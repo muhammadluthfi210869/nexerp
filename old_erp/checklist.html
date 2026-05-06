@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GsERP KIL - Checklist</title>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="57x57" href="https://kil.gserp.id/assets/favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="https://kil.gserp.id/assets/favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://kil.gserp.id/assets/favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="https://kil.gserp.id/assets/favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://kil.gserp.id/assets/favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="https://kil.gserp.id/assets/favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="https://kil.gserp.id/assets/favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://kil.gserp.id/assets/favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://kil.gserp.id/assets/favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"
+        href="https://kil.gserp.id/assets/favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://kil.gserp.id/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://kil.gserp.id/assets/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://kil.gserp.id/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="https://kil.gserp.id/assets/favicon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="https://kil.gserp.id/assets/favicon/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/fontawesome-free/css/all.min.css">
+    <!-- flag-icon-css -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/flag-icon-css/css/flag-icon.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet"
+        href="https://kil.gserp.id/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/select2/css/select2.min.css">
+    <link rel="stylesheet"
+        href="https://kil.gserp.id/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+    <!-- Lightbox -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/ekko-lightbox/ekko-lightbox.css">
+    <!-- daterange picker -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/daterangepicker/daterangepicker.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet"
+        href="https://kil.gserp.id/assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/summernote/summernote-bs4.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Full Calendar -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/fullcalendar/main.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/css/adminlte.min.css">
+    <!-- User style -->
+    <style>
+        /* Custom styles for Checklist module */
+        .gs-field {
+            position: relative;
+        }
+
+        .gs-field .invalid-feedback {
+            display: none;
+        }
+
+        .gs-field .is-invalid~.invalid-feedback {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+        <!-- Preloader -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            <img class="animation__shake" src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png"
+                alt="Logo" height="60" width="60">
+        </div>
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i
+                            class="fas fa-bars"></i></a></li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="javascript:;"> <i class="fas fa-clock"></i> <span
+                            class="digital-clock">00:00:00</span>
+                    </a></li>
+                <!-- Language Dropdown Menu
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="flag-icon flag-icon-us"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right p-0">
+                        <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en" class="dropdown-item active">
+                            <i class="flag-icon flag-icon-us mr-2"></i> English
+                        </a>
+                        <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id" class="dropdown-item">
+                            <i class="flag-icon flag-icon-id mr-2"></i> Indonesia
+                        </a>
+                    </div>
+                </li> -->
+                <li class="nav-item dropdown user-menu"><a href="#" class="nav-link dropdown-toggle"
+                        data-toggle="dropdown"> <img
+                            src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png"
+                            class="user-image img-circle elevation-2" alt="Zaki&#x20;"> <span
+                            class="d-none d-md-inline">Zaki </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <!-- User image -->
+                        <li class="user-header bg-primary"><img
+                                src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png"
+                                class="img-circle elevation-2" alt="Zaki&#x20;">
+
+                            <p>
+                                Zaki <small>Administrator</small>
+                            </p>
+                        </li>
+                        <li class="user-footer">
+                            <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+                                class="btn btn-default btn-flat btn-block"><i class="fas fa-user"></i> Akun Saya</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" data-widget="fullscreen" href="#" role="button"> <i
+                            class="fas fa-expand-arrows-alt"></i>
+                    </a></li>
+
+                <li class="nav-item"><a class="nav-link" href="javascript:;" role="button"
+                        onclick="uriAlert('https\x3A\x2F\x2Fkil.gserp.id\x2Fauth\x2Flogout')"> <i
+                            class="fas fa-power-off"></i>
+                    </a></li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;" class="brand-link"> <img
+                    src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" alt="Logo"
+                    class="brand-image img-circle elevation-3" style="opacity: .8"> <span
+                    class="brand-text font-weight-light">GsERP KIL</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- SidebarSearch Form -->
+                <div class="form-inline mt-2">
+                    <div class="input-group" data-widget="sidebar-search">
+                        <input class="form-control form-control-sidebar" type="search" placeholder="Search"
+                            aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-sidebar">
+                                <i class="fas fa-search fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview"
+                        role="menu" data-accordion="false">
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;" class="nav-link">
+                                <i class="nav-icon fas fa-home"></i>
+                                <p>Beranda</p>
+                            </a></li>
+                        <li class="nav-header">Dasbor</li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calendar"></i>
+                                <p>
+                                    D. Jadwal Produksi <span id="side_menu_1001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calendar-check"></i>
+                                <p>
+                                    D. Realisasi Produksi <span id="side_menu_1002"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-line"></i>
+                                <p>
+                                    D. Penjualan Sample <span id="side_menu_1003"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-bar"></i>
+                                <p>
+                                    D. Penjualan Barang <span id="side_menu_1004"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-area"></i>
+                                <p>
+                                    D. Pelanggan <span id="side_menu_1005" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-pie"></i>
+                                <p>
+                                    D. Sample <span id="side_menu_1006" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Dasbor Eksekutif</li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-user-tie"></i>
+                                <p>
+                                    D. Eksekutif <span id="side_menu_1101" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-bell"></i>
+                                <p>
+                                    D. Notifikasi <span id="side_menu_1102" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Dasbor Departemen</li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-bullhorn"></i>
+                                <p>
+                                    D. Digital Marketing <span id="side_menu_1201"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-handshake"></i>
+                                <p>
+                                    D. BusDev <span id="side_menu_1202" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-flask"></i>
+                                <p>
+                                    D. RnD <span id="side_menu_1203" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-shopping-cart"></i>
+                                <p>
+                                    D. Purchasing <span id="side_menu_1204" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-balance-scale"></i>
+                                <p>
+                                    D. Legalitas <span id="side_menu_1205" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-industry"></i>
+                                <p>
+                                    D. Produksi <span id="side_menu_1206" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-warehouse"></i>
+                                <p>
+                                    D. Gudang <span id="side_menu_1207" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-users"></i>
+                                <p>
+                                    D. HR <span id="side_menu_1208" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-money-bill-wave"></i>
+                                <p>
+                                    D. Keuangan <span id="side_menu_1209" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Dasbor BusDev</li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-address-book"></i>
+                                <p>
+                                    D. Buku Tamu <span id="side_menu_1301" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-vial"></i>
+                                <p>
+                                    D. Client Sample <span id="side_menu_1302" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-user-tag"></i>
+                                <p>
+                                    D. Client Produksi <span id="side_menu_1303"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-sync-alt"></i>
+                                <p>
+                                    D. Client RO <span id="side_menu_1304" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost"
+                                class="nav-link">
+                                <i class="nav-icon fas&#x20;fa-user-times"></i>
+                                <p>
+                                    D. Lost <span id="side_menu_1305" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Master</li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-users-cog"></i>
+                                <p>
+                                    Kelola Pengguna <i class="right fas fa-angle-left"></i> <span id="side_menu_2001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-key nav-icon"></i>
+                                        <p>
+                                            Hak Akses <span id="side_menu_2002" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-secret nav-icon"></i>
+                                        <p>
+                                            Pengguna <span id="side_menu_2003" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-book"></i>
+                                <p>
+                                    Kelola CoA <i class="right fas fa-angle-left"></i> <span id="side_menu_2111"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-project-diagram nav-icon"></i>
+                                        <p>
+                                            CoA <span id="side_menu_2112" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-external-link-alt nav-icon"></i>
+                                        <p>
+                                            CoA Jurnal Otomatis <span id="side_menu_2113"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-warehouse"></i>
+                                <p>
+                                    Kelola Gudang <i class="right fas fa-angle-left"></i> <span id="side_menu_2121"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-building nav-icon"></i>
+                                        <p>
+                                            Gudang <span id="side_menu_2122" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-house-user nav-icon"></i>
+                                        <p>
+                                            Hak Akses Gudang <span id="side_menu_2123"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-box"></i>
+                                <p>
+                                    Kelola Barang <i class="right fas fa-angle-left"></i> <span id="side_menu_2131"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-box-open nav-icon"></i>
+                                        <p>
+                                            Kategori Barang <span id="side_menu_2132"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-boxes nav-icon"></i>
+                                        <p>
+                                            Barang <span id="side_menu_2133" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-user-friends"></i>
+                                <p>
+                                    Kelola Supplier <i class="right fas fa-angle-left"></i> <span id="side_menu_2141"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-lock nav-icon"></i>
+                                        <p>
+                                            Kategori Supplier <span id="side_menu_2142"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-users nav-icon"></i>
+                                        <p>
+                                            Supplier <span id="side_menu_2143" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-address-book"></i>
+                                <p>
+                                    Kelola Pelanggan <i class="right fas fa-angle-left"></i> <span id="side_menu_2151"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-shield nav-icon"></i>
+                                        <p>
+                                            Kategori Pelanggan <span id="side_menu_2152"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-tie nav-icon"></i>
+                                        <p>
+                                            Pelanggan <span id="side_menu_2153" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-users nav-icon"></i>
+                                        <p>
+                                            Pelanggan Saya <span id="side_menu_2154"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-line"></i>
+                                <p>
+                                    Kelola Penjualan <i class="right fas fa-angle-left"></i> <span id="side_menu_2161"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-tags nav-icon"></i>
+                                        <p>
+                                            Kategori Penjualan <span id="side_menu_2162"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-bullseye nav-icon"></i>
+                                        <p>
+                                            Target Penjualan <span id="side_menu_2163"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-header">Persetujuan</li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cart-arrow-down"></i>
+                                <p>
+                                    Pembelian ~ <span id="side_menu_3001" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-step-backward"></i>
+                                <p>
+                                    Retur Pembelian ~ <span id="side_menu_3002" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-shopping-bag"></i>
+                                <p>
+                                    Penjualan Sample ~ <span id="side_menu_3003"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-luggage-cart"></i>
+                                <p>
+                                    Penjualan Produk ~ <span id="side_menu_3004"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-step-forward"></i>
+                                <p>
+                                    Retur Penjualan ~ <span id="side_menu_3005" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-dollar-sign"></i>
+                                <p>
+                                    Permintaan HPP ~ <span id="side_menu_3006" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-thumbtack"></i>
+                                <p>
+                                    Permintaan Pembelian ~ <span id="side_menu_3007"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-thumbs-up"></i>
+                                <p>
+                                    Permintaan Barang ~ <span id="side_menu_3008"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Umum</li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-progress"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-check-double"></i>
+                                <p>
+                                    Checklist Progress <span id="side_menu_4001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-tracking"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-check-circle"></i>
+                                <p>
+                                    Checklist Tracking <span id="side_menu_4002"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist"
+                                class="nav-link active">
+                                <i class="nav-icon fa&#x20;fa-clipboard-list"></i>
+                                <p>
+                                    Checklist <span id="side_menu_4003" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-category"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-tags"></i>
+                                <p>
+                                    Kategori Checklist <span id="side_menu_4004"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;todolist"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-tasks"></i>
+                                <p>
+                                    Todolist <span id="side_menu_4005" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Operasional</li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cart-plus"></i>
+                                <p>
+                                    Pembelian <i class="right fas fa-angle-left"></i> <span id="side_menu_5001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-cart-arrow-down nav-icon"></i>
+                                        <p>
+                                            Buat Pembelian <span id="side_menu_5002"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-invoice"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                        <p>
+                                            Faktur Pembelian <span id="side_menu_5003"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-step-backward nav-icon"></i>
+                                        <p>
+                                            Retur Pembelian <span id="side_menu_5004"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-down-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            DP Pembelian <span id="side_menu_5005"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Bayar Pembelian <span id="side_menu_5006"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;need-for-goods"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cubes"></i>
+                                <p>
+                                    Kebutuhan Barang <span id="side_menu_5011" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-clipboard-list"></i>
+                                <p>
+                                    Permintaan Barang <span id="side_menu_5012" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-thumbtack"></i>
+                                <p>
+                                    Permintaan Pembelian <span id="side_menu_5013"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-angle-double-right"></i>
+                                <p>
+                                    Barang Masuk <i class="right fas fa-angle-left"></i> <span id="side_menu_5101"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-in"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-truck-loading nav-icon"></i>
+                                        <p>
+                                            Pembelian Masuk <span id="side_menu_5102"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-in"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-undo nav-icon"></i>
+                                        <p>
+                                            Retur Penjualan <span id="side_menu_5103"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-angle-double-left"></i>
+                                <p>
+                                    Barang Keluar <i class="right fas fa-angle-left"></i> <span id="side_menu_5104"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-transfer"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-sync nav-icon"></i>
+                                        <p>
+                                            Transfer Barang <span id="side_menu_5105"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;delivery-out"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-truck-moving nav-icon"></i>
+                                        <p>
+                                            Pengiriman Barang <span id="side_menu_5106"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-out"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-undo nav-icon"></i>
+                                        <p>
+                                            Retur Pembelian <span id="side_menu_5107"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-opname"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-clipboard-check"></i>
+                                <p>
+                                    Stok Opname <span id="side_menu_5108" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;guest-book"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-address-book"></i>
+                                <p>
+                                    Buku Tamu <span id="side_menu_5151" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;follow-up-customer"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-user-check"></i>
+                                <p>
+                                    Follow Up Pelanggan <span id="side_menu_5152"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-luggage-cart"></i>
+                                <p>
+                                    Penjualan <i class="right fas fa-angle-left"></i> <span id="side_menu_5201"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-shopping-bag nav-icon"></i>
+                                        <p>
+                                            Penjualan Sample <span id="side_menu_5202"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Bayar Sample <span id="side_menu_5203"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-luggage-cart nav-icon"></i>
+                                        <p>
+                                            Penjualan <span id="side_menu_5211" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-step-forward nav-icon"></i>
+                                        <p>
+                                            Retur Penjualan <span id="side_menu_5212"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-down-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            DP Penjualan <span id="side_menu_5213"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-invoice"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Faktur Penjualan <span id="side_menu_5214"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Bayar Penjualan <span id="side_menu_5215"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calendar"></i>
+                                <p>
+                                    Pra Produksi <i class="right fas fa-angle-left"></i> <span id="side_menu_5301"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vials nav-icon"></i>
+                                        <p>
+                                            Kelola Formulasi <span id="side_menu_5302"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vial nav-icon"></i>
+                                        <p>
+                                            Formulasi <span id="side_menu_5303" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-dollar-sign nav-icon"></i>
+                                        <p>
+                                            Permintaan HPP <span id="side_menu_5304"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;batch-record"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-barcode nav-icon"></i>
+                                        <p>
+                                            Batch Record <span id="side_menu_5305"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-mixing"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vial nav-icon"></i>
+                                        <p>
+                                            Jadwal Mixing <span id="side_menu_5306"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-filling"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-wine-bottle nav-icon"></i>
+                                        <p>
+                                            Jadwal Filling <span id="side_menu_5307"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-packaging"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-box-tissue nav-icon"></i>
+                                        <p>
+                                            Jadwal Packaging <span id="side_menu_5308"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-adjustment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-sliders-h nav-icon"></i>
+                                        <p>
+                                            Penyesuaian Formulasi <span id="side_menu_7005"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-industry"></i>
+                                <p>
+                                    Produksi <i class="right fas fa-angle-left"></i> <span id="side_menu_5401"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-mixing"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vial nav-icon"></i>
+                                        <p>
+                                            Produksi Mixing <span id="side_menu_5402"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-filling"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-wine-bottle nav-icon"></i>
+                                        <p>
+                                            Produksi Filling <span id="side_menu_5403"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-packaging"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-box-tissue nav-icon"></i>
+                                        <p>
+                                            Produksi Packaging <span id="side_menu_5404"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calculator"></i>
+                                <p>
+                                    Akuntansi <i class="right fas fa-angle-left"></i> <span id="side_menu_5701"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;general-journal"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-contract nav-icon"></i>
+                                        <p>
+                                            Jurnal Umum <span id="side_menu_5702"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                        <p>
+                                            Kas Bank Keluar <span id="side_menu_5703"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-deposit"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-hand-holding-usd nav-icon"></i>
+                                        <p>
+                                            Kas Bank Masuk <span id="side_menu_5704"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-adjustment"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-boxes"></i>
+                                <p>
+                                    Penyesuaian Stok <span id="side_menu_5801" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Laporan</li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-boxes"></i>
+                                <p>
+                                    Laporan Persediaan <i class="right fas fa-angle-left"></i> <span id="side_menu_6101"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-cubes nav-icon"></i>
+                                        <p>
+                                            Stok <span id="side_menu_6102" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-mutation-goods"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-random nav-icon"></i>
+                                        <p>
+                                            Mutasi Barang <span id="side_menu_6103"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-users"></i>
+                                <p>
+                                    Laporan BusDev <i class="right fas fa-angle-left"></i> <span id="side_menu_6201"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-guest-book"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-address-book nav-icon"></i>
+                                        <p>
+                                            Buku Tamu <span id="side_menu_6202" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-follow-up-customer"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-check nav-icon"></i>
+                                        <p>
+                                            Follow Up Pelanggan <span id="side_menu_6203"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-file-invoice-dollar"></i>
+                                <p>
+                                    Laporan Keuangan <i class="right fas fa-angle-left"></i> <span id="side_menu_6801"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-general-ledger"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-alt nav-icon"></i>
+                                        <p>
+                                            Buku Besar <span id="side_menu_6802"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-profit-loss"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                        <p>
+                                            Laba Rugi <span id="side_menu_6803" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-trial-balance"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-balance-scale nav-icon"></i>
+                                        <p>
+                                            Neraca Saldo <span id="side_menu_6804"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-balance-sheet"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-contract nav-icon"></i>
+                                        <p>
+                                            Neraca <span id="side_menu_6805" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-header">Pengaturan</li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-user"></i>
+                                <p>
+                                    Akun Saya <span id="side_menu_7001" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;company"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-building"></i>
+                                <p>
+                                    Perusahaan <span id="side_menu_7002" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;setting"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cogs"></i>
+                                <p>
+                                    Pengaturan <span id="side_menu_7003" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;activity-log"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-history"></i>
+                                <p>
+                                    Catatan Aktifitas <span id="side_menu_7004" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0 text-dark">Checklist</h1>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a
+                                        href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;">Beranda</a></li>
+                                <li class="breadcrumb-item active">Checklist</li>
+                            </ol>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+            <!-- /.content-header -->
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="overlay" id="cardLoading">
+                                    <span class="spinner-grow"></span>
+                                </div>
+                                <div class="card-header">
+                                    <div class="card-tools">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-sm btn-warning"
+                                                onclick="location.href='https://kil.gserp.id/checklist/history';">
+                                                <i class="fas fa-history"></i> Riwayat</button>
+                                            <button type="button" class="btn btn-sm btn-info"
+                                                onclick="location.href='https://kil.gserp.id/checklist/create';">
+                                                <i class="fas fa-plus"></i> Buat</button>
+                                            <button type="button" class="btn btn-sm btn-secondary"
+                                                onclick="location.href='https://kil.gserp.id/checklist-tracking';">
+                                                <i class="fas fa-tasks"></i> Tracking</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="GSTable1"
+                                            class="table table-sm table-striped table-bordered table-valign-middle text-nowrap">
+                                            <thead>
+                                                <th class="text-center">#</th>
+                                                <th class="text-center">No. Sales</th>
+                                                <th class="text-center">Customer</th>
+                                                <th class="text-center">Produk</th>
+                                                <th class="text-center">Tanggal Mulai</th>
+                                                <th class="text-center">Tanggal Selesai</th>
+                                                <th class="text-center">Pembuat</th>
+                                                <th class="text-center">Status</th>
+                                                <th class="no-sort text-center">#</th>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+
+                <div class="modal fade" id="modal-sm">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div id="modal-sm-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-md">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div id="modal-md-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-lg">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div id="modal-lg-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-xl">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div id="modal-xl-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <!-- To the right -->
+            <div class="float-right d-none d-sm-inline">
+                Goodsyst Enterprise Resource Planning Karya Impian Laboratoris. 2.0.0 </div>
+            <!-- Default to the left -->
+            <strong>Copyright &copy; 2026 <a href="https&#x3A;&#x2F;&#x2F;dreamlab.id">PT. Karya Impian Laboratoris</a>.
+            </strong> All rights reserved.
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+    <!-- REQUIRED SCRIPTS -->
+
+    <!-- jQuery -->
+    <script src="https://kil.gserp.id/assets/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="https://kil.gserp.id/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="https://kil.gserp.id/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://kil.gserp.id/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <!-- jquery-validation -->
+    <script src="https://kil.gserp.id/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/jquery-validation/additional-methods.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://kil.gserp.id/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+    <!-- jszip -->
+    <script src="https://kil.gserp.id/assets/plugins/jszip/jszip.min.js"></script>
+    <!-- Select2 -->
+    <script src="https://kil.gserp.id/assets/plugins/select2/js/select2.full.min.js"></script>
+    <!-- Lightbox2 -->
+    <script src="https://kil.gserp.id/assets/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
+    <!-- date-range-picker -->
+    <script src="https://kil.gserp.id/assets/plugins/moment/moment.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="https://kil.gserp.id/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js">
+    </script>
+    <!-- Summernote -->
+    <script src="https://kil.gserp.id/assets/plugins/summernote/summernote-bs4.min.js"></script>
+    <!-- Jquery Number -->
+    <script src="https://kil.gserp.id/assets/tools/jquery.number.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="https://kil.gserp.id/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- Full Calendar -->
+    <script src="https://kil.gserp.id/assets/plugins/fullcalendar/main.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://kil.gserp.id/assets/js/adminlte.min.js"></script>
+    <script>
+        function uriAlert(uri, message, loading = false) {
+            var text = '';
+            if (message) {
+                text = message;
+            }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Anda akan melakukan aksi ini! " + text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '&nbsp;&nbsp;&nbsp;Iya&nbsp;&nbsp;&nbsp;',
+                cancelButtonText: '&nbsp;&nbsp;&nbsp;Tidak&nbsp;&nbsp;&nbsp;',
+                reverseButtons: true,
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                },
+            }).then((result) => {
+                if (result.value) {
+                    // Only show full-screen loading if explicitly requested
+                    if (loading === true) {
+                        showFullScreenLoading();
+                    }
+
+                    // Show card loading juga untuk backward compatibility
+                    $('#cardLoading').show();
+
+                    location.href = uri;
+                }
+            });
+        }
+
+        function showFullScreenLoading() {
+            // Create full-screen loading overlay if not exists
+            if ($('#fullScreenLoading').length === 0) {
+                var loadingHtml = '<div id="fullScreenLoading" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">' +
+                    '<div style="text-align: center;">' +
+                    '<div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>' +
+                    '<div class="text-light mt-3" style="font-size: 1.2rem;">Memproses...</div>' +
+                    '</div>' +
+                    '</div>';
+                $('body').append(loadingHtml);
+            } else {
+                $('#fullScreenLoading').show();
+            }
+        }
+
+        function hideFullScreenLoading() {
+            $('#fullScreenLoading').hide();
+        }
+    </script>
+    <!-- User JS -->
+    <script>
+        function toNumber(str) {
+            // Remove thousand separators and convert to float (EN format: 1,234.56)
+            return parseFloat(str.toString().replace(/,/g, '')) || 0;
+        }
+
+        function formatNumber(num, decimals = 2) {
+            // Format number to EN format (1,234.56)
+            return parseFloat(num || 0).toFixed(decimals)
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        $(function () {
+            // DataTable initialization
+            $("#GSTable1").DataTable({
+                "responsive": false,
+                "autoWidth": false,
+                "columnDefs": [{
+                    "targets": 'no-sort',
+                    "orderable": false,
+                    "responsivePriority": 1
+                }],
+            });
+
+            // Initialize Select2
+            $('.select2').select2({
+                placeholder: 'Pilih',
+                allowClear: true
+            });
+
+            // Initialize Select2 AJAX for sales
+            $('.salesSelect').select2({
+                placeholder: 'Ketik untuk mencari sales...',
+                allowClear: true,
+                ajax: {
+                    url: "https://kil.gserp.id/checklist/get-sales",
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            search: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function (data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.items,
+                            pagination: {
+                                more: data.more
+                            }
+                        };
+                    },
+                },
+                minimumInputLength: 1,
+                templateResult: function (item) {
+                    if (item.loading) {
+                        return 'Loading...';
+                    }
+                    return item.text;
+                },
+                templateSelection: function (item) {
+                    return item.text || item.id;
+                }
+            });
+
+            // Initialize Select2 AJAX for goods (no minimum input, load all when sales selected)
+            function initializeGoodsSelect2(element) {
+                $(element).select2({
+                    placeholder: 'Pilih Produk',
+                    allowClear: true,
+                    ajax: {
+                        url: "https://kil.gserp.id/checklist/get-goods",
+                        type: 'GET',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                sales_id: $('#sales').val()
+                            };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.items
+                            };
+                        },
+                    },
+                    templateResult: function (item) {
+                        if (item.loading) {
+                            return 'Loading...';
+                        }
+                        return item.text;
+                    },
+                    templateSelection: function (item) {
+                        return item.text || item.id;
+                    }
+                });
+            }
+
+            // Load goods when sales is selected
+            $('#sales').on('change', function () {
+                if ($(this).val()) {
+                    $('#goods').prop('disabled', false);
+                    $('#goods').val(null).trigger('change');
+                    ajaxSalesDetail();
+                    initializeGoodsSelect2('#goods');
+                } else {
+                    $('#goods').prop('disabled', true);
+                    $('#goods').val(null).trigger('change');
+                    $('#customer_name').val('');
+                }
+            });
+
+            // Initialize daterangepicker for history page
+
+            // Date change listener for start date
+            $('#checklists_date_start').on('dp.change change blur', function (e) {
+                calculateChecklistDueDate();
+            });
+
+            // Form validation with SweetAlert2
+            $.validator.setDefaults({
+                submitHandler: function (form) {
+                    Swal.fire({
+                        title: 'Apakah Anda yakin?',
+                        text: "Anda akan melakukan aksi ini!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: '&nbsp;&nbsp;&nbsp;Iya&nbsp;&nbsp;&nbsp;',
+                        cancelButtonText: '&nbsp;&nbsp;&nbsp;Tidak&nbsp;&nbsp;&nbsp;',
+                        reverseButtons: true,
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        },
+                    }).then((result) => {
+                        if (result.value) {
+                            $('#cardLoading').show();
+                            form.submit();
+                        }
+                    });
+                }
+            });
+
+            // Form validation rules
+            $('#GSForm').validate({
+                rules: {
+                    sales: {
+                        required: true
+                    },
+                    checklists_date_start: {
+                        required: true
+                    },
+                    checklists_date_end: {
+                        required: true
+                    }
+                },
+                messages: {
+                    sales: {
+                        required: 'Sales wajib dipilih'
+                    },
+                    checklists_date_start: {
+                        required: 'Tanggal mulai wajib diisi'
+                    },
+                    checklists_date_end: {
+                        required: 'Tanggal selesai wajib diisi'
+                    }
+                },
+                errorElement: 'span',
+                errorPlacement: function (error, element) {
+                    error.addClass('invalid-feedback');
+                    element.closest('.gs-field').append(error);
+                },
+                highlight: function (element, errorClass, validClass) {
+                    $(element).addClass('is-invalid');
+                },
+                unhighlight: function (element, errorClass, validClass) {
+                    $(element).removeClass('is-invalid');
+                }
+            });
+        });
+
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+
+        function ajaxDetail(id, modalsize) {
+            $('#' + modalsize + '-content').html('<div class="overlay" id="cardLoading"><span class="spinner-grow"></span></div><div class="modal-header"><h4 class="modal-title">Detail</h4><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><br><p>Memuat&hellip;</p></div><div class="modal-footer text-end"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>');
+            $.ajax({
+                type: "GET",
+                url: "https://kil.gserp.id/checklist/detail",
+                data: {
+                    'id': id,
+                },
+                dataType: 'json',
+                cache: false,
+                success: function (result) {
+                    $('#' + modalsize + '-content').html(result.view);
+                }
+            });
+        }
+
+        // Apply Filter for History
+        function applyFilter() {
+            var periode = $('#periode').val();
+
+            if (!periode || periode === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Silakan pilih periode terlebih dahulu!',
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
+                });
+                return;
+            }
+
+            var dates = periode.split('/');
+            var start = dates[0];
+            var end = dates[1];
+
+            location.href = 'https://kil.gserp.id/checklist/history/' + start + '/' + end;
+        }
+
+        function ajaxSalesDetail() {
+            var salesId = $('#sales').val();
+
+            if (!salesId || salesId === '') {
+                $('#customer_name').val('');
+                salesCategoriesId = null;
+                return;
+            }
+
+            $.ajax({
+                type: "GET",
+                url: "https://kil.gserp.id/checklist/get-sales-detail",
+                data: {
+                    'sales_id': salesId
+                },
+                dataType: 'json',
+                cache: false,
+                success: function (result) {
+                    $('#customer_name').val(result.customers_name || '');
+                    salesCategoriesId = result.sales_categories_id || null;
+                    calculateChecklistDueDate();
+                    if (salesCategoriesId) {
+                        ajaxFillDays(salesCategoriesId);
+                    }
+                },
+                error: function () {
+                    $('#customer_name').val('');
+                    salesCategoriesId = null;
+                }
+            });
+        }
+
+        function ajaxFillDays(salesCategoriesId) {
+            $.ajax({
+                type: "GET",
+                url: "https://kil.gserp.id/checklist/get-checklist-days",
+                data: { 'sales_categories_id': salesCategoriesId },
+                dataType: 'json',
+                cache: false,
+                success: function (result) {
+                    $.each(result, function (catId, days) {
+                        var $input = $('#days_' + catId);
+                        if ($input.length) {
+                            $input.val(days);
+                        }
+                    });
+                    Toast.fire({ icon: 'info', title: 'Lama hari diisi otomatis sesuai kategori penjualan.' });
+                }
+            });
+        }
+
+        function calculateChecklistDueDate() {
+            var startDate = $('#checklists_date_start').val();
+
+            if (!startDate || startDate === '') {
+                return;
+            }
+
+            $.ajax({
+                type: "GET",
+                url: "https://kil.gserp.id/checklist/calculate-due-date",
+                data: {
+                    'start_date': startDate,
+                    'sales_categories_id': salesCategoriesId || ''
+                },
+                dataType: 'json',
+                cache: false,
+                success: function (result) {
+                    if (result.due_date) {
+                        $('#checklists_date_end').val(result.due_date);
+                    }
+                }
+            });
+        }
+    </script>
+    <script>
+        $(function () {
+
+            $(document).on('select2:open', () => {
+                document.querySelector('.select2-container--open .select2-search__field').focus();
+            });
+            $('.gs-tooltip').tooltip();
+            $(document).on('click', '[data-toggle="lightbox"]', function (event) {
+                event.preventDefault();
+                $(this).ekkoLightbox();
+            });
+            $('.number').number(true, 0);
+            $(".number").keyup(function () {
+                if ($(this).val() == '') {
+                    $(this).val(0);
+                }
+            });
+            $('.number2').number(true, 2);
+            $('.number4').number(true, 4);
+
+            $('.datepicker').datetimepicker({
+                format: 'YYYY-MM-DD',
+            });
+            $('.yearpicker').datetimepicker({
+                format: "YYYY",
+                minViewMode: 1,
+                autoclose: true,
+            });
+            $('.monthpicker').datetimepicker({
+                format: "YYYY-MM",
+                minViewMode: 1,
+                autoclose: true,
+            });
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.datepicker, .input-group').length) {
+                    $('.datepicker').datetimepicker('hide');
+                }
+                if (!$(e.target).closest('.yearpicker, .input-group').length) {
+                    $('.yearpicker').datetimepicker('hide');
+                }
+                if (!$(e.target).closest('.monthpicker, .input-group').length) {
+                    $('.monthpicker').datetimepicker('hide');
+                }
+            });
+
+            $('.timepicker').datetimepicker({
+                format: 'HH:mm'
+            });
+            $('.mydaterangepicker').daterangepicker({
+                locale: {
+                    separator: '/',
+                    format: 'YYYY-MM-DD'
+                }
+            });
+            $('.summernote').summernote({
+                toolbar: [
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                ]
+            });
+            clockUpdate();
+            setInterval(clockUpdate, 1000);
+
+            $('#cardLoading').hide();
+        });
+
+        function clockUpdate() {
+            var date = new Date();
+
+            function addZero(x) {
+                if (x < 10) {
+                    return x = '0' + x;
+                } else {
+                    return x;
+                }
+            }
+
+            function twelveHour(x) {
+                if (x > 12) {
+                    return x = x - 12;
+                } else if (x == 0) {
+                    return x = 12;
+                } else {
+                    return x;
+                }
+            }
+            var h = addZero(date.getHours());
+            var m = addZero(date.getMinutes());
+            var s = addZero(date.getSeconds());
+
+            $('.digital-clock').text(h + ':' + m + ':' + s)
+        }
+
+        $(document).ready(function () {
+            // Load badges after DOM is ready
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3001').html(result);
+                        $('#main_menu_3001').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3002').html(result);
+                        $('#main_menu_3002').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3003').html(result);
+                        $('#main_menu_3003').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3004').html(result);
+                        $('#main_menu_3004').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3005').html(result);
+                        $('#main_menu_3005').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Frequest\x2Dcogs\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3006').html(result);
+                        $('#main_menu_3006').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Drequest\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3007').html(result);
+                        $('#main_menu_3007').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fgoods\x2Drequest\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3008').html(result);
+                        $('#main_menu_3008').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fchecklist\x2Dprogress\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_4001').html(result);
+                        $('#main_menu_4001').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5002').html(result);
+                        $('#main_menu_5002').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dinvoice\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5003').html(result);
+                        $('#main_menu_5003').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5004').html(result);
+                        $('#main_menu_5004').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Ddown\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5005').html(result);
+                        $('#main_menu_5005').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5006').html(result);
+                        $('#main_menu_5006').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fneed\x2Dfor\x2Dgoods\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5011').html(result);
+                        $('#main_menu_5011').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fgoods\x2Drequest\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5012').html(result);
+                        $('#main_menu_5012').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Drequest\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5013').html(result);
+                        $('#main_menu_5013').html(result);
+                        if (0 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_0').html() != '') {
+                                var temp = parseFloat($('#side_menu_0').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Din\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5102').html(result);
+                        $('#main_menu_5102').html(result);
+                        if (5101 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5101').html() != '') {
+                                var temp = parseFloat($('#side_menu_5101').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5101').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Din\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5103').html(result);
+                        $('#main_menu_5103').html(result);
+                        if (5101 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5101').html() != '') {
+                                var temp = parseFloat($('#side_menu_5101').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5101').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fdelivery\x2Dout\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5106').html(result);
+                        $('#main_menu_5106').html(result);
+                        if (5104 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5104').html() != '') {
+                                var temp = parseFloat($('#side_menu_5104').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5104').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Dout\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5107').html(result);
+                        $('#main_menu_5107').html(result);
+                        if (5104 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5104').html() != '') {
+                                var temp = parseFloat($('#side_menu_5104').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5104').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5202').html(result);
+                        $('#main_menu_5202').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5203').html(result);
+                        $('#main_menu_5203').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5211').html(result);
+                        $('#main_menu_5211').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5212').html(result);
+                        $('#main_menu_5212').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Ddown\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5213').html(result);
+                        $('#main_menu_5213').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dinvoice\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5214').html(result);
+                        $('#main_menu_5214').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5215').html(result);
+                        $('#main_menu_5215').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fformulation\x2Dmanage\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5302').html(result);
+                        $('#main_menu_5302').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fformulation\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5303').html(result);
+                        $('#main_menu_5303').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Frequest\x2Dcogs\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5304').html(result);
+                        $('#main_menu_5304').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fbatch\x2Drecord\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5305').html(result);
+                        $('#main_menu_5305').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dmixing\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5306').html(result);
+                        $('#main_menu_5306').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dfilling\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5307').html(result);
+                        $('#main_menu_5307').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dpackaging\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5308').html(result);
+                        $('#main_menu_5308').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dmixing\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5402').html(result);
+                        $('#main_menu_5402').html(result);
+                        if (5401 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5401').html() != '') {
+                                var temp = parseFloat($('#side_menu_5401').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5401').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dfilling\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5403').html(result);
+                        $('#main_menu_5403').html(result);
+                        if (5401 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5401').html() != '') {
+                                var temp = parseFloat($('#side_menu_5401').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5401').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dpackaging\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5404').html(result);
+                        $('#main_menu_5404').html(result);
+                        if (5401 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5401').html() != '') {
+                                var temp = parseFloat($('#side_menu_5401').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5401').html(badge);
+                        }
+                    }
+                }
+            });
+
+            // Scroll to active menu item
+            setTimeout(function () {
+                var activeLink = $('.nav-link.active');
+                var scrollViewport = $('.os-viewport');
+
+                if (activeLink.length > 0 && scrollViewport.length > 0) {
+                    var offsetTop = activeLink.offset().top - scrollViewport.offset().top;
+
+                    scrollViewport.animate({
+                        scrollTop: scrollViewport.scrollTop() + offsetTop - 50
+                    }, 150);
+                }
+            }, 150);
+        });
+    </script>
+</body>
+
+</html>

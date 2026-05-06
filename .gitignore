@@ -19,7 +19,6 @@ frontend/.env
 # Backups and archives
 *.zip
 *.tar.gz
-old_erp/
 
 # Logs
 *.log
