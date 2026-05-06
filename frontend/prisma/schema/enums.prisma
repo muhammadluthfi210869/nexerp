@@ -1,0 +1,549 @@
+enum ProductCategory {
+  SKINCARE
+  BODYCARE
+  BABYCARE
+  HAIRCARE
+  DECORATIVE
+  PARFUM
+  FOOTCARE
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  HEAD_OPS
+  COMMERCIAL
+  DIGIMAR
+  RND
+  COMPLIANCE
+  FINANCE
+  PURCHASING
+  PPIC
+  WAREHOUSE
+  PRODUCTION_OP
+  QC_LAB
+  HR
+  IT_SYS
+  ADMIN
+  SCM
+  PRODUCTION
+  MARKETING
+  APJ
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum LeadSource {
+  INSTAGRAM
+  TIKTOK
+  LINKTREE
+  GOOGLE
+  OFFLINE
+}
+
+enum WorkflowStatus {
+  NEW_LEAD
+  CONTACTED
+  FOLLOW_UP_1
+  FOLLOW_UP_2
+  FOLLOW_UP_3
+  NEGOTIATION
+  SAMPLE_REQUESTED
+  SAMPLE_SENT
+  SAMPLE_APPROVED
+  SPK_SIGNED
+  DP_PAID
+  PRODUCTION_PLAN
+  READY_TO_SHIP
+  WON_DEAL
+  LOST
+  ABORTED
+}
+
+enum ActivityType {
+  CHAT
+  CALL
+  MEETING_OFFLINE
+  MEETING_ONLINE
+}
+
+enum ApprovalStatus {
+  WAITING
+  APPROVED
+  REJECTED
+}
+
+enum QualityStage {
+  PROSPECT
+  SAMPLE
+  NEGOTIATION
+}
+
+enum LostStage {
+  PROSPECT
+  SAMPLE
+  NEGOTIATION
+}
+
+enum LostReason {
+  PRICE
+  QUALITY
+  COMPETITOR
+  GHOSTING
+  PRICE_ISSUE
+  UNRESPONSIVE
+  PRODUCT_MISMATCH
+  OTHER
+  MOQ_TOO_HIGH
+}
+
+enum AdPlatform {
+  META
+  TIKTOK
+  GOOGLE
+  YOUTUBE
+  INSTAGRAM
+  FACEBOOK
+}
+
+enum MarketingChannel {
+  ORGANIC
+  PAID_ADS
+}
+
+enum TrafficSource {
+  IG_ADS
+  TIKTOK_ADS
+  FB_ADS
+  GOOGLE_ADS
+  IG_ORGANIC
+  TIKTOK_ORGANIC
+  LINKTREE
+  OTHER
+}
+
+enum ContentCategory {
+  EDUCATIONAL
+  PROMOTIONAL
+  ENTERTAINMENT
+  BEHIND_THE_SCENES
+  OTHER
+}
+
+enum GuestCategory {
+  BRANDED
+  PEMULA
+}
+
+enum NPFStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum SampleStatus {
+  DEVELOPING
+  SENT
+  REVISION
+  APPROVED
+}
+
+enum RegType {
+  BPOM
+  HKI_BRAND
+  HKI_LOGO
+  HALAL
+}
+
+enum RegStage {
+  DRAFT
+  SUBMITTED
+  EVALUATION
+  REVISION
+  PUBLISHED
+}
+
+enum SOStatus {
+  PENDING_DP
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  READY_TO_PRODUCE
+}
+
+enum InvoiceType {
+  DP
+  FINAL_PAYMENT
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum MaterialType {
+  RAW_MATERIAL
+  PACKAGING
+  LABEL
+  BOX
+}
+
+enum MaterialUnit {
+  GR
+  KG
+  PCS
+  ML
+}
+
+enum POStatus {
+  ORDERED
+  SHIPPED
+  RECEIVED
+  CANCELLED
+}
+
+enum InboundStatus {
+  PENDING
+  APPROVED
+  CANCELLED
+}
+
+enum PurchaseReturnStatus {
+  DRAFT
+  WAITING_APPROVAL
+  COMPLETED
+  CANCELLED
+}
+
+enum ProdStage {
+  BATCHING
+  MIXING
+  FILLING
+  PACKING
+}
+
+enum QCStatus {
+  GOOD
+  QUARANTINE
+  REJECT
+}
+
+enum LifecycleStatus {
+  PLANNING
+  WAITING_MATERIAL
+  WAITING_PROCUREMENT
+  READY_TO_PRODUCE
+  MIXING
+  FILLING
+  PACKING
+  PENDING_QC
+  QC_HOLD
+  REWORK
+  FINISHED_GOODS
+  DONE
+  DELIVERED
+  CLOSED
+  CANCELLED
+}
+
+enum ShipStatus {
+  PACKING
+  SHIPPED
+  DELIVERED
+}
+
+enum RetentionStatus {
+  WAITING
+  NOTIFIED
+  REORDERED
+  CHURNED
+}
+
+enum Division {
+  BD
+  RND
+  FINANCE
+  SCM
+  LEGAL
+  WAREHOUSE
+  PRODUCTION
+  QC
+  MANAGEMENT
+  SYSTEM
+  CREATIVE
+}
+
+enum StreamEventType {
+  GATE_OPENED
+  GATE_BLOCKED
+  MANUAL_LOG
+  OVERRIDE
+  STATE_CHANGE
+  SLA_BREACH
+  HANDOVER
+  CRITICAL_DELAY
+}
+
+enum StockStatus {
+  READY
+  SHORTAGE
+  PENDING_CHECK
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum LegalStatus {
+  IN_PROGRESS
+  DONE
+  REJECTED
+}
+
+enum HkiStage {
+  DRAFT
+  SUBMITTED
+  EVALUATION
+  REVISION
+  PUBLISHED
+}
+
+enum BpomStage {
+  DRAFT
+  SUBMITTED
+  EVALUATION
+  REVISION
+  PUBLISHED
+}
+
+enum AuditRiskLevel {
+  OK
+  DELAY_AUDIT
+  CRITICAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  OVERDUE
+}
+
+enum MachineType {
+  MIXING_MACHINE
+  FILLING_MACHINE
+  PACKING_MACHINE
+}
+
+enum RejectReason {
+  FORMULA_FAILED
+  CONTAMINATION
+  PACKAGING_DEFECT
+  OPERATOR_ERROR
+  MACHINE_FAILURE
+  OTHER
+}
+
+enum PaymentType {
+  PREPAID
+  PARTIAL
+  CREDIT
+}
+
+enum HkiMode {
+  NEW
+  EXISTING
+}
+
+enum ActivityCategory {
+  FOLLOW_UP
+  PRESENTATION
+  SAMPLE_SEND
+  OTHER
+}
+
+enum ContractType {
+  PERMANENT
+  CONTRACT
+  PROBATION
+}
+
+enum SampleStage {
+  QUEUE
+  FORMULATING
+  LAB_TEST
+  READY_TO_SHIP
+  SHIPPED
+  RECEIVED
+  CLIENT_REVIEW
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum LocationType {
+  AMBIENT
+  COOL_ROOM
+  FLAMMABLE
+  QUARANTINE
+}
+
+enum TransactionType {
+  INBOUND
+  OUTBOUND
+  INTERNAL_MOVE
+  ADJUSTMENT
+  DISPOSAL
+  RETURN
+}
+
+enum RequisitionStatus {
+  PENDING
+  ISSUED
+  SHORTAGE
+  PARTIAL
+}
+
+enum FundRequestStatus {
+  PENDING_APPROVAL_MGR
+  APPROVED_BY_MGR
+  PENDING_APPROVAL_DIR
+  APPROVED_BY_DIR
+  WAITING_FINANCE_DISBURSEMENT
+  PAID
+  REJECTED
+}
+
+enum ReportGroup {
+  CURRENT_ASSET
+  FIXED_ASSET
+  OTHER_ASSET
+  CURRENT_LIABILITY
+  LONG_TERM_LIABILITY
+  EQUITY
+  OPERATING_REVENUE
+  OTHER_REVENUE
+  COGS
+  OPEX
+  OTHER_EXPENSE
+}
+
+enum InvoiceCategory {
+  RECEIVABLE
+  PAYABLE
+}
+
+enum SourceDocumentType {
+  SALES_ORDER
+  PURCHASE_ORDER
+  PAYMENT
+  STOCK_ADJUSTMENT
+  SALES_RETURN
+  PURCHASE_RETURN
+  PRODUCTION_PLAN
+  MATERIAL_REQUISITION
+}
+
+enum PeriodStatus {
+  OPEN
+  SOFT_LOCKED
+  CLOSED
+}
+
+enum FormulaStatus {
+  DRAFT
+  WAITING_APPROVAL
+  SAMPLE_LOCKED
+  PRODUCTION_LOCKED
+  SUPERSEDED
+  MINOR_COMPLIANCE_FIX
+  BPOM_REGISTRATION_PROCESS
+  REVISION_REQUIRED
+  ARCHIVED
+}
+
+enum IngredientCategory {
+  ALLOWED
+  RESTRICTED
+  PROHIBITED
+  COLORANT
+  PRESERVATIVE
+  UV_FILTER
+}
+
+enum ClaimRisk {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum OutboundMethod {
+  FIFO
+  FEFO
+}
+
+enum LaborGrade {
+  GRADE_A
+  GRADE_B
+  GRADE_C
+}
+
+enum EscalationType {
+  VENDOR_BLACKLIST_PO
+  FTY_THRESHOLD_BREACH
+  SPOILAGE_RISK_OVERRIDE
+  QC_GATE_BYPASS
+}
+
+
+enum DesignState {
+  INBOX
+  IN_PROGRESS
+  WAITING_APJ
+  WAITING_CLIENT
+  REVISION
+  LOCKED
+}
+
+enum TicketType {
+  LEAVE
+  OVERTIME
+  REIMBURSE
+}
+
+enum TicketStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISBURSED
+}
+
+enum PayrollStatus {
+  DRAFT
+  AUTHORIZED
+  PAID
+}
+
+enum AttendanceStatus {
+  ON_TIME
+  LATE
+  OUTSIDE_GEOFENCE
+}
+
+enum MaterialStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}

@@ -1,0 +1,30 @@
+﻿
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › tests\e2e\performance-audit.spec.ts:26:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens
+[1A[2K[chromium] › tests\e2e\performance-audit.spec.ts:26:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens
+Logging in...
+
+[1A[2K  1) [chromium] › tests\e2e\performance-audit.spec.ts:26:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens 
+
+    [31mTest timeout of 120000ms exceeded.[39m
+
+    Error: page.fill: Test timeout of 120000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[type="email"]')[22m
+
+
+      31 |     // Asumsi menggunakan port 3000 berdasarkan browser state pengguna
+      32 |     await page.goto('http://localhost:3000/login');
+    > 33 |     await page.fill('input[type="email"]', 'superadmin@dreamlab.com'); 
+         |                ^
+      34 |     await page.fill('input[type="password"]', 'password123');
+      35 |     await page.click('button[type="submit"]');
+      36 |     
+        at C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\tests\e2e\performance-audit.spec.ts:33:16
+
+    Error Context: test-results\performance-audit-Phase-1--36c6c-s-for-stuck-loading-screens-chromium\error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › tests\e2e\performance-audit.spec.ts:26:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens 

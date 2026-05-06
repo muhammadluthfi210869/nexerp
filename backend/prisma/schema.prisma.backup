@@ -1,0 +1,598 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// BATCH 1: COMMERCIAL & USER FOUNDATION
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  fullName     String
+  email         String    @unique
+  passwordHash String
+  role          UserRole
+  status        UserStatus @default(ACTIVE)
+  created_at    DateTime  @default(now())
+  deleted_at    DateTime? // Soft Delete
+
+  // Relations
+  leadsManaged    Lead[]            @relation("BDLeads")
+  lostDeals       LostDeal[]
+  guestLogs       GuestLog[]
+  verifiedPayments Payment[]         @relation("FinanceVerifier")
+  rndSamples      Sample[]          @relation("RNDFormulator")
+  scmPO           PurchaseOrder[]   @relation("SCMProcessor")
+  prodPlans       ProductionPlan[]  @relation("ProdAdmin")
+  qcAudits        QCAudit[]         @relation("QCOfficer")
+  logistics       Shipment[]        @relation("LogisticsOfficer")
+  registrations   Registration[]    @relation("LegalPIC")
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  DIGIMAR
+  BD
+  RND
+  SCM
+  LEGAL
+  PRODUCTION
+  WAREHOUSE
+  FINANCE
+  QC
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Lead {
+  id            String      @id @default(uuid()) @db.Uuid
+  client_name   String
+  phone_number  String
+  city          String
+  source_id     LeadSource
+  campaign_name String?
+  bd_id         String      @db.Uuid
+  status        LeadStatus  @default(NEW)
+  is_high_value Boolean     @default(false)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  // Relations
+  bd            User           @relation("BDLeads", fields: [bd_id], references: [id])
+  activities    LeadActivity[]
+  lostDeal      LostDeal?
+  
+  // Future Batch Relations
+  npfs          NewProductForm[]
+  salesOrders   SalesOrder[]
+  registrations Registration[]
+  retention     RetentionEngine?
+
+  @@index([bd_id])
+  @@index([status])
+  @@map("leads")
+}
+
+enum LeadSource {
+  INSTAGRAM
+  TIKTOK
+  LINKTREE
+  GOOGLE
+  OFFLINE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  SAMPLE
+  NEGO
+  DEAL
+  LOST
+}
+
+model LeadActivity {
+  id            String        @id @default(uuid()) @db.Uuid
+  lead_id       String        @db.Uuid
+  activity_type ActivityType
+  notes         String        @db.Text
+  response_time Int?          // in seconds
+  created_at    DateTime      @default(now())
+
+  // Relations
+  lead          Lead          @relation(fields: [lead_id], references: [id])
+
+  @@map("lead_activities")
+}
+
+enum ActivityType {
+  CHAT
+  CALL
+  MEETING_OFFLINE
+  MEETING_ONLINE
+}
+
+model LostDeal {
+  id          String      @id @default(uuid()) @db.Uuid
+  lead_id     String      @unique @db.Uuid
+  bd_id       String      @db.Uuid
+  stage_lost  LostStage
+  reason_type LostReason
+  lost_value  Decimal?    @db.Decimal(15, 2)
+  notes       String?     @db.Text
+  created_at  DateTime    @default(now())
+
+  // Relations
+  lead        Lead        @relation(fields: [lead_id], references: [id])
+  bd          User        @relation(fields: [bd_id], references: [id])
+
+  @@map("lost_deals")
+}
+
+enum LostStage {
+  PROSPECT
+  SAMPLE
+  NEGOTIATION
+}
+
+enum LostReason {
+  PRICE
+  QUALITY
+  COMPETITOR
+  GHOSTING
+  OTHER
+}
+
+model MarketingMetric {
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @db.Date
+  platform    AdPlatform
+  ad_spend    Decimal  @db.Decimal(15, 2)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+
+  @@index([date])
+  @@map("marketing_metrics")
+}
+
+enum AdPlatform {
+  META
+  TIKTOK
+  GOOGLE
+}
+
+model GuestLog {
+  id              String      @id @default(uuid()) @db.Uuid
+  visit_date      DateTime    @default(now())
+  client_name     String
+  bd_id           String      @db.Uuid
+  product_interest String?
+  moq_plan        Int?
+  category        GuestCategory
+
+  // Relations
+  bd              User        @relation(fields: [bd_id], references: [id])
+
+  @@map("guest_logs")
+}
+
+enum GuestCategory {
+  BRANDED
+  PEMULA
+}
+
+// ==============================================================
+// PLACEHOLDERS FOR BATCH 2 & 3 (RELATION PREPARATION)
+// ==============================================================
+
+model NewProductForm {
+  id          String   @id @default(uuid()) @db.Uuid
+  lead_id     String   @db.Uuid
+  product_name String
+  target_price Decimal  @db.Decimal(15, 2)
+  concept_notes String? @db.Text
+  status      NPFStatus @default(PENDING)
+  
+  lead        Lead      @relation(fields: [lead_id], references: [id])
+  samples     Sample[]
+
+  @@map("new_product_forms")
+}
+
+enum NPFStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model Sample {
+  id          String   @id @default(uuid()) @db.Uuid
+  npf_id      String   @db.Uuid
+  version     Int      @default(1)
+  rnd_id      String   @db.Uuid
+  status      SampleStatus @default(DEVELOPING)
+  created_at  DateTime @default(now())
+
+  npf         NewProductForm @relation(fields: [npf_id], references: [id])
+  rnd         User           @relation("RNDFormulator", fields: [rnd_id], references: [id])
+  feedbacks   SampleFeedback[]
+  formulas    Formula[]
+  registrations Registration[]
+  salesOrders   SalesOrder[]
+
+  @@map("samples")
+}
+
+enum SampleStatus {
+  DEVELOPING
+  SENT
+  REVISION
+  APPROVED
+}
+
+model SampleFeedback {
+  id          String   @id @default(uuid()) @db.Uuid
+  sample_id   String   @db.Uuid
+  feedback_text String @db.Text
+  created_at  DateTime @default(now())
+
+  sample      Sample   @relation(fields: [sample_id], references: [id])
+
+  @@map("sample_feedback")
+}
+
+model Formula {
+  id              String   @id @default(uuid()) @db.Uuid
+  sample_id       String   @db.Uuid
+  total_weight_gr Decimal  @db.Decimal(15, 3)
+  is_final        Boolean  @default(false)
+
+  sample          Sample   @relation(fields: [sample_id], references: [id])
+  items           FormulaItem[]
+
+  @@map("formulas")
+}
+
+model FormulaItem {
+  id              String   @id @default(uuid()) @db.Uuid
+  formula_id      String   @db.Uuid
+  materialId     String   @db.Uuid
+  dosage_percentage Decimal @db.Decimal(10, 5)
+  cost_snapshot   Decimal  @db.Decimal(15, 2)
+
+  formula         Formula  @relation(fields: [formula_id], references: [id])
+  material        Material @relation(fields: [materialId], references: [id])
+
+  @@map("formula_items")
+}
+
+model Registration {
+  id          String   @id @default(uuid()) @db.Uuid
+  lead_id     String   @db.Uuid
+  sample_id   String?  @db.Uuid
+  type        RegType
+  reg_number  String?
+  stage       RegStage @default(DOC_PREP)
+  expiry_date DateTime? @db.Date
+  legal_pic_id String   @db.Uuid
+
+  lead        Lead           @relation(fields: [lead_id], references: [id])
+  sample      Sample?        @relation(fields: [sample_id], references: [id])
+  legalPIC    User           @relation("LegalPIC", fields: [legal_pic_id], references: [id])
+
+  @@map("registrations")
+}
+
+enum RegType {
+  BPOM
+  HKI_BRAND
+  HKI_LOGO
+  HALAL
+}
+
+enum RegStage {
+  DOC_PREP
+  LAB_TEST
+  GOV_EVAL
+  DONE
+}
+
+model SalesOrder {
+  id            String      @id // Custom format or UUID
+  lead_id       String      @db.Uuid
+  sample_id     String      @db.Uuid
+  total_amount  Decimal     @db.Decimal(15, 2)
+  quantity      Int         @default(1)
+  status        SOStatus    @default(PENDING_DP)
+  created_at    DateTime    @default(now())
+
+  lead        Lead          @relation(fields: [lead_id], references: [id])
+  sample      Sample        @relation(fields: [sample_id], references: [id])
+  invoices    Invoice[]
+  workOrders  ProductionPlan[]
+  shipments   Shipment[]
+
+  @@map("sales_orders")
+}
+
+enum SOStatus {
+  PENDING_DP
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Invoice {
+  id          String      @id
+  so_id       String
+  type        InvoiceType
+  amount_due  Decimal     @db.Decimal(15, 2)
+  status      InvoiceStatus @default(UNPAID)
+  created_at  DateTime    @default(now())
+
+  so          SalesOrder  @relation(fields: [so_id], references: [id])
+  payments    Payment[]
+
+  @@map("invoices")
+}
+
+enum InvoiceType {
+  DP
+  FINAL_PAYMENT
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+model Payment {
+  id          String      @id @default(uuid()) @db.Uuid
+  invoice_id  String
+  verified_by String      @db.Uuid
+  amount_paid Decimal     @db.Decimal(15, 2)
+  payment_date DateTime    @default(now())
+
+  invoice     Invoice     @relation(fields: [invoice_id], references: [id])
+  verifier    User        @relation("FinanceVerifier", fields: [verified_by], references: [id])
+
+  @@map("payments")
+}
+
+// BATCH 3 PLACEHOLDERS
+
+model Material {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  type        MaterialType
+  unit        MaterialUnit
+  stock_qty   Decimal  @default(0) @db.Decimal(15, 3)
+  min_stock   Decimal  @default(10) @db.Decimal(15, 3)
+  unit_price  Decimal  @db.Decimal(15, 2)
+  deleted_at  DateTime? // Soft Delete
+
+  formulaItems FormulaItem[]
+  inboundItems InboundItem[]
+  requisitions MaterialRequisition[]
+
+  @@map("materials")
+}
+
+enum MaterialType {
+  RAW_MATERIAL
+  PACKAGING
+  OUTER_BOX
+  LABEL
+}
+
+enum MaterialUnit {
+  GR
+  KG
+  PCS
+  ML
+}
+
+model Supplier {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  category        String?
+  contact_person  String?
+
+  pos             PurchaseOrder[]
+
+  @@map("suppliers")
+}
+
+model PurchaseOrder {
+  id          String   @id
+  supplier_id String   @db.Uuid
+  scm_id      String   @db.Uuid
+  status      POStatus @default(ORDERED)
+  est_arrival DateTime? @db.Date
+
+  supplier    Supplier      @relation(fields: [supplier_id], references: [id])
+  scm         User          @relation("SCMProcessor", fields: [scm_id], references: [id])
+  inbounds    WarehouseInbound[]
+
+  @@map("purchase_orders")
+}
+
+enum POStatus {
+  ORDERED
+  SHIPPED
+  RECEIVED
+  CANCELLED
+}
+
+model WarehouseInbound {
+  id          String   @id @default(uuid()) @db.Uuid
+  po_id       String
+  status      InboundStatus @default(PENDING)
+  receivedAt DateTime @default(now())
+
+  po          PurchaseOrder @relation(fields: [po_id], references: [id])
+  items       InboundItem[]
+
+  @@map("warehouse_inbounds")
+}
+
+enum InboundStatus {
+  PENDING
+  APPROVED
+  CANCELLED
+}
+
+model InboundItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  inbound_id  String   @db.Uuid
+  materialId String   @db.Uuid
+  qty_actual  Decimal  @db.Decimal(15, 3)
+  is_quarantine Boolean @default(true)
+
+  inbound     WarehouseInbound @relation(fields: [inbound_id], references: [id])
+  material    Material         @relation(fields: [materialId], references: [id])
+
+  @@map("inbound_items")
+}
+
+model ProductionPlan { // Formally WorkOrder
+  id          String   @id @default(uuid()) @db.Uuid
+  so_id       String
+  admin_id    String   @db.Uuid
+  batch_no    String   @unique
+  status      ProdStatus @default(PLANNING)
+  
+  so          SalesOrder @relation(fields: [so_id], references: [id])
+  admin       User       @relation("ProdAdmin", fields: [admin_id], references: [id])
+  requisitions MaterialRequisition[]
+  stepLogs    ProductionStepLog[]
+  finishedGoods FinishedGood?
+
+  @@map("production_plans")
+}
+
+enum ProdStatus {
+  PLANNING
+  READY
+  ON_PROGRESS
+  DONE
+}
+
+model MaterialRequisition {
+  id          String   @id @default(uuid()) @db.Uuid
+  wo_id       String   @db.Uuid
+  materialId String   @db.Uuid
+  qty_requested Decimal @db.Decimal(15, 3)
+  qty_issued    Decimal @default(0) @db.Decimal(15, 3)
+
+  wo          ProductionPlan @relation(fields: [wo_id], references: [id])
+  material    Material       @relation(fields: [materialId], references: [id])
+
+  @@map("material_requisitions")
+}
+
+model ProductionStepLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  wo_id           String   @db.Uuid
+  stage           ProdStage
+  input_qty       Decimal  @db.Decimal(15, 3)
+  qty_result      Decimal  @db.Decimal(15, 3)
+  qty_reject      Decimal  @db.Decimal(15, 3)
+  qty_quarantine  Decimal  @db.Decimal(15, 3)
+  shrinkage_qty   Decimal  @default(0) @db.Decimal(15, 3)
+  created_at      DateTime @default(now())
+
+  wo              ProductionPlan @relation(fields: [wo_id], references: [id])
+  qcAudits        QCAudit[]
+
+  @@map("production_step_logs")
+}
+
+enum ProdStage {
+  BATCHING
+  MIXING
+  FILLING
+  PACKING
+}
+
+model QCAudit {
+  id              String   @id @default(uuid()) @db.Uuid
+  step_log_id     String   @db.Uuid
+  qc_id           String   @db.Uuid
+  status          QCStatus
+  notes           String?  @db.Text
+  created_at      DateTime @default(now())
+
+  stepLog         ProductionStepLog @relation(fields: [step_log_id], references: [id])
+  qc              User              @relation("QCOfficer", fields: [qc_id], references: [id])
+
+  @@map("qc_audits")
+}
+
+enum QCStatus {
+  PASS
+  FAIL
+  REWORK
+}
+
+model FinishedGood {
+  id          String   @id @default(uuid()) @db.Uuid
+  wo_id       String   @unique @db.Uuid
+  stock_qty   Int      @default(0)
+  expiry_date DateTime @db.Date
+
+  wo          ProductionPlan @relation(fields: [wo_id], references: [id])
+
+  @@map("finished_goods")
+}
+
+model Shipment {
+  id            String   @id
+  so_id         String
+  logistics_id  String   @db.Uuid
+  tracking_no   String?
+  status        ShipStatus @default(PACKING)
+  shipped_at    DateTime?
+  delivered_at  DateTime?
+
+  so            SalesOrder @relation(fields: [so_id], references: [id])
+  logistics     User       @relation("LogisticsOfficer", fields: [logistics_id], references: [id])
+
+  @@map("shipments")
+}
+
+enum ShipStatus {
+  PACKING
+  SHIPPED
+  DELIVERED
+}
+
+model RetentionEngine {
+  id          String   @id @default(uuid()) @db.Uuid
+  lead_id     String   @unique @db.Uuid
+  est_depletion_date DateTime?
+  status      RetentionStatus @default(WAITING)
+
+  lead        Lead     @relation(fields: [lead_id], references: [id])
+
+  @@map("retention_engine")
+}
+
+enum RetentionStatus {
+  WAITING
+  NOTIFIED
+  REORDERED
+  CHURNED
+}

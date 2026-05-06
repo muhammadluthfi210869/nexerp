@@ -1,0 +1,38 @@
+model User {
+  id               String           @id @default(uuid()) @db.Uuid
+  fullName         String?
+  email            String           @unique
+  passwordHash     String?
+  roles            UserRole[]
+  status           UserStatus       @default(ACTIVE)
+  managerPin       String? // Phase 2: Escalation PIN
+  approvalPin      String? // Internal E-Signature PIN (APJ/Legal)
+  createdAt        DateTime         @default(now())
+  deletedAt        DateTime?
+  stateTransitionLogs StateTransitionLog[] @relation("StateChanger")
+  bussdevProfile   BussdevStaff?
+  verifiedAds      DailyAdsMetric[] @relation("AdsVerifier")
+  lockedFormulas   Formula[]        @relation("FormulaLockedBy")
+  approvedFunds    FundRequest[]    @relation("FundApprover")
+  disbursedFunds   FundRequest[]    @relation("FundDisburser")
+  fundRequests     FundRequest[]    @relation("FundRequester")
+  guestLogs        GuestLog[]
+  labTests         LabTestResult[]
+  lostDeals        LostDeal[]
+  verifiedPayments Payment[]        @relation("FinanceVerifier")
+  prodPlans        ProductionPlan[] @relation("ProdAdmin")
+  scmPO            PurchaseOrder[]  @relation("SCMProcessor")
+  qcAudits         QCAudit[]        @relation("QCOfficer")
+  registrations    RegulatoryPipeline[]   @relation("LegalPIC")
+  leadsManaged     SalesLead[]      @relation("BDLeads")
+  salesTargets     SalesTarget[]
+  rndSamples       SampleRequest[]  @relation("RNDFormulator")
+  logistics        Shipment[]       @relation("LogisticsOfficer")
+  laborGrade       LaborGrade?
+  escalationsApproved AuditEscalation[] @relation("EscalationApprover")
+  employeeProfile  Employee?
+  approvedTickets  Ticket[]         @relation("TicketApprover")
+  authorizedPayrolls Payroll[]      @relation("PayrollApprover")
+
+  @@map("users")
+}

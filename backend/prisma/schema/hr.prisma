@@ -1,0 +1,159 @@
+model Employee {
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String?               @unique @db.Uuid
+  name            String
+  baseSalary      String?               // Encrypted (AES-256-GCM)
+  joinedAt        DateTime
+  contractEnd     DateTime?
+  contractType    ContractType          @default(CONTRACT)
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  
+  user            User?                 @relation(fields: [userId], references: [id])
+  roles           EmployeeRoleMapping[]
+  kpiScores       KpiScore[]
+  kpiPointLogs    KpiPointLog[]
+  attendances     Attendance[]
+  tickets         Ticket[]
+  payrollItems    PayrollItem[]
+
+  @@map("employees")
+}
+
+model EmployeeRoleMapping {
+  id         String   @id @default(uuid()) @db.Uuid
+  employeeId String   @db.Uuid
+  division   Division
+  roleName   String
+  weight     Decimal  @db.Decimal(3, 2) // e.g., 0.80 for 80%
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("employee_role_mappings")
+}
+
+model KpiMetricDefinition {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventCode   String   @unique // e.g., SO_PAID, QC_REJECT
+  label       String
+  points      Float    // e.g., 10 or -5
+  division    Division
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("kpi_metric_definitions")
+}
+
+model KpiPointLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  employeeId  String   @db.Uuid
+  metricCode  String
+  points      Float
+  
+  // Explicit Foreign Keys for standard relational integrity
+  soId        String?  @db.Uuid
+  planId      String?  @db.Uuid
+  qcAuditId   String?  @db.Uuid
+  
+  salesOrder  SalesOrder?     @relation(fields: [soId], references: [id])
+  prodPlan    ProductionPlan? @relation(fields: [planId], references: [id])
+  qcAudit     QCAudit?        @relation(fields: [qcAuditId], references: [id])
+  
+  metadata    Json?    // Contextual data
+  createdAt   DateTime @default(now())
+  
+  employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("kpi_point_logs")
+}
+
+model KpiScore {
+  id               String   @id @default(uuid()) @db.Uuid
+  employeeId       String   @db.Uuid
+  periodId         String   @db.Uuid
+  period           FinancialPeriod @relation(fields: [periodId], references: [id])
+  finalScore       Float
+  subjectiveScore  Float?   // The 30% part
+  objectiveScore   Float?   // The 70% part
+  metricsData      Json
+  createdAt        DateTime @default(now())
+  
+  employee         Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("kpi_scores")
+}
+
+model Attendance {
+  id             String           @id @default(uuid()) @db.Uuid
+  employeeId     String           @db.Uuid
+  clockIn        DateTime
+  clockOut       DateTime?
+  lat            Float
+  lng            Float
+  distanceFromFactory Float       // In meters
+  photoPath      String?
+  status         AttendanceStatus @default(ON_TIME)
+  createdAt      DateTime         @default(now())
+  
+  employee       Employee         @relation(fields: [employeeId], references: [id])
+
+  @@map("attendances")
+}
+
+model Ticket {
+  id             String         @id @default(uuid()) @db.Uuid
+  employeeId     String         @db.Uuid
+  type           TicketType
+  status         TicketStatus   @default(PENDING)
+  reason         String
+  startDate      DateTime
+  endDate        DateTime?
+  amount         String?        // Encrypted (for Reimbursement)
+  attachmentPath String?
+  authorizedById String?        @db.Uuid
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  employee       Employee       @relation(fields: [employeeId], references: [id])
+  approver       User?          @relation("TicketApprover", fields: [authorizedById], references: [id])
+
+  @@map("tickets")
+}
+
+model Payroll {
+  id               String        @id @default(uuid()) @db.Uuid
+  periodId         String        @db.Uuid
+  period           FinancialPeriod @relation(fields: [periodId], references: [id])
+  status           PayrollStatus @default(DRAFT)
+  totalDisbursement String?      // Encrypted total
+  authorizedById   String?       @db.Uuid
+  authorizedAt     DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  
+  approver         User?         @relation("PayrollApprover", fields: [authorizedById], references: [id])
+  items            PayrollItem[]
+
+  @@map("payrolls")
+}
+
+model PayrollItem {
+  id             String   @id @default(uuid()) @db.Uuid
+  payrollId      String   @db.Uuid
+  employeeId     String   @db.Uuid
+  baseSalary     String   // Encrypted
+  kpiIncentive   String   // Encrypted
+  deductions     String   // Encrypted
+  netSalary      String   // Encrypted
+  createdAt      DateTime @default(now())
+  
+  payroll        Payroll  @relation(fields: [payrollId], references: [id])
+  employee       Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("payroll_items")
+}

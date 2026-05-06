@@ -1,0 +1,94 @@
+
+> frontend@0.1.0 lint
+> eslint
+
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\debug-login.mjs
+  30:12  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\commercial\page.tsx
+  66:0  error  Parsing error: Declaration or statement expected
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\production-floor\page.tsx
+   5:29  warning  'CardHeader' is defined but never used          @typescript-eslint/no-unused-vars
+  19:20  warning  'useMemo' is defined but never used             @typescript-eslint/no-unused-vars
+  20:33  warning  'DialogHeader' is defined but never used        @typescript-eslint/no-unused-vars
+  20:47  warning  'DialogTitle' is defined but never used         @typescript-eslint/no-unused-vars
+  20:60  warning  'DialogFooter' is defined but never used        @typescript-eslint/no-unused-vars
+  59:24  warning  'isLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\production-planning\page.tsx
+  71:45  warning  'plansLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\qc\page.tsx
+  24:33  warning  'DialogHeader' is defined but never used  @typescript-eslint/no-unused-vars
+  24:47  warning  'DialogTitle' is defined but never used   @typescript-eslint/no-unused-vars
+  24:60  warning  'DialogFooter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\rnd\page.tsx
+  11:3   warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+  22:33  warning  'DialogHeader' is defined but never used  @typescript-eslint/no-unused-vars
+  22:47  warning  'DialogTitle' is defined but never used   @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\super-admin\page.tsx
+  13:3   warning  'LayoutDashboard' is defined but never used               @typescript-eslint/no-unused-vars
+  16:3   warning  'Cpu' is defined but never used                           @typescript-eslint/no-unused-vars
+  21:10  warning  'Card' is defined but never used                          @typescript-eslint/no-unused-vars
+  21:16  warning  'CardContent' is defined but never used                   @typescript-eslint/no-unused-vars
+  21:29  warning  'CardHeader' is defined but never used                    @typescript-eslint/no-unused-vars
+  21:41  warning  'CardTitle' is defined but never used                     @typescript-eslint/no-unused-vars
+  21:52  warning  'CardDescription' is defined but never used               @typescript-eslint/no-unused-vars
+  32:10  warning  'activeDepartment' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  32:28  warning  'setActiveDepartment' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\dashboard\warehouse\page.tsx
+  60:39  warning  'materialsLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\marketing\dashboard\page.tsx
+  13:22  warning  'Search' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\login\page.tsx
+  4:10  warning  'useRouter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\page.tsx
+  3:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\components\commercial\retention-radar.tsx
+  19:3  warning  'ExternalLink' is defined but never used  @typescript-eslint/no-unused-vars
+  20:3  warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\components\layout\Sidebar.tsx
+  9:3  warning  'ArrowRightLeft' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\components\marketing\PlatformAuditCard.tsx
+  3:27  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\components\rnd\formula-builder.tsx
+   15:10  warning  'Table' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   15:17  warning  'TableBody' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   15:28  warning  'TableCell' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   15:39  warning  'TableHead' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   15:50  warning  'TableHeader' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   15:63  warning  'TableRow' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   42:51  warning  'setValue' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   42:74  warning  'errors' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   66:16  warning  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  101:14  warning  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  208:36  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\components\rnd\formula-builder.tsx:208:36
+  206 |                        <p className="text-[10px] text-zinc-500">Vol:</p>
+  207 |                        <p className="text-xs font-mono font-bold text-emerald-500">
+> 208 |                          {((Number(watch(`items.${index}.dosage_percentage`)) || 0) / 100 * (Number(watch("total_weight_gr")) || 0)).toFixed(4)}g
+      |                                    ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  209 |                        </p>
+  210 |                     </div>
+  211 |                     <div className="col-span-1 flex justify-end">  react-hooks/incompatible-library
+
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\tests\e2e\workflow.spec.ts
+  8:11  warning  'productName' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 44 problems (1 error, 43 warnings)
+

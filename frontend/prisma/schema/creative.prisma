@@ -1,0 +1,71 @@
+model DesignTask {
+  id              String           @id @default(uuid()) @db.Uuid
+  leadId          String           @db.Uuid
+  soId            String?          @db.Uuid
+  brief           String
+  kanbanState     DesignState      @default(INBOX)
+  
+  // Stats & Interlocks
+  revisionCount   Int              @default(0)
+  isLocked        Boolean          @default(false)
+  isFinal         Boolean          @default(false)
+  
+  // SLA
+  slaDeadline     DateTime?
+  
+  // Final Assets (LOCKED state only)
+  finalArtworkUrl String?
+  finalMockupUrl  String?
+  
+  // Timestamps
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // Relations
+  lead            SalesLead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  salesOrder      SalesOrder?      @relation(fields: [soId], references: [id])
+  versions        DesignVersion[]
+  feedbacks       DesignFeedback[]
+
+  @@map("design_tasks")
+}
+
+model DesignVersion {
+  id              String       @id @default(uuid()) @db.Uuid
+  taskId          String       @db.Uuid
+  versionNumber   Int
+  
+  // Assets
+  artworkUrl      String?      // The High-Res Master File
+  mockupUrl       String?      // The visual preview
+  
+  // Tech Specs (Tab A/B)
+  printSpecs      Json?        // Finishing, Paper Type, etc.
+  
+  createdAt       DateTime     @default(now())
+  uploadedBy      String?      @db.Uuid
+  
+  task            DesignTask   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("design_versions")
+}
+
+model DesignFeedback {
+  id              String          @id @default(uuid()) @db.Uuid
+  taskId          String          @db.Uuid
+  fromDivision    Division
+  authorId        String          @db.Uuid
+  
+  content         String?
+  approvalStatus  ApprovalStatus?
+  
+  // Legal E-Signature (PIN verification meta)
+  signatureHash   String?         // Hash of the PIN + Meta
+  ipAddress       String?
+  
+  createdAt       DateTime        @default(now())
+  
+  task            DesignTask      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("design_feedbacks")
+}

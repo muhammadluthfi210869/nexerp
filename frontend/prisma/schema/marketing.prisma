@@ -1,0 +1,81 @@
+model DailyAdsMetric {
+  id             String        @id @default(uuid()) @db.Uuid
+  date           DateTime      @db.Date
+  platform       TrafficSource
+  spend          Decimal       @db.Decimal(15, 2)
+  impressions    Int           @default(0)
+  reach          Int           @default(0)
+  clicks         Int           @default(0)
+  leadsGenerated Int           @default(0)
+  campaignName   String?
+  isAudited      Boolean       @default(false)
+  auditedById    String?       @db.Uuid
+  auditedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  verifier       User?         @relation("AdsVerifier", fields: [auditedById], references: [id])
+
+  @@unique([date, platform, campaignName])
+  @@map("daily_ads_metrics")
+}
+
+model MarketingTarget {
+  id              String   @id @default(uuid()) @db.Uuid
+  month           Int
+  year            Int
+  leadTarget      Int      @default(0)
+  postTarget      Int      @default(0)
+  revenueTarget   Decimal  @default(0) @db.Decimal(15, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  clientAcqTarget Int      @default(0)
+  sampleTarget    Int      @default(0)
+  spendTarget     Decimal  @default(0) @db.Decimal(15, 2)
+
+  @@unique([month, year])
+  @@map("marketing_targets")
+}
+
+model ContentAsset {
+  id             String          @id @default(uuid()) @db.Uuid
+  publishDate    DateTime        @db.Date
+  platform       TrafficSource
+  contentPillar  ContentCategory
+  title          String
+  url            String?
+  views          Int             @default(0)
+  likes          Int             @default(0)
+  comments       Int             @default(0)
+  shares         Int             @default(0)
+  saves          Int             @default(0)
+  engagementRate Decimal         @default(0) @db.Decimal(5, 2)
+  auditStatus    String          @default("PENDING")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("content_assets")
+}
+
+model AccountHealthLog {
+  id             String        @id @default(uuid()) @db.Uuid
+  platform       TrafficSource
+  totalFollowers Int           @default(0)
+  followerGrowth Int           @default(0)
+  unfollows      Int           @default(0)
+  totalReach     Int           @default(0)
+  profileVisits  Int           @default(0)
+  postsCount     Int           @default(0)
+  storiesCount   Int           @default(0)
+  avgStoryViews  Int           @default(0)
+  likesCount     Int           @default(0)
+  commentsCount  Int           @default(0)
+  savesCount     Int           @default(0)
+  sharesCount    Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  weekNumber     Int
+  year           Int
+
+  @@unique([year, weekNumber, platform])
+  @@map("account_health_logs")
+}

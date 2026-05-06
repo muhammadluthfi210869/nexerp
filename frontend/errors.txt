@@ -1,0 +1,32 @@
+﻿.next/types/validator.ts(456,39): error TS2307: Cannot find module '../../src/app/page.js' or its corresponding type declarations.
+src/app/(dashboard)/executive/command-center/page.tsx(95,17): error TS18048: 'metrics.outstandingAR' is possibly 'undefined'.
+src/app/(dashboard)/executive/command-center/page.tsx(99,11): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/(dashboard)/executive/command-center/page.tsx(108,17): error TS18048: 'metrics.defectRate' is possibly 'undefined'.
+src/app/(dashboard)/logistics/outbound/page.tsx(201,17): error TS2339: Property 'truck' does not exist on type 'JSX.IntrinsicElements'.
+src/app/(dashboard)/master/customers/page.tsx(302,102): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/master/customers/page.tsx(313,107): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/master/goods/page.tsx(303,107): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/master/goods/page.tsx(349,113): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/master/goods/page.tsx(360,109): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/master/suppliers/page.tsx(235,101): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/production/terminal/page.tsx(120,23): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(dashboard)/production/work-orders/page.tsx(109,26): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
+src/app/(dashboard)/production/work-orders/page.tsx(125,69): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/rnd/dashboard/page.tsx(351,18): error TS2532: Object is possibly 'undefined'.
+src/app/(dashboard)/rnd/dashboard/page.tsx(351,71): error TS18048: 'samples' is possibly 'undefined'.
+src/app/(dashboard)/rnd/pipeline/page.tsx(376,100): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/app/(dashboard)/warehouse/inbound/page.tsx(132,77): error TS2322: Type 'unknown' is not assignable to type 'string'.
+src/app/(dashboard)/warehouse/inbound/page.tsx(189,77): error TS2322: Type 'unknown' is not assignable to type 'string'.

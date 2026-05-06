@@ -1,0 +1,134 @@
+model LegalStaff {
+  id    String       @id @default(uuid()) @db.Uuid
+  name  String
+  role  String       @default("LEGAL_OFFICER")
+  bpoms BpomRecord[]
+  hkis  HkiRecord[]
+
+  @@map("legal_staffs")
+}
+
+model HkiRecord {
+  id              String         @id @default(uuid()) @db.Uuid
+  hkiId           String         @unique
+  brandName       String
+  type            String
+  clientName      String
+  picId           String         @db.Uuid
+  applicationDate DateTime
+  expiryDate      DateTime?
+  stage           HkiStage
+  status          LegalStatus
+  auditRisk       AuditRiskLevel
+  pic             LegalStaff     @relation(fields: [picId], references: [id])
+
+  @@map("hki_records")
+}
+
+model BpomRecord {
+  id              String         @id @default(uuid()) @db.Uuid
+  bpomId          String         @unique
+  productName     String
+  category        String
+  clientName      String
+  picId           String         @db.Uuid
+  applicationDate DateTime
+  expiryDate      DateTime?
+  stage           BpomStage
+  status          LegalStatus
+  auditRisk       AuditRiskLevel
+  pic             LegalStaff     @relation(fields: [picId], references: [id])
+
+  @@map("bpom_records")
+}
+
+model LegalTimelineLog {
+  id            String   @id @default(uuid())
+  recordId      String
+  recordType    String
+  action        String
+  previousStage String?
+  newStage      String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  staffName     String
+
+  @@map("legal_timeline_logs")
+}
+
+model InternalAudit {
+  id                  String    @id @default(uuid()) @db.Uuid
+  area                String
+  auditDate           DateTime
+  parameterChecklist  Json
+  findings            String?
+  remediationDeadline DateTime?
+  status              String    @default("PENDING")
+  picId               String    @db.Uuid
+  createdAt           DateTime  @default(now())
+
+  @@map("internal_audits")
+}
+model RegulatoryPipeline {
+  id              String         @id @default(uuid()) @db.Uuid
+  leadId          String         @db.Uuid
+  sampleRequestId String?        @db.Uuid
+  type            RegType
+  currentStage    RegStage       @default(DRAFT)
+  pnbpStatus      Boolean        @default(false)
+  registrationNo  String?
+  expiryDate      DateTime?
+  daysInStage     Int            @default(0)
+  logHistory      Json           @default("[]")
+  legalPicId      String         @db.Uuid
+  materialItemId  String?        @db.Uuid
+  formulaId       String?        @db.Uuid
+
+  lead            SalesLead      @relation(fields: [leadId], references: [id])
+  sampleRequest   SampleRequest? @relation(fields: [sampleRequestId], references: [id])
+  formula         Formula?       @relation(fields: [formulaId], references: [id])
+  legalPic        User           @relation("LegalPIC", fields: [legalPicId], references: [id])
+  materialItem    MaterialItem?  @relation(fields: [materialItemId], references: [id])
+  artworkReviews  ArtworkReview[]
+  pnbpRequests    PNBPRequest[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("regulatory_pipelines")
+}
+
+model ArtworkReview {
+  id               String             @id @default(uuid()) @db.Uuid
+  pipelineId       String             @db.Uuid
+  designerPicId    String             @db.Uuid
+  artworkUrl       String
+  claimRisk        ClaimRisk          @default(LOW)
+  notes            String?
+  isApproved       Boolean            @default(false)
+  approvedAt       DateTime?
+  approvedById     String?            @db.Uuid
+  pipeline         RegulatoryPipeline @relation(fields: [pipelineId], references: [id])
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@map("artwork_reviews")
+}
+
+model PNBPRequest {
+  id              String             @id @default(uuid()) @db.Uuid
+  pipelineId      String             @db.Uuid
+  amount          Decimal
+  billingCode     String?
+  proofOfBilling  String?
+  isPaid          Boolean            @default(false)
+  paidAt          DateTime?
+  financeRecordId String?            @db.Uuid
+  pipeline        RegulatoryPipeline @relation(fields: [pipelineId], references: [id])
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@map("pnbp_requests")
+}

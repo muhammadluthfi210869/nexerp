@@ -1,0 +1,18 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  try {
+    const count = await prisma.user.count();
+    console.log('--- CONNECTION SUCCESSFUL! ---');
+    console.log('User Count:', count);
+  } catch (err) {
+    console.error('--- CONNECTION FAILED! ---');
+    console.error(err);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+main();

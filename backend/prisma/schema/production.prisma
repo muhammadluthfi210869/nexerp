@@ -1,0 +1,339 @@
+model ProductionPlan {
+  id               String                @id @default(uuid()) @db.Uuid
+  soId             String                @db.Uuid
+  adminId          String                @db.Uuid
+  batchNo          String                @unique
+  status           LifecycleStatus       @default(PLANNING)
+  apjStatus        ApprovalStatus        @default(WAITING)
+  apjNotes         String?
+  apjReleasedAt    DateTime?
+  apjSignatureUrl  String?
+  finishedGoods    FinishedGood?
+  isFirstPass           Boolean                @default(true)
+  formulaId       String?         @db.Uuid
+  formula         Formula?        @relation(fields: [formulaId], references: [id])
+  requisitions          MaterialRequisition[]
+  logs                  ProductionLog[]       @relation("PlanLogs")
+  deletedAt             DateTime?
+  admin                 User                  @relation("ProdAdmin", fields: [adminId], references: [id])
+  so                    SalesOrder            @relation(fields: [soId], references: [id], onDelete: Cascade)
+  stepLogs              ProductionStepLog[]
+  rejectExecutions      RejectExecution[]
+  copqRecords           COPQRecord[]
+  escalations           AuditEscalation[]
+  workOrders            WorkOrder[]
+  journalEntries        JournalEntry[]
+  kpiLogs               KpiPointLog[]
+
+  @@index([soId, status])
+  @@map("production_plans")
+}
+
+model MaterialRequisition {
+  id           String            @id @default(uuid()) @db.Uuid
+  reqNumber    String?           @unique
+  woId         String?           @db.Uuid
+  workOrderId  String?           @db.Uuid
+  materialId   String            @db.Uuid
+  qtyRequested Decimal           @db.Decimal(15, 3)
+  qtyIssued    Decimal           @default(0) @db.Decimal(15, 3)
+  status       RequisitionStatus @default(PENDING)
+  material     MaterialItem      @relation(fields: [materialId], references: [id])
+  fulfillments RequisitionFulfillment[]
+  wo           ProductionPlan?   @relation(fields: [woId], references: [id])
+  workOrder    WorkOrder?        @relation(fields: [workOrderId], references: [id])
+  journalEntries JournalEntry[]
+
+  @@map("material_requisitions")
+}
+
+model RequisitionFulfillment {
+  id            String              @id @default(uuid()) @db.Uuid
+  requisitionId String              @db.Uuid
+  inventoryId   String              @db.Uuid
+  qtyIssued     Decimal             @db.Decimal(15, 3)
+  createdAt     DateTime            @default(now())
+  
+  requisition   MaterialRequisition @relation(fields: [requisitionId], references: [id])
+  inventory     MaterialInventory   @relation(fields: [inventoryId], references: [id])
+
+  @@map("requisition_fulfillments")
+}
+
+model ProductionStepLog {
+  id            String         @id @default(uuid()) @db.Uuid
+  woId          String         @db.Uuid
+  stage         ProdStage
+  inputQty      Decimal        @db.Decimal(15, 3)
+  qtyResult     Decimal        @db.Decimal(15, 3)
+  qtyReject     Decimal        @db.Decimal(15, 3)
+  qtyQuarantine Decimal        @db.Decimal(15, 3)
+  shrinkageQty  Decimal        @default(0) @db.Decimal(15, 3)
+  createdAt     DateTime       @default(now())
+  wo            ProductionPlan @relation(fields: [woId], references: [id])
+
+  @@map("production_step_logs")
+}
+
+model QCAudit {
+  id             String        @id @default(uuid()) @db.Uuid
+  stepLogId      String        @db.Uuid
+  qcId           String        @db.Uuid
+  status         QCStatus
+  notes          String?
+  phValue        Decimal?      @db.Decimal(5, 2)
+  viscosityValue Int?
+  organoleptic   Boolean?
+  samplingVolume Decimal?      @db.Decimal(10, 2)
+  inkjetCheck    Boolean?
+  sealingCheck   Boolean?
+  createdAt      DateTime      @default(now())
+  qc             User          @relation("QCOfficer", fields: [qcId], references: [id])
+  stepLog        ProductionLog @relation(fields: [stepLogId], references: [id])
+  kpiLogs        KpiPointLog[]
+
+  @@index([stepLogId, status])
+  @@map("qc_audits")
+}
+
+model FinishedGood {
+  id        String          @id @default(uuid()) @db.Uuid
+  woId      String?         @unique @db.Uuid
+  stockQty  Decimal         @default(0) @db.Decimal(15, 3)
+  updatedAt DateTime        @updatedAt
+  wo        ProductionPlan? @relation(fields: [woId], references: [id])
+
+  @@map("finished_goods")
+}
+
+model WorkOrder {
+  id               String                @id @default(uuid()) @db.Uuid
+  leadId           String                @db.Uuid
+  planId           String?               @db.Uuid
+  woNumber         String                @unique
+  targetQty        Int
+  stage            LifecycleStatus       @default(WAITING_MATERIAL)
+  targetCompletion DateTime
+  actualCompletion DateTime?
+  actualCogs       Decimal?              @db.Decimal(15, 2)
+  targetHpp        Decimal               @default(0) @db.Decimal(15, 2)
+  deliveryOrder    DeliveryOrder?
+  invoices         Invoice[]
+  requisitions     MaterialRequisition[]
+  logs             ProductionLog[]
+  schedules        ProductionSchedule[]
+  deletedAt        DateTime?
+  lead             SalesLead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  plan             ProductionPlan?       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  returns          MaterialReturn[]
+
+  @@index([stage])
+  @@index([targetCompletion])
+  @@map("work_orders")
+}
+
+model MaterialReturn {
+  id           String        @id @default(uuid()) @db.Uuid
+  workOrderId  String        @db.Uuid
+  materialId   String        @db.Uuid
+  qtyReturned  Decimal       @db.Decimal(15, 3)
+  reason       String?
+  status       String        @default("PENDING") // PENDING, RECEIVED
+  createdAt    DateTime      @default(now())
+  workOrder    WorkOrder     @relation(fields: [workOrderId], references: [id])
+  material     MaterialItem  @relation(fields: [materialId], references: [id])
+  @@map("material_returns")
+}
+
+model Machine {
+  id               String               @id @default(uuid()) @db.Uuid
+  name             String
+  type             MachineType
+  capacityPerBatch Decimal              @db.Decimal(15, 2)
+  isActive         Boolean              @default(true)
+  lastService      DateTime?
+  costPerHour      Decimal              @default(0) @db.Decimal(15, 2)
+  productionLogs   ProductionLog[]
+  schedules        ProductionSchedule[]
+
+  @@map("machines")
+}
+
+model LaborRate {
+  id         String     @id @default(uuid()) @db.Uuid
+  grade      LaborGrade @unique
+  hourlyRate Decimal    @db.Decimal(15, 2)
+  updatedAt  DateTime   @updatedAt
+
+  @@map("labor_rates")
+}
+
+model ProductionSchedule {
+  id              String    @id @default(uuid()) @db.Uuid
+  scheduleNumber  String    @unique
+  workOrderId     String    @db.Uuid
+  machineId       String    @db.Uuid
+  stage           ProdStage
+  startTime       DateTime
+  endTime         DateTime
+  targetQty       Int       @default(0)
+  resultQty       Int       @default(0)
+  upscalePercent  Decimal?  @db.Decimal(5, 2)
+  upscaleResult   Decimal?  @db.Decimal(15, 2)
+  notes           String?
+  status          String    @default("SCHEDULED")
+  machine         Machine   @relation(fields: [machineId], references: [id])
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id])
+  stepDetails     ProductionStepDetail[]
+
+  @@map("production_schedules")
+}
+
+/// Per-stage formula/component tracking (Mixing formula, Filling components, Packing materials)
+model ProductionStepDetail {
+  id              String              @id @default(uuid()) @db.Uuid
+  scheduleId      String              @db.Uuid
+  materialId      String              @db.Uuid
+  materialCode    String?
+  concentration   Decimal?            @db.Decimal(10, 4)
+  qtyTheoretical  Decimal             @db.Decimal(15, 3)
+  qtyAvailable    Decimal?            @db.Decimal(15, 3)
+  qtyActual       Decimal?            @db.Decimal(15, 3)
+  category        String              @default("RAW")  /// RAW | BULK | KEMASAN_PRIMER | KEMASAN_SEKUNDER
+  notes           String?
+  material        MaterialItem        @relation(fields: [materialId], references: [id])
+  schedule        ProductionSchedule  @relation(fields: [scheduleId], references: [id])
+
+  @@map("production_step_details")
+}
+
+model ProductionLog {
+  id              String          @id @default(uuid()) @db.Uuid
+  logNumber       String?         @unique
+  workOrderId     String?         @db.Uuid
+  planId          String?         @db.Uuid
+  stage           LifecycleStatus
+  inputQty        Decimal         @db.Decimal(15, 2)
+  goodQty         Decimal         @db.Decimal(15, 2)
+  quarantineQty   Decimal         @db.Decimal(15, 2)
+  rejectQty       Decimal         @db.Decimal(15, 2)
+  shrinkageQty    Decimal         @default(0) @db.Decimal(15, 2)
+  startTime       DateTime?
+  endTime         DateTime?
+  loggedAt        DateTime        @default(now())
+  machineId       String?         @db.Uuid
+  operatorId      String?         @db.Uuid
+  operator        User?           @relation("ProductionOperator", fields: [operatorId], references: [id])
+  downtimeMinutes Int             @default(0)
+  notes           String?
+  laborCost       Decimal?        @db.Decimal(15, 2)
+  overheadCost    Decimal?        @db.Decimal(15, 2)
+  actualLaborRate   Decimal?      @db.Decimal(10, 2)
+  actualMachineRate Decimal?      @db.Decimal(10, 2)
+  /// Snapshot value of the material/result at the time of log
+  unitValueAtTransaction Decimal? @db.Decimal(15, 2)
+  /// Link to specific material batch being consumed or produced
+  materialInventoryId String?     @db.Uuid
+  machineParams   Json?           @db.JsonB
+  machine         Machine?        @relation(fields: [machineId], references: [id])
+  materialInventory MaterialInventory? @relation(fields: [materialInventoryId], references: [id])
+  plan            ProductionPlan? @relation("PlanLogs", fields: [planId], references: [id])
+  workOrder       WorkOrder?      @relation(fields: [workOrderId], references: [id])
+  qcAudits        QCAudit[]
+
+  @@index([loggedAt])
+  @@index([stage])
+  @@index([workOrderId])
+  @@map("production_logs")
+}
+
+model DeliveryOrder {
+  id             String        @id @default(uuid()) @db.Uuid
+  workOrderId    String        @unique @db.Uuid
+  trackingNumber String?
+  courierName    String?
+  shippedAt      DateTime      @default(now())
+  status         String        @default("SHIPPED")
+  workOrder      WorkOrder     @relation(fields: [workOrderId], references: [id])
+  invoice        Invoice?      @relation("DeliveryOrderInvoice")
+
+  @@map("delivery_orders")
+}
+
+// DEPRECATED: Replaced by unified Invoice
+// model FinalInvoice { ... }
+
+model RejectExecution {
+  id            String         @id @default(uuid()) @db.Uuid
+  planId        String         @db.Uuid
+  materialId    String?        @db.Uuid
+  qty           Decimal        @db.Decimal(15, 3)
+  action        String
+  lossAccountId String?        @db.Uuid
+  evidenceUrl   String?
+  executedAt    DateTime       @default(now())
+  lossAccount   Account?       @relation("LossAccount", fields: [lossAccountId], references: [id])
+  material      MaterialItem?  @relation(fields: [materialId], references: [id])
+  plan          ProductionPlan @relation(fields: [planId], references: [id])
+
+  @@map("reject_executions")
+}
+
+model Shipment {
+  id           String         @id @default(uuid()) @db.Uuid
+  soId         String         @db.Uuid
+  logisticsId  String         @db.Uuid
+  trackingNo   String?
+  status       ShipStatus     @default(PACKING)
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  evidenceUrl  String?
+  notes        String?
+  items        ShipmentItem[]
+  logistics    User           @relation("LogisticsOfficer", fields: [logisticsId], references: [id])
+  so           SalesOrder     @relation(fields: [soId], references: [id])
+
+  @@map("shipments")
+}
+
+model ShipmentItem {
+  id         String       @id @default(uuid()) @db.Uuid
+  shipmentId String       @db.Uuid
+  materialId String       @db.Uuid
+  qtyOrder   Decimal      @db.Decimal(15, 2)
+  qtyShipped Decimal      @db.Decimal(15, 2)
+  material   MaterialItem @relation(fields: [materialId], references: [id])
+  shipment   Shipment     @relation(fields: [shipmentId], references: [id])
+
+  @@map("shipment_items")
+}
+
+model COPQRecord {
+  id             String         @id @default(uuid()) @db.Uuid
+  planId         String         @db.Uuid
+  materialLoss   Decimal        @db.Decimal(15, 2)
+  laborLoss      Decimal        @db.Decimal(15, 2)
+  overheadLoss   Decimal        @db.Decimal(15, 2)
+  totalLoss      Decimal        @db.Decimal(15, 2)
+  reason         String?
+  journalEntryId String?        @db.Uuid
+  createdAt      DateTime       @default(now())
+  plan           ProductionPlan @relation(fields: [planId], references: [id])
+  journalEntry   JournalEntry?  @relation(fields: [journalEntryId], references: [id])
+
+  @@map("copq_records")
+}
+
+model AuditEscalation {
+  id             String         @id @default(uuid()) @db.Uuid
+  type           EscalationType
+  referenceId    String
+  planId         String?        @db.Uuid
+  reason         String
+  approvedById   String         @db.Uuid
+  createdAt      DateTime       @default(now())
+  approvedBy     User           @relation("EscalationApprover", fields: [approvedById], references: [id])
+  plan           ProductionPlan? @relation(fields: [planId], references: [id])
+
+  @@map("audit_escalations")
+}

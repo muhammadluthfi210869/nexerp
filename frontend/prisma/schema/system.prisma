@@ -1,0 +1,63 @@
+model SystemOverrideLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  documentId     String
+  documentType   String
+  gateType       String
+  reason         String
+  authorizedById String   @db.Uuid
+  createdAt      DateTime @default(now())
+
+  @@map("system_override_logs")
+}
+
+model SalesTarget {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  month         Int
+  year          Int
+  nominalTarget Decimal  @db.Decimal(15, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, month, year])
+  @@map("sales_targets")
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  value     String
+  group     String   @default("GENERAL")
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+model StateTransitionLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  entityType     String // e.g., "SALES_ORDER", "SAMPLE_REQUEST"
+  entityId       String
+  fromState      String?
+  toState        String
+  changedById    String?  @db.Uuid
+  reason         String?
+  metadata       Json? // For storing snapshots of critical data during transition
+  createdAt      DateTime @default(now())
+  
+  changedBy      User?    @relation("StateChanger", fields: [changedById], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("state_transition_logs")
+}
+
+model SystemSequence {
+  id        String   @id @default(uuid()) @db.Uuid
+  prefix    String
+  period    String   // YYMM format
+  lastValue Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([prefix, period])
+  @@map("system_sequences")
+}

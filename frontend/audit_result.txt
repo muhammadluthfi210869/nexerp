@@ -1,0 +1,67 @@
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles: 
+[2m[WebServer] [22m   * C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\package-lock.json
+[2m[WebServer] [22m
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata themeColor is configured in metadata export in /login. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata viewport is configured in metadata export in /login. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › tests\e2e\performance-audit.spec.ts:25:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens
+[1A[2K[chromium] › tests\e2e\performance-audit.spec.ts:25:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens
+Logging in...
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata themeColor is configured in metadata export in /login. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Unsupported metadata viewport is configured in metadata export in /login. Please move it to viewport export instead.
+[2m[WebServer] [22mRead more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+
+[1A[2KLogin failed! Capturing screenshot... page.waitForURL: Timeout 15000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until "load"
+============================================================
+
+[1A[2K  1) [chromium] › tests\e2e\performance-audit.spec.ts:25:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+      35 |       await page.click('button[type="submit"]');
+      36 |       
+    > 37 |       await page.waitForURL(/.*\/(dashboard|warehouse|finance|hub|terminal)/, { timeout: 15000 });
+         |                  ^
+      38 |       console.log('Login successful. Starting audit...');
+      39 |     } catch (e: any) {
+      40 |       console.log('Login failed! Capturing screenshot...', e.message);
+        at C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\tests\e2e\performance-audit.spec.ts:37:18
+
+    Error Context: test-results\performance-audit-Phase-1--36c6c-s-for-stuck-loading-screens-chromium\error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › tests\e2e\performance-audit.spec.ts:25:7 › Phase 1: Full ERP Loading Audit (X-Ray) › Audit all modules for stuck loading screens 

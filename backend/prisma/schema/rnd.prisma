@@ -1,0 +1,200 @@
+model RndStaff {
+  id                String          @id @default(uuid()) @db.Uuid
+  name              String
+  specialty         String
+  isActive          Boolean         @default(true)
+  maxWeeklyCapacity Int             @default(5)
+  sampleRequests    SampleRequest[]
+
+  @@map("rnd_staffs")
+}
+
+model SampleRequest {
+  id                  String           @id @default(uuid()) @db.Uuid
+  sampleCode          String           @unique
+  leadId              String           @db.Uuid
+  productName         String
+  targetFunction      String
+  textureReq          String
+  colorReq            String
+  aromaReq            String
+  version             Int              @default(1)
+  stage               SampleStage      @default(QUEUE)
+  picId               String?          @db.Uuid
+  requestedAt         DateTime         @default(now())
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @default(now()) @updatedAt
+  completedAt         DateTime?
+  feedback            String?
+  latestRevisionDate  DateTime?
+  revisionCount       Int              @default(0)
+  suggestDesign       String?
+  suggestPackaging    String?
+  suggestValue        String?
+  difficultyLevel     Int              @default(1)
+  pnfFileUrl          String?
+  currentExpectations String?
+  feedbackHistory     Json?            @default("[]")
+  courierName         String?
+  trackingNumber      String?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  clientRating        Int?
+  clientComment       String?
+  paymentProofUrl     String?
+  paymentApprovedAt   DateTime?
+  paymentApprovedById String?          @db.Uuid
+  paymentApprovedBy   User?            @relation("PaymentApprovedBy", fields: [paymentApprovedById], references: [id])
+  isApprovedByClient  Boolean          @default(false)
+  targetDeadline      DateTime?        @db.Date
+  targetHpp           Decimal?         @db.Decimal(15, 2)
+  rejectionReason     String?          @db.VarChar(100)
+  npfId               String?          @db.Uuid
+  rndId               String?          @db.Uuid
+  billOfMaterials     BillOfMaterial[]
+  formulas            Formula[]
+  registrations       RegulatoryPipeline[]
+  salesOrderItems     SalesOrderItem[]
+  salesOrders         SalesOrder[]
+  feedbacks           SampleFeedback[]
+  lead                SalesLead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  npf                 NewProductForm?  @relation(fields: [npfId], references: [id])
+  pic                 RndStaff?        @relation(fields: [picId], references: [id])
+  rnd                 User?            @relation("RNDFormulator", fields: [rndId], references: [id])
+  revisions           SampleRevision[]
+  stageLogs           SampleStageLog[]
+
+  @@index([stage, leadId])
+  @@map("sample_requests")
+}
+
+model SampleStageLog {
+  id              String        @id @default(uuid()) @db.Uuid
+  sampleRequestId String        @db.Uuid
+  stage           SampleStage
+  enteredAt       DateTime      @default(now())
+  leftAt          DateTime?
+  durationDays    Float?
+  notes           String?
+  rejectionReason String?       @db.VarChar(100)
+  sampleRequest   SampleRequest @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
+
+  @@map("sample_stage_logs")
+}
+
+model Formula {
+  id              String          @id @default(uuid()) @db.Uuid
+  formulaCode     String          @unique
+  sampleRequestId String          @db.Uuid
+  version         Int             @default(1)
+  createdAt       DateTime        @default(now())
+  lockedById      String?         @db.Uuid
+  targetYieldGram Decimal         @default(1000.000) @db.Decimal(15, 3)
+  updatedAt       DateTime        @default(now()) @updatedAt
+  status          FormulaStatus   @default(DRAFT)
+  phases          FormulaPhase[]
+  lockedBy        User?           @relation("FormulaLockedBy", fields: [lockedById], references: [id])
+  sampleRequest   SampleRequest   @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
+  labTestResults  LabTestResult[]
+  qcParameters    QCParameter?
+  registrations   RegulatoryPipeline[]
+  productionPlans ProductionPlan[]
+
+  @@map("formulas")
+}
+
+model FormulaPhase {
+  id           String        @id @default(uuid()) @db.Uuid
+  formulaId    String        @db.Uuid
+  prefix       String
+  customName   String?
+  instructions String?
+  order        Int
+  items        FormulaItem[]
+  formula      Formula       @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+
+  @@map("formula_phases")
+}
+
+model FormulaItem {
+  id               String        @id @default(uuid()) @db.Uuid
+  materialId       String?       @db.Uuid
+  dosagePercentage Decimal       @db.Decimal(10, 5)
+  costSnapshot     Decimal?      @db.Decimal(15, 2)
+  phaseId          String        @db.Uuid
+  material         MaterialItem? @relation(fields: [materialId], references: [id])
+  phase            FormulaPhase  @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@map("formula_items")
+}
+
+model QCParameter {
+  id              String  @id @default(uuid()) @db.Uuid
+  formulaId       String  @unique @db.Uuid
+  targetPh        String?
+  targetViscosity String?
+  targetColor     String?
+  targetAroma     String?
+  appearance      String?
+  formula         Formula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+
+  @@map("qc_parameters")
+}
+
+model SampleFeedback {
+  id              String        @id @default(uuid()) @db.Uuid
+  sampleRequestId String        @db.Uuid
+  feedbackText    String
+  createdAt       DateTime      @default(now())
+  sampleRequest   SampleRequest @relation(fields: [sampleRequestId], references: [id])
+
+  @@map("sample_feedback")
+}
+
+model SampleRevision {
+  id              String        @id @default(uuid()) @db.Uuid
+  sampleRequestId String        @db.Uuid
+  revisionNumber  Int
+  status          String        @default("PENDING")
+  feedback        String?
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  materialItemId  String?       @db.Uuid
+  materialItem    MaterialItem? @relation(fields: [materialItemId], references: [id])
+  sampleRequest   SampleRequest @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
+
+  @@unique([sampleRequestId, revisionNumber])
+  @@map("sample_revisions")
+}
+
+model BillOfMaterial {
+  id              String        @id @default(uuid()) @db.Uuid
+  sampleId        String        @db.Uuid
+  materialId      String        @db.Uuid
+  quantityPerUnit Decimal       @db.Decimal(15, 2)
+  material        MaterialItem  @relation(fields: [materialId], references: [id])
+  sample          SampleRequest @relation(fields: [sampleId], references: [id])
+
+  @@map("bill_of_materials")
+}
+
+model LabTestResult {
+  id              String   @id @default(uuid()) @db.Uuid
+  formulaId       String   @db.Uuid
+  testDate        DateTime @default(now())
+  testerId        String?  @db.Uuid
+  actualPh        String?
+  actualViscosity String?
+  actualDensity   String?
+  colorResult     String?
+  aromaResult     String?
+  textureResult   String?
+  stability40C    String?
+  stabilityRT     String?
+  stability4C     String?
+  notes           String?
+  formula         Formula  @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+  tester          User?    @relation(fields: [testerId], references: [id])
+
+  @@map("lab_test_results")
+}

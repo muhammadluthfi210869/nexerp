@@ -1,0 +1,14 @@
+﻿src/app/(dashboard)/master/suppliers/page.tsx(143,25): error TS2345: Argument of type '{ name: string; contact: string; phone: string; email: string; address: string; term_of_payment: number; categoryId: string; }' is not assignable to parameter of type 'SetStateAction<{ name: string; contact: string; phone: string; email: string; address: string; province: string; city: string; district: string; addressDetail: string; term_of_payment: number; categoryId: string; }>'.
+  Type '{ name: string; contact: string; phone: string; email: string; address: string; term_of_payment: number; categoryId: string; }' is missing the following properties from type '{ name: string; contact: string; phone: string; email: string; address: string; province: string; city: string; district: string; addressDetail: string; term_of_payment: number; categoryId: string; }': province, city, district, addressDetail
+src/app/(dashboard)/production/schedules/page.tsx(159,27): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(dashboard)/production/schedules/page.tsx(170,27): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(dashboard)/production/work-orders/page.tsx(147,25): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.

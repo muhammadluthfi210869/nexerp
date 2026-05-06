@@ -1,0 +1,234 @@
+model Invoice {
+  id                String          @id @default(uuid()) @db.Uuid
+  invoiceNumber     String          @unique
+  category          InvoiceCategory
+  type              InvoiceType     @default(FINAL_PAYMENT)
+  status            InvoiceStatus   @default(UNPAID)
+  amountDue         Decimal         @db.Decimal(15, 2)
+  outstandingAmount Decimal         @db.Decimal(15, 2)
+  issuedAt          DateTime        @default(now())
+  dueDate           DateTime
+  paidAt            DateTime?
+  soId              String?         @db.Uuid
+  poId              String?         @db.Uuid
+  workOrderId       String?         @db.Uuid
+  deliveryOrderId   String?         @unique @db.Uuid
+  supplierId        String?         @db.Uuid
+  attachmentUrls    String[]        @default([])
+  notes             String?
+  description       String?
+  deletedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  so                SalesOrder?     @relation(fields: [soId], references: [id])
+  po                PurchaseOrder?  @relation(fields: [poId], references: [id])
+  supplier          Supplier?       @relation(fields: [supplierId], references: [id])
+  workOrder         WorkOrder?      @relation(fields: [workOrderId], references: [id])
+  deliveryOrder     DeliveryOrder?  @relation("DeliveryOrderInvoice", fields: [deliveryOrderId], references: [id])
+  payments          Payment[]
+  journalEntries    JournalEntry[]
+
+  @@index([soId, status])
+  @@map("unified_invoices")
+}
+
+model Account {
+  id                    String            @id @default(uuid()) @db.Uuid
+  code                  String            @unique
+  name                  String
+  isActive              Boolean           @default(true)
+  type                  AccountType
+  normalBalance         NormalBalance
+  parentId              String?           @db.Uuid
+  reclassifyToAccountId String?           @db.Uuid
+  reportGroup           ReportGroup?      @default(OTHER_EXPENSE)
+  parent                Account?          @relation("AccountTree", fields: [parentId], references: [id])
+  children              Account[]         @relation("AccountTree")
+  reclassifyToAccount   Account?          @relation("Reclassification", fields: [reclassifyToAccountId], references: [id])
+  reclassifiedFrom      Account[]         @relation("Reclassification")
+  journalLines          JournalLine[]
+  taxLines              JournalLine[]     @relation("TaxAccount")
+  goodsInventory        MaterialItem[]    @relation("InventoryAccount")
+  goodsSales            MaterialItem[]    @relation("SalesAccount")
+  paymentAccounts       Payment[]         @relation("PaymentAccount")
+  lossAccounts          RejectExecution[] @relation("LossAccount")
+  adjustmentAccounts    StockAdjustment[] @relation("AdjustmentAccount")
+
+  @@map("accounts")
+}
+
+model FinancialPeriod {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String       @unique
+  startDate DateTime
+  endDate   DateTime
+  status    PeriodStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  summaryLedgers FinancialSummaryLedger[]
+  payrolls       Payroll[]
+  kpiScores      KpiScore[]
+
+  @@map("financial_periods")
+}
+
+model StockAdjustment {
+  id          String                @id @default(uuid()) @db.Uuid
+  date        DateTime              @default(now())
+  warehouseId String                @db.Uuid
+  type        String
+  accountId   String                @db.Uuid
+  notes       String?
+  items       StockAdjustmentItem[]
+  account     Account               @relation("AdjustmentAccount", fields: [accountId], references: [id])
+  warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
+  journalEntries JournalEntry[]
+
+  @@map("stock_adjustments")
+}
+
+model StockAdjustmentItem {
+  id           String          @id @default(uuid()) @db.Uuid
+  adjustmentId String          @db.Uuid
+  materialId   String          @db.Uuid
+  qty          Decimal         @db.Decimal(15, 2)
+  adjustment   StockAdjustment @relation(fields: [adjustmentId], references: [id])
+  material     MaterialItem    @relation(fields: [materialId], references: [id])
+
+  @@map("stock_adjustment_items")
+}
+
+model JournalEntry {
+  id                 String              @id @default(uuid()) @db.Uuid
+  date               DateTime
+  reference          String?
+  description        String
+  attachmentUrls     String[]
+  sourceDocumentType SourceDocumentType?
+  
+  // Explicit Foreign Keys for standard relational integrity
+  soId               String?             @db.Uuid
+  poId               String?             @db.Uuid
+  paymentId          String?             @db.Uuid
+  adjustmentId       String?             @db.Uuid
+  returnId           String?             @db.Uuid
+  purchaseReturnId   String?             @db.Uuid
+  planId             String?             @db.Uuid
+  requisitionId      String?             @db.Uuid
+  invoiceId          String?             @db.Uuid
+  
+  salesOrder         SalesOrder?         @relation(fields: [soId], references: [id])
+  purchaseOrder      PurchaseOrder?      @relation(fields: [poId], references: [id])
+  payment            Payment?            @relation("PaymentToJournal", fields: [paymentId], references: [id])
+  stockAdjustment    StockAdjustment?    @relation(fields: [adjustmentId], references: [id])
+  salesReturn        SalesReturn?        @relation(fields: [returnId], references: [id])
+  purchaseReturn     PurchaseReturn?     @relation(fields: [purchaseReturnId], references: [id])
+  productionPlan     ProductionPlan?     @relation(fields: [planId], references: [id])
+  requisition        MaterialRequisition? @relation(fields: [requisitionId], references: [id])
+  invoice            Invoice?            @relation(fields: [invoiceId], references: [id])
+  stockOpnames       StockOpname[]
+  copqRecords        COPQRecord[]
+  lines              JournalLine[]
+
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id           String       @id @default(uuid()) @db.Uuid
+  journalId    String       @db.Uuid
+  accountId    String       @db.Uuid
+  debit        Decimal      @default(0) @db.Decimal(15, 2)
+  credit       Decimal      @default(0) @db.Decimal(15, 2)
+  taxAccountId String?      @db.Uuid
+  taxRate      Decimal      @default(0) @db.Decimal(5, 2)
+  account      Account      @relation(fields: [accountId], references: [id])
+  journal      JournalEntry @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  taxAccount   Account?     @relation("TaxAccount", fields: [taxAccountId], references: [id])
+
+  @@map("journal_lines")
+}
+
+// DEPRECATED: Replaced by unified Invoice
+// model Invoice { ... }
+// model Bill { ... }
+
+model Payment {
+  id                 String   @id @default(uuid()) @db.Uuid
+  invoiceId          String   @db.Uuid
+  verifiedBy         String   @db.Uuid
+  amountPaid         Decimal  @db.Decimal(15, 2)
+  paymentDate        DateTime @default(now())
+  receiptFileUrl     String?
+  receivingAccountId String?  @db.Uuid
+  attachmentUrls     String[]
+  deletedAt          DateTime?
+  invoice            Invoice  @relation(fields: [invoiceId], references: [id])
+  receivingAccount   Account? @relation("PaymentAccount", fields: [receivingAccountId], references: [id])
+  verifier           User     @relation("FinanceVerifier", fields: [verifiedBy], references: [id])
+  journalEntries     JournalEntry[] @relation("PaymentToJournal")
+
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+model FundRequest {
+  id             String            @id @default(uuid()) @db.Uuid
+  requesterId    String            @db.Uuid
+  departmentId   String
+  amount         Decimal           @db.Decimal(15, 2)
+  reason         String
+  status         FundRequestStatus @default(PENDING_APPROVAL_MGR)
+  attachmentUrls String[]
+  approvedById   String?           @db.Uuid
+  disbursedById  String?           @db.Uuid
+  rejectReason   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  approver       User?             @relation("FundApprover", fields: [approvedById], references: [id])
+  disburser      User?             @relation("FundDisburser", fields: [disbursedById], references: [id])
+  requester      User              @relation("FundRequester", fields: [requesterId], references: [id])
+
+  @@map("fund_requests")
+}
+
+model TaxRate {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @unique // e.g., "PPN 11%", "PPH 23"
+  rate         Decimal  @db.Decimal(5, 2)
+  isActive     Boolean  @default(true)
+  description  String?
+  
+  soEntries    SalesOrder[]
+  soItemEntries SalesOrderItem[]
+  poItemEntries PurchaseOrderItem[]
+  
+  @@map("master_tax_rates")
+}
+
+model Currency {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique // e.g., "IDR", "USD"
+  symbol       String?
+  exchangeRate Decimal  @default(1.0) @db.Decimal(15, 4)
+  isMain       Boolean  @default(false)
+  
+  pos          PurchaseOrder[]
+  sos          SalesOrder[]
+  
+  @@map("master_currencies")
+}
+
+/// Specialized ledger for high-performance executive dashboards.
+/// Stores aggregated figures to maintain confidentiality and query speed.
+model FinancialSummaryLedger {
+  id             String          @id @default(uuid()) @db.Uuid
+  periodId       String          @db.Uuid
+  category       String // e.g., "TOTAL_PAYROLL", "TOTAL_REVENUE", "COGS_TOTAL"
+  nominalValue   Decimal         @db.Decimal(18, 2)
+  currencyCode   String          @default("IDR")
+  lastCalculated DateTime        @default(now())
+  period         FinancialPeriod @relation(fields: [periodId], references: [id])
+
+  @@unique([periodId, category, currencyCode])
+  @@map("financial_summary_ledger")
+}
