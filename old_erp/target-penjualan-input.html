@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GsERP KIL - Buat Target Penjualan</title>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="57x57" href="/assets/favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/assets/favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/assets/favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/assets/favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/assets/favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/assets/favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/assets/favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"
+        href="/assets/favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/assets/favicon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/assets/favicon/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="/assets/plugins/fontawesome-free/css/all.min.css">
+    <!-- flag-icon-css -->
+    <link rel="stylesheet" href="/assets/plugins/flag-icon-css/css/flag-icon.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="/assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet"
+        href="/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="/assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="/assets/plugins/select2/css/select2.min.css">
+    <link rel="stylesheet"
+        href="/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+    <!-- Lightbox -->
+    <link rel="stylesheet" href="/assets/plugins/ekko-lightbox/ekko-lightbox.css">
+    <!-- daterange picker -->
+    <link rel="stylesheet" href="/assets/plugins/daterangepicker/daterangepicker.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet"
+        href="/assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="/assets/plugins/summernote/summernote-bs4.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Full Calendar -->
+    <link rel="stylesheet" href="/assets/plugins/fullcalendar/main.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/assets/css/adminlte.min.css">
+    <!-- User style -->
+    <!-- Custom CSS for sales_target module -->
+    <style>
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+        <!-- Preloader -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            <img class="animation__shake" src="/uploads&#x2F;default.png"
+                alt="Logo" height="60" width="60">
+        </div>
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i
+                            class="fas fa-bars"></i></a></li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="javascript:;"> <i class="fas fa-clock"></i> <span
+                            class="digital-clock">00:00:00</span>
+                    </a></li>
+                <!-- Language Dropdown Menu
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="flag-icon flag-icon-us"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right p-0">
+                        <a href="/locale&#x2F;en" class="dropdown-item active">
+                            <i class="flag-icon flag-icon-us mr-2"></i> English
+                        </a>
+                        <a href="/locale&#x2F;id" class="dropdown-item">
+                            <i class="flag-icon flag-icon-id mr-2"></i> Indonesia
+                        </a>
+                    </div>
+                </li> -->
+                <li class="nav-item dropdown user-menu"><a href="#" class="nav-link dropdown-toggle"
+                        data-toggle="dropdown"> <img
+                            src="/uploads&#x2F;default.png"
+                            class="user-image img-circle elevation-2" alt="Zaki&#x20;"> <span
+                            class="d-none d-md-inline">Zaki </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <!-- User image -->
+                        <li class="user-header bg-primary"><img
+                                src="/uploads&#x2F;default.png"
+                                class="img-circle elevation-2" alt="Zaki&#x20;">
+
+                            <p>
+                                Zaki <small>Administrator</small>
+                            </p>
+                        </li>
+                        <li class="user-footer">
+                            <a href="/account"
+                                class="btn btn-default btn-flat btn-block"><i class="fas fa-user"></i> Akun Saya</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" data-widget="fullscreen" href="#" role="button"> <i
+                            class="fas fa-expand-arrows-alt"></i>
+                    </a></li>
+
+                <li class="nav-item"><a class="nav-link" href="javascript:;" role="button"
+                        onclick="uriAlert('https\x3A\x2F\x2Fkil.gserp.id\x2Fauth\x2Flogout')"> <i
+                            class="fas fa-power-off"></i>
+                    </a></li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="/" class="brand-link"> <img
+                    src="/uploads&#x2F;default.png" alt="Logo"
+                    class="brand-image img-circle elevation-3" style="opacity: .8"> <span
+                    class="brand-text font-weight-light">GsERP KIL</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- SidebarSearch Form -->
+                <div class="form-inline mt-2">
+                    <div class="input-group" data-widget="sidebar-search">
+                        <input class="form-control form-control-sidebar" type="search" placeholder="Search"
+                            aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-sidebar">
+                                <i class="fas fa-search fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview"
+                        role="menu" data-accordion="false">
+                        <li class="nav-item"><a href="/" class="nav-link">
+                                <i class="nav-icon fas fa-home"></i>
+                                <p>Beranda</p>
+                            </a></li>
+                        <li class="nav-header">Dasbor</li>
+                        <li class="nav-item"><a
+                                href="/dashboard-production-schedule"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calendar"></i>
+                                <p>
+                                    D. Jadwal Produksi <span id="side_menu_1001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="/dashboard-production-realization"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calendar-check"></i>
+                                <p>
+                                    D. Realisasi Produksi <span id="side_menu_1002"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/dashboard-sales-sample"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-line"></i>
+                                <p>
+                                    D. Penjualan Sample <span id="side_menu_1003"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/dashboard-sales-product"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-bar"></i>
+                                <p>
+                                    D. Penjualan Barang <span id="side_menu_1004"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/dashboard-customer"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-area"></i>
+                                <p>
+                                    D. Pelanggan <span id="side_menu_1005" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/dashboard-sample"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-chart-pie"></i>
+                                <p>
+                                    D. Sample <span id="side_menu_1006" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Master</li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-users-cog"></i>
+                                <p>
+                                    Kelola Pengguna <i class="right fas fa-angle-left"></i> <span id="side_menu_2001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/role-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-key nav-icon"></i>
+                                        <p>
+                                            Hak Akses <span id="side_menu_2002" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/user-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-secret nav-icon"></i>
+                                        <p>
+                                            Pengguna <span id="side_menu_2003" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-book"></i>
+                                <p>
+                                    Kelola CoA <i class="right fas fa-angle-left"></i> <span id="side_menu_2111"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/coa-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-project-diagram nav-icon"></i>
+                                        <p>
+                                            CoA <span id="side_menu_2112" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/coa-auto-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-external-link-alt nav-icon"></i>
+                                        <p>
+                                            CoA Jurnal Otomatis <span id="side_menu_2113"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-warehouse"></i>
+                                <p>
+                                    Kelola Gudang <i class="right fas fa-angle-left"></i> <span id="side_menu_2121"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/warehouse-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-building nav-icon"></i>
+                                        <p>
+                                            Gudang <span id="side_menu_2122" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/warehouse-access-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-house-user nav-icon"></i>
+                                        <p>
+                                            Hak Akses Gudang <span id="side_menu_2123"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-box"></i>
+                                <p>
+                                    Kelola Barang <i class="right fas fa-angle-left"></i> <span id="side_menu_2131"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/goods-category-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-box-open nav-icon"></i>
+                                        <p>
+                                            Kategori Barang <span id="side_menu_2132"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/goods-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-boxes nav-icon"></i>
+                                        <p>
+                                            Barang <span id="side_menu_2133" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-user-friends"></i>
+                                <p>
+                                    Kelola Supplier <i class="right fas fa-angle-left"></i> <span id="side_menu_2141"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/supplier-category-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-lock nav-icon"></i>
+                                        <p>
+                                            Kategori Supplier <span id="side_menu_2142"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/supplier-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-users nav-icon"></i>
+                                        <p>
+                                            Supplier <span id="side_menu_2143" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-address-book"></i>
+                                <p>
+                                    Kelola Pelanggan <i class="right fas fa-angle-left"></i> <span id="side_menu_2151"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/customer-category-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-shield nav-icon"></i>
+                                        <p>
+                                            Kategori Pelanggan <span id="side_menu_2152"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/customer-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-tie nav-icon"></i>
+                                        <p>
+                                            Pelanggan <span id="side_menu_2153" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/customer-my-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-users nav-icon"></i>
+                                        <p>
+                                            Pelanggan Saya <span id="side_menu_2154"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview menu-open">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link active">
+                                <i class="nav-icon fa&#x20;fa-chart-line"></i>
+                                <p>
+                                    Kelola Penjualan <i class="right fas fa-angle-left"></i> <span id="side_menu_2161"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/sales-category"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-tags nav-icon"></i>
+                                        <p>
+                                            Kategori Penjualan <span id="side_menu_2162"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/sales-target"
+                                        class="nav-link active">
+                                        <i class="fa&#x20;fa-bullseye nav-icon"></i>
+                                        <p>
+                                            Target Penjualan <span id="side_menu_2163"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-header">Persetujuan</li>
+                        <li class="nav-item"><a href="/purchase-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cart-arrow-down"></i>
+                                <p>
+                                    Pembelian ~ <span id="side_menu_3001" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/purchase-return-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-step-backward"></i>
+                                <p>
+                                    Retur Pembelian ~ <span id="side_menu_3002" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/sales-sample-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-shopping-bag"></i>
+                                <p>
+                                    Penjualan Sample ~ <span id="side_menu_3003"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/sales-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-luggage-cart"></i>
+                                <p>
+                                    Penjualan Produk ~ <span id="side_menu_3004"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/sales-return-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-step-forward"></i>
+                                <p>
+                                    Retur Penjualan ~ <span id="side_menu_3005" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/request-cogs-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-dollar-sign"></i>
+                                <p>
+                                    Permintaan HPP ~ <span id="side_menu_3006" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a
+                                href="/purchase-request-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-thumbtack"></i>
+                                <p>
+                                    Permintaan Pembelian ~ <span id="side_menu_3007"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/goods-request-approval"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-thumbs-up"></i>
+                                <p>
+                                    Permintaan Barang ~ <span id="side_menu_3008"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Umum</li>
+                        <li class="nav-item"><a href="/checklist-progress"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-check-double"></i>
+                                <p>
+                                    Checklist Progress <span id="side_menu_4001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/checklist-tracking"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-check-circle"></i>
+                                <p>
+                                    Checklist Tracking <span id="side_menu_4002"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/checklist"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-clipboard-list"></i>
+                                <p>
+                                    Checklist <span id="side_menu_4003" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/checklist-category"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-tags"></i>
+                                <p>
+                                    Kategori Checklist <span id="side_menu_4004"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/todolist"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-tasks"></i>
+                                <p>
+                                    Todolist <span id="side_menu_4005" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Operasional</li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cart-plus"></i>
+                                <p>
+                                    Pembelian <i class="right fas fa-angle-left"></i> <span id="side_menu_5001"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/purchase"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-cart-arrow-down nav-icon"></i>
+                                        <p>
+                                            Buat Pembelian <span id="side_menu_5002"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/purchase-invoice"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                        <p>
+                                            Faktur Pembelian <span id="side_menu_5003"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/purchase-return"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-step-backward nav-icon"></i>
+                                        <p>
+                                            Retur Pembelian <span id="side_menu_5004"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/purchase-down-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            DP Pembelian <span id="side_menu_5005"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/purchase-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Bayar Pembelian <span id="side_menu_5006"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="/need-for-goods"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cubes"></i>
+                                <p>
+                                    Kebutuhan Barang <span id="side_menu_5011" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/goods-request"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-clipboard-list"></i>
+                                <p>
+                                    Permintaan Barang <span id="side_menu_5012" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/purchase-request"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-thumbtack"></i>
+                                <p>
+                                    Permintaan Pembelian <span id="side_menu_5013"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-angle-double-right"></i>
+                                <p>
+                                    Barang Masuk <i class="right fas fa-angle-left"></i> <span id="side_menu_5101"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/purchase-in"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-truck-loading nav-icon"></i>
+                                        <p>
+                                            Pembelian Masuk <span id="side_menu_5102"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/sales-return-in"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-undo nav-icon"></i>
+                                        <p>
+                                            Retur Penjualan <span id="side_menu_5103"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-angle-double-left"></i>
+                                <p>
+                                    Barang Keluar <i class="right fas fa-angle-left"></i> <span id="side_menu_5104"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/goods-transfer"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-sync nav-icon"></i>
+                                        <p>
+                                            Transfer Barang <span id="side_menu_5105"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/delivery-out"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-truck-moving nav-icon"></i>
+                                        <p>
+                                            Pengiriman Barang <span id="side_menu_5106"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/purchase-return-out"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-undo nav-icon"></i>
+                                        <p>
+                                            Retur Pembelian <span id="side_menu_5107"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="/stock-opname"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-clipboard-check"></i>
+                                <p>
+                                    Stok Opname <span id="side_menu_5108" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/guest-book"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-address-book"></i>
+                                <p>
+                                    Buku Tamu <span id="side_menu_5151" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/follow-up-customer"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-user-check"></i>
+                                <p>
+                                    Follow Up Pelanggan <span id="side_menu_5152"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-luggage-cart"></i>
+                                <p>
+                                    Penjualan <i class="right fas fa-angle-left"></i> <span id="side_menu_5201"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/sales-sample"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-shopping-bag nav-icon"></i>
+                                        <p>
+                                            Penjualan Sample <span id="side_menu_5202"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/sales-sample-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Bayar Sample <span id="side_menu_5203"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/sales"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-luggage-cart nav-icon"></i>
+                                        <p>
+                                            Penjualan <span id="side_menu_5211" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/sales-return"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-step-forward nav-icon"></i>
+                                        <p>
+                                            Retur Penjualan <span id="side_menu_5212"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/sales-down-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            DP Penjualan <span id="side_menu_5213"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/sales-invoice"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Faktur Penjualan <span id="side_menu_5214"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/sales-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                        <p>
+                                            Bayar Penjualan <span id="side_menu_5215"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calendar"></i>
+                                <p>
+                                    Pra Produksi <i class="right fas fa-angle-left"></i> <span id="side_menu_5301"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/formulation-manage"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vials nav-icon"></i>
+                                        <p>
+                                            Kelola Formulasi <span id="side_menu_5302"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/formulation"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vial nav-icon"></i>
+                                        <p>
+                                            Formulasi <span id="side_menu_5303" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/request-cogs"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-dollar-sign nav-icon"></i>
+                                        <p>
+                                            Permintaan HPP <span id="side_menu_5304"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/batch-record"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-barcode nav-icon"></i>
+                                        <p>
+                                            Batch Record <span id="side_menu_5305"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/schedule-mixing"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vial nav-icon"></i>
+                                        <p>
+                                            Jadwal Mixing <span id="side_menu_5306"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/schedule-filling"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-wine-bottle nav-icon"></i>
+                                        <p>
+                                            Jadwal Filling <span id="side_menu_5307"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/schedule-packaging"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-box-tissue nav-icon"></i>
+                                        <p>
+                                            Jadwal Packaging <span id="side_menu_5308"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/formulation-adjustment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-sliders-h nav-icon"></i>
+                                        <p>
+                                            Penyesuaian Formulasi <span id="side_menu_7005"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-industry"></i>
+                                <p>
+                                    Produksi <i class="right fas fa-angle-left"></i> <span id="side_menu_5401"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/production-mixing"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-vial nav-icon"></i>
+                                        <p>
+                                            Produksi Mixing <span id="side_menu_5402"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/production-filling"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-wine-bottle nav-icon"></i>
+                                        <p>
+                                            Produksi Filling <span id="side_menu_5403"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/production-packaging"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-box-tissue nav-icon"></i>
+                                        <p>
+                                            Produksi Packaging <span id="side_menu_5404"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-calculator"></i>
+                                <p>
+                                    Akuntansi <i class="right fas fa-angle-left"></i> <span id="side_menu_5701"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/general-journal"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-contract nav-icon"></i>
+                                        <p>
+                                            Jurnal Umum <span id="side_menu_5702"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/other-payment"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                        <p>
+                                            Kas Bank Keluar <span id="side_menu_5703"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a href="/other-deposit"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-hand-holding-usd nav-icon"></i>
+                                        <p>
+                                            Kas Bank Masuk <span id="side_menu_5704"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="/stock-adjustment"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-boxes"></i>
+                                <p>
+                                    Penyesuaian Stok <span id="side_menu_5801" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-header">Laporan</li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-boxes"></i>
+                                <p>
+                                    Laporan Persediaan <i class="right fas fa-angle-left"></i> <span id="side_menu_6101"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a href="/report-stock"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-cubes nav-icon"></i>
+                                        <p>
+                                            Stok <span id="side_menu_6102" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/report-mutation-goods"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-random nav-icon"></i>
+                                        <p>
+                                            Mutasi Barang <span id="side_menu_6103"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-users"></i>
+                                <p>
+                                    Laporan BusDev <i class="right fas fa-angle-left"></i> <span id="side_menu_6201"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/report-guest-book"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-address-book nav-icon"></i>
+                                        <p>
+                                            Buku Tamu <span id="side_menu_6202" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/report-follow-up-customer"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-user-check nav-icon"></i>
+                                        <p>
+                                            Follow Up Pelanggan <span id="side_menu_6203"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-file-invoice-dollar"></i>
+                                <p>
+                                    Laporan Keuangan <i class="right fas fa-angle-left"></i> <span id="side_menu_6801"
+                                        class="badge badge-danger right"></span>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item"><a
+                                        href="/report-general-ledger"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-alt nav-icon"></i>
+                                        <p>
+                                            Buku Besar <span id="side_menu_6802"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/report-profit-loss"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                        <p>
+                                            Laba Rugi <span id="side_menu_6803" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/report-trial-balance"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-balance-scale nav-icon"></i>
+                                        <p>
+                                            Neraca Saldo <span id="side_menu_6804"
+                                                class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                                <li class="nav-item"><a
+                                        href="/report-balance-sheet"
+                                        class="nav-link">
+                                        <i class="fa&#x20;fa-file-contract nav-icon"></i>
+                                        <p>
+                                            Neraca <span id="side_menu_6805" class="badge badge-danger right"></span>
+                                        </p>
+                                    </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-header">Pengaturan</li>
+                        <li class="nav-item"><a href="/account"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-user"></i>
+                                <p>
+                                    Akun Saya <span id="side_menu_7001" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/company"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-building"></i>
+                                <p>
+                                    Perusahaan <span id="side_menu_7002" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/setting"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-cogs"></i>
+                                <p>
+                                    Pengaturan <span id="side_menu_7003" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                        <li class="nav-item"><a href="/activity-log"
+                                class="nav-link">
+                                <i class="nav-icon fa&#x20;fa-history"></i>
+                                <p>
+                                    Catatan Aktifitas <span id="side_menu_7004" class="badge badge-danger right"></span>
+                                </p>
+                            </a></li>
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0 text-dark">Buat Target Penjualan</h1>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a
+                                        href="/">Beranda</a></li>
+                                <li class="breadcrumb-item">Kelola Penjualan</li>
+                                <li class="breadcrumb-item active">Buat Target Penjualan</li>
+                            </ol>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+            <!-- /.content-header -->
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <form action="/sales-target/create" class="form-horizontal" id="GSForm"
+                        method="post" accept-charset="utf-8">
+                        <input type="hidden" name="csrf_gs" value="696f4e338108547bc1f3f2ee03f0d001">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="overlay" id="cardLoading">
+                                        <span class="spinner-grow"></span>
+                                    </div>
+                                    <div class="card-header">
+                                        <h3 class="card-title">Buat Target Penjualan</h3>
+                                    </div>
+                                    <div class="card-body">
+
+                                        <h5 class="text-primary mb-3"><i class="fas fa-bullseye"></i> Informasi Target
+                                        </h5>
+                                        <div class="form-group row">
+                                            <label for="users_id" class="col-sm-3 col-form-label">Marketing <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="gs-field col-sm-9">
+                                                <select class="form-control select2" name="users_id" id="users_id"
+                                                    data-placeholder="Pilih Marketing" required>
+                                                    <option value=""></option>
+                                                    <option value="1">
+                                                        Super Admin </option>
+                                                    <option value="2">
+                                                        Fadilah Syahab </option>
+                                                    <option value="3">
+                                                        Achmad Bagir </option>
+                                                    <option value="4">
+                                                        Zaki </option>
+                                                    <option value="5">
+                                                        Fatimah Amira </option>
+                                                    <option value="6">
+                                                        Ribut Supriyono </option>
+                                                    <option value="7">
+                                                        Riyantita Tunjungsari </option>
+                                                    <option value="8">
+                                                        Muhammad Ghufron </option>
+                                                    <option value="9">
+                                                        Akhmad Ratriono Anggoro </option>
+                                                    <option value="10">
+                                                        Dicky Barkah </option>
+                                                    <option value="11">
+                                                        Keviana </option>
+                                                    <option value="13">
+                                                        Irma Safarina </option>
+                                                    <option value="14">
+                                                        Ekky Ilham </option>
+                                                    <option value="15">
+                                                        Irma Finance </option>
+                                                    <option value="16">
+                                                        Vira </option>
+                                                    <option value="17">
+                                                        Desy </option>
+                                                    <option value="18">
+                                                        Gabriella Maulidha </option>
+                                                    <option value="19">
+                                                        Nur Kholilah </option>
+                                                    <option value="20">
+                                                        Muhammad Ruhullah </option>
+                                                    <option value="21">
+                                                        salfa delia fernanda </option>
+                                                    <option value="22">
+                                                        Rudy Affandy </option>
+                                                    <option value="23">
+                                                        Yulia Esther </option>
+                                                    <option value="24">
+                                                        Ayu Anindya </option>
+                                                    <option value="25">
+                                                        Krisna Putra Ramadhani </option>
+                                                    <option value="26">
+                                                        Ciptaning </option>
+                                                    <option value="27">
+                                                        Panca </option>
+                                                    <option value="28">
+                                                        Diaz Muhammad Irsyadi </option>
+                                                    <option value="29">
+                                                        Edi Design </option>
+                                                    <option value="30">
+                                                        BRIAN BUDY CAHYONO </option>
+                                                    <option value="31">
+                                                        Lee Maychael </option>
+                                                    <option value="32">
+                                                        SHIRLEY IRMA JUNITA </option>
+                                                    <option value="33">
+                                                        Siti </option>
+                                                    <option value="34">
+                                                        Estisan Septyana Atwinda </option>
+                                                    <option value="35">
+                                                        Laksmi Diah Ahmada </option>
+                                                    <option value="36">
+                                                        Annisa Shalihah </option>
+                                                    <option value="37">
+                                                        Diva </option>
+                                                    <option value="38">
+                                                        Latifatus Cahya Ningtyas </option>
+                                                    <option value="39">
+                                                        Revita Yustianawati </option>
+                                                    <option value="40">
+                                                        Etika Citra Nuraisah </option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label for="year" class="col-sm-3 col-form-label">Tahun <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="gs-field col-sm-9">
+                                                <input type="number" class="form-control" name="year" id="year"
+                                                    placeholder="2026" value="2026" min="2020" max="2099" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label for="month" class="col-sm-3 col-form-label">Bulan <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="gs-field col-sm-9">
+                                                <select class="form-control select2" name="month" id="month"
+                                                    data-placeholder="Pilih Bulan" required>
+                                                    <option value=""></option>
+                                                    <option value="1">
+                                                        Januari </option>
+                                                    <option value="2">
+                                                        Februari </option>
+                                                    <option value="3">
+                                                        Maret </option>
+                                                    <option value="4">
+                                                        April </option>
+                                                    <option value="5">
+                                                        Mei </option>
+                                                    <option value="6">
+                                                        Juni </option>
+                                                    <option value="7">
+                                                        Juli </option>
+                                                    <option value="8">
+                                                        Agustus </option>
+                                                    <option value="9">
+                                                        September </option>
+                                                    <option value="10">
+                                                        Oktober </option>
+                                                    <option value="11">
+                                                        November </option>
+                                                    <option value="12">
+                                                        Desember </option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label for="target" class="col-sm-3 col-form-label">Target (Rp) <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="gs-field col-sm-9">
+                                                <input type="text" class="form-control number2 text-right" name="target"
+                                                    id="target" placeholder="0" value="" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-body -->
+                                    <div class="card-footer text-right">
+                                        <button type="button" class="btn btn-danger"
+                                            onclick="location.href='https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dtarget';">
+                                            <i class="fas fa-angle-left"></i> Kembali
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Simpan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form> <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+
+                <div class="modal fade" id="modal-sm">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div id="modal-sm-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-md">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div id="modal-md-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-lg">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div id="modal-lg-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-xl">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div id="modal-xl-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <!-- To the right -->
+            <div class="float-right d-none d-sm-inline">
+                Goodsyst Enterprise Resource Planning Karya Impian Laboratoris. 2.0.0 </div>
+            <!-- Default to the left -->
+            <strong>Copyright &copy; 2026 <a href="https&#x3A;&#x2F;&#x2F;dreamlab.id">PT. Karya Impian Laboratoris</a>.
+            </strong> All rights reserved.
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+    <!-- REQUIRED SCRIPTS -->
+
+    <!-- jQuery -->
+    <script src="/assets/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <!-- jquery-validation -->
+    <script src="/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
+    <script src="/assets/plugins/jquery-validation/additional-methods.min.js"></script>
+    <!-- DataTables -->
+    <script src="/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+    <script src="/assets/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+    <script src="/assets/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+    <!-- jszip -->
+    <script src="/assets/plugins/jszip/jszip.min.js"></script>
+    <!-- Select2 -->
+    <script src="/assets/plugins/select2/js/select2.full.min.js"></script>
+    <!-- Lightbox2 -->
+    <script src="/assets/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
+    <!-- date-range-picker -->
+    <script src="/assets/plugins/moment/moment.min.js"></script>
+    <script src="/assets/plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js">
+    </script>
+    <!-- Summernote -->
+    <script src="/assets/plugins/summernote/summernote-bs4.min.js"></script>
+    <!-- Jquery Number -->
+    <script src="/assets/tools/jquery.number.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- Full Calendar -->
+    <script src="/assets/plugins/fullcalendar/main.js"></script>
+    <!-- AdminLTE App -->
+    <script src="/assets/js/adminlte.min.js"></script>
+    <script>
+        function uriAlert(uri, message, loading = false) {
+            var text = '';
+            if (message) {
+                text = message;
+            }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Anda akan melakukan aksi ini! " + text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '&nbsp;&nbsp;&nbsp;Iya&nbsp;&nbsp;&nbsp;',
+                cancelButtonText: '&nbsp;&nbsp;&nbsp;Tidak&nbsp;&nbsp;&nbsp;',
+                reverseButtons: true,
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                },
+            }).then((result) => {
+                if (result.value) {
+                    // Only show full-screen loading if explicitly requested
+                    if (loading === true) {
+                        showFullScreenLoading();
+                    }
+
+                    // Show card loading juga untuk backward compatibility
+                    $('#cardLoading').show();
+
+                    location.href = uri;
+                }
+            });
+        }
+
+        function showFullScreenLoading() {
+            // Create full-screen loading overlay if not exists
+            if ($('#fullScreenLoading').length === 0) {
+                var loadingHtml = '<div id="fullScreenLoading" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">' +
+                    '<div style="text-align: center;">' +
+                    '<div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>' +
+                    '<div class="text-light mt-3" style="font-size: 1.2rem;">Memproses...</div>' +
+                    '</div>' +
+                    '</div>';
+                $('body').append(loadingHtml);
+            } else {
+                $('#fullScreenLoading').show();
+            }
+        }
+
+        function hideFullScreenLoading() {
+            $('#fullScreenLoading').hide();
+        }
+    </script>
+    <!-- User JS -->
+    <script>
+        // Function to view detail (global scope)
+        function ajaxDetail(id, modalsize) {
+            $('#' + modalsize + '-content').html('<div class="overlay"><span class="spinner-grow"></span></div>');
+            $('#' + modalsize).modal('show');
+
+            $.ajax({
+                url: "/sales-target/detail",
+                data: { id: id },
+                dataType: 'json',
+                success: function (result) {
+                    $('#' + modalsize + '-content').html(result.view);
+                },
+                error: function () {
+                    $('#' + modalsize + '-content').html('<div class="modal-body"><p class="text-danger">Terjadi kesalahan saat memuat data.</p></div>');
+                }
+            });
+        }
+
+        $(function () {
+            $("#GSTable1").DataTable({
+                "responsive": false,
+                "autoWidth": false,
+                "columnDefs": [{
+                    "targets": 'no-sort',
+                    "orderable": false,
+                    "responsivePriority": 1
+                }],
+            });
+
+            // Initialize Select2 after elements are ready
+            $('.select2').each(function () {
+                var placeholder = $(this).data('placeholder');
+                $(this).select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    dropdownParent: $(this).closest('.card-body'),
+                    placeholder: placeholder || 'Pilih'
+                });
+            });
+
+            $.validator.setDefaults({
+                submitHandler: function (form) {
+                    Swal.fire({
+                        title: 'Apakah Anda yakin?',
+                        text: "Anda akan melakukan aksi ini!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: '&nbsp;&nbsp;&nbsp;Iya&nbsp;&nbsp;&nbsp;',
+                        cancelButtonText: '&nbsp;&nbsp;&nbsp;Tidak&nbsp;&nbsp;&nbsp;',
+                        reverseButtons: true,
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        },
+                    }).then((result) => {
+                        if (result.value) {
+                            $('#cardLoading').show();
+                            form.submit();
+                        }
+                    });
+                }
+            });
+            $('#GSForm').validate({
+                rules: {
+                    users_id: {
+                        required: true,
+                    },
+                    year: {
+                        required: true,
+                    },
+                    month: {
+                        required: true,
+                    },
+                    target: {
+                        required: true,
+                    },
+                },
+                errorElement: 'span',
+                errorPlacement: function (error, element) {
+                    error.addClass('invalid-feedback');
+                    element.closest('.form-group').append(error);
+                },
+                highlight: function (element, errorClass, validClass) {
+                    $(element).addClass('is-invalid');
+                },
+                unhighlight: function (element, errorClass, validClass) {
+                    $(element).removeClass('is-invalid');
+                }
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+
+            $(document).on('select2:open', () => {
+                document.querySelector('.select2-container--open .select2-search__field').focus();
+            });
+            $('.gs-tooltip').tooltip();
+            $(document).on('click', '[data-toggle="lightbox"]', function (event) {
+                event.preventDefault();
+                $(this).ekkoLightbox();
+            });
+            $('.number').number(true, 0);
+            $(".number").keyup(function () {
+                if ($(this).val() == '') {
+                    $(this).val(0);
+                }
+            });
+            $('.number2').number(true, 2);
+            $('.number4').number(true, 4);
+
+            $('.datepicker').datetimepicker({
+                format: 'YYYY-MM-DD',
+            });
+            $('.yearpicker').datetimepicker({
+                format: "YYYY",
+                minViewMode: 1,
+                autoclose: true,
+            });
+            $('.monthpicker').datetimepicker({
+                format: "YYYY-MM",
+                minViewMode: 1,
+                autoclose: true,
+            });
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.datepicker, .input-group').length) {
+                    $('.datepicker').datetimepicker('hide');
+                }
+                if (!$(e.target).closest('.yearpicker, .input-group').length) {
+                    $('.yearpicker').datetimepicker('hide');
+                }
+                if (!$(e.target).closest('.monthpicker, .input-group').length) {
+                    $('.monthpicker').datetimepicker('hide');
+                }
+            });
+
+            $('.timepicker').datetimepicker({
+                format: 'HH:mm'
+            });
+            $('.mydaterangepicker').daterangepicker({
+                locale: {
+                    separator: '/',
+                    format: 'YYYY-MM-DD'
+                }
+            });
+            $('.summernote').summernote({
+                toolbar: [
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                ]
+            });
+            clockUpdate();
+            setInterval(clockUpdate, 1000);
+
+            $('#cardLoading').hide();
+        });
+
+        function clockUpdate() {
+            var date = new Date();
+
+            function addZero(x) {
+                if (x < 10) {
+                    return x = '0' + x;
+                } else {
+                    return x;
+                }
+            }
+
+            function twelveHour(x) {
+                if (x > 12) {
+                    return x = x - 12;
+                } else if (x == 0) {
+                    return x = 12;
+                } else {
+                    return x;
+                }
+            }
+            var h = addZero(date.getHours());
+            var m = addZero(date.getMinutes());
+            var s = addZero(date.getSeconds());
+
+            $('.digital-clock').text(h + ':' + m + ':' + s)
+        }
+
+        $(document).ready(function () {
+            // Load badges after DOM is ready
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3001').html(result);
+                        $('#main_menu_3001').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3002').html(result);
+                        $('#main_menu_3002').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3003').html(result);
+                        $('#main_menu_3003').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3004').html(result);
+                        $('#main_menu_3004').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3005').html(result);
+                        $('#main_menu_3005').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Frequest\x2Dcogs\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3006').html(result);
+                        $('#main_menu_3006').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Drequest\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3007').html(result);
+                        $('#main_menu_3007').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fgoods\x2Drequest\x2Dapproval\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_3008').html(result);
+                        $('#main_menu_3008').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fchecklist\x2Dprogress\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_4001').html(result);
+                        $('#main_menu_4001').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5002').html(result);
+                        $('#main_menu_5002').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dinvoice\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5003').html(result);
+                        $('#main_menu_5003').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5004').html(result);
+                        $('#main_menu_5004').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Ddown\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5005').html(result);
+                        $('#main_menu_5005').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5006').html(result);
+                        $('#main_menu_5006').html(result);
+                        if (5001 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5001').html() != '') {
+                                var temp = parseFloat($('#side_menu_5001').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5001').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fneed\x2Dfor\x2Dgoods\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5011').html(result);
+                        $('#main_menu_5011').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fgoods\x2Drequest\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5012').html(result);
+                        $('#main_menu_5012').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Drequest\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5013').html(result);
+                        $('#main_menu_5013').html(result);
+                        
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_0').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Din\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5102').html(result);
+                        $('#main_menu_5102').html(result);
+                        if (5101 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5101').html() != '') {
+                                var temp = parseFloat($('#side_menu_5101').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5101').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Din\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5103').html(result);
+                        $('#main_menu_5103').html(result);
+                        if (5101 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5101').html() != '') {
+                                var temp = parseFloat($('#side_menu_5101').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5101').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fdelivery\x2Dout\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5106').html(result);
+                        $('#main_menu_5106').html(result);
+                        if (5104 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5104').html() != '') {
+                                var temp = parseFloat($('#side_menu_5104').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5104').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Dout\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5107').html(result);
+                        $('#main_menu_5107').html(result);
+                        if (5104 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5104').html() != '') {
+                                var temp = parseFloat($('#side_menu_5104').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5104').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5202').html(result);
+                        $('#main_menu_5202').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5203').html(result);
+                        $('#main_menu_5203').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5211').html(result);
+                        $('#main_menu_5211').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5212').html(result);
+                        $('#main_menu_5212').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Ddown\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5213').html(result);
+                        $('#main_menu_5213').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dinvoice\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5214').html(result);
+                        $('#main_menu_5214').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dpayment\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5215').html(result);
+                        $('#main_menu_5215').html(result);
+                        if (5201 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5201').html() != '') {
+                                var temp = parseFloat($('#side_menu_5201').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5201').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fformulation\x2Dmanage\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5302').html(result);
+                        $('#main_menu_5302').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fformulation\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5303').html(result);
+                        $('#main_menu_5303').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Frequest\x2Dcogs\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5304').html(result);
+                        $('#main_menu_5304').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fbatch\x2Drecord\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5305').html(result);
+                        $('#main_menu_5305').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dmixing\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5306').html(result);
+                        $('#main_menu_5306').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dfilling\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5307').html(result);
+                        $('#main_menu_5307').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dpackaging\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5308').html(result);
+                        $('#main_menu_5308').html(result);
+                        if (5301 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5301').html() != '') {
+                                var temp = parseFloat($('#side_menu_5301').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5301').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dmixing\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5402').html(result);
+                        $('#main_menu_5402').html(result);
+                        if (5401 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5401').html() != '') {
+                                var temp = parseFloat($('#side_menu_5401').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5401').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dfilling\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5403').html(result);
+                        $('#main_menu_5403').html(result);
+                        if (5401 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5401').html() != '') {
+                                var temp = parseFloat($('#side_menu_5401').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5401').html(badge);
+                        }
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dpackaging\x2Fbadge",
+                cache: false,
+                success: function (result) {
+                    if (result != 0) {
+                        $('#side_menu_5404').html(result);
+                        $('#main_menu_5404').html(result);
+                        if (5401 != 0) {
+                            var temp = 0;
+                            if ($('#side_menu_5401').html() != '') {
+                                var temp = parseFloat($('#side_menu_5401').html());
+                            }
+                            var badge = temp + parseFloat(result);
+                            if (badge == 0) {
+                                badge = '';
+                            }
+                            $('#side_menu_5401').html(badge);
+                        }
+                    }
+                }
+            });
+
+            // Scroll to active menu item
+            setTimeout(function () {
+                var activeLink = $('.nav-link.active');
+                var scrollViewport = $('.os-viewport');
+
+                if (activeLink.length > 0 && scrollViewport.length > 0) {
+                    var offsetTop = activeLink.offset().top - scrollViewport.offset().top;
+
+                    scrollViewport.animate({
+                        scrollTop: scrollViewport.scrollTop() + offsetTop - 50
+                    }, 150);
+                }
+            }, 150);
+        });
+    </script>
+</body>
+
+</html>
