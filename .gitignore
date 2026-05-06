@@ -28,9 +28,6 @@ backend_out.txt
 # IDE / Tooling
 .vscode/
 .idea/
-.gemini/
-artifacts/
-scratch/
 .DS_Store
 
 # Playwright
