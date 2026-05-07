@@ -6,10 +6,6 @@ interface DataTableProps {
   className?: string;
 }
 
-/**
- * Standardized table wrapper that enforces consistent row heights,
- * cell padding, and header styling across ALL ERP tables.
- */
 export function DataTable({ children, className }: DataTableProps) {
   return (
     <div 
@@ -29,34 +25,25 @@ interface DataTableHeadProps {
 }
 
 export function DataTableHead({ children, className }: DataTableHeadProps) {
-  return (
-    <thead className={cn("bg-[#F9FAFB] border-b border-gray-100", className)}>
-      <tr className="hover:bg-transparent">
-        {children}
-      </tr>
-    </thead>
-  );
+  return <thead className={cn("bg-slate-50/50", className)}>{children}</thead>;
 }
 
 interface DataTableThProps {
   children: React.ReactNode;
-  align?: "left" | "center" | "right";
   className?: string;
+  align?: "left" | "center" | "right";
 }
 
-export function DataTableTh({ children, align = "left", className }: DataTableThProps) {
+export function DataTableTh({ children, className, align = "left" }: DataTableThProps) {
   return (
     <th
       className={cn(
-        "text-[10px] font-extrabold text-slate-500 uppercase tracking-tight",
+        "text-[10px] font-bold text-slate-400 uppercase tracking-wider",
         align === "center" && "text-center",
         align === "right" && "text-right",
         className
       )}
-      style={{
-        padding: `0 var(--table-cell-px)`,
-        height: 'var(--table-header-h)',
-      }}
+      style={{ padding: `0 var(--table-cell-px)`, height: 'var(--table-row-h)' }}
     >
       {children}
     </th>
@@ -118,4 +105,3 @@ export function DataTableBody({ children }: DataTableBodyProps) {
     </tbody>
   );
 }
-

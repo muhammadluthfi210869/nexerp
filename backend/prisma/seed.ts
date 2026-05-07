@@ -26,7 +26,7 @@ async function main() {
     production_step_logs, production_schedules, production_plans,
     sample_stage_logs, sample_feedback, sample_revisions, sample_requests,
     sales_leads, bussdev_staffs, lost_deals, lead_activities, lead_timeline_logs,
-    material_items, suppliers, notifications, users, financial_periods,
+    material_items, suppliers, users, financial_periods,
     kpi_metric_definitions, accounts, master_categories, account_health_logs,
     activity_streams, articles, artwork_reviews, audit_escalations, content_assets,
     copq_records, daily_ads_metrics, delivery_orders, design_feedbacks, design_tasks,
@@ -34,13 +34,13 @@ async function main() {
     fund_requests, guest_logs, hki_records, internal_audits, journal_entries,
     journal_lines, lab_test_results, labor_rates, legal_staffs, legal_timeline_logs,
     machines, marketing_targets, new_product_forms, payments, pnbp_requests,
-    production_logs, purchase_request_items, purchase_requests, purchase_return_items,
-    purchase_returns, qc_audits, qc_parameters, regulatory_pipelines, reject_executions,
-    requisition_fulfillments, material_requisitions, material_returns, material_valuations,
+    production_logs, purchase_request_items, purchase_requests, 
+    qc_audits, qc_parameters, regulatory_pipelines, reject_executions,
+    material_requisitions, material_valuations,
     retention_engine, sales_return_items, sales_returns, sales_targets,
-    search_visibility_metrics, shipment_items, shipments, state_transition_logs,
+    shipment_items, shipments,
     stock_adjustment_items, stock_adjustments, stock_opname_items, stock_opnames,
-    system_configs, system_sequences, system_override_logs, tickets, transfer_order_items,
+    system_configs, system_override_logs, tickets, transfer_order_items,
     transfer_orders, unified_invoices, warehouse_locations, warehouses, website_products,
     work_orders
   RESTART IDENTITY CASCADE`);
@@ -79,7 +79,7 @@ async function main() {
 
   console.log('');
   console.log('💎 SEEDING COMPLETE.');
-  console.log('   🔐 Password untuk semua akun: 123');
+  console.log('   🔐 Password untuk semua akun: password123');
   console.log('   📧 Format email: nama@dreamlab.com');
 }
 

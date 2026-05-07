@@ -5,14 +5,12 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ScmService } from '../scm/services/scm.service';
 import { LifecycleStatus } from '@prisma/client';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { StockLedgerService } from './services/stock-ledger.service';
-import { FinanceService } from '../finance/finance.service';
-
-// LifecycleStatus replaced by LifecycleStatus
 
 import { IdGeneratorService } from '../system/id-generator.service';
 
@@ -23,15 +21,16 @@ export class WarehouseService {
 
   constructor(
     private prisma: PrismaService,
-    @Inject(forwardRef(() => ScmService))
     private scmService: ScmService,
-    @Inject(forwardRef(() => FinanceService))
-    private financeService: FinanceService,
     private stockLedger: StockLedgerService,
+    private moduleRef: ModuleRef,
     private idGenerator: IdGeneratorService,
     private eventEmitter: EventEmitter2,
-  ) {
-    // Phase 2: Start Watchdog on init or rely on cron
+  ) {}
+
+  private async getFinanceService() {
+    const { FinanceService } = await import('../finance/finance.service');
+    return this.moduleRef.get(FinanceService, { strict: false });
   }
 
   @OnEvent('production.schedule_completed')
@@ -501,7 +500,8 @@ export class WarehouseService {
 
       // Automated Journaling for Finance Integration (Phase 4)
       if (totalLossValue > 0) {
-        await this.financeService.createInventoryAdjustmentJournal({
+        const finSvc = await this.getFinanceService();
+      await finSvc.createInventoryAdjustmentJournal({
           opnameId: opname.id,
           totalLossValue,
           notes: opname.notes || 'Routine Audit',
@@ -642,7 +642,8 @@ export class WarehouseService {
       }, 0);
 
       if (totalValue > 0) {
-        await this.financeService.createMaterialHandoverJournal({
+        const finSvc = await this.getFinanceService();
+        await finSvc.createMaterialHandoverJournal({
           workOrderId: wo.id,
           totalValue,
           description: `SYSTEM: Material transition to WIP for WO ${wo.woNumber}`,

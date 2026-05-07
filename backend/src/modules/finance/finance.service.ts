@@ -33,10 +33,10 @@ import { FundRequestStatus } from '@prisma/client';
 import { VerifyArPaymentDto, ArPaymentType } from './dto/verify-ar-payment.dto';
 
 import { IdGeneratorService } from '../system/id-generator.service';
+import { ModuleRef } from '@nestjs/core';
 
 import { ScmService } from '../scm/services/scm.service';
 import { CreativeService } from '../creative/creative.service';
-import { WarehouseService } from '../warehouse/warehouse.service';
 
 @Injectable()
 export class FinanceService {
@@ -47,9 +47,13 @@ export class FinanceService {
     @Inject(forwardRef(() => ScmService))
     private scmService: ScmService,
     private creativeService: CreativeService,
-    @Inject(forwardRef(() => WarehouseService))
-    private warehouseService: WarehouseService,
+    private moduleRef: ModuleRef,
   ) {}
+
+  private async getWarehouseService() {
+    const { WarehouseService } = await import('../warehouse/warehouse.service');
+    return this.moduleRef.get(WarehouseService, { strict: false });
+  }
 
   async seedInitialAccounts() {
     const existing = await this.prisma.account.count();
@@ -1385,8 +1389,8 @@ export class FinanceService {
         });
 
         // F. PHASE 4: WAREHOUSE READINESS
-        const whResult =
-          await this.warehouseService.checkCapacityForNewDeal(leadId);
+        const whSvc = await this.getWarehouseService();
+        const whResult = await whSvc.checkCapacityForNewDeal(leadId);
         if (whResult.status !== 'OK') {
           this.eventEmitter.emit(ACTIVITY_EVENT, {
             leadId: leadId,

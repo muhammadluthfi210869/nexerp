@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   ChevronDown,
@@ -264,6 +263,8 @@ export function Sidebar() {
     }
   }, [pathname]);
 
+  const isExecutive = user?.roles?.includes("DIRECTOR");
+
   const toggleGroup = (label: string) => {
     setOpenGroups(prev =>
       prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
@@ -325,9 +326,96 @@ export function Sidebar() {
 
               <div className="space-y-1.5">
                 {tierGroups.map((group) => {
+                  const dashItems = group.items.filter(i => i.type === "dashboard");
                   const isGroupActive = group.items.some(i => i.href === pathname);
-                  const isOpen = openGroups.includes(group.label);
 
+                  // --- EXECUTIVE MODE (DIRECTOR role) ---
+                  if (isExecutive) {
+                    if (dashItems.length === 0) return null;
+                    const primaryHref = dashItems[0].href;
+                    const isPrimaryActive = pathname === primaryHref;
+                    const extraItems = dashItems.slice(1);
+
+                    return (
+                      <div key={group.label} className="space-y-1">
+                        <Link
+                          href={primaryHref}
+                          onMouseEnter={() => router.prefetch(primaryHref)}
+                          className={cn(
+                            "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                            isPrimaryActive
+                              ? "bg-brand-black text-white shadow-md shadow-slate-200"
+                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
+                              isPrimaryActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
+                            )}>
+                              <group.icon className={cn(
+                                "w-4 h-4",
+                                isPrimaryActive ? "text-white" : "text-slate-400 group-hover:text-brand-black"
+                              )} />
+                            </div>
+                            <span className={cn(
+                              "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
+                              isPrimaryActive ? "text-white" : "text-inherit"
+                            )}>
+                              {group.label}
+                            </span>
+                          </div>
+                        </Link>
+
+                        {extraItems.length > 0 && (
+                          <div className="ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
+                            {extraItems.map((item) => {
+                              const isExtraActive = pathname === item.href;
+                              return (
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  onMouseEnter={() => router.prefetch(item.href)}
+                                  className={cn(
+                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                    isExtraActive
+                                      ? "bg-slate-50 text-brand-black font-bold"
+                                      : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Zap className={cn(
+                                      "w-3.5 h-3.5 transition-colors",
+                                      isExtraActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
+                                    )} />
+                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                      {item.name}
+                                    </span>
+                                  </div>
+                                  {item.badge && (
+                                    <span className={cn(
+                                      "px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider",
+                                      item.badgeVariant === "critical" ? "bg-rose-100 text-rose-600" :
+                                      item.badgeVariant === "warning" ? "bg-amber-100 text-amber-600" :
+                                      "bg-slate-100 text-slate-500"
+                                    )}>
+                                      {item.badge}
+                                    </span>
+                                  )}
+                                  {isExtraActive && (
+                                    <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
+                                  )}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // --- NORMAL MODE (non-DIRECTOR) ---
+                  const isOpen = openGroups.includes(group.label);
                   return (
                     <div key={group.label} className="space-y-1">
                       <button
@@ -361,22 +449,9 @@ export function Sidebar() {
                           isOpen ? "rotate-180" : "text-slate-300"
                         )} />
                       </button>
-
-                      <AnimatePresence>
                         {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0, x: -10 }}
-                            animate={{ height: "auto", opacity: 1, x: 0 }}
-                            exit={{ height: 0, opacity: 0, x: -10 }}
-                            transition={{ duration: 0.3, ease: "circOut" }}
-                            className="overflow-hidden ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5"
-                          >
-                            {group.items.filter(item => {
-                              if (user?.roles?.includes("DIRECTOR")) {
-                                return item.type === "dashboard";
-                              }
-                              return true;
-                            }).map((item) => {
+                          <div className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
+                            {group.items.map((item) => {
                               const isActive = pathname === item.href;
                               const IconType = getIconByType(item.type);
                               return (
@@ -411,17 +486,13 @@ export function Sidebar() {
                                     </span>
                                   )}
                                   {isActive && (
-                                    <motion.div 
-                                      layoutId="activeIndicator"
-                                      className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full"
-                                    />
+                                    <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
                                   )}
                                 </Link>
                               );
                             })}
-                          </motion.div>
+                          </div>
                         )}
-                      </AnimatePresence>
                     </div>
                   );
                 })}

@@ -29,7 +29,6 @@ function StatCard({ title, value, subValue, icon, className, accentColor }: any)
           {React.cloneElement(icon, { size: 18, className: cn(icon.props.className, "transition-colors") })}
         </div>
       </div>
-      {/* Subtle Background Icon - Stripped of color for pure decorative effect */}
       <div className="absolute -bottom-4 -right-4 text-slate-900/[0.03] group-hover:text-primary/[0.06] transition-all duration-700 pointer-events-none">
         {React.cloneElement(icon, { 
           size: 100, 
@@ -40,66 +39,51 @@ function StatCard({ title, value, subValue, icon, className, accentColor }: any)
   );
 }
 
-function AlertItem({ label, val, critical }: { label: string; val: number; critical?: boolean }) {
-  return (
-    <div className={cn("flex justify-between items-center p-4 rounded-2xl border transition-all duration-300", critical && val > 0 ? "bg-rose-500/10 border-rose-500/50 shadow-lg shadow-rose-500/10" : "bg-white/5 border-white/10")}>
-      <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.1em]">{label}</span>
-      <span className={cn("text-sm font-black italic", val > 0 ? "text-rose-600" : "text-text-muted/30")}>{val}</span>
-    </div>
-  );
-}
-
-function StatRow({ label, val, pct, isMain = false, highlight = false, subValue }: any) {
-  return (
-    <div className="flex justify-between items-center group/row">
-      <span className={cn("text-[10px] font-bold text-slate-500 uppercase tracking-tight group-hover/row:text-brand-black transition-colors", isMain && "text-[11px] text-slate-900")}>{label}</span>
-      <div className="flex items-center gap-2">
-        <span className={cn("text-[11px] font-black text-slate-900", isMain && "text-sm", highlight && "text-blue-600")}>{val ?? 0}</span>
-        {pct && <span className="text-[9px] font-bold text-emerald-500 italic">{pct}</span>}
-        {subValue && <span className="text-[9px] font-bold text-slate-400">{subValue}</span>}
-      </div>
-    </div>
-  );
-}
-
 export function DashboardCards({ variant, data }: DashboardCardsProps) {
   if (!data) return null;
 
-  // ─── DASHBOARD OVERVIEW ─────────────────────────────────────────────────────
+  // --- DASHBOARD OVERVIEW ---
   if (variant === 'dashboard') {
     const overview = data.overview || {};
     const revenue = data.revenuePipeline || {};
     const activity = data.activityPerformance || {};
     const alerts = data.criticalAlerts || {};
 
+    const fmt = (n: any) => (n ?? 0).toLocaleString();
+    const fmtM = (n: any) => `Rp ${(Number(n || 0) / 1000000).toFixed(1)}M`;
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Card I - Funnel Overview */}
-        <Card className="bento-card p-6 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
-          <div className="flex items-center gap-2 mb-6">
-            <h3 className="text-[11px] font-black text-brand-black uppercase tracking-[0.2em]">A. FUNNEL OVERVIEW</h3>
+        {/* Card A - Funnel Overview */}
+        <Card className="bento-card p-8 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+               <div className="w-2.5 h-2.5 rounded-full bg-rose-200" />
+            </div>
+            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">A. FUNNEL OVERVIEW</h3>
           </div>
-          <div className="space-y-4">
-             <div className="flex justify-between items-end border-b border-slate-50 pb-2">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">Total Leads</span>
-                <div className="text-right">
-                   <span className="text-sm font-black text-brand-black tabular">1,245</span>
-                   <span className="ml-2 text-[9px] font-bold text-emerald-500 uppercase">(Inflow)</span>
+          <div className="space-y-6">
+             <div className="flex justify-between items-center border-b border-slate-50 pb-4">
+                <span className="text-[13px] font-black text-slate-500 uppercase tracking-tight">Total Leads</span>
+                <div className="flex items-center gap-2">
+                   <span className="text-lg font-black text-slate-900 tabular">{fmt(overview.totalLeads)}</span>
+                   <span className="text-[9px] font-black text-emerald-500 uppercase">(Inflow)</span>
                 </div>
              </div>
-             <div className="space-y-3">
+             <div className="space-y-5">
                 {[
-                  { label: "Leads Contacted", val: "850", pct: "68%" },
-                  { label: "Sample Process", val: "220", pct: "25%" },
-                  { label: "DP Received", val: "110", pct: "50%" },
-                  { label: "Deal Confirmed", val: "85", pct: "77%" },
-                  { label: "Repeat Order", val: "42", pct: "49%" },
+                  { label: "Leads Contacted", val: overview.contactedLeads, pct: overview.contactRate },
+                  { label: "Sample Process", val: overview.sampleProcess, pct: overview.sampleRate },
+                  { label: "DP Received", val: overview.dpReceived, pct: overview.dpRate },
+                  { label: "Deal Confirmed", val: overview.dealConfirmed, pct: overview.dealRate },
+                  { label: "Repeat Order", val: overview.repeatOrder, pct: overview.retentionRate },
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center group/item">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">{item.label}</span>
+                    <span className="text-[12px] font-black text-slate-500 uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">{item.label}</span>
                     <div className="flex items-center gap-3">
-                       <span className="text-[12px] font-black text-brand-black tabular">{item.val}</span>
-                       <span className="text-[9px] font-bold text-emerald-500 uppercase">({item.pct})</span>
+                       <span className="text-[13px] font-black text-slate-900 tabular">{fmt(item.val)}</span>
+                       <span className="text-[10px] font-black text-emerald-500 uppercase">({item.pct ?? 0}%)</span>
                     </div>
                   </div>
                 ))}
@@ -107,76 +91,88 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
           </div>
         </Card>
  
-        {/* Card II - Revenue Pipeline */}
-        <Card className="bento-card p-6 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
-          <div className="flex items-center gap-2 mb-6">
-            <h3 className="text-[11px] font-black text-brand-black uppercase tracking-[0.2em]">B. REVENUE PIPELINE</h3>
+        {/* Card B - Revenue Pipeline */}
+        <Card className="bento-card p-8 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+               <div className="w-2.5 h-2.5 rounded-full bg-orange-200" />
+            </div>
+            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">B. REVENUE PIPELINE</h3>
           </div>
           <div>
-            <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">TOTAL PIPELINE VALUE</p>
-            <h2 className="text-3xl font-black text-brand-black tabular tracking-tighter">Rp 12.5 M</h2>
-            <div className="space-y-3 mt-8 pt-6 border-t border-slate-50">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">TOTAL PIPELINE VALUE</p>
+            <h2 className="text-[32px] font-black text-slate-900 tabular tracking-tighter mb-10 leading-none">Rp {(Number(revenue.totalPipelineValue || 0) / 1000000).toFixed(1)} M</h2>
+            <div className="space-y-4 pt-8 border-t border-slate-50">
                {[
-                 { label: "Potential Sample", val: "Rp 4.2M" },
-                 { label: "Potential Deal", val: "Rp 2.8M" },
-                 { label: "Confirmed Deal", val: "Rp 3.5M", color: "text-blue-600" },
-                 { label: "Repeat Order Value", val: "Rp 1.5M", color: "text-emerald-500" },
+                 { label: "Potential Sample", val: fmtM(revenue.potentialSample) },
+                 { label: "Potential Deal", val: fmtM(revenue.potentialDeal) },
+                 { label: "Confirmed Deal", val: fmtM(revenue.confirmedDeal), color: "text-blue-600" },
+                 { label: "Repeat Order Value", val: fmtM(revenue.repeatOrderValue), color: "text-emerald-500" },
                ].map((item, i) => (
                  <div key={i} className="flex justify-between items-center group/item">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">{item.label}</span>
-                    <span className={cn("text-[12px] font-black tabular", item.color || "text-brand-black")}>{item.val}</span>
+                    <span className="text-[12px] font-black text-slate-500 uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">{item.label}</span>
+                    <span className={cn("text-[13px] font-black tabular", item.color || "text-slate-900")}>{item.val}</span>
                  </div>
                ))}
             </div>
           </div>
         </Card>
  
-        {/* Card III - Activity Performance */}
-        <Card className="bento-card p-6 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
-          <div className="flex items-center gap-2 mb-6">
-            <h3 className="text-[11px] font-black text-brand-black uppercase tracking-[0.2em]">C. ACTIVITY PERFORMANCE</h3>
+        {/* Card C - Activity Performance */}
+        <Card className="bento-card p-8 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+               <div className="w-2.5 h-2.5 rounded-full bg-orange-400" />
+            </div>
+            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">C. ACTIVITY PERFORMANCE</h3>
           </div>
-          <div className="space-y-8">
+          <div className="space-y-12">
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-100/50 flex flex-col">
-                <p className="text-[8px] font-black text-amber-600 uppercase tracking-tighter mb-1">FOLLOW-UP TODAY</p>
-                <span className="text-3xl font-black text-brand-black tabular leading-none">45</span>
+              <div className="bg-yellow-50/60 rounded-2xl p-5 border border-yellow-100 flex flex-col items-start">
+                <p className="text-[10px] font-black text-yellow-800 uppercase leading-tight mb-2">FOLLOW-UP<br/>TODAY</p>
+                <span className="text-3xl font-black text-slate-900 tabular tracking-tighter leading-none">{fmt(activity.followUpToday)}</span>
               </div>
-              <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 flex flex-col">
-                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter mb-1">AVG RESPONSE</p>
+              <div className="bg-emerald-50/60 rounded-2xl p-5 border border-emerald-100 flex flex-col items-start">
+                <p className="text-[10px] font-black text-emerald-800 uppercase leading-tight mb-2">AVG RESPONSE<br/>TIME</p>
                 <div className="flex items-baseline gap-0.5">
-                   <span className="text-3xl font-black text-brand-black tabular leading-none">1.2</span>
-                   <span className="text-[10px] font-black text-slate-400 uppercase">H</span>
+                   <span className="text-3xl font-black text-slate-900 tabular tracking-tighter leading-none">{(activity.avgResponse ?? 0).toFixed(1)}</span>
+                   <span className="text-[12px] font-black text-slate-900">h</span>
                 </div>
               </div>
             </div>
             <div className="space-y-4">
                <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Leads</span>
-                  <span className="text-[12px] font-black text-brand-black tabular">320</span>
+                  <span className="text-[12px] font-black text-slate-500 uppercase tracking-tight">Active Leads</span>
+                  <span className="text-[16px] font-black text-slate-900 tabular">{fmt(activity.activeLeads)}</span>
                </div>
-               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-400 rounded-full" style={{ width: '65%' }} />
+               <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${Math.min(100, (activity.activeLeads || 0) / 5)}%` }} />
                </div>
             </div>
           </div>
         </Card>
  
-        {/* Card IV - Critical Alert */}
-        <Card className="bento-card p-6 bg-rose-50/20 border-rose-100/50 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
-          <div className="flex items-center gap-2 mb-6">
-            <h3 className="text-[11px] font-black text-rose-600 uppercase tracking-[0.2em]">D. CRITICAL ALERT</h3>
+        {/* Card D - Critical Alert */}
+        <Card className="bento-card p-8 bg-[#FFF5F5] border-rose-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-rose-600" />
+               <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+            </div>
+            <h3 className="text-[12px] font-black text-rose-800 uppercase tracking-[0.1em]">D. CRITICAL ALERT</h3>
           </div>
           <div className="space-y-2.5">
             {[
-              { label: "Unfollowed Leads", val: "12" },
-              { label: "Stuck Samples (>14d)", val: "8" },
-              { label: "Stuck Negotiation", val: "5" },
-              { label: "At Risk Clients", val: "3" },
+              { label: "Unfollowed Leads", val: alerts.unfollowedLeads },
+              { label: "Stuck Samples (>14d)", val: alerts.stuckSamples },
+              { label: "Stuck Negotiation", val: alerts.stuckNego },
+              { label: "At Risk Clients", val: alerts.atRiskClients },
             ].map((item, i) => (
-              <div key={i} className="flex justify-between items-center py-2.5 px-4 bg-white rounded-xl border border-rose-100/30 group-hover:border-rose-100 transition-all shadow-sm">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight group-hover:text-slate-900 transition-colors">{item.label}</span>
-                 <span className="text-[14px] font-black text-rose-600 tabular">{item.val}</span>
+              <div key={i} className="flex justify-between items-center py-4 px-6 bg-white rounded-xl border border-rose-100/50 hover:border-rose-200 transition-all shadow-sm">
+                 <span className="text-[11px] font-black text-slate-600 uppercase tracking-tight">{item.label}</span>
+                 <span className="text-lg font-black text-rose-600 tabular">{fmt(item.val)}</span>
               </div>
             ))}
           </div>
@@ -185,7 +181,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
     );
   }
 
-  // ─── GUEST BOOK ──────────────────────────────────────────────────────────────
+  // --- GUEST BOOK ---
   if (variant === 'guest') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -217,7 +213,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
     );
   }
 
-  // ─── CLIENT SAMPLE ───────────────────────────────────────────────────────────
+  // --- CLIENT SAMPLE ---
   if (variant === 'sample') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -242,14 +238,14 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
         <StatCard
           title="Conversion ke Produksi"
           value={`${data.conversionToProd || 0}%`}
-          subValue="Sample Approved → SPK Signed"
+          subValue="Sample Approved -> SPK Signed"
           icon={<CheckCircle2 className="text-emerald-500" />}
         />
       </div>
     );
   }
 
-  // ─── CLIENT PRODUCTION ───────────────────────────────────────────────────────
+  // --- CLIENT PRODUCTION ---
   if (variant === 'production') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -275,14 +271,14 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
     );
   }
 
-  // ─── CLIENT RO ───────────────────────────────────────────────────────────────
+  // --- CLIENT RO ---
   if (variant === 'ro') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Active RO Clients"
           value={data.activeRoLeads ?? 0}
-          subValue="Clients dengan ≥ 2 Order"
+          subValue="Clients dengan >= 2 Order"
           icon={<RefreshCw className="text-emerald-500" />}
         />
         <StatCard
@@ -301,7 +297,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
     );
   }
 
-  // ─── LOST PAGE ───────────────────────────────────────────────────────────────
+  // --- LOST PAGE ---
   if (variant === 'lost') {
     const funnel = data.funnelConversion || {};
     return (
@@ -309,7 +305,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
         <StatCard
           title="A. Funnel Conversion"
           value={`${funnel.leadToSmpl || 0}%`}
-          subValue={`SMPL→PROD: ${funnel.smplToProd || 0}% · RO: ${funnel.prodToRo || "—"}`}
+          subValue={`SMPL -> PROD: ${funnel.smplToProd || 0}% · RO: ${funnel.prodToRo || "—"}`}
           icon={<BarChart3 className="text-violet-500" />}
         />
         <StatCard
@@ -334,7 +330,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
     );
   }
 
-  // ─── SALES PIPELINE ─────────────────────────────────────────────────────────
+  // --- SALES PIPELINE ---
   if (variant === 'pipeline') {
     const conversion = data.conversion || {};
     return (
@@ -369,4 +365,3 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
 
   return null;
 }
-

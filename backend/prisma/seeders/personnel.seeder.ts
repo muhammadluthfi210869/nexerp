@@ -15,6 +15,7 @@ interface PersonnelSeed {
 const PERSONNEL: PersonnelSeed[] = [
   // EXECUTIVE
   { email: 'zaki@dreamlab.com', fullName: 'Zaki', roles: [UserRole.SUPER_ADMIN], division: Division.MANAGEMENT, roleName: 'Direktur Utama', joinedAt: '01/01/2019', contractType: ContractType.PERMANENT },
+  { email: 'admin@dreamlab.com', fullName: 'Admin', roles: [UserRole.SUPER_ADMIN], division: Division.MANAGEMENT, roleName: 'Administrator', joinedAt: '01/01/2019', contractType: ContractType.PERMANENT },
   // OPERATIONAL HEADS
   { email: 'fadhilah@dreamlab.com', fullName: 'Fadhilah', roles: [UserRole.HEAD_OPS, UserRole.MARKETING], division: Division.MANAGEMENT, roleName: 'Head Ops Pemasaran', joinedAt: '01/06/2020', contractType: ContractType.PERMANENT },
   { email: 'bagir@dreamlab.com', fullName: 'Bagir', roles: [UserRole.HEAD_OPS, UserRole.PRODUCTION, UserRole.PURCHASING], division: Division.MANAGEMENT, roleName: 'Head Ops Manufacture', joinedAt: '01/01/2020', contractType: ContractType.PERMANENT },
@@ -62,7 +63,7 @@ function parseDate(dateStr: string): Date {
 export async function seedPersonnel(prisma: PrismaClient) {
   console.log('🌱 Seeding Personnel (24 Real Users)...');
 
-  const hashedPassword = await bcrypt.hash('123', 10);
+  const hashedPassword = await bcrypt.hash('password123', 10);
 
   for (const p of PERSONNEL) {
     // Create User

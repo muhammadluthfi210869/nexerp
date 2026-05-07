@@ -1,3 +1,6 @@
+"use client";
+export const dynamic = 'force-dynamic';
+
 import React from "react";
 import { SidebarWrapper } from "@/components/layout/SidebarWrapper";
 
@@ -29,4 +32,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

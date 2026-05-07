@@ -9,7 +9,7 @@ import {
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateSampleDto {
+export class CreateSampleRequestDto {
   @ApiProperty()
   @IsUUID()
   @IsNotEmpty()

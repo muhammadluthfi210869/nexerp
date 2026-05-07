@@ -14,14 +14,22 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const email = 'zaki@dreamlab.com';
   
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (!existing) {
+    console.error(`❌ User ${email} not found`);
+    return;
+  }
+  
+  const updatedRoles = [...new Set([...existing.roles, UserRole.DIRECTOR])];
+
   const user = await prisma.user.update({
     where: { email },
     data: {
-      roles: [UserRole.DIRECTOR]
+      roles: updatedRoles
     }
   });
 
-  console.log(`✅ Updated Zaki's role to DIRECTOR: ${user.email}`);
+  console.log(`✅ Updated ${email} roles: [${user.roles.join(', ')}]`);
 }
 
 main()

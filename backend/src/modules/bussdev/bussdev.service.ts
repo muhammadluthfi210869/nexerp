@@ -4,9 +4,9 @@ import {
   BadRequestException,
   Inject,
   forwardRef,
-  HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { CacheService } from '../../shared/cache.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { AdvanceLeadDto } from './dto/advance-lead.dto';
 import {
@@ -31,6 +31,7 @@ export class BussdevService {
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
+    private cacheService: CacheService,
     @Inject(forwardRef(() => ScmService))
     private scmService: ScmService,
   ) {}
@@ -540,118 +541,44 @@ export class BussdevService {
       );
 
       if (group === 'dashboard') {
-        const totalLeads = await this.prisma.salesLead.count();
-        const contactedLeads = await this.prisma.salesLead.count({
-          where: { activities: { some: {} } },
-        });
-        const sampleProcess = await this.prisma.salesLead.count({
-          where: { sampleRequests: { some: {} } },
-        });
-        const dpReceived = await this.prisma.salesLead.count({
-          where: {
-            status: {
-              in: [
-                'SPK_SIGNED',
-                'PRODUCTION_PLAN',
-                'READY_TO_SHIP',
-                'WON_DEAL',
-              ],
-            },
-          },
-        });
-        const dealConfirmed = await this.prisma.salesLead.count({
-          where: { status: 'WON_DEAL' },
-        });
-        const repeatOrder = await this.prisma.salesLead.count({
-          where: { orderCount: { gt: 1 } },
-        });
+        const cached = this.cacheService.get<any>('bussdev-dashboard')
+        if (cached) return cached
 
-        // REVENUE PIPELINE (Card II)
-        const totalPipelineValue = await this.prisma.salesLead.aggregate({
-          where: {
-            NOT: [{ status: 'WON_DEAL' }, { status: 'LOST' }],
-          },
-          _sum: { estimatedValue: true },
-        });
-        const potentialSample = await this.prisma.salesLead.aggregate({
-          where: { status: 'SAMPLE_REQUESTED' },
-          _sum: { estimatedValue: true },
-        });
-        const potentialDeal = await this.prisma.salesLead.aggregate({
-          where: {
-            status: {
-              in: ['NEGOTIATION', 'SAMPLE_APPROVED', 'SPK_SIGNED'],
-            },
-          },
-          _sum: { estimatedValue: true },
-        });
-        const confirmedDeal = await this.prisma.salesLead.aggregate({
-          where: { status: 'WON_DEAL' },
-          _sum: { estimatedValue: true },
-        });
-        const repeatOrderValue = await this.prisma.salesLead.aggregate({
-          where: { isRepeatOrder: true },
-          _sum: { estimatedValue: true },
-        });
+        const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-        // ACTIVITY PERFORMANCE (Card III)
-        const followUpToday = await this.prisma.leadActivity.count({
-          where: { createdAt: { gte: startOfToday } },
-        });
-        const avgResponseAgg = await this.prisma.leadActivity.aggregate({
-          _avg: { responseTime: true },
-        });
-        const activeLeadsCount = await this.prisma.salesLead.count({
-          where: { status: { not: 'LOST' } },
-        });
+        const [
+          totalLeads, contactedLeads, sampleProcess, dpReceived,
+          dealConfirmed, repeatOrder,
+          totalPipelineValue, potentialSample, potentialDeal,
+          confirmedDeal, repeatOrderValue,
+          followUpToday, avgResponseAgg, activeLeadsCount,
+          unfollowedLeads, stuckSamples, stuckNego, atRiskClients,
+          activityStreams,
+        ] = await Promise.all([
+          this.prisma.salesLead.count(),
+          this.prisma.salesLead.count({ where: { activities: { some: {} } } }),
+          this.prisma.salesLead.count({ where: { sampleRequests: { some: {} } } }),
+          this.prisma.salesLead.count({ where: { status: { in: ['SPK_SIGNED', 'PRODUCTION_PLAN', 'READY_TO_SHIP', 'WON_DEAL'] } } }),
+          this.prisma.salesLead.count({ where: { status: 'WON_DEAL' } }),
+          this.prisma.salesLead.count({ where: { orderCount: { gt: 1 } } }),
+          this.prisma.salesLead.aggregate({ where: { NOT: [{ status: 'WON_DEAL' }, { status: 'LOST' }] }, _sum: { estimatedValue: true } }),
+          this.prisma.salesLead.aggregate({ where: { status: 'SAMPLE_REQUESTED' }, _sum: { estimatedValue: true } }),
+          this.prisma.salesLead.aggregate({ where: { status: { in: ['NEGOTIATION', 'SAMPLE_APPROVED', 'SPK_SIGNED'] } }, _sum: { estimatedValue: true } }),
+          this.prisma.salesLead.aggregate({ where: { status: 'WON_DEAL' }, _sum: { estimatedValue: true } }),
+          this.prisma.salesLead.aggregate({ where: { isRepeatOrder: true }, _sum: { estimatedValue: true } }),
+          this.prisma.leadActivity.count({ where: { createdAt: { gte: startOfToday } } }),
+          this.prisma.leadActivity.aggregate({ _avg: { responseTime: true } }),
+          this.prisma.salesLead.count({ where: { status: { not: 'LOST' } } }),
+          this.prisma.salesLead.count({ where: { lastFollowUpAt: null, status: 'NEW_LEAD' } }),
+          this.prisma.salesLead.count({ where: { status: 'SAMPLE_REQUESTED', updatedAt: { lt: fourteenDaysAgo } } }),
+          this.prisma.salesLead.count({ where: { status: 'NEGOTIATION', updatedAt: { lt: sevenDaysAgo } } }),
+          this.prisma.salesLead.count({ where: { status: 'WON_DEAL', lastFollowUpAt: { lt: thirtyDaysAgo } } }),
+          this.prisma.activityStream.findMany({ take: 10, orderBy: { createdAt: 'desc' }, include: { lead: { select: { brandName: true, clientName: true } } } }),
+        ])
 
-        // CRITICAL ALERT (Card IV)
-        const unfollowedLeads = await this.prisma.salesLead.count({
-          where: {
-            lastFollowUpAt: null,
-            status: 'NEW_LEAD',
-          },
-        });
-        const stuckSamples = await this.prisma.salesLead.count({
-          where: {
-            status: 'SAMPLE_REQUESTED',
-            updatedAt: {
-              lt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
-            },
-          },
-        });
-        const stuckNego = await this.prisma.salesLead.count({
-          where: {
-            status: 'NEGOTIATION',
-            updatedAt: {
-              lt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-            },
-          },
-        });
-        const atRiskClients = await this.prisma.salesLead.count({
-          where: {
-            status: 'WON_DEAL',
-            lastFollowUpAt: {
-              lt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-            },
-          },
-        });
-
-        // GLOBAL ACTIVITY STREAM (Operational Table V)
-        const activityStreams = await this.prisma.activityStream.findMany({
-          take: 10,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            lead: {
-              select: {
-                brandName: true,
-                clientName: true,
-              },
-            },
-          },
-        });
-
-        return {
+        const result = {
           overview: {
             totalLeads,
             contactedLeads,
@@ -659,7 +586,6 @@ export class BussdevService {
             dpReceived,
             dealConfirmed,
             repeatOrder,
-            // Dynamic Conversion Rates
             contactRate: this.calcPct(contactedLeads, totalLeads),
             sampleRate: this.calcPct(sampleProcess, totalLeads),
             dpRate: this.calcPct(dpReceived, totalLeads),
@@ -667,15 +593,11 @@ export class BussdevService {
             retentionRate: this.calcPct(repeatOrder, totalLeads),
           },
           revenuePipeline: {
-            totalPipelineValue: Number(
-              totalPipelineValue._sum?.estimatedValue || 0,
-            ),
+            totalPipelineValue: Number(totalPipelineValue._sum?.estimatedValue || 0),
             potentialSample: Number(potentialSample._sum?.estimatedValue || 0),
             potentialDeal: Number(potentialDeal._sum?.estimatedValue || 0),
             confirmedDeal: Number(confirmedDeal._sum?.estimatedValue || 0),
-            repeatOrderValue: Number(
-              repeatOrderValue._sum?.estimatedValue || 0,
-            ),
+            repeatOrderValue: Number(repeatOrderValue._sum?.estimatedValue || 0),
           },
           activityPerformance: {
             followUpToday,
@@ -692,6 +614,8 @@ export class BussdevService {
           lostChurn: await this.getLostChurnTable(),
           activityStreams,
         };
+        this.cacheService.set('bussdev-dashboard', result, 30_000)
+        return result
       }
 
       switch (group) {

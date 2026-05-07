@@ -1,5 +1,4 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Card({
@@ -13,7 +12,7 @@ function Card({
       data-size={size}
       style={{ borderRadius: 'var(--card-radius)', padding: 'var(--card-py) var(--card-px)' }}
       className={cn(
-        "group/card flex flex-col gap-4 overflow-hidden bg-surface text-sm text-text-main border border-border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius]",
+        "group/card flex flex-col gap-4 overflow-hidden bg-surface text-sm text-text-main border border-border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius]",
         className
       )}
       {...props}
@@ -74,7 +73,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn(        "px-[--card-px] group-data-[size=sm]/card:px-3", className)}
+      className={cn("px-[--card-px] group-data-[size=sm]/card:px-3", className)}
       {...props}
     />
   )
@@ -94,12 +93,5 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
+  Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent,
 }
-

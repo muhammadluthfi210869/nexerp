@@ -13,9 +13,9 @@ import { CategoriesService } from '../services/categories.service';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
-  CategoryType,
 } from '../dto/category.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Master Data')
 @Controller('master/categories')
@@ -24,7 +24,8 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  findAll(@Query('type') type?: CategoryType) {
+  @ApiQuery({ name: 'type', required: false, enum: ['GOODS', 'SUPPLIER', 'CUSTOMER'] })
+  findAll(@Query('type') type?: string) {
     return this.categoriesService.findAll(type);
   }
 
@@ -49,7 +50,4 @@ export class CategoriesController {
   }
 }
 
-// Helper to add ApiTags if swagger is not imported
-function ApiTags(name: string): ClassDecorator {
-  return (target: any) => {};
-}
+

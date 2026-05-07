@@ -6,10 +6,6 @@ interface KPIGridProps {
   children: React.ReactNode;
 }
 
-/**
- * Standardized KPI card grid with enforced column count and gap.
- * Ensures all dashboard pages show KPI cards with identical density.
- */
 export function KPIGrid({ columns = 4, children }: KPIGridProps) {
   return (
     <div
@@ -34,17 +30,13 @@ interface KPICardProps {
   footer?: React.ReactNode;
 }
 
-/**
- * Standardized KPI card with enforced padding, radius, and internal layout.
- * Every KPI card across the ERP will have identical proportions.
- */
 export function KPICard({ id, title, icon, dotColor = "bg-primary", variant = "default", children, footer }: KPICardProps) {
   const isDanger = variant === "danger";
 
   return (
     <div
       className={cn(
-        "bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between group",
+        "bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between group hover:scale-[1.015] hover:-translate-y-1 active:scale-[0.985]",
         isDanger && "bg-brand-black text-white border-none shadow-xl"
       )}
       style={{
@@ -53,7 +45,6 @@ export function KPICard({ id, title, icon, dotColor = "bg-primary", variant = "d
       }}
     >
       <div className="relative z-10 h-full flex flex-col justify-between">
-        {/* Card Header */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -74,14 +65,10 @@ export function KPICard({ id, title, icon, dotColor = "bg-primary", variant = "d
               </span>
             )}
           </div>
-
-          {/* Card Content — provided by consumer */}
           <div className="space-y-3">
             {children}
           </div>
         </div>
-
-        {/* Card Footer */}
         {footer && (
           <div className={cn(
             "mt-4 pt-3 border-t",
@@ -94,4 +81,3 @@ export function KPICard({ id, title, icon, dotColor = "bg-primary", variant = "d
     </div>
   );
 }
-

@@ -10,14 +10,19 @@ dotenv.config({ path: path.join(process.cwd(), 'backend', '.env') });
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const compression = require('compression');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable Global Response Standardization
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // Enable Response Compression (gzip)
+  app.use(compression());
 
   // Enable Global Validation
   app.useGlobalPipes(

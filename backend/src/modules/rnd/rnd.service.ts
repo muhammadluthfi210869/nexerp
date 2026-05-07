@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
-import { CreateSampleDto } from './dto/create-sample-request.dto';
+import { CreateSampleRequestDto } from './dto/create-sample-request.dto';
 import { AdvanceSampleDto } from './dto/advance-sample-request.dto';
 import {
   SampleStage,
@@ -25,7 +25,7 @@ export class RndService {
     private idGenerator: IdGeneratorService,
   ) {}
 
-  async createSample(dto: CreateSampleDto) {
+  async createSample(dto: CreateSampleRequestDto) {
     const sampleCode = await this.idGenerator.generateId('SMP');
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.create({
@@ -261,30 +261,42 @@ export class RndService {
   }
 
   async getDashboardMetrics() {
-    const allSamples = await this.prisma.sampleRequest.findMany({
-      include: {
-        pic: true,
-        lead: {
-          select: {
-            clientName: true,
-            brandName: true,
-            pic: { select: { name: true } },
+    const [allSamples, staffs] = await Promise.all([
+      this.prisma.sampleRequest.findMany({
+        take: 200,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          pic: { select: { name: true } },
+          lead: {
+            select: {
+              clientName: true,
+              brandName: true,
+              pic: { select: { name: true } },
+            },
           },
+          stageLogs: { orderBy: { enteredAt: 'desc' }, take: 1 },
+          formulas: { select: { version: true } },
         },
-        stageLogs: true,
-        formulas: { select: { version: true } },
-      },
-    });
+      }),
+      this.prisma.user.findMany({
+        where: { roles: { has: 'RND' } },
+        select: { id: true, fullName: true, email: true },
+      }),
+    ]);
 
-    const activeSamples = allSamples.filter(
-      (s) =>
-        s.stage !== SampleStage.APPROVED && s.stage !== SampleStage.CANCELLED,
+    const approvedSamples = allSamples.filter(
+      (s) => s.stage === SampleStage.APPROVED,
     );
     const completedSamples = allSamples.filter(
-      (s) => s.stage === SampleStage.APPROVED,
+      (s) =>
+        s.stage === SampleStage.APPROVED && s.completedAt,
     );
     const rejectedSamples = allSamples.filter(
       (s) => s.stage === SampleStage.REJECTED,
+    );
+    const activeSamples = allSamples.filter(
+      (s) =>
+        s.stage !== SampleStage.APPROVED && s.stage !== SampleStage.CANCELLED,
     );
 
     // 1. TIMELINESS
@@ -302,12 +314,12 @@ export class RndService {
     }
 
     // 2. ACCURACY
-    const firstTimeApprovedCount = completedSamples.filter(
+    const firstTimeApprovedCount = approvedSamples.filter(
       (s) => (s.revisionCount || 0) === 0,
     ).length;
     const firstTimeApprovalRate =
-      completedSamples.length > 0
-        ? (firstTimeApprovedCount / completedSamples.length) * 100
+      approvedSamples.length > 0
+        ? (firstTimeApprovedCount / approvedSamples.length) * 100
         : 0;
 
     const avgRevisions =
@@ -317,18 +329,11 @@ export class RndService {
         : 0;
 
     // 3. PERFORMANCE EVALUATION (PER PIC)
-    const staffs = await this.prisma.user.findMany({
-      where: { roles: { has: 'RND' } },
-      include: { rndSamples: { include: { stageLogs: true } } },
-    });
-
     const performanceEvaluation = staffs.map((staff) => {
       const mySamples = allSamples.filter((s) => s.picId === staff.id);
       const myCompleted = mySamples.filter(
         (s) => s.stage === SampleStage.APPROVED,
       );
-
-      // Efficiency: On-Time Rate for completed projects
       const onTimeCompleted = myCompleted.filter(
         (s) => !s.targetDeadline || s.completedAt! <= s.targetDeadline,
       ).length;
@@ -336,16 +341,12 @@ export class RndService {
         myCompleted.length > 0
           ? Math.round((onTimeCompleted / myCompleted.length) * 100)
           : 0;
-
-      // Quality: 100 - (Avg Revisions * 15)
       const myAvgRevisions =
         mySamples.length > 0
           ? mySamples.reduce((sum, s) => sum + (s.revisionCount || 0), 0) /
             mySamples.length
           : 0;
       const quality = Math.max(0, 100 - Math.round(myAvgRevisions * 15));
-
-      // Utilization: Active samples vs Capacity (Assume max 10 projects/person)
       const myActiveProjects = mySamples.filter(
         (s) =>
           s.stage !== SampleStage.APPROVED && s.stage !== SampleStage.CANCELLED,
@@ -354,7 +355,6 @@ export class RndService {
         Math.round((myActiveProjects / 10) * 100),
         100,
       );
-
       return {
         picName: staff.fullName || staff.email,
         output: `${myCompleted.length} / ${mySamples.length}`,
@@ -384,12 +384,10 @@ export class RndService {
               (1000 * 60 * 60 * 24),
           )
         : 0;
-
       const totalDays = Math.round(
         (new Date().getTime() - s.requestedAt.getTime()) /
           (1000 * 60 * 60 * 24),
       );
-
       return {
         id: s.sampleCode,
         brand: s.lead?.brandName || 'Generic',
@@ -437,10 +435,10 @@ export class RndService {
       },
       approval: {
         overallRate: Math.round(
-          (completedSamples.length / (allSamples.length || 1)) * 100,
+          (approvedSamples.length / (allSamples.length || 1)) * 100,
         ),
         submitted: allSamples.length,
-        approved: completedSamples.length,
+        approved: approvedSamples.length,
         insight: 'Lead-to-Sample conversion flow is healthy',
       },
       performance: {

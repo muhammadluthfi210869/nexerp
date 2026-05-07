@@ -3,14 +3,13 @@ import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
-  CategoryType,
 } from '../dto/category.dto';
 
 @Injectable()
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(type?: CategoryType) {
+  async findAll(type?: string) {
     return this.prisma.masterCategory.findMany({
       where: type ? { type } : {},
       orderBy: { name: 'asc' },

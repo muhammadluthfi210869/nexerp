@@ -1,5 +1,6 @@
 import React from "react";
 import { ModuleHeader } from "./ModuleHeader";
+import { PageTransition } from "./PageTransition";
 
 interface DashboardShellProps {
   title: string;
@@ -16,17 +17,19 @@ interface DashboardShellProps {
  */
 export function DashboardShell({ title, titleAccent, subtitle, actions, children }: DashboardShellProps) {
   return (
-    <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
-      <ModuleHeader
-        title={title}
-        titleAccent={titleAccent}
-        subtitle={subtitle}
-        actions={actions}
-      />
-      <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
-        {children}
+    <PageTransition>
+      <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
+        <ModuleHeader
+          title={title}
+          titleAccent={titleAccent}
+          subtitle={subtitle}
+          actions={actions}
+        />
+        <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
+          {children}
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }
 

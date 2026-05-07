@@ -10,7 +10,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { RndService } from './rnd.service';
-import { CreateSampleDto } from './dto/create-sample-request.dto';
+import { CreateSampleRequestDto } from './dto/create-sample-request.dto';
 import { AdvanceSampleDto } from './dto/advance-sample-request.dto';
 
 @ApiTags('rnd')
@@ -21,7 +21,7 @@ export class RndController {
 
   @Post('samples')
   @ApiOperation({ summary: 'Create a new sample request' })
-  createSample(@Body() dto: CreateSampleDto) {
+  createSample(@Body() dto: CreateSampleRequestDto) {
     return this.rndService.createSample(dto);
   }
 

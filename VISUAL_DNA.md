@@ -155,13 +155,23 @@ All line charts **MUST** use a vertical linear gradient to create a "glow" effec
 
 ---
 
-## 6. 🕹️ Interactions & Motion
-The interface should feel alive but stable.
+## 6. 🕹️ Interactions & Motion (Institutional-Grade)
+The Nex ERP motion system is built for speed and spatial clarity. Motion must be non-blocking and feel like physics, not cartoons.
 
-- **Nav Item Hover**: `transform: translateX(4px)` with `cubic-bezier(0.4, 0, 0.2, 1)`
-- **Card Hover**: Smooth lift (4px) with expanded shadow.
-- **Progress Bars**: `transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1)`
-- **Critical Alerts**: Subtle red pulse animation.
+### Standardized Durations
+- **FAST (150ms)**: Micro-interactions (Hover, Toggles, Checkboxes).
+- **STANDARD (300ms)**: Page entrances, Modal openings, Section transitions.
+- **SLOW (500ms)**: Complex data visualizations or large-scale layout changes.
+
+### Easing DNA
+Never use `linear`. Use the **Institutional Ease** (Cubic Bezier):
+- `cubic-bezier(0.22, 1, 0.36, 1)` (Quick start, precision finish)
+
+### Motion Patterns
+- **The "Staggered Entrance"**: Child elements (like KPI cards or Table rows) must arrive in sequence with a `0.03s` stagger.
+- **The "Tactile Hover"**: Cards should lift (`-2px`) and scale slightly (`1.01`) on hover using a physics-based spring or tight transition.
+- **The "Spatial View Switch"**: Pages should use a subtle `Fade + Slide-Up (10px)` to provide directionality.
+- **Exit Strategy**: Exit animations MUST be 30% faster than entry animations to ensure the interface never feels "heavy".
 
 ---
 

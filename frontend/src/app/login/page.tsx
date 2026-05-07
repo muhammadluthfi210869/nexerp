@@ -56,23 +56,8 @@ export default function LoginPage() {
 
       toast.success(`Welcome back, ${user.fullName || user.email}!`);
 
-      // Intelligent Role-Based Redirection
-      const roles = user.roles || [];
-      if (roles.includes("SUPER_ADMIN")) {
-        window.location.href = "/dashboard/super-admin";
-      } else if (roles.includes("FINANCE")) {
-        window.location.href = "/finance/dashboard";
-      } else if (roles.includes("COMPLIANCE")) {
-        window.location.href = "/legality/dashboard";
-      } else if (roles.includes("COMMERCIAL")) {
-        window.location.href = "/bussdev/dashboard";
-      } else if (roles.includes("WAREHOUSE")) {
-        window.location.href = "/warehouse/hub";
-      } else if (roles.includes("PRODUCTION_OP")) {
-        window.location.href = "/production/terminal";
-      } else {
-        window.location.href = "/dashboard";
-      }
+      // Unified redirect — all users go to executive dashboard
+      window.location.href = "/executive/dashboard";
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || "Login failed. Check your credentials.");

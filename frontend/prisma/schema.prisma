@@ -119,6 +119,12 @@ model SalesLead {
   sampleRequests      SampleRequest[]
   workOrders          WorkOrder[]
 
+  @@index([status])
+  @@index([picId])
+  @@index([bdId])
+  @@index([lastFollowUpAt])
+  @@index([isRepeatOrder])
+  @@index([updatedAt])
   @@map("sales_leads")
 }
 
@@ -138,6 +144,9 @@ model LeadActivity {
   validatedBy      String?      @db.Uuid
   lead             SalesLead    @relation(fields: [leadId], references: [id])
 
+  @@index([leadId])
+  @@index([activityType])
+  @@index([createdAt])
   @@map("lead_activities")
 }
 
@@ -169,6 +178,8 @@ model BussdevStaff {
   user           User?       @relation(fields: [userId], references: [id])
   salesLeads     SalesLead[]
 
+  @@index([isActive])
+  @@index([userId])
   @@map("bussdev_staffs")
 }
 
@@ -311,6 +322,9 @@ model LeadTimelineLog {
   category      ActivityCategory @default(OTHER)
   lead          SalesLead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
+  @@index([leadId])
+  @@index([category])
+  @@index([createdAt])
   @@map("lead_timeline_logs")
 }
 
@@ -328,6 +342,9 @@ model ActivityStream {
   isCritical       Boolean         @default(false)
   lead             SalesLead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
+  @@index([leadId])
+  @@index([eventType])
+  @@index([createdAt])
   @@map("activity_streams")
 }
 
@@ -1951,6 +1968,10 @@ model SampleRequest {
   revisions           SampleRevision[]
   stageLogs           SampleStageLog[]
 
+  @@index([stage])
+  @@index([leadId])
+  @@index([picId])
+  @@index([updatedAt])
   @@map("sample_requests")
 }
 

@@ -58,10 +58,13 @@ export async function seedKpiScores(prisma: PrismaClient) {
     const start = new Date(yyyy, mm - 1, 1);
     const end = new Date(yyyy, mm, 0, 23, 59, 59);
 
-    const period = await prisma.financialPeriod.upsert({
-      where: { name: pName },
-      update: { startDate: start, endDate: end },
-      create: {
+    const existing = await prisma.financialPeriod.findFirst({ where: { name: pName } });
+    if (existing) {
+      periods.push(existing);
+      continue;
+    }
+    const period = await prisma.financialPeriod.create({
+      data: {
         name: pName,
         startDate: start,
         endDate: end,

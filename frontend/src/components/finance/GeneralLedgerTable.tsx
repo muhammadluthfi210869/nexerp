@@ -6,7 +6,6 @@ import { formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Hash, Calendar, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface JournalLine {
   id: string;

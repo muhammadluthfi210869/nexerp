@@ -7,14 +7,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -108,7 +101,7 @@
         "parameters": [
           {
             "name": "start",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -116,7 +109,7 @@
           },
           {
             "name": "end",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -139,7 +132,7 @@
         "parameters": [
           {
             "name": "start",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -147,7 +140,7 @@
           },
           {
             "name": "end",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -170,17 +163,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -310,7 +293,7 @@
         "parameters": [
           {
             "name": "start",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -318,7 +301,7 @@
           },
           {
             "name": "end",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -341,7 +324,7 @@
         "parameters": [
           {
             "name": "start",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -349,7 +332,7 @@
           },
           {
             "name": "end",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -539,14 +522,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -600,14 +576,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -641,17 +610,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -725,17 +684,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -811,17 +760,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -849,14 +788,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -876,17 +808,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -905,17 +827,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -943,14 +855,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1007,17 +912,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1064,17 +959,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1093,17 +978,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1445,7 +1320,7 @@
         "parameters": [
           {
             "name": "startDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1453,7 +1328,7 @@
           },
           {
             "name": "endDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1517,7 +1392,7 @@
         "parameters": [
           {
             "name": "date",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1727,17 +1602,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1766,14 +1631,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1832,14 +1690,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -1851,17 +1702,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -1954,17 +1795,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2009,14 +1840,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2133,14 +1957,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2154,14 +1971,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2184,14 +1994,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2219,17 +2022,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2243,14 +2036,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2274,14 +2060,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2293,17 +2072,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2326,14 +2095,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2380,17 +2142,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2432,17 +2184,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2468,17 +2210,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2707,7 +2439,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2715,7 +2447,7 @@
           },
           {
             "name": "stage",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2723,7 +2455,7 @@
           },
           {
             "name": "client",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2755,14 +2487,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2797,17 +2522,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -2904,7 +2619,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2912,7 +2627,7 @@
           },
           {
             "name": "category",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -3074,14 +2789,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3119,17 +2827,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3195,14 +2893,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3221,17 +2912,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3279,17 +2960,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3327,17 +2998,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3581,17 +3242,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -3638,17 +3289,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -3662,17 +3303,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -3686,17 +3317,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -3839,14 +3460,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -3874,17 +3488,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -3995,14 +3599,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4062,14 +3659,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4081,17 +3671,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4128,14 +3708,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4147,17 +3720,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4180,14 +3743,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4201,17 +3757,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4223,14 +3769,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4256,14 +3795,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4300,17 +3832,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4346,17 +3868,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4379,14 +3891,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4422,17 +3927,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4455,14 +3950,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4498,17 +3986,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4531,14 +4009,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4574,7 +4045,7 @@
         "parameters": [
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -4583,17 +4054,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4616,14 +4077,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4654,14 +4108,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4797,17 +4244,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -4847,7 +4284,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSampleDto"
+                "$ref": "#/components/schemas/CreateSampleRequestDto"
               }
             }
           }
@@ -4872,17 +4309,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -4996,14 +4423,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -5022,17 +4442,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -5154,7 +4564,7 @@
         "parameters": [
           {
             "name": "type",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -5209,17 +4619,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -5260,17 +4660,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5306,17 +4696,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5385,17 +4765,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5418,14 +4788,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5461,17 +4824,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5485,17 +4838,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5647,17 +4990,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5704,17 +5037,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5773,17 +5096,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5807,14 +5120,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5826,7 +5132,7 @@
         "parameters": [
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -5834,7 +5140,7 @@
           },
           {
             "name": "type",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -5857,14 +5163,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -5906,17 +5205,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -5963,14 +5252,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6026,7 +5308,7 @@
         "parameters": [
           {
             "name": "category",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -6119,14 +5401,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6138,17 +5413,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6162,17 +5427,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6232,17 +5487,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6349,14 +5594,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6379,14 +5617,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6400,17 +5631,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6461,14 +5682,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6482,14 +5696,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6503,14 +5710,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6522,7 +5722,7 @@
         "parameters": [
           {
             "name": "stage",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -6531,17 +5731,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6564,14 +5754,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6594,14 +5777,7 @@
         ],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6629,14 +5805,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6650,14 +5819,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6717,17 +5879,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -6966,14 +6118,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "number"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -7039,14 +6184,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7060,14 +6198,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7084,6 +6215,11 @@
             "required": false,
             "in": "query",
             "schema": {
+              "enum": [
+                "GOODS",
+                "SUPPLIER",
+                "CUSTOMER"
+              ],
               "type": "string"
             }
           }
@@ -7094,7 +6230,7 @@
           }
         },
         "tags": [
-          "Categories"
+          "Master Data"
         ]
       },
       "post": {
@@ -7116,7 +6252,7 @@
           }
         },
         "tags": [
-          "Categories"
+          "Master Data"
         ]
       }
     },
@@ -7139,7 +6275,7 @@
           }
         },
         "tags": [
-          "Categories"
+          "Master Data"
         ]
       },
       "patch": {
@@ -7170,7 +6306,7 @@
           }
         },
         "tags": [
-          "Categories"
+          "Master Data"
         ]
       },
       "delete": {
@@ -7191,7 +6327,7 @@
           }
         },
         "tags": [
-          "Categories"
+          "Master Data"
         ]
       }
     },
@@ -7201,17 +6337,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7256,14 +6382,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7329,17 +6448,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7374,14 +6483,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7484,14 +6586,7 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7505,14 +6600,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7526,14 +6614,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7547,14 +6628,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7568,14 +6642,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7598,17 +6665,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "tags": [
@@ -7656,20 +6713,7 @@
     "schemas": {
       "LoginDto": {
         "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "password": {
-            "type": "string",
-            "minLength": 6
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
+        "properties": {}
       },
       "JournalLineDto": {
         "type": "object",
@@ -7681,19 +6725,16 @@
           },
           "debit": {
             "type": "number",
-            "minimum": 0,
             "example": 1000000,
             "description": "Debit amount"
           },
           "credit": {
             "type": "number",
-            "minimum": 0,
             "example": 0,
             "description": "Credit amount"
           },
           "taxRate": {
             "type": "number",
-            "minimum": 0,
             "example": 0.1,
             "description": "Tax rate (0.1 = 10%)"
           },
@@ -7752,120 +6793,27 @@
       },
       "CreateFundRequestDto": {
         "type": "object",
-        "properties": {
-          "departmentId": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "attachmentUrls": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "departmentId",
-          "amount",
-          "reason"
-        ]
+        "properties": {}
       },
       "ApproveFundRequestDto": {
         "type": "object",
-        "properties": {
-          "approvedById": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "approvedById"
-        ]
+        "properties": {}
       },
       "DisburseFundRequestDto": {
         "type": "object",
-        "properties": {
-          "disbursedById": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "accountId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "disbursedById",
-          "accountId"
-        ]
+        "properties": {}
       },
       "DirectorApproveFundRequestDto": {
         "type": "object",
-        "properties": {
-          "approvedById": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "approvedById"
-        ]
+        "properties": {}
       },
       "RejectFundRequestDto": {
         "type": "object",
-        "properties": {
-          "reason": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ]
+        "properties": {}
       },
       "VerifyArPaymentDto": {
         "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "SAMPLE",
-              "DP_ORDER",
-              "PELUNASAN",
-              "PNBP"
-            ]
-          },
-          "id": {
-            "type": "string"
-          },
-          "receivingAccountId": {
-            "type": "string"
-          },
-          "actualAmount": {
-            "type": "number"
-          },
-          "bankAdminFee": {
-            "type": "number"
-          },
-          "taxAmount": {
-            "type": "number"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "id",
-          "receivingAccountId",
-          "actualAmount",
-          "bankAdminFee",
-          "taxAmount"
-        ]
+        "properties": {}
       },
       "CreatePurchaseOrderDto": {
         "type": "object",
@@ -7877,12 +6825,10 @@
           },
           "supplierId": {
             "type": "string",
-            "format": "uuid",
             "example": "uuid-supplier-123"
           },
           "leadId": {
             "type": "string",
-            "format": "uuid",
             "example": "uuid-lead-456"
           },
           "items": {
@@ -7911,522 +6857,55 @@
           "supplierId"
         ]
       },
-      "InboundItemDto": {
-        "type": "object",
-        "properties": {
-          "materialId": {
-            "type": "string"
-          },
-          "qtyActual": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "materialId",
-          "qtyActual"
-        ]
-      },
       "CreateInboundDto": {
         "type": "object",
-        "properties": {
-          "poId": {
-            "type": "string"
-          },
-          "warehouseId": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InboundItemDto"
-            }
-          }
-        },
-        "required": [
-          "poId",
-          "warehouseId",
-          "items"
-        ]
+        "properties": {}
       },
       "UpdateInboundStatusDto": {
         "type": "object",
-        "properties": {
-          "status": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "status"
-        ]
+        "properties": {}
       },
       "CreateMaterialDto": {
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "type": {
-            "type": "object"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "unitPrice": {
-            "type": "number"
-          },
-          "stockQty": {
-            "type": "number"
-          },
-          "minStock": {
-            "type": "number"
-          },
-          "categoryId": {
-            "type": "string"
-          },
-          "inventoryAccountId": {
-            "type": "string"
-          },
-          "salesAccountId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "type",
-          "unit",
-          "unitPrice"
-        ]
+        "properties": {}
       },
       "UpdateMaterialDto": {
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "type": {
-            "type": "object"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "unitPrice": {
-            "type": "number"
-          },
-          "stockQty": {
-            "type": "number"
-          },
-          "minStock": {
-            "type": "number"
-          },
-          "categoryId": {
-            "type": "string"
-          },
-          "inventoryAccountId": {
-            "type": "string"
-          },
-          "salesAccountId": {
-            "type": "string"
-          }
-        }
-      },
-      "CreatePurchaseReturnItemDto": {
-        "type": "object",
-        "properties": {
-          "materialId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "unitPrice": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "materialId",
-          "quantity",
-          "unitPrice"
-        ]
+        "properties": {}
       },
       "CreatePurchaseReturnDto": {
         "type": "object",
-        "properties": {
-          "supplierId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "warehouseId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "inboundId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "date": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreatePurchaseReturnItemDto"
-            }
-          }
-        },
-        "required": [
-          "supplierId",
-          "warehouseId",
-          "items"
-        ]
+        "properties": {}
       },
       "UpdatePurchaseReturnStatusDto": {
         "type": "object",
-        "properties": {
-          "status": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "CreateSampleRequestDto": {
-        "type": "object",
-        "properties": {
-          "productName": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "targetPrice": {
-            "type": "number"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "productName"
-        ]
+        "properties": {}
       },
       "CreateLeadDto": {
         "type": "object",
-        "properties": {
-          "clientName": {
-            "type": "string"
-          },
-          "brandName": {
-            "type": "string"
-          },
-          "contactInfo": {
-            "type": "string"
-          },
-          "source": {
-            "type": "string"
-          },
-          "productInterest": {
-            "type": "string"
-          },
-          "estimatedValue": {
-            "type": "number"
-          },
-          "picId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "isRepeatOrder": {
-            "type": "boolean"
-          },
-          "hkiMode": {
-            "type": "object"
-          },
-          "paymentType": {
-            "type": "object"
-          },
-          "category": {
-            "type": "object"
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "province": {
-            "type": "string"
-          },
-          "city": {
-            "type": "string"
-          },
-          "district": {
-            "type": "string"
-          },
-          "addressDetail": {
-            "type": "string"
-          },
-          "launchingPlan": {
-            "type": "string"
-          },
-          "targetMarket": {
-            "type": "string"
-          },
-          "contactChannel": {
-            "type": "string"
-          },
-          "packagingSuggestion": {
-            "type": "string"
-          },
-          "designSuggestion": {
-            "type": "string"
-          },
-          "valueSuggestion": {
-            "type": "string"
-          },
-          "sku": {
-            "type": "string"
-          },
-          "unitPrice": {
-            "type": "number"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "moq": {
-            "type": "number"
-          },
-          "planOmset": {
-            "type": "number"
-          },
-          "logoRevision": {
-            "type": "number"
-          },
-          "hkiProgress": {
-            "type": "string"
-          },
-          "sampleRequests": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateSampleRequestDto"
-            }
-          }
-        },
-        "required": [
-          "clientName",
-          "contactInfo",
-          "source",
-          "productInterest",
-          "estimatedValue"
-        ]
+        "properties": {}
       },
       "AdvanceLeadDto": {
         "type": "object",
-        "properties": {
-          "action": {
-            "type": "object"
-          },
-          "newStatus": {
-            "type": "object"
-          },
-          "lostReason": {
-            "type": "object"
-          },
-          "paymentType": {
-            "type": "object"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "isRepeatOrder": {
-            "type": "boolean"
-          },
-          "pnfFileUrl": {
-            "type": "string"
-          },
-          "spkFileUrl": {
-            "type": "string"
-          },
-          "clientExpectations": {
-            "type": "string"
-          },
-          "paymentProofUrl": {
-            "type": "string"
-          },
-          "downPaymentAmount": {
-            "type": "number"
-          },
-          "productConcept": {
-            "type": "string"
-          },
-          "targetPrice": {
-            "type": "number"
-          },
-          "loggedBy": {
-            "type": "string"
-          },
-          "productCategory": {
-            "type": "string"
-          },
-          "estimatedMoq": {
-            "type": "number"
-          },
-          "planOmset": {
-            "type": "number"
-          },
-          "packagingSuggestion": {
-            "type": "string"
-          },
-          "designSuggestion": {
-            "type": "string"
-          },
-          "valueSuggestion": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "action",
-          "newStatus",
-          "loggedBy"
-        ]
+        "properties": {}
       },
       "CreateGuestDto": {
         "type": "object",
-        "properties": {
-          "clientName": {
-            "type": "string"
-          },
-          "productInterest": {
-            "type": "string"
-          },
-          "moqPlan": {
-            "type": "number"
-          },
-          "category": {
-            "type": "object"
-          },
-          "phoneNo": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "city": {
-            "type": "string"
-          },
-          "launchingPlan": {
-            "type": "string"
-          },
-          "targetMarket": {
-            "type": "string"
-          },
-          "instansi": {
-            "type": "string"
-          },
-          "purpose": {
-            "type": "string"
-          },
-          "visitDate": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "clientName",
-          "category"
-        ]
+        "properties": {}
       },
       "CreateNPFDto": {
         "type": "object",
-        "properties": {
-          "leadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productName": {
-            "type": "string"
-          },
-          "targetPrice": {
-            "type": "number"
-          },
-          "conceptNotes": {
-            "type": "string"
-          },
-          "status": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "leadId",
-          "productName",
-          "targetPrice"
-        ]
+        "properties": {}
       },
       "CreateSampleDto": {
         "type": "object",
-        "properties": {
-          "leadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productName": {
-            "type": "string",
-            "example": "Luminous Serum"
-          },
-          "targetFunction": {
-            "type": "string",
-            "example": "Brightening"
-          },
-          "textureReq": {
-            "type": "string",
-            "example": "Liquid Gel"
-          },
-          "colorReq": {
-            "type": "string",
-            "example": "Clear"
-          },
-          "aromaReq": {
-            "type": "string",
-            "example": "Floral"
-          },
-          "targetHpp": {
-            "type": "number",
-            "example": 15000
-          },
-          "targetDeadline": {
-            "type": "string",
-            "example": "2026-12-31T23:59:59Z"
-          },
-          "difficultyLevel": {
-            "type": "number",
-            "example": 1
-          },
-          "picId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "leadId",
-          "productName",
-          "targetFunction",
-          "textureReq",
-          "colorReq",
-          "aromaReq"
-        ]
+        "properties": {}
       },
       "CreateFormulaItemDto": {
         "type": "object",
         "properties": {
           "materialId": {
             "type": "string",
-            "format": "uuid",
             "example": "uuid-mat-123"
           },
           "dosagePercentage": {
@@ -8451,7 +6930,6 @@
         "properties": {
           "sampleRequestId": {
             "type": "string",
-            "format": "uuid",
             "example": "uuid-sample-123"
           },
           "totalWeightGr": {
@@ -8480,12 +6958,10 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
           "materialId": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
           "dosagePercentage": {
             "type": "number",
@@ -8504,8 +6980,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
           "prefix": {
             "type": "string",
@@ -8579,375 +7054,116 @@
           "phases"
         ]
       },
-      "AdvanceSampleDto": {
+      "CreateSampleRequestDto": {
         "type": "object",
         "properties": {
-          "newStage": {
-            "type": "object"
-          },
-          "feedback": {
+          "leadId": {
             "type": "string"
           },
-          "rejectionReason": {
+          "productName": {
+            "type": "string",
+            "example": "Luminous Serum"
+          },
+          "targetFunction": {
+            "type": "string",
+            "example": "Brightening"
+          },
+          "textureReq": {
+            "type": "string",
+            "example": "Liquid Gel"
+          },
+          "colorReq": {
+            "type": "string",
+            "example": "Clear"
+          },
+          "aromaReq": {
+            "type": "string",
+            "example": "Floral"
+          },
+          "targetHpp": {
+            "type": "number",
+            "example": 15000
+          },
+          "targetDeadline": {
+            "type": "string",
+            "example": "2026-12-31T23:59:59Z"
+          },
+          "difficultyLevel": {
+            "type": "number",
+            "example": 1
+          },
+          "picId": {
             "type": "string"
           }
         },
         "required": [
-          "newStage"
+          "leadId",
+          "productName",
+          "targetFunction",
+          "textureReq",
+          "colorReq",
+          "aromaReq"
         ]
+      },
+      "AdvanceSampleDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreateLostDealDto": {
         "type": "object",
-        "properties": {
-          "leadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "stageLost": {
-            "type": "object"
-          },
-          "reasonType": {
-            "type": "object"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "leadId",
-          "stageLost",
-          "reasonType"
-        ]
-      },
-      "CreateSalesOrderItemDto": {
-        "type": "object",
-        "properties": {
-          "materialId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productName": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "unitPrice": {
-            "type": "number"
-          },
-          "netto": {
-            "type": "number"
-          },
-          "taxId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "materialId",
-          "productName",
-          "quantity",
-          "unitPrice"
-        ]
+        "properties": {}
       },
       "CreateSalesOrderDto": {
         "type": "object",
-        "properties": {
-          "leadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "sampleId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "salesCategory": {
-            "type": "string"
-          },
-          "brandName": {
-            "type": "string"
-          },
-          "taxId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "currencyId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "totalAmount": {
-            "type": "number"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateSalesOrderItemDto"
-            }
-          }
-        },
-        "required": [
-          "leadId",
-          "sampleId",
-          "salesCategory",
-          "totalAmount",
-          "items"
-        ]
+        "properties": {}
       },
       "UpdateSalesOrderDto": {
         "type": "object",
-        "properties": {
-          "status": {
-            "type": "object"
-          }
-        }
+        "properties": {}
       },
       "CreateInvoiceDto": {
         "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "soId": {
-            "type": "string"
-          },
-          "type": {
-            "type": "object"
-          },
-          "amountDue": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "id",
-          "soId",
-          "type",
-          "amountDue"
-        ]
+        "properties": {}
       },
       "CreatePaymentDto": {
         "type": "object",
-        "properties": {
-          "invoiceId": {
-            "type": "string"
-          },
-          "amountPaid": {
-            "type": "number"
-          },
-          "paymentDate": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "invoiceId",
-          "amountPaid"
-        ]
+        "properties": {}
       },
       "CreateProductionPlanDto": {
         "type": "object",
-        "properties": {
-          "soId": {
-            "type": "string"
-          },
-          "batchNo": {
-            "type": "string"
-          },
-          "status": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "soId",
-          "batchNo"
-        ]
+        "properties": {}
       },
       "UpdatePlanStatusDto": {
         "type": "object",
-        "properties": {
-          "status": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "status"
-        ]
+        "properties": {}
       },
       "CreateStepLogDto": {
         "type": "object",
-        "properties": {
-          "workOrderId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "stage": {
-            "type": "object"
-          },
-          "inputQty": {
-            "type": "number"
-          },
-          "goodQty": {
-            "type": "number"
-          },
-          "rejectQty": {
-            "type": "number"
-          },
-          "quarantineQty": {
-            "type": "number"
-          },
-          "machineId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "operatorId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "startTime": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "endTime": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "machineParams": {
-            "type": "object"
-          },
-          "materialBatchNumber": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "workOrderId",
-          "stage",
-          "inputQty",
-          "goodQty",
-          "rejectQty",
-          "quarantineQty"
-        ]
+        "properties": {}
       },
       "CreateRequisitionDto": {
         "type": "object",
-        "properties": {
-          "woId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "materialId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "qtyRequested": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "woId",
-          "materialId",
-          "qtyRequested"
-        ]
+        "properties": {}
       },
       "IssueRequisitionDto": {
         "type": "object",
-        "properties": {
-          "qtyIssued": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "qtyIssued"
-        ]
+        "properties": {}
       },
       "CreateQCAuditDto": {
         "type": "object",
-        "properties": {
-          "stepLogId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "inventoryId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "object"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "ph": {
-            "type": "number"
-          },
-          "viscosity": {
-            "type": "number"
-          },
-          "organoleptic": {
-            "type": "string"
-          },
-          "fillingWeight": {
-            "type": "number"
-          },
-          "sealingCheck": {
-            "type": "string"
-          },
-          "labelingCheck": {
-            "type": "string"
-          },
-          "expDateCheck": {
-            "type": "string"
-          },
-          "halalStatus": {
-            "type": "string"
-          },
-          "isCompliancePassed": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "status"
-        ]
+        "properties": {}
       },
       "CreateShipmentDto": {
         "type": "object",
-        "properties": {
-          "soId": {
-            "type": "string"
-          },
-          "logisticsId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "trackingNo": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "soId",
-          "logisticsId"
-        ]
+        "properties": {}
       },
       "UpdateShipmentStatusDto": {
         "type": "object",
-        "properties": {
-          "status": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "status"
-        ]
+        "properties": {}
       },
       "CreateCategoryDto": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
           "type": {
             "type": "string",
             "enum": [
@@ -8958,57 +7174,20 @@
           }
         },
         "required": [
-          "name",
           "type"
         ]
       },
       "UpdateCategoryDto": {
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "isActive": {
-            "type": "boolean"
-          }
-        }
+        "properties": {}
       },
       "CreateWarehouseDto": {
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "picName": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
+        "properties": {}
       },
       "UpdateWarehouseDto": {
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "picName": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          }
-        }
+        "properties": {}
       }
     }
   }
