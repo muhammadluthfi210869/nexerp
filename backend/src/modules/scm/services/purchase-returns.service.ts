@@ -14,8 +14,14 @@ import { PurchaseReturnStatus } from '@prisma/client';
 export class PurchaseReturnsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreatePurchaseReturnDto) {
+  async create(dto: CreatePurchaseReturnDto, userId?: string) {
     const { items, ...returnData } = dto;
+
+    if (userId && !returnData.notes) {
+      returnData.notes = `[Created by: ${userId}]`;
+    } else if (userId) {
+      returnData.notes += ` [Created by: ${userId}]`;
+    }
 
     return this.prisma.$transaction(async (tx) => {
       // 1. Validate Stock Availability for each item

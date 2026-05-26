@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { PurchaseReturnsService } from '../services/purchase-returns.service';
 import {
@@ -24,8 +25,11 @@ export class PurchaseReturnsController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
-  async create(@Body() dto: CreatePurchaseReturnDto) {
-    return this.service.create(dto);
+  async create(
+    @Body() dto: CreatePurchaseReturnDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.service.create(dto, req.user.id);
   }
 
   @Get()
