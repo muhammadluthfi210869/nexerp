@@ -12,6 +12,8 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 import { LegalityService } from '../../legality/legality.service';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { UserRole } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class PurchaseOrdersService {
@@ -38,10 +40,17 @@ export class PurchaseOrdersService {
         );
       }
 
-      // Verify PIN (In real app, compare with hashed PIN in DB)
-      const manager = await this.prisma.user.findFirst({
-        where: { managerPin: escalationPin },
+      // Verify PIN using bcrypt
+      const managers = await this.prisma.user.findMany({
+        where: {
+          roles: { hasSome: [UserRole.HEAD_OPS, UserRole.DIRECTOR, UserRole.SUPER_ADMIN] },
+          managerPin: { not: null },
+        },
       });
+
+      const manager = managers.find((m) =>
+        bcrypt.compareSync(escalationPin, m.managerPin || ''),
+      );
 
       if (!manager) {
         throw new ForbiddenException('PIN Manajer tidak valid.');
@@ -52,7 +61,7 @@ export class PurchaseOrdersService {
         .create({
           data: {
             type: 'VENDOR_BLACKLIST_PO',
-            referenceId: dto.id,
+            referenceId: poNumber,
             reason: escalationReason,
             approvedBy: { connect: { id: manager.id } },
           },
