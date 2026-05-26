@@ -8,11 +8,6 @@ import {
 } from 'class-validator';
 
 export class CreatePurchaseOrderDto {
-  @ApiProperty({ example: 'PO-2024-001', description: 'Human-readable PO ID' })
-  @IsString()
-  @IsNotEmpty()
-  id!: string;
-
   @ApiProperty({ example: 'uuid-supplier-123' })
   @IsUUID()
   @IsNotEmpty()
