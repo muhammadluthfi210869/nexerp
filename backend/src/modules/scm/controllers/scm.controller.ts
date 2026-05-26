@@ -8,7 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ScmService } from '../services/scm.service';
-import { PurchaseOrdersService } from '../services/purchase-orders.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -19,7 +18,6 @@ import { UserRole, User } from '@prisma/client';
 export class ScmController {
   constructor(
     private readonly scmService: ScmService,
-    private readonly poService: PurchaseOrdersService,
   ) {}
 
   @Get('vendors')
@@ -70,12 +68,6 @@ export class ScmController {
     @Request() req: { user: User },
   ) {
     return this.scmService.approvePurchaseRequest(id, req.user.id);
-  }
-
-  @Post('purchase-order')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
-  async createPurchaseOrder(@Request() req: { user: User }, @Body() body: any) {
-    return this.poService.create(req.user.id, body);
   }
 
   @Get('purchase-requests')
