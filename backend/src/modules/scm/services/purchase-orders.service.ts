@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
@@ -48,27 +49,28 @@ export class PurchaseOrdersService {
         },
       });
 
-      const manager = managers.find((m) =>
-        bcrypt.compareSync(escalationPin, m.managerPin || ''),
+      const managerResults = await Promise.all(
+        managers.map((m) => bcrypt.compare(escalationPin, m.managerPin!).then((match) => ({ manager: m, match }))),
       );
+      const manager = managerResults.find((r) => r.match)?.manager;
 
       if (!manager) {
         throw new ForbiddenException('PIN Manajer tidak valid.');
       }
 
       // Record Escalation (Non-blocking)
-      await this.prisma.auditEscalation
-        .create({
+      try {
+        await this.prisma.auditEscalation.create({
           data: {
             type: 'VENDOR_BLACKLIST_PO',
             referenceId: poNumber,
             reason: escalationReason,
             approvedBy: { connect: { id: manager.id } },
           },
-        })
-        .catch((err) => {
-          console.error('[AuditEscalation] Failed to record:', err.message);
         });
+      } catch (err) {
+        Logger.warn(`[AuditEscalation] Failed to record: ${err.message}`, 'PurchaseOrdersService');
+      }
     }
 
     // 1. SMART-GATE: Artwork Approval for Packaging
