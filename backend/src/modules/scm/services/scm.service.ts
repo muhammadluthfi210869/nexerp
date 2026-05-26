@@ -7,7 +7,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { ACTIVITY_EVENT } from '../../activity-stream/events/activity.events';
-import { Division, StreamEventType, POStatus } from '@prisma/client';
+import { Division, StreamEventType, POStatus, PRPriority, PRStatus } from '@prisma/client';
 
 @Injectable()
 export class ScmService {
@@ -744,8 +744,8 @@ export class ScmService {
       const pr = await tx.purchaseRequest.create({
         data: {
           warehouseId: warehouse.id,
-          priority: 'HIGH',
-          status: 'PENDING_APPROVAL_SCM',
+          priority: PRPriority.HIGH,
+          status: PRStatus.SUBMITTED,
           notes: `AUTO-PR: Financial Gate 2 Passed for Lead ${sample.lead.clientName}. Stock shortage detected.`,
           items: {
             create: prItems.map((item) => ({
@@ -770,9 +770,9 @@ export class ScmService {
       });
 
       if (!pr) throw new NotFoundException('Purchase Request not found');
-      if (pr.status !== 'PENDING_APPROVAL_SCM') {
+      if (pr.status !== PRStatus.SUBMITTED) {
         throw new BadRequestException(
-          `PR status ${pr.status} — hanya PENDING_APPROVAL_SCM yang bisa di-approve`,
+          `PR status ${pr.status} — hanya SUBMITTED yang bisa di-approve`,
         );
       }
 
@@ -806,7 +806,7 @@ export class ScmService {
 
       await tx.purchaseRequest.update({
         where: { id: prId },
-        data: { status: 'APPROVED' },
+        data: { status: PRStatus.APPROVED },
       });
 
       return po;
@@ -826,7 +826,7 @@ export class ScmService {
 
   async createPurchaseRequest(dto: {
     warehouseId: string;
-    priority?: string;
+    priority?: PRPriority;
     requiredDate?: string;
     notes?: string;
     items: Array<{
@@ -839,7 +839,7 @@ export class ScmService {
       const pr = await tx.purchaseRequest.create({
         data: {
           warehouseId: dto.warehouseId,
-          priority: dto.priority || 'MEDIUM',
+          priority: dto.priority || PRPriority.MEDIUM,
           notes: dto.notes,
           items: {
             create: dto.items.map((item) => ({

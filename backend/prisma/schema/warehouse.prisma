@@ -137,8 +137,8 @@ model PurchaseRequest {
   id          String                @id @default(uuid()) @db.Uuid
   requestDate DateTime              @default(now())
   warehouseId String                @db.Uuid
-  priority    String                @default("MEDIUM")
-  status      String                @default("DRAFT")
+  priority    PRPriority            @default(MEDIUM)
+  status      PRStatus              @default(DRAFT)
   notes       String?
   supplierId  String?               @db.Uuid
   createdAt   DateTime              @default(now())

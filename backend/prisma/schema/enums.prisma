@@ -559,3 +559,18 @@ enum MaterialStatus {
   ACTIVE
   ARCHIVED
 }
+
+enum PRPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PRStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
