@@ -210,6 +210,7 @@ enum POStatus {
   SHIPPED
   RECEIVED
   CANCELLED
+  RETURNED
 }
 
 enum InboundStatus {

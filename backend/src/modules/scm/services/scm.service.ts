@@ -7,7 +7,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { ACTIVITY_EVENT } from '../../activity-stream/events/activity.events';
-import { Division, StreamEventType } from '@prisma/client';
+import { Division, StreamEventType, POStatus } from '@prisma/client';
 
 @Injectable()
 export class ScmService {
@@ -273,7 +273,7 @@ export class ScmService {
       totalOrdered > 0 ? (totalReceived / totalOrdered) * 100 : 100;
 
     const purchaseReturns = pos.filter(
-      (p) => (p.status as string) === 'RETURNED',
+      (p) => p.status === POStatus.RETURNED,
     ).length;
     const returnRate =
       pos.length > 0 ? (purchaseReturns / pos.length) * 100 : 0;
