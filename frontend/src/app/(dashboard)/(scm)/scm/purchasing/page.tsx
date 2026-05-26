@@ -83,7 +83,7 @@ export default function PurchasingPage() {
   const { data: warehouses } = useQuery({
     queryKey: ["warehouses"],
     queryFn: async () => {
-      const res = await api.get("/warehouse/warehouses");
+      const res = await api.get("/master/warehouses/active");
       return res.data;
     }
   });

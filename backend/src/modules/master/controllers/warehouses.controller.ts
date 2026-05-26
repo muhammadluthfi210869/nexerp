@@ -11,11 +11,23 @@ import {
 import { WarehousesService } from '../services/warehouses.service';
 import { CreateWarehouseDto, UpdateWarehouseDto } from '../dto/warehouse.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Controller('master/warehouses')
 @UseGuards(JwtAuthGuard)
 export class WarehousesController {
-  constructor(private readonly warehousesService: WarehousesService) {}
+  constructor(
+    private readonly warehousesService: WarehousesService,
+    private prisma: PrismaService,
+  ) {}
+
+  @Get('active')
+  async findActive() {
+    return this.prisma.warehouse.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: { name: 'asc' },
+    });
+  }
 
   @Get()
   findAll() {

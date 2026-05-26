@@ -2,24 +2,16 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 
-@Controller()
+@Controller('master/materials')
 @UseGuards(JwtAuthGuard)
-export class RouteAliasController {
+export class MaterialsController {
   constructor(private prisma: PrismaService) {}
 
-  @Get('master/materials')
-  async getMasterMaterials() {
+  @Get()
+  async findAll() {
     return this.prisma.materialItem.findMany({
       where: { deletedAt: null },
       include: { category: true },
-      orderBy: { name: 'asc' },
-    });
-  }
-
-  @Get('warehouse/warehouses')
-  async getWarehouseWarehouses() {
-    return this.prisma.warehouse.findMany({
-      where: { status: 'ACTIVE' },
       orderBy: { name: 'asc' },
     });
   }

@@ -9,7 +9,6 @@ import { InboundsController } from './controllers/inbounds.controller';
 import { MaterialsController } from './controllers/materials.controller';
 import { ScmController } from './controllers/scm.controller';
 import { PurchaseReturnsController } from './controllers/purchase-returns.controller';
-import { RouteAliasController } from './controllers/route-alias.controller';
 import { PurchaseReturnsService } from './services/purchase-returns.service';
 
 import { LegalityModule } from '../legality/legality.module';
@@ -29,7 +28,6 @@ import { LegalityModule } from '../legality/legality.module';
     MaterialsController,
     ScmController,
     PurchaseReturnsController,
-    RouteAliasController,
   ],
   exports: [ScmService],
 })

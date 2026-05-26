@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MaterialsController } from './controllers/materials.controller';
 import { CategoriesController } from './controllers/categories.controller';
 import { WarehousesController } from './controllers/warehouses.controller';
 import { SuppliersController } from './controllers/suppliers.controller';
@@ -10,6 +11,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   controllers: [
+    MaterialsController,
     CategoriesController,
     WarehousesController,
     SuppliersController,
