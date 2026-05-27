@@ -7,13 +7,15 @@ export class SupplierScoreService {
 
   async recalculateAll() {
     const suppliers = await this.prisma.supplier.findMany({ select: { id: true } });
-    for (const s of suppliers) {
-      const score = await this.calculateScore(s.id);
-      await this.prisma.supplier.update({
-        where: { id: s.id },
-        data: { performanceScore: score },
-      });
-    }
+    await Promise.all(
+      suppliers.map(async (s) => {
+        const score = await this.calculateScore(s.id);
+        return this.prisma.supplier.update({
+          where: { id: s.id },
+          data: { performanceScore: score },
+        });
+      }),
+    );
   }
 
   async calculateScore(supplierId: string): Promise<number> {

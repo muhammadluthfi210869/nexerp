@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
@@ -70,6 +71,21 @@ export class RequisitionService {
       where: { id },
     });
     if (!header) throw new NotFoundException('Requisition not found');
+
+    const allowedTransitions: Record<string, string[]> = {
+      PENDING: ['APPROVED', 'REJECTED'],
+      APPROVED: ['FULFILLED'],
+      REJECTED: [],
+      FULFILLED: [],
+    };
+
+    const allowed = allowedTransitions[header.status] || [];
+    if (!allowed.includes(dto.status)) {
+      throw new BadRequestException(
+        `Cannot transition from ${header.status} to ${dto.status}`,
+      );
+    }
+
     return this.prisma.materialRequisitionHeader.update({
       where: { id },
       data: { status: dto.status },

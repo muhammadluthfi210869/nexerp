@@ -12,17 +12,19 @@ export class PurchasePaymentsService {
   constructor(private prisma: PrismaService) {}
 
   async pay(dto: CreatePurchasePaymentDto, userId: string) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id: dto.invoiceId },
-    });
-
-    if (!invoice) throw new NotFoundException('Invoice not found');
-    if (Number(invoice.outstandingAmount) <= 0)
-      throw new BadRequestException('Invoice already fully paid');
-    if (dto.amount > Number(invoice.outstandingAmount))
-      throw new BadRequestException('Payment exceeds outstanding balance');
-
     return this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findUnique({
+        where: { id: dto.invoiceId },
+      });
+
+      if (!invoice) throw new NotFoundException('Invoice not found');
+
+      const outstanding = Number(invoice.outstandingAmount);
+      if (outstanding <= 0)
+        throw new BadRequestException('Invoice already fully paid');
+      if (dto.amount > outstanding)
+        throw new BadRequestException('Payment exceeds outstanding balance');
+
       const payment = await tx.payment.create({
         data: {
           invoiceId: dto.invoiceId,
@@ -33,7 +35,7 @@ export class PurchasePaymentsService {
         },
       });
 
-      const newOutstanding = Number(invoice.outstandingAmount) - dto.amount;
+      const newOutstanding = outstanding - dto.amount;
       const newStatus =
         newOutstanding <= 0 ? InvoiceStatus.PAID : InvoiceStatus.PARTIAL;
 
