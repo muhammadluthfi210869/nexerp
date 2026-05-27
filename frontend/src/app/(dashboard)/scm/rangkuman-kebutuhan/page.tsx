@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { EmptyState } from "@/components/empty-state";
 
 const SUPPLIERS = [
   "PT Kimia Farma Tbk", "CV Bahan Kimia Abadi", "PT Global Packaging Solution", "UD Sumber Makmur", "PT Aroma Nusantara"
@@ -186,8 +187,18 @@ export default function ConsolidatedMRPPage() {
                  <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
                </TableRow>
            </TableHeader>
-           <TableBody>
-            {filteredData.map((item, idx) => (
+            <TableBody>
+             {filteredData.length === 0 ? (
+               <TableRow>
+                  <TableCell colSpan={7} className="py-20">
+                     <EmptyState
+                       icon={<Package className="h-8 w-8 text-slate-300" />}
+                       title="Tidak Ada Data"
+                       description="Tidak ada data kebutuhan yang sesuai dengan pencarian. Coba ubah kata kunci pencarian."
+                     />
+                  </TableCell>
+               </TableRow>
+             ) : filteredData.map((item, idx) => (
                <TableRow key={item.kode} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
                  <TableCell className="py-4 px-4 font-black text-slate-300 text-xs">{(idx + 1).toString().padStart(2, '0')}</TableCell>
                  <TableCell className="py-4 px-4">

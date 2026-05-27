@@ -30,6 +30,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { EmptyState } from "@/components/empty-state";
 
 export default function VendorPerformancePage() {
   const { data: vendors } = useQuery({
@@ -103,8 +104,18 @@ export default function VendorPerformancePage() {
                </TableRow>
             </TableHeader>
             <TableBody>
-               {vendors?.map((vendor: any) => (
-                  <TableRow key={vendor.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+               {!vendors || vendors.length === 0 ? (
+                  <TableRow>
+                     <TableCell colSpan={6} className="py-20">
+                        <EmptyState
+                          icon={<BarChart3 className="h-8 w-8 text-slate-300" />}
+                          title="Belum Ada Pemasok"
+                          description="Belum ada data pemasok yang tercatat. Tambahkan pemasok baru untuk mulai evaluasi."
+                        />
+                     </TableCell>
+                  </TableRow>
+               ) : vendors?.map((vendor: any) => (
+                   <TableRow key={vendor.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
                      <TableCell className="py-4 px-4">
                         <div className="flex items-center gap-4">
                            <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-300 shadow-inner group-hover:scale-110 transition-transform">

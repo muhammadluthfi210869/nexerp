@@ -50,6 +50,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { EmptyState } from "@/components/empty-state";
 
 export default function ReceivingPage() {
   const queryClient = useQueryClient();
@@ -242,58 +243,73 @@ export default function ReceivingPage() {
                </TableRow>
             </TableHeader>
             <TableBody>
-               {receipts?.map((receipt: any) => (
-                   <TableRow key={receipt.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                     <TableCell className="py-8 pl-10">
-                        <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center shadow-sm group-hover:rotate-6 transition-transform border border-slate-200">
-                              <ClipboardCheck className="h-5 w-5 text-blue-500" />
-                           </div>
-                           <div className="flex flex-col">
-                              <span className="font-black text-slate-900 tracking-tight text-base uppercase italic">{receipt.id}</span>
-                               <span className="text-[10px] font-black text-slate-400 uppercase">{receipt.date}</span>
-                           </div>
-                        </div>
-                     </TableCell>
-                     <TableCell>
-                         <DnaBadge status="default">
-                            {receipt.poId}
-                         </DnaBadge>
-                     </TableCell>
-                     <TableCell>
-                        <div className="flex items-center gap-3">
-                           <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-black text-[10px] text-slate-500 uppercase">
-                              {receipt.vendor.charAt(0)}
-                           </div>
-                           <p className="font-black text-slate-900 text-sm uppercase italic">{receipt.vendor}</p>
-                        </div>
-                     </TableCell>
-                     <TableCell className="text-center">
-                         <DnaBadge status={
-                          receipt.qc === 'PASSED' ? 'success' :
-                          receipt.qc === 'WAITING' ? 'warning' : 'critical'
-                        }>
-                           {receipt.qc}
-                        </DnaBadge>
-                     </TableCell>
-                     <TableCell className="text-center">
-                         <DnaBadge status={receipt.status === 'VERIFIED' ? 'info' : 'default'}>
-                           {receipt.status}
-                        </DnaBadge>
-                     </TableCell>
-                     <TableCell className="pr-10 text-right">
-                        <div className="flex justify-end gap-2">
-                           <Button variant="ghost" size="sm" className="rounded-xl font-black uppercase text-[9px] text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2">
-                              <FileSearch className="h-3 w-3" /> Inspeksi
-                           </Button>
-                            <Button variant="ghost" size="icon" className="rounded-xl border border-slate-200 shadow-sm bg-white hover:bg-slate-100 hover:text-slate-900 transition-all">
-                              <MoreVertical className="h-4 w-4" />
-                           </Button>
-                        </div>
+               {!isLoading && (!receipts || receipts.length === 0) ? (
+                  <TableRow>
+                     <TableCell colSpan={6} className="py-20">
+                        <EmptyState
+                          icon={<PackageCheck className="h-8 w-8 text-slate-300" />}
+                          title="Belum Ada Penerimaan"
+                          description="Belum ada barang yang diterima. Daftarkan kedatangan baru untuk memulai."
+                          action={
+                            <DnaButton variant="primary" onClick={() => setIsModalOpen(true)}>
+                              Daftarkan Kedatangan
+                            </DnaButton>
+                          }
+                        />
                      </TableCell>
                   </TableRow>
+               ) : receipts?.map((receipt: any) => (
+                    <TableRow key={receipt.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                      <TableCell className="py-8 pl-10">
+                         <div className="flex items-center gap-4">
+                             <div className="h-12 w-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center shadow-sm group-hover:rotate-6 transition-transform border border-slate-200">
+                               <ClipboardCheck className="h-5 w-5 text-blue-500" />
+                            </div>
+                            <div className="flex flex-col">
+                               <span className="font-black text-slate-900 tracking-tight text-base uppercase italic">{receipt.id}</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase">{receipt.date}</span>
+                            </div>
+                         </div>
+                      </TableCell>
+                      <TableCell>
+                          <DnaBadge status="default">
+                             {receipt.poId}
+                          </DnaBadge>
+                      </TableCell>
+                      <TableCell>
+                         <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-black text-[10px] text-slate-500 uppercase">
+                               {receipt.vendor.charAt(0)}
+                            </div>
+                            <p className="font-black text-slate-900 text-sm uppercase italic">{receipt.vendor}</p>
+                         </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                          <DnaBadge status={
+                           receipt.qc === 'PASSED' ? 'success' :
+                           receipt.qc === 'WAITING' ? 'warning' : 'critical'
+                         }>
+                            {receipt.qc}
+                         </DnaBadge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                          <DnaBadge status={receipt.status === 'VERIFIED' ? 'info' : 'default'}>
+                            {receipt.status}
+                         </DnaBadge>
+                      </TableCell>
+                      <TableCell className="pr-10 text-right">
+                         <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" className="rounded-xl font-black uppercase text-[9px] text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2">
+                               <FileSearch className="h-3 w-3" /> Inspeksi
+                            </Button>
+                             <Button variant="ghost" size="icon" className="rounded-xl border border-slate-200 shadow-sm bg-white hover:bg-slate-100 hover:text-slate-900 transition-all">
+                               <MoreVertical className="h-4 w-4" />
+                            </Button>
+                         </div>
+                      </TableCell>
+                   </TableRow>
                ))}
-            </TableBody>
+             </TableBody>
          </Table>
       </TableWrapper>
     </DashboardShell>

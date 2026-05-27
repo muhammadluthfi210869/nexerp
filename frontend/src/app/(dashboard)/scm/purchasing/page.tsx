@@ -13,6 +13,7 @@ import {
   ChevronRight,
   User,
   Package,
+  ShoppingCart,
   Calendar,
   Trash2,
   ShieldAlert,
@@ -51,6 +52,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
+import { EmptyState } from "@/components/empty-state";
 
 export default function PurchasingPage() {
   const queryClient = useQueryClient();
@@ -371,8 +373,23 @@ export default function PurchasingPage() {
                      <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
                   </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-slate-100">
-                 {purchaseOrders?.map((po: any) => (
+               <TableBody className="divide-y divide-slate-100">
+                  {!poLoading && (!purchaseOrders || purchaseOrders.length === 0) ? (
+                     <TableRow>
+                        <TableCell colSpan={6} className="py-20">
+                           <EmptyState
+                             icon={<ShoppingCart className="h-8 w-8 text-slate-300" />}
+                             title="Belum Ada Pesanan"
+                             description="Belum ada purchase order yang tercatat. Buat requisisi baru untuk memulai."
+                             action={
+                               <DnaButton variant="primary" onClick={() => setIsModalOpen(true)}>
+                                 Buat Requisisi
+                               </DnaButton>
+                             }
+                           />
+                        </TableCell>
+                     </TableRow>
+                  ) : purchaseOrders?.map((po: any) => (
                      <TableRow key={po.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
                         <TableCell className="py-4 px-4">
                            <div className="flex items-center gap-3">
