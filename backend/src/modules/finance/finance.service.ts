@@ -454,11 +454,13 @@ export class FinanceService {
       where: {
         category: 'RECEIVABLE',
         status: { in: ['UNPAID', 'PARTIAL'] },
-        attachmentUrls: { hasSome: [] }, // This is a placeholder, usually we check if proof exists
       },
       include: {
         so: { include: { lead: true } },
         workOrder: { include: { lead: true } },
+        payments: {
+          where: { attachmentUrls: { isEmpty: false } },
+        },
       },
     });
   }
@@ -1182,13 +1184,7 @@ export class FinanceService {
           return updated;
         }
         throw new BadRequestException(
-          `Expense account for department ${req.departmentId} not configured. Create an expense account with code starting with '6' and name containing '${req.departmentId}'.`,
-        );
-      }
-
-      if (!expenseAcc) {
-        throw new BadRequestException(
-          `Expense account for department ${req.departmentId} not configured.`,
+          `Akun beban untuk departemen ${req.departmentId} tidak ditemukan. Buat akun beban dengan kode diawali '6' dan nama mengandung '${req.departmentId}'.`,
         );
       }
 
@@ -1263,7 +1259,7 @@ export class FinanceService {
       let clientName = '';
       let leadId = '';
 
-      if (type === 'SAMPLE') {
+      if (String(type) === 'SAMPLE') {
         const activity = await tx.leadActivity.findUnique({
           where: { id },
           include: { lead: true },
@@ -1374,11 +1370,11 @@ export class FinanceService {
         }
 
         // E. PHASE 4: CREATIVE AUTOMATION
-        await this.creativeService.createTask(
+        await this.creativeService.createTask({
           leadId,
-          `AUTO-GEN: Desain Kemasan untuk ${activity.lead.brandName} (${activity.lead.productInterest}). DP Produksi telah lunas.`,
-          (activity.metadata as any)?.salesOrderId,
-        );
+          brief: `AUTO-GEN: Desain Kemasan untuk ${activity.lead.brandName} (${activity.lead.productInterest}). DP Produksi telah lunas.`,
+          soId: (activity.metadata as any)?.salesOrderId,
+        });
 
         this.eventEmitter.emit(ACTIVITY_EVENT, {
           leadId: leadId,
@@ -2047,6 +2043,71 @@ export class FinanceService {
   async getCurrencies() {
     return this.prisma.currency.findMany({
       orderBy: { code: 'asc' },
+    });
+  }
+
+  // --- COA CRUD ---
+
+  async createAccount(dto: {
+    code: string;
+    name: string;
+    type: AccountType;
+    normalBalance: NormalBalance;
+    parentId?: string;
+    reportGroup?: ReportGroup;
+    isActive?: boolean;
+  }) {
+    const existing = await this.prisma.account.findUnique({
+      where: { code: dto.code },
+    });
+    if (existing) {
+      throw new BadRequestException(`Account code '${dto.code}' already exists`);
+    }
+    return this.prisma.account.create({
+      data: {
+        code: dto.code,
+        name: dto.name,
+        type: dto.type,
+        normalBalance: dto.normalBalance,
+        parentId: dto.parentId,
+        reportGroup: dto.reportGroup,
+        isActive: dto.isActive ?? true,
+      },
+    });
+  }
+
+  async updateAccount(
+    id: string,
+    dto: Partial<{
+      code: string;
+      name: string;
+      type: AccountType;
+      normalBalance: NormalBalance;
+      parentId: string;
+      reportGroup: ReportGroup;
+      isActive: boolean;
+    }>,
+  ) {
+    const account = await this.prisma.account.findUnique({ where: { id } });
+    if (!account) throw new NotFoundException('Account not found');
+    if (dto.code && dto.code !== account.code) {
+      const dup = await this.prisma.account.findUnique({
+        where: { code: dto.code },
+      });
+      if (dup)
+        throw new BadRequestException(
+          `Account code '${dto.code}' already exists`,
+        );
+    }
+    return this.prisma.account.update({ where: { id }, data: dto });
+  }
+
+  async softDeleteAccount(id: string) {
+    const account = await this.prisma.account.findUnique({ where: { id } });
+    if (!account) throw new NotFoundException('Account not found');
+    return this.prisma.account.update({
+      where: { id },
+      data: { isActive: false },
     });
   }
 }

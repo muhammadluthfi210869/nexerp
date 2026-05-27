@@ -5,12 +5,16 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { CreateSampleRequestDto } from './dto/create-sample-request.dto';
+import { CreateSampleDto } from './dto/create-sample.dto';
+import { CreateNPFDto } from './dto/create-npf.dto';
 import { AdvanceSampleDto } from './dto/advance-sample-request.dto';
 import {
   SampleStage,
   WorkflowStatus,
   Division,
   StreamEventType,
+  UserRole,
+  RevisionStatus,
 } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
@@ -75,6 +79,86 @@ export class RndService {
     });
   }
 
+  async createFormulationSample(dto: CreateSampleDto) {
+    if (dto.rndId === '00000000-0000-0000-0000-000000000000') {
+      const rndUser = await this.prisma.user.findFirst({
+        where: { roles: { has: UserRole.RND } },
+      });
+      if (rndUser) dto.rndId = rndUser.id;
+    }
+
+    const npf = await this.prisma.newProductForm.findUnique({
+      where: { id: dto.npfId },
+      select: { leadId: true },
+    });
+
+    const sampleCode = await this.idGenerator.generateId('SMP');
+
+    return this.prisma.sampleRequest.create({
+      data: {
+        sampleCode: sampleCode,
+        npfId: dto.npfId,
+        rndId: dto.rndId,
+        version: dto.version || 1,
+        leadId: npf?.leadId || 'UNKNOWN_UUID',
+        productName: 'Sample from NPF',
+        targetFunction: 'General',
+        textureReq: 'Standard',
+        colorReq: 'Natural',
+        aromaReq: 'Fresh',
+      },
+    });
+  }
+
+  async createNPF(dto: CreateNPFDto) {
+    const npf = await this.prisma.newProductForm.create({
+      data: {
+        productName: dto.productName,
+        targetPrice: dto.targetPrice,
+        conceptNotes: dto.conceptNotes,
+        leadId: dto.leadId,
+      },
+    });
+
+    const rndUser = await this.prisma.user.findFirst({
+      where: { roles: { has: UserRole.RND }, status: 'ACTIVE' },
+    });
+
+    if (rndUser) {
+      const sampleCode = await this.idGenerator.generateId('SMP');
+      await this.prisma.sampleRequest.create({
+        data: {
+          sampleCode: sampleCode,
+          npfId: npf.id,
+          rndId: rndUser.id,
+          version: 1,
+          leadId: dto.leadId,
+          productName: dto.productName,
+          targetFunction: 'General',
+          textureReq: 'Standard',
+          colorReq: 'Natural',
+          aromaReq: 'Fresh',
+        },
+      });
+    }
+
+    return npf;
+  }
+
+  async getNPFs() {
+    return this.prisma.newProductForm.findMany({
+      include: { lead: { select: { clientName: true } } },
+      orderBy: { productName: 'asc' },
+    });
+  }
+
+  async getNPF(id: string) {
+    return this.prisma.newProductForm.findUnique({
+      where: { id },
+      include: { lead: true, samples: true },
+    });
+  }
+
   async acceptSample(sampleId: string) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({
@@ -117,7 +201,7 @@ export class RndService {
               },
             ],
           },
-          qcParameters: {
+          qcparameter: {
             create: {},
           },
         },
@@ -188,6 +272,7 @@ export class RndService {
 
       if (dto.newStage === SampleStage.APPROVED) {
         updateData.completedAt = new Date();
+        updateData.revisionStatus = RevisionStatus.DONE;
       }
 
       if (dto.newStage === SampleStage.REJECTED || dto.feedback) {
@@ -288,8 +373,7 @@ export class RndService {
       (s) => s.stage === SampleStage.APPROVED,
     );
     const completedSamples = allSamples.filter(
-      (s) =>
-        s.stage === SampleStage.APPROVED && s.completedAt,
+      (s) => s.stage === SampleStage.APPROVED && s.completedAt,
     );
     const rejectedSamples = allSamples.filter(
       (s) => s.stage === SampleStage.REJECTED,
@@ -464,6 +548,7 @@ export class RndService {
       include: {
         lead: { include: { pic: true } },
         pic: true,
+        stageLogs: { orderBy: { enteredAt: 'desc' }, take: 1 },
         formulas: {
           orderBy: { version: 'desc' },
           include: {
@@ -493,6 +578,7 @@ export class RndService {
       include: {
         lead: { include: { pic: true } },
         pic: true,
+        stageLogs: { orderBy: { enteredAt: 'desc' }, take: 1 },
         formulas: {
           orderBy: { version: 'desc' },
           take: 1,
@@ -583,6 +669,114 @@ export class RndService {
     });
   }
 
+  async setQcParameters(
+    formulaId: string,
+    dto: {
+      targetPh?: string;
+      targetViscosity?: string;
+      targetColor?: string;
+      targetAroma?: string;
+      appearance?: string;
+    },
+  ) {
+    const formula = await this.prisma.formula.findUnique({
+      where: { id: formulaId },
+    });
+
+    if (!formula) throw new NotFoundException('Formula not found');
+
+    return this.prisma.qCParameter.upsert({
+      where: { formulaId },
+      update: {
+        targetPh: dto.targetPh,
+        targetViscosity: dto.targetViscosity,
+        targetColor: dto.targetColor,
+        targetAroma: dto.targetAroma,
+        appearance: dto.appearance,
+      },
+      create: {
+        formulaId,
+        targetPh: dto.targetPh,
+        targetViscosity: dto.targetViscosity,
+        targetColor: dto.targetColor,
+        targetAroma: dto.targetAroma,
+        appearance: dto.appearance,
+      },
+    });
+  }
+
+  // --- REVISION TRACKER ---
+
+  async getRevisions() {
+    return this.prisma.sampleRequest.findMany({
+      where: {
+        revisionStatus: {
+          in: [RevisionStatus.NOT_STARTED, RevisionStatus.IN_PROGRESS],
+        },
+      },
+      include: {
+        lead: { select: { clientName: true, brandName: true } },
+        pic: { select: { name: true } },
+        formulas: {
+          orderBy: { version: 'desc' },
+          take: 1,
+          select: { id: true, formulaCode: true, version: true },
+        },
+      },
+      orderBy: { latestRevisionDate: 'desc' },
+    });
+  }
+
+  async getRevisionHistory() {
+    return this.prisma.sampleRequest.findMany({
+      where: {
+        revisionStatus: {
+          in: [RevisionStatus.DONE, RevisionStatus.CANCELLED],
+        },
+      },
+      include: {
+        lead: { select: { clientName: true, brandName: true } },
+        pic: { select: { name: true } },
+        formulas: {
+          orderBy: { version: 'desc' },
+          take: 1,
+          select: { id: true, formulaCode: true, version: true },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async startRevision(id: string) {
+    const sample = await this.prisma.sampleRequest.findUnique({
+      where: { id },
+    });
+    if (!sample) throw new NotFoundException('Sample not found');
+
+    return this.prisma.sampleRequest.update({
+      where: { id },
+      data: {
+        revisionStatus: RevisionStatus.IN_PROGRESS,
+        latestRevisionDate: new Date(),
+      },
+    });
+  }
+
+  async completeRevision(id: string) {
+    const sample = await this.prisma.sampleRequest.findUnique({
+      where: { id },
+    });
+    if (!sample) throw new NotFoundException('Sample not found');
+
+    return this.prisma.sampleRequest.update({
+      where: { id },
+      data: {
+        revisionStatus: RevisionStatus.DONE,
+        completedAt: new Date(),
+      },
+    });
+  }
+
   async getAllLabTestResults(type?: string) {
     const where: any = {};
     if (type === 'stability') {
@@ -616,5 +810,33 @@ export class RndService {
             : null,
         })),
       );
+  }
+
+  async getFormulas() {
+    return this.prisma.formula.findMany({
+      include: {
+        sampleRequest: {
+          select: {
+            id: true,
+            sampleCode: true,
+            productName: true,
+            lead: {
+              select: { id: true, clientName: true, brandName: true },
+            },
+          },
+        },
+        phases: {
+          include: {
+            items: {
+              include: { material: true },
+            },
+          },
+        },
+        lockedBy: {
+          select: { id: true, fullName: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

@@ -246,4 +246,41 @@ export class ProductionController {
   ) {
     return this.productionService.assignFormulaToPlan(id, dto.formulaId);
   }
+
+  // === PHASE 4: Floor, Leakage & Timeline ===
+
+  @Get('floor')
+  async getFloor() {
+    return this.productionService.getFloorData();
+  }
+
+  @Get('leakage')
+  async getLeakage() {
+    return this.productionService.getLeakageData();
+  }
+
+  @Get('work-orders/:woId/timeline')
+  async getTimeline(@Param('woId') woId: string) {
+    return this.productionService.getWorkOrderTimeline(woId);
+  }
+
+  // --- FORMULA ADJUSTMENTS ---
+
+  @Get('formula-adjustments')
+  async getFormulaAdjustments() {
+    return this.productionService.getFormulaAdjustments();
+  }
+
+  @Post('formula-adjustments')
+  async createFormulaAdjustment(
+    @Body()
+    dto: {
+      formulaId: string;
+      requestedBy: string;
+      reason: string;
+      changes: any;
+    },
+  ) {
+    return this.productionService.createFormulaAdjustment(dto);
+  }
 }

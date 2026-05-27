@@ -218,19 +218,9 @@ export class BussdevService {
         throw new NotFoundException(`Lead with ID ${leadId} not found`);
       }
 
-      // 1. GATE: Restricted statuses for BusDev (Mandat V4)
-      const restrictedStatuses: WorkflowStatus[] = [
-        WorkflowStatus.DP_PAID,
-        WorkflowStatus.PRODUCTION_PLAN,
-      ];
-      if (
-        restrictedStatuses.includes(dto.newStatus) &&
-        !currentLead.isEmergencyOverride
-      ) {
-        throw new BadRequestException(
-          `GATE_BLOCKED: Status '${dto.newStatus}' hanya dapat diaktifkan otomatis oleh sistem setelah verifikasi pembayaran oleh Finance.`,
-        );
-      }
+      // 1. AUTO-HANDOVER: SAMPLE_APPROVED -> SPK_SIGNED
+      const isAutoProduction = dto.newStatus === WorkflowStatus.SAMPLE_APPROVED;
+      const finalStatus = isAutoProduction ? WorkflowStatus.SPK_SIGNED : dto.newStatus;
 
       // 2. Resolve File Paths
       const paymentProofUrl =
@@ -250,7 +240,7 @@ export class BussdevService {
       const updatedLead = await tx.salesLead.update({
         where: { id: leadId },
         data: {
-          status: dto.newStatus,
+          status: finalStatus,
           paymentType: dto.paymentType || currentLead.paymentType,
           lostReason: dto.newStatus === 'LOST' ? dto.lostReason : null,
           isRepeatOrder:
@@ -274,7 +264,7 @@ export class BussdevService {
       });
 
       // KPI: LEAD_WON
-      if (dto.newStatus === WorkflowStatus.WON_DEAL) {
+      if (finalStatus === WorkflowStatus.WON_DEAL) {
         this.eventEmitter.emit('LEAD_WON', {
           employeeId: currentLead.bdId,
           referenceId: leadId,
@@ -298,6 +288,30 @@ export class BussdevService {
         },
         loggedBy: dto.loggedBy,
       });
+
+      // Auto-handover timeline logs (SAMPLE_APPROVED -> SPK_SIGNED)
+      if (isAutoProduction) {
+        await tx.leadTimelineLog.create({
+          data: {
+            leadId,
+            action: 'SAMPLE_APPROVED',
+            previousStatus: currentLead.status,
+            newStatus: WorkflowStatus.SAMPLE_APPROVED,
+            notes: 'AUTO_HANDOVER: Sample approved by client. Lead otomatis dipindahkan ke Production Pipeline.',
+            loggedBy: 'SYSTEM_ORCHESTRATOR',
+          },
+        });
+        await tx.leadTimelineLog.create({
+          data: {
+            leadId,
+            action: 'AUTO_PRODUCTION_HANDOVER',
+            previousStatus: WorkflowStatus.SAMPLE_APPROVED,
+            newStatus: WorkflowStatus.SPK_SIGNED,
+            notes: 'AUTO_HANDOVER: Lead otomatis masuk ke Production Pipeline sebagai SPK_SIGNED.',
+            loggedBy: 'SYSTEM_ORCHESTRATOR',
+          },
+        });
+      }
 
       // --- PROTOCOL: WAITING_FINANCE_APPROVAL ---
       if (dto.newStatus === WorkflowStatus.WAITING_FINANCE_APPROVAL) {
@@ -399,7 +413,7 @@ export class BussdevService {
       }
 
       // --- AUTOMATION: SO CREATION (SPK_SIGNED only) ---
-      if (dto.newStatus === WorkflowStatus.SPK_SIGNED) {
+      if (finalStatus === WorkflowStatus.SPK_SIGNED) {
         const orderId = await this.idGenerator.generateId('SO');
         const approvedSample = await tx.sampleRequest.findFirst({
           where: { leadId: leadId, stage: SampleStage.APPROVED },
@@ -541,42 +555,110 @@ export class BussdevService {
       );
 
       if (group === 'dashboard') {
-        const cached = this.cacheService.get<any>('bussdev-dashboard')
-        if (cached) return cached
+        const cached = this.cacheService.get<any>('bussdev-dashboard');
+        if (cached) return cached;
 
-        const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const fourteenDaysAgo = new Date(
+          now.getTime() - 14 * 24 * 60 * 60 * 1000,
+        );
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(
+          now.getTime() - 30 * 24 * 60 * 60 * 1000,
+        );
 
         const [
-          totalLeads, contactedLeads, sampleProcess, dpReceived,
-          dealConfirmed, repeatOrder,
-          totalPipelineValue, potentialSample, potentialDeal,
-          confirmedDeal, repeatOrderValue,
-          followUpToday, avgResponseAgg, activeLeadsCount,
-          unfollowedLeads, stuckSamples, stuckNego, atRiskClients,
+          totalLeads,
+          contactedLeads,
+          sampleProcess,
+          dpReceived,
+          dealConfirmed,
+          repeatOrder,
+          totalPipelineValue,
+          potentialSample,
+          potentialDeal,
+          confirmedDeal,
+          repeatOrderValue,
+          followUpToday,
+          avgResponseAgg,
+          activeLeadsCount,
+          unfollowedLeads,
+          stuckSamples,
+          stuckNego,
+          atRiskClients,
           activityStreams,
         ] = await Promise.all([
           this.prisma.salesLead.count(),
           this.prisma.salesLead.count({ where: { activities: { some: {} } } }),
-          this.prisma.salesLead.count({ where: { sampleRequests: { some: {} } } }),
-          this.prisma.salesLead.count({ where: { status: { in: ['SPK_SIGNED', 'PRODUCTION_PLAN', 'READY_TO_SHIP', 'WON_DEAL'] } } }),
+          this.prisma.salesLead.count({
+            where: { sampleRequests: { some: {} } },
+          }),
+          this.prisma.salesLead.count({
+            where: {
+              status: {
+                in: [
+                  'SPK_SIGNED',
+                  'PRODUCTION_PLAN',
+                  'READY_TO_SHIP',
+                  'WON_DEAL',
+                ],
+              },
+            },
+          }),
           this.prisma.salesLead.count({ where: { status: 'WON_DEAL' } }),
           this.prisma.salesLead.count({ where: { orderCount: { gt: 1 } } }),
-          this.prisma.salesLead.aggregate({ where: { NOT: [{ status: 'WON_DEAL' }, { status: 'LOST' }] }, _sum: { estimatedValue: true } }),
-          this.prisma.salesLead.aggregate({ where: { status: 'SAMPLE_REQUESTED' }, _sum: { estimatedValue: true } }),
-          this.prisma.salesLead.aggregate({ where: { status: { in: ['NEGOTIATION', 'SAMPLE_APPROVED', 'SPK_SIGNED'] } }, _sum: { estimatedValue: true } }),
-          this.prisma.salesLead.aggregate({ where: { status: 'WON_DEAL' }, _sum: { estimatedValue: true } }),
-          this.prisma.salesLead.aggregate({ where: { isRepeatOrder: true }, _sum: { estimatedValue: true } }),
-          this.prisma.leadActivity.count({ where: { createdAt: { gte: startOfToday } } }),
+          this.prisma.salesLead.aggregate({
+            where: { NOT: [{ status: 'WON_DEAL' }, { status: 'LOST' }] },
+            _sum: { estimatedValue: true },
+          }),
+          this.prisma.salesLead.aggregate({
+            where: { status: 'SAMPLE_REQUESTED' },
+            _sum: { estimatedValue: true },
+          }),
+          this.prisma.salesLead.aggregate({
+            where: {
+              status: { in: ['NEGOTIATION', 'SAMPLE_APPROVED', 'SPK_SIGNED'] },
+            },
+            _sum: { estimatedValue: true },
+          }),
+          this.prisma.salesLead.aggregate({
+            where: { status: 'WON_DEAL' },
+            _sum: { estimatedValue: true },
+          }),
+          this.prisma.salesLead.aggregate({
+            where: { isRepeatOrder: true },
+            _sum: { estimatedValue: true },
+          }),
+          this.prisma.leadActivity.count({
+            where: { createdAt: { gte: startOfToday } },
+          }),
           this.prisma.leadActivity.aggregate({ _avg: { responseTime: true } }),
           this.prisma.salesLead.count({ where: { status: { not: 'LOST' } } }),
-          this.prisma.salesLead.count({ where: { lastFollowUpAt: null, status: 'NEW_LEAD' } }),
-          this.prisma.salesLead.count({ where: { status: 'SAMPLE_REQUESTED', updatedAt: { lt: fourteenDaysAgo } } }),
-          this.prisma.salesLead.count({ where: { status: 'NEGOTIATION', updatedAt: { lt: sevenDaysAgo } } }),
-          this.prisma.salesLead.count({ where: { status: 'WON_DEAL', lastFollowUpAt: { lt: thirtyDaysAgo } } }),
-          this.prisma.activityStream.findMany({ take: 10, orderBy: { createdAt: 'desc' }, include: { lead: { select: { brandName: true, clientName: true } } } }),
-        ])
+          this.prisma.salesLead.count({
+            where: { lastFollowUpAt: null, status: 'NEW_LEAD' },
+          }),
+          this.prisma.salesLead.count({
+            where: {
+              status: 'SAMPLE_REQUESTED',
+              updatedAt: { lt: fourteenDaysAgo },
+            },
+          }),
+          this.prisma.salesLead.count({
+            where: { status: 'NEGOTIATION', updatedAt: { lt: sevenDaysAgo } },
+          }),
+          this.prisma.salesLead.count({
+            where: {
+              status: 'WON_DEAL',
+              lastFollowUpAt: { lt: thirtyDaysAgo },
+            },
+          }),
+          this.prisma.activityStream.findMany({
+            take: 10,
+            orderBy: { createdAt: 'desc' },
+            include: {
+              lead: { select: { brandName: true, clientName: true } },
+            },
+          }),
+        ]);
 
         const result = {
           overview: {
@@ -593,11 +675,15 @@ export class BussdevService {
             retentionRate: this.calcPct(repeatOrder, totalLeads),
           },
           revenuePipeline: {
-            totalPipelineValue: Number(totalPipelineValue._sum?.estimatedValue || 0),
+            totalPipelineValue: Number(
+              totalPipelineValue._sum?.estimatedValue || 0,
+            ),
             potentialSample: Number(potentialSample._sum?.estimatedValue || 0),
             potentialDeal: Number(potentialDeal._sum?.estimatedValue || 0),
             confirmedDeal: Number(confirmedDeal._sum?.estimatedValue || 0),
-            repeatOrderValue: Number(repeatOrderValue._sum?.estimatedValue || 0),
+            repeatOrderValue: Number(
+              repeatOrderValue._sum?.estimatedValue || 0,
+            ),
           },
           activityPerformance: {
             followUpToday,
@@ -614,8 +700,8 @@ export class BussdevService {
           lostChurn: await this.getLostChurnTable(),
           activityStreams,
         };
-        this.cacheService.set('bussdev-dashboard', result, 30_000)
-        return result
+        this.cacheService.set('bussdev-dashboard', result, 30_000);
+        return result;
       }
 
       switch (group) {
@@ -1051,11 +1137,7 @@ export class BussdevService {
       include: {
         pic: true,
         sampleRequests: {
-          include: {
-            revisions: {
-              orderBy: { revisionNumber: 'asc' },
-            },
-          },
+          include: {},
           orderBy: { requestedAt: 'desc' },
           take: 1,
         },
@@ -1190,7 +1272,9 @@ export class BussdevService {
         const leads = (staff as any).salesLeads || [];
         const totalLeads = leads.length;
         const contacted = leads.filter((l: any) =>
-          l.timelineLogs?.some((log: any) => log.category === 'FOLLOW_UP'),
+          l.timelineLogs?.some(
+            (log: any) => String(log.category) === 'FOLLOW_UP',
+          ),
         ).length;
         const withSample = leads.filter(
           (l: any) => l.sampleRequests?.length > 0,
@@ -1227,7 +1311,7 @@ export class BussdevService {
           clsRO: clsRO,
           actualRevenue,
           status,
-        };
+        } as const;
       });
     } catch (error) {
       console.error('[BussdevService] Error in getBDPerformance:', error);
@@ -1249,7 +1333,7 @@ export class BussdevService {
         bd: (l as any).pic?.name || 'Unknown',
         reason: l.lostReason || 'No Reason',
         lostValue: Number(l.estimatedValue || 0),
-      }));
+      })) as any[];
     } catch (error) {
       console.error('[BussdevService] Error in getLostChurnTable:', error);
       return [];
@@ -1740,5 +1824,244 @@ export class BussdevService {
       status: retention.status,
       message: 'Retention check triggered',
     };
+  }
+
+  // --- LEAD CRUD ---
+
+  async getLeadById(id: string) {
+    const lead = await this.prisma.salesLead.findUnique({
+      where: { id },
+      include: {
+        pic: true,
+        activities: { orderBy: { createdAt: 'desc' } },
+        sampleRequests: true,
+        salesOrders: { orderBy: { createdAt: 'desc' } },
+        workOrders: true,
+        timelineLogs: { orderBy: { createdAt: 'desc' }, take: 20 },
+        registrations: true,
+        designTasks: true,
+      },
+    });
+    if (!lead) throw new NotFoundException(`Lead with ID ${id} not found`);
+    return lead;
+  }
+
+  async updateLead(id: string, dto: any) {
+    const lead = await this.prisma.salesLead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException(`Lead with ID ${id} not found`);
+
+    return this.prisma.salesLead.update({
+      where: { id },
+      data: {
+        clientName: dto.clientName ?? lead.clientName,
+        brandName: dto.brandName ?? lead.brandName,
+        contactInfo: dto.contactInfo ?? lead.contactInfo,
+        productInterest: dto.productInterest ?? lead.productInterest,
+        estimatedValue: dto.estimatedValue ?? lead.estimatedValue,
+        notes: dto.notes ?? lead.notes,
+        moq: dto.moq ?? lead.moq,
+        planOmset: dto.planOmset ?? lead.planOmset,
+        province: dto.province ?? lead.province,
+        city: dto.city ?? lead.city,
+        district: dto.district ?? lead.district,
+        addressDetail: dto.addressDetail ?? lead.addressDetail,
+        launchingPlan: dto.launchingPlan ?? lead.launchingPlan,
+        targetMarket: dto.targetMarket ?? lead.targetMarket,
+        contactChannel: dto.contactChannel ?? lead.contactChannel,
+        sku: dto.sku ?? lead.sku,
+        unitPrice: dto.unitPrice ?? lead.unitPrice,
+        packagingSuggestion: dto.packagingSuggestion ?? lead.packagingSuggestion,
+        designSuggestion: dto.designSuggestion ?? lead.designSuggestion,
+        valueSuggestion: dto.valueSuggestion ?? lead.valueSuggestion,
+      },
+    });
+  }
+
+  async deleteLead(id: string) {
+    const lead = await this.prisma.salesLead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException(`Lead with ID ${id} not found`);
+
+    return this.prisma.salesLead.delete({ where: { id } });
+  }
+
+  // --- SAMPLE SALES CRUD ---
+
+  async createSampleSales(dto: {
+    customerId: string;
+    productName: string;
+    description?: string;
+    qty: number;
+    unitPrice: number;
+    targetDeliveryDate?: string;
+    notes?: string;
+  }) {
+    const customer = await this.prisma.salesLead.findUnique({
+      where: { id: dto.customerId },
+    });
+    if (!customer) throw new NotFoundException('Customer (Lead) not found');
+
+    const sampleCode = await this.idGenerator.generateId('SMP');
+    return this.prisma.sampleRequest.create({
+      data: {
+        sampleCode,
+        leadId: dto.customerId,
+        productName: dto.productName,
+        targetFunction: dto.description || 'Sample Sales',
+        textureReq: '-',
+        colorReq: '-',
+        aromaReq: '-',
+        stage: SampleStage.QUEUE,
+        targetHpp: dto.unitPrice,
+        targetDeadline: dto.targetDeliveryDate
+          ? new Date(dto.targetDeliveryDate)
+          : undefined,
+        currentExpectations: dto.notes,
+      },
+    });
+  }
+
+  // --- SAMPLE REQUEST CRUD ---
+
+  async createSampleRequest(dto: {
+    leadId: string;
+    productName: string;
+    targetFunction?: string;
+    textureReq?: string;
+    colorReq?: string;
+    aromaReq?: string;
+    targetHpp?: number;
+  }) {
+    const lead = await this.prisma.salesLead.findUnique({
+      where: { id: dto.leadId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    const sampleCode = await this.idGenerator.generateId('SMP');
+    return this.prisma.sampleRequest.create({
+      data: {
+        sampleCode,
+        leadId: dto.leadId,
+        productName: dto.productName,
+        targetFunction: dto.targetFunction || 'General',
+        textureReq: dto.textureReq || '-',
+        colorReq: dto.colorReq || '-',
+        aromaReq: dto.aromaReq || '-',
+        stage: SampleStage.QUEUE,
+        targetHpp: dto.targetHpp,
+      },
+    });
+  }
+
+  async updateSampleRequest(id: string, dto: any) {
+    const sample = await this.prisma.sampleRequest.findUnique({
+      where: { id },
+    });
+    if (!sample) throw new NotFoundException('Sample request not found');
+
+    return this.prisma.sampleRequest.update({
+      where: { id },
+      data: {
+        productName: dto.productName ?? sample.productName,
+        targetFunction: dto.targetFunction ?? sample.targetFunction,
+        textureReq: dto.textureReq ?? sample.textureReq,
+        colorReq: dto.colorReq ?? sample.colorReq,
+        aromaReq: dto.aromaReq ?? sample.aromaReq,
+        stage: dto.stage ?? sample.stage,
+        targetHpp: dto.targetHpp ?? sample.targetHpp,
+        targetDeadline: dto.targetDeadline
+          ? new Date(dto.targetDeadline)
+          : sample.targetDeadline,
+        currentExpectations:
+          dto.currentExpectations ?? sample.currentExpectations,
+      },
+    });
+  }
+
+  async approveSample(dto: {
+    sampleId: string;
+    approvedBy: string;
+    notes?: string;
+  }) {
+    return this.prisma.$transaction(async (tx) => {
+      const sample = await tx.sampleRequest.findUnique({
+        where: { id: dto.sampleId },
+        include: { lead: true },
+      });
+      if (!sample) throw new NotFoundException('Sample request not found');
+
+      const updated = await tx.sampleRequest.update({
+        where: { id: dto.sampleId },
+        data: {
+          stage: SampleStage.APPROVED,
+          isApprovedByClient: true,
+          clientRating: 5,
+          clientComment: dto.notes || 'Approved by internal',
+        },
+      });
+
+      await tx.salesLead.update({
+        where: { id: sample.leadId },
+        data: { status: WorkflowStatus.SAMPLE_APPROVED },
+      });
+
+      await tx.leadTimelineLog.create({
+        data: {
+          leadId: sample.leadId,
+          action: 'SAMPLE_APPROVED_INTERNAL',
+          notes: `Sample ${sample.sampleCode} approved by ${dto.approvedBy}. ${dto.notes || ''}`,
+          loggedBy: dto.approvedBy,
+        },
+      });
+
+      this.eventEmitter.emit(ACTIVITY_EVENT, {
+        leadId: sample.leadId,
+        senderDivision: Division.RND,
+        eventType: StreamEventType.STATE_CHANGE,
+        notes: `SAMPLE_APPROVED: Sampel ${sample.sampleCode} telah disetujui.`,
+        loggedBy: dto.approvedBy,
+      });
+
+      return updated;
+    });
+  }
+
+  // --- SALES ORDER CRUD ---
+
+  async createSalesOrder(dto: {
+    leadId: string;
+    sampleId: string;
+    totalAmount: number;
+    quantity?: number;
+    brandName?: string;
+  }) {
+    const lead = await this.prisma.salesLead.findUnique({
+      where: { id: dto.leadId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    const orderId = await this.idGenerator.generateId('SO');
+    return this.prisma.salesOrder.create({
+      data: {
+        orderNumber: orderId,
+        leadId: dto.leadId,
+        sampleId: dto.sampleId,
+        totalAmount: dto.totalAmount,
+        quantity: dto.quantity || 1,
+        brandName: dto.brandName || lead.brandName,
+        status: 'PENDING_DP',
+      },
+    });
+  }
+
+  async getSalesOrders() {
+    return this.prisma.salesOrder.findMany({
+      include: {
+        lead: {
+          include: { pic: true },
+        },
+        sample: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

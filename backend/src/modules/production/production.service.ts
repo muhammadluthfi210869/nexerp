@@ -11,6 +11,7 @@ import { LifecycleStatus, Prisma } from '@prisma/client';
 // LifecycleStatus is replaced by LifecycleStatus
 
 import { LegalityService } from '../legality/legality.service';
+import { rel } from '../../common/helpers/prisma.helper';
 
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
@@ -30,6 +31,13 @@ export class ProductionService {
     machineId?: string,
     operatorId?: string,
   ) {
+    // 0. Validate UUID format
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(workOrderId)) {
+      throw new BadRequestException('Invalid Work Order ID format');
+    }
+
     // 1. Validation: Check if Warehouse has released material
     const pendingReqs = await this.prisma.materialRequisition.findMany({
       where: {
@@ -74,15 +82,15 @@ export class ProductionService {
             logNumber: await this.idGenerator.generateStageId(
               LifecycleStatus.MIXING,
             ),
-            workOrderId: wo.id,
+            workOrder: rel(wo.id),
             stage: LifecycleStatus.MIXING,
             inputQty: wo.targetQty,
             goodQty: 0,
             quarantineQty: 0,
             rejectQty: 0,
             startTime: new Date(),
-            machineId,
-            operatorId,
+            machine: rel(machineId),
+            operator: rel(operatorId),
             notes: 'SYSTEM: PRODUCTION_STARTED_OEE_ACTIVE',
           },
         });
@@ -126,15 +134,15 @@ export class ProductionService {
     return await this.prisma.productionLog.create({
       data: {
         logNumber,
-        workOrderId,
+        workOrder: rel(workOrderId),
         stage,
-        inputQty: 0, // Will be updated on submit
+        inputQty: 0,
         goodQty: 0,
         quarantineQty: 0,
         rejectQty: 0,
         startTime: new Date(),
-        machineId,
-        operatorId,
+        machine: rel(machineId),
+        operator: rel(operatorId),
         notes: `EVENT: STAGE_${stage}_STARTED`,
       },
     });
@@ -157,14 +165,14 @@ export class ProductionService {
         // Log the Incident
         return await tx.productionLog.create({
           data: {
-            workOrderId,
+            workOrder: rel(workOrderId),
             stage,
             inputQty: 0,
             goodQty: 0,
             quarantineQty: 0,
             rejectQty: 0,
             notes: `CRITICAL_ALERT: BREAKDOWN - ${notes}`,
-            downtimeMinutes: 0, // Still active
+            downtimeMinutes: 0,
           },
         });
       })
@@ -218,37 +226,45 @@ export class ProductionService {
 
         const logNumber = await this.idGenerator.generateStageId(stage);
 
+        // Auto-calc shrinkage: what went in minus what came out
+        const input = Number(inputQty || 0);
+        const good = Number(goodQty || 0);
+        const reject = Number(rejectQty || 0);
+        const quarantine = Number(quarantineQty || 0);
+        const shrinkage = Math.max(0, input - good - reject - quarantine);
+
         // Create/Update Final Log for this stage
         await tx.productionLog.create({
           data: {
             logNumber,
             stage,
-            inputQty: Number(inputQty || 0),
-            goodQty: Number(goodQty || 0),
-            quarantineQty: Number(quarantineQty || 0),
-            rejectQty: Number(rejectQty || 0),
+            inputQty: input,
+            goodQty: good,
+            quarantineQty: quarantine,
+            rejectQty: reject,
+            shrinkageQty: shrinkage,
             startTime,
             loggedAt: endTime,
-            machineId,
             downtimeMinutes: Number(downtimeMinutes || 0),
             notes: notes || `RELAY_COMPLETED: Duration ${durationMin}m`,
-            workOrder: workOrderId
-              ? { connect: { id: workOrderId } }
-              : undefined,
-            plan: wo?.planId ? { connect: { id: wo.planId } } : undefined,
+            workOrder: rel(workOrderId),
+            plan: rel(wo?.planId),
+            machine: rel(machineId),
             // Phase 2: HPP Snapshot & Batch Tracking
             unitValueAtTransaction: dto.unitValueAtTransaction || 0,
-            materialInventoryId: dto.materialInventoryId,
+            materialInventory: rel(dto.materialInventoryId),
           },
         });
 
         // --- PHASE 2: FTY & COPQ LOGIC ---
         if (Number(rejectQty) > 0 || Number(quarantineQty) > 0) {
           // If any issue occurs, it's no longer a First Pass (FTY)
-          await tx.productionPlan.update({
-            where: { id: wo.planId || '' },
-            data: { isFirstPass: false },
-          });
+          if (wo.planId) {
+            await tx.productionPlan.update({
+              where: { id: wo.planId },
+              data: { isFirstPass: false },
+            });
+          }
 
           if (Number(rejectQty) > 0) {
             await this.calculateCOPQ(tx, workOrderId, stage, Number(rejectQty));
@@ -437,10 +453,12 @@ export class ProductionService {
               ? parseFloat(((onTimeOrders / totalOrders) * 100).toFixed(1))
               : 100,
           delayed: alertOrders,
-          avgCycle:
+          avgCycleHours:
             totalOrders > 0
-              ? `${Math.round(totalActualUnits / totalOrders)} unit/batch`
-              : '0 unit/batch',
+              ? parseFloat(
+                  ((Math.max(1, alertOrders) / totalOrders) * 24).toFixed(1),
+                )
+              : 0,
         },
         efficiency: {
           utilization: totalOrders > 0 ? 85 : 0, // Base utilization if orders exist
@@ -540,10 +558,44 @@ export class ProductionService {
     const logs = await this.prisma.productionLog.findMany({
       include: {
         workOrder: { select: { id: true, woNumber: true } },
-        qcAudits: { select: { status: true, createdAt: true } },
       },
       orderBy: { loggedAt: 'desc' },
     });
+
+    const workOrderIds = logs
+      .map((l) => l.workOrderId)
+      .filter((id): id is string => id !== null);
+    const workOrders = await this.prisma.workOrder.findMany({
+      where: { id: { in: workOrderIds } },
+      select: { id: true, planId: true },
+    });
+    const planIds = [
+      ...new Set(
+        workOrders
+          .map((wo) => wo.planId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const stepLogs = await this.prisma.productionStepLog.findMany({
+      where: { woId: { in: planIds } },
+      include: { qcAudits: { select: { status: true, createdAt: true } } },
+    });
+
+    const auditsByPlan = new Map<string, any[]>();
+    for (const sl of stepLogs) {
+      if (!auditsByPlan.has(sl.woId)) {
+        auditsByPlan.set(sl.woId, []);
+      }
+      auditsByPlan.get(sl.woId)!.push(...sl.qcAudits);
+    }
+
+    const auditMap = new Map<string, any[]>();
+    for (const wo of workOrders) {
+      if (wo.planId && auditsByPlan.has(wo.planId)) {
+        auditMap.set(wo.id, auditsByPlan.get(wo.planId)!);
+      }
+    }
+
     return logs.map((l) => ({
       id: l.id,
       workOrderId: l.workOrderId,
@@ -556,7 +608,7 @@ export class ProductionService {
       laborCost: l.laborCost ? Number(l.laborCost) : 0,
       overheadCost: l.overheadCost ? Number(l.overheadCost) : 0,
       loggedAt: l.loggedAt,
-      qcAudits: l.qcAudits,
+      qcAudits: l.workOrderId ? auditMap.get(l.workOrderId) || [] : [],
     }));
   }
 
@@ -795,15 +847,23 @@ export class ProductionService {
         include: { lead: true },
       });
 
-      // Phase 3: Create Material Requisition automatically for Warehouse
-      // We'll create a summary requisition for the batch
-      await tx.materialRequisition.create({
-        data: {
-          workOrderId: wo.id,
-          qtyRequested: dto.targetQty, // Placeholder for actual formula-based qty
-          materialId: (await tx.materialItem.findFirst({}))?.id || '', // Just a dummy link for prototype
-        },
-      });
+      // Create Material Requisitions from BOM
+      const approvedSample = wo.lead?.sampleRequests?.find(
+        (sr: any) => sr.stage === 'APPROVED',
+      );
+      const bom = approvedSample?.billOfMaterials || [];
+      if (bom.length > 0) {
+        for (const bomItem of bom) {
+          const totalQty = Number(bomItem.quantityPerUnit) * dto.targetQty;
+          await tx.materialRequisition.create({
+            data: {
+              workOrderId: wo.id,
+              materialId: bomItem.materialId,
+              qtyRequested: totalQty,
+            },
+          });
+        }
+      }
 
       this.eventEmitter.emit('production.work_order.created', {
         workOrderId: wo.id,
@@ -956,7 +1016,7 @@ export class ProductionService {
         // Create a production log to notify that material is released
         await tx.productionLog.create({
           data: {
-            workOrderId: requisition.workOrderId,
+            workOrder: rel(requisition.workOrderId),
             stage: updated.workOrder.stage,
             inputQty: 0,
             goodQty: 0,
@@ -1020,20 +1080,50 @@ export class ProductionService {
   }
 
   async getPendingAudits() {
-    return this.prisma.productionLog.findMany({
+    const logs = await this.prisma.productionLog.findMany({
       where: {
         OR: [
           { quarantineQty: { gt: 0 } },
           { notes: { contains: 'QC_REQUIRED' } },
         ],
-        // Check if already audited
-        qcAudits: { none: {} },
       },
       include: {
         workOrder: { include: { lead: true } },
       },
       orderBy: { loggedAt: 'desc' },
     });
+
+    const workOrderIds = logs
+      .map((l) => l.workOrderId)
+      .filter((id): id is string => id !== null);
+    const workOrders = await this.prisma.workOrder.findMany({
+      where: { id: { in: workOrderIds } },
+      select: { id: true, planId: true },
+    });
+    const planIds = [
+      ...new Set(
+        workOrders
+          .map((wo) => wo.planId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const stepLogs = await this.prisma.productionStepLog.findMany({
+      where: { woId: { in: planIds } },
+      include: { qcAudits: { take: 1 } },
+    });
+
+    const auditedPlanIds = new Set(
+      stepLogs.filter((sl) => sl.qcAudits.length > 0).map((sl) => sl.woId),
+    );
+    const auditedWoIds = new Set(
+      workOrders
+        .filter((wo) => wo.planId && auditedPlanIds.has(wo.planId))
+        .map((wo) => wo.id),
+    );
+
+    return logs.filter(
+      (l) => l.workOrderId && !auditedWoIds.has(l.workOrderId),
+    );
   }
 
   async submitAudit(
@@ -1438,8 +1528,8 @@ export class ProductionService {
         const schedule = await tx.productionSchedule.create({
           data: {
             scheduleNumber,
-            workOrderId: dto.workOrderId,
-            machineId: dto.machineId,
+            workOrder: rel(dto.workOrderId),
+            machine: rel(dto.machineId),
             stage: dto.stage as any,
             startTime: new Date(dto.startTime),
             endTime: new Date(dto.endTime),
@@ -1545,18 +1635,16 @@ export class ProductionService {
       // Prevent Good Output (pcs) from exceeding the logic limit of Actual Bulk (kg) consumed.
       if (schedule.stage === 'FILLING') {
         // 1. QC Interlock: Check if Bulk (Mixing) has passed QC
-        const mixingLog = await tx.productionLog.findFirst({
+        const mixingStepLog = await tx.productionStepLog.findFirst({
           where: {
-            workOrderId: schedule.workOrderId,
+            wo: { workOrders: { some: { id: schedule.workOrderId } } },
             stage: 'MIXING',
           },
-          include: { qcAudits: true },
-          orderBy: { loggedAt: 'desc' },
+          include: { qcAudits: { where: { status: 'PASS' as any }, take: 1 } },
+          orderBy: { createdAt: 'desc' },
         });
 
-        const isBulkPassed = mixingLog?.qcAudits?.some(
-          (a: any) => a.status === 'PASS',
-        );
+        const isBulkPassed = mixingStepLog?.qcAudits?.length > 0;
 
         if (!isBulkPassed) {
           this.eventEmitter.emit('production.qc_interlock_triggered', {
@@ -1632,18 +1720,28 @@ export class ProductionService {
       const laborCost = (actualDurationMinutes / 60) * Number(laborRate);
       const overheadCost = (actualDurationMinutes / 60) * Number(machineRate);
 
+      const scheduleInput = schedule.targetQty;
+      const scheduleGood = 0; // Wait for QC
+      const scheduleReject = Math.max(0, schedule.targetQty - resultQty);
+      const scheduleQuarantine = resultQty;
+      const scheduleShrinkage = Math.max(
+        0,
+        scheduleInput - scheduleGood - scheduleReject - scheduleQuarantine,
+      );
+
       await tx.productionLog.create({
         data: {
           logNumber: await this.idGenerator.generateStageId(schedule.stage),
-          workOrderId: schedule.workOrderId,
+          workOrder: rel(schedule.workOrderId),
           stage: schedule.stage,
-          inputQty: schedule.targetQty,
-          goodQty: 0, // Wait for QC
-          quarantineQty: resultQty, // Blocked in Quarantine
-          rejectQty: Math.max(0, schedule.targetQty - resultQty),
+          inputQty: scheduleInput,
+          goodQty: scheduleGood,
+          quarantineQty: scheduleQuarantine,
+          rejectQty: scheduleReject,
+          shrinkageQty: scheduleShrinkage,
           startTime: schedule.startTime,
           loggedAt: new Date(),
-          machineId: schedule.machineId,
+          machine: rel(schedule.machineId),
           downtimeMinutes: downtimeMinutes || 0,
           notes: `TERMINAL_SYNC: Duration ${actualDurationMinutes}m. ${notes || ''}`,
           laborCost,
@@ -1666,7 +1764,22 @@ export class ProductionService {
         })),
       });
 
-      return schedule;
+      return {
+        scheduleId: schedule.id,
+        scheduleNumber: schedule.scheduleNumber,
+        workOrderId: schedule.workOrderId,
+        stage: schedule.stage,
+        resultQty: schedule.resultQty,
+        status: schedule.status,
+        machine: schedule.machine,
+        stepDetails: schedule.stepDetails,
+        costing: {
+          laborCost: Number(laborCost),
+          overheadCost: Number(overheadCost),
+          totalCost: Number(laborCost) + Number(overheadCost),
+          actualDurationMinutes,
+        },
+      };
     });
   }
 
@@ -1768,7 +1881,17 @@ export class ProductionService {
         const actual = Number(item.qtyActual);
         const deviation = Math.abs(actual - theoretical) / theoretical;
 
-        // Constraint 2: Weight Tolerance Hard-Stop (0.5%)
+        // Constraint 2a: Hard-Stop 10% — Fraud Prevention (even supervisor PIN cannot bypass)
+        if (deviation > 0.1) {
+          throw new BadRequestException({
+            code: 'DEVIATION_EXCESSIVE',
+            message: `Deviasi ${(deviation * 100).toFixed(2)}% untuk ${detail.material.name} melebihi batas maksimal 10%. Transaksi ditolak. Hubungi PPIC untuk koreksi BOM/formula.`,
+            deviation: (deviation * 100).toFixed(2),
+            limit: '10%',
+          });
+        }
+
+        // Constraint 2b: Weight Tolerance Hard-Stop (0.5%)
         if (deviation > 0.005) {
           if (!supervisorPin || !supervisorId) {
             throw new BadRequestException({
@@ -2012,6 +2135,446 @@ export class ProductionService {
     });
   }
 
+  async getFloorData() {
+    const activeWOs = await this.prisma.workOrder.findMany({
+      where: {
+        stage: {
+          notIn: ['CLOSED', 'CANCELLED', 'FINISHED_GOODS', 'DELIVERED'],
+        },
+      },
+      include: {
+        lead: {
+          select: { clientName: true, brandName: true, productInterest: true },
+        },
+        logs: { orderBy: { loggedAt: 'desc' }, take: 1 },
+        schedules: {
+          include: { machine: true },
+          orderBy: { startTime: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: { targetCompletion: 'asc' },
+    });
+
+    const STAGES = [
+      'PLANNING',
+      'WAITING_MATERIAL',
+      'WAITING_PROCUREMENT',
+      'READY_TO_PRODUCE',
+      'MIXING',
+      'PENDING_QC',
+      'QC_HOLD',
+      'REWORK',
+      'FILLING',
+      'PACKING',
+      'FINISHED_GOODS',
+    ];
+
+    const floorData = STAGES.reduce(
+      (acc, stage) => {
+        const wos = activeWOs.filter((wo) => wo.stage === stage);
+        acc[stage] = wos.map((wo) => {
+          const latestLog = wo.logs[0];
+          const latestSchedule = wo.schedules[0];
+          const now = new Date();
+          const isOverdue = wo.targetCompletion < now;
+          const hasReject = wo.logs.some((l) => Number(l.rejectQty) > 0);
+          const stalledHours = latestLog?.loggedAt
+            ? Math.round(
+                (now.getTime() - latestLog.loggedAt.getTime()) /
+                  (1000 * 60 * 60),
+              )
+            : 0;
+
+          let health: 'ON_TRACK' | 'DELAYED' | 'CRITICAL' = 'ON_TRACK';
+          if (isOverdue && stalledHours > 4) health = 'CRITICAL';
+          else if (isOverdue || hasReject) health = 'DELAYED';
+
+          return {
+            id: wo.id,
+            woNumber: wo.woNumber,
+            productName:
+              wo.lead?.productInterest || wo.lead?.brandName || 'Unnamed',
+            clientName: wo.lead?.clientName || '',
+            targetQty: wo.targetQty,
+            targetCompletion: wo.targetCompletion,
+            operatorId: latestLog?.operatorId || null,
+            machineName: latestSchedule?.machine?.name || null,
+            stageDuration:
+              latestLog?.loggedAt && latestLog?.startTime
+                ? Math.round(
+                    (latestLog.loggedAt.getTime() -
+                      latestLog.startTime.getTime()) /
+                      60000,
+                  )
+                : null,
+            timeSinceUpdate: stalledHours,
+            health,
+            hasReject,
+            isOverdue,
+          };
+        });
+        return acc;
+      },
+      {} as Record<string, any[]>,
+    );
+
+    return {
+      stages: floorData,
+      totalActive: activeWOs.length,
+      timestamp: new Date(),
+    };
+  }
+
+  async getLeakageData() {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [allLogs, allSchedules, allQcAudits] = await Promise.all([
+      this.prisma.productionLog.findMany({
+        where: { loggedAt: { gte: thirtyDaysAgo } },
+        include: {
+          workOrder: { include: { lead: true } },
+        },
+        orderBy: { loggedAt: 'desc' },
+      }),
+      this.prisma.productionSchedule.findMany({
+        where: { startTime: { gte: thirtyDaysAgo } },
+        include: {
+          stepDetails: true,
+          workOrder: true,
+          machine: true,
+        },
+      }),
+      this.prisma.qCAudit.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+      }),
+    ]);
+
+    const materialLeakage: any[] = [];
+    const timeLeakage: any[] = [];
+    const weightDeviation: any[] = [];
+    const missingQCGate: any[] = [];
+    const sequenceViolation: any[] = [];
+    const rejectSpikes: any[] = [];
+
+    // 1. Material Leakage: inputQty vs goodQty per stage
+    const woLogMap = new Map<string, any[]>();
+    for (const log of allLogs) {
+      if (!log.workOrderId) continue;
+      const arr = woLogMap.get(log.workOrderId) || [];
+      arr.push(log);
+      woLogMap.set(log.workOrderId, arr);
+    }
+
+    for (const [, logs] of woLogMap) {
+      for (const log of logs) {
+        const input = Number(log.inputQty);
+        const good = Number(log.goodQty);
+        const reject = Number(log.rejectQty);
+        const quarantine = Number(log.quarantineQty);
+        const shrinkage = Number(log.shrinkageQty || 0);
+        const accountedOutput = good + reject + quarantine + shrinkage;
+        if (input > 0) {
+          const lossPct = ((input - accountedOutput) / input) * 100;
+          if (lossPct > 2) {
+            materialLeakage.push({
+              woNumber: log.workOrder?.woNumber || 'N/A',
+              stage: log.stage,
+              input,
+              output: accountedOutput,
+              good,
+              reject,
+              quarantine,
+              shrinkage,
+              loss: input - accountedOutput,
+              lossPct: parseFloat(lossPct.toFixed(2)),
+              productName: log.workOrder?.lead?.productInterest || 'N/A',
+              detectedAt: log.loggedAt,
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Weight Deviation: step detail theoretical vs actual
+    for (const schedule of allSchedules) {
+      for (const detail of schedule.stepDetails) {
+        if (detail.qtyActual && detail.qtyTheoretical) {
+          const theoretical = Number(detail.qtyTheoretical);
+          const actual = Number(detail.qtyActual);
+          const devPct = (Math.abs(actual - theoretical) / theoretical) * 100;
+          if (devPct > 0.5) {
+            weightDeviation.push({
+              woNumber: schedule.workOrder?.woNumber || 'N/A',
+              scheduleId: schedule.id,
+              stage: schedule.stage,
+              materialId: detail.materialId,
+              materialCode: detail.materialCode,
+              theoretical,
+              actual,
+              devPct: parseFloat(devPct.toFixed(2)),
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Missing QC Gate: completed schedules without QC audit
+    for (const schedule of allSchedules.filter(
+      (s) => s.status === 'COMPLETED',
+    )) {
+      const hasQc = allQcAudits.some((a) => a.stepLogId === schedule.id);
+      if (!hasQc) {
+        missingQCGate.push({
+          scheduleId: schedule.id,
+          woNumber: schedule.workOrder?.woNumber || 'N/A',
+          stage: schedule.stage,
+          machineName: schedule.machine?.name || 'N/A',
+          completedAt: schedule.endTime,
+        });
+      }
+    }
+
+    // 4. Reject Spikes: per machine per day
+    const machineRejectMap = new Map<
+      string,
+      { total: number; count: number }
+    >();
+    for (const log of allLogs) {
+      if (!log.machineId) continue;
+      const key = `${log.machineId}_${log.loggedAt.toISOString().slice(0, 10)}`;
+      const existing = machineRejectMap.get(key) || { total: 0, count: 0 };
+      existing.total += Number(log.rejectQty);
+      existing.count += Number(log.goodQty) + Number(log.rejectQty);
+      machineRejectMap.set(key, existing);
+    }
+
+    for (const [key, val] of machineRejectMap) {
+      const rate = val.count > 0 ? (val.total / val.count) * 100 : 0;
+      if (rate > 10) {
+        const [machineId, dateStr] = key.split('_');
+        rejectSpikes.push({
+          machineId,
+          date: dateStr,
+          rejectRate: parseFloat(rate.toFixed(1)),
+          totalReject: val.total,
+          totalOutput: val.count,
+        });
+      }
+    }
+
+    // 5. Sequence Violation: check if stages were skipped
+    for (const [, logs] of woLogMap) {
+      const sortedLogs = logs.sort(
+        (a, b) => a.loggedAt.getTime() - b.loggedAt.getTime(),
+      );
+      const stageOrder = [
+        'PLANNING',
+        'WAITING_MATERIAL',
+        'MIXING',
+        'FILLING',
+        'PACKING',
+        'FINISHED_GOODS',
+      ];
+      let lastIdx = -1;
+      for (const log of sortedLogs) {
+        const idx = stageOrder.indexOf(log.stage);
+        if (idx >= 0) {
+          if (lastIdx >= 0 && idx > lastIdx + 1) {
+            sequenceViolation.push({
+              woNumber: log.workOrder?.woNumber || 'N/A',
+              fromStage: stageOrder[lastIdx],
+              attemptedStage: log.stage,
+              skippedStages: stageOrder.slice(lastIdx + 1, idx),
+              detectedAt: log.loggedAt,
+            });
+          }
+          lastIdx = idx;
+        }
+      }
+    }
+
+    // 6. Time Leakage: gap between consecutive stage logs > 4h threshold
+    for (const [, logs] of woLogMap) {
+      const sortedLogs = logs.sort(
+        (a, b) => a.loggedAt.getTime() - b.loggedAt.getTime(),
+      );
+      for (let i = 1; i < sortedLogs.length; i++) {
+        const prev = sortedLogs[i - 1];
+        const curr = sortedLogs[i];
+        const gapHours =
+          (curr.loggedAt.getTime() - prev.loggedAt.getTime()) /
+          (1000 * 60 * 60);
+        if (gapHours > 4) {
+          timeLeakage.push({
+            woNumber: curr.workOrder?.woNumber || 'N/A',
+            fromStage: prev.stage,
+            toStage: curr.stage,
+            gapHours: parseFloat(gapHours.toFixed(1)),
+            prevTime: prev.loggedAt,
+            currTime: curr.loggedAt,
+            productName: curr.workOrder?.lead?.productInterest || 'N/A',
+          });
+        }
+      }
+    }
+
+    return {
+      materialLeakage: materialLeakage.slice(0, 50),
+      timeLeakage: timeLeakage.slice(0, 50),
+      weightDeviation: weightDeviation.slice(0, 50),
+      missingQCGate: missingQCGate.slice(0, 50),
+      sequenceViolation: sequenceViolation.slice(0, 50),
+      rejectSpikes: rejectSpikes.slice(0, 50),
+      summary: {
+        totalAnomalies:
+          materialLeakage.length +
+          timeLeakage.length +
+          weightDeviation.length +
+          missingQCGate.length +
+          sequenceViolation.length +
+          rejectSpikes.length,
+        criticalCount:
+          materialLeakage.filter((l) => l.lossPct > 10).length +
+          rejectSpikes.filter((r) => r.rejectRate > 20).length,
+      },
+    };
+  }
+
+  async getWorkOrderTimeline(woId: string) {
+    const wo = await this.prisma.workOrder.findUnique({
+      where: { id: woId },
+      include: {
+        lead: true,
+        plan: {
+          include: {
+            stepLogs: {
+              include: {
+                qcAudits: { orderBy: { createdAt: 'desc' }, take: 1 },
+              },
+            },
+          },
+        },
+        logs: {
+          include: { machine: true, operator: true },
+          orderBy: { loggedAt: 'asc' },
+        },
+        schedules: {
+          include: {
+            stepDetails: { include: { material: true } },
+            machine: true,
+          },
+        },
+        requisitions: { include: { material: true, fulfillments: true } },
+      },
+    });
+
+    if (!wo) throw new NotFoundException('Work Order not found');
+
+    const stepLogAuditMap = new Map<string, string | null>();
+    for (const sl of wo.plan?.stepLogs || []) {
+      stepLogAuditMap.set(sl.stage, sl.qcAudits[0]?.status || null);
+    }
+
+    const timeline = wo.logs.map((log) => ({
+      stage: log.stage,
+      startTime: log.startTime,
+      endTime: log.loggedAt,
+      durationMin:
+        log.startTime && log.loggedAt
+          ? Math.round(
+              (log.loggedAt.getTime() - log.startTime.getTime()) / 60000,
+            )
+          : 0,
+      inputQty: Number(log.inputQty),
+      goodQty: Number(log.goodQty),
+      rejectQty: Number(log.rejectQty),
+      quarantineQty: Number(log.quarantineQty),
+      shrinkageQty: Number(log.shrinkageQty),
+      machineName: log.machine?.name || null,
+      operatorName: log.operator?.fullName || null,
+      downtimeMinutes: log.downtimeMinutes,
+      laborCost: log.laborCost ? Number(log.laborCost) : null,
+      overheadCost: log.overheadCost ? Number(log.overheadCost) : null,
+      qcStatus: stepLogAuditMap.get(log.stage as any) || null,
+      notes: log.notes,
+    }));
+
+    const totalInput = wo.logs.reduce((s, l) => s + Number(l.inputQty), 0);
+    const totalGood = wo.logs.reduce((s, l) => s + Number(l.goodQty), 0);
+    const totalReject = wo.logs.reduce((s, l) => s + Number(l.rejectQty), 0);
+    const totalShrinkage = wo.logs.reduce(
+      (s, l) => s + Number(l.shrinkageQty),
+      0,
+    );
+    const totalDowntime = wo.logs.reduce((s, l) => s + l.downtimeMinutes, 0);
+    const totalLaborCost = wo.logs.reduce(
+      (s, l) => s + Number(l.laborCost || 0),
+      0,
+    );
+    const totalOverheadCost = wo.logs.reduce(
+      (s, l) => s + Number(l.overheadCost || 0),
+      0,
+    );
+
+    return {
+      woNumber: wo.woNumber,
+      productName: wo.lead?.productInterest || wo.lead?.brandName || 'Unnamed',
+      clientName: wo.lead?.clientName || '',
+      targetQty: wo.targetQty,
+      targetCompletion: wo.targetCompletion,
+      currentStage: wo.stage,
+      timeline,
+      massBalance: {
+        totalInput,
+        totalGood,
+        totalReject,
+        totalShrinkage,
+        leakage: totalInput - totalGood - totalReject - totalShrinkage,
+        leakagePct:
+          totalInput > 0
+            ? parseFloat(
+                (
+                  ((totalInput - totalGood - totalReject - totalShrinkage) /
+                    totalInput) *
+                  100
+                ).toFixed(2),
+              )
+            : 0,
+        effectiveYield:
+          totalInput > 0
+            ? parseFloat(((totalGood / totalInput) * 100).toFixed(2))
+            : 0,
+      },
+      costing: {
+        totalLaborCost,
+        totalOverheadCost,
+        totalCost: totalLaborCost + totalOverheadCost,
+        actualCogs: wo.actualCogs ? Number(wo.actualCogs) : null,
+        targetHpp: wo.targetHpp ? Number(wo.targetHpp) : null,
+      },
+      schedules: wo.schedules.map((s) => ({
+        id: s.id,
+        stage: s.stage,
+        scheduleNumber: s.scheduleNumber,
+        machineName: s.machine?.name,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        targetQty: s.targetQty,
+        resultQty: s.resultQty,
+        status: s.status,
+        components: s.stepDetails.map((d) => ({
+          materialCode: d.materialCode,
+          materialName: d.material?.name,
+          category: d.category,
+          qtyTheoretical: Number(d.qtyTheoretical),
+          qtyActual: d.qtyActual ? Number(d.qtyActual) : null,
+        })),
+      })),
+    };
+  }
+
   @OnEvent('warehouse.stock.adjusted')
   async handleStockAdjusted(payload: any) {
     this.eventEmitter.emit('activity.logged', {
@@ -2028,5 +2591,63 @@ export class ProductionService {
       notes: `Inbound received: materials available for production`,
       loggedBy: 'SYSTEM:PRODUCTION',
     });
+  }
+
+  // --- FORMULA ADJUSTMENTS ---
+
+  private formulaAdjustments: Array<{
+    id: string;
+    formulaId: string;
+    requestedBy: string;
+    reason: string;
+    changes: any;
+    status: string;
+    createdAt: Date;
+  }> = [];
+
+  async getFormulaAdjustments() {
+    const adjustments = await this.prisma.stateTransitionLog.findMany({
+      where: { entityType: 'FORMULA_ADJUSTMENT' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return adjustments.map((a) => ({
+      id: a.id,
+      formulaId: a.entityId,
+      requestedBy: a.changedById,
+      reason: a.reason,
+      changes: a.metadata,
+      status: a.toState,
+      createdAt: a.createdAt,
+    }));
+  }
+
+  async createFormulaAdjustment(dto: {
+    formulaId: string;
+    requestedBy: string;
+    reason: string;
+    changes: any;
+  }) {
+    const log = await this.prisma.stateTransitionLog.create({
+      data: {
+        entityType: 'FORMULA_ADJUSTMENT',
+        entityId: dto.formulaId,
+        fromState: 'PENDING',
+        toState: 'REQUESTED',
+        changedById: dto.requestedBy,
+        reason: dto.reason,
+        metadata: dto.changes,
+      },
+    });
+
+    return {
+      id: log.id,
+      formulaId: dto.formulaId,
+      requestedBy: dto.requestedBy,
+      reason: dto.reason,
+      changes: dto.changes,
+      status: 'REQUESTED',
+      createdAt: log.createdAt,
+    };
   }
 }

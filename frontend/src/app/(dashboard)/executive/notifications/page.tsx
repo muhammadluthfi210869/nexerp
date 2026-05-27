@@ -106,7 +106,7 @@ export default function NotificationsPage() {
 
   const markReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      return api.patch(`/notifications/${id}/read`);
+      return api.post(`/notifications/${id}/read`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["executive-notifications"] });
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
-      return api.patch("/notifications/read-all");
+      return api.post("/notifications/read-all");
     },
     onSuccess: () => {
       toast.success("Semua notifikasi ditandai sudah dibaca");

@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Delete,
   Param,
   UseGuards,
   Query,
@@ -16,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 
 import { FinanceService } from './finance.service';
+import { CashService } from './cash.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -30,13 +32,31 @@ import {
 } from './dto/fund-request.dto';
 import { Req } from '@nestjs/common';
 import { VerifyArPaymentDto } from './dto/verify-ar-payment.dto';
+import { CashDisburseDto, CashReceiveDto } from './dto/cash.dto';
 
 @ApiTags('finance')
 @ApiBearerAuth()
 @Controller('finance')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class FinanceController {
-  constructor(private readonly financeService: FinanceService) {}
+  constructor(
+    private readonly financeService: FinanceService,
+    private readonly cashService: CashService,
+  ) {}
+
+  @Post('cash/disburse')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Kas Keluar — unified cash disbursement' })
+  async disburseCash(@Body() dto: CashDisburseDto) {
+    return this.cashService.disburse(dto);
+  }
+
+  @Post('cash/receive')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Kas Masuk — unified cash receipt' })
+  async receiveCash(@Body() dto: CashReceiveDto) {
+    return this.cashService.receive(dto);
+  }
 
   @Get('dashboard')
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
@@ -344,5 +364,50 @@ export class FinanceController {
   @Get('currencies')
   async getCurrencies() {
     return this.financeService.getCurrencies();
+  }
+
+  // --- COA CRUD ---
+
+  @Post('accounts')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Create a new COA account' })
+  async createAccount(
+    @Body()
+    dto: {
+      code: string;
+      name: string;
+      type: any;
+      normalBalance: any;
+      parentId?: string;
+      reportGroup?: any;
+      isActive?: boolean;
+    },
+  ) {
+    return this.financeService.createAccount(dto);
+  }
+
+  @Patch('accounts/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Update a COA account' })
+  async updateAccount(@Param('id') id: string, @Body() dto: any) {
+    return this.financeService.updateAccount(id, dto);
+  }
+
+  @Delete('accounts/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Soft-delete a COA account (set isActive=false)' })
+  async softDeleteAccount(@Param('id') id: string) {
+    return this.financeService.softDeleteAccount(id);
+  }
+
+  // --- PAYMENT VERIFY ALIAS ---
+
+  @Post('payment/verify')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Alias for POST /finance/verify-payment' })
+  async verifyPaymentAlias(
+    @Body() dto: { type: string; id: string; verifiedBy: string },
+  ) {
+    return this.financeService.verifyOrderPayment(dto);
   }
 }

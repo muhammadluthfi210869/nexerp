@@ -5,6 +5,8 @@ import {
   Patch,
   Param,
   Get,
+  Put,
+  Delete,
   UseGuards,
   UseInterceptors,
   UploadedFiles,
@@ -254,5 +256,114 @@ export class BussdevController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
   triggerRetention(@Param('id') id: string) {
     return this.bussdevService.triggerRetentionCheck(id);
+  }
+
+  // --- LEAD CRUD ---
+
+  @Get('lead/:id')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.RND, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Get single lead detail' })
+  getLead(@Param('id') id: string) {
+    return this.bussdevService.getLeadById(id);
+  }
+
+  @Put('lead/:id')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update a lead' })
+  updateLead(@Param('id') id: string, @Body() dto: any) {
+    return this.bussdevService.updateLead(id, dto);
+  }
+
+  @Delete('lead/:id')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Delete a lead' })
+  deleteLead(@Param('id') id: string) {
+    return this.bussdevService.deleteLead(id);
+  }
+
+  // --- SAMPLE SALES CRUD ---
+
+  @Post('samples')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a new sample sales order' })
+  createSample(
+    @Body()
+    dto: {
+      customerId: string;
+      productName: string;
+      description?: string;
+      qty: number;
+      unitPrice: number;
+      targetDeliveryDate?: string;
+      notes?: string;
+    },
+  ) {
+    return this.bussdevService.createSampleSales(dto);
+  }
+
+  // --- SAMPLE REQUEST CRUD ---
+
+  @Post('sample-request')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create sample request (from SOT)' })
+  createSampleRequest(
+    @Body()
+    dto: {
+      leadId: string;
+      productName: string;
+      targetFunction?: string;
+      textureReq?: string;
+      colorReq?: string;
+      aromaReq?: string;
+      targetHpp?: number;
+    },
+  ) {
+    return this.bussdevService.createSampleRequest(dto);
+  }
+
+  @Patch('sample-request/:id')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.RND)
+  @ApiOperation({ summary: 'Update a sample request' })
+  updateSampleRequest(@Param('id') id: string, @Body() dto: any) {
+    return this.bussdevService.updateSampleRequest(id, dto);
+  }
+
+  @Post('approve-sample')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.RND)
+  @ApiOperation({ summary: 'Approve a sample' })
+  approveSample(
+    @Body()
+    dto: {
+      sampleId: string;
+      approvedBy: string;
+      notes?: string;
+    },
+  ) {
+    return this.bussdevService.approveSample(dto);
+  }
+
+  // --- SALES ORDER CRUD ---
+
+  @Post('sales-order')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a sales order' })
+  createSalesOrder(
+    @Body()
+    dto: {
+      leadId: string;
+      sampleId: string;
+      totalAmount: number;
+      quantity?: number;
+      brandName?: string;
+    },
+  ) {
+    return this.bussdevService.createSalesOrder(dto);
+  }
+
+  @Get('sales-orders')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'List all sales orders' })
+  getSalesOrders() {
+    return this.bussdevService.getSalesOrders();
   }
 }

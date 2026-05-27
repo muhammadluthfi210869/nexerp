@@ -228,6 +228,14 @@ export class NotificationService {
 
   // --- QUERIES ---
 
+  async getAllNotifications(userId: string, limit: number = 50) {
+    return this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
   async getUnreadNotifications(userId: string) {
     return this.prisma.notification.findMany({
       where: { userId, isRead: false },

@@ -82,8 +82,7 @@ export default function BayarSamplePage() {
 
   const verifyMutation = useMutation({
     mutationFn: async ({ sampleId, formData }: { sampleId: string; formData: FormData }) => {
-      const resp = await api.post("/finance/payment/verify", formData, {
-        params: { gate: "G1" },
+      const resp = await api.post("/finance/verify-payment", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return resp.data;
