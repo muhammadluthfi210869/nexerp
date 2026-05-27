@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FileIcon,
   History,
@@ -63,7 +64,7 @@ export default function PurchasePaymentPrototype() {
     queryKey: ["purchase-invoices"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-invoices");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -118,13 +119,13 @@ export default function PurchasePaymentPrototype() {
   };
 
   return (
-    <DashboardShell title="PURCHASING" titleAccent="PAYMENTS" subtitle="Vendor settlement & payment tracking">
+    <DashboardShell title="PEMBELIAN" titleAccent="PEMBAYARAN" subtitle="Penyelesaian pembayaran & pelacakan">
       <div className="space-y-8 animate-fade-slide-in">
         {/* KPI Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <StatCard label="Aging Payables" value="Rp 24,000,000" subValue="12 overdue | Audit Required" icon={<Wallet className="text-rose-600" />} />
-          <StatCard label="Total Settled (MTD)" value="Rp 189,500,000" subValue="75% efficiency target achieved" icon={<CircleDollarSign className="text-emerald-500" />} />
-          <StatCard label="Payment Gateway" value="Instant Settlement" subValue="Instant gateway settlement active" icon={<Zap className="text-blue-500" />} />
+          <StatCard label="Hutang Tertunda" value="Rp 24,000,000" subValue="12 overdue | Audit Required" icon={<Wallet className="text-rose-600" />} />
+          <StatCard label="Total Lunas (MTD)" value="Rp 189,500,000" subValue="75% efficiency target achieved" icon={<CircleDollarSign className="text-emerald-500" />} />
+          <StatCard label="Gateway Pembayaran" value="Instant Settlement" subValue="Instant gateway settlement active" icon={<Zap className="text-blue-500" />} />
         </div>
 
         {/* Main List Table */}
@@ -134,12 +135,12 @@ export default function PurchasePaymentPrototype() {
               <div className="relative w-72">
                 <DnaInput
                   icon={<Search className="h-4 w-4 text-slate-400" />}
-                  placeholder="Search Invoice or Vendor..."
+                  placeholder="Cari Faktur atau Pemasok..."
                 />
               </div>
               <div className="flex gap-4">
                 <DnaButton variant="ghost">
-                  Status: All
+                  Status: Semua
                 </DnaButton>
               </div>
             </div>
@@ -148,13 +149,13 @@ export default function PurchasePaymentPrototype() {
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 px-4 text-table-header text-slate-400">Faktur / Origin</TableHead>
-                <TableHead className="py-4 px-4 text-table-header text-slate-400">PO / Supplier</TableHead>
-                <TableHead className="py-4 px-4 text-table-header text-slate-400">Commercial Date</TableHead>
-                <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Grand Total</TableHead>
+                <TableHead className="py-4 px-4 text-table-header text-slate-400">Faktur / Asal</TableHead>
+                <TableHead className="py-4 px-4 text-table-header text-slate-400">PO / Pemasok</TableHead>
+                <TableHead className="py-4 px-4 text-table-header text-slate-400">Tanggal</TableHead>
+                <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Total</TableHead>
                 <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Sisa Tagihan</TableHead>
                 <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right pr-10">Settlement</TableHead>
+                <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right pr-10">Penyelesaian</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -162,7 +163,7 @@ export default function PurchasePaymentPrototype() {
                 <TableRow>
                   <TableCell colSpan={7} className="py-20 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                    <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Loading invoices...</p>
+                    <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat faktur...</p>
                   </TableCell>
                 </TableRow>
               )}
@@ -170,14 +171,14 @@ export default function PurchasePaymentPrototype() {
                 <TableRow>
                   <TableCell colSpan={7} className="py-20 text-center">
                     <AlertCircle className="h-6 w-6 mx-auto text-rose-500" />
-                    <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Failed to load invoices</p>
+                    <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Gagal memuat faktur</p>
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && !isError && invList.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-20 text-center">
-                    <p className="text-[10px] font-black uppercase text-slate-300">No payable invoices found</p>
+                    <p className="text-[10px] font-black uppercase text-slate-300">Belum ada faktur yang harus dibayar</p>
                   </TableCell>
                 </TableRow>
               )}
@@ -270,8 +271,8 @@ export default function PurchasePaymentPrototype() {
                 </button>
 
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Settlement Protocol</p>
-                  <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">Invoice <span className="text-emerald-500">Payment</span></h2>
+                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Protokol Penyelesaian</p>
+                   <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">Pembayaran <span className="text-emerald-500">Faktur</span></h2>
                 </div>
 
                 <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 grid grid-cols-2 gap-4">
@@ -294,7 +295,7 @@ export default function PurchasePaymentPrototype() {
                   <div className="flex items-center gap-3">
                     <Wallet className="h-5 w-5 text-emerald-600" />
                     <div className="flex flex-col">
-                      <span className="font-black text-xs uppercase text-slate-900">Utilize Down Payment</span>
+                      <span className="font-black text-xs uppercase text-slate-900">Gunakan Uang Muka</span>
                       <span className="text-[9px] font-black text-slate-400 uppercase">Available: Rp 500,000</span>
                     </div>
                   </div>
@@ -308,7 +309,7 @@ export default function PurchasePaymentPrototype() {
                 {/* Form Inputs */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase block">Payment Date</label>
+                    <label className="text-[9px] font-black text-slate-400 uppercase block">Tanggal Bayar</label>
                     <DnaInput
                       icon={<Calendar className="h-4 w-4 text-slate-400" />}
                       type="date"
@@ -317,7 +318,7 @@ export default function PurchasePaymentPrototype() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase block">Payment Source</label>
+                    <label className="text-[9px] font-black text-slate-400 uppercase block">Sumber Dana</label>
                     <div className="relative">
                       <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                       <select className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none pl-10">
@@ -330,7 +331,7 @@ export default function PurchasePaymentPrototype() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-400 uppercase block">Settlement Amount (IDR)</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase block">Jumlah Pembayaran</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 z-10 text-sm">Rp</span>
                     <DnaInput
@@ -349,12 +350,12 @@ export default function PurchasePaymentPrototype() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-400 uppercase block">Administrative Notes</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase block">Catatan Administrasi</label>
                   <textarea
                     rows={2}
                     value={paymentNotes}
                     onChange={(e) => setPaymentNotes(e.target.value)}
-                    placeholder="Add reconciliation notes..."
+                    placeholder="Tambahkan catatan rekonsiliasi..."
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
                   />
                 </div>
@@ -365,7 +366,7 @@ export default function PurchasePaymentPrototype() {
                     variant="ghost"
                     className="flex-1 h-11"
                   >
-                    Cancel
+                    Batal
                   </DnaButton>
                   <DnaButton
                     onClick={handleExecuteSettlement}
@@ -374,7 +375,7 @@ export default function PurchasePaymentPrototype() {
                     icon={paymentMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     className="flex-[2] h-11 hover:scale-[1.02]"
                   >
-                    {paymentMutation.isPending ? "Processing..." : "Execute Settlement"}
+                    {paymentMutation.isPending ? "Memproses..." : "Bayar Sekarang"}
                   </DnaButton>
                 </div>
               </motion.div>

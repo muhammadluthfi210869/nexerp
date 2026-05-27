@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import { 
   Plus, 
   Search, 
@@ -65,7 +66,7 @@ export default function PurchasingPage() {
     queryKey: ["vendors"],
     queryFn: async () => {
       const res = await api.get("/scm/vendors");
-      return res.data?.data || res.data || [];
+      return unwrapResponse(res) || [];
     }
   });
 
@@ -73,7 +74,7 @@ export default function PurchasingPage() {
     queryKey: ["raw-materials"],
     queryFn: async () => {
       const res = await api.get("/scm/materials");
-      return res.data.filter((m: any) => m.type === "RAW_MATERIAL");
+      return (unwrapResponse(res) || []).filter((m: any) => m.type === "RAW_MATERIAL");
     }
   });
 
@@ -81,7 +82,7 @@ export default function PurchasingPage() {
     queryKey: ["warehouses"],
     queryFn: async () => {
       const res = await api.get("/master/warehouses/active");
-      return res.data?.data || res.data || [];
+      return unwrapResponse(res) || [];
     }
   });
 
@@ -89,7 +90,7 @@ export default function PurchasingPage() {
     queryKey: ["purchase-requests"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-requests");
-      return res.data;
+      return unwrapResponse(res);
     }
   });
 
@@ -97,7 +98,7 @@ export default function PurchasingPage() {
     queryKey: ["purchase-orders"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-orders");
-      return (res.data || []).map((po: any) => ({
+      return (unwrapResponse(res) || []).map((po: any) => ({
         id: po.poNumber || po.id,
         vendor: po.supplier?.name || '-',
         date: po.createdAt ? new Date(po.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-',
@@ -138,17 +139,17 @@ export default function PurchasingPage() {
 
   return (
     <DashboardShell
-      title="PURCHASING"
-      titleAccent="& REQUISITION"
-      subtitle="Inventory replenishment, vendor coordination, and procurement analytics engine"
+      title="PENGADAAN"
+      titleAccent="& REQUISISI"
+      subtitle="Pengisian stok, koordinasi pemasok, dan analitik pengadaan"
       actions={
         <DnaButton variant="primary" size="lg" onClick={() => setIsModalOpen(true)} icon={<Plus className="group-hover:rotate-90 transition-transform duration-300" />}>
-          Create Requisition
+          Buat Requisisi
         </DnaButton>
       }
     >
       {vendorsLoading || materialsLoading || whLoading || prsLoading || poLoading ? (
-        <QueryLoading message="Loading purchasing data..." />
+        <QueryLoading message="Memuat data pengadaan..." />
       ) : (
       <>
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -156,8 +157,8 @@ export default function PurchasingPage() {
             <div className="bg-white p-8 text-slate-900 border-b border-slate-200 flex justify-between items-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none" />
                 <div className="relative z-10">
-                   <h2 className="text-xl font-black tracking-tight">New Requisition</h2>
-                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5">Strategic Sourcing Protocol v4.0</p>
+                  <h2 className="text-xl font-black tracking-tight">Requisisi Baru</h2>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5">Strategic Sourcing Protocol v4.0</p>
                 </div>
                 <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 shrink-0">
                    <ClipboardList className="h-6 w-6 text-blue-600" />
@@ -167,10 +168,10 @@ export default function PurchasingPage() {
             <div className="p-10 space-y-10 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2.5">
-                       <label className="text-[9px] font-black text-slate-400 uppercase block">Target Vendor</label>
+                       <label className="text-[9px] font-black text-slate-400 uppercase block">Pemasok Tujuan</label>
                       <Select value={selectedVendor} onValueChange={(val: string | null) => setSelectedVendor(val || "")}>
                          <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                            <SelectValue placeholder="Select Vendor" />
+                            <SelectValue placeholder="Pilih Pemasok" />
                          </SelectTrigger>
                          <SelectContent className="bg-white border-slate-200 shadow-sm rounded-2xl p-2">
                             {vendors?.map((v: any) => (
@@ -182,10 +183,10 @@ export default function PurchasingPage() {
                       </Select>
                     </div>
                     <div className="space-y-2.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase block">Receiving Warehouse</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase block">Gudang Penerima</label>
                       <Select value={selectedWarehouse} onValueChange={(val: string | null) => setSelectedWarehouse(val || "")}>
                          <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                            <SelectValue placeholder="Select Warehouse" />
+                            <SelectValue placeholder="Pilih Gudang" />
                          </SelectTrigger>
                          <SelectContent className="bg-white border-slate-200 shadow-sm rounded-2xl p-2">
                             {warehouses?.map((w: any) => (
@@ -200,7 +201,7 @@ export default function PurchasingPage() {
 
                 <div className="grid grid-cols-2 gap-8">
                    <div className="space-y-2.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase block">Payment Terms</label>
+                       <label className="text-[9px] font-black text-slate-400 uppercase block">Syarat Pembayaran</label>
                       <Select value={paymentTerms} onValueChange={(val: string | null) => setPaymentTerms(val || "")}>
                          <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
                             <SelectValue placeholder="Terms" />
@@ -216,7 +217,7 @@ export default function PurchasingPage() {
  
                  <div className="grid grid-cols-2 gap-8">
                    <div className="space-y-2.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase block">Urgency Level</label>
+                       <label className="text-[9px] font-black text-slate-400 uppercase block">Tingkat Urgensi</label>
                       <Select value={urgency} onValueChange={(val: string | null) => setUrgency(val || "NORMAL")}>
                          <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
                             <SelectValue />
@@ -229,7 +230,7 @@ export default function PurchasingPage() {
                       </Select>
                    </div>
                    <div className="space-y-2.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase block">Down Payment (DP)</label>
+                       <label className="text-[9px] font-black text-slate-400 uppercase block">Uang Muka (DP)</label>
                       <DnaInput 
                           type="number" 
                           value={downPayment}
@@ -240,10 +241,10 @@ export default function PurchasingPage() {
                 </div>
 
                <div className="space-y-4">
-                  <label className="text-[9px] font-black text-slate-400 uppercase block">Materials Selection</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase block">Pilih Material</label>
                   <Select onValueChange={(val: string | null) => val && addItem(val)}>
                      <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                        <SelectValue placeholder="+ Append Raw Material to Requisition" />
+                        <SelectValue placeholder="+ Tambah Material ke Requisisi" />
                      </SelectTrigger>
                      <SelectContent className="bg-white border-slate-200 shadow-sm rounded-2xl p-2">
                         {materials?.map((m: any) => (
@@ -259,11 +260,11 @@ export default function PurchasingPage() {
                    <Table>
                       <TableHeader className="bg-slate-50/50">
                          <TableRow className="bg-slate-50/50">
-                            <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Material</TableHead>
-                            <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Quantity</TableHead>
-                            <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Unit Price</TableHead>
-                            <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Tax</TableHead>
-                            <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Subtotal</TableHead>
+                           <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Material</TableHead>
+                           <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Jumlah</TableHead>
+                           <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Harga Satuan</TableHead>
+                           <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Pajak</TableHead>
+                           <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Subtotal</TableHead>
                             <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right"></TableHead>
                          </TableRow>
                       </TableHeader>
@@ -271,7 +272,7 @@ export default function PurchasingPage() {
                          {items.length === 0 ? (
                            <TableRow>
                               <TableCell colSpan={6} className="py-16 text-center">
-                               <p className="text-slate-300 font-medium text-sm">Awaiting supply configuration...</p>
+                               <p className="text-slate-300 font-medium text-sm">Menunggu konfigurasi pasokan...</p>
                              </TableCell>
                            </TableRow>
                          ) : items.map((item) => (
@@ -283,7 +284,7 @@ export default function PurchasingPage() {
                                      </div>
                                      <div>
                                         <p className="font-medium text-slate-900 text-sm">{item.name}</p>
-                                        <p className="text-[10px] font-medium text-slate-400">Domestic Supply</p>
+                                        <p className="text-[10px] font-medium text-slate-400">Pasokan Domestik</p>
                                      </div>
                                   </div>
                                </TableCell>
@@ -319,17 +320,17 @@ export default function PurchasingPage() {
                </div>
 
                <div className="pt-6 flex gap-4">
-                  <DnaButton variant="ghost" onClick={() => setIsModalOpen(false)} className="h-14 px-8">Discard</DnaButton>
-                    <DnaButton variant="primary" className="flex-1" disabled={createPRMutation.isPending} onClick={() => {
-                      createPRMutation.mutate({
-                        warehouseId: selectedWarehouse || undefined,
-                        priority: urgency === 'NORMAL' ? 'MEDIUM' : urgency,
-                        notes: `Vendor: ${selectedVendor}`,
-                        items: items.map((i) => ({ materialId: i.id, qtyRequired: 1, estimatedPrice: i.price })),
-                      });
-                    }}>
-                      {createPRMutation.isPending ? 'SUBMITTING...' : 'Commit Requisition Protocol'}
-                    </DnaButton>
+                   <DnaButton variant="ghost" onClick={() => setIsModalOpen(false)} className="h-14 px-8">Batal</DnaButton>
+                     <DnaButton variant="primary" className="flex-1" disabled={createPRMutation.isPending} onClick={() => {
+                       createPRMutation.mutate({
+                         warehouseId: selectedWarehouse || undefined,
+                         priority: urgency === 'NORMAL' ? 'MEDIUM' : urgency,
+                         notes: `Vendor: ${selectedVendor}`,
+                         items: items.map((i) => ({ materialId: i.id, qtyRequired: 1, estimatedPrice: i.price })),
+                       });
+                     }}>
+                       {createPRMutation.isPending ? 'MENGIRIM...' : 'Kirim Requisisi'}
+                     </DnaButton>
                </div>
             </div>
           </DialogContent>
@@ -337,10 +338,10 @@ export default function PurchasingPage() {
       
       {/* KPI Stats Engine */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard label="Pending PR" value={pendingPrCount} icon={<FileEdit className="text-blue-600" />} />
-            <StatCard label="Active PO" value={activePoCount} icon={<Truck className="text-blue-600" />} />
-           <StatCard label="Awaiting GRN" value={awaitingGrnCount} icon={<PackageCheck className="text-emerald-600" />} />
-           <StatCard label="Critical Shortage" value={criticalShortageCount} icon={<ShieldAlert className="text-rose-600" />} />
+            <StatCard label="PR Tertunda" value={pendingPrCount} icon={<FileEdit className="text-blue-600" />} />
+            <StatCard label="PO Aktif" value={activePoCount} icon={<Truck className="text-blue-600" />} />
+           <StatCard label="Menunggu GRN" value={awaitingGrnCount} icon={<PackageCheck className="text-emerald-600" />} />
+           <StatCard label="Kekurangan Kritis" value={criticalShortageCount} icon={<ShieldAlert className="text-rose-600" />} />
         </div>
 
       {/* Registry Database */}
@@ -348,10 +349,10 @@ export default function PurchasingPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-8 bg-blue-600 rounded-full" />
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Requisition Registry</h3>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">Daftar Requisisi</h3>
           </div>
           <div className="flex items-center gap-3">
-              <DnaInput placeholder="Search registry..." icon={<Search />} className="w-72" />
+              <DnaInput placeholder="Cari registry..." icon={<Search />} className="w-72" />
              <DnaButton variant="outline" icon={<Filter />}>
                 Filter
              </DnaButton>
@@ -362,12 +363,12 @@ export default function PurchasingPage() {
            <Table className="table-dense">
               <TableHeader className="bg-slate-50/50">
                   <TableRow className="bg-slate-50/50">
-                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Registry ID</TableHead>
-                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Vendor / Source</TableHead>
-                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Type</TableHead>
-                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Value</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">ID Registry</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Pemasok</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Tipe</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Nilai</TableHead>
                      <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Actions</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
                   </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-slate-100">

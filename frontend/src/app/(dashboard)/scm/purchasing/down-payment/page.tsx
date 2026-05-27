@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Plus,
   History,
@@ -60,7 +61,7 @@ export default function DownPaymentPrototype() {
     queryKey: ["purchase-invoices"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-invoices");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -68,7 +69,7 @@ export default function DownPaymentPrototype() {
     queryKey: ["purchase-orders"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-orders");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -100,11 +101,11 @@ export default function DownPaymentPrototype() {
 
   return (
     <DashboardShell
-      title={view === "list" ? "DP" : "BUAT DP"}
-      titleAccent="PEMBELIAN"
+      title={view === "list" ? "UANG" : "BUAT DP"}
+      titleAccent="MUKA"
       subtitle={
         view === "list"
-          ? "(Manage vendor down payments and commercial commitments)"
+          ? "(Kelola uang muka pemasok dan komitmen komersial)"
           : "(SCM Procurement Protocol \u2022 Drafting Phase)"
       }
       actions={
@@ -150,9 +151,9 @@ export default function DownPaymentPrototype() {
           >
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard label="Total DP Committed" value="Rp 750,000" subValue="2 Records MTD" icon={<CreditCard className="text-blue-600" />} />
-              <StatCard label="Outstanding Balance" value="Rp 150,000" subValue="Awaiting Full Invoice Reconciliation" icon={<AlertCircle className="text-amber-500" />} />
-              <StatCard label="Reconciliation Rate" value="80%" subValue="Operational Efficiency" icon={<CheckCircle2 className="text-emerald-500" />} />
+              <StatCard label="Total DP" value="Rp 750,000" subValue="2 Records MTD" icon={<CreditCard className="text-blue-600" />} />
+              <StatCard label="Saldo Outstanding" value="Rp 150,000" subValue="Menunggu Rekonsiliasi Faktur" icon={<AlertCircle className="text-amber-500" />} />
+              <StatCard label="Tingkat Rekonsiliasi" value="80%" subValue="Efisiensi Operasional" icon={<CheckCircle2 className="text-emerald-500" />} />
             </div>
 
             {/* List Table */}
@@ -162,7 +163,7 @@ export default function DownPaymentPrototype() {
                   <div className="relative w-72">
                     <DnaInput
                       icon={<Search className="h-3.5 w-3.5 text-slate-400" />}
-                      placeholder="Search Code or Vendor..."
+                      placeholder="Cari Kode atau Pemasok..."
                     />
                   </div>
                   <div className="flex items-center gap-3">
@@ -187,12 +188,12 @@ export default function DownPaymentPrototype() {
               <Table className="table-dense">
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="py-3 px-4 pl-8 text-table-header text-slate-400">DP Identity</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400">PO / Supplier</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400">Payment Source</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-right">Amount / Used</TableHead>
+                    <TableHead className="py-3 px-4 pl-8 text-table-header text-slate-400">ID DP</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400">PO / Pemasok</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400">Sumber Dana</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-right">Jumlah / Terpakai</TableHead>
                     <TableHead className="py-3 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-right pr-8">Protocol</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-right pr-8">Protokol</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -200,14 +201,14 @@ export default function DownPaymentPrototype() {
                     <TableRow>
                       <TableCell colSpan={6} className="py-20 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Loading down payments...</p>
+                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat uang muka...</p>
                       </TableCell>
                     </TableRow>
                   )}
                   {!invLoading && invList.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">No down payments found</p>
+                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada uang muka</p>
                       </TableCell>
                     </TableRow>
                   )}

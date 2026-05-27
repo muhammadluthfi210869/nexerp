@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import { 
   ArrowRightLeft, 
   History, 
@@ -60,7 +61,7 @@ export default function InventoryMutationPrototype() {
     queryKey: ["warehouse-transfers"],
     queryFn: async () => {
       const res = await api.get("/warehouse/transfers");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -68,7 +69,7 @@ export default function InventoryMutationPrototype() {
     queryKey: ["master-materials"],
     queryFn: async () => {
       const res = await api.get("/master/materials");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -129,7 +130,7 @@ export default function InventoryMutationPrototype() {
       titleAccent="BARANG"
       subtitle={
         view === "list" 
-          ? "(Stock Transfer Protocol & Inter-Warehouse Asset Movement)" 
+          ? "(Protokol Transfer Stok & Pergerakan Aset Antar-Gudang)" 
           : "(Drafting Phase • Protocol 09-MT)"
       }
       actions={
@@ -165,10 +166,10 @@ export default function InventoryMutationPrototype() {
           >
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard label="Pending Transfers" value="5" icon={<Clock className="text-amber-500" />} />
-              <StatCard label="Successful Moves" value="128" icon={<CheckCircle2 className="text-emerald-500" />} />
-              <StatCard label="Transfer Frequency" value="12/day" icon={<ArrowRightLeft className="text-blue-600" />} />
-              <StatCard label="Critical Stock Alerts" value="3" icon={<Layers className="text-rose-600" />} />
+            <StatCard label="Transfer Tertunda" value="5" icon={<Clock className="text-amber-500" />} />
+            <StatCard label="Berhasil" value="128" icon={<CheckCircle2 className="text-emerald-500" />} />
+            <StatCard label="Frekuensi Transfer" value="12/hari" icon={<ArrowRightLeft className="text-blue-600" />} />
+            <StatCard label="Peringatan Stok" value="3" icon={<Layers className="text-rose-600" />} />
             </div>
 
             {/* List Table */}
@@ -176,11 +177,11 @@ export default function InventoryMutationPrototype() {
               filters={
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
                   <div className="w-72">
-                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Search Mutation ID..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
+                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari ID Mutasi..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
                   </div>
                   <div className="flex gap-4">
                     <DnaButton variant="ghost" className="h-10 px-5 rounded-lg text-[9px] text-slate-500 hover:bg-slate-50 hover:text-slate-500">
-                      Filter: All Status
+                      Filter: Semua Status
                     </DnaButton>
                   </div>
                 </div>
@@ -189,11 +190,11 @@ export default function InventoryMutationPrototype() {
               <Table className="table-dense">
                 <TableHeader>
                   <TableRow className="bg-slate-50/50">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Transfer Identity</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Source / Target</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Authorized By</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400">ID Transfer</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Asal / Tujuan</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Dibuat Oleh</TableHead>
                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Action</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,14 +202,14 @@ export default function InventoryMutationPrototype() {
                     <TableRow>
                       <TableCell colSpan={5} className="py-20 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Loading transfers...</p>
+                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat transfer...</p>
                       </TableCell>
                     </TableRow>
                   )}
                   {!transferLoading && transferList.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">No transfers found</p>
+                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada transfer</p>
                       </TableCell>
                     </TableRow>
                   )}

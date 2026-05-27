@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import { 
   BarChart4, 
   History, 
@@ -76,7 +77,7 @@ export default function MRPPrototype() {
     queryKey: ["scm-goods-requirements"],
     queryFn: async () => {
       const res = await api.get("/scm/goods-requirements");
-      return res.data || res;
+      return unwrapResponse(res);
     },
   });
 
@@ -84,7 +85,7 @@ export default function MRPPrototype() {
     queryKey: ["scm-materials"],
     queryFn: async () => {
       const res = await api.get("/scm/materials");
-      return res.data || res;
+      return unwrapResponse(res);
     },
   });
 
@@ -92,7 +93,7 @@ export default function MRPPrototype() {
     queryKey: ["commercial-sales-orders"],
     queryFn: async () => {
       const res = await api.get("/commercial/sales-orders");
-      return res.data || res;
+      return unwrapResponse(res);
     },
   });
 

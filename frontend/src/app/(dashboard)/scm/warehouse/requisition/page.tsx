@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import { 
   Plus, 
   History, 
@@ -70,7 +71,7 @@ export default function MaterialRequisitionPrototype() {
     queryKey: ["warehouse-requisitions"],
     queryFn: async () => {
       const res = await api.get("/warehouse/requisitions");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -78,7 +79,7 @@ export default function MaterialRequisitionPrototype() {
     queryKey: ["master-materials"],
     queryFn: async () => {
       const res = await api.get("/master/materials");
-      return res.data;
+      return unwrapResponse(res);
     },
   });
 
@@ -140,7 +141,7 @@ export default function MaterialRequisitionPrototype() {
       titleAccent="BARANG"
       subtitle={
         view === "list" 
-          ? "(Internal Material Requisition & Intra-Warehouse Stock Allocation)" 
+          ? "(Requisisi Material Internal & Alokasi Stok Antar-Gudang)" 
           : "(Drafting Phase • Protocol 05-PR)"
       }
       actions={
@@ -176,10 +177,10 @@ export default function MaterialRequisitionPrototype() {
           >
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard label="Active Requests" value="12" icon={<Clock className="text-amber-500" />} />
-              <StatCard label="Fulfilled Today" value="45" icon={<CheckCircle2 className="text-emerald-500" />} />
-              <StatCard label="Stock In Transit" value="8" icon={<ArrowRightLeft className="text-blue-600" />} />
-              <StatCard label="Priority Items" value="3" icon={<Layers className="text-rose-600" />} />
+            <StatCard label="Permintaan Aktif" value="12" icon={<Clock className="text-amber-500" />} />
+            <StatCard label="Terpenuhi Hari Ini" value="45" icon={<CheckCircle2 className="text-emerald-500" />} />
+            <StatCard label="Stok Dalam Transit" value="8" icon={<ArrowRightLeft className="text-blue-600" />} />
+            <StatCard label="Prioritas" value="3" icon={<Layers className="text-rose-600" />} />
             </div>
 
             {/* List Table */}
@@ -187,11 +188,11 @@ export default function MaterialRequisitionPrototype() {
               filters={
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
                   <div className="w-72">
-                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Search Requisition ID..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
+                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari ID Requisisi..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
                   </div>
                   <div className="flex gap-4">
                     <DnaButton variant="ghost" className="h-10 px-5 rounded-lg text-[9px] text-slate-500 hover:bg-slate-50 hover:text-slate-500">
-                      Filter: All Status
+                      Filter: Semua Status
                     </DnaButton>
                   </div>
                 </div>
@@ -200,11 +201,11 @@ export default function MaterialRequisitionPrototype() {
               <Table className="table-dense">
                 <TableHeader>
                   <TableRow className="bg-slate-50/50">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Request Identity</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Origin / Destination</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Requisitioner / Remarks</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400">ID Permintaan</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Asal / Tujuan</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Peminta / Catatan</TableHead>
                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Action</TableHead>
+                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -212,14 +213,14 @@ export default function MaterialRequisitionPrototype() {
                     <TableRow>
                       <TableCell colSpan={5} className="py-20 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Loading requisitions...</p>
+                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat requisisi...</p>
                       </TableCell>
                     </TableRow>
                   )}
                   {!reqLoading && reqList.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">No requisitions found</p>
+                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada requisisi</p>
                       </TableCell>
                     </TableRow>
                   )}
