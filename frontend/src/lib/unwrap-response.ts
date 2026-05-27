@@ -1,5 +1,6 @@
-export function unwrapResponse<T>(response: any): T {
-  if (response?.data?.data) return response.data.data as T;
-  if (response?.data) return response.data as T;
-  return response as T;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function unwrapResponse(response: any): any {
+  if (response?.data?.data) return response.data.data;
+  if (response?.data) return response.data;
+  return response;
 }
