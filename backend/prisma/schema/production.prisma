@@ -324,6 +324,37 @@ model COPQRecord {
   @@map("copq_records")
 }
 
+model MaterialRequisitionHeader {
+  id            String                    @id @default(uuid()) @db.Uuid
+  reqNumber     String                    @unique
+  requestDate   DateTime                  @default(now())
+  fromWarehouse String                    @db.Uuid
+  toWarehouse   String                    @db.Uuid
+  notes         String?
+  status        RequisitionHeaderStatus   @default(PENDING)
+  createdById   String                    @db.Uuid
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  items         MaterialRequisitionItem[]
+  requester     User                      @relation("RequisitionRequester", fields: [createdById], references: [id])
+  fromWh        Warehouse                 @relation("FromWarehouse", fields: [fromWarehouse], references: [id])
+  toWh          Warehouse                 @relation("ToWarehouse", fields: [toWarehouse], references: [id])
+
+  @@map("material_requisition_headers")
+}
+
+model MaterialRequisitionItem {
+  id         String                  @id @default(uuid()) @db.Uuid
+  headerId   String                  @db.Uuid
+  materialId String                  @db.Uuid
+  qty        Decimal                 @db.Decimal(15, 3)
+  notes      String?
+  header     MaterialRequisitionHeader @relation(fields: [headerId], references: [id], onDelete: Cascade)
+  material   MaterialItem            @relation(fields: [materialId], references: [id])
+
+  @@map("material_requisition_items")
+}
+
 model AuditEscalation {
   id             String         @id @default(uuid()) @db.Uuid
   type           EscalationType

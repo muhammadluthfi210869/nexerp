@@ -474,6 +474,13 @@ enum PeriodStatus {
   CLOSED
 }
 
+enum RevisionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
 enum FormulaStatus {
   DRAFT
   WAITING_APPROVAL
@@ -572,5 +579,12 @@ enum PRStatus {
   SUBMITTED
   APPROVED
   REJECTED
+  CANCELLED
+}
+
+enum RequisitionHeaderStatus {
+  PENDING
+  APPROVED
+  FULFILLED
   CANCELLED
 }

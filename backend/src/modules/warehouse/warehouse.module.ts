@@ -6,10 +6,11 @@ import { FinanceModule } from '../finance/finance.module';
 import { ScmModule } from '../scm/scm.module';
 
 import { StockLedgerService } from './services/stock-ledger.service';
+import { RequisitionService } from './services/requisition.service';
 
 @Module({
   imports: [PrismaModule, ScmModule, forwardRef(() => FinanceModule)],
-  providers: [WarehouseService, StockLedgerService],
+  providers: [WarehouseService, StockLedgerService, RequisitionService],
   controllers: [WarehouseController],
   exports: [WarehouseService, StockLedgerService],
 })

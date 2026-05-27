@@ -16,6 +16,8 @@ model Warehouse {
   destTransfers         TransferOrder[]        @relation("DestTransfers")
   sourceTransfers       TransferOrder[]        @relation("SourceTransfers")
   locations             WarehouseLocation[]
+  fromRequisitions      MaterialRequisitionHeader[] @relation("FromWarehouse")
+  toRequisitions        MaterialRequisitionHeader[] @relation("ToWarehouse")
 
   @@map("warehouses")
 }
@@ -88,6 +90,7 @@ model MaterialItem {
   purchaseReturnItems  PurchaseReturnItem[]
   stepDetails          ProductionStepDetail[]
   returns              MaterialReturn[]
+  requisitionItems     MaterialRequisitionItem[]
 
   @@index([type])
   @@map("material_items")

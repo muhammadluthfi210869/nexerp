@@ -1,14 +1,19 @@
-import { Controller, Post, Param, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Param, Get, Body, UseGuards, Patch, Request } from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { RequisitionService } from './services/requisition.service';
+import { CreateRequisitionDto, UpdateRequisitionStatusDto } from './dto/requisition.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('warehouse')
 export class WarehouseController {
-  constructor(private readonly warehouseService: WarehouseService) {}
+  constructor(
+    private readonly warehouseService: WarehouseService,
+    private readonly requisitionService: RequisitionService,
+  ) {}
 
   @Get('stats')
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.DIRECTOR)
@@ -169,5 +174,37 @@ export class WarehouseController {
   @Get('release-requests')
   async getReleaseRequests() {
     return this.warehouseService.getReleaseRequests();
+  }
+
+  // === REQUISITIONS (Permintaan Barang) ===
+
+  @Post('requisitions')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PRODUCTION)
+  async createRequisition(
+    @Body() dto: CreateRequisitionDto,
+    @Request() req: any,
+  ) {
+    return this.requisitionService.create(dto, req.user.id);
+  }
+
+  @Get('requisitions')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async listRequisitions() {
+    return this.requisitionService.findAll();
+  }
+
+  @Get('requisitions/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getRequisition(@Param('id') id: string) {
+    return this.requisitionService.findOne(id);
+  }
+
+  @Patch('requisitions/:id/status')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async updateRequisitionStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateRequisitionStatusDto,
+  ) {
+    return this.requisitionService.updateStatus(id, dto);
   }
 }
