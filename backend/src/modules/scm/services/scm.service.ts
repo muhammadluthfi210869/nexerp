@@ -707,7 +707,7 @@ export class ScmService {
         where: { status: 'ACTIVE' },
       });
       if (!warehouse)
-        throw new Error('No active warehouse found for PR auto-gen');
+        throw new NotFoundException('No active warehouse found for PR auto-gen');
 
       const prItems = [];
 

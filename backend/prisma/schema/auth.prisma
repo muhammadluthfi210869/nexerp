@@ -39,6 +39,7 @@ model User {
   paymentApprovals   SampleRequest[] @relation("PaymentApprovedBy")
   leadValidations   LeadActivity[]  @relation("LeadActivityValidator")
   notifications     Notification[]
+  purchaseReturns   PurchaseReturn[] @relation("PurchaseReturnCreator")
 
   @@map("users")
 }

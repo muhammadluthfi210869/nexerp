@@ -17,12 +17,6 @@ export class PurchaseReturnsService {
   async create(dto: CreatePurchaseReturnDto, userId?: string) {
     const { items, ...returnData } = dto;
 
-    if (userId && !returnData.notes) {
-      returnData.notes = `[Created by: ${userId}]`;
-    } else if (userId) {
-      returnData.notes += ` [Created by: ${userId}]`;
-    }
-
     return this.prisma.$transaction(async (tx) => {
       // 1. Validate Stock Availability for each item
       for (const item of items) {
@@ -55,6 +49,7 @@ export class PurchaseReturnsService {
           returnNumber: await this.generateReturnNumber(tx),
           totalValue,
           status: PurchaseReturnStatus.DRAFT,
+          ...(userId && { createdById: userId }),
           items: {
             create: items.map((i) => ({
               materialId: i.materialId,
