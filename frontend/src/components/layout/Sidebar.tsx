@@ -23,8 +23,7 @@ import {
   FileSearch,
   Users,
   FlaskConical,
-  Package,
-  RefreshCw,
+  XCircle,
   PlusCircle,
   ClipboardCheck,
   Archive,
@@ -94,9 +93,6 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
       { name: "Sales Order Central", href: "/bussdev/sales-orders", type: "action" },
       { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
-      { name: "Client Sample", href: "/bussdev/client-sample", type: "bussdev_sample" },
-      { name: "Client Produksi", href: "/bussdev/client-production", type: "bussdev_prod" },
-      { name: "Client RO", href: "/bussdev/client-ro", type: "bussdev_ro" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
     ]
   },
@@ -130,6 +126,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
       { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
       { name: "Formula Repository", href: "/rnd/repository", type: "history" },
+      { name: "Revision Board", href: "/rnd/revision-tracker", type: "action" },
     ]
   },
   {
@@ -153,10 +150,13 @@ const MODULE_STRUCTURE: NavGroup[] = [
     roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
     items: [
       { name: "Plant Controller", href: "/production/dashboard", type: "dashboard" },
+      { name: "Production Floor", href: "/production/floor", type: "dashboard", badge: "LIVE", badgeVariant: "warning" },
       { name: "Work Orders (BMR)", href: "/production/work-orders", type: "action" },
       { name: "Batch Schedules", href: "/production/schedules", type: "action" },
+      { name: "Schedule Gantt", href: "/production/schedule", type: "history" },
       { name: "Batch Records", href: "/production/batch-records", type: "history" },
       { name: "Operator Terminal", href: "/production/terminal", type: "action" },
+      { name: "Leakage Center", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
       { name: "Yield & Loss Intel", href: "/production/analytics", type: "history" },
     ]
   },
@@ -235,9 +235,7 @@ const getIconByType = (type: string) => {
     case "input": return PlusCircle;
     case "action": return Zap;
     case "history": return History;
-    case "bussdev_sample": return FlaskConical;
-    case "bussdev_prod": return Package;
-    case "bussdev_ro": return RefreshCw;
+    case "bussdev_lost": return XCircle;
     default: return Activity;
   }
 };

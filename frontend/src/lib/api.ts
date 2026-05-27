@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://5.223.80.88";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 
+  (typeof window !== 'undefined' && 
+   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? ''
+    : 'http://5.223.80.88');
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -9,6 +13,20 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export function extractApiError(error: unknown): { status: number; message: string; code: string } {
+  if (axios.isAxiosError(error)) {
+    return {
+      status: error.response?.status ?? 500,
+      message: error.response?.data?.message ?? error.message ?? "Unknown error",
+      code: error.response?.data?.code ?? "UNKNOWN_ERROR",
+    };
+  }
+  if (error instanceof Error) {
+    return { status: 500, message: error.message, code: "UNKNOWN_ERROR" };
+  }
+  return { status: 500, message: "Unknown error", code: "UNKNOWN_ERROR" };
+}
 
 // Request Interceptor: Attach JWT Token
 api.interceptors.request.use((config) => {
