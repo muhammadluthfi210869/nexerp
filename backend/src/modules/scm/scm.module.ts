@@ -10,6 +10,11 @@ import { MaterialsController } from './controllers/materials.controller';
 import { ScmController } from './controllers/scm.controller';
 import { PurchaseReturnsController } from './controllers/purchase-returns.controller';
 import { PurchaseReturnsService } from './services/purchase-returns.service';
+import { PurchaseInvoicesService } from './services/purchase-invoices.service';
+import { PurchaseInvoicesController } from './controllers/purchase-invoices.controller';
+import { PurchasePaymentsService } from './services/purchase-payments.service';
+import { SupplierScoreService } from './services/supplier-score.service';
+import { PurchasePaymentsController } from './controllers/purchase-payments.controller';
 
 import { LegalityModule } from '../legality/legality.module';
 
@@ -21,6 +26,9 @@ import { LegalityModule } from '../legality/legality.module';
     MaterialsService,
     ScmService,
     PurchaseReturnsService,
+    PurchaseInvoicesService,
+    PurchasePaymentsService,
+    SupplierScoreService,
   ],
   controllers: [
     PurchaseOrdersController,
@@ -28,7 +36,9 @@ import { LegalityModule } from '../legality/legality.module';
     MaterialsController,
     ScmController,
     PurchaseReturnsController,
+    PurchaseInvoicesController,
+    PurchasePaymentsController,
   ],
-  exports: [ScmService],
+  exports: [ScmService, SupplierScoreService],
 })
 export class ScmModule {}
