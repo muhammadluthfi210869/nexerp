@@ -560,45 +560,6 @@ export class ScmService {
     };
   }
 
-  // async stockAdjustment(data: any) {
-  //   return this.prisma.$transaction(async (tx) => {
-  //     const adjustment = await tx.stockAdjustment.create({
-  //       data: {
-  //         materialId: data.materialId,
-  //         warehouseId: data.warehouseId,
-  //         type: data.type,
-  //         quantity: data.quantity,
-  //         reason: data.reason,
-  //         adjustedById: data.userId,
-  //       },
-  //     });
-
-  //     // Update Inventory
-  //     const multiplier = data.type === 'ADD' ? 1 : -1;
-  //     await tx.materialInventory.update({
-  //       where: {
-  //         materialId_warehouseId: {
-  //           materialId: data.materialId,
-  //           warehouseId: data.warehouseId,
-  //         },
-  //       },
-  //       data: {
-  //         currentStock: { increment: data.quantity * multiplier },
-  //       },
-  //     });
-
-  //     return adjustment;
-  //   });
-  // }
-
-  // async createTransferOrder(data: any) {
-  //   return this.prisma.transferOrder.create({
-  //     data: {
-  //       materialId: data.materialId,
-  //       fromWarehouseId: data.fromWarehouseId,
-  //       toWarehouseId: data.toWarehouseId,
-  //       quantity: data.quantity,
-  //       status: 'PENDING',
   async initializePurchaseFromSuggestion(materialId: string, userId: string) {
     const material = await this.prisma.materialItem.findUnique({
       where: { id: materialId },
