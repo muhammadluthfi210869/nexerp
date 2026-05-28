@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
@@ -12,6 +12,20 @@ import { QCAuditsService } from '../services/qc-audits.service';
 @Controller('qc')
 export class QcController {
   constructor(private readonly qcService: QCAuditsService) {}
+
+  @Get('dashboard')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Get QC dashboard stats' })
+  getDashboard() {
+    return this.qcService.getDashboard();
+  }
+
+  @Get('workbench')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB)
+  @ApiOperation({ summary: 'Get QC workbench (quarantine audits)' })
+  getWorkbench() {
+    return this.qcService.getWorkbench();
+  }
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB)

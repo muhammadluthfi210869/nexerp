@@ -177,4 +177,11 @@ export class RndController {
   getFormulas() {
     return this.rndService.getFormulas();
   }
+
+  @Get('pipeline')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
+  @ApiOperation({ summary: 'Get R&D pipeline (all samples with phases)' })
+  getPipeline() {
+    return this.rndService.getPipeline();
+  }
 }
