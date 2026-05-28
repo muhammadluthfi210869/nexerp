@@ -39,19 +39,54 @@
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
-| GET | `/finance` | Dashboard | Financial overview |
-| POST | `/finance/payment/verify` | `verifyPayment()` | Verify payment (G1/G2/G3) |
-| GET | `/finance/ar-hub` | `getArHub()` | Accounts Receivable with aging |
+| GET | `/finance/dashboard` | `getDashboardMetrics()` | Financial overview |
+| POST | `/finance/verify-payment` | `verifyOrderPayment()` | Verify payment (G1/G2/G3) |
+| POST | `/finance/payment/verify` | `verifyOrderPayment()` | Alias for verify-payment |
+| GET | `/finance/ar-hub/pending` | `getArHubPending()` | Accounts Receivable pending |
+| POST | `/finance/ar-hub/verify` | `verifyArHubPayment()` | Verify AR hub payment |
 | POST | `/finance/ap-hub` | `createApDisbursement()` | AP disbursement |
-| POST | `/finance/journal` | `createJournalEntry()` | Create journal entry |
-| GET | `/finance/journal` | `getJournalEntries()` | List journal entries |
-| GET | `/finance/trial-balance` | `getTrialBalance()` | Trial balance report |
-| GET | `/finance/profit-loss` | `getProfitLoss()` | P&L statement |
-| GET | `/finance/balance-sheet` | `getBalanceSheet()` | Balance sheet |
+| POST | `/finance/journals` | `createJournalEntry()` | Create journal entry |
+| GET | `/finance/journals` | `getJournalEntries()` | List journal entries |
+| POST | `/finance/journals/:id/reverse` | `reverseJournalEntry()` | Reverse journal entry |
+| GET | `/finance/journal` | `getJournalEntries()` | Alias for journals |
+| GET | `/finance/ledger` | `getJournalEntries()` | Alias for journals |
+| GET | `/finance/ledger/recent` | `getRecentJournals()` | Recent 5 journal entries |
+| GET | `/finance/reports/trial-balance` | `getTrialBalance()` | Trial balance report |
+| GET | `/finance/reports/trial-balance/detailed` | `getDetailedTrialBalance()` | Detailed trial balance |
+| GET | `/finance/reports/profit-loss` | `getProfitLoss()` | P&L statement |
+| GET | `/finance/reports/balance-sheet` | `getBalanceSheet()` | Balance sheet |
+| GET | `/finance/reports/cash-flow` | `getCashFlow()` | Cash flow statement |
+| GET | `/finance/reports/general-ledger/:accountId` | `getGeneralLedger()` | General ledger per account |
+| GET | `/finance/reports/project-budgeting` | `getProjectBudgetingReport()` | Project budgeting report |
 | POST | `/finance/fund-request` | `createFundRequest()` | Create fund request |
-| PATCH | `/finance/fund-request/:id` | `approveFundRequest()` | Approve/reject fund request |
+| GET | `/finance/fund-requests` | `getAllFundRequests()` | List all fund requests |
+| GET | `/finance/fund-requests/me` | `getMyFundRequests()` | List my fund requests |
+| PATCH | `/finance/fund-request/:id/approve` | `approveFundRequest()` | Approve fund request |
+| POST | `/finance/fund-request/:id/disburse` | `disburseFundRequest()` | Disburse fund request |
+| POST | `/finance/fund-request/:id/director-approve` | `directorApproveFundRequest()` | Director approve fund request |
+| PATCH | `/finance/fund-request/:id/reject` | `rejectFundRequest()` | Reject fund request |
 | POST | `/finance/pnbp/pay` | `payPnbp()` | Pay PNBP for Legal |
 | POST | `/finance/adjustment-journal` | `createInventoryAdjustmentJournal()` | Auto journal from warehouse |
+| GET | `/finance/accounts` | `getAccounts()` | List COA accounts |
+| POST | `/finance/accounts` | `createAccount()` | Create COA account |
+| PATCH | `/finance/accounts/:id` | `updateAccount()` | Update COA account |
+| DELETE | `/finance/accounts/:id` | `softDeleteAccount()` | Soft-delete COA account |
+| POST | `/finance/accounts/seed` | `seedInitialAccounts()` | Seed initial COA |
+| GET | `/finance/invoices` | `getInvoices()` | List invoices |
+| GET | `/finance/bills` | `getBills()` | List bills (payable) |
+| POST | `/finance/bills` | `createBill()` | Create bill |
+| GET | `/finance/deliveries` | `getDeliveries()` | List deliveries for invoicing |
+| POST | `/finance/invoice/generate/:deliveryOrderId` | `generateFinalInvoice()` | Generate final invoice |
+| GET | `/finance/invoices/final` | `getAllFinalInvoices()` | List final invoices |
+| GET | `/finance/invoices/final/active` | `getActiveInvoices()` | List active final invoices |
+| POST | `/finance/invoice/validate/:invoiceId` | `validatePayment()` | Validate invoice payment |
+| GET | `/finance/sales-orders` | `getSalesOrders()` | List sales orders |
+| PATCH | `/finance/validate-payment/:activityId` | `validateBussdevPayment()` | Validate BD payment |
+| POST | `/finance/cash/disburse` | `cashService.disburse()` | Cash disbursement |
+| POST | `/finance/cash/receive` | `cashService.receive()` | Cash receipt |
+| GET | `/finance/dashboard/advanced` | `getAdvancedDashboardStats()` | Advanced dashboard stats |
+| GET | `/finance/taxes` | `getTaxes()` | List tax rates |
+| GET | `/finance/currencies` | `getCurrencies()` | List currencies |
 
 ---
 

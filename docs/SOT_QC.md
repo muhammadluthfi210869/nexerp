@@ -55,6 +55,16 @@
 // Mapping: PASS → GOOD, FAIL → REJECT, REJECTED → REJECT
 ```
 
+### 3.2. QC Checklists (`/qc/checklists`)
+
+| Method | Endpoint | Service Method | Description |
+|--------|----------|----------------|-------------|
+| GET | `/qc/checklists` | `findAll(status?)` | List all checklists with progress (optional `?status=`) |
+| GET | `/qc/checklists/completed` | `findCompleted()` | List completed checklists |
+| GET | `/qc/checklists/:id` | `findOne()` | Single checklist detail |
+| POST | `/qc/checklists` | `create()` | Create checklist |
+| PATCH | `/qc/checklists/:id` | `update()` | Update checklist status |
+
 ### 3.2. Production QC Stats
 
 | Method | Endpoint | Service Method | Description |
@@ -167,6 +177,8 @@ Model: `QCAudit`
 | QCAudits service | `backend/src/modules/qc/services/qc-audits.service.ts` |
 | QCAudits controller | `backend/src/modules/qc/controllers/qc-audits.controller.ts` |
 | QC alias controller | `backend/src/modules/qc/controllers/qc.controller.ts` |
+| QCChecklists controller | `backend/src/modules/qc/controllers/qc-checklists.controller.ts` |
+| QCChecklists service | `backend/src/modules/qc/services/qc-checklists.service.ts` |
 | QC module | `backend/src/modules/qc/qc.module.ts` |
 | Events controller (SSE) | `backend/src/modules/events/events.controller.ts` |
 | Production QC stats | `backend/src/modules/production/production.service.ts` |

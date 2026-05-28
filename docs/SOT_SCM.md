@@ -19,16 +19,29 @@
 
 ## 2. BACKEND API ENDPOINTS
 
-### 2.1. Purchase Orders (`/scm/purchase-orders`)
+### 2.1. SCM Main (`/scm`)
+
+| Method | Endpoint | Service Method | Description |
+|--------|----------|----------------|-------------|
+| GET | `/scm/dashboard` | `getDashboardStats()` | SCM dashboard metrics |
+| GET | `/scm/vendors` | `getVendors()` | List all vendors |
+| GET | `/scm/work-orders/active` | `getActiveWorkOrders()` | Active work orders for material check |
+| GET | `/scm/work-orders/:id/readiness` | `checkMaterialReadiness()` | Check material readiness for WO |
+| POST | `/scm/purchase-orders/initialize` | `initializePurchaseFromSuggestion()` | Initialize PO from suggestion |
+| POST | `/scm/purchase-requests/:id/approve` | `approvePurchaseRequest()` | Approve purchase request |
+| GET | `/scm/purchase-requests` | `getPurchaseRequests()` | List purchase requests |
+| POST | `/scm/purchase-request` | `createPurchaseRequest()` | Create purchase request |
+
+### 2.2. Purchase Orders (`/scm/purchase-orders`)
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
 | GET | `/scm/purchase-orders` | `findAll()` | List all POs with supplier, inbounds, SCM info |
 | GET | `/scm/purchase-orders/:id` | `findOne()` | Single PO detail |
 | POST | `/scm/purchase-orders` | `create()` | Create PO |
-| POST | `/scm/purchase-orders/:id/down-payment` | `completeDownPayment()` | Record PO down payment |
+| POST | `/scm/purchase-orders/:id/down-payment` | `createDownPayment()` | Record PO down payment |
 
-### 2.2. Materials (`/scm/materials`)
+### 2.3. Materials (`/scm/materials`)
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
@@ -36,15 +49,19 @@
 | GET | `/scm/materials/:id` | `findOne()` | Single material with inventories (batches) |
 | POST | `/scm/materials` | `create()` | Create material |
 | PUT | `/scm/materials/:id` | `update()` | Update material |
-| DELETE | `/scm/materials/:id` | `remove()` | Soft-delete material |
+| DELETE | `/scm/materials/:id` | `softDelete()` | Soft-delete material |
 
-### 2.3. Inbounds / QC (`/scm/inbounds`)
+### 2.4. Inbounds (`/scm/inbounds`)
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
+| GET | `/scm/inbounds` | `findAll()` | List all inbound records |
+| POST | `/scm/inbounds` | `create()` | Create inbound record |
+| PATCH | `/scm/inbounds/:id/status` | `updateStatus()` | Update inbound status |
 | POST | `/scm/inbounds/:id/qc-validate` | `qcValidate()` | Validate inbound QC (event: `scm.inbound.qc_validated`) |
+| POST | `/scm/inbounds/:id/reject` | `reject()` | Reject inbound |
 
-### 2.4. Route Aliases (`/master/*`) — via RouteAliasController
+### 2.5. Route Aliases (`/master/*`) — via RouteAliasController
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -158,6 +175,8 @@
 |------|------|
 | Prisma schema (warehouse — all SCM models) | `backend/prisma/schema/warehouse.prisma` |
 | Prisma enums | `backend/prisma/schema/enums.prisma` |
+| SCM service | `backend/src/modules/scm/services/scm.service.ts` |
+| SCM controller | `backend/src/modules/scm/controllers/scm.controller.ts` |
 | Materials service | `backend/src/modules/scm/services/materials.service.ts` |
 | Materials controller | `backend/src/modules/scm/controllers/materials.controller.ts` |
 | Purchase orders service | `backend/src/modules/scm/services/purchase-orders.service.ts` |

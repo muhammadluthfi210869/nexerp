@@ -36,6 +36,7 @@ import { DnaBadge } from "@/components/dna/DnaBadge";
 import { DnaInput } from "@/components/dna/DnaInput";
 import { StatCard } from "@/components/dna/StatCard";
 import { TableShell } from "@/components/layout/TableShell";
+import { CascadingAddress } from "@/components/ui/cascading-address";
 
 type Category = { id: string; name: string };
 
@@ -291,26 +292,18 @@ export default function MasterSuppliersPage() {
               <input value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Province</label>
-                <input value={formData.province} onChange={(e) => setFormData({...formData, province: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">City</label>
-                <input value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-            </div>
+            <CascadingAddress
+              provinsi={formData.province}
+              kota={formData.city}
+              kecamatan={formData.district}
+              onProvinsiChange={(v) => setFormData({...formData, province: v})}
+              onKotaChange={(v) => setFormData({...formData, city: v})}
+              onKecamatanChange={(v) => setFormData({...formData, district: v})}
+            />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">District</label>
-                <input value={formData.district} onChange={(e) => setFormData({...formData, district: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Address Detail</label>
-                <input value={formData.addressDetail} onChange={(e) => setFormData({...formData, addressDetail: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Address Detail</label>
+              <input value={formData.addressDetail} onChange={(e) => setFormData({...formData, addressDetail: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
             </div>
 
             <div className="space-y-2">

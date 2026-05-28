@@ -102,21 +102,49 @@ Proses produksi bersifat **Atomic** (berurutan) — tidak bisa dilompati.
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
-| GET | `/production/dashboard` | `getDashboardStats()` | OEE, yield, COPQ, lead time, downtime |
-| GET | `/production/analytics` | `getAnalytics()` | Charts: oeeTrend, yieldDaily, rejectPareto, qcHold, laborCost |
+| GET | `/production/dashboard` | `getDashboardAnalytics()` | OEE, yield, COPQ, lead time, downtime |
+| GET | `/production/analytics/dashboard` | `getDashboardAnalytics()` | Alias for dashboard |
+| GET | `/production/analytics/oee` | `getMachineOEE()` | OEE analytics |
+| GET | `/production/oee` | `getMachineOEE()` | Alias for OEE |
+| GET | `/production/machines` | `getMachines()` | List machines (optional `?category=`) |
 | GET | `/production/terminal` | `getTerminalData()` | Workshops: MIXING, FILLING, PACKING + schedule counts |
 | GET | `/production/qc/stats` | `getQCStats()` | FTY, COPQ, leakage, holdAnomaly, complianceScore |
+| GET | `/production/qc/pending` | `getPendingAudits()` | Pending QC audits |
 | GET | `/production/plans` | `getProductionPlans()` | Batch records with logs |
 | GET | `/production/plans/:id` | `getPlanById()` | Single plan detail |
-| GET | `/production/schedules` | `getAllSchedules()` | Production schedules |
-| POST | `/production/schedules` | `createSchedule()` | Create schedule from plan |
-| PATCH | `/production/schedules/:id/result` | `updateScheduleResult()` | Submit stage result (with QC interlock check) |
-| PATCH | `/production/schedules/:id/actuals` | `submitStepActuals()` | Submit step actuals (atomic phase + FEFO + QC gates) |
+| GET | `/production/schedules` | `getSchedulesByStage()` | Production schedules (optional `?stage=`) |
+| POST | `/production/schedules` | `createBatchSchedule()` | Create schedule from plan |
+| POST | `/production/schedules/:id/result` | `updateScheduleResult()` | Submit stage result (with QC interlock check) |
+| POST | `/production/schedules/:id/actuals` | `submitStepActuals()` | Submit step actuals (atomic phase + FEFO + QC gates) |
 | GET | `/production/requisitions` | `getAllRequisitions()` | List material requisitions |
 | POST | `/production/requisitions/:id/issue` | `issueMaterial()` | Issue material (decrement stock + InventoryTransaction) |
 | POST | `/production/requisitions/:id/shortage` | `flagShortage()` | Flag shortage + escalate WO to WAITING_PROCUREMENT |
 | GET | `/production/step-logs` | `getStepLogs()` | ProductionStepLog records |
-| GET | `/production/step-logs/wo/:woId` | `getStepLogsByWorkOrder()` | Step logs filtered by WO |
+| GET | `/production/leads` | `getProductionLeads()` | Production leads |
+| POST | `/production/work-orders` | `createWorkOrder()` | Create work order |
+| GET | `/production/work-orders` | `getWorkOrders()` | List work orders |
+| GET | `/production/active` | `getActiveWorkOrders()` | Active work orders |
+| POST | `/production/start/:workOrderId` | `startProduction()` | Start production for WO |
+| POST | `/production/start-stage` | `startStage()` | Start a specific stage |
+| POST | `/production/:workOrderId/submit-log` | `submitStageLog()` | Submit stage log |
+| POST | `/production/qc/verify` | `verifyStageQC()` | Verify stage QC |
+| POST | `/production/reconciliation/return` | `returnMaterial()` | Return material from production |
+| POST | `/production/finalize/:woNumber` | `finalizeWorkOrderCosting()` | Finalize WO costing |
+| POST | `/production/production-plans/:id/assign-formula` | `assignFormulaToPlan()` | Assign formula to plan |
+| GET | `/production/batch-records` | `getBatchRecords()` | Batch records |
+| GET | `/production/audit` | `getProductionAudit()` | Production audit |
+| GET | `/production/chain-of-custody` | `getChainOfCustody()` | Chain of custody |
+| GET | `/production/warehouse-preparation` | `getWarehousePreparation()` | Warehouse preparation |
+| GET | `/production/micro-flow` | `getMicroFlowDiagnostics()` | Micro flow diagnostics |
+| GET | `/production/batch-audit` | `getBatchGranularAudit()` | Batch granular audit |
+| GET | `/production/summary` | `getExecutiveSummary()` | Executive summary |
+| GET | `/production/floor` | `getFloorData()` | Floor data |
+| GET | `/production/leakage` | `getLeakageData()` | Leakage data |
+| GET | `/production/work-orders/:woId/timeline` | `getWorkOrderTimeline()` | Work order timeline |
+| GET | `/production/qr/resolve/:uuid` | `resolveQRContext()` | Resolve QR code context |
+| POST | `/production/breakdown` | `reportBreakdown()` | Report machine breakdown |
+| GET | `/production/formula-adjustments` | `getFormulaAdjustments()` | List formula adjustments |
+| POST | `/production/formula-adjustments` | `createFormulaAdjustment()` | Create formula adjustment |
 
 ### 4.2. Production-Planning Module (`/production-plans`)
 

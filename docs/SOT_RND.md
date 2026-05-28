@@ -27,19 +27,26 @@
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
-| GET | `/rnd` | Dashboard | R&D overview |
-| GET | `/rnd/samples` | `getAllSampleRequests()` | All sample requests |
-| GET | `/rnd/samples/:id` | `getSampleRequest()` | Single sample request detail |
-| POST | `/rnd/samples/:id/accept` | `acceptSampleTask()` | Accept task (set PIC) |
-| POST | `/rnd/samples/:id/formula` | `createFormula()` | Create formula version |
-| GET | `/rnd/formulas/:id` | `getFormula()` | Formula detail with phases + items |
-| PATCH | `/rnd/formulas/:id/lock` | `lockFormula()` | Lock formula → SAMPLE_LOCKED |
-| POST | `/rnd/lab-test` | `createLabTestResult()` | Input lab test results |
-| GET | `/rnd/lab-test-results` | `getAllLabTestResults(type?)` | All lab tests, optional `?type=stability` filter |
+| GET | `/rnd/dashboard` | `getDashboardMetrics()` | R&D overview |
+| GET | `/rnd/inbox` | `getInboxSamples()` | Inbox samples |
+| GET | `/rnd/staffs` | `getStaffs()` | R&D staff list |
+| GET | `/rnd/samples` | `getSamples()` | All sample requests |
+| GET | `/rnd/samples/:id` | `getSample()` | Single sample request detail |
+| POST | `/rnd/samples` | `createSample()` | Create new sample request |
+| POST | `/rnd/sample/:id/accept` | `acceptSample()` | Accept task (set PIC) |
+| PATCH | `/rnd/sample/:id/advance` | `advanceSampleStage()` | Advance sample to next stage |
+| PATCH | `/rnd/sample/:id/assign` | `assignPIC()` | Assign PIC to sample |
+| GET | `/rnd/samples/:id/versions` | `getVersions()` | Get sample versions |
+| GET | `/rnd/samples/:id/feedback` | `getFeedback()` | Get sample feedback |
+| GET | `/rnd/formulas` | `getFormulas()` | List all formulas |
+| GET | `/rnd/lab-test-results` | `getAllLabTestResults()` | All lab tests, optional `?type=stability` filter |
 | GET | `/rnd/lab-test-results/:formulaId` | `getLabTestResults()` | Lab tests for specific formula |
-| POST | `/rnd/samples/:id/ship` | `shipSample()` | Input courier + tracking number |
-| PATCH | `/rnd/samples/:id/revision` | `createRevision()` | Create revision from feedback |
+| POST | `/rnd/lab-test-results` | `createLabTestResult()` | Input lab test results |
 | POST | `/rnd/qc-parameters/:formulaId` | `setQcParameters()` | Set QC target parameters |
+| GET | `/rnd/revisions` | `getRevisions()` | Active revisions (NOT_STARTED + IN_PROGRESS) |
+| GET | `/rnd/revisions/history` | `getRevisionHistory()` | Completed revision history |
+| POST | `/rnd/revision/:id/start` | `startRevision()` | Start a revision (set IN_PROGRESS) |
+| POST | `/rnd/revision/:id/complete` | `completeRevision()` | Complete a revision (set DONE) |
 
 ---
 
@@ -141,3 +148,5 @@
 | RND service | `backend/src/modules/rnd/rnd.service.ts` |
 | RND controller | `backend/src/modules/rnd/rnd.controller.ts` |
 | RND module | `backend/src/modules/rnd/rnd.module.ts` |
+| Formulas controller | `backend/src/modules/rnd/formulas/formulas.controller.ts` |
+| Formulas service | `backend/src/modules/rnd/formulas/formulas.service.ts` |

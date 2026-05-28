@@ -53,19 +53,37 @@ Seluruh pergerakan status klien mengikuti alur linear. Lonjakan status dilarang 
 
 | Method | Endpoint | Service Method | Description |
 |--------|----------|----------------|-------------|
-| GET | `/bussdev` | `getAll()` | All leads with pipeline data |
+| GET | `/bussdev/leads` | `getLeads()` | All leads with pipeline data |
 | POST | `/bussdev/lead` | `createLead()` | Create new lead |
-| GET | `/bussdev/lead/:id` | `findOne()` | Single lead detail |
+| GET | `/bussdev/lead/:id` | `getLeadById()` | Single lead detail |
 | PUT | `/bussdev/lead/:id` | `updateLead()` | Update lead |
-| DELETE | `/bussdev/lead/:id` | `removeLead()` | Delete lead |
+| DELETE | `/bussdev/lead/:id` | `deleteLead()` | Delete lead |
+| PATCH | `/bussdev/lead/:id/advance` | `advanceLeadStage()` | Advance lead to next stage (with file uploads) |
 | POST | `/bussdev/lead/:id/activity` | `logActivity()` | Log activity on lead |
-| GET | `/bussdev/lead/:id/activities` | `getActivities()` | Get activity timeline |
+| GET | `/bussdev/lead/:id/activity-stream` | `getActivityStream()` | Get activity timeline |
+| GET | `/bussdev/lead/:id/balance` | `getLeadBalance()` | Get lead financial balance |
 | POST | `/bussdev/sample-request` | `createSampleRequest()` | Create sample request |
 | PATCH | `/bussdev/sample-request/:id` | `updateSampleRequest()` | Update sample request |
 | POST | `/bussdev/sales-order` | `createSalesOrder()` | Create sales order |
-| PATCH | `/bussdev/sales-order/:id` | `updateSalesOrder()` | Update sales order |
+| PATCH | `/bussdev/sales-order/:id/status` | `updateSalesOrderStatus()` | Update SO status |
 | GET | `/bussdev/sales-orders` | `getSalesOrders()` | List sales orders |
 | POST | `/bussdev/approve-sample` | `approveSample()` | Approve sample |
+| POST | `/bussdev/samples` | `createSampleSales()` | Create sample sales order |
+| GET | `/bussdev/samples` | `getClientSamples()` | List client samples |
+| PATCH | `/bussdev/sample/:id/ship` | `shipSample()` | Ship sample to client |
+| PATCH | `/bussdev/sample/:id/feedback` | `submitSampleFeedback()` | Submit sample feedback |
+| POST | `/bussdev/guest/:id/convert` | `convertGuestToLead()` | Convert guest to lead |
+| PATCH | `/bussdev/lead/:id/override` | `emergencyOverride()` | Emergency override (SUPER_ADMIN) |
+| POST | `/bussdev/retention-engine/:id/trigger` | `triggerRetentionCheck()` | Trigger retention check |
+| GET | `/bussdev/dashboard` | `getPageAnalytics('dashboard')` | BD dashboard analytics |
+| GET | `/bussdev/analytics/funnel` | `getFunnelAnalytics()` | Funnel analytics |
+| GET | `/bussdev/analytics/pipeline-granular` | `getGranularPipelineTable()` | Granular pipeline table |
+| GET | `/bussdev/analytics/staff-performance` | `getBDPerformance()` | Staff performance |
+| GET | `/bussdev/analytics/lost-churn` | `getLostChurnTable()` | Lost & churn analytics |
+| GET | `/bussdev/analytics/:group` | `getPageAnalytics()` | Parameterized page analytics |
+| GET | `/bussdev/leads/stuck` | `getStuckLeads()` | Stuck leads (>7 days) |
+| GET | `/bussdev/leads/group/:group` | `getLeadsByGroup()` | Leads by group |
+| GET | `/bussdev/staffs` | `getStaffs()` | BD staff list |
 
 ---
 

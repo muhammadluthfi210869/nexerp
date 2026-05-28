@@ -45,6 +45,7 @@ import { TableWrapper } from "@/components/dna/TableWrapper";
 import { DnaInput } from "@/components/dna/DnaInput";
 import { StatCard } from "@/components/dna/StatCard";
 import { TableShell } from "@/components/layout/TableShell";
+import { CascadingAddress } from "@/components/ui/cascading-address";
 
 type Customer = {
   id: string;
@@ -373,35 +374,14 @@ export default function MasterCustomersPage() {
                 <MapPin className="w-3.5 h-3.5" />
                 Alamat & Wilayah
               </h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Provinsi</label>
-                  <input
-                    placeholder="e.g. Jawa Timur"
-                    value={formData.provinsi}
-                    onChange={(e) => setFormData({ ...formData, provinsi: e.target.value })}
-                    className="w-full h-11 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Kota / Kabupaten</label>
-                  <input
-                    placeholder="e.g. Surabaya"
-                    value={formData.kota}
-                    onChange={(e) => setFormData({ ...formData, kota: e.target.value })}
-                    className="w-full h-11 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Kecamatan</label>
-                  <input
-                    placeholder="e.g. Tandes"
-                    value={formData.kecamatan}
-                    onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
-                    className="w-full h-11 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
-                  />
-                </div>
-              </div>
+              <CascadingAddress
+                provinsi={formData.provinsi}
+                kota={formData.kota}
+                kecamatan={formData.kecamatan}
+                onProvinsiChange={(v) => setFormData({ ...formData, provinsi: v })}
+                onKotaChange={(v) => setFormData({ ...formData, kota: v })}
+                onKecamatanChange={(v) => setFormData({ ...formData, kecamatan: v })}
+              />
               <div className="space-y-2">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Alamat Detail</label>
                 <textarea

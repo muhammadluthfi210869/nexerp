@@ -146,6 +146,32 @@ Setiap pergerakan stok WAJIB tercatat di `InventoryTransaction` dengan `Referenc
 | GET | `/warehouse/release-requests` | `getReleaseRequests()` | Pending MaterialRequisitions grouped by work order |
 | POST | `/warehouse/validate-handover` | `validateHandover()` | Validate batch before handover (QC gate + FEFO) |
 
+### 4.9. Quarantine Release
+
+| Method | Endpoint | Service Method | Description |
+|--------|----------|----------------|-------------|
+| POST | `/warehouse/inbounds/:id/release` | `releaseFromQuarantine()` | Release inbound from quarantine |
+
+### 4.10. Requisitions (Permintaan Barang)
+
+| Method | Endpoint | Service Method | Description |
+|--------|----------|----------------|-------------|
+| POST | `/warehouse/requisitions` | `requisitionService.create()` | Create requisition |
+| GET | `/warehouse/requisitions` | `requisitionService.findAll()` | List requisitions |
+| GET | `/warehouse/requisitions/:id` | `requisitionService.findOne()` | Get single requisition |
+| PATCH | `/warehouse/requisitions/:id/status` | `requisitionService.updateStatus()` | Update requisition status |
+
+### 4.11. Stock Intelligence
+
+| Method | Endpoint | Service Method | Description |
+|--------|----------|----------------|-------------|
+| GET | `/warehouse/stock-intelligence/abc` | `stockIntel.getABCAnalysis()` | ABC analysis |
+| GET | `/warehouse/stock-intelligence/dead-stock` | `stockIntel.getDeadStockItems()` | Dead stock items |
+| GET | `/warehouse/stock-intelligence/fast-movers` | `stockIntel.getFastMovers()` | Fast-moving items |
+| GET | `/warehouse/stock-intelligence/slow-movers` | `stockIntel.getSlowMovers()` | Slow-moving items |
+| GET | `/warehouse/stock-intelligence/reorder-suggestions` | `stockIntel.getReorderSuggestions()` | Reorder suggestions |
+| GET | `/warehouse/stock-intelligence/critical` | `stockIntel.getCriticalStockItems()` | Critical stock items |
+
 ---
 
 ## 5. COMMUNICATION PROTOCOL (EVENT EMISSIONS)
@@ -262,6 +288,8 @@ async recordMovement(tx: PrismaTx, data: {
 | Controller | `backend/src/modules/warehouse/warehouse.controller.ts` |
 | Module | `backend/src/modules/warehouse/warehouse.module.ts` |
 | StockLedgerService | `backend/src/modules/warehouse/services/stock-ledger.service.ts` |
+| RequisitionService | `backend/src/modules/warehouse/services/requisition.service.ts` |
+| StockIntelligenceService | `backend/src/modules/warehouse/services/stock-intelligence.service.ts` |
 | Frontend Dashboard | `frontend/src/app/(dashboard)/warehouse/WarehouseDashboardClient.tsx` |
 | Frontend Hub | `frontend/src/app/(dashboard)/warehouse/hub/page.tsx` |
 | Frontend Adjustment | `frontend/src/app/(dashboard)/warehouse/adjustment/AdjustmentClient.tsx` |
