@@ -10,6 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function CashInPage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,6 +27,7 @@ export default function CashInPage() {
   const [cartAmount, setCartAmount] = useState("");
   const [cartMemo, setCartMemo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: accounts } = useQuery({
     queryKey: ["coa"],
@@ -46,8 +54,13 @@ export default function CashInPage() {
   const totalCash = entries.reduce((s, e) => s + e.amount, 0);
   const isReady = cashAccountId && entries.length > 0;
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!isReady || isSubmitting) return;
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
     setIsSubmitting(true);
     try {
       const lines = [
@@ -87,7 +100,7 @@ export default function CashInPage() {
             <DnaInput type="date" value={date} onChange={e => setDate(e.target.value)} className="h-11 rounded-xl bg-slate-50 border-none" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-tight text-slate-400">Kas / Bank (Debit)</Label>
+            <Label className="text-[10px] font-black uppercase tracking-tight text-slate-400">Kas / Bank (Debit) <span className="text-red-500">*</span></Label>
              <Select onValueChange={(v: string | null) => setCashAccountId(v || "")}>
               <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
                 <SelectValue placeholder="Pilih Akun Kas/Bank" />
@@ -183,6 +196,19 @@ export default function CashInPage() {
           </DnaButton>
         </div>
       </div>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

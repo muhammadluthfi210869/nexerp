@@ -18,6 +18,8 @@ import {
   DialogDescription,
   DialogTitle,
   DialogTrigger,
+  DialogHeader,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
@@ -211,6 +213,7 @@ export default function ChartOfAccountsPage() {
   const [formNormalBalance, setFormNormalBalance] = useState<NormalBalance>("DEBIT");
   const [formParentId, setFormParentId] = useState("");
   const [formIsActive, setFormIsActive] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: accounts, isLoading, isError } = useQuery<Account[]>({
     queryKey: ["finance-accounts"],
@@ -272,6 +275,11 @@ export default function ChartOfAccountsPage() {
   };
 
   const handleSubmit = () => {
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = () => {
+    setShowConfirm(false);
     const payload = {
       code: formCode,
       name: formName,
@@ -432,7 +440,7 @@ export default function ChartOfAccountsPage() {
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Kode Akun
+                  Kode Akun <span className="text-red-500">*</span>
                 </Label>
                 <DnaInput
                   placeholder="11100"
@@ -443,7 +451,7 @@ export default function ChartOfAccountsPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Nama Akun
+                  Nama Akun <span className="text-red-500">*</span>
                 </Label>
                 <DnaInput
                   placeholder="Kas Besar"
@@ -554,6 +562,18 @@ export default function ChartOfAccountsPage() {
               </DnaButton>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardShell>

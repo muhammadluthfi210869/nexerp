@@ -17,6 +17,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
+  DialogHeader,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
@@ -92,6 +94,7 @@ export default function FormulaAdjustmentPage() {
   const [formType, setFormType] = useState("");
   const [formQtyChange, setFormQtyChange] = useState("");
   const [formReason, setFormReason] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: adjustments, isLoading, isError } = useQuery<FormulaAdjustment[]>({
     queryKey: ["formula-adjustments"],
@@ -153,6 +156,11 @@ export default function FormulaAdjustmentPage() {
       toast.error("Lengkapi semua field wajib");
       return;
     }
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = () => {
+    setShowConfirm(false);
     createMutation.mutate({
       batchRecord: formBatch,
       formulaId: formFormula,
@@ -331,7 +339,7 @@ export default function FormulaAdjustmentPage() {
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Batch Record
+                  Batch Record <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formBatch} onValueChange={(v) => setFormBatch(v ?? "")}>
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
@@ -348,7 +356,7 @@ export default function FormulaAdjustmentPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Formula
+                  Formula <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formFormula} onValueChange={(v) => setFormFormula(v ?? "")}>
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
@@ -365,7 +373,7 @@ export default function FormulaAdjustmentPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Jenis Penyesuaian
+                  Jenis Penyesuaian <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formType} onValueChange={(v) => setFormType(v ?? "")}>
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
@@ -418,6 +426,18 @@ export default function FormulaAdjustmentPage() {
               </DnaButton>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardShell>

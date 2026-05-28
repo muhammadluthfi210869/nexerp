@@ -15,6 +15,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataCard, DnaButton, DnaInput } from "@/components/dna";
 import { Label } from "@/components/ui/label";
@@ -37,6 +44,7 @@ export default function SampleSalesInputPage() {
   const [unitPrice, setUnitPrice] = useState("");
   const [targetDeliveryDate, setTargetDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: customers } = useQuery({
     queryKey: ["master-customers"],
@@ -71,8 +79,14 @@ export default function SampleSalesInputPage() {
     qty &&
     Number(qty) > 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
     toast.loading("Membuat sample order...", { id: "submit-sample" });
 
     const payload: any = {
@@ -106,7 +120,7 @@ export default function SampleSalesInputPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <UserCircle className="h-3.5 w-3.5" /> Customer
+                <UserCircle className="h-3.5 w-3.5" /> Customer <span className="text-red-500">*</span>
               </Label>
               <Select value={customerId} onValueChange={(v) => setCustomerId(v || "")}>
                 <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all">
@@ -128,7 +142,7 @@ export default function SampleSalesInputPage() {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Package className="h-3.5 w-3.5" /> Nama Produk
+                <Package className="h-3.5 w-3.5" /> Nama Produk <span className="text-red-500">*</span>
               </Label>
               <DnaInput
                 placeholder="e.g. Serum Brightening 30ml"
@@ -153,7 +167,7 @@ export default function SampleSalesInputPage() {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Hash className="h-3.5 w-3.5" /> Qty
+                <Hash className="h-3.5 w-3.5" /> Qty <span className="text-red-500">*</span>
               </Label>
               <DnaInput
                 type="number"
@@ -222,6 +236,19 @@ export default function SampleSalesInputPage() {
           </div>
         </form>
       </DataCard>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

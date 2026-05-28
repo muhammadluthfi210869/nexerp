@@ -29,7 +29,10 @@ import {
 import { 
   Dialog, 
   DialogContent, 
-  DialogTrigger 
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { 
   Select, 
@@ -61,6 +64,7 @@ export default function WorkOrdersPage() {
   const [targetQty, setTargetQty] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [now] = useState(() => Date.now());
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: workOrders, isLoading } = useQuery({
     queryKey: ["work-orders"],
@@ -98,6 +102,11 @@ export default function WorkOrdersPage() {
 
   const handleSubmit = () => {
     if (!selectedLead || !targetQty || !targetDate) return toast.error("Fill all fields.");
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = () => {
+    setShowConfirm(false);
     createMutation.mutate({
       leadId: selectedLead,
       targetQty: Number(targetQty),
@@ -127,7 +136,7 @@ export default function WorkOrdersPage() {
             </div>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Product (Sales Lead)</label>
+                <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Product (Sales Lead) <span className="text-red-500">*</span></label>
                  <Select onValueChange={(val: string | null) => setSelectedLead(val ?? "")}>
                   <SelectTrigger className="h-11 bg-slate-50 border-slate-250 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all"><SelectValue placeholder="Select product..." /></SelectTrigger>
                   <SelectContent className="rounded-xl border border-slate-100 shadow-xl p-1.5 max-h-[300px]">
@@ -138,18 +147,18 @@ export default function WorkOrdersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Target Qty (pcs)</label>
+                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Target Qty (pcs) <span className="text-red-500">*</span></label>
                   <Input type="number" value={targetQty} onChange={(e) => setTargetQty(e.target.value)} placeholder="e.g. 5000" className="h-11 bg-slate-50 border-slate-200 rounded-xl font-bold text-[10px] uppercase placeholder:text-slate-400 focus:bg-white transition-all" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Target Completion</label>
+                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Target Completion <span className="text-red-500">*</span></label>
                   <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="h-11 bg-slate-50 border-slate-200 rounded-xl font-bold text-[10px] focus:bg-white transition-all text-slate-800" />
                 </div>
               </div>
 
               <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <DnaButton variant="outline" size="md" onClick={() => setIsModalOpen(false)}>Cancel</DnaButton>
-                <DnaButton variant="primary" size="md" onClick={handleSubmit} disabled={createMutation.isPending} className="flex-1">
+                <DnaButton variant="primary" size="md" onClick={handleSubmit} disabled={createMutation.isPending} className="flex-1 mb-0">
                   Generate Work Order
                 </DnaButton>
               </div>
@@ -276,6 +285,18 @@ export default function WorkOrdersPage() {
             </Table>
          </div>
       </TableWrapper>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

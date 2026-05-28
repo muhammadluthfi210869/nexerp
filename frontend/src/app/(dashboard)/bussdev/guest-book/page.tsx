@@ -32,6 +32,13 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type GuestLog = {
   id: string;
@@ -59,6 +66,7 @@ export default function GuestBookPage() {
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     clientName: "",
@@ -109,11 +117,16 @@ export default function GuestBookPage() {
     (g.instansi?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.clientName) {
       toast.error("Nama tamu wajib diisi");
       return;
     }
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
     try {
       setSaving(true);
       await api.post("/guests", {
@@ -297,6 +310,7 @@ export default function GuestBookPage() {
                   <div className="h-10 w-[1px] bg-slate-100" />
                   <DnaButton
                     onClick={handleSubmit}
+                    className="mb-0"
                     variant="primary"
                     size="lg"
                     icon={saving ? <Loader2 className="animate-spin" /> : <Save />}
@@ -338,7 +352,7 @@ export default function GuestBookPage() {
                     <div className="space-y-5">
                       <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nama Tamu</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nama Tamu <span className="text-red-500">*</span></label>
                           <DnaInput
                             placeholder="Nama lengkap tamu"
                             value={formData.clientName}
@@ -494,6 +508,18 @@ export default function GuestBookPage() {
           )}
         </AnimatePresence>
       </div>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

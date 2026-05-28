@@ -29,7 +29,9 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
+  DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
@@ -60,6 +62,7 @@ export default function BayarSamplePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSample, setSelectedSample] = useState<SamplePayment | null>(null);
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: samples, isLoading, isError } = useQuery<SamplePayment[]>({
@@ -325,7 +328,14 @@ function PaymentForm({
 
   const canSubmit = !isSubmitting && method && Number(amount) > 0 && file;
 
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const handleSubmit = () => {
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = () => {
+    setShowConfirm(false);
     const formData = new FormData();
     formData.append("sampleId", sample.id);
     formData.append("amount", amount);
@@ -373,7 +383,7 @@ function PaymentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" /> Tanggal Pembayaran
+              <Calendar className="h-3.5 w-3.5" /> Tanggal Pembayaran <span className="text-red-500">*</span>
             </Label>
             <DnaInput
               type="date"
@@ -384,7 +394,7 @@ function PaymentForm({
           </div>
           <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-              <Landmark className="h-3.5 w-3.5" /> Metode Pembayaran
+              <Landmark className="h-3.5 w-3.5" /> Metode Pembayaran <span className="text-red-500">*</span>
             </Label>
             <Select value={method} onValueChange={(v) => setMethod(v || "")}>
               <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs focus:ring-4 focus:ring-emerald-500/5 transition-all">
@@ -410,7 +420,7 @@ function PaymentForm({
 
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-            <CreditCard className="h-3.5 w-3.5" /> Jumlah Bayar (IDR)
+            <CreditCard className="h-3.5 w-3.5" /> Jumlah Bayar (IDR) <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">
@@ -427,7 +437,7 @@ function PaymentForm({
 
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-            <UploadCloud className="h-3.5 w-3.5" /> Bukti Pembayaran
+            <UploadCloud className="h-3.5 w-3.5" /> Bukti Pembayaran <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <input
@@ -509,6 +519,19 @@ function PaymentForm({
           </DnaButton>
         </div>
       </div>
-    </>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Konfirmasi</DialogTitle>
+            </DialogHeader>
+            <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+            <DialogFooter>
+              <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+              <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
   );
 }

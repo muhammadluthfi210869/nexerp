@@ -44,6 +44,13 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type SalesReturn = {
   id: string;
@@ -77,6 +84,7 @@ export default function SalesReturnPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [selectedSO, setSelectedSO] = useState<SalesOrder | null>(null);
   const [returnItems, setReturnItems] = useState<any[]>([]);
 
@@ -154,7 +162,7 @@ export default function SalesReturnPage() {
     return { subtotal, tax, total: subtotal + tax };
   }, [returnItems]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.soId || !formData.warehouseId) {
       toast.error("Lengkapi semua field wajib");
       return;
@@ -164,6 +172,12 @@ export default function SalesReturnPage() {
       toast.error("Minimal 1 item harus diretur");
       return;
     }
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
+    const validItems = returnItems.filter((i: any) => i.qtyReturned > 0);
     try {
       setSaving(true);
       await api.post("/bussdev/sales-returns", {
@@ -367,7 +381,7 @@ export default function SalesReturnPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Sales Order</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Sales Order <span className="text-red-500">*</span></label>
                       <select
                         value={formData.soId}
                         onChange={(e) => handleSelectSO(e.target.value)}
@@ -380,7 +394,7 @@ export default function SalesReturnPage() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Gudang Tujuan</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Gudang Tujuan <span className="text-red-500">*</span></label>
                       <select
                         value={formData.warehouseId}
                         onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
@@ -571,6 +585,18 @@ export default function SalesReturnPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

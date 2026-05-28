@@ -33,6 +33,7 @@ export function CreateDesignTaskModal({
   const [soId, setSoId] = useState("");
   const [brief, setBrief] = useState("");
   const [taskType, setTaskType] = useState("PACKAGING_DESIGN");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ["available-sos"],
@@ -43,6 +44,13 @@ export function CreateDesignTaskModal({
   const handleSubmit = () => {
     const selectedSO = salesOrders.find((s: any) => s.id === soId);
     if (!selectedSO) return;
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = () => {
+    setShowConfirm(false);
+    const selectedSO = salesOrders.find((s: any) => s.id === soId);
+    if (!selectedSO) return;
 
     onCreate({
       leadId: selectedSO.leadId,
@@ -51,7 +59,6 @@ export function CreateDesignTaskModal({
       taskType
     });
     
-    // Reset and close
     setSoId("");
     setBrief("");
     onClose();
@@ -153,6 +160,19 @@ export function CreateDesignTaskModal({
           </DnaButton>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

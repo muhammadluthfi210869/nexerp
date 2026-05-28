@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,6 +87,7 @@ export default function PurchaseRequestsPage() {
   // New Item State
   const [newItemMaterialId, setNewItemMaterialId] = useState("");
   const [newItemQty, setNewItemQty] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Fetch PRs
   const { data: requests, isLoading } = useQuery<PurchaseRequest[]>({
@@ -173,7 +175,11 @@ export default function PurchaseRequestsPage() {
       toast.error("Payload Empty: Add at least one material.");
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const confirmSubmit = () => {
+    setShowConfirm(false);
     createPRMutation.mutate({
       warehouseId: selectedWarehouse,
       priority,
@@ -208,7 +214,7 @@ export default function PurchaseRequestsPage() {
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="grid grid-cols-3 gap-6">
                 <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block pl-1">Gudang Tujuan</Label>
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block pl-1">Gudang Tujuan <span className="text-red-500">*</span></Label>
                   <Select value={selectedWarehouse} onValueChange={(val) => { if (typeof val === 'string') setSelectedWarehouse(val); }} required>
                     <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
                       <SelectValue placeholder="Pilih Gudang" />
@@ -221,7 +227,7 @@ export default function PurchaseRequestsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block pl-1">Tingkat Prioritas</Label>
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block pl-1">Tingkat Prioritas <span className="text-red-500">*</span></Label>
                   <Select value={priority} onValueChange={(val) => { if (typeof val === 'string') setPriority(val); }} required>
                     <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
                       <SelectValue placeholder="Priority" />
@@ -234,7 +240,7 @@ export default function PurchaseRequestsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block pl-1">Tgl Dibutuhkan</Label>
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block pl-1">Tgl Dibutuhkan <span className="text-red-500">*</span></Label>
                    <DnaInput 
                      type="date" 
                      value={requiredDate}
@@ -405,6 +411,18 @@ export default function PurchaseRequestsPage() {
            </TableBody>
         </Table>
       </TableWrapper>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

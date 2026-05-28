@@ -36,6 +36,13 @@ import {
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type SalesTarget = {
   id: string;
@@ -65,6 +72,7 @@ export default function SalesTargetPrototype() {
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     userId: "",
@@ -114,11 +122,16 @@ export default function SalesTargetPrototype() {
     u.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.userId || !formData.nominalTarget) {
       toast.error("Lengkapi semua field wajib");
       return;
     }
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
     try {
       setSaving(true);
       await api.post("/bussdev/sales-targets", formData);
@@ -333,7 +346,7 @@ export default function SalesTargetPrototype() {
 
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nama Sales</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nama Sales <span className="text-red-500">*</span></label>
                         <div className="relative">
                           <DnaInput
                             placeholder="Search from staff members..."
@@ -401,7 +414,7 @@ export default function SalesTargetPrototype() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Target Nominal (IDR)</label>
+                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Target Nominal (IDR) <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <DnaInput
                           type="number"
@@ -466,6 +479,18 @@ export default function SalesTargetPrototype() {
           )}
         </AnimatePresence>
       </div>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

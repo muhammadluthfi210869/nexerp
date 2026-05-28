@@ -75,6 +75,7 @@ export default function MasterCustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -129,8 +130,13 @@ export default function MasterCustomersPage() {
     fetchUsers();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowConfirm(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
     try {
       if (editingCustomer) {
         await api.patch(`/master/customers/${editingCustomer.id}`, formData);
@@ -312,7 +318,7 @@ export default function MasterCustomersPage() {
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Company Name</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Company Name <span className="text-red-500">*</span></label>
                 <input
                   placeholder="e.g. PT GLOBAL SYNERGY"
                   value={formData.clientName}
@@ -463,6 +469,18 @@ export default function MasterCustomersPage() {
               </DnaButton>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </TableShell>

@@ -27,7 +27,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -85,6 +86,7 @@ export default function BayarPembelianPage() {
     notes: "",
   });
   const [validationError, setValidationError] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: bills, isLoading } = useQuery<Bill[]>({
@@ -183,6 +185,11 @@ export default function BayarPembelianPage() {
       toast.error("Please select a payment date.");
       return;
     }
+    setShowConfirm(true);
+  }
+
+  function confirmSubmit() {
+    setShowConfirm(false);
     payMutation.mutate();
   }
 
@@ -323,7 +330,7 @@ export default function BayarPembelianPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Payment Date</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Payment Date <span className="text-red-500">*</span></label>
                   <DnaInput
                     type="date"
                     value={paymentForm.date}
@@ -331,7 +338,7 @@ export default function BayarPembelianPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Cash / Bank Account</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Cash / Bank Account <span className="text-red-500">*</span></label>
                    <Select
                      value={paymentForm.coaId}
                      onValueChange={(val: string | null) => setPaymentForm({ ...paymentForm, coaId: val ?? "" })}
@@ -351,7 +358,7 @@ export default function BayarPembelianPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Payment Amount (IDR)</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Payment Amount (IDR) <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-slate-300">Rp</span>
                   <DnaInput
@@ -404,6 +411,18 @@ export default function BayarPembelianPage() {
               </DnaButton>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardShell>

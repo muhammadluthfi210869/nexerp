@@ -27,12 +27,13 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { 
   Select, 
@@ -50,6 +51,7 @@ export default function PurchaseReturnsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInbound, setSelectedInbound] = useState<string | null>(null);
   const [returnItems, setReturnItems] = useState<any[]>([]);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: returns, isLoading } = useQuery({
     queryKey: ["purchase-returns"],
@@ -121,9 +123,13 @@ export default function PurchaseReturnsPage() {
         toast.error("Pilih minimal satu item untuk diretur.");
         return;
     }
+    setShowConfirm(true);
+  };
 
+  const confirmSubmit = () => {
+    setShowConfirm(false);
+    const validItems = returnItems.filter(i => i.qtyReturn > 0);
     const inbound = inbounds?.find((i: any) => i.id === selectedInbound);
-    
     createMutation.mutate({
       supplierId: inbound.po.supplierId,
       warehouseId: inbound.warehouseId,
@@ -323,6 +329,18 @@ export default function PurchaseReturnsPage() {
            </Table>
         </TableWrapper>
       </div>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }
