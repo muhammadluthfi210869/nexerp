@@ -43,5 +43,33 @@ export default defineConfig({
         baseURL: 'http://localhost:3002',
       },
     },
+    {
+      name: 'legality-e2e',
+      testMatch: '**/legality-*.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3000',
+      },
+    },
+    {
+      name: 'smoke-api',
+      testMatch: '**/communication-protocol.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
+    },
+    {
+      name: 'golden-thread',
+      testMatch: '**/golden-thread/*.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
+    },
+    {
+      name: 'all-e2e',
+      testMatch: '**/*.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
+    },
   ],
 });

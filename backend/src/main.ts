@@ -33,10 +33,12 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS with Reflection (Safe for Dev)
-  // Enable CORS
+  // Enable CORS — locked to production domain, wide open for dev
+  const corsOrigin = process.env.NODE_ENV === 'production'
+    ? (process.env.CORS_ORIGIN || 'https://nexerp.id')
+    : true;
   app.enableCors({
-    origin: true, // Echoes the request origin
+    origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
