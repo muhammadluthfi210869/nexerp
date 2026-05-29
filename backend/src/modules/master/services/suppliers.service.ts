@@ -7,6 +7,7 @@ export class SuppliersService {
 
   async findAll() {
     return this.prisma.supplier.findMany({
+      where: { deletedAt: null },
       include: {
         category: true,
       },
@@ -16,7 +17,7 @@ export class SuppliersService {
 
   async findOne(id: string) {
     const supplier = await this.prisma.supplier.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: {
         category: true,
       },
@@ -35,6 +36,13 @@ export class SuppliersService {
     return this.prisma.supplier.update({
       where: { id },
       data: dto,
+    });
+  }
+
+  async remove(id: string) {
+    return this.prisma.supplier.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 }

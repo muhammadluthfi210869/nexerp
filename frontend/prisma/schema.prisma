@@ -1208,15 +1208,44 @@ model Employee {
   id              String                @id @default(uuid()) @db.Uuid
   userId          String?               @unique @db.Uuid
   name            String
+  // Identity & Demographics
+  nik             String?               @unique
+  birthDate       DateTime?
+  gender          String?               // L / P
+  religion        String?
+  maritalStatus   String?               // SINGLE / MARRIED / DIVORCED / WIDOWED
+  // Contact
+  phone           String?
+  address         String?
+  emergencyContact  String?
+  emergencyPhone    String?
+  // Legal & Finance
+  npwp            String?
+  bpjsKesehatan   String?
+  bpjsKetenagakerjaan String?
+  bankName        String?
+  bankAccount     String?
+  bankHolder      String?
+  // Education
+  education       String?               // SD / SMP / SMA / D3 / S1 / S2
+  major           String?
+  // Salary & Contract
   baseSalary      String?               // Encrypted (AES-256-GCM)
   joinedAt        DateTime
   contractEnd     DateTime?
   contractType    ContractType          @default(CONTRACT)
+  resignDate      DateTime?
+  resignReason    String?
   isActive        Boolean               @default(true)
+  // Reporting structure
+  managerId       String?               @db.Uuid
+  // Timestamps
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   
   user            User?                 @relation(fields: [userId], references: [id])
+  manager         Employee?             @relation("EmployeeManagerRelation", fields: [managerId], references: [id])
+  subordinates    Employee[]            @relation("EmployeeManagerRelation")
   roles           EmployeeRoleMapping[]
   kpiScores       KpiScore[]
   kpiPointLogs    KpiPointLog[]
@@ -1291,6 +1320,7 @@ model KpiScore {
   
   employee         Employee @relation(fields: [employeeId], references: [id])
 
+  @@unique([employeeId, periodId])
   @@map("kpi_scores")
 }
 
@@ -1366,11 +1396,12 @@ model PayrollItem {
 
 
 model LegalStaff {
-  id    String       @id @default(uuid()) @db.Uuid
-  name  String
-  role  String       @default("LEGAL_OFFICER")
-  bpoms BpomRecord[]
-  hkis  HkiRecord[]
+  id     String        @id @default(uuid()) @db.Uuid
+  name   String
+  role   String        @default("LEGAL_OFFICER")
+  bpoms  BpomRecord[]
+  hkis   HkiRecord[]
+  halals HalalRecord[]
 
   @@map("legal_staffs")
 }
@@ -1407,6 +1438,23 @@ model BpomRecord {
   pic             LegalStaff     @relation(fields: [picId], references: [id])
 
   @@map("bpom_records")
+}
+
+model HalalRecord {
+  id              String      @id @default(uuid()) @db.Uuid
+  halalId         String      @unique
+  productName     String
+  manufacturer    String
+  category        String
+  picId           String      @db.Uuid
+  applicationDate DateTime
+  expiryDate      DateTime?
+  stage           String      @default("DRAFT")
+  status          LegalStatus @default(IN_PROGRESS)
+  auditRisk       AuditRiskLevel @default(OK)
+  pic             LegalStaff  @relation(fields: [picId], references: [id])
+
+  @@map("halal_records")
 }
 
 model LegalTimelineLog {
@@ -2291,8 +2339,11 @@ model Supplier {
   district         String?
   addressDetail    String?
   termOfPayment    Int                 @default(0)
+  tax              Decimal?            @db.Decimal(5, 2)
+  description      String?
   categoryId       String?             @db.Uuid
   performanceScore Float               @default(0)
+  deletedAt        DateTime?
   createdAt        DateTime            @default(now())
   inventories      MaterialInventory[]
   pos              PurchaseOrder[]

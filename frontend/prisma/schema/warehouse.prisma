@@ -76,7 +76,6 @@ model MaterialItem {
   poItems              PurchaseOrderItem[]
   prItems              PurchaseRequestItem[]
   registrations        RegulatoryPipeline[]
-  rejectExecutions     RejectExecution[]
   salesOrderItems      SalesOrderItem[]
   returnItems          SalesReturnItem[]
   sampleItems          SampleRevision[]
@@ -118,8 +117,11 @@ model Supplier {
   district         String?
   addressDetail    String?
   termOfPayment    Int                 @default(0)
+  tax              Decimal?            @db.Decimal(5, 2)
+  description      String?
   categoryId       String?             @db.Uuid
   performanceScore Float               @default(0)
+  deletedAt        DateTime?
   createdAt        DateTime            @default(now())
   inventories      MaterialInventory[]
   pos              PurchaseOrder[]
@@ -258,6 +260,7 @@ model InboundItem {
   materialId   String           @db.Uuid
   qtyActual    Decimal          @db.Decimal(15, 3)
   isQuarantine Boolean          @default(true)
+  qcStatus     QCStatus         @default(QUARANTINE)
   inbound      WarehouseInbound @relation(fields: [inboundId], references: [id])
   material     MaterialItem     @relation(fields: [materialId], references: [id])
 

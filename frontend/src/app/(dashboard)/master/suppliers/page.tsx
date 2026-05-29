@@ -13,6 +13,7 @@ import {
   ExternalLink,
   MoreHorizontal,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,6 +53,8 @@ type Supplier = {
   district: string;
   addressDetail: string;
   term_of_payment: number;
+  tax: number | null;
+  description: string | null;
   performanceScore: number;
   categoryId: string;
   category?: Category;
@@ -77,6 +80,8 @@ export default function MasterSuppliersPage() {
     district: "",
     addressDetail: "",
     term_of_payment: 0,
+    tax: null as number | null,
+    description: "",
     categoryId: "",
   });
 
@@ -123,6 +128,17 @@ export default function MasterSuppliersPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus supplier ini?")) return;
+    try {
+      await api.delete(`/master/suppliers/${id}`);
+      toast.success("Supplier berhasil dihapus");
+      fetchData();
+    } catch (err) {
+      toast.error("Gagal menghapus supplier");
+    }
+  };
+
   const filteredSuppliers = suppliers.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.contact?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -142,7 +158,8 @@ export default function MasterSuppliersPage() {
             setFormData({
               name: "", contact: "", phone: "", email: "",
               address: "", province: "", city: "", district: "",
-              addressDetail: "", term_of_payment: 0, categoryId: "",
+              addressDetail: "", term_of_payment: 0, tax: null,
+              description: "", categoryId: "",
             });
             setIsModalOpen(true);
           }}
@@ -207,6 +224,14 @@ export default function MasterSuppliersPage() {
                     <p className="text-sm font-black text-slate-900">{supplier.term_of_payment} Days</p>
                   </div>
                   <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Pajak</p>
+                    <p className="text-sm font-black text-slate-900">{supplier.tax != null ? `${supplier.tax}%` : "---"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Kota</p>
+                    <p className="text-sm font-black text-slate-900">{supplier.city || "---"}</p>
+                  </div>
+                  <div>
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Performance</p>
                     <div className="flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -230,6 +255,8 @@ export default function MasterSuppliersPage() {
                     district: supplier.district || "",
                     addressDetail: supplier.addressDetail || "",
                     term_of_payment: supplier.term_of_payment,
+                    tax: supplier.tax ?? null,
+                    description: supplier.description || "",
                     categoryId: supplier.categoryId || "",
                   });
                   setIsModalOpen(true);
@@ -238,7 +265,7 @@ export default function MasterSuppliersPage() {
                 </DnaButton>
                 <div className="flex gap-1">
                   <DnaButton variant="ghost"><ExternalLink className="w-3.5 h-3.5" /></DnaButton>
-                  <DnaButton variant="ghost"><MoreHorizontal className="w-3.5 h-3.5" /></DnaButton>
+                  <DnaButton variant="ghost" onClick={() => handleDelete(supplier.id)}><Trash2 className="w-3.5 h-3.5 text-red-500" /></DnaButton>
                 </div>
               </div>
             </div>
@@ -272,20 +299,24 @@ export default function MasterSuppliersPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PIC Name</label>
-                <input value={formData.contact} onChange={(e) => setFormData({...formData, contact: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
+              <div className="grid grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PIC Name</label>
+                  <input value={formData.contact} onChange={(e) => setFormData({...formData, contact: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone</label>
+                  <input value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Term of Payment</label>
+                  <input type="number" value={formData.term_of_payment} onChange={(e) => setFormData({...formData, term_of_payment: Number(e.target.value)})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pajak (%)</label>
+                  <input type="number" step="0.01" value={formData.tax ?? ""} onChange={(e) => setFormData({...formData, tax: e.target.value ? Number(e.target.value) : null})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone</label>
-                <input value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Term of Payment</label>
-                <input type="number" value={formData.term_of_payment} onChange={(e) => setFormData({...formData, term_of_payment: Number(e.target.value)})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-            </div>
 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Email</label>
@@ -309,6 +340,11 @@ export default function MasterSuppliersPage() {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Address</label>
               <input value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Description</label>
+              <textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 py-3 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none" />
             </div>
 
             <DialogFooter className="pt-4 gap-3">

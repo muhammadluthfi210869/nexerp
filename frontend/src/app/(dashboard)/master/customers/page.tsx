@@ -14,6 +14,7 @@ import {
   UserCircle,
   MapPin,
   User,
+  Trash2,
 } from "lucide-react";
 import {
   Table,
@@ -130,6 +131,16 @@ export default function MasterCustomersPage() {
     fetchData();
     fetchUsers();
   }, []);
+
+  const handleDelete = async (customer: Customer) => {
+    try {
+      await api.delete(`/master/customers/${customer.id}`);
+      toast.success("Customer deleted successfully");
+      fetchData();
+    } catch (err) {
+      toast.error("Failed to delete customer");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,9 +299,14 @@ export default function MasterCustomersPage() {
                     </DnaBadge>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
-                    <DnaButton variant="ghost" onClick={() => openEditModal(customer)}>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </DnaButton>
+                    <div className="flex items-center justify-end gap-1">
+                      <DnaButton variant="ghost" onClick={() => openEditModal(customer)}>
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </DnaButton>
+                      <DnaButton variant="ghost" onClick={() => handleDelete(customer)}>
+                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                      </DnaButton>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Warehouse as WarehouseIcon,
   Layers,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -112,6 +113,16 @@ export default function MasterWarehousesPage() {
       fetchWarehouses();
     } catch (err) {
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (warehouse: Warehouse) => {
+    try {
+      await api.delete(`/master/warehouses/${warehouse.id}`);
+      toast.success("Warehouse deleted successfully");
+      fetchWarehouses();
+    } catch (err) {
+      toast.error("Failed to delete warehouse");
     }
   };
 
@@ -225,6 +236,9 @@ export default function MasterWarehousesPage() {
                 <DnaButton variant="ghost" onClick={() => toggleStatus(warehouse)}>
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                   {warehouse.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                </DnaButton>
+                <DnaButton variant="ghost" onClick={() => handleDelete(warehouse)}>
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Hapus
                 </DnaButton>
               </div>
             </div>

@@ -296,6 +296,7 @@ export default function MasterGoodsPage() {
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
                 <TableHead className="text-table-header text-slate-400 px-6 py-4">Product Specification</TableHead>
+                <TableHead className="text-table-header text-slate-400 px-6 py-4">Category</TableHead>
                 <TableHead className="text-table-header text-slate-400 px-6 py-4">Logistics</TableHead>
                 <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right tabular-nums">Valuation</TableHead>
                 <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">Stock Status</TableHead>
@@ -305,7 +306,7 @@ export default function MasterGoodsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  <TableCell colSpan={6} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
                     Syncing Global Ledger...
                   </TableCell>
                 </TableRow>
@@ -332,6 +333,11 @@ export default function MasterGoodsPage() {
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{good.code || "PENDING_SKU"}</span>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase bg-slate-100 px-2 py-1 rounded-md">
+                      {good.category?.name || "UNCATEGORIZED"}
+                    </span>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <div className="flex flex-col gap-0.5">

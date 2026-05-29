@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Param,
+  Delete,
   UseGuards,
 } from '@nestjs/common';
 import { SuppliersService } from '../services/suppliers.service';
@@ -33,5 +34,10 @@ export class SuppliersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: any) {
     return this.suppliersService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.suppliersService.remove(id);
   }
 }
