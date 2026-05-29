@@ -148,19 +148,15 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "PRODUCTION Ops",
+    label: "PRODUCTION",
     icon: Factory,
     roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
     items: [
-      { name: "Plant Controller", href: "/production/dashboard", type: "dashboard" },
-      { name: "Production Floor", href: "/production/floor", type: "dashboard", badge: "LIVE", badgeVariant: "warning" },
-      { name: "Work Orders (BMR)", href: "/production/work-orders", type: "action" },
-      { name: "Batch Schedules", href: "/production/schedules", type: "action" },
-      { name: "Schedule Gantt", href: "/production/schedule", type: "history" },
-      { name: "Batch Records", href: "/production/batch-records", type: "history" },
-      { name: "Operator Terminal", href: "/production/terminal", type: "action" },
-      { name: "Leakage Center", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
-      { name: "Yield & Loss Intel", href: "/production/analytics", type: "history" },
+      { name: "Dashboard", href: "/production", type: "dashboard" },
+      { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
+      { name: "Operasional", href: "/production/operations", type: "dashboard" },
+      { name: "Pipeline", href: "/production/pipeline", type: "history" },
+      { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
     ]
   },
   {
@@ -202,7 +198,11 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Users,
     roles: ["SUPER_ADMIN", "HR", "DIRECTOR"],
     items: [
-      { name: "HR Intelligence", href: "/hr/dashboard", type: "dashboard" },
+      { name: "Dashboard", href: "/production", type: "dashboard" },
+      { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
+      { name: "Operasional", href: "/production/floor", type: "dashboard", badge: "LIVE", badgeVariant: "warning" },
+      { name: "Pipeline", href: "/production/batch-records", type: "history" },
+      { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
     ]
   },
   {
