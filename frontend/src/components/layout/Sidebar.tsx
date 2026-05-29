@@ -126,11 +126,10 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Beaker,
     roles: ["SUPER_ADMIN", "RND", "DIRECTOR"],
     items: [
-      { name: "Sample Inbox", href: "/rnd/inbox", type: "input", badge: "New" },
-      { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
       { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
       { name: "Formula Repository", href: "/rnd/repository", type: "history" },
-      { name: "Revision Board", href: "/rnd/revision-tracker", type: "action" },
+      { name: "Sample Inbox", href: "/rnd/inbox", type: "input", badge: "New" },
+      { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
     ]
   },
   {
