@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Patch,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -47,6 +48,16 @@ export class PurchaseOrdersController {
   @ApiOperation({ summary: 'Get a single Purchase Order by ID' })
   findOne(@Param('id') id: string) {
     return this.poService.findOne(id);
+  }
+
+  @Patch(':id/status')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Update PO status (approve/reject)' })
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: { status: string; reason?: string },
+  ) {
+    return this.poService.updateStatus(id, dto.status as any, dto.reason);
   }
 
   @Post(':id/down-payment')

@@ -40,7 +40,9 @@ model User {
   leadValidations     LeadActivity[]              @relation("LeadActivityValidator")
   notifications       Notification[]
   purchaseReturns     PurchaseReturn[]            @relation("PurchaseReturnCreator")
+  purchaseRequests    PurchaseRequest[]            @relation("PurchaseRequestCreator")
   requisitions        MaterialRequisitionHeader[] @relation("RequisitionRequester")
+  qcChecklists        QCChecklist[]               @relation("QCChecklistCreator")
 
   @@map("users")
 }

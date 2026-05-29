@@ -16,7 +16,11 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
-  Filter
+  Filter,
+  BadgeCheck,
+  XCircle,
+  Ban,
+  User
 } from "lucide-react";
 import { DnaInput, DnaBadge, DnaButton, TableWrapper } from "@/components/dna";
 import { 
@@ -34,7 +38,10 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
   SelectContent, 
@@ -52,6 +59,9 @@ export default function PurchaseReturnsPage() {
   const [selectedInbound, setSelectedInbound] = useState<string | null>(null);
   const [returnItems, setReturnItems] = useState<any[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [approveDialog, setApproveDialog] = useState<string | null>(null);
+  const [rejectDialog, setRejectDialog] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const { data: returns, isLoading } = useQuery({
     queryKey: ["purchase-returns"],
@@ -114,6 +124,35 @@ export default function PurchaseReturnsPage() {
     onSuccess: () => {
       toast.success("Retur selesai. Stok diperbarui.");
       queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
+    }
+  });
+
+  const approveReturnMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return api.patch(`/scm/purchase-returns/${id}/status`, { status: "COMPLETED" });
+    },
+    onSuccess: () => {
+      toast.success("Retur pembelian disetujui.");
+      queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
+      setApproveDialog(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal menyetujui retur.");
+    }
+  });
+
+  const rejectReturnMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      return api.patch(`/scm/purchase-returns/${id}/status`, { status: "CANCELLED" });
+    },
+    onSuccess: () => {
+      toast.success("Retur pembelian ditolak.");
+      queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
+      setRejectDialog(null);
+      setRejectReason("");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal menolak retur.");
     }
   });
 
@@ -268,63 +307,82 @@ export default function PurchaseReturnsPage() {
 
         <TableWrapper>
            <Table>
-              <TableHeader className="bg-slate-50/50">
-                 <TableRow className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">No. Retur</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Pemasok</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right tabular-nums">Nilai</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Verifikasi</TableHead>
-                 </TableRow>
-              </TableHeader>
+                   <TableHeader className="bg-slate-50/50">
+                  <TableRow className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">No. Retur</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Pemasok</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-left">Pembuat</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right tabular-nums">Nilai</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
+                     <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Verifikasi</TableHead>
+                  </TableRow>
+               </TableHeader>
               <TableBody className="divide-y divide-slate-100">
-                 {returns?.length === 0 ? (
-                   <TableRow>
-                     <TableCell colSpan={5} className="py-20 text-center">
-                        <AlertCircle className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                         <p className="text-slate-400 font-medium">Belum ada transaksi retur pada periode ini.</p>
-                     </TableCell>
-                   </TableRow>
-                 ) : returns?.map((ret: any) => (
-                    <TableRow key={ret.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                       <TableCell className="py-4 px-4">
-                          <div className="flex items-center gap-4">
-                             <div className="h-11 w-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
-                                <RotateCcw className="h-5 w-5" />
-                             </div>
-                             <div>
-                                <span className="font-black text-slate-900 text-base">{ret.returnNumber}</span>
-                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{new Date(ret.createdAt).toLocaleDateString()}</p>
-                             </div>
-                          </div>
-                       </TableCell>
-                       <TableCell className="py-4 px-4 font-black text-slate-700 text-sm">{ret.supplier?.name}</TableCell>
-                       <TableCell className="py-4 px-4 text-right tabular-nums font-black text-rose-600 text-base">Rp {Number(ret.totalValue).toLocaleString()}</TableCell>
-                       <TableCell className="py-4 px-4 text-center">
-                          <DnaBadge status={ret.status === 'COMPLETED' ? 'success' : ret.status === 'CANCELLED' ? 'default' : 'warning'}>
-                             {ret.status}
-                          </DnaBadge>
-                       </TableCell>
-                       <TableCell className="py-4 px-4 text-right">
-                          {ret.status === 'DRAFT' && (
-                             <DnaButton 
-                               variant="primary"
-                               size="sm"
-                               onClick={() => completeMutation.mutate(ret.id)}
-                               className="bg-emerald-600 hover:bg-emerald-700"
-                             >
-                                 Finalisasi & Balik Stok
-                             </DnaButton>
-                          )}
-                          {ret.status === 'COMPLETED' && (
-                             <div className="flex items-center justify-end gap-2 text-emerald-600">
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span className="text-[10px] font-black uppercase">Stok Dikembalikan</span>
-                             </div>
-                          )}
-                       </TableCell>
+                  {returns?.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-20 text-center">
+                         <AlertCircle className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                          <p className="text-slate-400 font-medium">Belum ada transaksi retur pada periode ini.</p>
+                      </TableCell>
                     </TableRow>
-                 ))}
+                  ) : returns?.map((ret: any) => (
+                     <TableRow key={ret.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                        <TableCell className="py-4 px-4">
+                           <div className="flex items-center gap-4">
+                              <div className="h-11 w-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
+                                 <RotateCcw className="h-5 w-5" />
+                              </div>
+                              <div>
+                                 <span className="font-black text-slate-900 text-base">{ret.returnNumber}</span>
+                                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{new Date(ret.createdAt).toLocaleDateString()}</p>
+                              </div>
+                           </div>
+                        </TableCell>
+                        <TableCell className="py-4 px-4 font-black text-slate-700 text-sm">{ret.supplier?.name}</TableCell>
+                        <TableCell className="py-4 px-4">
+                           <div className="flex items-center gap-1.5">
+                              <User className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-[10px] font-medium text-slate-600">{ret.creator?.fullName || '-'}</span>
+                           </div>
+                        </TableCell>
+                        <TableCell className="py-4 px-4 text-right tabular-nums font-black text-rose-600 text-base">Rp {Number(ret.totalValue).toLocaleString()}</TableCell>
+                        <TableCell className="py-4 px-4 text-center">
+                           <DnaBadge status={ret.status === 'COMPLETED' ? 'success' : ret.status === 'CANCELLED' || ret.status === 'REJECTED' ? 'default' : ret.status === 'WAITING_APPROVAL' ? 'warning' : 'info'}>
+                              {ret.status?.replace('_', ' ') || 'DRAFT'}
+                           </DnaBadge>
+                        </TableCell>
+                        <TableCell className="py-4 px-4 text-right">
+                           <div className="flex justify-end gap-1.5">
+                              {ret.status === 'DRAFT' && (
+                                 <DnaButton 
+                                   variant="primary"
+                                   size="sm"
+                                   onClick={() => completeMutation.mutate(ret.id)}
+                                   className="bg-emerald-600 hover:bg-emerald-700"
+                                 >
+                                     Finalisasi & Balik Stok
+                                 </DnaButton>
+                              )}
+                              {ret.status === 'WAITING_APPROVAL' && (
+                                 <>
+                                    <DnaButton variant="primary" size="sm" onClick={() => setApproveDialog(ret.id)} className="bg-emerald-600 hover:bg-emerald-700">
+                                       <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Setuju
+                                    </DnaButton>
+                                    <DnaButton variant="outline" size="sm" onClick={() => setRejectDialog(ret.id)} className="text-rose-600 border-rose-200 hover:bg-rose-50">
+                                       <XCircle className="h-3.5 w-3.5 mr-1" /> Tolak
+                                    </DnaButton>
+                                 </>
+                              )}
+                              {ret.status === 'COMPLETED' && (
+                                 <div className="flex items-center justify-end gap-2 text-emerald-600">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    <span className="text-[10px] font-black uppercase">Stok Dikembalikan</span>
+                                 </div>
+                              )}
+                           </div>
+                        </TableCell>
+                     </TableRow>
+                  ))}
               </TableBody>
            </Table>
         </TableWrapper>
@@ -338,6 +396,58 @@ export default function PurchaseReturnsPage() {
           <DialogFooter>
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Confirmation */}
+      <Dialog open={!!approveDialog} onOpenChange={(open) => { if (!open) setApproveDialog(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BadgeCheck className="h-5 w-5 text-emerald-500" />
+              Konfirmasi Persetujuan Retur
+            </DialogTitle>
+            <DialogDescription>
+              Setujui retur pembelian ini? Stok akan dikembalikan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => approveDialog && approveReturnMutation.mutate(approveDialog)} className="bg-emerald-600 hover:bg-emerald-700">
+              Ya, Setujui
+            </DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog open={!!rejectDialog} onOpenChange={(open) => { if (!open) { setRejectDialog(null); setRejectReason(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ban className="h-5 w-5 text-rose-500" />
+              Konfirmasi Penolakan Retur
+            </DialogTitle>
+            <DialogDescription>
+              Tolak retur pembelian ini.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Label className="text-[9px] font-black text-slate-400 uppercase">Alasan Penolakan</Label>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Alasan mengapa ditolak..."
+              className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium resize-none"
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <DnaButton variant="ghost" onClick={() => { setRejectDialog(null); setRejectReason(""); }}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => rejectDialog && rejectReturnMutation.mutate({ id: rejectDialog, reason: rejectReason })} className="bg-rose-600 hover:bg-rose-700">
+              Ya, Tolak
+            </DnaButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

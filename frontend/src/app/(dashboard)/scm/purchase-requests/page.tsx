@@ -44,7 +44,11 @@ import {
   Clock,
   ArrowRight,
   Trash2,
-  Package
+  Package,
+  BadgeCheck,
+  XCircle,
+  Ban,
+  User
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -83,6 +87,9 @@ export default function PurchaseRequestsPage() {
   const [requiredDate, setRequiredDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<PRItem[]>([]);
+  const [approveDialog, setApproveDialog] = useState<string | null>(null);
+  const [rejectDialog, setRejectDialog] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   
   // New Item State
   const [newItemMaterialId, setNewItemMaterialId] = useState("");
@@ -140,6 +147,38 @@ export default function PurchaseRequestsPage() {
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || "Protocol Error: Failed to commit request.");
+    }
+  });
+
+  const approvePRMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post(`/scm/purchase-requests/${id}/approve`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("PR disetujui, PO berhasil dibuat.");
+      queryClient.invalidateQueries({ queryKey: ["purchase-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      setApproveDialog(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal menyetujui PR.");
+    }
+  });
+
+  const rejectPRMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const res = await api.post(`/scm/purchase-requests/${id}/reject`, { reason });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("PR ditolak.");
+      queryClient.invalidateQueries({ queryKey: ["purchase-requests"] });
+      setRejectDialog(null);
+      setRejectReason("");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal menolak PR.");
     }
   });
 
@@ -347,70 +386,144 @@ export default function PurchaseRequestsPage() {
         <Table className="table-dense">
            <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
-                 <TableHead className="py-3 pl-8 font-black text-slate-400 uppercase tracking-tight text-[9px]">Data Permintaan</TableHead>
-                 <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Gudang</TableHead>
-                 <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Jml Item</TableHead>
-                 <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                 <TableHead className="pr-8 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
+                  <TableHead className="py-3 pl-8 font-black text-slate-400 uppercase tracking-tight text-[9px]">Data Permintaan</TableHead>
+                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Gudang</TableHead>
+                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Pembuat</TableHead>
+                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Jml Item</TableHead>
+                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
+                  <TableHead className="pr-8 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
               </TableRow>
            </TableHeader>
-           <TableBody>
-              {isLoading ? (
-                 <TableRow><TableCell colSpan={5} className="h-32 text-center"><Loader2 className="animate-spin mx-auto h-6 w-6 text-blue-600" /></TableCell></TableRow>
-               )                : filteredRequests?.length === 0 ? (
-                 <TableRow><TableCell colSpan={5} className="h-32 text-center text-slate-400 font-black uppercase tracking-tight text-xs">Belum ada permintaan.</TableCell></TableRow>
-               ) : (
-                  filteredRequests?.map((pr: any) => (
-                    <TableRow key={pr.id} className="group hover:bg-slate-50/50 transition-all duration-300 border-b border-slate-50">
-                       <TableCell className="py-2.5 px-3 pl-8">
-                          <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-[10px] italic">
-                                PR
-                             </div>
-                             <div>
-                                <p className="font-black text-slate-900 tracking-tight text-xs leading-tight uppercase italic">#{pr.id.split('-')[0]}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight mt-0.5 italic">{new Date(pr.requestDate).toLocaleDateString()}</p>
-                             </div>
-                          </div>
-                       </TableCell>
-                       <TableCell className="py-2.5 px-3">
-                          <div className="space-y-1">
-                              <p className="text-slate-700 font-black text-xs tracking-tight flex items-center gap-1.5 uppercase italic">
-                                <Package size={12} className="text-blue-600" /> {pr.warehouse.name}
-                             </p>
-                              <DnaBadge status={
-                                pr.priority === 'URGENT' ? 'critical' :
-                                pr.priority === 'MEDIUM' ? 'warning' : 'info'
-                              }>
-                                 {pr.priority} Priority
-                              </DnaBadge>
-                          </div>
-                       </TableCell>
-                       <TableCell className="py-2.5 px-3">
-                          <div className="space-y-0.5">
-                             <p className="font-black text-slate-900 text-xs">{pr.items.length} Materials</p>
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight italic truncate max-w-[180px]">{pr.notes || "Tidak ada catatan"}</p>
-                          </div>
-                       </TableCell>
-                       <TableCell className="py-2.5 px-3 text-center">
-                           <DnaBadge status={
-                              pr.status === 'ORDERED' ? 'success' :
-                              pr.status === 'APPROVED' ? 'info' : 'default'
-                           }>
-                              {pr.status}
-                           </DnaBadge>
-                       </TableCell>
-                       <TableCell className="py-2.5 px-3 pr-8 text-right">
-                           <DnaButton variant="primary" size="sm">
-                              Review <ArrowRight className="h-3 w-3" />
-                           </DnaButton>
-                       </TableCell>
-                    </TableRow>
-                 ))
-              )}
+                  <TableBody>
+               {isLoading ? (
+                  <TableRow><TableCell colSpan={7} className="h-32 text-center"><Loader2 className="animate-spin mx-auto h-6 w-6 text-blue-600" /></TableCell></TableRow>
+                )                : filteredRequests?.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="h-32 text-center text-slate-400 font-black uppercase tracking-tight text-xs">Belum ada permintaan.</TableCell></TableRow>
+                ) : (
+                   filteredRequests?.map((pr: any) => (
+                     <TableRow key={pr.id} className="group hover:bg-slate-50/50 transition-all duration-300 border-b border-slate-50">
+                        <TableCell className="py-2.5 px-3 pl-8">
+                           <div className="flex items-center gap-3">
+                               <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-[10px] italic">
+                                 PR
+                              </div>
+                              <div>
+                                 <p className="font-black text-slate-900 tracking-tight text-xs leading-tight uppercase italic">#{pr.id.split('-')[0]}</p>
+                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight mt-0.5 italic">{new Date(pr.requestDate).toLocaleDateString()}</p>
+                              </div>
+                           </div>
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3">
+                           <div className="space-y-1">
+                               <p className="text-slate-700 font-black text-xs tracking-tight flex items-center gap-1.5 uppercase italic">
+                                 <Package size={12} className="text-blue-600" /> {pr.warehouse.name}
+                              </p>
+                               <DnaBadge status={
+                                 pr.priority === 'URGENT' ? 'critical' :
+                                 pr.priority === 'MEDIUM' ? 'warning' : 'info'
+                               }>
+                                  {pr.priority} Priority
+                               </DnaBadge>
+                           </div>
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3">
+                           <div className="flex items-center gap-1.5">
+                              <User size={11} className="text-slate-400" />
+                              <span className="text-[10px] font-medium text-slate-600">{pr.creator?.fullName || '-'}</span>
+                           </div>
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3">
+                           <div className="space-y-0.5">
+                              <p className="font-black text-slate-900 text-xs">{pr.items.length} Materials</p>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight italic truncate max-w-[180px]">{pr.notes || "Tidak ada catatan"}</p>
+                           </div>
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3 text-center">
+                            <DnaBadge status={
+                               pr.status === 'APPROVED' || pr.status === 'ORDERED' ? 'success' :
+                               pr.status === 'SUBMITTED' ? 'warning' :
+                               pr.status === 'REJECTED' ? 'critical' : 'default'
+                            }>
+                               {pr.status}
+                            </DnaBadge>
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3 pr-8 text-right">
+                           <div className="flex justify-end gap-1.5">
+                              {pr.status === 'SUBMITTED' && (
+                                 <>
+                                    <DnaButton variant="primary" size="sm" onClick={() => setApproveDialog(pr.id)} className="bg-emerald-600 hover:bg-emerald-700 text-[9px] h-7 px-2">
+                                       <BadgeCheck className="h-3 w-3 mr-1" /> Setuju
+                                    </DnaButton>
+                                    <DnaButton variant="outline" size="sm" onClick={() => setRejectDialog(pr.id)} className="text-rose-600 border-rose-200 hover:bg-rose-50 text-[9px] h-7 px-2">
+                                       <XCircle className="h-3 w-3 mr-1" /> Tolak
+                                    </DnaButton>
+                                 </>
+                              )}
+                              {pr.status === 'DRAFT' && (
+                                 <DnaButton variant="primary" size="sm">
+                                    Review <ArrowRight className="h-3 w-3" />
+                                 </DnaButton>
+                              )}
+                           </div>
+                        </TableCell>
+                     </TableRow>
+                  ))
+               )}
            </TableBody>
         </Table>
       </TableWrapper>
+      {/* Approve Confirmation */}
+      <Dialog open={!!approveDialog} onOpenChange={(open) => { if (!open) setApproveDialog(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BadgeCheck className="h-5 w-5 text-emerald-500" />
+              Konfirmasi Persetujuan PR
+            </DialogTitle>
+            <DialogDescription>
+              Setujui Purchase Request ini? PO akan dibuat otomatis dari PR ini.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => approveDialog && approvePRMutation.mutate(approveDialog)} className="bg-emerald-600 hover:bg-emerald-700">
+              Ya, Setujui & Buat PO
+            </DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog open={!!rejectDialog} onOpenChange={(open) => { if (!open) { setRejectDialog(null); setRejectReason(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ban className="h-5 w-5 text-rose-500" />
+              Konfirmasi Penolakan PR
+            </DialogTitle>
+            <DialogDescription>
+              Tolak Purchase Request ini. Berikan alasan penolakan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Label className="text-[9px] font-black text-slate-400 uppercase">Alasan Penolakan</Label>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Alasan mengapa ditolak..."
+              className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium resize-none"
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <DnaButton variant="ghost" onClick={() => { setRejectDialog(null); setRejectReason(""); }}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => rejectDialog && rejectPRMutation.mutate({ id: rejectDialog, reason: rejectReason })} className="bg-rose-600 hover:bg-rose-700">
+              Ya, Tolak
+            </DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>

@@ -143,8 +143,10 @@ model PurchaseRequest {
   status      PRStatus              @default(DRAFT)
   notes       String?
   supplierId  String?               @db.Uuid
+  createdById String?               @db.Uuid
   createdAt   DateTime              @default(now())
   items       PurchaseRequestItem[]
+  creator     User?                 @relation("PurchaseRequestCreator", fields: [createdById], references: [id])
   supplier    Supplier?             @relation(fields: [supplierId], references: [id])
   warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
 
@@ -172,6 +174,8 @@ model PurchaseOrder {
   totalValue     Decimal             @default(0) @db.Decimal(15, 2)
   currencyId     String?             @db.Uuid
   estArrival     DateTime?           @db.Date
+  dueDate        DateTime?           @db.Date
+  taxPercent     Decimal?            @db.Decimal(5, 2)
   notes          String?
   deletedAt      DateTime?
   createdAt      DateTime            @default(now())

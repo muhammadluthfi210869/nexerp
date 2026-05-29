@@ -13,6 +13,11 @@ export class CreatePurchaseOrderDto {
   @IsNotEmpty()
   supplierId!: string;
 
+  @ApiPropertyOptional({ example: 'uuid-warehouse-456' })
+  @IsUUID()
+  @IsOptional()
+  warehouseId?: string;
+
   @ApiPropertyOptional({ example: 'uuid-lead-456' })
   @IsUUID()
   @IsOptional()
@@ -26,10 +31,24 @@ export class CreatePurchaseOrderDto {
   @IsOptional()
   totalAmount?: number;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  taxPercent?: number;
+
   @ApiPropertyOptional({ example: '2024-12-31' })
   @IsDateString()
   @IsOptional()
   estArrival?: string;
+
+  @ApiPropertyOptional({ example: '2024-12-31' })
+  @IsDateString()
+  @IsOptional()
+  dueDate?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  notes?: string;
 
   @ApiPropertyOptional()
   @IsString()

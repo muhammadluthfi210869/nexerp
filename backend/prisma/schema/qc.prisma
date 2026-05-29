@@ -100,7 +100,7 @@ model QCChecklist {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  creator User @relation(fields: [createdById], references: [id])
+  creator User @relation("QCChecklistCreator", fields: [createdById], references: [id])
 
   @@index([status])
   @@index([createdById])

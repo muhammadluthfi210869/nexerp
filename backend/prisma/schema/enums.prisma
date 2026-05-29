@@ -206,9 +206,13 @@ enum MaterialUnit {
 }
 
 enum POStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
   ORDERED
   SHIPPED
   RECEIVED
+  REJECTED
   CANCELLED
   RETURNED
 }
@@ -237,6 +241,37 @@ enum QCStatus {
   GOOD
   QUARANTINE
   REJECT
+}
+
+enum QcInspectionPhase {
+  INBOUND
+  MIXING
+  FILLING
+  PACKING
+  FINAL
+}
+
+enum QcDefectCategory {
+  FISIK
+  KIMIA
+  MIKROBIOLOGI
+  LABEL_DOKUMEN
+  KEMASAN
+  LAINNYA
+}
+
+enum QcSeverity {
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum QcDisposition {
+  REWORK
+  SCRAP
+  RETURN_TO_VENDOR
+  USE_AS_IS
+  SORTING
 }
 
 enum LifecycleStatus {
@@ -525,7 +560,6 @@ enum EscalationType {
   SPOILAGE_RISK_OVERRIDE
   QC_GATE_BYPASS
 }
-
 
 enum DesignState {
   INBOX
