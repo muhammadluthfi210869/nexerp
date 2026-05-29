@@ -133,18 +133,14 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "SUPPLY CHAIN (SCM)",
+    label: "SUPPLY CHAIN",
     icon: Truck,
     roles: ["SUPER_ADMIN", "SCM", "PURCHASING", "DIRECTOR"],
     items: [
-      { name: "Inventory Intel", href: "/scm/dashboard", type: "dashboard" },
-      { name: "Purchasing (PR/PO)", href: "/scm/purchasing", type: "action", badge: "5", badgeVariant: "warning" },
-      { name: "Receiving (GRN)", href: "/scm/receiving", type: "action" },
-      { name: "Purchase Returns", href: "/scm/purchase-returns", type: "action" },
-      { name: "Vendor Matrix", href: "/scm/vendors/performance", type: "history" },
-      { name: "Materials Registry", href: "/master/goods", type: "input" },
-      { name: "Vendor Network", href: "/master/suppliers", type: "input" },
-      { name: "Warehouse Map", href: "/warehouse", type: "dashboard" },
+      { name: "Dashboard", href: "/scm/dashboard", type: "dashboard" },
+      { name: "Pembelian", href: "/scm/pembelian", type: "action", badge: "5", badgeVariant: "warning" },
+      { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", type: "action" },
+      { name: "Supplier", href: "/master/suppliers", type: "input" },
     ]
   },
   {
@@ -172,17 +168,13 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "WAREHOUSE Ops",
+    label: "GUDANG",
     icon: Warehouse,
     roles: ["SUPER_ADMIN", "WAREHOUSE", "SCM", "DIRECTOR"],
     items: [
-      { name: "Command Dashboard", href: "/warehouse", type: "dashboard" },
-      { name: "Workstation (3-Tab)", href: "/warehouse/workstation", type: "action" },
-      { name: "Goods Receiving", href: "/warehouse/inbound", type: "input" },
-      { name: "Material Release", href: "/warehouse/release", type: "action" },
-      { name: "Transfer Orders", href: "/warehouse/transfers", type: "action" },
-      { name: "Stock Opname", href: "/warehouse/opname", type: "history" },
-      { name: "Stock Adjustment", href: "/warehouse/adjustment", type: "input" },
+      { name: "Dashboard", href: "/warehouse", type: "dashboard" },
+      { name: "Gudang", href: "/warehouse/gudang", type: "action" },
+      { name: "Stok", href: "/warehouse/stok", type: "history" },
     ]
   },
   {
@@ -198,11 +190,10 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Users,
     roles: ["SUPER_ADMIN", "HR", "DIRECTOR"],
     items: [
-      { name: "Dashboard", href: "/production", type: "dashboard" },
-      { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
-      { name: "Operasional", href: "/production/floor", type: "dashboard", badge: "LIVE", badgeVariant: "warning" },
-      { name: "Pipeline", href: "/production/batch-records", type: "history" },
-      { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
+      { name: "Dashboard", href: "/hr/dashboard", type: "dashboard" },
+      { name: "Personnel", href: "/master/personnel", type: "input" },
+      { name: "Attendance", href: "/hr/attendance", type: "action" },
+      { name: "Payroll", href: "/hr/payroll", type: "history" },
     ]
   },
   {
@@ -224,7 +215,7 @@ const TIER_STRUCTURE = [
   },
   {
     tier: "OPERATIONAL EXCELLENCE",
-    groups: ["FINANCE", "SUPPLY CHAIN (SCM)", "PRODUCTION Ops", "QUALITY CONTROL", "WAREHOUSE Ops", "RESEARCH & DEV"]
+    groups: ["FINANCE", "SUPPLY CHAIN", "PRODUCTION", "QUALITY CONTROL", "GUDANG", "RESEARCH & DEV"]
   },
   {
     tier: "STRATEGIC SUPPORT",
