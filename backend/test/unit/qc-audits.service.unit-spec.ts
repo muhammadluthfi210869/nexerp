@@ -65,18 +65,17 @@ describe('QCAuditsService — Unit', () => {
       const dto = {
         stepLogId: 'step-1',
         status: 'GOOD' as any,
-        phase: 'MIXING',
-        notes: 'All parameters in spec',
-        ph: 6.0,
-      };
+        phase: 'MIXING' as any,
+        notes: 'All parameters within spec',
+        ph: 6.5,
+      } as any;
 
       mockTx.productionStepLog.findUnique.mockResolvedValue({
         id: 'step-1',
-        inputQty: 1000,
-        qtyResult: 950,
-        wo: { formulaId: 'f-1' },
+        inputQty: 500,
+        qtyResult: 500,
+        wo: { formulaId: null },
       });
-      mockPrisma.qCParameter.findUnique.mockResolvedValue(null);
       mockTx.qCAudit.create.mockResolvedValue({
         id: 'audit-1',
         status: 'GOOD',
@@ -99,12 +98,12 @@ describe('QCAuditsService — Unit', () => {
       const dto = {
         stepLogId: 'step-2',
         status: 'REJECT' as any,
-        phase: 'FILLING',
+        phase: 'FILLING' as any,
         notes: 'pH out of range',
         defectType: 'pH_OUT_OF_SPEC',
         severity: 'MAJOR',
         disposition: 'REWORK',
-      };
+      } as any;
 
       mockTx.productionStepLog.findUnique.mockResolvedValue({
         id: 'step-2',
