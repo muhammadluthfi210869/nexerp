@@ -3,61 +3,40 @@ import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Injectable()
 export class QCChecklistsService {
-  private checklists: Array<{
-    id: string;
-    title: string;
-    workOrderId?: string;
-    createdById: string;
-    status: string;
-    items: { id: string; label: string; isRequired: boolean; checked: boolean }[];
-    completedItems: string[];
-    notes?: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }> = [];
-  private counter = 0;
-
   constructor(private prisma: PrismaService) {}
 
-  private generateId(): string {
-    this.counter++;
-    return `QCL-${Date.now()}-${this.counter}`;
-  }
-
   async findAll(status?: string) {
-    let results = this.checklists;
-    if (status) {
-      results = results.filter((c) => c.status === status);
-    }
-    return results.map((c) => ({
-      ...c,
-      progress:
-        c.items.length > 0
-          ? Math.round((c.completedItems.length / c.items.length) * 100)
-          : 0,
-    }));
+    const where = status ? { status } : {};
+    const checklists = await this.prisma.qCChecklist.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { creator: { select: { id: true, fullName: true } } },
+    });
+    return checklists.map((c) => {
+      const items = (c.items as any[]) || [];
+      const completed = (c.completedItems as string[]) || [];
+      return {
+        ...c,
+        progress: items.length > 0 ? Math.round((completed.length / items.length) * 100) : 0,
+      };
+    });
   }
 
   async findCompleted() {
-    return this.checklists
-      .filter((c) => c.status === 'COMPLETED')
-      .map((c) => ({
-        ...c,
-        progress: 100,
-      }));
+    return this.findAll('COMPLETED');
   }
 
   async findOne(id: string) {
-    const checklist = this.checklists.find((c) => c.id === id);
+    const checklist = await this.prisma.qCChecklist.findUnique({
+      where: { id },
+      include: { creator: { select: { id: true, fullName: true } } },
+    });
     if (!checklist) throw new NotFoundException('Checklist not found');
+    const items = (checklist.items as any[]) || [];
+    const completed = (checklist.completedItems as string[]) || [];
     return {
       ...checklist,
-      progress:
-        checklist.items.length > 0
-          ? Math.round(
-              (checklist.completedItems.length / checklist.items.length) * 100,
-            )
-          : 0,
+      progress: items.length > 0 ? Math.round((completed.length / items.length) * 100) : 0,
     };
   }
 
@@ -69,25 +48,23 @@ export class QCChecklistsService {
       items: { label: string; isRequired?: boolean }[];
     },
   ) {
-    const checklist = {
-      id: this.generateId(),
-      title: dto.title,
-      workOrderId: dto.workOrderId,
-      createdById: userId,
-      status: 'PENDING',
-      items: dto.items.map((item, idx) => ({
-        id: `ITEM-${idx + 1}`,
-        label: item.label,
-        isRequired: item.isRequired ?? false,
-        checked: false,
-      })),
-      completedItems: [] as string[],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const items = dto.items.map((item, idx) => ({
+      id: `ITEM-${idx + 1}`,
+      label: item.label,
+      isRequired: item.isRequired ?? false,
+      checked: false,
+    }));
 
-    this.checklists.push(checklist);
-    return checklist;
+    return this.prisma.qCChecklist.create({
+      data: {
+        title: dto.title,
+        workOrderId: dto.workOrderId,
+        createdById: userId,
+        status: 'PENDING',
+        items,
+        completedItems: [],
+      },
+    });
   }
 
   async update(
@@ -98,24 +75,26 @@ export class QCChecklistsService {
       notes?: string;
     },
   ) {
-    const idx = this.checklists.findIndex((c) => c.id === id);
-    if (idx === -1) throw new NotFoundException('Checklist not found');
+    const existing = await this.prisma.qCChecklist.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Checklist not found');
 
-    const checklist = this.checklists[idx];
-    if (dto.status) checklist.status = dto.status;
-    if (dto.completedItems) checklist.completedItems = dto.completedItems;
-    if (dto.notes) checklist.notes = dto.notes;
-    checklist.updatedAt = new Date();
+    const data: any = { ...dto };
 
     // Auto-complete if all required items are checked
-    const requiredItems = checklist.items.filter((i) => i.isRequired);
-    const allRequiredChecked = requiredItems.every((i) =>
-      checklist.completedItems.includes(i.id),
-    );
-    if (allRequiredChecked && requiredItems.length > 0) {
-      checklist.status = 'COMPLETED';
+    if (dto.completedItems) {
+      const items = (existing.items as any[]) || [];
+      const requiredItems = items.filter((i: any) => i.isRequired);
+      const allRequiredChecked = requiredItems.every((i: any) =>
+        dto.completedItems!.includes(i.id),
+      );
+      if (allRequiredChecked && requiredItems.length > 0) {
+        data.status = 'COMPLETED';
+      }
     }
 
-    return checklist;
+    return this.prisma.qCChecklist.update({
+      where: { id },
+      data,
+    });
   }
 }

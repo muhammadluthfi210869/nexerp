@@ -224,6 +224,11 @@ export class ProductionController {
     return this.productionService.getBatchRecords();
   }
 
+  @Get('batch-records/:batchNo/detail')
+  async getBatchRecordDetail(@Param('batchNo') batchNo: string) {
+    return this.productionService.getBatchRecordDetail(batchNo);
+  }
+
   @Post('qc/verify')
   async verifyQC(@Body() dto: any, @Request() req: any) {
     return this.productionService.verifyStageQC(req.user.id, dto);

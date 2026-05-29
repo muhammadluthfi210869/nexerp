@@ -1931,6 +1931,30 @@ export class ProductionService {
 
   // === PHASE 3: Batch Records ===
 
+  async getBatchRecordDetail(batchNo: string) {
+    const plan = await this.prisma.productionPlan.findFirst({
+      where: { batchNo },
+      include: {
+        so: { include: { lead: true } },
+        workOrders: {
+          include: {
+            schedules: {
+              include: {
+                stepDetails: { include: { material: true } },
+                machine: true,
+              },
+            },
+            logs: { orderBy: { loggedAt: 'desc' } },
+            requisitions: { include: { material: true } },
+          },
+        },
+        logs: { orderBy: { loggedAt: 'desc' } },
+      },
+    });
+    if (!plan) throw new NotFoundException(`Batch record ${batchNo} not found`);
+    return plan;
+  }
+
   async getBatchRecords() {
     const plans = await this.prisma.productionPlan.findMany({
       include: {

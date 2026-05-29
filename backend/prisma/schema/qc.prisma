@@ -1,0 +1,141 @@
+/// QC Audit Record — setiap inspeksi di setiap fase
+model QCAudit {
+  id            String             @id @default(uuid()) @db.Uuid
+  stepLogId     String?            @db.Uuid
+  inventoryId   String?            @db.Uuid
+  inboundItemId String?            @db.Uuid
+  qcId          String             @db.Uuid
+  status        QCStatus
+  phase         QcInspectionPhase?
+
+  // --- Parameter Hasil Ukur ---
+  phValue        Decimal? @db.Decimal(5, 2)
+  viscosityValue Int?
+  organoleptic   Boolean?
+  samplingVolume Decimal? @db.Decimal(10, 2)
+  inkjetCheck    Boolean?
+  sealingCheck   Boolean?
+  labelingCheck  Boolean?
+  expDateCheck   Boolean?
+  halalStatus    Boolean?
+  densityValue   Decimal? @db.Decimal(10, 4)
+  homogenityPass Boolean?
+  torqueValue    Int?
+  leakTestPass   Boolean?
+  dimensionCheck Boolean?
+  coaVerified    Boolean?
+
+  // --- Detail Reject / Defect ---
+  defectCategory   QcDefectCategory?
+  defectType       String?
+  defectLocation   String?
+  defectCause      String?
+  severity         QcSeverity?
+  disposition      QcDisposition?
+  rootCause        String?
+  correctiveAction String?
+  materialBatchNo  String?
+  supplierId       String?           @db.Uuid
+
+  // --- Metadata ---
+  notes          String?
+  supervisorPin  String?
+  supervisorById String?  @db.Uuid
+  bypassReason   String?
+  createdAt      DateTime @default(now())
+
+  // --- Relations ---
+  qc      User               @relation("QCOfficer", fields: [qcId], references: [id])
+  stepLog ProductionStepLog? @relation(fields: [stepLogId], references: [id])
+  kpiLogs KpiPointLog[]
+
+  @@index([stepLogId, status])
+  @@index([phase])
+  @@index([createdAt])
+  @@index([supplierId])
+  @@index([defectCategory])
+  @@map("qc_audits")
+}
+
+/// QC Threshold Reference — target parameter dari R&D, digunakan untuk validasi otomatis
+model QCParameter {
+  id              String  @id @default(uuid()) @db.Uuid
+  formulaId       String  @unique @db.Uuid
+  targetPh        String?
+  targetViscosity String?
+  targetColor     String?
+  targetAroma     String?
+  appearance      String?
+  formula         Formula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+
+  @@map("qc_parameters")
+}
+
+/// Reject Execution — pencatatan eksekusi barang reject (rework/scrap/dll) linkage ke finance
+model RejectExecution {
+  id            String         @id @default(uuid()) @db.Uuid
+  planId        String         @db.Uuid
+  materialId    String?        @db.Uuid
+  qty           Decimal        @db.Decimal(15, 3)
+  action        String
+  lossAccountId String?        @db.Uuid
+  evidenceUrl   String?
+  executedAt    DateTime       @default(now())
+  lossAccount   Account?       @relation("LossAccount", fields: [lossAccountId], references: [id])
+  material      MaterialItem?  @relation(fields: [materialId], references: [id])
+  plan          ProductionPlan @relation(fields: [planId], references: [id])
+
+  @@map("reject_executions")
+}
+
+model QCChecklist {
+  id            String   @id @default(uuid()) @db.Uuid
+  title         String
+  workOrderId   String?  @db.Uuid
+  createdById   String   @db.Uuid
+  status        String   @default("PENDING")
+  items         Json     @default("[]")
+  completedItems Json    @default("[]")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  creator User @relation(fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([createdById])
+  @@map("qc_checklists")
+}
+
+/// COPQ Record — Cost of Poor Quality per batch
+model COPQRecord {
+  id             String         @id @default(uuid()) @db.Uuid
+  planId         String         @db.Uuid
+  qcAuditId      String?        @db.Uuid
+  materialLoss   Decimal        @db.Decimal(15, 2)
+  laborLoss      Decimal        @db.Decimal(15, 2)
+  overheadLoss   Decimal        @db.Decimal(15, 2)
+  totalLoss      Decimal        @db.Decimal(15, 2)
+  reason         String?
+  journalEntryId String?        @db.Uuid
+  createdAt      DateTime       @default(now())
+  plan           ProductionPlan @relation(fields: [planId], references: [id])
+  journalEntry   JournalEntry?  @relation(fields: [journalEntryId], references: [id])
+
+  @@map("copq_records")
+}
+
+/// Audit Escalation — trigger untuk eskalasi kritikal ke direktur
+model AuditEscalation {
+  id           String          @id @default(uuid()) @db.Uuid
+  type         EscalationType
+  referenceId  String
+  planId       String?         @db.Uuid
+  reason       String
+  approvedById String          @db.Uuid
+  createdAt    DateTime        @default(now())
+  approvedBy   User            @relation("EscalationApprover", fields: [approvedById], references: [id])
+  plan         ProductionPlan? @relation(fields: [planId], references: [id])
+
+  @@map("audit_escalations")
+}

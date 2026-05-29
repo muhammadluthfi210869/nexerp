@@ -5,13 +5,17 @@ import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
 import { UserRole, User } from '@prisma/client';
 import { QCAuditsService } from '../services/qc-audits.service';
+import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @ApiTags('qc')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('qc')
 export class QcController {
-  constructor(private readonly qcService: QCAuditsService) {}
+  constructor(
+    private readonly qcService: QCAuditsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Get('dashboard')
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
@@ -46,5 +50,26 @@ export class QcController {
       status: (statusMap[dto.status?.toUpperCase()] || dto.status) as any,
       notes: dto.notes,
     });
+  }
+
+  @Get('report')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Get QC audit report' })
+  async getReport() {
+    const audits = await this.prisma.qcAudit.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return audits;
+  }
+
+  @Get('analytics/reject-analysis')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Get reject analysis' })
+  async getRejectAnalysis() {
+    const rejects = await this.prisma.qcAudit.findMany({
+      where: { status: 'REJECT' },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rejects;
   }
 }
