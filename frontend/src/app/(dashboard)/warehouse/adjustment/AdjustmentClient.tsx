@@ -74,13 +74,6 @@ export default function AdjustmentClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-      setIsNewAdjOpen(false);
-      setFormMaterialId("");
-      setFormType("");
-      setFormQty("");
-      setFormWarehouseId("");
-      setFormAccountId("");
-      setFormNotes("");
       toast.success("Adjustment submitted successfully");
     },
     onError: (err: any) => {
@@ -116,9 +109,9 @@ export default function AdjustmentClient() {
     <div className="flex flex-col gap-[2rem]">
       {/* 1. KPI CARDS */}
       <div className="grid grid-cols-3 gap-6">
-        <StatCard value={adjustments.length} label="Total Adjustment" change={`${adjustments.length} entries`} variant="neutral" />
-        <StatCard value={pendingCount} label="Pending Appr" variant="warning" />
-        <StatCard value={completedCount} label="Completed" variant="success" />
+        <StatCard value={adjustments.length} label="Total Adjustment" subValue={`${adjustments.length} entries`} />
+        <StatCard value={pendingCount} label="Pending Appr" className="[&_h3]:text-amber-600" />
+        <StatCard value={completedCount} label="Completed" className="[&_h3]:text-emerald-600" />
       </div>
 
       {/* 2. FILTER BAR */}
@@ -190,7 +183,7 @@ export default function AdjustmentClient() {
                 </td>
                 <td className="px-6 py-4 text-center">
                   <DnaBadge
-                    variant={adj.status === 'APPROVED' ? 'success' : adj.status === 'REJECTED' ? 'critical' : 'warning'}
+                    status={adj.status === 'APPROVED' ? 'success' : adj.status === 'REJECTED' ? 'critical' : 'warning'}
                   >
                     {adj.status}
                   </DnaBadge>
