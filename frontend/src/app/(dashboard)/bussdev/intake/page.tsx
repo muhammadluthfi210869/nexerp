@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DnaInput, DnaButton } from "@/components/dna";
+import { DnaInput, DnaButton, SectionLabel, DnaBadge } from "@/components/dna";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -116,16 +116,16 @@ export default function LeadIntakePage() {
       titleAccent="Intake"
       subtitle="Prospect Registration & Workload Assignment Protocol"
       actions={
-        <span className="bg-white border border-slate-200 text-slate-500 font-black uppercase py-1.5 px-4 rounded-lg text-[10px]">
+        <DnaBadge status="default" className="bg-white border-slate-200 text-slate-500">
           Lead Registration
-        </span>
+        </DnaBadge>
       }
       sidebar={
         <div className="animate-fade-slide-in space-y-6">
           <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-6">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <SectionLabel as="h3" className="flex items-center gap-2 text-slate-400">
               <Shield size={12} className="text-blue-500" /> Internal Logistics
-            </h3>
+            </SectionLabel>
 
             <div className="space-y-3">
               <Label className="text-[10px] font-black text-slate-400 uppercase">Assignment</Label>
