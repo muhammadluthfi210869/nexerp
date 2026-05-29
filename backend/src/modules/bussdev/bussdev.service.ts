@@ -420,11 +420,17 @@ export class BussdevService {
           orderBy: { createdAt: 'desc' },
         });
 
+        if (!approvedSample) {
+          throw new BadRequestException(
+            'VALIDATION_ERROR: Tidak ada sample yang sudah APPROVED untuk lead ini. Selesaikan tahap sample terlebih dahulu.',
+          );
+        }
+
         await tx.salesOrder.create({
           data: {
             orderNumber: orderId,
             leadId: leadId,
-            sampleId: approvedSample?.id || '',
+            sampleId: approvedSample.id,
             totalAmount:
               dto.planOmset ||
               currentLead.planOmset ||

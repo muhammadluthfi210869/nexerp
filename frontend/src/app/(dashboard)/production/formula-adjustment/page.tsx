@@ -100,14 +100,25 @@ export default function FormulaAdjustmentPage() {
     queryKey: ["formula-adjustments"],
     queryFn: async () => {
       const res = await api.get("/production/formula-adjustments");
-      return res.data || [];
+      const raw = res.data || [];
+      return raw.map((a: any) => ({
+        id: a.id,
+        code: a.id?.substring(0, 8)?.toUpperCase() || 'ADJ-001',
+        date: a.createdAt || new Date().toISOString(),
+        batchRecord: a.entityId || 'N/A',
+        product: a.reason || 'N/A',
+        adjustmentType: a.changes?.adjustmentType || a.metadata?.adjustmentType || 'Penyesuaian',
+        reason: a.reason || '',
+        quantityChange: a.changes?.quantityChange || a.metadata?.quantityChange || 0,
+        status: a.status || 'PENDING',
+      }));
     },
   });
 
   const { data: batchRecords } = useQuery<BatchRecord[]>({
     queryKey: ["production-batch-records-list"],
     queryFn: async () => {
-      const res = await api.get("/production-plans");
+      const res = await api.get("/production/batch-records");
       return (res.data || []).map((b: any) => ({
         batchNo: b.batchNo || b.code || b.id,
         productInterest: b.lead?.productInterest || b.product || "Unknown",
@@ -130,7 +141,16 @@ export default function FormulaAdjustmentPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return api.post("/production/formula-adjustments", data);
+      return api.post("/production/formula-adjustments", {
+        formulaId: data.formulaId,
+        requestedBy: data.requestedBy,
+        reason: data.reason,
+        changes: {
+          batchRecord: data.batchRecord,
+          adjustmentType: data.adjustmentType,
+          quantityChange: data.quantityChange,
+        },
+      });
     },
     onSuccess: () => {
       toast.success("Penyesuaian formulasi berhasil dibuat");
@@ -161,12 +181,14 @@ export default function FormulaAdjustmentPage() {
 
   const confirmSubmit = () => {
     setShowConfirm(false);
+    const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}") : {};
     createMutation.mutate({
       batchRecord: formBatch,
       formulaId: formFormula,
       adjustmentType: formType,
       quantityChange: Number(formQtyChange) || 0,
       reason: formReason,
+      requestedBy: user.id || user.email || 'SYSTEM',
     });
   };
 
