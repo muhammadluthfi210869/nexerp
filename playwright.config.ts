@@ -65,6 +65,20 @@ export default defineConfig({
       },
     },
     {
+      name: 'error-paths',
+      testMatch: '**/error-paths.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
+    },
+    {
+      name: 'edge-cases',
+      testMatch: '**/edge-cases.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
+    },
+    {
       name: 'all-e2e',
       testMatch: '**/*.spec.ts',
       use: {
