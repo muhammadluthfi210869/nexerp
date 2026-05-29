@@ -12,6 +12,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-erp_user} -d ${DB_NAME:-erp_database}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -26,24 +31,37 @@ services:
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:3001/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://nexerp.id/api
+        NEXT_PUBLIC_API_URL: https://${DOMAIN_NAME}/api
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: https://nexerp.id/api
+      NEXT_PUBLIC_API_URL: https://${DOMAIN_NAME}/api
       NODE_ENV: production
     depends_on:
       - backend
     networks:
       - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:3000 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   nginx:
     image: nginx:alpine
@@ -62,6 +80,12 @@ services:
       - backend
     networks:
       - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost/ 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   certbot:
     image: certbot/certbot

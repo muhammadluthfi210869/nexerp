@@ -21,13 +21,15 @@ WORKDIR /app
 
 # Copy built assets and necessary files
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY init-db.sh ./
 RUN chmod +x init-db.sh
+
+# Install production dependencies only
+RUN npm ci --omit=dev && npm cache clean --force
 
 EXPOSE 3001
 

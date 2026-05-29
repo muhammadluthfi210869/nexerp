@@ -18,13 +18,30 @@ if [ $PUSH_EXIT -ne 0 ]; then
   echo "Retry exit code: $?"
 fi
 
+# Check if database already has data (production guard)
+USER_COUNT=$(node -e "
+const { PrismaClient } = require('@prisma/client');
+async function check() {
+  const prisma = new PrismaClient();
+  try {
+    const count = await prisma.user.count();
+    console.log(count);
+  } finally {
+    await prisma.\$disconnect();
+  }
+}
+check().catch(() => console.log('0'));
+" 2>/dev/null || echo "0")
+
 echo "=== Step 2: Seeding ==="
-if [ -f "dist/prisma/seed.js" ]; then
+if [ "$USER_COUNT" -gt 0 ]; then
+  echo "Data already exists ($USER_COUNT users), skipping seed."
+elif [ -f "dist/prisma/seed.js" ]; then
   echo "Running compiled seed (dist/prisma/seed.js)..."
-  node dist/prisma/seed.js 2>&1 || echo "Seed failed (may already exist)"
+  node dist/prisma/seed.js 2>&1 || echo "Seed failed"
 else
   echo "Running prisma db seed..."
-  npx prisma db seed 2>&1 || echo "Seed failed (may already exist)"
+  npx prisma db seed 2>&1 || echo "Seed failed"
 fi
 
 echo "=== Step 3: Starting NestJS ==="

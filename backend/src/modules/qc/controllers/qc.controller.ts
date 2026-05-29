@@ -56,7 +56,7 @@ export class QcController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Get QC audit report' })
   async getReport() {
-    const audits = await this.prisma.qcAudit.findMany({
+    const audits = await this.prisma.qCAudit.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return audits;
@@ -66,7 +66,7 @@ export class QcController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Get reject analysis' })
   async getRejectAnalysis() {
-    const rejects = await this.prisma.qcAudit.findMany({
+    const rejects = await this.prisma.qCAudit.findMany({
       where: { status: 'REJECT' },
       orderBy: { createdAt: 'desc' },
     });

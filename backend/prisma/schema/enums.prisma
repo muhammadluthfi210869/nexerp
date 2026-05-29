@@ -595,6 +595,13 @@ enum AttendanceStatus {
   OUTSIDE_GEOFENCE
 }
 
+enum HppStatus {
+  DRAFT
+  CALCULATED
+  APPROVED
+  REJECTED
+}
+
 enum MaterialStatus {
   DRAFT
   ACTIVE
