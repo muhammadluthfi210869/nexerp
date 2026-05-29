@@ -79,6 +79,20 @@ export default defineConfig({
       },
     },
     {
+      name: 'performance-pages',
+      testMatch: '**/performance-pages.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3000',
+      },
+    },
+    {
+      name: 'performance-api',
+      testMatch: '**/performance-api.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
+    },
+    {
       name: 'all-e2e',
       testMatch: '**/*.spec.ts',
       use: {
