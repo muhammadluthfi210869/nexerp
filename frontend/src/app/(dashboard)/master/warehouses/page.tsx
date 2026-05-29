@@ -35,6 +35,10 @@ type Warehouse = {
   name: string;
   pic_name: string;
   description: string;
+  phone: string;
+  province: string;
+  city: string;
+  address: string;
   status: "ACTIVE" | "INACTIVE";
   _count: {
     locations: number;
@@ -52,6 +56,10 @@ export default function MasterWarehousesPage() {
     name: "",
     pic_name: "",
     description: "",
+    phone: "",
+    province: "",
+    city: "",
+    address: "",
   });
 
   const fetchWarehouses = async () => {
@@ -87,7 +95,7 @@ export default function MasterWarehousesPage() {
       }
       setIsModalOpen(false);
       setEditingWarehouse(null);
-      setFormData({ name: "", pic_name: "", description: "" });
+      setFormData({ name: "", pic_name: "", description: "", phone: "", province: "", city: "", address: "" });
       fetchWarehouses();
     } catch (err) {
       toast.error("Failed to save warehouse");
@@ -100,6 +108,10 @@ export default function MasterWarehousesPage() {
       name: warehouse.name,
       pic_name: warehouse.pic_name || "",
       description: warehouse.description || "",
+      phone: warehouse.phone || "",
+      province: warehouse.province || "",
+      city: warehouse.city || "",
+      address: warehouse.address || "",
     });
     setIsModalOpen(true);
   };
@@ -128,7 +140,10 @@ export default function MasterWarehousesPage() {
 
   const filteredWarehouses = warehouses.filter(w =>
     w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    w.pic_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    w.pic_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    w.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    w.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    w.address?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const activeCount = warehouses.filter(w => w.status === "ACTIVE").length;
@@ -146,7 +161,7 @@ export default function MasterWarehousesPage() {
           icon={<Plus />}
           onClick={() => {
             setEditingWarehouse(null);
-            setFormData({ name: "", pic_name: "", description: "" });
+            setFormData({ name: "", pic_name: "", description: "", phone: "", province: "", city: "", address: "" });
             setIsModalOpen(true);
           }}
         >
@@ -206,6 +221,13 @@ export default function MasterWarehousesPage() {
                 <p className="mt-4 text-[11px] font-bold text-slate-400 leading-relaxed line-clamp-2">
                   {warehouse.description || "Establish storage protocols and safety measures for this warehouse."}
                 </p>
+
+                {(warehouse.phone || warehouse.province || warehouse.city || warehouse.address) && (
+                  <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-bold text-slate-500">
+                    {warehouse.phone && <span>📞 {warehouse.phone}</span>}
+                    {warehouse.city && <span>📍 {[warehouse.city, warehouse.province].filter(Boolean).join(", ")}</span>}
+                  </div>
+                )}
 
                 <div className="mt-6 flex items-center gap-6 border-t border-slate-100 pt-5">
                   <div className="flex items-center gap-3">
@@ -281,6 +303,84 @@ export default function MasterWarehousesPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
               />
+            </div>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-4">Contact & Location</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone</label>
+                  <input
+                    placeholder="021-12345678"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Province</label>
+                  <select
+                    value={formData.province}
+                    onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                    className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                  >
+                    <option value="">Select Province</option>
+                    <option value="Aceh">Aceh</option>
+                    <option value="Sumatera Utara">Sumatera Utara</option>
+                    <option value="Sumatera Barat">Sumatera Barat</option>
+                    <option value="Riau">Riau</option>
+                    <option value="Jambi">Jambi</option>
+                    <option value="Sumatera Selatan">Sumatera Selatan</option>
+                    <option value="Bengkulu">Bengkulu</option>
+                    <option value="Lampung">Lampung</option>
+                    <option value="Kepulauan Bangka Belitung">Kepulauan Bangka Belitung</option>
+                    <option value="Kepulauan Riau">Kepulauan Riau</option>
+                    <option value="DKI Jakarta">DKI Jakarta</option>
+                    <option value="Jawa Barat">Jawa Barat</option>
+                    <option value="Jawa Tengah">Jawa Tengah</option>
+                    <option value="DI Yogyakarta">DI Yogyakarta</option>
+                    <option value="Jawa Timur">Jawa Timur</option>
+                    <option value="Banten">Banten</option>
+                    <option value="Bali">Bali</option>
+                    <option value="Nusa Tenggara Barat">Nusa Tenggara Barat</option>
+                    <option value="Nusa Tenggara Timur">Nusa Tenggara Timur</option>
+                    <option value="Kalimantan Barat">Kalimantan Barat</option>
+                    <option value="Kalimantan Tengah">Kalimantan Tengah</option>
+                    <option value="Kalimantan Selatan">Kalimantan Selatan</option>
+                    <option value="Kalimantan Timur">Kalimantan Timur</option>
+                    <option value="Kalimantan Utara">Kalimantan Utara</option>
+                    <option value="Sulawesi Utara">Sulawesi Utara</option>
+                    <option value="Sulawesi Tengah">Sulawesi Tengah</option>
+                    <option value="Sulawesi Selatan">Sulawesi Selatan</option>
+                    <option value="Sulawesi Tenggara">Sulawesi Tenggara</option>
+                    <option value="Gorontalo">Gorontalo</option>
+                    <option value="Sulawesi Barat">Sulawesi Barat</option>
+                    <option value="Maluku">Maluku</option>
+                    <option value="Maluku Utara">Maluku Utara</option>
+                    <option value="Papua">Papua</option>
+                    <option value="Papua Barat">Papua Barat</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">City</label>
+                  <input
+                    placeholder="e.g. Jakarta Selatan"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Address</label>
+                  <input
+                    placeholder="Jl. Contoh No. 123"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter className="pt-4 gap-3">
               <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</DnaButton>

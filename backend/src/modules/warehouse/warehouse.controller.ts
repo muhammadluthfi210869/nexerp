@@ -1,11 +1,25 @@
-import { Controller, Post, Param, Get, Body, UseGuards, Patch, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Get,
+  Body,
+  UseGuards,
+  Patch,
+  Request,
+  Query,
+} from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { RequisitionService } from './services/requisition.service';
-import { CreateRequisitionDto, UpdateRequisitionStatusDto } from './dto/requisition.dto';
+import { StockIntelligenceService } from './services/stock-intelligence.service';
+import {
+  CreateRequisitionDto,
+  UpdateRequisitionStatusDto,
+} from './dto/requisition.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('warehouse')
@@ -13,6 +27,7 @@ export class WarehouseController {
   constructor(
     private readonly warehouseService: WarehouseService,
     private readonly requisitionService: RequisitionService,
+    private readonly stockIntel: StockIntelligenceService,
   ) {}
 
   @Get('stats')
@@ -34,8 +49,14 @@ export class WarehouseController {
     UserRole.PURCHASING,
     UserRole.PRODUCTION,
   )
-  async getCatalog() {
-    return this.warehouseService.getCatalog();
+  async getCatalog(@Query('warehouseId') warehouseId?: string) {
+    return this.warehouseService.getCatalog(warehouseId);
+  }
+
+  @Get('warehouses')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getWarehouses() {
+    return this.warehouseService.getActiveWarehouses();
   }
 
   @Get('history/:materialId')
@@ -174,6 +195,55 @@ export class WarehouseController {
   @Get('release-requests')
   async getReleaseRequests() {
     return this.warehouseService.getReleaseRequests();
+  }
+
+  // === QUARANTINE RELEASE ===
+
+  @Post('inbounds/:id/release')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.QC_LAB)
+  async releaseFromQuarantine(
+    @Param('id') id: string,
+    @Body() body: { performedBy?: string },
+  ) {
+    return this.warehouseService.releaseFromQuarantine(id, body.performedBy);
+  }
+
+  // === STOCK INTELLIGENCE ===
+
+  @Get('stock-intelligence/abc')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.DIRECTOR)
+  async getABCAnalysis() {
+    return this.stockIntel.getABCAnalysis();
+  }
+
+  @Get('stock-intelligence/dead-stock')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getDeadStock() {
+    return this.stockIntel.getDeadStockItems();
+  }
+
+  @Get('stock-intelligence/fast-movers')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getFastMovers(@Query('limit') limit?: string) {
+    return this.stockIntel.getFastMovers(limit ? Number(limit) : 10);
+  }
+
+  @Get('stock-intelligence/slow-movers')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getSlowMovers(@Query('days') days?: string) {
+    return this.stockIntel.getSlowMovers(days ? Number(days) : 60);
+  }
+
+  @Get('stock-intelligence/reorder-suggestions')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PURCHASING)
+  async getReorderSuggestions() {
+    return this.stockIntel.getReorderSuggestions();
+  }
+
+  @Get('stock-intelligence/critical')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PURCHASING)
+  async getCriticalItems() {
+    return this.stockIntel.getCriticalStockItems();
   }
 
   // === REQUISITIONS (Permintaan Barang) ===

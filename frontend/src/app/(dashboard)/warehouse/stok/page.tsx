@@ -34,15 +34,32 @@ import {
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function StokPage() {
   const [tab, setTab] = useState("stok");
+  const [warehouseFilter, setWarehouseFilter] = useState("ALL");
 
   const { data: catalog, isLoading: catalogLoading } = useQuery({
-    queryKey: ["warehouse-catalog-stok"],
+    queryKey: ["warehouse-catalog-stok", warehouseFilter],
     queryFn: async () => {
-      const res = await api.get("/warehouse/catalog");
+      const params = warehouseFilter !== "ALL" ? { warehouseId: warehouseFilter } : {};
+      const res = await api.get("/warehouse/catalog", { params });
       return res.data;
+    },
+  });
+
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ["warehouse-list-active"],
+    queryFn: async () => {
+      const res = await api.get("/warehouse/warehouses");
+      return res.data || [];
     },
   });
 
@@ -94,6 +111,21 @@ export default function StokPage() {
             <StatCard label="Stok Kritis" value={criticalItems} subValue="Below Min Level" icon={<AlertTriangle />} />
             <StatCard label="Unique Categories" value={String(new Set(catalog?.map((i: any) => i.category?.name).filter(Boolean)).size || 0)} subValue="Material Types" icon={<Package />} />
           </div>
+
+          <Card className="bg-white border-slate-200 p-4 rounded-[1.5rem] mb-6 flex gap-4 items-center shadow-sm">
+            <Warehouse className="w-4 h-4 text-slate-400" />
+            <Select value={warehouseFilter} onValueChange={(v) => v && setWarehouseFilter(v)}>
+              <SelectTrigger className="w-64 bg-slate-50 border-slate-200 rounded-xl h-[46px] text-[10px] font-black uppercase italic tracking-widest">
+                <SelectValue placeholder="Semua Gudang" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-slate-200 text-slate-900">
+                <SelectItem value="ALL">Semua Gudang</SelectItem>
+                {(warehouses as any[])?.map((wh: any) => (
+                  <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Card>
 
           <TableWrapper>
             <div className="overflow-x-auto">

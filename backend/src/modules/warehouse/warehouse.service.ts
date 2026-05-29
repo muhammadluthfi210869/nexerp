@@ -2,16 +2,14 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ScmService } from '../scm/services/scm.service';
 import { LifecycleStatus } from '@prisma/client';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { StockLedgerService } from './services/stock-ledger.service';
-
 import { IdGeneratorService } from '../system/id-generator.service';
 
 @Injectable()
@@ -38,11 +36,6 @@ export class WarehouseService {
     scheduleId: string;
     materialsConsumed: { materialId: string; qty: number }[];
   }) {
-    console.log(
-      `[COMM_PROT] Warehouse RECEIVED event for Schedule ${payload.scheduleId}`,
-    );
-    console.log(`[COMM_PROT] Payload: ${JSON.stringify(payload)}`);
-
     const schedule = await this.prisma.productionSchedule.findUnique({
       where: { id: payload.scheduleId },
     });
@@ -50,48 +43,56 @@ export class WarehouseService {
 
     await this.prisma.$transaction(async (tx) => {
       for (const item of payload.materialsConsumed) {
-        // Find suitable batch (FIFO)
-        const batch = await tx.materialInventory.findFirst({
+        let remainingQty = Number(item.qty);
+        const batches = await tx.materialInventory.findMany({
           where: {
             materialId: item.materialId,
             currentStock: { gt: 0 },
             qcStatus: 'GOOD',
           },
-          orderBy: { receivingDate: 'asc' },
+          orderBy: [{ expDate: 'asc' }, { receivingDate: 'asc' }],
         });
 
-        /* 
-        // Phase 4: Removed double-deduction. Handover already handled this.
-        // If back-flushing is needed, ensure releaseMaterial is not called.
-        if (batch) {
-          await this.stockLedger.recordMovement(tx, {
-            materialId: item.materialId,
-            inventoryId: batch.id,
-            type: 'OUTBOUND',
-            quantity: item.qty,
-            referenceNo: schedule.scheduleNumber,
-            notes: `Auto-deduction for Schedule ${schedule.scheduleNumber} (COMM_PROT)`,
+        for (const batch of batches) {
+          if (remainingQty <= 0) break;
+          const deductQty = Math.min(remainingQty, Number(batch.currentStock));
+          await tx.materialInventory.update({
+            where: { id: batch.id },
+            data: { currentStock: { decrement: deductQty } },
           });
+          await tx.inventoryTransaction.create({
+            data: {
+              materialId: item.materialId,
+              inventoryId: batch.id,
+              type: 'OUTBOUND',
+              quantity: deductQty,
+              referenceNo: schedule.scheduleNumber,
+              notes: `Auto-deduction for Schedule ${schedule.scheduleNumber}`,
+              performedBy: 'SYSTEM_SCHEDULE',
+            },
+          });
+          remainingQty -= deductQty;
         }
-        */
+
+        await tx.materialItem.update({
+          where: { id: item.materialId },
+          data: { stockQty: { decrement: Number(item.qty) } },
+        });
       }
 
-      // Update Audit Ledger with state transition
       await tx.stateTransitionLog.create({
         data: {
           entityType: 'PRODUCTION_SCHEDULE',
           entityId: schedule.id,
           fromState: 'IN_PROGRESS',
           toState: 'COMPLETED',
-          reason:
-            'COMM_PROT: Automated Stock Deduction Success (SYSTEM_PROTOCOL)',
+          reason: 'COMM_PROT: Automated Stock Deduction',
         },
       });
     });
   }
 
   async getDashboardStats() {
-    // World-Class Solution: In-Memory Caching for Macro Stats
     if (
       this.statsCache &&
       Date.now() - this.statsCache.timestamp < this.CACHE_TTL
@@ -99,160 +100,305 @@ export class WarehouseService {
       return this.statsCache.data;
     }
 
-    console.time('WarehouseDashboardStats');
-    // Parallelize and use lean select/aggregations
-    const [locations, inventoryStats, criticalLevels] = await Promise.all([
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    const [
+      locations,
+      activeMaterials,
+      outboundTransactions,
+      inventoryAgg,
+      quarantineBatches,
+      totalInboundValue,
+    ] = await Promise.all([
       this.prisma.warehouseLocation.findMany({
         select: { capacity: true, currentUsage: true },
+      }),
+      this.prisma.materialItem.findMany({
+        where: { deletedAt: null, status: 'ACTIVE' },
+        select: {
+          id: true,
+          type: true,
+          stockQty: true,
+          unitPrice: true,
+          minLevel: true,
+          isCritical: true,
+          valuations: {
+            orderBy: { date: 'desc' },
+            take: 1,
+            select: { movingAveragePrice: true },
+          },
+        },
+      }),
+      this.prisma.inventoryTransaction.findMany({
+        where: { type: 'OUTBOUND', createdAt: { gte: ninetyDaysAgo } },
+        select: {
+          materialId: true,
+          quantity: true,
+          unitValueAtTransaction: true,
+        },
       }),
       this.prisma.materialInventory.aggregate({
         _avg: { auditAccuracy: true },
       }),
-      this.prisma.materialItem.count({
-        where: { isCritical: true, minLevel: { gt: 0 } },
+      this.prisma.materialInventory.findMany({
+        where: { qcStatus: 'QUARANTINE', currentStock: { gt: 0 } },
+        select: { receivingDate: true, currentStock: true },
+      }),
+      this.prisma.inventoryTransaction.aggregate({
+        where: { type: 'INBOUND', createdAt: { gte: ninetyDaysAgo } },
+        _sum: { unitValueAtTransaction: true },
       }),
     ]);
 
-    const totalCap = locations.reduce((sum, l) => sum + Number(l.capacity), 0);
-    const usedCap = locations.reduce(
-      (sum, l) => sum + Number(l.currentUsage),
+    const totalCap = locations.reduce((s, l) => s + Number(l.capacity), 0);
+    const usedCap = locations.reduce((s, l) => s + Number(l.currentUsage), 0);
+    const capacityUtility = totalCap > 0 ? (usedCap / totalCap) * 100 : 0;
+
+    // Real valuation by type
+    const valuationByType: Record<string, number> = {};
+    let totalValuation = 0;
+    let criticalCount = 0;
+    for (const m of activeMaterials) {
+      const price = Number(
+        m.valuations?.[0]?.movingAveragePrice || m.unitPrice || 0,
+      );
+      const value = Number(m.stockQty) * price;
+      const type = m.type.toLowerCase();
+      valuationByType[type] = (valuationByType[type] || 0) + value;
+      totalValuation += value;
+      if (Number(m.stockQty) < Number(m.minLevel)) criticalCount++;
+    }
+
+    // Turnover: COGS from OUTBOUND / avg inventory value
+    const totalCogs = outboundTransactions.reduce(
+      (s, t) => s + Number(t.quantity) * Number(t.unitValueAtTransaction || 0),
       0,
     );
-    const capacityUtility = totalCap > 0 ? (usedCap / totalCap) * 100 : 0;
+    const avgInventory =
+      activeMaterials.length > 0 ? totalValuation / activeMaterials.length : 1;
+    const turnoverRatio = avgInventory > 0 ? totalCogs / avgInventory : 0;
+
+    // Dead stock estimate: items with no OUTBOUND in 90 days
+    const movedMaterialIds = new Set(
+      outboundTransactions.map((t) => t.materialId),
+    );
+    const deadStockItems = activeMaterials.filter(
+      (m) => !movedMaterialIds.has(m.id),
+    );
+    const deadStockValue = deadStockItems.reduce((s, m) => {
+      const price = Number(
+        m.valuations?.[0]?.movingAveragePrice || m.unitPrice || 0,
+      );
+      return s + Number(m.stockQty) * price;
+    }, 0);
+
+    // Aging karantina
+    const avgAging =
+      quarantineBatches.length > 0
+        ? quarantineBatches.reduce((s, b) => {
+            const days = b.receivingDate
+              ? (now.getTime() - b.receivingDate.getTime()) /
+                (1000 * 60 * 60 * 24)
+              : 0;
+            return s + days;
+          }, 0) / quarantineBatches.length
+        : 0;
+
+    // Health score composite (simplified real calculation)
+    const accuracy = Number(inventoryAgg._avg.auditAccuracy || 0) / 100;
+    const turnoverHealth = Math.min(turnoverRatio / 12, 1);
+    const criticalHealth =
+      criticalCount > 0
+        ? Math.max(0, 1 - criticalCount / activeMaterials.length)
+        : 1;
+    const healthScore = Math.round(
+      (accuracy * 0.4 + turnoverHealth * 0.3 + criticalHealth * 0.3) * 100,
+    );
 
     const result = {
       capacity: {
         utility: capacityUtility.toFixed(1),
-        accuracy: inventoryStats._avg.auditAccuracy || 98.5,
-        fifoScore: 9.8,
+        accuracy: Number(inventoryAgg._avg.auditAccuracy || 0),
+        fifoScore: Math.min(10, parseFloat((accuracy * 10).toFixed(1))),
       },
       valuation: {
-        total: '12.50',
-        raw: '8.50',
-        pack: '2.50',
-        box: '1.00',
-        label: '0.50',
+        total: (totalValuation / 1e9).toFixed(2),
+        raw: ((valuationByType['raw_material'] || 0) / 1e9).toFixed(2),
+        pack: ((valuationByType['packaging'] || 0) / 1e9).toFixed(2),
+        box: ((valuationByType['box'] || 0) / 1e9).toFixed(2),
+        label: ((valuationByType['label'] || 0) / 1e9).toFixed(2),
       },
       turnover: {
-        ratio: 14.2,
-        health: 95,
+        ratio: parseFloat(turnoverRatio.toFixed(1)),
+        health: healthScore,
       },
       risk: {
-        deadStock: 142000000,
-        criticalItems: criticalLevels,
-        agingKarantina: 4.2,
+        deadStock: Math.round(deadStockValue),
+        criticalItems: criticalCount,
+        agingKarantina: parseFloat(avgAging.toFixed(1)),
       },
     };
 
-    // Update cache
     this.statsCache = { data: result, timestamp: Date.now() };
-
-    console.timeEnd('WarehouseDashboardStats');
     return result;
   }
 
   async getAuditGranular() {
-    console.time('WarehouseAuditGranular');
-    const [sensitiveMats, packMats, transactions] = await Promise.all([
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    const [
+      inbounds,
+      quarantinedBatches,
+      rawMaterials,
+      packagingItems,
+      recentTransactions,
+      outboundCount,
+      requisitionCount,
+      productionLogs,
+    ] = await Promise.all([
+      this.prisma.warehouseInbound.count({
+        where: { receivedAt: { gte: thirtyDaysAgo } },
+      }),
+      this.prisma.materialInventory.count({
+        where: { qcStatus: 'QUARANTINE', currentStock: { gt: 0 } },
+      }),
       this.prisma.materialInventory.findMany({
-        where: { material: { type: 'RAW_MATERIAL' } },
+        where: { material: { type: 'RAW_MATERIAL' }, currentStock: { gt: 0 } },
         include: {
           material: { select: { name: true, unit: true, unitPrice: true } },
         },
-        take: 5,
+        take: 10,
         orderBy: { expDate: 'asc' },
       }),
       this.prisma.materialItem.findMany({
-        where: { type: 'PACKAGING' },
+        where: { type: 'PACKAGING', deletedAt: null },
         include: { inventories: { select: { currentStock: true } } },
-        take: 5,
+        take: 10,
       }),
       this.prisma.inventoryTransaction.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: { material: { select: { name: true } } },
       }),
+      this.prisma.inventoryTransaction.count({
+        where: { type: 'OUTBOUND', createdAt: { gte: thirtyDaysAgo } },
+      }),
+      this.prisma.materialRequisition.count(),
+      this.prisma.productionLog.findMany({
+        where: { loggedAt: { gte: thirtyDaysAgo } },
+        select: {
+          goodQty: true,
+          rejectQty: true,
+          workOrder: { select: { woNumber: true } },
+        },
+        take: 50,
+      }),
     ]);
 
-    const productivity = [
-      { name: 'Budi Santoso', points: 420, batch: '14 Batch', rank: 1 },
-      { name: 'Siti Aminah', points: 380, batch: '12 Batch', rank: 2 },
-      { name: 'Agus Setiawan', points: 310, batch: '10 Batch', rank: 3 },
-    ];
-
-    const topRaw = sensitiveMats.map((m) => ({
-      name: m.material.name,
-      usage: '1,200 Kg',
-      value: ((Number(m.material.unitPrice) * 1.2) / 1000000).toFixed(1) + 'M',
+    // Top 5 Raw Materials by stock value
+    const topRaw = rawMaterials.slice(0, 5).map((inv) => ({
+      name: inv.material.name,
+      usage: `${Number(inv.currentStock).toLocaleString()} ${inv.material.unit}`,
+      value:
+        'Rp ' +
+        (
+          (Number(inv.currentStock) * Number(inv.material.unitPrice)) /
+          1e6
+        ).toFixed(1) +
+        'M',
     }));
 
-    const topPack = packMats.map((p) => ({
-      name: p.name,
-      usage: '45,000 Pcs',
-      value: '25.5M',
-    }));
+    // Packaging stock status
+    const packStocks = packagingItems.slice(0, 5).map((item) => {
+      const total = item.inventories.reduce(
+        (s, i) => s + Number(i.currentStock),
+        0,
+      );
+      return {
+        name: item.name,
+        qty: `${total.toLocaleString()} Pcs`,
+        status:
+          total < 1000 ? 'LOW_STOCK' : total < 5000 ? 'STABLE' : 'OVERSTOCK',
+      };
+    });
 
-    const result = {
-      jalurA: { inbound: 2, karantina: 0, velocity: 8.4 },
-      jalurB: { reqProd: 0, picking: 4, handover: 0, velocity: 4.2 },
-      jalurC: { orderProc: 10, shipping: 0, delivered: 0, velocity: 9.1 },
-      sensitiveMaterials: sensitiveMats.map((inv) => ({
+    // Sensitive materials with FEFO status
+    const sensitiveMats = rawMaterials.slice(0, 5).map((inv) => {
+      const expDays = inv.expDate
+        ? Math.round(
+            (inv.expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          )
+        : 999;
+      let status = 'FEFO_OK';
+      if (inv.qcStatus !== 'GOOD') status = 'NEEDS_QC';
+      else if (expDays < 30) status = 'EXPIRING_SOON';
+      else if (expDays < 90) status = 'WATCH';
+      return {
         name: inv.material.name,
         date: inv.expDate?.toLocaleDateString() || 'N/A',
-        status: inv.qcStatus === 'GOOD' ? 'FEFO_OK' : 'NEEDS_QC',
+        status,
         qty: `${inv.currentStock} ${inv.material.unit}`,
-      })),
-      packagingStocks: packMats.map((item) => {
-        const total = item.inventories.reduce(
-          (s, i) => s + Number(i.currentStock),
-          0,
-        );
-        return {
-          name: item.name,
-          qty: `${total} Pcs`,
-          status: total < 1000 ? 'LOW_STOCK' : 'STABLE',
-        };
-      }),
-      soFulfillment: [
-        {
-          client: 'PT. GlowUp',
-          so: 'SO-2026-001',
-          qty: '5,000 / 6,000 Pcs',
-          status: 'PARSIAL',
-          progress: 83,
-          var: -1000,
-        },
-        {
-          client: 'CLIENT_B',
-          so: 'SO-2026-002',
-          qty: '2000 / 2000 Pcs',
-          status: 'FULL',
-          progress: 100,
-          var: 0,
-        },
-      ],
-      riskLoss: [
-        {
-          item: 'Serum Vitamin C',
-          source: 'Batch #202',
-          detail: 'Degradasi Suhu',
-          impact: 'Rp 45M',
-          loss: '250 Unit',
-          action: 'DISPOSAL',
-        },
-        {
-          item: 'Botol PET 100ml',
-          source: 'Vendor X',
-          detail: 'Defect Cetak',
-          impact: 'Rp 12M',
-          loss: '5,000 Pcs',
-          action: 'RETURN',
-        },
-      ],
+      };
+    });
+
+    // Productivity from production logs
+    const productivity = productionLogs
+      .filter((l) => l.workOrder?.woNumber)
+      .reduce((acc: any[], log) => {
+        const key = log.workOrder?.woNumber || 'unknown';
+        const existing = acc.find((a) => a.name === key);
+        if (existing) {
+          existing.points += Number(log.goodQty);
+          existing.batchCount++;
+        } else {
+          acc.push({
+            name: key,
+            points: Number(log.goodQty),
+            batchCount: 1,
+          });
+        }
+        return acc;
+      }, [])
+      .sort((a: any, b: any) => b.points - a.points)
+      .slice(0, 5)
+      .map((item: any, idx: number) => ({
+        name: `WO ${item.name}`,
+        points: item.points,
+        batch: `${item.batchCount} Batch`,
+        rank: idx + 1,
+      }));
+
+    // Velocity scores (simplified real calculation)
+    const inboundVelocity =
+      inbounds > 0 ? Math.min(10, (inbounds / 30) * 10) : 0;
+    const internalVelocity =
+      outboundCount > 0 ? Math.min(10, (outboundCount / 30) * 10) : 0;
+
+    const result = {
+      jalurA: {
+        inbound: inbounds,
+        karantina: quarantinedBatches,
+        velocity: parseFloat(inboundVelocity.toFixed(1)),
+      },
+      jalurB: {
+        reqProd: requisitionCount,
+        picking: outboundCount,
+        handover: 0,
+        velocity: parseFloat(internalVelocity.toFixed(1)),
+      },
+      jalurC: { orderProc: 0, shipping: 0, delivered: 0, velocity: 0 },
+      sensitiveMaterials: sensitiveMats,
+      packagingStocks: packStocks,
+      soFulfillment: [],
+      riskLoss: [],
       topRaw,
-      topPack,
+      topPack: packStocks,
       productivity,
-      recentLogs: transactions.map((t) => ({
+      recentLogs: recentTransactions.map((t) => ({
         id: t.id,
         item: t.material.name,
         type: t.type,
@@ -260,13 +406,22 @@ export class WarehouseService {
         time: t.createdAt,
       })),
     };
-    console.timeEnd('WarehouseAuditGranular');
     return result;
   }
 
-  async getCatalog() {
+  async getCatalog(warehouseId?: string) {
+    const where: any = { deletedAt: null };
+    if (warehouseId) {
+      where.inventories = {
+        some: {
+          location: {
+            warehouseId,
+          },
+        },
+      };
+    }
     return this.prisma.materialItem.findMany({
-      where: { deletedAt: null },
+      where,
       include: {
         category: true,
         inventories: {
@@ -284,6 +439,13 @@ export class WarehouseService {
     });
   }
 
+  async getActiveWarehouses() {
+    return this.prisma.warehouse.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async getTransactionHistory(materialId: string) {
     return this.prisma.inventoryTransaction.findMany({
       where: { materialId },
@@ -292,43 +454,83 @@ export class WarehouseService {
     });
   }
 
+  private async getOrCreateSystemSupplier(tx: any) {
+    let sup = await tx.supplier.findFirst({
+      where: { name: 'System Default' },
+    });
+    if (!sup)
+      sup = await tx.supplier.create({
+        data: { name: 'System Default', performanceScore: 0 },
+      });
+    return sup;
+  }
+
   async receiveGoods(data: {
     materialId: string;
-    supplierId: string;
+    supplierId?: string;
     batchNumber: string;
     quantity: number;
+    purchasePrice?: number;
     expDate?: Date;
     locationId?: string;
     notes?: string;
     performedBy?: string;
   }) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Create the inventory record
+      const mat = await tx.materialItem.findUnique({
+        where: { id: data.materialId },
+        select: { stockQty: true, unitPrice: true },
+      });
+      const lastValuation = await tx.materialValuation.findFirst({
+        where: { materialId: data.materialId },
+        orderBy: { date: 'desc' },
+      });
+
+      const oldStock = Number(mat?.stockQty || 0);
+      const oldMAP = Number(
+        lastValuation?.movingAveragePrice || mat?.unitPrice || 0,
+      );
+      const newPrice = data.purchasePrice || oldMAP;
+      const newQty = data.quantity;
+
+      // Moving Average Price: ((oldStock * oldMAP) + (newQty * newPrice)) / (oldStock + newQty)
+      const totalOldValue = oldStock * oldMAP;
+      const totalNewValue = newQty * newPrice;
+      const newMAP =
+        oldStock + newQty > 0
+          ? (totalOldValue + totalNewValue) / (oldStock + newQty)
+          : newPrice;
+
+      const effectiveSupplierId =
+        data.supplierId || (await this.getOrCreateSystemSupplier(tx)).id;
+
       const inventory = await tx.materialInventory.create({
         data: {
           materialId: data.materialId,
-          supplierId: data.supplierId,
+          supplierId: effectiveSupplierId,
           batchNumber: data.batchNumber,
           currentStock: data.quantity,
           expDate: data.expDate ? new Date(data.expDate) : null,
           locationId: data.locationId,
+          qcStatus: 'QUARANTINE',
           notes: data.notes,
           receivingDate: new Date(),
         },
       });
 
-      // Phase 2: Capture Snapshot Value for HPP
-      const valuation = await tx.materialValuation.findFirst({
-        where: { materialId: data.materialId },
-        orderBy: { date: 'desc' },
+      // 3. Create MaterialValuation with new MAP
+      await tx.materialValuation.create({
+        data: {
+          materialId: data.materialId,
+          movingAveragePrice: newMAP,
+          lastPurchasePrice: newPrice,
+          totalQty: oldStock + newQty,
+          totalValue: (oldStock + newQty) * newMAP,
+          referenceNo: data.notes || `INBOUND-${inventory.batchNumber}`,
+        },
       });
-      const mat = await tx.materialItem.findUnique({
-        where: { id: data.materialId },
-      });
-      const snapshotValue =
-        valuation?.movingAveragePrice || mat?.unitPrice || 0;
 
-      // 2. Log the transaction with Snapshot Value and Batch Link
+      // 4. Log the transaction with MAP snapshot
       await tx.inventoryTransaction.create({
         data: {
           materialId: data.materialId,
@@ -338,11 +540,11 @@ export class WarehouseService {
           notes: data.notes,
           destLocId: data.locationId,
           performedBy: data.performedBy,
-          unitValueAtTransaction: snapshotValue,
+          unitValueAtTransaction: newMAP,
         },
       });
 
-      // 3. Update MaterialItem cache
+      // 5. Update MaterialItem cache
       await tx.materialItem.update({
         where: { id: data.materialId },
         data: { stockQty: { increment: data.quantity } },
@@ -501,7 +703,7 @@ export class WarehouseService {
       // Automated Journaling for Finance Integration (Phase 4)
       if (totalLossValue > 0) {
         const finSvc = await this.getFinanceService();
-      await finSvc.createInventoryAdjustmentJournal({
+        await finSvc.createInventoryAdjustmentJournal({
           opnameId: opname.id,
           totalLossValue,
           notes: opname.notes || 'Routine Audit',
@@ -682,6 +884,9 @@ export class WarehouseService {
         totalValue,
       });
 
+      // Non-blocking shortage check
+      this.checkAndEmitShortages();
+
       return result;
     });
   }
@@ -693,6 +898,11 @@ export class WarehouseService {
   }
 
   async updateBatchStatus(id: string, status: any, userId: string) {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id))
+      throw new BadRequestException('Invalid batch ID format');
+
     const batch = await this.prisma.materialInventory.findUnique({
       where: { id },
     });
@@ -877,43 +1087,71 @@ export class WarehouseService {
       if (transfer.status !== 'PENDING')
         throw new BadRequestException('Transfer already processed');
 
-      // Execute stock movement
       for (const item of transfer.items) {
-        // Decrement at source
-        await tx.materialItem.update({
-          where: { id: item.materialId },
-          data: { stockQty: { decrement: item.qty } },
+        // Deduct from source using FEFO batch
+        let remainingQty = Number(item.qty);
+        const sourceBatches = await tx.materialInventory.findMany({
+          where: {
+            materialId: item.materialId,
+            currentStock: { gt: 0 },
+            qcStatus: 'GOOD',
+          },
+          orderBy: [{ expDate: 'asc' }, { lastRestock: 'asc' }],
         });
 
-        // Log outbound from source
-        await tx.inventoryTransaction.create({
+        for (const batch of sourceBatches) {
+          if (remainingQty <= 0) break;
+          const deductQty = Math.min(remainingQty, Number(batch.currentStock));
+          await tx.materialInventory.update({
+            where: { id: batch.id },
+            data: { currentStock: { decrement: deductQty } },
+          });
+          await tx.inventoryTransaction.create({
+            data: {
+              materialId: item.materialId,
+              inventoryId: batch.id,
+              type: 'INTERNAL_MOVE',
+              quantity: deductQty,
+              referenceNo: transfer.transferNumber,
+              warehouseId: transfer.sourceWarehouseId,
+              performedBy: userId,
+              notes: `TRANSFER_OUT to ${transfer.destWarehouseId} | Batch: ${batch.batchNumber}`,
+            },
+          });
+          remainingQty -= deductQty;
+        }
+
+        // Increment at destination (create new batch record)
+        const sysSup = await this.getOrCreateSystemSupplier(tx);
+        const destBatch = await tx.materialInventory.create({
           data: {
             materialId: item.materialId,
-            type: 'OUTBOUND',
-            quantity: item.qty,
-            referenceNo: transfer.transferNumber,
-            warehouseId: transfer.sourceWarehouseId,
-            performedBy: userId,
-            notes: `TRANSFER_OUT to ${transfer.destWarehouseId}`,
+            supplierId: sysSup.id,
+            batchNumber: `TRF-${transfer.transferNumber.slice(0, 8)}-${item.materialId.slice(0, 4)}`,
+            currentStock: Number(item.qty),
+            qcStatus: 'GOOD',
+            notes: `Transferred from ${transfer.sourceWarehouseId}`,
+            receivingDate: new Date(),
           },
         });
-
-        // Increment at destination
-        await tx.materialItem.update({
-          where: { id: item.materialId },
-          data: { stockQty: { increment: item.qty } },
-        });
-
-        // Log inbound at destination
         await tx.inventoryTransaction.create({
           data: {
             materialId: item.materialId,
-            type: 'INBOUND',
-            quantity: item.qty,
+            inventoryId: destBatch.id,
+            type: 'INTERNAL_MOVE',
+            quantity: Number(item.qty),
             referenceNo: transfer.transferNumber,
             warehouseId: transfer.destWarehouseId,
             performedBy: userId,
             notes: `TRANSFER_IN from ${transfer.sourceWarehouseId}`,
+          },
+        });
+
+        // Update global cache
+        await tx.materialItem.update({
+          where: { id: item.materialId },
+          data: {
+            stockQty: { decrement: remainingQty < 0 ? Number(item.qty) : 0 },
           },
         });
       }
@@ -995,31 +1233,28 @@ export class WarehouseService {
   }
 
   async approveOpnameWithPin(opnameId: string, userId: string, pin: string) {
-    // Validate Manager PIN
     const manager = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { managerPin: true, roles: true },
+      select: { managerPin: true },
     });
 
     if (!manager || !manager.managerPin) {
       throw new BadRequestException('User has no escalation PIN configured.');
     }
 
-    if (manager.managerPin !== pin) {
+    const isPinValid = await bcrypt.compare(pin, manager.managerPin);
+    if (!isPinValid) {
       throw new BadRequestException('Invalid escalation PIN.');
     }
 
-    // Update opname with approval metadata
     await this.prisma.stockOpname.update({
       where: { id: opnameId },
       data: {
         approvalStatus: 'APPROVED',
         approvedById: userId,
-        approvalPin: '***VERIFIED***', // Do not store plain PIN
       },
     });
 
-    // Delegate to existing approval logic
     return this.approveOpname(opnameId, userId);
   }
 
@@ -1080,7 +1315,7 @@ export class WarehouseService {
         data: {
           inboundNumber,
           poId: data.poId,
-          status: 'APPROVED',
+          status: 'PENDING',
           receivedAt: data.receivedAt ? new Date(data.receivedAt) : new Date(),
           warehouseId,
           items: {
@@ -1099,23 +1334,11 @@ export class WarehouseService {
         },
       });
 
-      for (const item of data.items) {
-        await this.receiveGoods({
-          materialId: item.materialId,
-          supplierId: '00000000-0000-0000-0000-000000000000',
-          batchNumber: item.batchNumber,
-          quantity: item.quantity,
-          expDate: item.expiryDate ? new Date(item.expiryDate) : undefined,
-          notes: `Inbound via GRN ${inboundNumber}`,
-          performedBy: 'WAREHOUSE_SYSTEM',
-        });
-      }
-
       this.eventEmitter.emit('activity.logged', {
         action: 'WAREHOUSE_INBOUND',
         entityType: 'Inbound',
         entityId: inbound.id,
-        detail: `Inbound ${inboundNumber} created with ${data.items.length} items`,
+        detail: `Inbound ${inboundNumber} created with ${data.items.length} items (ALL QUARANTINE)`,
         senderDivision: 'WAREHOUSE',
       });
       this.eventEmitter.emit('warehouse.inbound.received', {
@@ -1125,16 +1348,70 @@ export class WarehouseService {
         itemsCount: data.items.length,
       });
 
-      this.eventEmitter.emit('INBOUND_COMPLETED', {
-        referenceId: inbound.id,
-        metadata: {
-          inboundNumber,
-          poId: data.poId,
-          itemsCount: data.items.length,
+      return inbound;
+    });
+  }
+
+  async releaseFromQuarantine(inboundId: string, performedBy?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const inbound = await tx.warehouseInbound.findUnique({
+        where: { id: inboundId },
+        include: {
+          items: { include: { material: { select: { unitPrice: true } } } },
         },
       });
+      if (!inbound) throw new NotFoundException('Inbound not found');
+      if (inbound.status !== 'PENDING')
+        throw new BadRequestException('Inbound already processed');
 
-      return inbound;
+      // Get or create a fallback supplier
+      let fallbackSupplier = await tx.supplier.findFirst({
+        where: { name: 'System Default' },
+      });
+      if (!fallbackSupplier) {
+        fallbackSupplier = await tx.supplier.create({
+          data: { name: 'System Default', performanceScore: 0 },
+        });
+      }
+
+      for (const item of inbound.items) {
+        await tx.materialInventory.create({
+          data: {
+            materialId: item.materialId,
+            supplierId: fallbackSupplier.id,
+            batchNumber: `BATCH-${inbound.inboundNumber.slice(0, 8)}-${item.id.slice(0, 4)}`,
+            currentStock: item.qtyActual,
+            qcStatus: 'GOOD',
+            notes: `Released from quarantine via GRN ${inbound.inboundNumber}`,
+            receivingDate: new Date(),
+          },
+        });
+
+        await tx.materialItem.update({
+          where: { id: item.materialId },
+          data: { stockQty: { increment: item.qtyActual } },
+        });
+      }
+
+      const updated = await tx.warehouseInbound.update({
+        where: { id: inboundId },
+        data: { status: 'APPROVED' },
+      });
+
+      this.eventEmitter.emit('activity.logged', {
+        action: 'QUARANTINE_RELEASED',
+        entityType: 'Inbound',
+        entityId: inboundId,
+        detail: `Inbound ${inbound.inboundNumber} released from quarantine`,
+        senderDivision: 'WAREHOUSE',
+      });
+      this.eventEmitter.emit('warehouse.inbound.approved', {
+        inboundId,
+        inboundNumber: inbound.inboundNumber,
+        itemsCount: inbound.items.length,
+      });
+
+      return updated;
     });
   }
 
@@ -1179,6 +1456,7 @@ export class WarehouseService {
     type: 'WRITE_OFF' | 'CORRECTION' | 'DISPOSAL';
     qty: number;
     warehouseId: string;
+    accountId?: string;
     notes?: string;
   }) {
     const adjustment = await this.prisma.stockAdjustment.create({
@@ -1187,9 +1465,9 @@ export class WarehouseService {
           data.type === 'WRITE_OFF' || data.type === 'DISPOSAL' ? 'OUT' : 'IN',
         warehouseId: data.warehouseId,
         accountId:
-          data.type === 'DISPOSAL'
-            ? '00000000-0000-0000-0000-000000000001'
-            : '00000000-0000-0000-0000-000000000002',
+          data.accountId ||
+          (await this.prisma.account.findFirst())?.id ||
+          '00000000-0000-0000-0000-000000000001',
         notes: data.notes || '',
         date: new Date(),
         items: {
@@ -1362,23 +1640,48 @@ export class WarehouseService {
     materialId: string;
     qtyReturned: number;
   }) {
-    console.log(
-      `[WAREHOUSE] Production material return: ${payload.materialId} x ${payload.qtyReturned}`,
-    );
-    await this.prisma.materialItem.update({
-      where: { id: payload.materialId },
-      data: { stockQty: { increment: payload.qtyReturned } },
+    await this.prisma.$transaction(async (tx) => {
+      // Restore to oldest active batch or create new inventory record
+      const oldestBatch = await tx.materialInventory.findFirst({
+        where: { materialId: payload.materialId, qcStatus: 'GOOD' },
+        orderBy: { receivingDate: 'asc' },
+      });
+
+      if (oldestBatch) {
+        await tx.materialInventory.update({
+          where: { id: oldestBatch.id },
+          data: { currentStock: { increment: payload.qtyReturned } },
+        });
+        await tx.inventoryTransaction.create({
+          data: {
+            materialId: payload.materialId,
+            inventoryId: oldestBatch.id,
+            type: 'RETURN',
+            quantity: payload.qtyReturned,
+            referenceNo: `RET-PROD-${payload.workOrderId.slice(0, 8)}`,
+            performedBy: 'SYSTEM_PRODUCTION',
+            notes: `Material returned from production to batch ${oldestBatch.batchNumber}`,
+          },
+        });
+      } else {
+        await tx.inventoryTransaction.create({
+          data: {
+            materialId: payload.materialId,
+            type: 'RETURN',
+            quantity: payload.qtyReturned,
+            referenceNo: `RET-PROD-${payload.workOrderId.slice(0, 8)}`,
+            performedBy: 'SYSTEM_PRODUCTION',
+            notes: 'Material returned from production (no existing batch)',
+          },
+        });
+      }
+
+      await tx.materialItem.update({
+        where: { id: payload.materialId },
+        data: { stockQty: { increment: payload.qtyReturned } },
+      });
     });
-    await this.prisma.inventoryTransaction.create({
-      data: {
-        materialId: payload.materialId,
-        type: 'RETURN',
-        quantity: payload.qtyReturned,
-        referenceNo: `RET-PROD-${payload.workOrderId.slice(0, 8)}`,
-        performedBy: 'SYSTEM_PRODUCTION',
-        notes: 'Material returned from production',
-      },
-    });
+
     this.eventEmitter.emit('activity.logged', {
       action: 'MATERIAL_RETURNED_FROM_PRODUCTION',
       entityType: 'InventoryTransaction',
@@ -1386,6 +1689,34 @@ export class WarehouseService {
       detail: `${payload.qtyReturned} units returned from WO ${payload.workOrderId}`,
       senderDivision: 'WAREHOUSE',
     });
+  }
+
+  private async checkAndEmitShortages() {
+    try {
+      const allActive = await this.prisma.materialItem.findMany({
+        where: { deletedAt: null, status: 'ACTIVE' },
+        select: {
+          id: true,
+          name: true,
+          stockQty: true,
+          minLevel: true,
+          isCritical: true,
+        },
+      });
+      for (const item of allActive) {
+        if (Number(item.stockQty) <= Number(item.minLevel)) {
+          this.eventEmitter.emit('warehouse.stock.shortage', {
+            materialId: item.id,
+            materialName: item.name,
+            currentStock: Number(item.stockQty),
+            minLevel: Number(item.minLevel),
+            isCritical: item.isCritical,
+          });
+        }
+      }
+    } catch {
+      // Silent fail for secondary concern
+    }
   }
 
   /**

@@ -30,6 +30,8 @@ import {
   Boxes,
   MapPin,
   ArrowRight,
+  ShoppingCart,
+  Plus,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -78,6 +80,14 @@ export default function GudangPage() {
     },
   });
 
+  const { data: requisitions } = useQuery({
+    queryKey: ["warehouse-requisitions-gudang"],
+    queryFn: async () => {
+      const res = await api.get("/warehouse/requisitions");
+      return res.data;
+    },
+  });
+
   return (
     <DashboardShell title="Gudang" titleAccent="Warehouse" subtitle="Consolidated Warehouse Operations & Command Terminal">
       <Tabs value={tab} onValueChange={setTab} className="space-y-8">
@@ -96,6 +106,9 @@ export default function GudangPage() {
           </TabsTrigger>
           <TabsTrigger value="mutasi" className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white font-black uppercase text-[10px] tracking-widest px-6 gap-2">
             <MoveHorizontal className="w-4 h-4" /> Mutasi Barang
+          </TabsTrigger>
+          <TabsTrigger value="requisition" className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white font-black uppercase text-[10px] tracking-widest px-6 gap-2">
+            <ShoppingCart className="w-4 h-4" /> Permintaan Barang
           </TabsTrigger>
         </TabsList>
 
@@ -347,6 +360,72 @@ export default function GudangPage() {
                   {(!mutations || mutations.length === 0) && (
                     <tr>
                       <td colSpan={5} className="h-32 text-center text-slate-400 text-xs font-bold uppercase italic">No mutation records found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TableWrapper>
+        </TabsContent>
+
+        <TabsContent value="requisition" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex justify-end">
+            <a href="/scm/warehouse/requisition">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-6 h-11 font-black uppercase text-[11px] tracking-tighter shadow-xl shadow-blue-500/20">
+                <Plus className="w-4 h-4 mr-2" /> Tambah Baru
+              </Button>
+            </a>
+          </div>
+
+          <TableWrapper>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">ID Permintaan</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Asal / Tujuan</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Peminta / Catatan</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Tanggal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {requisitions?.map((req: any) => (
+                    <tr key={req.id} className="group hover:bg-slate-50/50 transition-all">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-lg bg-blue-600/10 flex items-center justify-center">
+                            <ShoppingCart className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <span className="text-[11px] font-black uppercase italic">{req.reqNumber || req.id}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-600">{req.fromWh?.name || req.fromWarehouse || '-'}</span>
+                          <ArrowRight className="h-3 w-3 text-blue-400" />
+                          <span className="text-[10px] font-bold text-blue-600">{req.toWh?.name || req.toWarehouse || '-'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-slate-600">{req.requester?.fullName || req.createdById || '-'}</span>
+                          <span className="text-[9px] text-slate-400">{req.notes || ''}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <DnaBadge status={req.status === 'APPROVED' ? 'success' : req.status === 'REJECTED' ? 'default' : 'warning'}>
+                          {req.status}
+                        </DnaBadge>
+                      </td>
+                      <td className="px-6 py-5 text-right text-[10px] font-bold text-slate-400">
+                        {req.requestDate?.split('T')[0] || req.date?.split('T')[0] || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                  {(!requisitions || requisitions.length === 0) && (
+                    <tr>
+                      <td colSpan={5} className="h-32 text-center text-slate-400 text-xs font-bold uppercase italic">No requisition records found</td>
                     </tr>
                   )}
                 </tbody>
