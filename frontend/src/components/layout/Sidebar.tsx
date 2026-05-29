@@ -52,20 +52,6 @@ interface NavGroup {
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
-    label: "MASTER DATA",
-    icon: Archive,
-    roles: ["SUPER_ADMIN", "ADMIN", "SCM", "FINANCE", "DIRECTOR"],
-    items: [
-      { name: "Registry Overview", href: "/master", type: "dashboard" },
-      { name: "Goods Registry", href: "/master/goods", type: "input" },
-      { name: "Warehouse Hub", href: "/master/warehouses", type: "input" },
-      { name: "Vendor Network", href: "/master/suppliers", type: "input" },
-      { name: "Client Database", href: "/master/customers", type: "input" },
-      { name: "Personnel Hub", href: "/master/personnel", type: "input" },
-      { name: "Global Categories", href: "/master/categories", type: "action" },
-    ]
-  },
-  {
     label: "EXECUTIVE",
     icon: ShieldAlert,
     roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
@@ -93,6 +79,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
       { name: "Sales Order Central", href: "/bussdev/sales-orders", type: "action" },
       { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
+      { name: "Client Database", href: "/master/customers", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
     ]
   },
@@ -140,6 +127,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Dashboard", href: "/scm/dashboard", type: "dashboard" },
       { name: "Pembelian", href: "/scm/pembelian", type: "action", badge: "5", badgeVariant: "warning" },
       { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", type: "action" },
+      { name: "Barang", href: "/master/goods", type: "input" },
       { name: "Supplier", href: "/master/suppliers", type: "input" },
     ]
   },
@@ -175,6 +163,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Dashboard", href: "/warehouse", type: "dashboard" },
       { name: "Gudang", href: "/warehouse/gudang", type: "action" },
       { name: "Stok", href: "/warehouse/stok", type: "history" },
+      { name: "Data Gudang", href: "/master/warehouses", type: "input" },
     ]
   },
   {
@@ -204,6 +193,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Audit Ledger", href: "/system/audit-ledger", type: "history" },
       { name: "Event Protocol", href: "/system/protocol", type: "dashboard" },
       { name: "System Health", href: "/system/health", type: "dashboard" },
+      { name: "Global Categories", href: "/master/categories", type: "action" },
     ]
   }
 ];
@@ -219,7 +209,7 @@ const TIER_STRUCTURE = [
   },
   {
     tier: "STRATEGIC SUPPORT",
-    groups: ["MASTER DATA", "LEGALITAS / APJ", "HUMAN RESOURCES", "CREATIVE HUB", "SYSTEM CONTROL"]
+    groups: ["LEGALITAS / APJ", "HUMAN RESOURCES", "CREATIVE HUB", "SYSTEM CONTROL"]
   }
 ];
 
