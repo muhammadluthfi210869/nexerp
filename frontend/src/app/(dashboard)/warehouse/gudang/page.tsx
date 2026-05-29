@@ -180,11 +180,11 @@ export default function GudangPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">GRN Protocol</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Source</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">PO Ref</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">GRN Protocol</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Source</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">PO Ref</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -230,11 +230,11 @@ export default function GudangPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Release #</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Destination</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Items</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Release #</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Destination</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Items</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -280,11 +280,11 @@ export default function GudangPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Transfer #</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Route</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Items</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Transfer #</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Route</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Items</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -331,11 +331,11 @@ export default function GudangPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Mutation #</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Items</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Mutation #</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Type</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Items</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -382,11 +382,11 @@ export default function GudangPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">ID Permintaan</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Asal / Tujuan</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Peminta / Catatan</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Tanggal</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">ID Permintaan</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Asal / Tujuan</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Peminta / Catatan</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-right">Tanggal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

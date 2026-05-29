@@ -1,7 +1,8 @@
 import React, { Suspense } from "react";
 import AdjustmentClient from "./AdjustmentClient";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Zap } from "lucide-react";
+import { Zap, Plus } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = {
   title: "Stock Adjustment | Warehouse Hub",
@@ -18,7 +19,16 @@ export default function AdjustmentPage() {
         </div>
       </div>
     }>
-      <DashboardShell title="Stock" titleAccent="Adjustment" subtitle="Warehouse stock correction and adjustment portal.">
+      <DashboardShell
+        title="Stock"
+        titleAccent="Adjustment"
+        subtitle="Warehouse stock correction and adjustment portal."
+        actions={
+          <Link href="/warehouse/adjustment?new=1" className="inline-flex items-center gap-2 px-6 h-11 bg-white text-slate-900 hover:bg-slate-100 rounded-2xl font-black uppercase tracking-tighter text-[11px] shadow-sm border border-slate-200">
+            <Plus className="w-4 h-4" /> NEW ADJ
+          </Link>
+        }
+      >
         <AdjustmentClient />
       </DashboardShell>
     </Suspense>

@@ -132,12 +132,12 @@ export default function StokPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Material</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Stock</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Min Level</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Material</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Category</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Stock</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Min Level</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Valuation</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -284,11 +284,11 @@ export default function StokPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Adjustment #</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Items</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Adjustment #</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400">Type</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Items</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-center">Status</th>
+                    <th className="px-6 py-4 text-table-header text-slate-400 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

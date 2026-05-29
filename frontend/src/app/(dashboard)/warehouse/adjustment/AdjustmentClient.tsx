@@ -2,31 +2,15 @@
 
 import React, { useState } from "react";
 import {
-  Plus,
   Search,
-  ArrowLeft,
   CheckCircle2,
   XCircle,
-  Clock,
-  Layers,
   ChevronRight,
-  MoreVertical,
   History,
   AlertCircle,
-  Loader2,
-  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -34,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StatCard } from "@/components/dna/StatCard";
+import { DnaBadge } from "@/components/dna/DnaBadge";
+import { TableWrapper } from "@/components/dna/TableWrapper";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -53,18 +40,9 @@ interface Adjustment {
 
 export default function AdjustmentClient() {
   const queryClient = useQueryClient();
-  const [isNewAdjOpen, setIsNewAdjOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
-
-  // Form state
-  const [formMaterialId, setFormMaterialId] = useState("");
-  const [formType, setFormType] = useState("");
-  const [formQty, setFormQty] = useState("");
-  const [formWarehouseId, setFormWarehouseId] = useState("");
-  const [formAccountId, setFormAccountId] = useState("");
-  const [formNotes, setFormNotes] = useState("");
 
   const { data: adjustments = [], isLoading } = useQuery({
     queryKey: ['adjustments'],
@@ -135,158 +113,31 @@ export default function AdjustmentClient() {
   });
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 p-6 font-sans">
-      
-      {/* 1. HEADER SECTION */}
-      <div className="flex justify-between items-start mb-8">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-slate-400">
-            <button className="hover:text-gray-900 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <span className="text-[10px] font-bold uppercase tracking-widest">Warehouse / Adjustment</span>
-          </div>
-          <h1 className="text-2xl font-black tracking-tighter uppercase italic text-gray-900 flex items-center gap-3">
-             Stock Adjustment
-             <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-          </h1>
-        </div>
-
-        <Dialog open={isNewAdjOpen} onOpenChange={setIsNewAdjOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-white text-slate-900 hover:bg-slate-100 rounded-2xl px-6 h-11 font-black uppercase tracking-tighter text-[11px] shadow-xl shadow-white/5">
-               <Plus className="w-4 h-4 mr-2" /> NEW ADJ
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200 text-gray-900 rounded-[2rem] max-w-md p-8 border-2">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">New Stock Adjustment</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-5 mt-6">
-               <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select Material</label>
-                   <Select value={formMaterialId} onValueChange={(v) => v && setFormMaterialId(v)}>
-                    <SelectTrigger className="bg-white border-gray-200 rounded-xl h-12 text-[12px] font-bold">
-                      <SelectValue placeholder="Choose Material..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-gray-900">
-                      <SelectItem value="gly">Glycerin Pharma Grade</SelectItem>
-                      <SelectItem value="nia">Niacinamide Powder</SelectItem>
-                    </SelectContent>
-                  </Select>
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Adj Type</label>
-                     <Select value={formType} onValueChange={(v) => v && setFormType(v)}>
-                      <SelectTrigger className="bg-white border-gray-200 rounded-xl h-12 text-[12px] font-bold">
-                        <SelectValue placeholder="Type..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200 text-gray-900">
-                        <SelectItem value="WRITE_OFF">Write Off</SelectItem>
-                        <SelectItem value="CORRECTION">Correction</SelectItem>
-                        <SelectItem value="DISPOSAL">Disposal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Quantity</label>
-                    <Input type="number" className="bg-white border-gray-200 rounded-xl h-12 text-[12px] font-black" placeholder="0" value={formQty} onChange={(e) => setFormQty(e.target.value)} />
-                  </div>
-               </div>
-               <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Warehouse Location</label>
-                   <Select value={formWarehouseId} onValueChange={(v) => v && setFormWarehouseId(v)}>
-                    <SelectTrigger className="bg-white border-gray-200 rounded-xl h-12 text-[12px] font-bold">
-                      <SelectValue placeholder="Select Warehouse..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-gray-900">
-                      <SelectItem value="ch">Central Hub</SelectItem>
-                      <SelectItem value="rm">Raw Mat WH</SelectItem>
-                    </SelectContent>
-                  </Select>
-               </div>
-               <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CoA Penyesuaian</label>
-                   <Select value={formAccountId} onValueChange={(v) => v && setFormAccountId(v)}>
-                    <SelectTrigger className="bg-white border-gray-200 rounded-xl h-12 text-[12px] font-bold">
-                      <SelectValue placeholder="Select Account..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-gray-900 max-h-60">
-                      {(accounts as any[])?.map((acct: any) => (
-                        <SelectItem key={acct.id} value={acct.id}>
-                          {acct.code} - {acct.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-               </div>
-               <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Reason / Notes</label>
-                    <Input className="bg-white border-gray-200 rounded-xl h-12 text-[12px] font-bold" placeholder="Optional notes..." value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
-                </div>
-               <div className="flex gap-3 pt-4">
-                  <Button variant="ghost" className="flex-1 rounded-xl h-12 text-slate-400 font-bold" onClick={() => setIsNewAdjOpen(false)}>CANCEL</Button>
-                   <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 font-black uppercase italic tracking-tighter" 
-                     onClick={() => {
-                       if (!formMaterialId || !formType || !formQty || !formWarehouseId) {
-                         return toast.error("Please fill in all required fields");
-                       }
-                        createMutation.mutate({
-                          materialId: formMaterialId,
-                          type: formType,
-                          qty: Number(formQty),
-                          warehouseId: formWarehouseId,
-                          accountId: formAccountId || undefined,
-                          notes: formNotes || undefined,
-                        });
-                     }}
-                     disabled={createMutation.isPending}
-                   >
-                     {createMutation.isPending ? <Loader2 className="animate-spin" /> : "SUBMIT ADJUSTMENT"}
-                   </Button>
-               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+    <div className="flex flex-col gap-[2rem]">
+      {/* 1. KPI CARDS */}
+      <div className="grid grid-cols-3 gap-6">
+        <StatCard value={adjustments.length} label="Total Adjustment" change={`${adjustments.length} entries`} variant="neutral" />
+        <StatCard value={pendingCount} label="Pending Appr" variant="warning" />
+        <StatCard value={completedCount} label="Completed" variant="success" />
       </div>
 
-      {/* 2. KPI CARDS */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        {[
-          { label: "TOTAL ADJUSTMENT", val: adjustments.length, icon: Layers, color: "text-blue-400" },
-          { label: "PENDING APPR", val: pendingCount, icon: Clock, color: "text-amber-400" },
-          { label: "COMPLETED", val: completedCount, icon: CheckCircle2, color: "text-emerald-400" },
-        ].map((card, i) => (
-          <Card key={i} className="bg-white border-gray-200 p-6 rounded-[2.5rem] flex items-center justify-between shadow-lg">
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{card.label}</p>
-              <p className="text-4xl font-black tracking-tighter tabular text-gray-900">{card.val}</p>
-            </div>
-            <div className={cn("p-4 rounded-2xl bg-gray-50 border border-gray-200", card.color)}>
-               <card.icon className="w-6 h-6" />
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* 3. FILTER BAR */}
-      <Card className="bg-white border-gray-200 p-4 rounded-[1.5rem] mb-6 flex gap-4 items-center shadow-sm">
+      {/* 2. FILTER BAR */}
+      <div className="bg-white border border-slate-200 p-4 rounded-[24px] flex gap-4 items-center shadow-sm">
          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-white transition-colors" />
-            <input 
-              type="text" 
-              placeholder="SEARCH MATERIAL..." 
-              className="w-full bg-gray-100 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-[11px] font-black text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-all placeholder:text-gray-400"
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="SEARCH MATERIAL..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-[11px] font-black text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-300"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
          </div>
           <Select value={filterType} onValueChange={(v) => v && setFilterType(v)}>
-             <SelectTrigger className="w-40 bg-gray-100 border-gray-200 rounded-xl h-[46px] text-[10px] font-black uppercase italic tracking-widest">
+             <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-[46px] text-[10px] font-black uppercase tracking-widest">
                 <SelectValue placeholder="TYPE" />
              </SelectTrigger>
-             <SelectContent className="bg-white border-gray-200 text-gray-900">
+             <SelectContent className="bg-white border-slate-200 text-slate-900">
                 <SelectItem value="ALL">ALL TYPES</SelectItem>
                 <SelectItem value="WRITE_OFF">WRITE OFF</SelectItem>
                 <SelectItem value="CORRECTION">CORRECTION</SelectItem>
@@ -294,42 +145,42 @@ export default function AdjustmentClient() {
              </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={(v) => v && setFilterStatus(v)}>
-            <SelectTrigger className="w-40 bg-gray-100 border-gray-200 rounded-xl h-[46px] text-[10px] font-black uppercase italic tracking-widest">
+            <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-[46px] text-[10px] font-black uppercase tracking-widest">
                <SelectValue placeholder="STATUS" />
             </SelectTrigger>
-            <SelectContent className="bg-white border-gray-200 text-gray-900">
+            <SelectContent className="bg-white border-slate-200 text-slate-900">
                <SelectItem value="ALL">ALL STATUS</SelectItem>
                <SelectItem value="PENDING">PENDING</SelectItem>
                <SelectItem value="APPROVED">APPROVED</SelectItem>
                <SelectItem value="REJECTED">REJECTED</SelectItem>
             </SelectContent>
          </Select>
-      </Card>
+      </div>
 
-      {/* 4. TABLE SECTION */}
-      <Card className="bg-white border-gray-200 rounded-[2rem] overflow-hidden shadow-lg">
+      {/* 3. TABLE SECTION */}
+      <TableWrapper>
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest">#ADJ</th>
-              <th className="px-6 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest">Material</th>
-              <th className="px-6 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest">Type</th>
-              <th className="px-6 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Qty</th>
-              <th className="px-6 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">Status</th>
-              <th className="px-6 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest">Date</th>
-              <th className="px-6 py-4 text-right text-[9px] font-black text-slate-500 uppercase tracking-widest">Actions</th>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              <th className="px-6 py-4 text-left text-table-header text-slate-400">#ADJ</th>
+              <th className="px-6 py-4 text-left text-table-header text-slate-400">Material</th>
+              <th className="px-6 py-4 text-left text-table-header text-slate-400">Type</th>
+              <th className="px-6 py-4 text-right text-table-header text-slate-400">Qty</th>
+              <th className="px-6 py-4 text-center text-table-header text-slate-400">Status</th>
+              <th className="px-6 py-4 text-left text-table-header text-slate-400">Date</th>
+              <th className="px-6 py-4 text-right text-table-header text-slate-400">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-slate-200">
             {filteredAdjustments.map((adj) => (
-              <tr key={adj.id} className="hover:bg-gray-50 transition-colors group">
-                <td className="px-6 py-4 whitespace-nowrap text-[10px] font-black text-blue-600 tabular">{adj.adjNumber}</td>
+              <tr key={adj.id} className="hover:bg-slate-50 transition-colors group">
+                <td className="px-6 py-4 whitespace-nowrap text-[11px] font-black text-blue-600 tabular">{adj.adjNumber}</td>
                 <td className="px-6 py-4">
-                   <p className="text-[11px] font-black text-gray-900">{adj.materialName}</p>
-                   <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{adj.warehouseName}</p>
+                   <p className="text-[13px] font-semibold text-slate-900">{adj.materialName}</p>
+                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{adj.warehouseName}</p>
                 </td>
                 <td className="px-6 py-4">
-                   <span className="text-[9px] font-black text-gray-600 uppercase italic tracking-tighter">{adj.type.replace('_', ' ')}</span>
+                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">{adj.type.replace('_', ' ')}</span>
                 </td>
                 <td className={cn(
                   "px-6 py-4 text-right text-[11px] font-black tabular",
@@ -338,14 +189,11 @@ export default function AdjustmentClient() {
                    {adj.qty > 0 ? `+${adj.qty}` : adj.qty} {adj.unit}
                 </td>
                 <td className="px-6 py-4 text-center">
-                   <span className={cn(
-                     "px-2 py-0.5 rounded text-[6.5px] font-black uppercase tracking-widest",
-                     adj.status === 'PENDING' ? "bg-amber-500/20 text-amber-500 border border-amber-500/30" :
-                     adj.status === 'APPROVED' ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30" :
-                     "bg-rose-500/20 text-rose-500 border border-rose-500/30"
-                   )}>
-                     {adj.status}
-                   </span>
+                  <DnaBadge
+                    variant={adj.status === 'APPROVED' ? 'success' : adj.status === 'REJECTED' ? 'critical' : 'warning'}
+                  >
+                    {adj.status}
+                  </DnaBadge>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-[10px] font-bold text-slate-400">
                    {new Date(adj.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
@@ -353,16 +201,16 @@ export default function AdjustmentClient() {
                 <td className="px-6 py-4 text-right">
                   {adj.status === 'PENDING' ? (
                     <div className="flex justify-end gap-2">
-                        <button 
+                        <button
                           onClick={() => approveMutation.mutate({ id: adj.id, status: 'APPROVED' })}
-                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 shadow-lg shadow-emerald-500/10"
+                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20"
                           disabled={approveMutation.isPending}
                         >
                            <CheckCircle2 className="w-3.5 h-3.5" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => approveMutation.mutate({ id: adj.id, status: 'REJECTED' })}
-                          className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 shadow-lg shadow-rose-500/10"
+                          className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
                           disabled={approveMutation.isPending}
                         >
                            <XCircle className="w-3.5 h-3.5" />
@@ -370,8 +218,8 @@ export default function AdjustmentClient() {
                     </div>
                   ) : (
                     <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                       <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
-                          <MoreVertical className="w-3.5 h-3.5" />
+                       <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-400">
+                          <ChevronRight className="w-3.5 h-3.5" />
                        </button>
                     </div>
                   )}
@@ -382,11 +230,11 @@ export default function AdjustmentClient() {
         </table>
         {filteredAdjustments.length === 0 && (
           <div className="p-12 text-center flex flex-col items-center gap-4">
-             <AlertCircle className="w-12 h-12 text-gray-400" />
-             <p className="text-[11px] font-black text-slate-600 uppercase tracking-widest italic">No adjustments found matching filters</p>
+             <AlertCircle className="w-12 h-12 text-slate-300" />
+             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">No adjustments found matching filters</p>
           </div>
         )}
-      </Card>
+      </TableWrapper>
 
       {/* 5. RECENT ACTIVITY FOOTER */}
       <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">
