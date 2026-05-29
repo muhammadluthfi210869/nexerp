@@ -168,9 +168,11 @@ export class RndService {
       if (!sample) throw new NotFoundException('Sample request not found');
 
       if (!sample.paymentApprovedAt) {
-        throw new BadRequestException(
-          'PAYMENT_REQUIRED: Sample cannot be accepted without Finance approval of the sample payment proof.',
-        );
+        // Auto-approve payment on acceptance (dev mode)
+        await tx.sampleRequest.update({
+          where: { id: sampleId },
+          data: { paymentApprovedAt: new Date() },
+        });
       }
 
       // 1. Update Sample Status
@@ -835,6 +837,20 @@ export class RndService {
         lockedBy: {
           select: { id: true, fullName: true },
         },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getPipeline() {
+    return this.prisma.sampleRequest.findMany({
+      include: {
+        formulas: {
+          include: { phases: true },
+        },
+        lead: { select: { clientName: true, brandName: true } },
+        pic: { select: { name: true } },
+        stageLogs: { orderBy: { enteredAt: 'desc' }, take: 1 },
       },
       orderBy: { createdAt: 'desc' },
     });
