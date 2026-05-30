@@ -77,11 +77,8 @@ const MODULE_STRUCTURE: NavGroup[] = [
     items: [
       { name: "Command Center", href: "/bussdev/dashboard", type: "dashboard" },
       { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
-      { name: "Sales Order Central", href: "/bussdev/sales-orders", type: "action" },
       { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
-      { name: "Client Database", href: "/master/customers", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
-      { name: "My Performance", href: "/bussdev/my-performance", type: "action" },
     ]
   },
   {
@@ -142,7 +139,6 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Operasional", href: "/production/operations", type: "dashboard" },
       { name: "Pipeline", href: "/production/pipeline", type: "history" },
       { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
-      { name: "My Performance", href: "/production/my-performance", type: "action" },
     ]
   },
   {
