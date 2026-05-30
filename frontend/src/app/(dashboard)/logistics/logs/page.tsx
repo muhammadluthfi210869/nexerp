@@ -16,7 +16,7 @@ import {
   BarChart3,
   Activity
 } from "lucide-react";
-import { StatCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
+import { StatCard, KpiCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function ShippingLogsPage() {
@@ -47,20 +47,9 @@ export default function ShippingLogsPage() {
         </div>
       }
     >
-
-      {/* 📊 II. PERFORMANCE SUMMARY */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <StatCard label="DELIVERIES (WEEK)" value="42" icon={<Truck />} />
-         <StatCard label="AVG. LEAD TIME" value="3.5h" icon={<Clock />} />
-         <StatCard label="SUCCESS RATE" value="99.2%" icon={<CheckCircle2 />} />
-         <StatCard label="ON-TIME SCORE" value="95%" icon={<Activity />} />
-      </div>
-
-      {/* 🔍 III. ARCHIVE SEARCH & LOGS */}
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-           <div className="relative flex-1 group">
-               <DnaInput 
+      <div className="flex items-center gap-5">
+        <div className="flex-1">
+          <DnaInput 
                  icon={<Search className="h-4 w-4" />}
                  placeholder="SEARCH BY DO#, CLIENT, OR SHIPMENT ID..."
                  className="h-16 bg-white border border-slate-100 rounded-2xl font-black text-[10px] uppercase tracking-widest italic"
@@ -135,7 +124,6 @@ export default function ShippingLogsPage() {
             </table>
           </div>
         </TableWrapper>
-      </div>
     </TableShell>
   );
 }

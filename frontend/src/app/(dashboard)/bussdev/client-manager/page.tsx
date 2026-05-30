@@ -33,7 +33,7 @@ function BukuTamuContent() {
   const { data: intakeLeads, isLoading: isLoadingLeads } = useQuery({
     queryKey: ["bussdev-leads-group", "guest"],
     queryFn: async () => {
-      try { return (await api.get<any[]>("/bussdev/leads/group/guest")).data; }
+      try { return (await api.get<any[]>("/bussdev/leads/group/guest?mine=true")).data; }
       catch { return []; }
     },
   });
@@ -172,7 +172,7 @@ function SampleContent() {
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["bussdev-leads-group", "sample"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/sample")).data,
+    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/sample?mine=true")).data,
   });
 
   const filtered = leads?.filter((l: any) =>
@@ -224,7 +224,7 @@ function ProductionContent() {
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["bussdev-leads-group", "production"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/production")).data,
+    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/production?mine=true")).data,
   });
 
   const filtered = leads?.filter((l: any) =>
@@ -284,7 +284,7 @@ function ROContent() {
 
   const { data: leads, isLoading: isLeadsLoading } = useQuery({
     queryKey: ["bussdev-leads-group", "ro"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/ro")).data,
+    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/ro?mine=true")).data,
   });
 
   const updateFuMutation = useMutation({
