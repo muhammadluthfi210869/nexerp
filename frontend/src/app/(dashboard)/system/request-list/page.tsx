@@ -5,9 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DnaButton, DnaInput } from "@/components/dna";
+import { DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { Search, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function RequestListPage() {
@@ -78,22 +77,19 @@ export default function RequestListPage() {
                   <TableCell className="font-black text-xs uppercase">{req.title}</TableCell>
                   <TableCell className="text-xs text-slate-500">{req.createdBy || "-"}</TableCell>
                   <TableCell>
-                    <span className={cn(
-                      "text-[9px] font-black uppercase px-2 py-0.5 rounded",
-                      req.priority === "CRITICAL" ? "bg-rose-100 text-rose-600" :
-                      req.priority === "HIGH" ? "bg-orange-100 text-orange-600" :
-                      req.priority === "MEDIUM" ? "bg-amber-100 text-amber-600" :
-                      "bg-slate-100 text-slate-500"
-                    )}>{req.priority || "MEDIUM"}</span>
+                    <DnaBadge status={
+                      req.priority === "CRITICAL" ? "critical" :
+                      req.priority === "HIGH" ? "warning" :
+                      "default"
+                    }>{req.priority || "MEDIUM"}</DnaBadge>
                   </TableCell>
                   <TableCell className="text-xs text-slate-500">{req.createdAt}</TableCell>
                   <TableCell className="text-center">
-                    <span className={cn(
-                      "text-[9px] font-black uppercase px-2 py-0.5 rounded",
-                      req.status === "APPROVED" ? "bg-emerald-100 text-emerald-600" :
-                      req.status === "REJECTED" ? "bg-rose-100 text-rose-600" :
-                      "bg-amber-100 text-amber-600"
-                    )}>{req.status || "PENDING"}</span>
+                    <DnaBadge status={
+                      req.status === "APPROVED" ? "success" :
+                      req.status === "REJECTED" ? "critical" :
+                      "warning"
+                    }>{req.status || "PENDING"}</DnaBadge>
                   </TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex justify-end gap-2">

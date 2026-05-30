@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { TableWrapper, SectionLabel } from "@/components/dna";
+import { TableWrapper, SectionLabel, DnaBadge } from "@/components/dna";
 
 export function AuditTables({ audit }: { audit: any }) {
   return (
@@ -31,10 +31,7 @@ export function AuditTables({ audit }: { audit: any }) {
                         <p className="text-[12px] font-black text-brand-black tabular">{inv.qty}</p>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={cn(
-                          "px-3 py-1 rounded-md text-[8px] font-black uppercase tabular border shadow-sm",
-                          inv.status === 'FEFO_OK' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-                        )}>{inv.status}</span>
+                        <DnaBadge status={inv.status === 'FEFO_OK' ? 'success' : 'warning'}>{inv.status}</DnaBadge>
                       </td>
                     </tr>
                   ))}
@@ -68,10 +65,7 @@ export function AuditTables({ audit }: { audit: any }) {
                         <p className="text-[12px] font-black text-brand-black tabular">{inv.qty}</p>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={cn(
-                          "px-3 py-1 rounded-md text-[8px] font-black uppercase tabular border shadow-sm",
-                          inv.status === 'STABLE' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
-                        )}>{inv.status}</span>
+                        <DnaBadge status={inv.status === 'STABLE' ? 'success' : 'critical'}>{inv.status}</DnaBadge>
                       </td>
                     </tr>
                   ))}
@@ -104,10 +98,7 @@ export function AuditTables({ audit }: { audit: any }) {
                         <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{so.so}</p>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={cn(
-                          "px-3 py-1 rounded-md text-[8px] font-black uppercase tabular border shadow-sm",
-                          so.status === 'FULL' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'
-                        )}>{so.status}</span>
+                        <DnaBadge status={so.status === 'FULL' ? 'success' : 'warning'}>{so.status}</DnaBadge>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex flex-col items-end">

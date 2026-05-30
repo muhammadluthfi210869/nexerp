@@ -540,7 +540,7 @@ export default function MRPPrototype() {
                                          </div>
                                          <div className="flex flex-col">
                                             <span className="text-[9px] font-black text-slate-400 uppercase">Need Purchase</span>
-                                            <span className="text-[12px] font-black text-rose-500">{formulaItems.filter((m: any) => Number(m.stockQty || 0) < Number(m.reorderPoint || 0)).length} items</span>
+                                             <span className="text-[12px] font-black text-rose-500 tabular-nums">{formulaItems.filter((m: any) => Number(m.stockQty || 0) < Number(m.reorderPoint || 0)).length} items</span>
                                          </div>
                                       </div>
                                       <div className="flex items-center gap-2">

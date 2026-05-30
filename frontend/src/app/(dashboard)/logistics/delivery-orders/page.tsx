@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatCard, TableWrapper, DnaButton, DnaInput } from "@/components/dna";
+import { StatCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function DeliveryOrdersPage() {
@@ -166,12 +166,9 @@ export default function DeliveryOrdersPage() {
                                 </div>
                                 <div>
                                    <p className="text-[11px] font-black text-brand-black uppercase italic group-hover:text-primary transition-colors">{doOrder.id}</p>
-                                   <span className={cn(
-                                      "text-[8px] font-black uppercase px-2 py-0.5 rounded border mt-1 block w-fit",
-                                      doOrder.priority === 'URGENT' ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-slate-50 text-slate-400 border-slate-100"
-                                   )}>
-                                      {doOrder.priority}
-                                   </span>
+                                    <DnaBadge status={doOrder.priority === 'URGENT' ? "critical" : "default"} className="mt-1">
+                                       {doOrder.priority}
+                                    </DnaBadge>
                                 </div>
                              </div>
                           </td>
@@ -196,13 +193,9 @@ export default function DeliveryOrdersPage() {
                              <p className="text-[11px] font-black text-slate-900 tabular uppercase">{doOrder.date}</p>
                           </td>
                           <td className="px-6 py-6 text-center">
-                             <span className={cn(
-                                "text-[9px] font-black uppercase px-4 py-1.5 rounded-xl tabular border shadow-sm",
-                                doOrder.status === 'SHIPPED' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : 
-                                doOrder.status === 'AWAITING_FLEET' ? "bg-blue-600 text-white border-blue-500 animate-pulse" : "bg-slate-50 text-slate-400 border-slate-100"
-                             )}>
-                                {doOrder.status.replace('_', ' ')}
-                             </span>
+                              <DnaBadge status={doOrder.status === 'SHIPPED' ? "success" : doOrder.status === 'AWAITING_FLEET' ? "warning" : "default"}>
+                                 {doOrder.status.replace('_', ' ')}
+                              </DnaBadge>
                           </td>
                            <td className="px-6 py-6 text-right">
                               <DnaButton 

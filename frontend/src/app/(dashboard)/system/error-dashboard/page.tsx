@@ -276,7 +276,7 @@ function StatCard({ label, value, icon, color, bg, suffix }: {
         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", bg)}>
           <span className={color}>{icon}</span>
         </div>
-        <span className="text-3xl font-black text-slate-900 tracking-tighter">
+                        <span className="text-3xl font-black text-slate-900 tracking-tighter tabular-nums">
           {value}{suffix && <span className="text-sm text-slate-400 ml-1">{suffix}</span>}
         </span>
       </div>

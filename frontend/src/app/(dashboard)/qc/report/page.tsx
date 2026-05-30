@@ -9,6 +9,7 @@ import { StatCard } from "@/components/dna/StatCard";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { SectionLabel } from "@/components/dna/SectionLabel";
 import { ShieldCheck, AlertTriangle, TrendingDown, FlaskConical, Loader2 } from "lucide-react";
+import { DnaBadge } from "@/components/dna";
 
 export default function QCReportPage() {
   const { data: stats, isLoading } = useQuery({
@@ -58,9 +59,9 @@ export default function QCReportPage() {
                       <TableRow key={r.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
                         <TableCell className="py-3 px-4 font-black text-slate-900 text-xs uppercase">{r.material}</TableCell>
                         <TableCell className="py-3 px-4 text-center">
-                          <span className="bg-slate-100 text-slate-600 font-bold text-[10px] uppercase px-2 py-0.5 rounded">
+                          <DnaBadge>
                             {r.part}
-                          </span>
+                          </DnaBadge>
                         </TableCell>
                         <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs tabular-nums">{r.qty}</TableCell>
                         <TableCell className="py-3 px-4 text-center text-slate-500">{r.vendor || "-"}</TableCell>

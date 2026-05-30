@@ -107,7 +107,7 @@ export function DesignHubDrawer({
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                        <FileText className="w-4 h-4 text-indigo-600" /> DESIGN BRIEF
                     </h3>
-                    <div className="text-sm text-slate-600 font-medium leading-relaxed bg-indigo-50/30 p-8 rounded-[2.5rem] border border-indigo-100/50 italic">
+                    <div className="text-sm text-slate-600 font-medium leading-relaxed bg-indigo-50/30 p-8 rounded-[24px] border border-indigo-100/50 italic">
                        {task.brief}
                     </div>
                  </div>
@@ -115,7 +115,7 @@ export function DesignHubDrawer({
 
               <TabsContent value="versions" className="m-0 space-y-6">
                 {!task.isLocked && (task.kanbanState === 'INBOX' || task.kanbanState === 'IN_PROGRESS' || task.kanbanState === 'REVISION') && (
-                  <div className="space-y-4 p-8 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50/50">
+                  <div className="space-y-4 p-8 rounded-[24px] border-2 border-dashed border-slate-200 bg-slate-50/50">
                     <p className="text-sm font-bold text-slate-900 text-center">Push New Revision</p>
                     <p className="text-[10px] text-slate-400 font-black uppercase text-center">Ai, PDF or CDR up to 50MB</p>
                     <div className="grid grid-cols-2 gap-4">
@@ -195,7 +195,7 @@ export function DesignHubDrawer({
                      </div>
                    ))}
                    {(!task.versions || task.versions.length === 0) && (
-                     <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem] bg-slate-50/50">
+                     <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[24px] bg-slate-50/50">
                         <Upload className="w-8 h-8 text-slate-300 mx-auto mb-4" />
                         <p className="text-xs font-black text-slate-400 uppercase italic tracking-widest">Awaiting first artifact submission</p>
                      </div>

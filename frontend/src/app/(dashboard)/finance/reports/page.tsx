@@ -93,19 +93,19 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
         <Table className="table-dense">
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead rowSpan={2} className="px-4 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Kode</TableHead>
-              <TableHead rowSpan={2} className="px-4 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Nama Akun</TableHead>
-              <TableHead colSpan={2} className="px-4 py-2 text-center font-black text-slate-400 uppercase tracking-tight text-[9px] border-l border-slate-100">Saldo Awal</TableHead>
-              <TableHead colSpan={2} className="px-4 py-2 text-center font-black text-slate-400 uppercase tracking-tight text-[9px] border-l border-slate-100">Perubahan</TableHead>
-              <TableHead colSpan={2} className="px-4 py-2 text-center font-black text-slate-400 uppercase tracking-tight text-[9px] border-l border-slate-100">Saldo Akhir</TableHead>
+              <TableHead rowSpan={2} className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Kode</TableHead>
+              <TableHead rowSpan={2} className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Nama Akun</TableHead>
+              <TableHead colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Saldo Awal</TableHead>
+              <TableHead colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Perubahan</TableHead>
+              <TableHead colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Saldo Akhir</TableHead>
             </TableRow>
             <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="px-4 py-2 text-right font-black text-slate-400 uppercase tracking-tight text-[9px] border-l border-slate-100">Debit</TableHead>
-              <TableHead className="px-4 py-2 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Kredit</TableHead>
-              <TableHead className="px-4 py-2 text-right font-black text-slate-400 uppercase tracking-tight text-[9px] border-l border-slate-100">Debit</TableHead>
-              <TableHead className="px-4 py-2 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Kredit</TableHead>
-              <TableHead className="px-4 py-2 text-right font-black text-slate-400 uppercase tracking-tight text-[9px] border-l border-slate-100">Debit</TableHead>
-              <TableHead className="px-4 py-2 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Kredit</TableHead>
+              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</TableHead>
+              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</TableHead>
+              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</TableHead>
+              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</TableHead>
+              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</TableHead>
+              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -655,11 +655,11 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
               <Table className="table-dense">
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="px-6 py-4 text-[9px] font-black uppercase tracking-tight text-slate-400 text-left">Tanggal</TableHead>
-                    <TableHead className="px-6 py-4 text-[9px] font-black uppercase tracking-tight text-slate-400 text-left">Keterangan</TableHead>
-                    <TableHead className="px-6 py-4 text-[9px] font-black uppercase tracking-tight text-slate-400 text-right">Debit</TableHead>
-                    <TableHead className="px-6 py-4 text-[9px] font-black uppercase tracking-tight text-slate-400 text-right">Kredit</TableHead>
-                    <TableHead className="px-6 py-4 text-[9px] font-black uppercase tracking-tight text-slate-400 text-right">Saldo Berjalan</TableHead>
+                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-left">Tanggal</TableHead>
+                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-left">Keterangan</TableHead>
+                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Debit</TableHead>
+                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Kredit</TableHead>
+                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Saldo Berjalan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -757,12 +757,12 @@ function ProjectBudgetingTab() {
         <Table className="table-dense">
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="px-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Project / Product</TableHead>
-              <TableHead className="px-6 py-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Budget</TableHead>
-              <TableHead className="px-6 py-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Spent</TableHead>
-              <TableHead className="px-6 py-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Burn Rate (%)</TableHead>
-              <TableHead className="px-6 py-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-              <TableHead className="px-6 py-4 text-right pr-10 font-black text-slate-400 uppercase tracking-tight text-[9px]">Margin (%)</TableHead>
+              <TableHead className="px-6 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Project / Product</TableHead>
+              <TableHead className="px-6 py-4 text-right text-table-header text-slate-400 uppercase tracking-tight">Budget</TableHead>
+              <TableHead className="px-6 py-4 text-right text-table-header text-slate-400 uppercase tracking-tight">Spent</TableHead>
+              <TableHead className="px-6 py-4 text-center text-table-header text-slate-400 uppercase tracking-tight">Burn Rate (%)</TableHead>
+              <TableHead className="px-6 py-4 text-center text-table-header text-slate-400 uppercase tracking-tight">Status</TableHead>
+              <TableHead className="px-6 py-4 text-right pr-10 text-table-header text-slate-400 uppercase tracking-tight">Margin (%)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

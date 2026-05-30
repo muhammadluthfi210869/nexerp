@@ -118,14 +118,13 @@ export default function FleetControlCenter() {
                     <div className="h-14 w-14 rounded-2xl bg-white text-slate-900 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all shadow-lg shadow-slate-200 border border-slate-200">
                        <Truck className="h-6 w-6" />
                     </div>
-                    <span className={cn(
-                       "px-4 py-1 rounded-full font-black uppercase tracking-widest text-[8px] border tabular shadow-sm",
-                       unit.status === 'ON_ROUTE' ? "bg-orange-50 text-orange-600 border-orange-100" : 
-                       unit.status === 'DELIVERED' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : 
-                       unit.status === 'LOADING' ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-slate-50 text-slate-400 border-slate-100"
-                    )}>
+                    <DnaBadge status={
+                       unit.status === 'ON_ROUTE' ? "warning" : 
+                       unit.status === 'DELIVERED' ? "success" : 
+                       unit.status === 'LOADING' ? "warning" : "default"
+                    }>
                        {unit.status.replace('_', ' ')}
-                    </span>
+                    </DnaBadge>
                  </div>
 
                  <div className="space-y-1 relative z-10">

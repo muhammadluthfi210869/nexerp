@@ -19,9 +19,6 @@ import {
   Globe,
   Verified,
   ArrowRight,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { TableWrapper, StatCard, DataCard, DnaBadge, DnaButton } from "@/components/dna";
@@ -177,12 +174,12 @@ export default function LegalityHub() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">PERMIT ID / REFERENCE</th>
-                  <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">LICENSING NAME / ISSUER</th>
-                  <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">CATEGORY</th>
-                  <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">VALID UNTIL</th>
-                  <th className="px-4 py-4 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</th>
-                  <th className="px-4 py-4 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">LEGAL ACTION</th>
+                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PERMIT ID / REFERENCE</th>
+                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">LICENSING NAME / ISSUER</th>
+                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">CATEGORY</th>
+                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">VALID UNTIL</th>
+                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">STATUS</th>
+                  <th className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">LEGAL ACTION</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -216,9 +213,7 @@ export default function LegalityHub() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black text-slate-500 bg-slate-100 rounded px-2.5 py-0.5 uppercase">
-                          {permit.type}
-                        </span>
+                        <DnaBadge status="default">{permit.type}</DnaBadge>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase leading-none">

@@ -216,7 +216,7 @@ export default function AuditLedgerPage() {
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
-              <p className="text-2xl font-black text-brand-black tracking-tight">{stat.value}</p>
+              <p className="text-2xl font-black text-brand-black tracking-tight tabular-nums">{stat.value}</p>
             </div>
           </div>
         ))}

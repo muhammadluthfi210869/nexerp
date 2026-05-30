@@ -14,7 +14,7 @@ import {
   Loader2,
   History as HistoryIcon
 } from "lucide-react";
-import { DnaInput, DnaButton } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import { 
   Table, 
   TableBody, 
@@ -122,7 +122,7 @@ export default function RndRepositoryPage() {
                            <div className="space-y-1">
                               <p className="font-black text-slate-900 text-xs tracking-tight">{formula.name}</p>
                                <div className="flex items-center gap-2">
-                                  <span className="rounded-lg px-2.5 py-1 font-black uppercase text-[8px] border-none shadow-sm bg-slate-50 text-slate-600 border border-slate-100">{formula.category}</span>
+                                  <DnaBadge status="default">{formula.category}</DnaBadge>
                                   <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded text-[9px] font-black text-slate-700 uppercase tracking-tight border border-slate-200">
                                     <HistoryIcon className="h-2.5 w-2.5" /> {formula.activeVersion}
                                   </span>
@@ -137,14 +137,9 @@ export default function RndRepositoryPage() {
                        </TableCell>
                         <TableCell className="text-center">
                            <div className="flex items-center justify-center gap-2">
-                              <span className={cn(
-                                "rounded-lg px-2.5 py-1 font-black uppercase text-[8px] border-none shadow-sm",
-                                formula.status === 'RELEASED' 
-                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
-                                  : "bg-slate-50 text-slate-600 border border-slate-100"
-                              )}>
-                                 {formula.status}
-                              </span>
+                              <DnaBadge status={formula.status === 'RELEASED' ? "success" : "default"}>
+                                {formula.status}
+                             </DnaBadge>
                               {formula.status === 'RELEASED' && (
                                 <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100" title="Integrity Verified">
                                    <ShieldCheck className="h-3 w-3 text-emerald-600" />

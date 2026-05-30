@@ -403,10 +403,10 @@ export default function PurchasingPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-[9px] font-black text-slate-400 uppercase">Barang</TableHead>
-                        <TableHead className="text-[9px] font-black text-slate-400 uppercase text-center">Qty</TableHead>
-                        <TableHead className="text-[9px] font-black text-slate-400 uppercase text-right">Harga</TableHead>
-                        <TableHead className="text-[9px] font-black text-slate-400 uppercase text-right">Subtotal</TableHead>
+                        <TableHead className="text-table-header text-slate-400 uppercase">Barang</TableHead>
+                        <TableHead className="text-table-header text-slate-400 uppercase text-center">Qty</TableHead>
+                        <TableHead className="text-table-header text-slate-400 uppercase text-right">Harga</TableHead>
+                        <TableHead className="text-table-header text-slate-400 uppercase text-right">Subtotal</TableHead>
                         <TableHead className="w-12"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -474,7 +474,7 @@ export default function PurchasingPage() {
                   </div>
                   <div className="border-t border-slate-200 pt-2 flex justify-between text-base">
                     <span className="font-black text-slate-700">Grand Total</span>
-                    <span className="font-black text-blue-600 text-lg">Rp {grandTotal.toLocaleString()}</span>
+                    <span className="font-black text-blue-600 text-lg tabular-nums">Rp {grandTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -575,13 +575,13 @@ export default function PurchasingPage() {
               <Table className="table-dense">
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">No. PO</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">Supplier</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">Tgl</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">Pembuat</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase text-right">Nilai</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase text-center">Status</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase text-right">Aksi</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">No. PO</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Supplier</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Tgl</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Pembuat</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Nilai</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Status</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -679,12 +679,12 @@ export default function PurchasingPage() {
               <Table className="table-dense">
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">ID</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">Gudang</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase">Pembuat</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase text-right">Jml Item</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase text-center">Status</TableHead>
-                    <TableHead className="py-3 px-4 text-[9px] font-black text-slate-400 uppercase text-right">Aksi</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">ID</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Gudang</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Pembuat</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Jml Item</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Status</TableHead>
+                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

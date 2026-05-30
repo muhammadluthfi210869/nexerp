@@ -334,9 +334,9 @@ export default function MasterGoodsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase bg-slate-100 px-2 py-1 rounded-md">
+                    <DnaBadge>
                       {good.category?.name || "UNCATEGORIZED"}
-                    </span>
+                    </DnaBadge>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <div className="flex flex-col gap-0.5">
@@ -356,12 +356,9 @@ export default function MasterGoodsPage() {
                   </TableCell>
                   <TableCell className="px-6 py-4 text-center">
                     <div className="flex flex-col items-center gap-1">
-                      <span className={cn(
-                        "text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-full",
-                        good.stockQty <= good.minLevel ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-900"
-                      )}>
+                      <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
                         {good.stockQty} {good.unit}
-                      </span>
+                      </DnaBadge>
                       {good.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
                     </div>
                   </TableCell>

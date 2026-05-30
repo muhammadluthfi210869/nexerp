@@ -172,7 +172,7 @@ export default function ARHubPrototype() {
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      <span className="rounded-lg px-2.5 py-1 font-black uppercase text-[8px] border-none shadow-sm bg-slate-100 text-slate-600">{inv.kode_do}</span>
+                      <DnaBadge status="default">{inv.kode_do}</DnaBadge>
                     </TableCell>
                     <TableCell className="text-right font-mono tabular-nums py-4 text-slate-900 text-xs font-black">
                       Rp {inv.grand_total.toLocaleString('id-ID')}

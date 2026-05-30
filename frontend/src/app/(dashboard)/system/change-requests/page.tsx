@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaButton, DnaInput } from "@/components/dna";
+import { DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import {
   Plus, Loader2, FileText, CheckCircle2, XCircle, Clock, AlertCircle
 } from "lucide-react";
@@ -12,7 +12,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 export default function ChangeRequestsPage() {
   const queryClient = useQueryClient();
@@ -67,12 +66,11 @@ export default function ChangeRequestsPage() {
                     <p className="text-xs text-slate-500 mt-1">{req.description}</p>
                     <div className="flex gap-3 mt-2">
                       <span className="text-[9px] font-bold text-slate-400 uppercase">{req.createdAt}</span>
-                      <span className={cn(
-                        "text-[9px] font-black uppercase px-2 py-0.5 rounded",
-                        req.status === "DONE" ? "bg-emerald-100 text-emerald-600" :
-                        req.status === "REJECTED" ? "bg-rose-100 text-rose-600" :
-                        "bg-amber-100 text-amber-600"
-                      )}>{req.status || "PENDING"}</span>
+                      <DnaBadge status={
+                        req.status === "DONE" ? "success" :
+                        req.status === "REJECTED" ? "critical" :
+                        "warning"
+                      }>{req.status || "PENDING"}</DnaBadge>
                     </div>
                   </div>
                 </div>

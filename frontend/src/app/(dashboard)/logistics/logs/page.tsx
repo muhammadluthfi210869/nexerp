@@ -16,8 +16,7 @@ import {
   BarChart3,
   Activity
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { StatCard, TableWrapper, DnaButton, DnaInput } from "@/components/dna";
+import { StatCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function ShippingLogsPage() {
@@ -121,12 +120,9 @@ export default function ShippingLogsPage() {
                        </div>
                     </td>
                     <td className="px-6 py-6 text-center">
-                       <span className={cn(
-                         "px-3 py-1 rounded-lg text-[9px] font-black uppercase tabular border shadow-sm",
-                         log.status === 'SUCCESS' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-rose-50 text-rose-700 border-rose-100"
-                       )}>
-                          {log.status}
-                       </span>
+<DnaBadge status={log.status === 'SUCCESS' ? "success" : "critical"}>
+                           {log.status}
+                        </DnaBadge>
                     </td>
                     <td className="px-6 py-6 text-right">
                         <DnaButton variant="outline" size="sm" className="italic">

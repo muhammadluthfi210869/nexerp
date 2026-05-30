@@ -351,7 +351,7 @@ export default function CashOutPage() {
 
           <div className="mb-10">
             <Label className="text-[10px] font-black uppercase tracking-tight text-rose-500 flex items-center gap-2 mb-4">
-              <Upload size={14} /> Bukti Pembayaran <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">WAJIB</span>
+                              <Upload size={14} /> Bukti Pembayaran <DnaBadge status="critical">WAJIB</DnaBadge>
             </Label>
             <div className="border-4 border-dashed border-rose-100 rounded-2xl p-8 flex flex-col items-center justify-center bg-rose-50/20 hover:bg-rose-50 transition-all group">
               <Upload className={cn(

@@ -173,7 +173,7 @@ function FakturJualTab() {
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <span className="rounded-lg border border-slate-200 text-slate-500 font-medium uppercase text-[8px] tracking-tight px-1.5 py-0.5">{inv.source}</span>
+                  <DnaBadge status="default">{inv.source}</DnaBadge>
                 </TableCell>
                 <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">Rp {inv.amount.toLocaleString("id-ID")}</TableCell>
                 <TableCell className="text-center">
@@ -616,7 +616,7 @@ function ARHubTab() {
                     </div>
                   </TableCell>
                   <TableCell className="py-4">
-                    <span className="rounded-lg px-2.5 py-1 font-black uppercase text-[8px] border-none shadow-sm bg-slate-100 text-slate-600">{inv.kode_do}</span>
+                    <DnaBadge status="default">{inv.kode_do}</DnaBadge>
                   </TableCell>
                   <TableCell className="text-right font-mono tabular-nums py-4 text-slate-900 text-xs font-black">
                     Rp {inv.grand_total.toLocaleString("id-ID")}
