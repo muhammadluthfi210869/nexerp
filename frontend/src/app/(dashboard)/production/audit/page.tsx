@@ -6,10 +6,7 @@ import {
   ShieldCheck, 
   Search, 
   Filter, 
-  BarChart3, 
   Clock, 
-  AlertTriangle,
-  ChevronRight,
   TrendingDown,
   DollarSign,
   Cpu
@@ -17,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatCard, DnaBadge, DnaInput } from "@/components/dna";
 import { SectionDivider } from "@/components/layout/SectionDivider";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataTable, DataTableHead, DataTableTh, DataTableBody, DataTableRow, DataTableCell } from "@/components/layout/DataTable";
@@ -47,16 +44,13 @@ export default function ProductionAuditPage() {
       subtitle="Operational Integrity / Cost Attribution / Machine Performance"
       actions={
         <div className="flex gap-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search Work Order..." 
-              className="pl-12 pr-6 py-3 rounded-2xl bg-white border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-slate-900 transition-all w-64 outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <DnaInput
+            icon={<Search className="w-4 h-4" />}
+            placeholder="Search Work Order..."
+            className="w-64"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <button className="p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors">
             <Filter className="w-5 h-5 text-slate-900" />
           </button>
@@ -66,26 +60,23 @@ export default function ProductionAuditPage() {
 
       {/* COST ATTRIBUTION ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <MetricCard 
-          label="Total Labor Cost" 
-          value="Rp 12,450,000" 
-          sub="Current Month Attribution"
+        <StatCard
+          label="Total Labor Cost"
+          value="Rp 12,450,000"
+          subValue="Current Month Attribution"
           icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
-          trend="+4.2%"
         />
-        <MetricCard 
-          label="Machine Overhead" 
-          value="Rp 28,120,000" 
-          sub="Active Asset Utilization"
+        <StatCard
+          label="Machine Overhead"
+          value="Rp 28,120,000"
+          subValue="Active Asset Utilization"
           icon={<Cpu className="w-6 h-6 text-blue-600" />}
-          trend="-2.1%"
         />
-        <MetricCard 
-          label="Avg. Reject Rate" 
-          value="0.84%" 
-          sub="Quality Performance Metric"
+        <StatCard
+          label="Avg. Reject Rate"
+          value="0.84%"
+          subValue="Quality Performance Metric"
           icon={<TrendingDown className="w-6 h-6 text-rose-600" />}
-          isAlert
         />
       </div>
 
@@ -114,9 +105,9 @@ export default function ProductionAuditPage() {
                     </div>
                   </DataTableCell>
                   <DataTableCell>
-                    <Badge className="bg-slate-100 text-slate-900 border-none font-black text-[9px] uppercase tracking-tighter">
+                    <DnaBadge status="info">
                       {log.stage}
-                    </Badge>
+                    </DnaBadge>
                   </DataTableCell>
                   <DataTableCell>
                     <span className="text-[11px] font-bold text-slate-600 uppercase">{log.operatorId || "N/A"}</span>
@@ -164,31 +155,4 @@ export default function ProductionAuditPage() {
   );
 }
 
-function MetricCard({ label, value, sub, icon, trend, isAlert }: any) {
-  return (
-    <Card className={cn(
-      "p-8 border-none shadow-sm rounded-3xl bg-white group transition-all hover:shadow-xl hover:shadow-slate-200/50 relative overflow-hidden",
-      isAlert && "ring-2 ring-rose-100"
-    )}>
-      <div className="flex justify-between items-start mb-6">
-        <div className="p-4 bg-slate-50 rounded-2xl group-hover:scale-110 transition-transform">
-          {icon}
-        </div>
-        {trend && (
-          <Badge className={cn(
-            "font-black text-[9px] px-2 py-0.5 border-none",
-            trend.startsWith('+') ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-          )}>
-            {trend}
-          </Badge>
-        )}
-      </div>
-      <div>
-        <h3 className="text-3xl font-black italic tracking-tighter text-slate-900 mb-1">{value}</h3>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{label}</p>
-        <p className="text-[9px] font-bold text-slate-300 uppercase mt-2">{sub}</p>
-      </div>
-    </Card>
-  );
-}
 
