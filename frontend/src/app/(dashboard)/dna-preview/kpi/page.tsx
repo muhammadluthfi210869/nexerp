@@ -38,6 +38,12 @@ function KpiCard({
     </div>
   ) : null;
 
+  const bgIcon = React.isValidElement(icon)
+    ? React.cloneElement(icon as React.ReactElement<any>, {
+        className: "w-[110px] h-[110px] stroke-[0.75px] text-slate-300/25 transition-all duration-700",
+      })
+    : null;
+
   return (
     <div
       className={`bg-white border rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center ${borderClass}`}
@@ -58,6 +64,11 @@ function KpiCard({
         </div>
         {iconEl}
       </div>
+      {bgIcon && (
+        <div className="absolute -bottom-5 -right-5 pointer-events-none select-none z-0">
+          {bgIcon}
+        </div>
+      )}
     </div>
   );
 }
