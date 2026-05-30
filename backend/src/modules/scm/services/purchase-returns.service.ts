@@ -134,6 +134,7 @@ export class PurchaseReturnsService {
         supplier: true,
         warehouse: true,
         items: { include: { material: true } },
+        creator: { select: { id: true, fullName: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

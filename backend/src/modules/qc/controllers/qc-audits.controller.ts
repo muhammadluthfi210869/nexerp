@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Query,
+  Param,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -27,7 +28,13 @@ export class QCAuditsController {
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.PRODUCTION_OP)
-  findAll(@Query('status') status?: string, @Query('type') type?: string) {
-    return this.qcService.findAll(status, type);
+  findAll(@Request() req: any, @Query('status') status?: string, @Query('type') type?: string, @Query('mine') mine?: string) {
+    return this.qcService.findAll(status, type, mine === 'true' ? req.user.id : undefined);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB)
+  findOne(@Param('id') id: string) {
+    return this.qcService.findOne(id);
   }
 }

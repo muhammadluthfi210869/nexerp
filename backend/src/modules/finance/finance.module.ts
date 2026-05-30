@@ -3,6 +3,7 @@ import { FinanceService } from './finance.service';
 import { FinanceController } from './finance.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { ValuationService } from './valuation.service';
+import { CashService } from './cash.service';
 
 import { ScmModule } from '../scm/scm.module';
 import { CreativeModule } from '../creative/creative.module';
@@ -15,8 +16,8 @@ import { WarehouseModule } from '../warehouse/warehouse.module';
     CreativeModule,
     forwardRef(() => WarehouseModule),
   ],
-  providers: [FinanceService, ValuationService],
+  providers: [FinanceService, ValuationService, CashService],
   controllers: [FinanceController],
-  exports: [FinanceService],
+  exports: [FinanceService, CashService],
 })
 export class FinanceModule {}

@@ -40,26 +40,22 @@ export class StepLogsService {
     if (currentStepIndex > 0) {
       const prevStep = this.stepOrder[currentStepIndex - 1];
 
-      const prevLog = await this.prisma.productionLog.findFirst({
+      const prevStepLog = await this.prisma.productionStepLog.findFirst({
         where: {
-          workOrderId: dto.workOrderId,
-          stage: prevStep,
+          wo: { workOrders: { some: { id: dto.workOrderId } } },
+          stage: prevStep as any,
         },
-        include: { qcAudits: true },
-        orderBy: { loggedAt: 'desc' },
+        include: { qcAudits: { where: { status: QCStatus.GOOD }, take: 1 } },
+        orderBy: { createdAt: 'desc' },
       });
 
-      if (!prevLog) {
+      if (!prevStepLog) {
         throw new BadRequestException(
           `QC Interlock: Previous stage (${prevStep}) hasn't been logged.`,
         );
       }
 
-      const hasPassAudit = (prevLog.qcAudits as any[]).some(
-        (audit) => audit.status === QCStatus.GOOD,
-      );
-
-      if (!hasPassAudit) {
+      if (prevStepLog.qcAudits.length === 0) {
         throw new BadRequestException(
           `QC Interlock: Previous stage (${prevStep}) has NO valid GOOD audit.`,
         );
@@ -83,10 +79,12 @@ export class StepLogsService {
   }
 
   async findByPlan(workOrderId: string) {
-    return this.prisma.productionLog.findMany({
-      where: { workOrderId },
+    return this.prisma.productionStepLog.findMany({
+      where: {
+        wo: { workOrders: { some: { id: workOrderId } } },
+      },
       include: { qcAudits: true },
-      orderBy: { loggedAt: 'asc' },
+      orderBy: { createdAt: 'asc' },
     });
   }
 }

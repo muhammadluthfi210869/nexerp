@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -30,7 +31,6 @@ import {
   DirectorApproveFundRequestDto,
   RejectFundRequestDto,
 } from './dto/fund-request.dto';
-import { Req } from '@nestjs/common';
 import { VerifyArPaymentDto } from './dto/verify-ar-payment.dto';
 import { CashDisburseDto, CashReceiveDto } from './dto/cash.dto';
 
@@ -97,8 +97,8 @@ export class FinanceController {
 
   @Get('fund-requests')
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
-  async getAllFundRequests() {
-    return this.financeService.getAllFundRequests();
+  async getAllFundRequests(@Req() req: any, @Query('mine') mine?: string) {
+    return this.financeService.getAllFundRequests(mine === 'true' ? req.user.id : undefined);
   }
 
   @Get('reports/project-budgeting')

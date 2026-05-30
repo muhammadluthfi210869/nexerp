@@ -10,8 +10,12 @@ describe('PurchasePaymentsService', () => {
   beforeEach(async () => {
     prisma = {
       invoice: { findUnique: jest.fn(), update: jest.fn() },
-      payment: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() },
-      $transaction: jest.fn((fn: Function) => fn(prisma)),
+      payment: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+      },
+      $transaction: jest.fn((fn: (...args: any[]) => any) => fn(prisma)),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -79,7 +83,10 @@ describe('PurchasePaymentsService', () => {
       expect(prisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'inv-1' },
-          data: expect.objectContaining({ status: 'PAID', outstandingAmount: 0 }),
+          data: expect.objectContaining({
+            status: 'PAID',
+            outstandingAmount: 0,
+          }),
         }),
       );
     });

@@ -1,4 +1,3 @@
-// @ts-nocheck - Requires Prisma schema regeneration (blocked by legal.prisma relation issue)
 import {
   Injectable,
   NotFoundException,

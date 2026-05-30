@@ -914,8 +914,13 @@ export class ProductionService {
     });
   }
 
-  async getWorkOrders() {
+  async getWorkOrders(userId?: string) {
+    const where: any = {};
+    if (userId) {
+      where.lead = { bdId: userId };
+    }
     return this.prisma.workOrder.findMany({
+      where,
       include: {
         lead: {
           select: {

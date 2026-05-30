@@ -29,13 +29,16 @@ export class PurchaseInvoicesService {
       if (!inbound.poId || !inbound.po)
         throw new BadRequestException('GR has no PO reference');
 
-      const totalAmount = inbound.po.items?.reduce(
-        (sum, item) => sum + Number(item.totalPrice),
-        0,
-      ) || 0;
+      const totalAmount =
+        inbound.po.items?.reduce(
+          (sum, item) => sum + Number(item.totalPrice),
+          0,
+        ) || 0;
 
       if (totalAmount <= 0)
-        throw new BadRequestException('Cannot create invoice for zero-amount PO');
+        throw new BadRequestException(
+          'Cannot create invoice for zero-amount PO',
+        );
 
       const invoiceNumber = await this.idGenerator.generateId('PI');
       const dueDate = dto.dueDate

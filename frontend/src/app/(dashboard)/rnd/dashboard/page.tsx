@@ -4,19 +4,70 @@ import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2, Plus, TestTube, ClipboardCheck, Dna, Binary, Clock, CheckCircle2, FlaskConical, TrendingUp, AlertTriangle, X } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  TestTube,
+  ClipboardCheck,
+  Dna,
+  Binary,
+  Clock,
+  CheckCircle2,
+  FlaskConical,
+  TrendingUp,
+  AlertTriangle,
+  X,
+  Calendar,
+  Users
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { FormulaBuilder } from "@/components/rnd/formula-builder";
 import { DnaButton } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
 
+// --- Custom Stage Visualizer matching prototype cj ---
+function StageVisualizer({ stage }: { stage: string }) {
+  const steps = ["NOT START", "REV 1", "REV 2", "EXTRA", "DEAL"];
+  // Map SampleStage to index
+  const stageMap: Record<string, number> = {
+    QUEUE: 0,
+    FORMULATING: 1,
+    LAB_TEST: 2,
+    READY_TO_SHIP: 3,
+    SHIPPED: 3,
+    RECEIVED: 3,
+    CLIENT_REVIEW: 3,
+    REVISION_QUEUE: 3,
+    APPROVED: 4
+  };
+  const currentIdx = stageMap[stage] ?? 0;
+  return (
+    <div style={{ display: "flex", gap: "3px", justifyContent: "center", alignItems: "center" }}>
+      {steps.map((step, idx) => (
+        <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "6px",
+              borderRadius: "3px",
+              background: idx <= currentIdx ? (idx === currentIdx ? "#2563EB" : "#93C5FD") : "#F1F5F9",
+              border: idx === currentIdx ? "1px solid #1D4ED8" : "none"
+            }}
+          />
+          <span style={{ fontSize: "7px", fontWeight: 950, color: idx === currentIdx ? "#1E293B" : "#94A3B8" }}>
+            {step}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function RndExecutiveDashboard() {
   const queryClient = useQueryClient();
@@ -65,44 +116,56 @@ export default function RndExecutiveDashboard() {
 
   const metrics = metricsQuery.data;
 
+  // Pipeline Master rows mapping
   const pipelineRows = useMemo(() => {
     const raw = metrics?.tables?.pipelineMaster;
     if (!raw || raw.length === 0) return [];
-    return raw.map((r: any) => ({
-      id: r.id,
-      brand: r.brand || 'Generic',
-      prod: r.product || '—',
-      cat: 'SKINCARE',
-      stage: r.stage,
-      rev: parseInt(r.revisions) || 0,
-      stab: 'N/A',
-      time: (r.totalTime || '').replace('Total: ', '').replace(' Days', 'd') || '—',
-      status: r.status,
-    }));
+    return raw.map((r: any) => {
+      const daysStr = r.timeAudit ? r.timeAudit.replace("In Stage: ", "") : "—";
+      const totalStr = r.totalTime ? r.totalTime.replace("Total: ", "") : "—";
+      const revNum = parseInt(r.revisions) || 0;
+      return {
+        id: r.id || "RD-24-001",
+        brand: r.brand || "Generic",
+        prod: r.product || "—",
+        pic: r.pic || "TBD",
+        bd: r.bd || "System",
+        stage: r.stage || "QUEUE",
+        days: daysStr,
+        total: totalStr,
+        rev: String(revNum),
+        first: revNum === 0,
+        status: r.status || "ONGOING",
+        onTime: !r.timeAudit?.includes("Delayed") && !r.timeAudit?.includes("Overdue"),
+        delay: 0
+      };
+    });
   }, [metrics]);
 
+  // PIC Evaluation rows mapping
   const picRows = useMemo(() => {
     const raw = metrics?.tables?.performanceEvaluation;
     if (!raw || raw.length === 0) return [];
     return raw.map((r: any) => ({
-      name: r.picName,
-      output: r.output,
-      eff: r.efficiency,
-      avg: (r.efficiency || '').replace('% OT', '') + 'd',
-      quality: r.quality,
-      qualNote: 'FIRST-TIME',
-      util: r.utilization,
+      name: r.picName || "—",
+      output: r.output || "—",
+      eff: r.efficiency || "—",
+      avg: (r.efficiency || "").includes("OT") ? (r.efficiency || "").split(" ")[0] : "—",
+      quality: r.quality || "—",
+      qualNote: "FIRST-TIME",
+      util: r.utilization || "—",
     }));
   }, [metrics]);
 
+  // Failure Logs mapping
   const failureRows = useMemo(() => {
     const raw = metrics?.tables?.failureLogs;
     if (!raw || raw.length === 0) return [];
     return raw.map((r: any) => ({
-      prod: r.productName,
-      stage: r.stage,
-      reason: r.reason,
-      pic: r.picName,
+      prod: r.productName || "—",
+      stage: r.stage || "—",
+      reason: r.reason || "—",
+      pic: r.picName || "—",
     }));
   }, [metrics]);
 
@@ -114,18 +177,38 @@ export default function RndExecutiveDashboard() {
   );
 
   return (
-    <DashboardShell
-      title="R&D Intelligence Center"
-      actions={
-        <div className="bg-white border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-3 shadow-sm">
-          <Dna className="h-5 w-5 text-emerald-500 blur-[0.5px] animate-pulse" />
-          <div>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-tight leading-none">Active Samples</p>
-            <p className="text-xl font-black text-slate-900 leading-none mt-1">{samples?.length || 0}</p>
-          </div>
-        </div>
-      }
+    <div
+      className="view-section active"
+      style={{ paddingBottom: "5rem", background: "#F8FAFC", minHeight: "100vh" }}
     >
+      {/* Executive Command Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2rem" }}>
+        <div>
+          <h2 className="dashboard-title" style={{ margin: 0 }}>
+            DIVISI R&D (Product Innovation Lab)
+          </h2>
+          <p style={{ margin: "4px 0 0 0", color: "#64748B", fontSize: "14px", fontWeight: 500 }}>
+            (Pusat Kendali Formula & Sampel)
+          </p>
+        </div>
+        <div
+          style={{
+            background: "white",
+            padding: "10px 18px",
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <Calendar size={14} color="#64748B" />
+          <span style={{ fontSize: "12px", fontWeight: 800, color: "#1E293B" }}>
+            LAB REPORT ACTIVE
+          </span>
+        </div>
+      </div>
+
       <Tabs defaultValue="executive" className="w-full">
         <TabsList className="bg-white border-slate-200 mb-6">
           <TabsTrigger value="executive" className="flex items-center gap-2">
@@ -150,188 +233,486 @@ export default function RndExecutiveDashboard() {
         {/* TAB 1 — EXECUTIVE DASHBOARD                 */}
         {/* ════════════════════════════════════════════ */}
         <TabsContent value="executive">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-            <KpiCard
-              label="ON-TIME RATE"
-              value={`${metrics?.timeliness?.onTimeRate ?? 85.4}%`}
-              targetPct={metrics?.timeliness?.onTimeRate ?? 85}
-              icon={<Clock />}
-            />
-            <KpiCard
-              label="FIRST-TIME APPROVAL"
-              value={`${metrics?.accuracy?.firstTimeApprovalRate ?? 72.1}%`}
-              targetPct={metrics?.accuracy?.firstTimeApprovalRate ?? 72}
-              icon={<CheckCircle2 />}
-            />
-            <KpiCard
-              label="OVERALL APPROVAL"
-              value={`${metrics?.approval?.overallRate ?? 84.4}%`}
-              targetPct={metrics?.approval?.overallRate ?? 84}
-              icon={<FlaskConical />}
-            />
-            <KpiCard
-              label="UTILIZATION"
-              value={`${metrics?.performance?.utilizationRate ?? 92}%`}
-              targetPct={metrics?.performance?.utilizationRate ?? 92}
-              icon={<TrendingUp />}
-            />
-            <KpiCard
-              label="OVERDUE"
-              value={String(metrics?.timeliness?.overdueCount ?? 3)}
-              targetPct={(metrics?.timeliness?.overdueCount ?? 3) === 0 ? 100 : 0}
-              icon={<AlertTriangle />}
-            />
-            <KpiCard
-              label="FAILED ITEMS"
-              value={String(metrics?.accuracy?.failedItemsCount ?? 5)}
-              targetPct={(metrics?.accuracy?.failedItemsCount ?? 5) === 0 ? 100 : Math.max(0, 100 - (metrics?.accuracy?.failedItemsCount ?? 5) * 20)}
-              icon={<X />}
-            />
+          {/* Executive KPI Cards */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "1.5rem",
+              marginBottom: "3rem",
+            }}
+          >
+            {/* Card A: Timeliness */}
+            <div
+              style={{
+                background: "white",
+                padding: "1.5rem",
+                borderRadius: "24px",
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <div style={{ width: "8px", height: "8px", background: "#EF4444", borderRadius: "50%" }} />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>
+                  🔴 A. TIMELINESS
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ background: "#F8FAFC", padding: "12px", borderRadius: "16px" }}>
+                  <p style={{ fontSize: "9px", fontWeight: 900, color: "#64748B", margin: 0 }}>
+                    ON-TIME SAMPLE RATE
+                  </p>
+                  <p style={{ fontSize: "20px", fontWeight: 950, color: "#10B981", margin: "4px 0" }}>
+                    {metrics?.timeliness?.onTimeRate ?? 85.4}%
+                  </p>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                  <div>
+                    <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>AVG CYCLE</p>
+                    <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                      {metrics?.timeliness?.avgCycleTime ?? "4.2"}{" "}
+                      <span style={{ fontSize: "9px" }}>DAYS</span>
+                    </p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>OVERDUE</p>
+                    <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
+                      {metrics?.timeliness?.overdueCount ?? 3}{" "}
+                      <span style={{ fontSize: "9px" }}>SAMPLES</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 800,
+                  color: "#94A3B8",
+                  marginTop: "1rem",
+                  borderTop: "1px solid #F1F5F9",
+                  paddingTop: "8px",
+                  margin: 0
+                }}
+              >
+                Insight: <span style={{ color: "#1E293B" }}>{metrics?.timeliness?.insight || "Velocity is within operational SLA"}</span>
+              </p>
+            </div>
+
+            {/* Card B: Accuracy */}
+            <div
+              style={{
+                background: "white",
+                padding: "1.5rem",
+                borderRadius: "24px",
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <div style={{ width: "8px", height: "8px", background: "#F59E0B", borderRadius: "50%" }} />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>
+                  🟠 B. ACCURACY
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ background: "#F8FAFC", padding: "12px", borderRadius: "16px" }}>
+                  <p style={{ fontSize: "9px", fontWeight: 900, color: "#64748B", margin: 0 }}>
+                    FIRST-TIME APPROVAL
+                  </p>
+                  <p style={{ fontSize: "20px", fontWeight: 950, color: "#2563EB", margin: "4px 0" }}>
+                    {metrics?.accuracy?.firstTimeApprovalRate ?? 72.1}%
+                  </p>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                  <div>
+                    <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>AVG REVISION</p>
+                    <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                      {metrics?.accuracy?.avgRevision ?? "1.4"}{" "}
+                      <span style={{ fontSize: "9px" }}>X</span>
+                    </p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>FAILED</p>
+                    <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
+                      {metrics?.accuracy?.failedItemsCount ?? 5}{" "}
+                      <span style={{ fontSize: "9px" }}>ITEMS</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 800,
+                  color: "#94A3B8",
+                  marginTop: "1rem",
+                  borderTop: "1px solid #F1F5F9",
+                  paddingTop: "8px",
+                  margin: 0
+                }}
+              >
+                Insight: <span style={{ color: "#1E293B" }}>{metrics?.accuracy?.insight || "Formulation accuracy is stabilizing"}</span>
+              </p>
+            </div>
+
+            {/* Card C: Approval Performance */}
+            <div
+              style={{
+                background: "white",
+                padding: "1.5rem",
+                borderRadius: "24px",
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <div style={{ width: "8px", height: "8px", background: "#EAB308", borderRadius: "50%" }} />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>
+                  🟡 C. APPROVAL PERFORMANCE
+                </p>
+              </div>
+              <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                  {metrics?.approval?.overallRate ?? 84.4}%
+                </p>
+                <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>
+                  OVERALL APPROVAL RATE
+                </p>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", background: "#FFFBEB", padding: "10px", borderRadius: "12px" }}>
+                <div style={{ textAlign: "center", flex: 1 }}>
+                  <p style={{ fontSize: "8px", fontWeight: 800, color: "#B45309", margin: 0 }}>SUBMITTED</p>
+                  <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                    {metrics?.approval?.submitted ?? 45}
+                  </p>
+                </div>
+                <div style={{ width: "1px", background: "#FEF3C7" }} />
+                <div style={{ textAlign: "center", flex: 1 }}>
+                  <p style={{ fontSize: "8px", fontWeight: 800, color: "#B45309", margin: 0 }}>APPROVED</p>
+                  <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                    {metrics?.approval?.approved ?? 38}
+                  </p>
+                </div>
+              </div>
+              <p
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 800,
+                  color: "#94A3B8",
+                  marginTop: "1rem",
+                  borderTop: "1px solid #F1F5F9",
+                  paddingTop: "8px",
+                  margin: 0
+                }}
+              >
+                Insight: <span style={{ color: "#1E293B" }}>{metrics?.approval?.insight || "Lead-to-Sample conversion flow is healthy"}</span>
+              </p>
+            </div>
+
+            {/* Card D: R&D Performance */}
+            <div
+              style={{
+                background: "white",
+                padding: "1.5rem",
+                borderRadius: "24px",
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <div style={{ width: "8px", height: "8px", background: "#3B82F6", borderRadius: "50%" }} />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>
+                  🔵 D. R&D PERFORMANCE
+                </p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div style={{ background: "#EFF6FF", padding: "10px", borderRadius: "12px" }}>
+                  <p style={{ fontSize: "8px", fontWeight: 800, color: "#1D4ED8", margin: 0 }}>ACTIVE PJKT</p>
+                  <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                    {metrics?.performance?.activeProjects ?? 12}
+                  </p>
+                </div>
+                <div style={{ background: "#F0FDF4", padding: "10px", borderRadius: "12px" }}>
+                  <p style={{ fontSize: "8px", fontWeight: 800, color: "#166534", margin: 0 }}>COMPLETED</p>
+                  <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                    {metrics?.performance?.completedProjects ?? 28}
+                  </p>
+                </div>
+              </div>
+              <div style={{ marginTop: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "9px", fontWeight: 850, color: "#64748B" }}>UTILIZATION RATE</span>
+                  <span style={{ fontSize: "10px", fontWeight: 950, color: "#1E293B" }}>
+                    {metrics?.performance?.utilizationRate ?? 92}%
+                  </span>
+                </div>
+                <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
+                  <div style={{ width: `${metrics?.performance?.utilizationRate ?? 92}%`, height: "100%", background: "#3B82F6" }} />
+                </div>
+              </div>
+              <p
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 800,
+                  color: "#94A3B8",
+                  marginTop: "1rem",
+                  borderTop: "1px solid #F1F5F9",
+                  paddingTop: "8px",
+                  margin: 0
+                }}
+              >
+                Insight: <span style={{ color: "#1E293B" }}>{metrics?.performance?.insight || "Resource utilization is optimized"}</span>
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-4 bg-rose-500 rounded-full" />
-              <h3 className="text-[12px] font-black uppercase tracking-widest text-slate-900 italic">1. R&D PIPELINE MASTER (FLOW VELOCITY)</h3>
-            </div>
-            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1600px]">
+          {/* R&D Pipeline Master Table */}
+          <div style={{ marginBottom: "3.5rem" }}>
+            <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
+              🔴 1. R&D PIPELINE MASTER (FLOW VELOCITY)
+            </h3>
+            <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr className="bg-slate-50/50 border-b border-slate-100">
-                      <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase">RND ID / BRAND</th>
-                      <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase">PRODUCT NAME / CATEGORY</th>
-                      <th className="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase">STAGE PROGRESSION</th>
-                      <th className="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase">ACCURACY (REV)</th>
-                      <th className="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase">STABILITY</th>
-                      <th className="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase">CYCLE TIME</th>
-                      <th className="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase">STATUS</th>
+                    <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                      <th style={{ padding: "1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        RND ID / BRAND
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        PRODUCT NAME
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        TEAM (BD / PIC)
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        CURRENT STAGE
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        TIME AUDIT
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        QUALITY (REV)
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        STATUS
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        TIMELINESS
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                      {pipelineRows.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="px-6 py-8 text-center">
-                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">No pipeline data available</p>
-                          </td>
-                        </tr>
-                      ) : pipelineRows.map((row: any, i: number) => (
-                      <tr key={i} className="border-b border-slate-50 hover:bg-slate-50/30 transition-colors">
-                        <td className="px-6 py-5">
-                          <p className="text-[13px] font-black text-slate-900">#{row.id}</p>
-                          <p className="text-[9px] font-medium text-slate-400 uppercase">{row.brand}</p>
-                        </td>
-                        <td className="px-6 py-5">
-                          <p className="text-[12px] font-black text-slate-900 uppercase">{row.prod}</p>
-                          <p className="text-[9px] font-medium text-slate-400">{row.cat}</p>
-                        </td>
-                        <td className="px-6 py-5 text-center">
-                          <StageVisual progress={row.stage.toString()} />
-                        </td>
-                        <td className="px-6 py-5 text-center">
-                          <span className={cn(
-                            "text-sm font-black",
-                            row.rev === 0 ? "text-emerald-500" : (row.rev < 2 ? "text-amber-500" : "text-rose-500")
-                          )}>{row.rev}x</span>
-                        </td>
-                        <td className="px-6 py-5 text-center">
-                          <span className={cn(
-                            "px-2 py-0.5 rounded text-[8px] font-black text-white",
-                            row.stab === 'PASSED' ? 'bg-emerald-500' : (row.stab === 'TESTING' ? 'bg-blue-500' : 'bg-slate-500')
-                          )}>{row.stab}</span>
-                        </td>
-                        <td className="px-6 py-5 text-right text-sm font-black tabular text-slate-900">{row.time}</td>
-                        <td className="px-6 py-5 text-center">
-                          <span className={cn(
-                            "px-3 py-1 rounded-md text-[9px] font-black text-white",
-                            row.status === 'APPROVED' ? 'bg-emerald-500' : 'bg-slate-900'
-                          )}>{row.status}</span>
+                    {pipelineRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ padding: "1.5rem", textAlign: "center" }}>
+                          <p style={{ fontSize: "10px", fontWeight: 500, color: "#94A3B8", textTransform: "uppercase" }}>
+                            No pipeline data available
+                          </p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      pipelineRows.map((row: any, idx: number) => (
+                        <tr
+                          key={idx}
+                          style={{
+                            borderBottom: "1px solid #F1F5F9",
+                            background: row.onTime ? "transparent" : "#FFF1F2",
+                          }}
+                        >
+                          <td style={{ padding: "1.25rem 1.5rem" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 900, color: "#64748B" }}>
+                              #{row.id}
+                            </div>
+                            <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+                              {row.brand}
+                            </div>
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 900, color: "#1E293B" }}>
+                            {row.prod}
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 800, color: "#1E293B" }}>
+                              {row.pic}
+                            </div>
+                            <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>
+                              BD: {row.bd}
+                            </div>
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                            <StageVisualizer stage={row.stage} />
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B" }}>
+                              In Stage: {row.days} Days
+                            </div>
+                            <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>
+                              Total: {row.total} Days
+                            </div>
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 950,
+                                color: row.rev === "0" ? "#10B981" : "#F59E0B",
+                              }}
+                            >
+                              {row.rev} <span style={{ fontSize: "9px" }}>X</span>
+                            </div>
+                            {row.first && (
+                              <div style={{ fontSize: "8px", fontWeight: 900, color: "#10B981" }}>
+                                FIRST-TIME
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                            <span
+                              style={{
+                                background: row.status === "APPROVED" ? "#10B981" : row.status === "REJECTED" ? "#EF4444" : "#64748B",
+                                color: "white",
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                fontSize: "9px",
+                                fontWeight: 950,
+                              }}
+                            >
+                              {row.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                            {row.onTime ? (
+                              <span style={{ color: "#10B981", fontWeight: 950, fontSize: "10px" }}>
+                                ON-TIME
+                              </span>
+                            ) : (
+                              <div style={{ color: "#E11D48" }}>
+                                <span style={{ fontWeight: 950, fontSize: "10px" }}>DELAY</span>
+                                <div style={{ fontSize: "9px", fontWeight: 800 }}>+{row.delay} DAYS</div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col xl:flex-row gap-8 items-start mt-8">
-            <div className="flex-1 w-full space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-4 bg-gray-700 rounded-full" />
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 italic">2. PIC PERFORMANCE EVALUATION</h3>
-              </div>
-              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-50">
-                        <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">PIC NAME / PERIOD</th>
-                        <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">OUTPUT (COMP/APP)</th>
-                        <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">EFFICIENCY</th>
-                        <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">QUALITY</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">UTILIZATION</th>
+          {/* Section 2 & 3 Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "7fr 3fr", gap: "2rem" }}>
+            {/* PIC Performance Evaluation */}
+            <div>
+              <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
+                🟠 2. R&D PERFORMANCE EVALUATION (PER PERSON)
+              </h3>
+              <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                      <th style={{ padding: "1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        PIC NAME / PERIOD
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        OUTPUT (COMP/APP)
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        EFFICIENCY
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        QUALITY
+                      </th>
+                      <th style={{ padding: "1.5rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>
+                        UTILIZATION
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {picRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ padding: "1.5rem", textAlign: "center" }}>
+                          <p style={{ fontSize: "10px", fontWeight: 500, color: "#94A3B8", textTransform: "uppercase" }}>
+                            No performance data available
+                          </p>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {picRows.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-8 text-center">
-                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">No performance data available</p>
+                    ) : (
+                      picRows.map((row: any, idx: number) => (
+                        <tr
+                          key={idx}
+                          style={{
+                            borderBottom: idx < picRows.length - 1 ? "1px solid #F1F5F9" : "none",
+                          }}
+                        >
+                          <td style={{ padding: "1.5rem", fontSize: "13px", fontWeight: 900, color: "#1E293B", textTransform: "uppercase" }}>
+                            {row.name}
+                          </td>
+                          <td style={{ padding: "1.5rem", textAlign: "center", fontSize: "14px", fontWeight: 900 }}>
+                            {row.output}
+                          </td>
+                          <td style={{ padding: "1.5rem", textAlign: "center" }}>
+                            <p style={{ fontSize: "12px", fontWeight: 800, color: "#059669", margin: 0 }}>
+                              {row.eff}
+                            </p>
+                            <p style={{ fontSize: "9px", fontWeight: 700, color: "#94A3B8", margin: "2px 0 0 0" }}>
+                              Avg: {row.avg}
+                            </p>
+                          </td>
+                          <td style={{ padding: "1.5rem", textAlign: "center" }}>
+                            <p style={{ fontSize: "12px", fontWeight: 800, color: "#2563EB", margin: 0 }}>
+                              {row.quality}
+                            </p>
+                            <p style={{ fontSize: "9px", fontWeight: 700, color: "#94A3B8", margin: "2px 0 0 0" }}>
+                              {row.qualNote}
+                            </p>
+                          </td>
+                          <td style={{ padding: "1.5rem", textAlign: "right", fontSize: "14px", fontWeight: 900 }}>
+                            {row.util}
                           </td>
                         </tr>
-                      ) : picRows.map((row: any, i: number) => (
-                        <tr key={i} className={cn("hover:bg-slate-50/50 transition-colors", i < 2 && "border-b border-slate-50")}>
-                          <td className="px-6 py-6">
-                            <p className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{row.name}</p>
-                          </td>
-                          <td className="px-6 py-6 text-center">
-                            <p className="text-[14px] font-black text-slate-900 tabular">{row.output}</p>
-                          </td>
-                          <td className="px-6 py-6 text-center">
-                            <p className="text-[12px] font-black text-emerald-600 uppercase tracking-tighter">{row.eff}</p>
-                             <p className="text-[9px] font-medium text-slate-400 uppercase">Avg: {row.avg}</p>
-                          </td>
-                          <td className="px-6 py-6 text-center">
-                            <p className="text-[12px] font-black text-blue-600 uppercase tracking-tighter">{row.quality}</p>
-                             <p className="text-[9px] font-medium text-slate-400 uppercase">{row.qualNote}</p>
-                          </td>
-                          <td className="px-6 py-6 text-right">
-                            <p className="text-[14px] font-black text-slate-900 tabular">{row.util}</p>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <div className="w-full xl:w-[450px] space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-4 bg-rose-500 rounded-full" />
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 italic text-rose-600">3. FAILURE / REJECT LOG</h3>
-              </div>
-              <div className="rounded-2xl border border-rose-100 shadow-sm bg-rose-50/30 p-6">
-                <div className="flex justify-between items-center mb-6 border-b border-rose-100 pb-4">
-                  <p className="text-[10px] font-black text-rose-800 uppercase tracking-widest">PRODUCT / STAGE</p>
-                  <p className="text-[10px] font-black text-rose-800 uppercase tracking-widest">REASON</p>
+            {/* Failure Reject Log */}
+            <div>
+              <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#EF4444", letterSpacing: "0.05em" }}>
+                🔴 3. FAILURE / REJECT LOG
+              </h3>
+              <div style={{ background: "#FFF1F2", borderRadius: "24px", border: "1px solid #FECDD3", padding: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px solid #FEE2E2", paddingBottom: "10px" }}>
+                  <p style={{ fontSize: "10px", fontWeight: 950, color: "#9F1239", margin: 0 }}>PRODUCT / STAGE</p>
+                  <p style={{ fontSize: "10px", fontWeight: 950, color: "#9F1239", margin: 0 }}>REASON</p>
                 </div>
-                <div className="space-y-6">
-                    {failureRows.length === 0 ? (
-                      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tight text-center py-4">No failures logged</p>
-                    ) : failureRows.map((row: any, i: number) => (
-                      <div key={i} className="flex justify-between items-start">
-                      <div>
-                        <p className="text-[13px] font-black text-slate-900 tracking-tight">{row.prod}</p>
-                        <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">STAGE: {row.stage}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                  {failureRows.length === 0 ? (
+                    <p style={{ fontSize: "10px", fontWeight: 500, color: "#9F1239", textAlign: "center", padding: "1rem" }}>
+                      No failures logged
+                    </p>
+                  ) : (
+                    failureRows.map((row: any, idx: number) => (
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <p style={{ fontSize: "13px", fontWeight: 900, color: "#1E293B", margin: 0 }}>{row.prod}</p>
+                          <p style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", margin: "2px 0 0 0", textTransform: "uppercase" }}>
+                            STAGE: {row.stage}
+                          </p>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <p style={{ fontSize: "13px", fontWeight: 900, color: "#EF4444", margin: 0 }}>{row.reason}</p>
+                          <p style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", margin: "2px 0 0 0", textTransform: "uppercase" }}>
+                            PIC: {row.pic}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-[13px] font-black text-rose-500 tracking-tight">{row.reason}</p>
-                        <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">PIC: {row.pic}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -470,33 +851,6 @@ export default function RndExecutiveDashboard() {
           )}
         </DialogContent>
       </Dialog>
-    </DashboardShell>
-  );
-}
-
-function StageVisual({ progress }: { progress: string }) {
-  const stages = ["QUEUE", "FORMULA", "LAB", "SHIP", "REVIEW", "DONE"];
-  let currentIndex = 0;
-  if (progress === 'QUEUE') currentIndex = 0;
-  else if (progress === 'FORMULATING') currentIndex = 1;
-  else if (progress === 'LAB_TEST') currentIndex = 2;
-  else if (progress === 'READY_TO_SHIP' || progress === 'SHIPPED' || progress === 'RECEIVED') currentIndex = 3;
-  else if (progress === 'CLIENT_REVIEW' || progress === 'REVISION_QUEUE') currentIndex = 4;
-  else if (progress === 'APPROVED') currentIndex = 5;
-  else currentIndex = 0;
-
-  return (
-    <div className="flex flex-col items-center gap-1 w-full max-w-[140px] mx-auto">
-      <div className="flex gap-0.5 w-full">
-        {stages.map((_, i) => (
-          <div key={i} className={cn("h-1 flex-1 rounded-full transition-all", i <= currentIndex ? "bg-primary shadow-[0_0_8px_rgba(37,99,235,0.3)]" : "bg-slate-100")} />
-        ))}
-      </div>
-      <div className="flex justify-between w-full">
-        <span className="text-[6px] font-medium text-slate-400 uppercase">{stages[0]}</span>
-        <span className="text-[6px] font-medium text-primary uppercase tracking-tight">{stages[currentIndex]}</span>
-        <span className="text-[6px] font-medium text-slate-400 uppercase">{stages[5]}</span>
-      </div>
     </div>
   );
 }

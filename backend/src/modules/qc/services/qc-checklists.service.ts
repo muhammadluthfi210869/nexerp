@@ -17,7 +17,10 @@ export class QCChecklistsService {
       const completed = (c.completedItems as string[]) || [];
       return {
         ...c,
-        progress: items.length > 0 ? Math.round((completed.length / items.length) * 100) : 0,
+        progress:
+          items.length > 0
+            ? Math.round((completed.length / items.length) * 100)
+            : 0,
       };
     });
   }
@@ -36,7 +39,10 @@ export class QCChecklistsService {
     const completed = (checklist.completedItems as string[]) || [];
     return {
       ...checklist,
-      progress: items.length > 0 ? Math.round((completed.length / items.length) * 100) : 0,
+      progress:
+        items.length > 0
+          ? Math.round((completed.length / items.length) * 100)
+          : 0,
     };
   }
 
@@ -75,7 +81,9 @@ export class QCChecklistsService {
       notes?: string;
     },
   ) {
-    const existing = await this.prisma.qCChecklist.findUnique({ where: { id } });
+    const existing = await this.prisma.qCChecklist.findUnique({
+      where: { id },
+    });
     if (!existing) throw new NotFoundException('Checklist not found');
 
     const data: any = { ...dto };

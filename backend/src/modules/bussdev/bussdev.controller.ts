@@ -10,6 +10,8 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -131,8 +133,8 @@ export class BussdevController {
   @Get('leads')
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.RND)
   @ApiOperation({ summary: 'Get all leads' })
-  getLeads() {
-    return this.bussdevService.getLeads();
+  getLeads(@Req() req: any, @Query('mine') mine?: string) {
+    return this.bussdevService.getLeads(mine === 'true' ? req.user.id : undefined);
   }
 
   @Get('leads/stuck')
@@ -261,7 +263,12 @@ export class BussdevController {
   // --- LEAD CRUD ---
 
   @Get('lead/:id')
-  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.RND, UserRole.FINANCE)
+  @Roles(
+    UserRole.COMMERCIAL,
+    UserRole.SUPER_ADMIN,
+    UserRole.RND,
+    UserRole.FINANCE,
+  )
   @ApiOperation({ summary: 'Get single lead detail' })
   getLead(@Param('id') id: string) {
     return this.bussdevService.getLeadById(id);

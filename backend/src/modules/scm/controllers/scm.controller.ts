@@ -16,9 +16,7 @@ import { UserRole, User } from '@prisma/client';
 @Controller('scm')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ScmController {
-  constructor(
-    private readonly scmService: ScmService,
-  ) {}
+  constructor(private readonly scmService: ScmService) {}
 
   @Get('vendors')
   @Roles(
@@ -70,6 +68,15 @@ export class ScmController {
     return this.scmService.approvePurchaseRequest(id, req.user.id);
   }
 
+  @Post('purchase-requests/:id/reject')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  async rejectPurchaseRequest(
+    @Param('id') id: string,
+    @Body() dto: { reason?: string },
+  ) {
+    return this.scmService.rejectPurchaseRequest(id, dto.reason);
+  }
+
   @Get('purchase-requests')
   @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE)
   async getPurchaseRequests() {
@@ -81,5 +88,4 @@ export class ScmController {
   async createPurchaseRequest(@Body() body: any) {
     return this.scmService.createPurchaseRequest(body);
   }
-
 }

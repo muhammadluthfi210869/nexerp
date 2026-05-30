@@ -12,8 +12,12 @@ describe('PurchaseInvoicesService', () => {
   beforeEach(async () => {
     prisma = {
       warehouseInbound: { findUnique: jest.fn() },
-      invoice: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() },
-      $transaction: jest.fn((fn: Function) => fn(prisma)),
+      invoice: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+      },
+      $transaction: jest.fn((fn: (...args: any[]) => any) => fn(prisma)),
     };
 
     idGenerator = { generateId: jest.fn().mockResolvedValue('PI-001') };
@@ -145,7 +149,9 @@ describe('PurchaseInvoicesService', () => {
   describe('findOne', () => {
     it('should throw NotFoundException when invoice not found', async () => {
       prisma.invoice.findUnique.mockResolvedValue(null);
-      await expect(service.findOne('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should return invoice with relations', async () => {
@@ -165,7 +171,9 @@ describe('PurchaseInvoicesService', () => {
           where: { id: 'inv-1' },
           include: expect.objectContaining({
             supplier: true,
-            po: expect.objectContaining({ include: { items: { include: { material: true } } } }),
+            po: expect.objectContaining({
+              include: { items: { include: { material: true } } },
+            }),
             payments: true,
           }),
         }),

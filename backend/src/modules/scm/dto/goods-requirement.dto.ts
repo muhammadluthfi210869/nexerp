@@ -12,7 +12,12 @@ import { Type } from 'class-transformer';
 // RequirementStatus enum not in Prisma schema
 // // RequirementStatus not available in current Prisma client generation
 // import { RequirementStatus } from '@prisma/client';
-enum RequirementStatus { DRAFT, SUBMITTED, APPROVED, DONE }
+enum RequirementStatus {
+  DRAFT,
+  SUBMITTED,
+  APPROVED,
+  DONE,
+}
 
 export class GoodsRequirementItemDto {
   @IsUUID()

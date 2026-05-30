@@ -40,18 +40,14 @@ describe('SupplierScoreService', () => {
           status: 'RECEIVED',
           estArrival: new Date('2024-01-10'),
           inbounds: [{ receivedAt: new Date('2024-01-09') }],
-          items: [
-            { unitPrice: 100, material: { unitPrice: 95 } },
-          ],
+          items: [{ unitPrice: 100, material: { unitPrice: 95 } }],
         },
         {
           id: 'po-2',
           status: 'RECEIVED',
           estArrival: new Date('2024-01-20'),
           inbounds: [{ receivedAt: new Date('2024-01-22') }],
-          items: [
-            { unitPrice: 100, material: { unitPrice: 100 } },
-          ],
+          items: [{ unitPrice: 100, material: { unitPrice: 100 } }],
         },
       ];
       prisma.purchaseOrder.findMany.mockResolvedValue(mockPOs);
@@ -68,9 +64,7 @@ describe('SupplierScoreService', () => {
           status: 'RECEIVED',
           estArrival: new Date('2024-01-10'),
           inbounds: [{ receivedAt: new Date('2024-01-09') }],
-          items: [
-            { unitPrice: 100, material: { unitPrice: 100 } },
-          ],
+          items: [{ unitPrice: 100, material: { unitPrice: 100 } }],
         },
       ];
       prisma.purchaseOrder.findMany.mockResolvedValue(mockPOs);
@@ -85,9 +79,7 @@ describe('SupplierScoreService', () => {
           id: 'po-1',
           status: 'ORDERED',
           inbounds: [],
-          items: [
-            { unitPrice: 100, material: { unitPrice: 100 } },
-          ],
+          items: [{ unitPrice: 100, material: { unitPrice: 100 } }],
         },
       ];
       prisma.purchaseOrder.findMany.mockResolvedValue(mockPOs);

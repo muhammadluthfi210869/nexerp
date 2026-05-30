@@ -52,6 +52,9 @@ type GuestLog = {
   city: string | null;
   email: string | null;
   productInterest: string | null;
+  moqPlan?: number | null;
+  launchingPlan?: string | null;
+  targetMarket?: string | null;
 };
 
 type UserOption = {
@@ -78,6 +81,9 @@ export default function GuestBookPage() {
     city: "",
     email: "",
     productInterest: "",
+    moqPlan: "",
+    launchingPlan: "",
+    targetMarket: "",
     visitDate: new Date().toISOString().slice(0, 16),
   });
 
@@ -139,7 +145,8 @@ export default function GuestBookPage() {
       setFormData({
         clientName: "", phoneNo: "", instansi: "", purpose: "",
         category: "PROSPEK", bdId: "", city: "", email: "",
-        productInterest: "", visitDate: new Date().toISOString().slice(0, 16),
+        productInterest: "", moqPlan: "", launchingPlan: "", targetMarket: "",
+        visitDate: new Date().toISOString().slice(0, 16),
       });
     } catch {
       toast.error("Gagal menyimpan buku tamu");
@@ -207,80 +214,105 @@ export default function GuestBookPage() {
                   </div>
                 }
               >
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-slate-50/50">
-                      <TableRow className="hover:bg-transparent border-slate-100">
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Tanggal & Waktu</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Nama Tamu</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Asal Instansi</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">No. Telepon</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Tujuan / Keperluan</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Bertemu Dengan</TableHead>
-                        <TableHead className="py-4 px-4 pr-6 text-table-header text-slate-400 text-right">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <div className="overflow-x-auto" style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", tableLayout: "fixed" }}>
+                    <thead>
+                      <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                        <th style={{ padding: "1rem 0.5rem 1rem 1.5rem", width: "9%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>TANGGAL/WKT</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "11%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>NAMA CLIENT</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "9%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>BUSDEV</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "12%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>KONTAK (WA/MAIL)</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "5%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>KOTA</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "12%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>PRODUK</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "6%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>MOQ</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "8%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>LAUNCH</th>
+                        <th style={{ padding: "1rem 0.5rem", width: "13%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>TARGET MARKET</th>
+                        <th style={{ padding: "1rem 1.5rem 1rem 0.5rem", width: "15%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "right" }}>KATEGORISASI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="py-20 text-center">
+                        <tr>
+                          <td colSpan={10} style={{ padding: "5rem 0", textAlign: "center" }}>
                             <div className="flex flex-col items-center gap-3">
                               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                               <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">Loading guest data...</p>
                             </div>
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                        </tr>
                       ) : filteredGuests.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="py-20 text-center">
+                        <tr>
+                          <td colSpan={10} style={{ padding: "5rem 0", textAlign: "center" }}>
                             <div className="flex flex-col items-center gap-3">
                               <BookOpen className="h-10 w-10 text-slate-200" />
                               <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">Belum ada tamu tercatat</p>
                             </div>
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                        </tr>
                       ) : (
-                        filteredGuests.map((guest) => (
-                          <TableRow key={guest.id} className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50">
-                            <TableCell className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-3.5 w-3.5 text-blue-500" />
-                                <span className="text-[10px] font-black text-slate-900 uppercase italic">
-                                  {new Date(guest.visitDate).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        filteredGuests.map((guest) => {
+                          const visitDateObj = new Date(guest.visitDate);
+                          const day = String(visitDateObj.getDate()).padStart(2, '0');
+                          const month = String(visitDateObj.getMonth() + 1).padStart(2, '0');
+                          const timeStr = visitDateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }).replace('.', ':');
+
+                          return (
+                            <tr key={guest.id} style={{ borderBottom: "1px solid #F1F5F9", transition: "background 0.2s" }} className="hover:bg-blue-50/10">
+                              <td style={{ padding: "1rem 0.5rem 1rem 1.5rem" }}>
+                                <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{`${day}-${month}`}</div>
+                                <div style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>{timeStr}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem" }}>
+                                <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{guest.clientName.toUpperCase()}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}>
+                                <div style={{ fontSize: "10px", fontWeight: 900, color: "#6366F1" }}>{guest.bd?.fullName || "—"}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem" }}>
+                                <div style={{ fontSize: "10px", fontWeight: 850, color: "#1E293B" }}>{guest.phoneNo || "—"}</div>
+                                <div style={{ fontSize: "8px", fontWeight: 700, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis" }}>{guest.email || "—"}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}>
+                                <div style={{ fontSize: "10px", fontWeight: 900, color: "#64748B" }}>{(guest.city || "—").toUpperCase()}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem" }}>
+                                <div style={{ fontSize: "10px", fontWeight: 950, color: "#2563EB" }}>{(guest.productInterest || "—").toUpperCase()}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}>
+                                <div className="tabular-nums" style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{guest.moqPlan ? Number(guest.moqPlan).toLocaleString() : "—"}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}>
+                                <div style={{ fontSize: "9px", fontWeight: 900, color: "#1E293B" }}>{(guest.launchingPlan || "—").toUpperCase()}</div>
+                              </td>
+                              <td style={{ padding: "1rem 0.5rem" }}>
+                                <div style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{(guest.targetMarket || "—").toUpperCase()}</div>
+                              </td>
+                              <td style={{ padding: "1rem 1.5rem 1rem 0.5rem", textAlign: "right" }}>
+                                <span style={{
+                                  background: guest.category === "PEMULA" ? "#F0FDF4" : "#F5F3FF",
+                                  color: guest.category === "PEMULA" ? "#166534" : "#5B21B6",
+                                  padding: "2px 8px",
+                                  borderRadius: "10px",
+                                  fontSize: "8px",
+                                  fontWeight: 950,
+                                  border: `1px solid ${guest.category === "PEMULA" ? "#DCFCE7" : "#DDD6FE"}`
+                                }}>
+                                  {guest.category}
                                 </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:rotate-12 transition-transform shrink-0">
-                                  <User className="h-4 w-4" />
-                                </div>
-                                <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{guest.clientName}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <span className="font-black text-slate-900 text-xs uppercase">{guest.instansi || "—"}</span>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <span className="text-[10px] font-bold text-slate-400">{guest.phoneNo || "—"}</span>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <span className="text-[10px] font-medium text-slate-500 max-w-[200px] truncate block">{guest.purpose || "—"}</span>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <span className="text-[10px] font-black text-blue-600 uppercase">{guest.bd?.fullName || "—"}</span>
-                            </TableCell>
-                            <TableCell className="py-3 px-4 pr-6 text-right">
-                              <span className="rounded-lg px-2.5 py-1 font-black uppercase text-[8px] shadow-sm bg-blue-100 text-blue-700">
-                                {guest.category}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
-                    </TableBody>
-                  </Table>
+                    </tbody>
+                  </table>
+                  <div style={{ padding: "1rem 2rem", background: "#F8FAFC", borderTop: "1px solid #F1F5F9", textAlign: "right" }}>
+                    <p style={{ fontSize: "9px", fontWeight: 950, color: "#64748B", margin: 0 }}>
+                      TOTAL LOGGED DATA: <span style={{ color: "#111827" }}>{filteredGuests.length} RECORDS</span>
+                    </p>
+                  </div>
                 </div>
+
               </TableWrapper>
             </motion.div>
           ) : (
@@ -396,6 +428,29 @@ export default function GuestBookPage() {
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Email Address</label>
+                          <DnaInput
+                            placeholder="client@email.com"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            icon={<User className="h-4 w-4" />}
+                            className="font-black text-xs"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Product Interest</label>
+                          <DnaInput
+                            placeholder="e.g. Serum, Lotion"
+                            value={formData.productInterest}
+                            onChange={(e) => setFormData({ ...formData, productInterest: e.target.value })}
+                            icon={<Building2 className="h-4 w-4" />}
+                            className="font-black text-xs uppercase"
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tujuan / Keperluan</label>
                         <textarea
@@ -404,6 +459,45 @@ export default function GuestBookPage() {
                           onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
                           rows={3}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 py-3 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rencana Project */}
+                  <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-5">
+                    <div className="flex items-center gap-3">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                      <h2 className="text-xl font-black uppercase tracking-tighter italic">Rencana <span className="text-blue-600">Proyek</span></h2>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">MOQ Rencana</label>
+                        <DnaInput
+                          type="number"
+                          placeholder="e.g. 5000"
+                          value={formData.moqPlan}
+                          onChange={(e) => setFormData({ ...formData, moqPlan: e.target.value })}
+                          className="font-black text-xs"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Rencana Launching</label>
+                        <DnaInput
+                          placeholder="e.g. MEI 26"
+                          value={formData.launchingPlan}
+                          onChange={(e) => setFormData({ ...formData, launchingPlan: e.target.value })}
+                          className="font-black text-xs uppercase"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Target Market</label>
+                        <DnaInput
+                          placeholder="e.g. E-COMMERCE, KLINIK"
+                          value={formData.targetMarket}
+                          onChange={(e) => setFormData({ ...formData, targetMarket: e.target.value })}
+                          className="font-black text-xs uppercase"
                         />
                       </div>
                     </div>

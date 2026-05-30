@@ -1075,8 +1075,16 @@ export class FinanceService {
     });
   }
 
-  async getAllFundRequests() {
+  async getAllFundRequests(userId?: string) {
+    const where: any = {};
+    if (userId) {
+      where.OR = [
+        { requesterId: userId },
+        { approvedById: userId },
+      ];
+    }
     return this.prisma.fundRequest.findMany({
+      where,
       include: { requester: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -2061,7 +2069,9 @@ export class FinanceService {
       where: { code: dto.code },
     });
     if (existing) {
-      throw new BadRequestException(`Account code '${dto.code}' already exists`);
+      throw new BadRequestException(
+        `Account code '${dto.code}' already exists`,
+      );
     }
     return this.prisma.account.create({
       data: {

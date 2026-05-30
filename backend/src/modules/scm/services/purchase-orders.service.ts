@@ -27,7 +27,14 @@ export class PurchaseOrdersService {
 
   async create(userId: string, dto: CreatePurchaseOrderDto) {
     const poNumber = await this.idGenerator.generateId('PO');
-    const { items, escalationPin, escalationReason, ...poData } = dto;
+    const {
+      items,
+      escalationPin,
+      escalationReason,
+      warehouseId,
+      dueDate,
+      ...poData
+    } = dto;
 
     // 0. SOFT-BLOCK GATE: Vendor Watchlist
     const supplier = await this.prisma.supplier.findUnique({
@@ -44,13 +51,23 @@ export class PurchaseOrdersService {
       // Verify PIN using bcrypt
       const managers = await this.prisma.user.findMany({
         where: {
-          roles: { hasSome: [UserRole.HEAD_OPS, UserRole.DIRECTOR, UserRole.SUPER_ADMIN] },
+          roles: {
+            hasSome: [
+              UserRole.HEAD_OPS,
+              UserRole.DIRECTOR,
+              UserRole.SUPER_ADMIN,
+            ],
+          },
           managerPin: { not: null },
         },
       });
 
       const managerResults = await Promise.all(
-        managers.map((m) => bcrypt.compare(escalationPin, m.managerPin!).then((match) => ({ manager: m, match }))),
+        managers.map((m) =>
+          bcrypt
+            .compare(escalationPin, m.managerPin!)
+            .then((match) => ({ manager: m, match })),
+        ),
       );
       const manager = managerResults.find((r) => r.match)?.manager;
 
@@ -68,8 +85,11 @@ export class PurchaseOrdersService {
             approvedBy: { connect: { id: manager.id } },
           },
         });
-      } catch (err) {
-        Logger.warn(`[AuditEscalation] Failed to record: ${err.message}`, 'PurchaseOrdersService');
+      } catch (err: any) {
+        Logger.warn(
+          `[AuditEscalation] Failed to record: ${err?.message || err}`,
+          'PurchaseOrdersService',
+        );
       }
     }
 
@@ -98,6 +118,8 @@ export class PurchaseOrdersService {
         poNumber,
         totalValue: totalAmount || 0,
         scmId: userId,
+        status: 'DRAFT' as any,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
         estArrival: dto.estArrival ? new Date(dto.estArrival) : undefined,
         items: items
           ? {
@@ -117,8 +139,11 @@ export class PurchaseOrdersService {
     return this.prisma.purchaseOrder.findMany({
       include: {
         supplier: true,
-        scm: { select: { fullName: true } },
+        scm: { select: { id: true, fullName: true } },
         inbounds: { include: { items: true } },
+        items: {
+          include: { material: true },
+        },
       },
       orderBy: { id: 'desc' },
     });
@@ -131,6 +156,23 @@ export class PurchaseOrdersService {
     });
     if (!po) throw new NotFoundException(`PO ${id} not found`);
     return po;
+  }
+
+  async updateStatus(id: string, status: string, reason?: string) {
+    const po = await this.prisma.purchaseOrder.findUnique({
+      where: { id },
+    });
+    if (!po) throw new NotFoundException('Purchase Order not found');
+
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: {
+        status: status as any,
+        notes: reason
+          ? `${po.notes || ''}\n[${status}] ${reason}`.trim()
+          : undefined,
+      },
+    });
   }
 
   async createDownPayment(poId: string, amount: number, notes?: string) {

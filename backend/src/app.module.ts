@@ -32,6 +32,7 @@ import { EventsModule } from './modules/events/events.module';
 import { SystemModule } from './modules/system/system.module';
 
 import { MasterModule } from './modules/master/master.module';
+import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -65,6 +66,7 @@ import { join } from 'path';
     HrModule,
     ExecutiveModule,
     MasterModule,
+    MyDashboardModule,
     EventEmitterModule.forRoot(),
     ActivityStreamModule,
     SharedModule,

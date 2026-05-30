@@ -426,11 +426,15 @@ export class QCAuditsService {
 
   // --- Query Methods ---
 
-  async findAll(status?: string, type?: string) {
+  async findAll(status?: string, type?: string, userId?: string) {
     const where: any = {};
 
     if (status) {
       where.status = this.normalizeStatus(status);
+    }
+
+    if (userId) {
+      where.qcId = userId;
     }
 
     if (type === 'inbound') {

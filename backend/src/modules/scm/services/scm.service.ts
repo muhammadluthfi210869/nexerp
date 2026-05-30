@@ -7,7 +7,13 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { ACTIVITY_EVENT } from '../../activity-stream/events/activity.events';
-import { Division, StreamEventType, POStatus, PRPriority, PRStatus } from '@prisma/client';
+import {
+  Division,
+  StreamEventType,
+  POStatus,
+  PRPriority,
+  PRStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class ScmService {
@@ -668,7 +674,9 @@ export class ScmService {
         where: { status: 'ACTIVE' },
       });
       if (!warehouse)
-        throw new NotFoundException('No active warehouse found for PR auto-gen');
+        throw new NotFoundException(
+          'No active warehouse found for PR auto-gen',
+        );
 
       const prItems = [];
 
@@ -774,12 +782,34 @@ export class ScmService {
     });
   }
 
+  async rejectPurchaseRequest(prId: string, reason?: string) {
+    const pr = await this.prisma.purchaseRequest.findUnique({
+      where: { id: prId },
+    });
+    if (!pr) throw new NotFoundException('Purchase Request not found');
+    if (pr.status !== PRStatus.SUBMITTED) {
+      throw new BadRequestException(
+        `PR status ${pr.status} — hanya SUBMITTED yang bisa di-reject`,
+      );
+    }
+    return this.prisma.purchaseRequest.update({
+      where: { id: prId },
+      data: {
+        status: PRStatus.REJECTED,
+        notes: reason
+          ? `${pr.notes || ''}\n[REJECTED] ${reason}`.trim()
+          : pr.notes,
+      },
+    });
+  }
+
   async getPurchaseRequests() {
     return this.prisma.purchaseRequest.findMany({
       include: {
         items: { include: { material: true } },
         warehouse: true,
         supplier: true,
+        creator: { select: { id: true, fullName: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -802,6 +832,7 @@ export class ScmService {
           warehouseId: dto.warehouseId,
           priority: dto.priority || PRPriority.MEDIUM,
           notes: dto.notes,
+          createdById: (dto as any).createdById,
           items: {
             create: dto.items.map((item) => ({
               materialId: item.materialId,

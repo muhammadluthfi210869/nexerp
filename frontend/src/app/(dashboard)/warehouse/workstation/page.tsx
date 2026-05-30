@@ -365,7 +365,7 @@ export default function WarehouseWorkstation() {
                      </div>
                      <div className="text-right">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RELEASE QTY</p>
-                        <p className="text-2xl font-black text-emerald-600 uppercase italic tracking-tighter mt-1">{selectedIssueItem?.totalRequested} {selectedIssueItem?.unit}</p>
+                         <p className="text-2xl font-black text-emerald-600 uppercase italic tracking-tighter mt-1 tabular-nums">{selectedIssueItem?.totalRequested} {selectedIssueItem?.unit}</p>
                      </div>
                   </div>
 

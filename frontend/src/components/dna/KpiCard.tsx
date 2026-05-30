@@ -50,7 +50,7 @@ export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProp
 
   return (
     <div
-      className={`bg-white border rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center animate-fade-slide-in ${borderClass}`}
+      className={`bg-white border border-[var(--border-color)] rounded-[24px] p-8 shadow-sm transition-all group overflow-hidden relative flex items-center animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] ${borderClass}`}
       style={
         isUnder
           ? { animation: "kpi-pulse-border 2s cubic-bezier(0.22, 1, 0.36, 1) infinite" }
@@ -59,7 +59,7 @@ export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProp
     >
       <div className="flex justify-between items-center relative z-10 w-full">
         <div className="space-y-1.5 flex-1 min-w-0 pr-4">
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">{label}</p>
+          <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.1em]">{label}</p>
           <h3 className={`text-[32px] font-black tracking-[-0.02em] tabular leading-tight ${valueClass}`}>
             {value}
           </h3>

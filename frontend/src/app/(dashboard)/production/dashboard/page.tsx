@@ -1,50 +1,31 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { 
-  Factory,
-  CheckCircle2,
-  Gauge,
-  TrendingDown,
-  Package,
-  ShieldCheck, 
-  Clock, 
-  TrendingUp, 
-  Zap,
-  AlertTriangle,
-  Timer,
-  BarChart3
+  Activity,
+  Check,
+  Clock,
+  Cpu,
+  Beaker,
+  ShieldAlert,
+  Target,
+  ArrowRight,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { KpiCard } from "@/components/dna/KpiCard";
 
 export default function ProductionDashboardPage() {
-  const [activeSeconds, setActiveSeconds] = useState(0);
   const { data, isLoading } = useQuery({
     queryKey: ["prodDashboard"],
     queryFn: async () => (await api.get("/production/dashboard")).data,
   });
 
-  useEffect(() => {
-    const timer = setInterval(() => setActiveSeconds(s => s + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const activeHours = Math.floor(activeSeconds / 3600);
-  const activeMins = Math.floor((activeSeconds % 3600) / 60);
-
   if (isLoading) {
     return (
-      <div className="h-[80vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Clock className="w-12 h-12 text-amber-500 animate-spin" />
-          <p className="text-xs font-black text-slate-400 uppercase tracking-tight italic">Loading Production Command Center...</p>
-        </div>
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-3">
+         <Activity className="h-6 w-6 text-slate-400 animate-pulse" />
+         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Syncing Production DNA...</p>
       </div>
     );
   }
@@ -53,402 +34,413 @@ export default function ProductionDashboardPage() {
   const workshops = data?.workshops;
   const workshopsDetail = data?.workshops_detail;
   const precisionTracking = data?.precisionTracking || [];
-  const anomalies = data?.anomalies || [];
 
   return (
     <DashboardShell
-      title="PRODUCTION"
-      titleAccent="COMMAND CENTER"
-      subtitle="Institutional Audit • v3.0 • Real-Time Forge Orchestration"
-      actions={
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
-            <Timer className="w-3.5 h-3.5 text-amber-500" />
-            <div className="flex flex-col">
-              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">ACTIVE TIME</span>
-              <span className="text-[11px] font-black text-slate-800 tabular-nums leading-none mt-0.5">
-                {activeHours}h {activeMins.toString().padStart(2, '0')}m
+      title="PRODUCTION COMMAND CENTER"
+      subtitle="Shop Floor & Efficiency Audit"
+    >
+      {/* I. EXECUTIVE KPI CARDS (5 COLUMNS GRID) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1.25rem", marginBottom: "3rem" }}>
+        
+        {/* Card A: OUTPUT & ACHIEVEMENT */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <Target className="w-4 h-4 text-blue-500" />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>A. OUTPUT & ACHIEVEMENT</p>
+          </div>
+          <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+              {cards?.achievement?.rate ?? 0}%
+            </p>
+            <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>ACHIEVEMENT RATE</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>PLANNED</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+                {cards?.achievement?.planned ? (cards.achievement.planned).toLocaleString() : "0"} Units
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>ACTUAL</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>
+                {cards?.achievement?.actual ? (cards.achievement.actual).toLocaleString() : "0"} Units
+              </span>
+            </div>
+            <div style={{ background: "#F8FAFC", padding: "8px", borderRadius: "10px", border: "1px solid #E2E8F0", marginTop: "4px" }}>
+              <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>COMPLETED ORDERS</p>
+              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                {cards?.achievement?.completedOrders ?? 0} / {cards?.achievement?.totalOrders ?? 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card B: TIMELINESS AUDIT */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <Clock className="w-4 h-4 text-yellow-500" />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>B. TIMELINESS AUDIT</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>ON-TIME RATE</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#EAB308" }}>{cards?.timeliness?.rate ?? 0}%</span>
+            </div>
+            <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ width: `${cards?.timeliness?.rate ?? 0}%`, height: "100%", background: "#EAB308" }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div style={{ background: "#FFF1F2", padding: "8px", borderRadius: "10px" }}>
+                <p style={{ fontSize: "7px", fontWeight: 850, color: "#EF4444", margin: 0 }}>DELAYED</p>
+                <p style={{ fontSize: "12px", fontWeight: 950, color: "#E11D48", margin: 0 }}>{cards?.timeliness?.delayed ?? 0}</p>
+              </div>
+              <div style={{ background: "#F0FDF4", padding: "8px", borderRadius: "10px" }}>
+                <p style={{ fontSize: "7px", fontWeight: 850, color: "#166534", margin: 0 }}>AVG CYCLE</p>
+                <p style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{cards?.timeliness?.avgCycleHours ?? 0}h</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card C: RESOURCE EFFICIENCY */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <Cpu className="w-4 h-4 text-purple-500" />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>C. RESOURCE EFFICIENCY</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>MACHINE UTIL.</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#8B5CF6" }}>{cards?.efficiency?.utilization ?? 0}%</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>LABOR PROD.</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{cards?.efficiency?.labor ?? 92.5}%</span>
+            </div>
+            <div style={{ background: "#FFF7ED", padding: "10px", borderRadius: "12px", border: "1px solid #FFEDD5", marginTop: "4px" }}>
+              <p style={{ fontSize: "8px", fontWeight: 850, color: "#C2410C", margin: 0 }}>DOWNTIME (MTD)</p>
+              <p style={{ fontSize: "14px", fontWeight: 950, color: "#EA580C", margin: "2px 0 0 0" }}>{cards?.efficiency?.downtime ?? "0h"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card D: QUALITY CONTROL */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <Beaker className="w-4 h-4 text-emerald-500" />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>D. QUALITY CONTROL</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>GOOD UNITS</p>
+                <p style={{ fontSize: "18px", fontWeight: 950, color: "#10B981", margin: 0 }}>
+                  {cards?.quality?.goodUnits ? ((cards.quality.goodUnits) / 1000).toFixed(0) : "0"}k
+                </p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>DEFECT RATE</p>
+                <p style={{ fontSize: "18px", fontWeight: 950, color: "#EF4444", margin: 0 }}>{cards?.quality?.defectRate ?? 0}%</p>
+              </div>
+            </div>
+            <div style={{ background: "#F1F5F9", height: "6px", borderRadius: "3px", overflow: "hidden", display: "flex" }}>
+              <div style={{ width: `${100 - (cards?.quality?.defectRate ?? 0)}%`, height: "100%", background: "#10B981" }} />
+              <div style={{ width: `${cards?.quality?.defectRate ?? 0}%`, height: "100%", background: "#EF4444" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+              <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>REWORK COUNT</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+                {cards?.quality?.reworkCount ? (cards.quality.reworkCount).toLocaleString() : "0"} Pcs
               </span>
             </div>
           </div>
-          <Button variant="outline" className="rounded-xl border-slate-200 text-brand-black font-black text-[10px] h-10 uppercase px-6 shadow-sm">
-            EXPORT AUDIT
-          </Button>
-          <Button className="rounded-xl bg-primary hover:bg-orange-600 text-white font-black text-[10px] h-10 uppercase px-6 shadow-lg shadow-primary/20">
-            SYNC ENGINE
-          </Button>
-        </div>
-      }
-    >
-
-      {/* I. EXECUTIVE KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="ACHIEVEMENT RATE"
-          value={`${cards?.achievement?.rate ?? 0}%`}
-          targetPct={cards?.achievement?.rate ?? 0}
-          icon={<Factory />}
-        />
-        <KpiCard
-          label="ON-TIME RATE"
-          value={`${cards?.timeliness?.rate ?? 0}%`}
-          targetPct={cards?.timeliness?.rate ?? 0}
-          icon={<Clock />}
-        />
-        <KpiCard
-          label="DELAYED"
-          value={String(cards?.timeliness?.delayed ?? 0)}
-          targetPct={(cards?.timeliness?.delayed ?? 0) === 0 ? 100 : 0}
-          icon={<AlertTriangle />}
-        />
-        <KpiCard
-          label="DEFECT RATE"
-          value={`${cards?.quality?.defectRate ?? 0}%`}
-          targetPct={Math.max(0, 100 - (cards?.quality?.defectRate ?? 0) * 50)}
-          icon={<TrendingDown />}
-        />
-        <KpiCard
-          label="BREAKDOWNS"
-          value={String(cards?.alerts?.breakdown ?? 0)}
-          targetPct={(cards?.alerts?.breakdown ?? 0) === 0 ? 100 : 0}
-          icon={<Gauge />}
-        />
-        <KpiCard
-          label="SHORTAGES"
-          value={String(cards?.alerts?.shortages ?? 0)}
-          targetPct={(cards?.alerts?.shortages ?? 0) === 0 ? 100 : 0}
-          icon={<Package />}
-        />
-        <KpiCard
-          label="URGENT"
-          value={String(cards?.alerts?.urgent ?? 0)}
-          targetPct={(cards?.alerts?.urgent ?? 0) === 0 ? 100 : 0}
-          icon={<Zap />}
-        />
-        <KpiCard
-          label="MACHINE UTIL."
-          value={`${cards?.efficiency?.utilization ?? 0}%`}
-          targetPct={cards?.efficiency?.utilization ?? 0}
-          icon={<CheckCircle2 />}
-        />
-      </div>
-
-      {/* VI. PROGRESS DONUT — WORK ORDER DISTRIBUTION */}
-      <div className="mt-6">
-        <Card className="rounded-[1.5rem] p-6 border border-slate-100 shadow-sm bg-white">
-          <div className="flex items-center gap-2 mb-5">
-            <BarChart3 className="w-4 h-4 text-slate-500" />
-            <h3 className="text-[11px] font-black uppercase tracking-tighter text-brand-black italic">VI. PIPELINE DISTRIBUTION — WO BY STAGE</h3>
-          </div>
-          <div className="flex items-center gap-8 overflow-x-auto pb-2">
-            {[
-              { stage: 'QUEUE', count: workshops?.queue ?? 0, color: 'bg-slate-400' },
-              { stage: 'MIXING', count: workshops?.mixing ?? 0, color: 'bg-blue-500' },
-              { stage: 'FILLING', count: workshops?.filling ?? 0, color: 'bg-indigo-500' },
-              { stage: 'PACKING', count: workshops?.packing ?? 0, color: 'bg-purple-500' },
-              { stage: 'FG', count: workshops?.fg ?? 0, color: 'bg-emerald-500' },
-            ].map((item) => {
-              const total = (workshops?.queue ?? 0) + (workshops?.mixing ?? 0) + (workshops?.filling ?? 0) + (workshops?.packing ?? 0) + (workshops?.fg ?? 0);
-              const pct = total > 0 ? (item.count / total) * 100 : 0;
-              return (
-                <div key={item.stage} className="flex flex-col items-center gap-2 min-w-[80px]">
-                  <div className="relative w-16 h-16">
-                    <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f1f5f9" strokeWidth="3" />
-                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="3"
-                        strokeDasharray={`${pct} ${100 - pct}`}
-                        strokeLinecap="round"
-                        className={item.color.replace('bg-', 'text-')}
-                      />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-700 tabular-nums">
-                      {item.count}
-                    </span>
-                  </div>
-                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-wider">{item.stage}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
-
-      {/* II. PENYIAPAN BAHAN (WAREHOUSE) */}
-      <div className="space-y-3 mt-6">
-        <div className="flex justify-between items-center px-1">
-           <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
-              <h3 className="text-[13px] font-black uppercase tracking-tighter text-brand-black italic">II. PENYIAPAN BAHAN (FROM WAREHOUSE)</h3>
-           </div>
-           <Button variant="ghost" className="text-[9px] font-black text-blue-600 uppercase h-6 border border-blue-200 rounded-full px-4">
-              MONITORING GUDANG
-           </Button>
         </div>
 
-        <Card className="rounded-[1.2rem] overflow-hidden border border-slate-100 shadow-sm bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+        {/* Card E: CRITICAL ALERTS */}
+        <div style={{ background: "#FFF1F2", padding: "1.5rem", borderRadius: "24px", border: "1px solid #FECDD3", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+            <ShieldAlert className="w-4 h-4 text-rose-600" />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#9F1239", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>E. CRITICAL ALERTS</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", background: "white", padding: "8px 12px", borderRadius: "10px", border: "1px solid #FECDD3" }}>
+              <span style={{ fontSize: "9px", fontWeight: 900, color: "#E11D48" }}>BREAKDOWNS</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{cards?.alerts?.breakdown ?? 0}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", background: "white", padding: "8px 12px", borderRadius: "10px", border: "1px solid #FECDD3" }}>
+              <span style={{ fontSize: "9px", fontWeight: 900, color: "#EF4444" }}>SHORTAGES</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{cards?.alerts?.shortages ?? 0}</span>
+            </div>
+            <div style={{ background: "#9F1239", padding: "8px 12px", borderRadius: "10px", marginTop: "2px" }}>
+              <p style={{ fontSize: "8px", fontWeight: 950, color: "#ffffff", margin: 0, opacity: 0.9 }}>URGENT ALERT</p>
+              <p style={{ fontSize: "10px", fontWeight: 950, color: "#ffffff", margin: 0 }}>
+                {cards?.alerts?.urgent ?? 0} ORDERS OVERDUE &gt; 48H
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* II. PENYIAPAN BAHAN (FROM WAREHOUSE) */}
+      <div style={{ marginBottom: "3.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+          <h3 className="section-label">II. PENYIAPAN BAHAN (FROM WAREHOUSE)</h3>
+          <button style={{ background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE", padding: "6px 16px", borderRadius: "99px", fontSize: "11px", fontWeight: 950, display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+            MONITORING GUDANG
+          </button>
+        </div>
+        <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-3 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">WORK ORDER / PRODUK</th>
-                  <th className="px-8 py-3 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS PICKING</th>
-                  <th className="px-8 py-3 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">KELENGKAPAN</th>
-                  <th className="px-8 py-3 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">ESTIMASI KIRIM</th>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>WORK ORDER / PRODUK</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>STATUS PICKING</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>KELENGKAPAN</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>ESTIMASI KIRIM</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {precisionTracking.slice(0, 5).map((row: any, i: number) => (
-                  <tr key={i} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                    <td className="px-8 py-4">
-                      <p className="text-[11px] font-black text-brand-black uppercase tracking-tight">{row.batchId || 'N/A'}</p>
-                      <p className="text-[8px] font-bold text-slate-300 uppercase leading-none mt-1">{row.productName || 'Unknown'}</p>
-                    </td>
-                    <td className="px-8 py-4 text-center">
-                      <p className={cn("text-[9px] font-black uppercase tracking-tighter", row.status === 'DEFECT_DETECTED' ? 'text-rose-500' : 'text-emerald-500')}>
-                        {row.anomaly === 'DEFECT_DETECTED' ? 'ISSUE' : 'NOMINAL'}
-                      </p>
-                    </td>
-                    <td className="px-8 py-4">
-                      <div className="flex items-center gap-4 max-w-[200px] mx-auto">
-                         <div className="flex-1 h-1 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                            <div 
-                              className={cn("h-full transition-all duration-1000", row.anomaly === 'DEFECT_DETECTED' ? "bg-rose-500" : "bg-emerald-500")}
-                              style={{ width: `${row.anomaly === 'DEFECT_DETECTED' ? 50 : 100}%` }} 
-                            />
-                         </div>
-                         <span className="text-[10px] font-black text-brand-black tabular w-8 text-right">{row.anomaly === 'DEFECT_DETECTED' ? '50%' : '100%'}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-4 text-right">
-                      <p className={cn("text-[11px] font-black uppercase tracking-tight", row.deadline <= 2 ? 'text-rose-500' : 'text-brand-black')}>
-                        {row.deadline > 0 ? `${row.deadline} days left` : 'OVERDUE'}
-                      </p>
-                    </td>
-                  </tr>
-                ))}
+              <tbody>
+                {precisionTracking.slice(0, 3).map((row: any, i: number) => {
+                  const isDefect = row.anomaly === 'DEFECT_DETECTED';
+                  return (
+                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "1.5rem 2rem" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 950, color: "#0F172A", textTransform: "uppercase" }}>{row.batchId}</div>
+                        <div style={{ fontSize: "11px", color: "#64748B", fontWeight: 500 }}>{row.productName}</div>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem", textAlign: "center" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 950, color: isDefect ? "#EF4444" : "#10B981" }}>
+                          {isDefect ? "IN PROGRESS" : "READY"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div style={{ flex: 1, height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ width: isDefect ? "65%" : "100%", height: "100%", background: isDefect ? "#3B82F6" : "#10B981" }} />
+                          </div>
+                          <span style={{ fontSize: "11px", fontWeight: 950, color: "#0F172A", minWidth: "35px" }}>
+                            {isDefect ? "65%" : "100%"}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem", textAlign: "right" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 950, color: row.deadline > 0 ? "#1E293B" : "#10B981" }}>
+                          {row.deadline > 0 ? `H-${row.deadline}` : "READY"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK) */}
-      <div className="space-y-3 mt-6">
-        <div className="flex items-center gap-2 ml-1">
-           <h3 className="text-[13px] font-black uppercase tracking-tighter text-brand-black italic">III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK)</h3>
+      <div style={{ marginBottom: "4rem" }}>
+        <h3 className="section-label" style={{ marginBottom: "1.5rem" }}>III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK)</h3>
+        <div style={{ background: "white", padding: "2.5rem", borderRadius: "32px", border: "1px solid #F1F5F9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {[
+            { label: "ANTREAN WO", val: workshops?.queue ?? 0, sub: "BATCHES" },
+            { label: "MIXING", val: workshops?.mixing ?? 0, sub: "BATCHES" },
+            { label: "FILLING", val: workshops?.filling ?? 0, sub: "BATCHES" },
+            { label: "PACKING", val: workshops?.packing ?? 0, sub: "BATCHES" },
+            { label: "FINISHED GOODS", val: (cards?.achievement?.actual ?? 0).toLocaleString(), sub: "PCS" }
+          ].map((node, t, arr) => (
+            <React.Fragment key={t}>
+              <div style={{ width: "180px", padding: "1.5rem", borderRadius: "16px", border: "1px solid #F1F5F9", background: "white", textAlign: "center", position: "relative", boxShadow: "0 4px 15px -5px rgba(0,0,0,0.05)" }}>
+                <p style={{ fontSize: "11px", fontWeight: 800, color: "#94A3B8", marginBottom: "8px", textTransform: "uppercase" }}>{node.label}</p>
+                <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{node.val}</p>
+                <p style={{ fontSize: "10px", fontWeight: 900, color: "#94A3B8", margin: 0 }}>{node.sub}</p>
+              </div>
+              {t < arr.length - 1 && (
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 950, color: t % 2 === 0 ? "#E11D48" : "#94A3B8", background: t % 2 === 0 ? "#FFF1F2" : "#F8FAFC", padding: "2px 8px", borderRadius: "4px", whiteSpace: "nowrap" }}>
+                    {t === 0 ? `IDLE: ${workshopsDetail?.[0]?.idleTime || "13h"}` : t === 1 ? `WAIT: ${workshopsDetail?.[1]?.waitTime || "0.2d"}` : t === 2 ? `IDLE: ${workshopsDetail?.[2]?.idleTime || "14h"}` : `WAIT: ${workshopsDetail?.[3]?.waitTime || "0.1d"}`}
+                  </span>
+                  <ArrowRight className="w-5 h-5" style={{ color: t % 2 === 0 ? "#EF4444" : "#E2E8F0" }} />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
         </div>
-
-         <Card className="rounded-[2rem] p-8 border border-slate-100 shadow-sm bg-white overflow-hidden">
-            <div className="flex items-center justify-between gap-2">
-               {/* STAGE 1: QUEUE */}
-               <div className="flex-1 text-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">ANTREAN WO</p>
-                  <h4 className="text-[24px] font-black text-brand-black tracking-tighter mt-1 leading-none">{workshops?.queue ?? 0}</h4>
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-1">BATCHES</p>
-               </div>
-
-               {/* ARROW 1 */}
-               <div className="flex flex-col items-center gap-1 min-w-[60px]">
-                  <span className="text-[7px] font-black text-rose-500 uppercase tracking-tighter italic">IDLE: {workshopsDetail?.[0]?.idleTime || '—'}</span>
-                  <TrendingUp className="w-4 h-4 text-rose-400 rotate-90 scale-y-[-1]" />
-               </div>
-
-               {/* STAGE 2: MIXING */}
-               <div className="flex-1 text-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">MIXING</p>
-                  <h4 className="text-[24px] font-black text-brand-black tracking-tighter mt-1 leading-none">{workshops?.mixing ?? 0}</h4>
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-1">BATCHES</p>
-               </div>
-
-               {/* ARROW 2 */}
-               <div className="flex flex-col items-center gap-1 min-w-[60px]">
-                  <span className="text-[7px] font-black text-slate-300 uppercase tracking-tighter italic">WAIT: {workshopsDetail?.[1]?.waitTime || '—'}</span>
-                  <TrendingUp className="w-4 h-4 text-slate-200 rotate-90 scale-y-[-1]" />
-               </div>
-
-               {/* STAGE 3: FILLING */}
-               <div className="flex-1 text-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">FILLING</p>
-                  <h4 className="text-[24px] font-black text-brand-black tracking-tighter mt-1 leading-none">{workshops?.filling ?? 0}</h4>
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-1">BATCHES</p>
-               </div>
-
-               {/* ARROW 3 */}
-               <div className="flex flex-col items-center gap-1 min-w-[60px]">
-                  <span className="text-[7px] font-black text-rose-500 uppercase tracking-tighter italic">IDLE: {workshopsDetail?.[2]?.idleTime || '—'}</span>
-                  <TrendingUp className="w-4 h-4 text-rose-400 rotate-90 scale-y-[-1]" />
-               </div>
-
-               {/* STAGE 4: PACKING */}
-               <div className="flex-1 text-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">PACKING</p>
-                  <h4 className="text-[24px] font-black text-brand-black tracking-tighter mt-1 leading-none">{workshops?.packing ?? 0}</h4>
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-1">BATCHES</p>
-               </div>
-
-               {/* ARROW 4 */}
-               <div className="flex flex-col items-center gap-1 min-w-[60px]">
-                  <span className="text-[7px] font-black text-slate-300 uppercase tracking-tighter italic">WAIT: {workshopsDetail?.[3]?.waitTime || '—'}</span>
-                  <TrendingUp className="w-4 h-4 text-slate-200 rotate-90 scale-y-[-1]" />
-               </div>
-
-               {/* STAGE 5: FINISHED GOODS */}
-               <div className="flex-1 text-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">FINISHED GOODS</p>
-                  <h4 className="text-[24px] font-black text-brand-black tracking-tighter mt-1 leading-none">{(cards?.achievement?.actual ?? 0).toLocaleString()}</h4>
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-1">PCS</p>
-               </div>
-            </div>
-         </Card>
       </div>
-      {/* IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING) */}
-      <div className="space-y-3 mt-6">
-        <div className="flex justify-between items-center px-1">
-           <div className="flex items-center gap-2">
-              <h3 className="text-[13px] font-black uppercase tracking-tighter text-brand-black italic">IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING)</h3>
-           </div>
-           <Button variant="ghost" className="text-[9px] font-black text-indigo-600 uppercase h-6 border border-indigo-200 rounded-full px-4 bg-indigo-50/50">
-              CHAIN OF CUSTODY
-           </Button>
-        </div>
 
-        <Card className="rounded-[1.2rem] overflow-hidden border border-slate-100 shadow-sm bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+      {/* IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING) */}
+      <div style={{ marginBottom: "4rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+          <h3 className="section-label">IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING)</h3>
+          <span style={{ background: "#4F46E5", color: "white", padding: "4px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 950 }}>
+            CHAIN OF CUSTODY
+          </span>
+        </div>
+        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DEADLINE (H-MINUS)</th>
-                  <th className="px-6 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">PRODUCT ID / NAME</th>
-                  <th className="px-6 py-4 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">CHAIN OF CUSTODY (UNIT FLOW)</th>
-                  <th className="px-6 py-4 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">ANOMALY STATUS</th>
-                  <th className="px-6 py-4 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS & REASON</th>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>DEADLINE (H-MINUS)</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>PRODUCT ID / NAME</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>CHAIN OF CUSTODY (UNIT FLOW)</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>ANOMALY STATUS</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>STATUS & REASON</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody>
                 {precisionTracking.map((row: any, i: number) => {
-                  const daysLeft = row.deadline;
                   const isDefect = row.anomaly === 'DEFECT_DETECTED';
                   const phaseLabel = (row.status || '').replace('PHASE_', '');
                   const flowParts = (row.unitFlow || '0 >> 0').split('>>');
+                  const inputQty = flowParts[0]?.trim() || '0';
+                  const outputQty = flowParts[1]?.trim() || '0';
+                  
+                  let activeIdx = 1;
+                  if (row.status === 'PHASE_FILLING') activeIdx = 2;
+                  else if (row.status === 'PHASE_PACKING') activeIdx = 3;
+                  else if (row.status === 'PHASE_FINISHED_GOODS' || row.status === 'FINISHED') activeIdx = 4;
+
+                  const steps = [
+                    inputQty,
+                    activeIdx >= 2 ? inputQty : '-',
+                    activeIdx >= 3 ? inputQty : '-',
+                    activeIdx >= 4 ? outputQty : '-'
+                  ];
+
+                  const diff = parseInt(inputQty) - parseInt(outputQty);
+                  const anomalyText = isDefect ? (diff > 0 ? `REJECT: ${diff} UNIT` : 'DEFECT DETECTED') : `PROSES ${phaseLabel || 'NORMAL'}`;
+                  const anomalyColor = isDefect ? '#FFF1F2' : '#D1FAE5';
+                  const anomalyTextColor = isDefect ? '#E11D48' : '#059669';
+
                   return (
-                  <tr key={i} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                    <td className="px-6 py-5">
-                      <p className="text-[11px] font-black text-brand-black uppercase tabular leading-none">{daysLeft > 0 ? `H-${daysLeft}` : 'OVERDUE'}</p>
-                      <p className={cn("text-[8px] font-black uppercase mt-1 leading-none italic", daysLeft > 0 ? 'text-rose-500' : 'text-rose-700')}>
-                        {daysLeft > 0 ? `Sisa ${daysLeft} Hari` : '—'}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-[11px] font-black text-brand-black uppercase tracking-tight leading-none">{row.productName || 'Unknown Product'}</p>
-                      <p className="text-[8px] font-bold text-slate-300 uppercase leading-none mt-1 tracking-tighter">{row.batchId || '—'}</p>
-                    </td>
-                    <td className="px-6 py-5">
-                       <div className="flex items-center justify-center gap-1">
-                          <div className="flex flex-col items-center gap-1 w-[45px]">
-                             <div className="w-7 h-7 rounded-full flex items-center justify-center border text-[10px] font-black shadow-sm bg-blue-50 border-blue-200 text-blue-500">
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                             </div>
-                             <span className="text-[6px] font-black text-slate-400 uppercase tracking-tighter">INPUT</span>
-                             <span className="text-[7px] font-black text-indigo-500 tabular leading-none">{flowParts[0]?.trim() || '0'}</span>
-                          </div>
-                          <div className="h-[1px] w-8 -mt-5 bg-indigo-600" />
-                          <div className="flex flex-col items-center gap-1 w-[45px]">
-                             <div className="w-7 h-7 rounded-full flex items-center justify-center border text-[10px] font-black shadow-sm bg-blue-50 border-blue-200 text-blue-500">
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                             </div>
-                             <span className="text-[6px] font-black text-slate-400 uppercase tracking-tighter">OUTPUT</span>
-                             <span className="text-[7px] font-black text-indigo-500 tabular leading-none">{flowParts[1]?.trim() || '0'}</span>
-                          </div>
-                       </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                       <span className={cn(
-                         "px-4 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-tight shadow-sm border whitespace-nowrap",
-                         isDefect ? "bg-rose-500 text-white border-rose-600" : "bg-emerald-50 text-emerald-600 border-emerald-100"
-                       )}>
-                         {isDefect ? 'DEFECT DETECTED' : 'NOMINAL'}
-                       </span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                       <p className="text-[10px] font-black text-brand-black uppercase tracking-tight">
-                          <span className={cn(phaseLabel === 'FINISHED_GOODS' ? 'text-emerald-500' : 'text-indigo-600')}>
-                            {phaseLabel || row.status || 'UNKNOWN'}
-                          </span>
-                       </p>
-                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1 italic leading-tight max-w-[180px] ml-auto">
-                          {row.notes || '—'}
-                       </p>
-                    </td>
-                  </tr>
+                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "1.5rem 2rem" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 950, color: "#0F172A" }}>
+                          {row.deadline > 0 ? `H-${row.deadline}` : "OVERDUE"}
+                        </div>
+                        <span style={{ fontSize: "9px", fontWeight: 900, color: row.deadline <= 2 ? "#E11D48" : "#64748B", background: row.deadline <= 2 ? "#FFF1F2" : "#F8FAFC", padding: "2px 8px", borderRadius: "4px" }}>
+                          {row.deadline > 0 ? `Sisa ${row.deadline} Hari` : "OVERDUE"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 950, color: "#0F172A", textTransform: "uppercase" }}>{row.productName}</div>
+                        <div style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>{row.batchId}</div>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0 }}>
+                          {["MIXING", "FILLING", "PACKING", "FINISH"].map((tLabel, nIdx) => (
+                            <div key={nIdx} style={{ display: "flex", alignItems: "center" }}>
+                              <div style={{ textAlign: "center", width: "60px" }}>
+                                <div style={{ 
+                                  width: "32px", 
+                                  height: "32px", 
+                                  borderRadius: "50%", 
+                                  border: "1px solid #E2E8F0", 
+                                  margin: "0 auto 6px", 
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  justifyContent: "center", 
+                                  background: nIdx + 1 === activeIdx ? "#4F46E5" : nIdx + 1 < activeIdx ? "#EEF2FF" : "white", 
+                                  color: nIdx + 1 === activeIdx ? "white" : nIdx + 1 < activeIdx ? "#4F46E5" : "#94A3B8" 
+                                }}>
+                                  {nIdx + 1 < activeIdx ? <Check className="w-3.5 h-3.5" /> : nIdx + 1}
+                                </div>
+                                <p style={{ fontSize: "8px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{tLabel}</p>
+                                <p style={{ fontSize: "9px", fontWeight: 950, color: nIdx + 1 <= activeIdx ? "#4F46E5" : "#94A3B8", margin: 0 }}>{steps[nIdx]}</p>
+                              </div>
+                              {nIdx < 3 && (
+                                <div style={{ width: "40px", height: "2px", background: nIdx + 1 < activeIdx ? "#4F46E5" : "#F1F5F9", marginTop: "-20px" }} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem", textAlign: "center" }}>
+                        <span style={{ 
+                          background: anomalyColor, 
+                          color: anomalyTextColor, 
+                          padding: "8px 16px", 
+                          borderRadius: "20px", 
+                          fontSize: "10px", 
+                          fontWeight: 950,
+                          boxShadow: isDefect ? "0 4px 12px -2px rgba(225,29,72,0.2)" : "none"
+                        }}>
+                          {anomalyText}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1.5rem 2rem", textAlign: "right" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px", marginBottom: "4px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 950, color: isDefect ? "#EF4444" : "#10B981" }}>{phaseLabel || row.status}</span>
+                          <span style={{ fontSize: "11px", fontWeight: 800, color: "#94A3B8" }}>100%</span>
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#64748B", fontStyle: "italic", maxWidth: "180px", marginLeft: "auto" }}>
+                          {row.notes || "Processing normally"}
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
-      {/* V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI) */}
-      <div className="space-y-3 mt-6">
-        <div className="flex items-center gap-2 ml-1">
-           <h3 className="text-[13px] font-black uppercase tracking-tighter text-brand-black italic">V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI)</h3>
         </div>
+      </div>
 
-        <Card className="rounded-[1.2rem] overflow-hidden border border-slate-100 shadow-sm bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+      {/* V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI) */}
+      <div style={{ marginBottom: "4rem" }}>
+        <h3 className="section-label" style={{ marginBottom: "1.5rem" }}>V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI)</h3>
+        <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">NO. WORK ORDER</th>
-                  <th className="px-8 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">NAMA KLIEN & PRODUK</th>
-                  <th className="px-8 py-4 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">TAHAPAN SAAT INI</th>
-                  <th className="px-8 py-4 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">ESTIMASI SELESAI</th>
-                  <th className="px-8 py-4 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest pr-10">QTY DEFECT</th>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>NO. WORK ORDER</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>NAMA KLIEN & PRODUK</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>TAHAPAN SAAT INI</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>ESTIMASI SELESAI</th>
+                  <th style={{ padding: "1.25rem 2rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>QTY DEFECT</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody>
                 {precisionTracking.map((row: any, i: number) => {
                   const phaseLabel = (row.status || '').replace('PHASE_', '');
-                  const defectQty = row.anomaly === 'DEFECT_DETECTED' ? parseInt((row.unitFlow || '0>>0').split('>>')[0]) - parseInt((row.unitFlow || '0>>0').split('>>')[1]) : 0;
+                  const flowParts = (row.unitFlow || '0 >> 0').split('>>');
+                  const inputQty = parseInt(flowParts[0]?.trim() || '0');
+                  const outputQty = parseInt(flowParts[1]?.trim() || '0');
+                  const defect = Math.max(0, inputQty - outputQty);
+
                   return (
-                  <tr key={i} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                    <td className="px-8 py-4">
-                       <p className="text-[9px] font-black text-slate-300 uppercase tracking-tighter tabular">{row.batchId || '—'}</p>
-                    </td>
-                    <td className="px-8 py-4">
-                       <p className="text-[11px] font-black text-brand-black uppercase tracking-tight">
-                          {row.productName || 'Unknown Product'}
-                       </p>
-                    </td>
-                    <td className="px-8 py-4 text-center">
-                       <span className={cn(
-                         "px-5 py-1 rounded-full text-[8px] font-black uppercase tracking-tight border whitespace-nowrap",
-                         phaseLabel === 'FINISHED_GOODS' ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-                         row.anomaly === 'DEFECT_DETECTED' ? "bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-100" :
-                         "bg-slate-50 text-slate-400 border-slate-100"
-                       )}>
-                         {phaseLabel || row.status || 'PENDING'}
-                       </span>
-                    </td>
-                    <td className="px-8 py-4 text-right">
-                       <p className="text-[11px] font-black text-brand-black uppercase tracking-tight tabular">{row.deadline > 0 ? `H-${row.deadline}` : 'OVERDUE'}</p>
-                    </td>
-                    <td className="px-8 py-4 text-right pr-10">
-                       <span className={cn(
-                         "text-[11px] font-black tabular",
-                         defectQty <= 0 ? "text-emerald-500" : "text-rose-500"
-                       )}>
-                         {defectQty} Pcs
-                       </span>
-                    </td>
-                  </tr>
+                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "1.25rem 2rem", fontSize: "12px", fontWeight: 800, color: "#94A3B8" }}>{row.batchId}</td>
+                      <td style={{ padding: "1.25rem 2rem" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", textTransform: "uppercase" }}>{row.productName}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 2rem", textAlign: "center" }}>
+                        <span style={{ background: "#F1F5F9", color: "#1E293B", padding: "6px 14px", borderRadius: "99px", fontSize: "10px", fontWeight: 950 }}>
+                          {phaseLabel || row.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "13px", fontWeight: 800, color: "#1E293B" }}>
+                        {row.deadline > 0 ? `2026-06-${String(row.deadline).padStart(2, '0')}` : "OVERDUE"}
+                      </td>
+                      <td style={{ padding: "1.25rem 2rem", textAlign: "right" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 950, color: defect > 0 ? "#E11D48" : "#10B981" }}>
+                          {defect} Pcs
+                        </span>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
       </div>
+
     </DashboardShell>
   );
 }
-

@@ -2,23 +2,22 @@
 
 import React from "react";
 import {
-   TrendingUp,
-   ShieldAlert,
-   AlertTriangle,
-   Box,
+   HardDrive,
    DollarSign,
+   RefreshCw,
+   ShieldAlert,
    ChevronRight,
-   Zap,
-   Clock,
-   Beaker,
-   Warehouse,
-   Target,
-   Layers,
-   RefreshCw
+   FlaskConical,
+   ShieldCheck,
+   Package,
+   CheckCircle,
+   ShoppingBag,
+   Truck,
+   AlertTriangle,
+  Zap,
+  Box,
+  Activity
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 
 interface WarehouseDashboardClientProps {
    initialStats?: {
@@ -31,10 +30,10 @@ interface WarehouseDashboardClientProps {
       jalurA?: { inbound?: number; karantina?: number; velocity?: number };
       jalurB?: { reqProd?: number; picking?: number; handover?: number; velocity?: number };
       jalurC?: { orderProc?: number; shipping?: number; delivered?: number; velocity?: number };
-      sensitiveMaterials?: Array<{ name: string; date: string; status: string; qty: string }>;
-      packagingStocks?: Array<{ name: string; qty: string; status: string }>;
-      soFulfillment?: Array<{ client: string; so: string; qty: string; status: string; progress: number; var: number }>;
-      riskLoss?: Array<{ item: string; source: string; detail: string; impact: string; action: string }>;
+      sensitiveMaterials?: Array<{ name: string; date: string; status: string; qty: string; fisik?: number; book?: number; avail?: number; age?: string }>;
+      packagingStocks?: Array<{ name: string; qty: string; status: string; fisik?: number; book?: number; avail?: number; age?: string; date?: string }>;
+      soFulfillment?: Array<{ client: string; so: string; qty: string; status: string; progress: number; var: number; pcs?: string; variant?: string }>;
+      riskLoss?: Array<{ item: string; source: string; detail: string; impact: string; action: string; cause?: string; issue?: string; aging?: string; loss?: string }>;
       topRaw?: Array<{ name: string; usage: string; value: string }>;
       topPack?: Array<{ name: string; usage: string; value: string }>;
       productivity?: Array<{ rank?: number; name: string; batch: string; points: number }>;
@@ -44,383 +43,588 @@ interface WarehouseDashboardClientProps {
 export default function WarehouseDashboardClient({ initialStats, initialAudit }: WarehouseDashboardClientProps) {
    const stats = initialStats || {};
    const audit = initialAudit || {};
+
+   // Helper function for raw/pack lists fallback
+   const getSensitiveMaterials = () => {
+      if (audit.sensitiveMaterials?.length) return audit.sensitiveMaterials;
+      return [
+         { name: "NIACINAMIDE 99%", in: "12/01/24", age: "45D", status: "NEEDS_QC", fisik: 500, book: 500, avail: 480 },
+         { name: "HYALURONIC ACID", in: "12/01/24", age: "46D", status: "FEFO_OK", fisik: 550, book: 550, avail: 550 },
+         { name: "VITAMIN C 10%", in: "12/01/24", age: "47D", status: "FEFO_OK", fisik: 600, book: 600, avail: 600 },
+         { name: "ALOE VERA EXT", in: "12/01/24", age: "48D", status: "FEFO_OK", fisik: 650, book: 650, avail: 650 },
+         { name: "ROSE WATER", in: "12/01/24", age: "49D", status: "FEFO_OK", fisik: 700, book: 700, avail: 700 },
+         { name: "GLYCERIN TECH", in: "12/01/24", age: "50D", status: "FEFO_OK", fisik: 750, book: 750, avail: 750 }
+      ];
+   };
+
+   const getPackagingStocks = () => {
+      if (audit.packagingStocks?.length) return audit.packagingStocks;
+      return [
+         { name: "AIRLESS BOTTLE 30ML", in: "05/12/23", age: "82D", status: "LOW_STOCK", fisik: 2500, book: 2500, avail: 2450 },
+         { name: "LIP GLOSS TUBE 5G", in: "05/12/23", age: "83D", status: "STABLE", fisik: 2600, book: 2600, avail: 2600 },
+         { name: "MIST SPRAYER 100ML", in: "05/12/23", age: "84D", status: "STABLE", fisik: 2700, book: 2700, avail: 2700 },
+         { name: "BOX MATTE BLACK", in: "05/12/23", age: "85D", status: "STABLE", fisik: 2800, book: 2800, avail: 2800 },
+         { name: "LABEL SERUM V2", in: "05/12/23", age: "86D", status: "STABLE", fisik: 2900, book: 2900, avail: 2900 }
+      ];
+   };
+
+   const getSoFulfillment = () => {
+      if (audit.soFulfillment?.length) return audit.soFulfillment;
+      return [
+         { client: "PT. GlowUp", so: "SO-2026-001 • Brightening Serum V1", pcs: "5,000 / 6,000", status: "PARSIAL", variant: "-1,000", progress: "83%" },
+         { client: "CLIENT_B", so: "SO-2026-002", pcs: "2,000 / 2,000", status: "FULL", variant: "0", progress: "100%" },
+         { client: "CLIENT_C", so: "SO-2026-003", pcs: "3,000 / 3,000", status: "FULL", variant: "0", progress: "100%" }
+      ];
+   };
+
+   const getRiskLoss = () => {
+      if (audit.riskLoss?.length) return audit.riskLoss;
+      return [
+         { item: "Acne Serum #001", detail: "Botol Pump 100ml", issue: "Leak: Inbound / QC Awal", cause: "REJECT VENDOR", aging: "3 HARI", impact: "Rp 1.2M", action: "RETURN", loss: "20 Pcs" },
+         { item: "Retinol 10% Encaps", detail: "Bulk Liquid", issue: "Leak: Warehouse Rack", cause: "EXPIRED", aging: "210 HARI", impact: "Rp 45.0M", action: "DISPOSAL", loss: "100 Kg" },
+         { item: "Day Cream #05", detail: "Jar Acrylic Gold", issue: "Leak: Warehouse Rack", cause: "STAGNAN", aging: "185 HARI", impact: "Rp 12.0M", action: "OFFER CLIENT", loss: "500 Pcs" },
+         { item: "Lip Balm #003", detail: "Sticker Segel Gold", issue: "Leak: Filling / Packing", cause: "REJECT PRODUKSI", aging: "1 HARI", impact: "Rp 0.1M", action: "REWORK", loss: "50 Pcs" }
+      ];
+   };
+
+   const getTopRaw = () => {
+      if (audit.topRaw?.length) return audit.topRaw;
+      return [
+         { name: "NIACINAMIDE 99%", usage: "800 KG", value: "Rp 12.0 M" },
+         { name: "HYALURONIC ACID", usage: "950 KG", value: "Rp 14.5 M" },
+         { name: "VITAMIN C 10%", usage: "1100 KG", value: "Rp 17.0 M" }
+      ];
+   };
+
+   const getTopPack = () => {
+      if (audit.topPack?.length) return audit.topPack;
+      return [
+         { name: "AIRLESS BOTTLE 30ML", usage: "15,000 PCS", value: "Rp 5.0 M" },
+         { name: "LIP GLOSS TUBE 5G", usage: "17,500 PCS", value: "Rp 6.2 M" },
+         { name: "MIST SPRAYER 100ML", usage: "20,000 PCS", value: "Rp 7.4 M" }
+      ];
+   };
+
    return (
-      <div className="flex flex-col gap-[2rem]">
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <KpiCard
-               label="CAPACITY"
-               value={`${stats.capacity?.utility || '0'}%`}
-               targetPct={Number(stats.capacity?.utility) || 0}
-               subValue="Space Utilization"
-               icon={<Warehouse className="w-4 h-4" />}
-            />
-            <KpiCard
-               label="ACCURACY"
-               value={`${typeof stats.capacity?.accuracy === 'number' ? stats.capacity.accuracy.toFixed(1) : '0'}%`}
-               targetPct={stats.capacity?.accuracy || 0}
-               icon={<Target className="w-4 h-4" />}
-            />
-            <KpiCard
-               label="FIFA SCORE"
-               value={`${stats.capacity?.fifoScore || '0.0'}/10`}
-               targetPct={(Number(stats.capacity?.fifoScore) || 0) * 10}
-               icon={<Layers className="w-4 h-4" />}
-            />
-            <KpiCard
-               label="VALUATION AUDIT"
-               value={`Rp ${(Number(stats.valuation?.total || 0) >= 1000 ? (Number(stats.valuation?.total || 0) / 1000).toFixed(2) + ' T' : Number(stats.valuation?.total || 0).toFixed(2) + ' B').replace('.', ',')}`}
-               targetPct={50}
-               subValue="Total Inventory Value"
-               icon={<DollarSign className="w-4 h-4" />}
-            />
-            <KpiCard
-               label="TURNOVER"
-               value={`${stats.turnover?.ratio || '0'}x`}
-               targetPct={stats.turnover?.health || 0}
-               subValue={`Health ${stats.turnover?.health || 0}%`}
-               icon={<RefreshCw className="w-4 h-4" />}
-            />
-            <KpiCard
-               label="RISK"
-               value={`${stats.risk?.criticalItems || 0}`}
-               targetPct={(stats.risk?.criticalItems ?? 0) === 0 ? 100 : 0}
-               subValue="Items Critical"
-               icon={<ShieldAlert className="w-4 h-4" />}
-            />
+      <div className="view-section active" style={{ paddingBottom: "10rem", background: "#F8FAFC", minHeight: "100vh" }}>
+         {/* HEADER */}
+         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2.5rem" }}>
+            <div>
+               <h2 className="dashboard-title" style={{ marginBottom: "0.25rem" }}>WHAREHOUSE AUDIT COMMAND</h2>
+               <p style={{ fontSize: "12px", color: "#64748B", fontWeight: 500 }}>Zero-Scroll Geometric Audit Protocol v7.0</p>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+               <div style={{ background: "#E2E8F0", padding: "6px 12px", borderRadius: "12px", fontSize: "10px", fontWeight: 950 }}>AUTO-SYNC: ACTIVE</div>
+               <div style={{ background: "#1E293B", color: "white", padding: "6px 12px", borderRadius: "12px", fontSize: "10px", fontWeight: 950 }}>LEVEL: EXECUTIVE</div>
+            </div>
          </div>
 
-         {/* II. AUDIT COMMAND MATRIX */}
-         <div className="space-y-3 mt-4">
-            <div className="flex justify-between items-center px-1">
-               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">II. AUDIT COMMAND MATRIX (TRI-FLOW VELOCITY)</h3>
-               <div className="flex gap-4">
-                  <div className="flex items-center gap-1.5">
-                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                     <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">OPTIMAL</span>
+         {/* I. EXECUTIVE KPI CARDS (4 COLUMNS GRID) */}
+         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem", marginBottom: "3rem" }}>
+            
+            {/* Card 1: Capacity & Accuracy */}
+            <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                  <HardDrive className="w-3.5 h-3.5 text-blue-500" />
+                  <p style={{ fontSize: "10px", fontWeight: 950, letterSpacing: "0.05em", color: "#1E293B", margin: 0 }}>CAPACITY & ACCURACY</p>
+               </div>
+               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1rem" }}>
+                  <div>
+                     <p style={{ fontSize: "24px", fontWeight: 950, margin: 0, color: "#1E293B" }}>
+                        {stats.capacity?.utility || "88.4"}%
+                     </p>
+                     <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>UTILITAS KAPASITAS</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                     <div className="w-2 h-2 rounded-full bg-rose-500" />
-                     <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">BOTTLENECK</span>
+                  <div style={{ textAlign: "right" }}>
+                     <p style={{ fontSize: "14px", fontWeight: 950, margin: 0, color: "#10B981" }}>
+                        {typeof stats.capacity?.accuracy === "number" ? stats.capacity.accuracy.toFixed(1) : "99.8"}%
+                     </p>
+                     <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>ACCURACY</p>
                   </div>
+               </div>
+               <div style={{ padding: "8px", background: "#F8FAFC", borderRadius: "12px", border: "1px solid #F1F5F9", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "8px", fontWeight: 950, color: "#64748B" }}>SKOR FIFO/FEFO</span>
+                  <span style={{ fontSize: "9px", fontWeight: 950, color: "#3B82F6" }}>
+                     {typeof stats.capacity?.fifoScore === "number" ? stats.capacity.fifoScore.toFixed(1) : "9.8"} / 10.0
+                  </span>
                </div>
             </div>
 
-            <div className="space-y-2 text-nowrap">
-               {/* JALUR A */}
-               <div className="flex items-center bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-[75px] relative">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
-                  <div className="pl-6 pr-4 min-w-[160px]">
-                     <h4 className="text-[9px] font-black text-blue-600 uppercase tracking-tight leading-none">JALUR MASUK (A)</h4>
-                     <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest mt-1">SUPPLIER & MATS</p>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center gap-12 px-8">
-                     <div className="text-center">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">PENERIMAAN</p>
-                        <p className="text-[18px] font-black text-brand-black tabular leading-none">{audit.jalurA?.inbound ?? 0}</p>
+            {/* Card 2: Valuation Audit */}
+            <div style={{ background: "#1E293B", padding: "1.5rem", borderRadius: "24px", color: "white" }}>
+               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                  <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+                  <p style={{ fontSize: "10px", fontWeight: 950, letterSpacing: "0.05em", margin: 0 }}>VALUATION AUDIT</p>
+               </div>
+               <p style={{ fontSize: "24px", fontWeight: 950, margin: 0 }}>
+                  Rp {stats.valuation?.total ? (Number(stats.valuation.total) >= 1000 ? (Number(stats.valuation.total)/1000).toFixed(2) + " T" : Number(stats.valuation.total).toFixed(2) + " B") : "18.42 B"}
+               </p>
+               <p style={{ fontSize: "8px", fontWeight: 850, color: "#94A3B8", marginBottom: "1rem", marginTop: 0 }}>TOTAL INVENTORY VALUE</p>
+               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  {[
+                     { l: "RAW", v: stats.valuation?.raw || "8.2B" },
+                     { l: "PACK", v: stats.valuation?.pack || "6.1B" },
+                     { l: "BOX", v: stats.valuation?.box || "2.4B" },
+                     { l: "LABEL", v: stats.valuation?.label || "1.7B" }
+                  ].map((item, idx) => (
+                     <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "8px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px" }}>
+                        <span style={{ fontWeight: 400, color: "#94A3B8" }}>{item.l}</span>
+                        <span style={{ fontWeight: 950, marginLeft: "auto" }}>{item.v}</span>
                      </div>
-                     <ChevronRight className="w-3.5 h-3.5 text-slate-100" />
-                     <div className="text-center bg-rose-50 px-8 py-2.5 rounded-xl border border-rose-100">
-                        <p className="text-[7px] font-black text-rose-500 uppercase tracking-widest mb-1">KARANTINA / QC</p>
-                        <p className="text-[18px] font-black text-rose-600 tabular leading-none">{audit.jalurA?.karantina ?? 0}</p>
-                     </div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Card 3: Turnover & Health */}
+            <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0" }}>
+               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                  <RefreshCw className="w-3.5 h-3.5 text-indigo-500" />
+                  <p style={{ fontSize: "10px", fontWeight: 950, letterSpacing: "0.05em", color: "#1E293B", margin: 0 }}>TURNOVER & HEALTH</p>
+               </div>
+               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1rem" }}>
+                  <div>
+                     <p style={{ fontSize: "24px", fontWeight: 950, margin: 0, color: "#1E293B" }}>
+                        {stats.turnover?.ratio || "14.2"}<span style={{ fontSize: "10px" }}>x</span>
+                     </p>
+                     <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>TURNOVER RATIO</p>
                   </div>
-                  <div className="px-6 text-right min-w-[100px] border-l border-slate-50 flex flex-col justify-center">
-                     <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">VELOCITY</p>
-                     <p className="text-[18px] font-black text-blue-600 tabular leading-none tracking-tighter">{audit.jalurA?.velocity ?? 0}<span className="text-[9px] text-slate-300 ml-0.5">/10</span></p>
+                  <div style={{ textAlign: "right" }}>
+                     <p style={{ fontSize: "24px", fontWeight: 950, margin: 0, color: "#6366F1" }}>
+                        {stats.turnover?.health || 95}<span style={{ fontSize: "10px" }}>%</span>
+                     </p>
+                     <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>HEALTH SCORE</p>
+                  </div>
+               </div>
+               <div style={{ display: "flex", height: "6px", borderRadius: "3px", overflow: "hidden", marginBottom: "8px" }}>
+                  <div style={{ width: "70%", background: "#10B981" }} />
+                  <div style={{ width: "20%", background: "#F59E0B" }} />
+                  <div style={{ width: "10%", background: "#EF4444" }} />
+               </div>
+               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "7px", fontWeight: 950, color: "#64748B" }}>
+                  <span>70% SEHAT</span>
+                  <span>20% MOD</span>
+                  <span>10% STAG</span>
+               </div>
+            </div>
+
+            {/* Card 4: Risk Analytics */}
+            <div style={{ background: "#FFF1F2", padding: "1.5rem", borderRadius: "24px", border: "1px solid #FECDD3" }}>
+               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                  <p style={{ fontSize: "10px", fontWeight: 950, letterSpacing: "0.05em", color: "#9F1239", margin: 0 }}>RISK ANALYTICS</p>
+               </div>
+               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div>
+                     <p style={{ fontSize: "18px", fontWeight: 950, color: "#E11D48", margin: 0 }}>
+                        Rp {stats.risk?.deadStock ? stats.risk.deadStock + "M" : "142M"}
+                     </p>
+                     <p style={{ fontSize: "8px", fontWeight: 850, color: "#9F1239", margin: 0 }}>DEAD STOCK</p>
+                  </div>
+                  <div>
+                     <p style={{ fontSize: "18px", fontWeight: 950, color: "#E11D48", margin: 0 }}>
+                        {stats.risk?.criticalItems || 12} ITEMS
+                     </p>
+                     <p style={{ fontSize: "8px", fontWeight: 850, color: "#9F1239", margin: 0 }}>STOK KRITIS</p>
+                  </div>
+               </div>
+               <div style={{ marginTop: "1rem", padding: "8px", background: "rgba(225, 29, 72, 0.1)", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "8px", fontWeight: 950, color: "#9F1239" }}>AGING KARANTINA (AVG)</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#E11D48" }}>
+                     {stats.risk?.agingKarantina || "4.2"} HARI
+                  </span>
+               </div>
+            </div>
+
+         </div>
+
+         {/* II. AUDIT COMMAND MATRIX */}
+         <div style={{ marginBottom: "4rem" }}>
+            <div style={{ marginBottom: "3rem" }}>
+               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                  <p style={{ fontSize: "10px", fontWeight: 950, color: "#64748B", letterSpacing: "0.1em", margin: 0 }}>
+                     II. AUDIT COMMAND MATRIX (TRI-FLOW VELOCITY)
+                  </p>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                     <span style={{ fontSize: "8px", fontWeight: 950, color: "#10B981", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10B981" }} /> OPTIMAL
+                     </span>
+                     <span style={{ fontSize: "8px", fontWeight: 950, color: "#EF4444", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#EF4444" }} /> BOTTLENECK
+                     </span>
                   </div>
                </div>
 
-               {/* JALUR B */}
-               <div className="flex items-center bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-[75px] relative">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
-                  <div className="pl-6 pr-4 min-w-[160px]">
-                     <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-tight leading-none">JALUR INTERNAL (B)</h4>
-                     <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest mt-1">PROD CONSUMPTION</p>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center gap-10 px-8">
-                     <div className="text-center">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">REQ PROD</p>
-                        <p className="text-[18px] font-black text-brand-black tabular leading-none">{audit.jalurB?.reqProd ?? 0}</p>
+               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  
+                  {/* Jalur A */}
+                  <div style={{ display: "flex", background: "white", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden", height: "64px" }}>
+                     <div style={{ width: "4px", background: "#3B82F6" }} />
+                     <div style={{ width: "200px", padding: "0 1rem", display: "flex", flexDirection: "column", justifyContent: "center", background: "#F8FAFC", borderRight: "1px solid #F1F5F9" }}>
+                        <p style={{ fontSize: "8px", fontWeight: 950, color: "#3B82F6", margin: 0 }}>JALUR MASUK (A)</p>
+                        <p style={{ fontSize: "7px", fontWeight: 800, color: "#94A3B8", marginTop: "2px", margin: 0 }}>SUPPLIER & MATS</p>
                      </div>
-                     <ChevronRight className="w-3.5 h-3.5 text-slate-100" />
-                     <div className="text-center bg-rose-50 px-8 py-2.5 rounded-xl border border-rose-100">
-                        <p className="text-[7px] font-black text-rose-500 uppercase tracking-widest mb-1">PICKING</p>
-                        <p className="text-[18px] font-black text-rose-600 tabular leading-none">{audit.jalurB?.picking ?? 0}</p>
+                     <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 1.5rem" }}>
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#64748B", marginBottom: "4px", margin: 0 }}>PENERIMAAN</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{audit.jalurA?.inbound ?? 2}</p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5" style={{ color: "#CBD5E1" }} />
+                        <div style={{ flex: 1, textAlign: "center", background: "#FFF1F2", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#E11D48", marginBottom: "4px", margin: 0 }}>KARANTINA / QC</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#E11D48", margin: 0 }}>{audit.jalurA?.karantina ?? 5}</p>
+                        </div>
                      </div>
-                     <ChevronRight className="w-3.5 h-3.5 text-slate-100" />
-                     <div className="text-center">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">HANDOVER</p>
-                        <p className="text-[18px] font-black text-brand-black tabular leading-none">{audit.jalurB?.handover ?? 0}</p>
+                     <div style={{ width: "120px", padding: "0 1rem", display: "flex", flexDirection: "column", justifyContent: "center", background: "#F8FAFC", borderLeft: "1px solid #F1F5F9", textAlign: "right" }}>
+                        <p style={{ fontSize: "7px", fontWeight: 950, color: "#64748B", margin: 0 }}>VELOCITY</p>
+                        <p style={{ fontSize: "14px", fontWeight: 950, color: "#3B82F6", margin: "2px 0 0 0" }}>
+                           {audit.jalurA?.velocity ?? "8.4"}<span style={{ fontSize: "8px" }}>/10</span>
+                        </p>
                      </div>
                   </div>
-                  <div className="px-6 text-right min-w-[100px] border-l border-slate-50 flex flex-col justify-center">
-                     <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">VELOCITY</p>
-                     <p className="text-[18px] font-black text-amber-600 tabular leading-none tracking-tighter">{audit.jalurB?.velocity ?? 0}<span className="text-[9px] text-slate-300 ml-0.5">/10</span></p>
-                  </div>
-               </div>
 
-               {/* JALUR C */}
-               <div className="flex items-center bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-[75px] relative">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
-                  <div className="pl-6 pr-4 min-w-[160px]">
-                     <h4 className="text-[9px] font-black text-emerald-600 uppercase tracking-tight leading-none">JALUR KELUAR (C)</h4>
-                     <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest mt-1">SO FULFILLMENT</p>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center gap-10 px-8">
-                     <div className="text-center">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">ORDER PROC</p>
-                        <p className="text-[18px] font-black text-brand-black tabular leading-none">{audit.jalurC?.orderProc ?? 0}</p>
+                  {/* Jalur B */}
+                  <div style={{ display: "flex", background: "white", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden", height: "64px" }}>
+                     <div style={{ width: "4px", background: "#F59E0B" }} />
+                     <div style={{ width: "200px", padding: "0 1rem", display: "flex", flexDirection: "column", justifyContent: "center", background: "#F8FAFC", borderRight: "1px solid #F1F5F9" }}>
+                        <p style={{ fontSize: "8px", fontWeight: 950, color: "#F59E0B", margin: 0 }}>JALUR INTERNAL (B)</p>
+                        <p style={{ fontSize: "7px", fontWeight: 800, color: "#94A3B8", marginTop: "2px", margin: 0 }}>PROD CONSUMPTION</p>
                      </div>
-                     <ChevronRight className="w-3.5 h-3.5 text-slate-100" />
-                     <div className="text-center">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">SHIPPING</p>
-                        <p className="text-[18px] font-black text-brand-black tabular leading-none">{audit.jalurC?.shipping ?? 0}</p>
+                     <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 1.5rem" }}>
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#64748B", marginBottom: "4px", margin: 0 }}>REQ PROD</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{audit.jalurB?.reqProd ?? 0}</p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5" style={{ color: "#CBD5E1" }} />
+                        <div style={{ flex: 1, textAlign: "center", background: "#FFF1F2", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#E11D48", marginBottom: "4px", margin: 0 }}>PICKING</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#E11D48", margin: 0 }}>{audit.jalurB?.picking ?? 4}</p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5" style={{ color: "#CBD5E1" }} />
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#64748B", marginBottom: "4px", margin: 0 }}>HANDOVER</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{audit.jalurB?.handover ?? 0}</p>
+                        </div>
                      </div>
-                     <ChevronRight className="w-3.5 h-3.5 text-slate-100" />
-                     <div className="text-center">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">DELIVERED</p>
-                        <p className="text-[18px] font-black text-brand-black tabular leading-none">{audit.jalurC?.delivered ?? 0}</p>
+                     <div style={{ width: "120px", padding: "0 1rem", display: "flex", flexDirection: "column", justifyContent: "center", background: "#F8FAFC", borderLeft: "1px solid #F1F5F9", textAlign: "right" }}>
+                        <p style={{ fontSize: "7px", fontWeight: 950, color: "#64748B", margin: 0 }}>VELOCITY</p>
+                        <p style={{ fontSize: "14px", fontWeight: 950, color: "#F59E0B", margin: "2px 0 0 0" }}>
+                           {audit.jalurB?.velocity ?? "4.2"}<span style={{ fontSize: "8px" }}>/10</span>
+                        </p>
                      </div>
                   </div>
-                  <div className="px-6 text-right min-w-[100px] border-l border-slate-50 flex flex-col justify-center">
-                     <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">VELOCITY</p>
-                     <p className="text-[18px] font-black text-emerald-600 tabular leading-none tracking-tighter">{audit.jalurC?.velocity ?? 0}<span className="text-[9px] text-slate-300 ml-0.5">/10</span></p>
+
+                  {/* Jalur C */}
+                  <div style={{ display: "flex", background: "white", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden", height: "64px" }}>
+                     <div style={{ width: "4px", background: "#10B981" }} />
+                     <div style={{ width: "200px", padding: "0 1rem", display: "flex", flexDirection: "column", justifyContent: "center", background: "#F8FAFC", borderRight: "1px solid #F1F5F9" }}>
+                        <p style={{ fontSize: "8px", fontWeight: 950, color: "#10B981", margin: 0 }}>JALUR KELUAR (C)</p>
+                        <p style={{ fontSize: "7px", fontWeight: 800, color: "#94A3B8", marginTop: "2px", margin: 0 }}>SO FULFILLMENT</p>
+                     </div>
+                     <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 1.5rem" }}>
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#64748B", marginBottom: "4px", margin: 0 }}>ORDER PROC</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{audit.jalurC?.orderProc ?? 10}</p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5" style={{ color: "#CBD5E1" }} />
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#64748B", marginBottom: "4px", margin: 0 }}>SHIPPING</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{audit.jalurC?.shipping ?? 0}</p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5" style={{ color: "#CBD5E1" }} />
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                           <p style={{ fontSize: "7px", fontWeight: 850, color: "#64748B", marginBottom: "4px", margin: 0 }}>DELIVERED</p>
+                           <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{audit.jalurC?.delivered ?? 0}</p>
+                        </div>
+                     </div>
+                     <div style={{ width: "120px", padding: "0 1rem", display: "flex", flexDirection: "column", justifyContent: "center", background: "#F8FAFC", borderLeft: "1px solid #F1F5F9", textAlign: "right" }}>
+                        <p style={{ fontSize: "7px", fontWeight: 950, color: "#64748B", margin: 0 }}>VELOCITY</p>
+                        <p style={{ fontSize: "14px", fontWeight: 950, color: "#10B981", margin: "2px 0 0 0" }}>
+                           {audit.jalurC?.velocity ?? "9.1"}<span style={{ fontSize: "8px" }}>/10</span>
+                        </p>
+                     </div>
                   </div>
+
                </div>
             </div>
          </div>
 
          {/* III. GRANULAR AUDIT TABLES (QUAD-GRID) */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-8">
-
-            {/* III.A AUDIT GRANULAR BAHAN BAKU */}
-            <div className="space-y-2">
-               <div className="flex items-center gap-2">
-                  <Beaker className="w-3 h-3 text-indigo-500" />
-                  <h3 className="text-[9px] font-black uppercase tracking-tighter text-brand-black italic">III.A AUDIT GRANULAR BAHAN BAKU</h3>
-               </div>
-               <Card className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
-                  <div className="overflow-x-auto overflow-y-hidden">
-                     <table className="w-full text-left whitespace-nowrap">
-                        <thead className="bg-slate-50/50">
-                           <tr>
-                              <th className="px-4 py-2 text-table-header text-slate-400">NAMA / MASUK</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center">SIMPAN</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center">STATUS</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-right pr-4">FIS/BK/AV</th>
+         <div style={{ display: "flex", flexDirection: "column", gap: "3rem" }}>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+               
+               {/* III.A Bahan Baku */}
+               <div>
+                  <h3 style={{ margin: "0 0 1rem 0", fontSize: "10px", fontWeight: 950, color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                     <FlaskConical className="w-3.5 h-3.5 text-purple-500" /> III.A AUDIT GRANULAR BAHAN BAKU (SENSITIF & FEFO)
+                  </h3>
+                  <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                     <div style={{ padding: "0.75rem 1rem", background: "#F1F5F9", borderBottom: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "8px", fontWeight: 950, color: "#475569" }}>BPOM COMPLIANT</span>
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                     </div>
+                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                        <thead>
+                           <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA / MASUK</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>SIMPAN</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>STATUS</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "right" }}>FIS/BK/AV</th>
                            </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
-                           {(audit.sensitiveMaterials?.length ? audit.sensitiveMaterials : [
-                              { name: 'NIACINAMIDE 99%', date: '12/01/24', status: 'NEEDS_QC', qty: '500' },
-                              { name: 'HYALURONIC ACID', date: '12/01/24', status: 'FEFO_OK', qty: '550' },
-                              { name: 'VITAMIN C 10%', date: '12/01/24', status: 'FEFO_OK', qty: '600' },
-                           ]).map((row: any, i: number) => (
-                              <tr key={i}>
-                                 <td className="px-4 py-2 text-[9px] font-black">
-                                    {row.name} <span className="text-[7px] text-slate-300 font-bold ml-1 italic">{row.date}</span>
+                        <tbody>
+                           {getSensitiveMaterials().map((row: any, tIdx: number) => (
+                              <tr key={tIdx} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                                 <td style={{ padding: "0.75rem" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 950 }}>{row.name}</div>
+                                    <div style={{ fontSize: "7px", color: "#94A3B8" }}>{row.in || row.date}</div>
                                  </td>
-                                 <td className="px-4 py-2 text-[9px] font-black text-center tabular">{row.qty}</td>
-                                 <td className="px-4 py-2 text-center">
-                                    <DnaBadge status={row.status === 'FEFO_OK' ? 'success' : 'warning'}>{row.status}</DnaBadge>
+                                 <td style={{ padding: "0.75rem", textAlign: "center", fontSize: "10px", fontWeight: 950 }}>{row.age || "45D"}</td>
+                                 <td style={{ padding: "0.75rem", textAlign: "center" }}>
+                                    <span style={{ 
+                                       background: (row.status || "").includes("OK") ? "#10B981" : "#F59E0B", 
+                                       color: "white", 
+                                       padding: "2px 6px", 
+                                       borderRadius: "4px", 
+                                       fontSize: "7px", 
+                                       fontWeight: 950 
+                                    }}>
+                                       {row.status}
+                                    </span>
                                  </td>
-                                 <td className="px-4 py-2 text-right text-[9px] font-black tabular pr-4">{row.qty}</td>
-                              </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                  </div>
-               </Card>
-            </div>
-
-            {/* III.B AUDIT GRANULAR BAHAN KEMAS */}
-            <div className="space-y-2">
-               <div className="flex items-center gap-2">
-                  <Box className="w-3 h-3 text-orange-500" />
-                  <h3 className="text-[9px] font-black uppercase tracking-tighter text-brand-black italic">III.B AUDIT GRANULAR BAHAN KEMAS</h3>
-               </div>
-               <Card className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
-                  <div className="overflow-x-auto overflow-y-hidden">
-                     <table className="w-full text-left whitespace-nowrap">
-                        <thead className="bg-slate-50/50">
-                           <tr>
-                              <th className="px-4 py-2 text-table-header text-slate-400">NAMA / MASUK</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center">SIMPAN</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center">STATUS</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-right pr-4">FIS/BK/AV</th>
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                           {(audit.packagingStocks?.length ? audit.packagingStocks : [
-                              { name: 'AIRLESS BOTTLE 30ML', qty: '2500 Pcs', status: 'LOW_STOCK' },
-                              { name: 'LIP GLOSS TUBE 5G', qty: '2600 Pcs', status: 'STABLE' },
-                              { name: 'MIST SPRAYER 100ML', qty: '2700 Pcs', status: 'STABLE' },
-                           ]).map((row: any, i: number) => (
-                              <tr key={i}>
-                                 <td className="px-4 py-2 text-[9px] font-black">
-                                    {row.name} <span className="text-[7px] text-slate-300 font-bold ml-1 italic">{row.date || ''}</span>
-                                 </td>
-                                 <td className="px-4 py-2 text-[9px] font-black text-center tabular">{row.qty}</td>
-                                 <td className="px-4 py-2 text-center">
-                                    <DnaBadge status={row.status === 'STABLE' ? 'success' : 'critical'}>{row.status}</DnaBadge>
-                                 </td>
-                                 <td className="px-4 py-2 text-right text-[9px] font-black tabular pr-4">{row.qty}</td>
-                              </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                  </div>
-               </Card>
-            </div>
-
-            {/* III.C PEMENUHAN PESANAN (SO FULFILLMENT) */}
-            <div className="space-y-2">
-               <div className="flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-blue-500" />
-                  <h3 className="text-[9px] font-black uppercase tracking-tighter text-brand-black italic">III.C SO FULFILLMENT AUDIT</h3>
-               </div>
-               <Card className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
-                  <div className="overflow-x-auto overflow-y-hidden">
-                     <table className="w-full text-left whitespace-nowrap">
-                        <thead className="bg-slate-50/50">
-                           <tr>
-                              <th className="px-4 py-2 text-table-header text-slate-400">CLIENT / NO. SO</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center">KELENGKAPAN</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center">STATUS</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-right pr-4">PROGRESS / VAR</th>
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                           {(audit.soFulfillment?.length ? audit.soFulfillment : [
-                              { client: 'PT. GlowUp', so: 'SO-001', qty: '5K/6K Pcs', status: 'PARSIAL', color: 'amber', var: '-1K (83%)' },
-                              { client: 'CLIENT_B', so: 'SO-002', qty: '2K/2K Pcs', status: 'FULL', color: 'emerald', var: '0 (100%)' },
-                              { client: 'CLIENT_C', so: 'SO-003', qty: '3K/3K Pcs', status: 'FULL', color: 'emerald', var: '0 (100%)' },
-                           ]).map((row: any, i: number) => (
-                              <tr key={i}>
-                                 <td className="px-4 py-2 text-[9px] font-black">
-                                    {row.client} <span className="text-[7px] text-slate-300 font-bold ml-1 italic">{row.so}</span>
-                                 </td>
-                                 <td className="px-4 py-2 text-[9px] font-black text-center tabular">{row.qty}</td>
-                                 <td className="px-4 py-2 text-center">
-                                    <DnaBadge status={row.status === 'FULL' ? 'success' : 'warning'}>{row.status}</DnaBadge>
-                                 </td>
-                                 <td className="px-4 py-2 text-right text-[9px] font-black tabular pr-4">{row.var || row.progress || ''}</td>
-                              </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                  </div>
-               </Card>
-            </div>
-
-            {/* III.D AUDIT RISIKO & KERUGIAN */}
-            <div className="space-y-2">
-               <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-3 h-3 text-rose-500" />
-                  <h3 className="text-[9px] font-black uppercase tracking-tighter text-brand-black italic">III.D AUDIT RISIKO & KERUGIAN</h3>
-               </div>
-               <Card className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
-                  <div className="overflow-x-auto overflow-y-hidden">
-                     <table className="w-full text-left whitespace-nowrap">
-                        <thead className="bg-slate-50/50">
-                           <tr>
-                              <th className="px-4 py-2 text-table-header text-slate-400">ITEM & SUMBER</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400">DETAIL AUDIT</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-right">IMPACT (RP)</th>
-                              <th className="px-4 py-2 text-table-header text-slate-400 text-center pr-4">ACTION</th>
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                           {(audit.riskLoss?.length ? audit.riskLoss : [
-                              { item: 'Acne Serum', source: 'REJECT', detail: 'Leak: Inbound', impact: 'Rp 1.2M', action: 'RETURN' },
-                              { item: 'Retinol 10%', source: 'EXPIRED', detail: 'Leak: Rack', impact: 'Rp 45M', action: 'DISPOSAL' },
-                              { item: 'Day Cream #05', source: 'STAGNAN', detail: 'Leak: Rack', impact: 'Rp 12M', action: 'OFFER' },
-                           ]).map((row: any, i: number) => (
-                              <tr key={i}>
-                                 <td className="px-4 py-2 text-[9px] font-black">
-                                    {row.item} <span className="text-[7px] text-rose-400 font-bold ml-1 italic">{row.source}</span>
-                                 </td>
-                                 <td className="px-4 py-2 text-[8px] font-bold text-slate-600">{row.detail}</td>
-                                 <td className="px-4 py-2 text-right text-[9px] font-black text-rose-600 tabular">{row.impact}</td>
-                                 <td className="px-4 py-2 text-center pr-4">
-                                     <DnaBadge status="default">
-                                        {row.action}
-                                     </DnaBadge>
+                                 <td style={{ padding: "0.75rem", textAlign: "right", fontSize: "10px", fontWeight: 950 }}>
+                                    {row.fisik ?? row.qty} / {row.book ?? row.qty} / <span style={{ color: "#3B82F6" }}>{row.avail ?? row.qty}</span>
                                  </td>
                               </tr>
                            ))}
                         </tbody>
                      </table>
                   </div>
-               </Card>
+               </div>
+
+               {/* III.B Bahan Kemas */}
+               <div>
+                  <h3 style={{ margin: "0 0 1rem 0", fontSize: "10px", fontWeight: 950, color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                     <Box className="w-3.5 h-3.5 text-orange-500" /> III.B AUDIT GRANULAR BAHAN KEMAS (DEGRADASI & STOK)
+                  </h3>
+                  <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                     <div style={{ padding: "0.75rem 1rem", background: "#FFF7ED", borderBottom: "1px solid #FED7AA", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "8px", fontWeight: 950, color: "#9A3412" }}>QUALITY AUDIT</span>
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500" />
+                     </div>
+                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                        <thead>
+                           <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA / MASUK</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>SIMPAN</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>STATUS</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "right" }}>FIS/BK/AV</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           {getPackagingStocks().map((row: any, tIdx: number) => (
+                              <tr key={tIdx} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                                 <td style={{ padding: "0.75rem" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 950 }}>{row.name}</div>
+                                    <div style={{ fontSize: "7px", color: "#94A3B8" }}>{row.in || row.date}</div>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "center", fontSize: "10px", fontWeight: 950 }}>{row.age || "82D"}</td>
+                                 <td style={{ padding: "0.75rem", textAlign: "center" }}>
+                                    <span style={{ 
+                                       background: row.status === "STABLE" ? "#10B981" : "#EF4444", 
+                                       color: "white", 
+                                       padding: "2px 6px", 
+                                       borderRadius: "4px", 
+                                       fontSize: "7px", 
+                                       fontWeight: 950 
+                                    }}>
+                                       {row.status}
+                                    </span>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "right", fontSize: "10px", fontWeight: 950 }}>
+                                    {row.fisik ?? row.qty} / {row.book ?? row.qty} / <span style={{ color: "#3B82F6" }}>{row.avail ?? row.qty}</span>
+                                 </td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
             </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+               
+               {/* III.C SO Fulfillment */}
+               <div>
+                  <h3 style={{ margin: "0 0 1rem 0", fontSize: "10px", fontWeight: 950, color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                     <ShoppingBag className="w-3.5 h-3.5 text-blue-500" /> III.C PEMENUHAN PESANAN (SO FULFILLMENT)
+                  </h3>
+                  <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                     <div style={{ padding: "0.75rem 1rem", background: "#EEF2FF", borderBottom: "1px solid #C7D2FE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "8px", fontWeight: 950, color: "#3730A3" }}>LOGISTICS AUDIT</span>
+                        <Truck className="w-3.5 h-3.5 text-blue-500" />
+                     </div>
+                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                        <thead>
+                           <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>CLIENT / NO. SO</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>KELENGKAPAN</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>STATUS</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "right" }}>PROGRESS / VAR</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           {getSoFulfillment().map((row: any, tIdx: number) => (
+                              <tr key={tIdx} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                                 <td style={{ padding: "0.75rem" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 950 }}>{row.client}</div>
+                                    <div style={{ fontSize: "7px", color: "#94A3B8" }}>{row.so}</div>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "center", fontSize: "10px", fontWeight: 950 }}>
+                                    {row.pcs || row.qty}
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "center" }}>
+                                    <span style={{ 
+                                       background: row.status === "FULL" ? "#10B981" : "#F59E0B", 
+                                       color: "white", 
+                                       padding: "2px 6px", 
+                                       borderRadius: "4px", 
+                                       fontSize: "7px", 
+                                       fontWeight: 950 
+                                    }}>
+                                       {row.status}
+                                    </span>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "right" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 950, color: (row.variant || String(row.var)) === "0" ? "#10B981" : "#EF4444" }}>
+                                       {row.variant || row.var}
+                                    </div>
+                                    <div style={{ fontSize: "8px", fontWeight: 950, color: "#3B82F6" }}>{row.progress}</div>
+                                 </td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+               {/* III.D Risk & Loss */}
+               <div>
+                  <h3 style={{ margin: "0 0 1rem 0", fontSize: "10px", fontWeight: 950, color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                     <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> III.D AUDIT RISIKO & KERUGIAN (NON-SELLABLE)
+                  </h3>
+                  <div style={{ background: "#FFF1F2", borderRadius: "24px", border: "1px solid #FECDD3", overflow: "hidden" }}>
+                     <div style={{ padding: "0.75rem 1rem", background: "#FECDD3", borderBottom: "1px solid #FECDD3", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "8px", fontWeight: 950, color: "#9F1239" }}>ACTION REQUIRED</span>
+                        <Activity className="w-3 h-3 text-rose-600" />
+                     </div>
+                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                        <thead>
+                           <tr style={{ background: "#FECDD3", borderBottom: "1px solid #FECDD3" }}>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, color: "#9F1239" }}>ITEM & SUMBER</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, color: "#9F1239", textAlign: "center" }}>DETAIL AUDIT</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, color: "#9F1239", textAlign: "right" }}>IMPACT (RP/LOSS)</th>
+                              <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, color: "#9F1239", textAlign: "right" }}>ACTION</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           {getRiskLoss().map((row: any, tIdx: number) => (
+                              <tr key={tIdx} style={{ borderBottom: "1px solid #FECDD3" }}>
+                                 <td style={{ padding: "0.75rem" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 950, color: "#9F1239" }}>{row.item}</div>
+                                    <div style={{ fontSize: "7px", color: "#BE123B" }}>{row.cause || row.source}</div>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "center" }}>
+                                    <div style={{ fontSize: "8px", fontWeight: 950, color: "#E11D48" }}>{row.issue || row.detail}</div>
+                                    <div style={{ fontSize: "7px", color: "#9F1239" }}>{row.aging || "1 HARI"} Aging</div>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "right" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 950, color: "#E11D48" }}>{row.impact}</div>
+                                    <div style={{ fontSize: "7px", color: "#9F1239" }}>Loss: {row.loss || "0 Pcs"}</div>
+                                 </td>
+                                 <td style={{ padding: "0.75rem", textAlign: "right" }}>
+                                    <span style={{ 
+                                       background: "#9F1239", 
+                                       color: "white", 
+                                       padding: "2px 6px", 
+                                       borderRadius: "4px", 
+                                       fontSize: "7px", 
+                                       fontWeight: 950 
+                                    }}>
+                                       {row.action}
+                                    </span>
+                                 </td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+            </div>
+
          </div>
 
          {/* IV & V. PRODUCTIVITY LISTS (2-COL) */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pb-10">
-            {/* IV. TOP 10 LIST BAHAN BAKU */}
-            <div className="space-y-2">
-               <div className="flex items-center gap-2">
-                  <Zap className="w-3 h-3 text-emerald-500" />
-                  <h3 className="text-[9px] font-black uppercase tracking-tighter text-brand-black italic">IV. TOP 10 LIST BAHAN BAKU</h3>
-               </div>
-               <Card className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
-                  <table className="w-full text-left whitespace-nowrap">
-                     <thead className="bg-slate-50/30">
-                        <tr>
-                           <th className="px-4 py-2 text-table-header text-slate-400">NAMA BAHAN BAKU</th>
-                           <th className="px-4 py-2 text-table-header text-slate-400 text-center">PEMAKAIAN</th>
-                           <th className="px-4 py-2 text-table-header text-slate-400 text-right pr-4">NILAI / OMSET</th>
+         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginTop: "3rem" }}>
+            
+            {/* IV. TOP 10 Bahan Baku */}
+            <div>
+               <h3 style={{ margin: "0 0 1rem 0", fontSize: "10px", fontWeight: 950, color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Zap className="w-3.5 h-3.5 text-emerald-500" /> IV. TOP 10 LIST BAHAN BAKU (PRODUKTIVITAS)
+               </h3>
+               <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                     <thead>
+                        <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                           <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA BAHAN BAKU</th>
+                           <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>PEMAKAIAN</th>
+                           <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "right" }}>NILAI / OMSET</th>
                         </tr>
                      </thead>
-                     <tbody className="divide-y divide-slate-50">
-                        {(audit.topRaw?.length ? audit.topRaw : [
-                           { name: 'NIACINAMIDE 99%', usage: '800 KG', value: 'Rp 12.0 M' },
-                           { name: 'HYALURONIC ACID', usage: '950 KG', value: 'Rp 14.5 M' },
-                        ]).map((row: any, i: number) => (
-                           <tr key={i}>
-                              <td className="px-4 py-2 text-[9px] font-black">{row.name}</td>
-                              <td className="px-4 py-2 text-[9px] font-black text-center tabular">{row.usage}</td>
-                              <td className="px-4 py-2 text-right text-[9px] font-black text-emerald-600 tabular pr-4">{row.value}</td>
+                     <tbody>
+                        {getTopRaw().map((row: any, tIdx: number) => (
+                           <tr key={tIdx} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                              <td style={{ padding: "0.82rem 0.75rem", fontSize: "10px", fontWeight: 950 }}>{row.name}</td>
+                              <td style={{ padding: "0.75rem", textAlign: "center", fontSize: "10px", fontWeight: 950 }}>{row.usage}</td>
+                              <td style={{ padding: "0.75rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#10B981" }}>{row.value}</td>
                            </tr>
                         ))}
                      </tbody>
                   </table>
-               </Card>
+               </div>
             </div>
 
-            {/* V. TOP 10 LIST KEMASAN */}
-            <div className="space-y-2">
-               <div className="flex items-center gap-2">
-                  <Box className="w-3 h-3 text-indigo-500" />
-                  <h3 className="text-[9px] font-black uppercase tracking-tighter text-brand-black italic">V. TOP 10 LIST KEMASAN</h3>
-               </div>
-               <Card className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-white">
-                  <table className="w-full text-left whitespace-nowrap">
-                     <thead className="bg-slate-50/30">
-                        <tr>
-                           <th className="px-4 py-2 text-table-header text-slate-400">NAMA KEMASAN</th>
-                           <th className="px-4 py-2 text-table-header text-slate-400 text-center">PEMAKAIAN</th>
-                           <th className="px-4 py-2 text-table-header text-slate-400 text-right pr-4">NILAI / OMSET</th>
+            {/* V. TOP 10 Kemasan */}
+            <div>
+               <h3 style={{ margin: "0 0 1rem 0", fontSize: "10px", fontWeight: 950, color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Box className="w-3.5 h-3.5 text-indigo-500" /> V. TOP 10 LIST KEMASAN (PRODUKTIVITAS)
+               </h3>
+               <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                     <thead>
+                        <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                           <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA KEMASAN</th>
+                           <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "center" }}>PEMAKAIAN</th>
+                           <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, textAlign: "right" }}>NILAI / OMSET</th>
                         </tr>
                      </thead>
-                     <tbody className="divide-y divide-slate-50">
-                        {(audit.topPack?.length ? audit.topPack : [
-                           { name: 'AIRLESS BOTTLE 30ML', usage: '15000 PCS', value: 'Rp 5.0 M' },
-                           { name: 'LIP GLOSS TUBE 5G', usage: '17500 PCS', value: 'Rp 6.2 M' },
-                        ]).map((row: any, i: number) => (
-                           <tr key={i}>
-                              <td className="px-4 py-2 text-[9px] font-black">{row.name}</td>
-                              <td className="px-4 py-2 text-[9px] font-black text-center tabular">{row.usage}</td>
-                              <td className="px-4 py-2 text-right text-[9px] font-black text-emerald-600 tabular pr-4">{row.value}</td>
+                     <tbody>
+                        {getTopPack().map((row: any, tIdx: number) => (
+                           <tr key={tIdx} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                              <td style={{ padding: "0.82rem 0.75rem", fontSize: "10px", fontWeight: 950 }}>{row.name}</td>
+                              <td style={{ padding: "0.75rem", textAlign: "center", fontSize: "10px", fontWeight: 950 }}>{row.usage}</td>
+                              <td style={{ padding: "0.75rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#10B981" }}>{row.value}</td>
                            </tr>
                         ))}
                      </tbody>
                   </table>
-               </Card>
+               </div>
             </div>
+
          </div>
+
       </div>
    );
 }
-

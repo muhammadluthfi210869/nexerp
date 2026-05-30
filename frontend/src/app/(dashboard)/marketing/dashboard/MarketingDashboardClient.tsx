@@ -4,151 +4,107 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
-  DollarSign,
+  Calendar,
   TrendingUp,
-  Target,
+  Filter,
   Wallet,
-  PenTool,
+  Music,
+  Activity,
+  Eye,
+  MousePointer2,
+  MousePointerClick,
   BarChart3,
+  CheckCircle2,
+  DollarSign,
+  Target,
+  PenTool,
   Globe,
   Search,
-  Calendar,
-  Camera,
+  Heart,
   MessageCircle,
-  Video,
-  Music2,
-  CheckCircle2,
+  Share2,
+  Bookmark
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { KpiCard } from "@/components/dna/KpiCard";
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  Cell
-} from "recharts";
-import { cn } from "@/lib/utils";
 
-// --- FALLBACK DATA (identical to original hardcoded values) ---
-const DEFAULT_TREND_DATA = [
-  { month: "Jan", leads: 400, cpl: 600, closing: 300, cpa: 700 },
-  { month: "Feb", leads: 500, cpl: 550, closing: 320, cpa: 680 },
-  { month: "Mar", leads: 450, cpl: 520, closing: 420, cpa: 650 },
-  { month: "Apr", leads: 650, cpl: 480, closing: 380, cpa: 630 },
-  { month: "May", leads: 720, cpl: 450, closing: 510, cpa: 580 },
-  { month: "Jun", leads: 620, cpl: 510, closing: 480, cpa: 610 },
-  { month: "Jul", leads: 800, cpl: 430, closing: 550, cpa: 550 },
-  { month: "Aug", leads: 880, cpl: 410, closing: 620, cpa: 520 },
-  { month: "Sep", leads: 750, cpl: 460, closing: 700, cpa: 540 },
-  { month: "Oct", leads: 950, cpl: 390, closing: 650, cpa: 510 },
-  { month: "Nov", leads: 1050, cpl: 360, closing: 820, cpa: 480 },
-  { month: "Dec", leads: 1150, cpl: 340, closing: 900, cpa: 450 },
-];
+// --- Custom Chart matching prototype's aj component ---
+interface CustomChartProps {
+  data: number[];
+  color: string;
+  color2?: string;
+  data2?: number[];
+}
 
-const DEFAULT_PRODUCT_PERFORMANCE = [
-  { name: "Brightening Serum", leads: "1.250", samples: "180", deals: "42 DEALS", progress: 85 },
-  { name: "Acne Series", leads: "840", samples: "125", deals: "28 DEALS", progress: 60 },
-  { name: "Anti-Aging Retinol", leads: "760", samples: "110", deals: "35 DEALS", progress: 55 },
-  { name: "Moisturizer Gel", leads: "520", samples: "75", deals: "15 DEALS", progress: 40 },
-  { name: "Sunscreen Hybrid", leads: "480", samples: "60", deals: "12 DEALS", progress: 35 },
-];
+const CustomChart: React.FC<CustomChartProps> = ({ data, color, color2, data2 }) => {
+  const maxVal = 150;
+  const i = 500 / (data.length - 1);
+  const a = data.map((val, idx) => `${idx * i},${150 - (val / maxVal) * 150}`).join(" ");
+  const o = data2 ? data2.map((val, idx) => `${idx * i},${150 - (val / maxVal) * 150}`).join(" ") : null;
 
-const DEFAULT_PLATFORM_DATA = {
-  INSTAGRAM: {
-    id: "INSTAGRAM",
-    label: "INSTAGRAM",
-    icon: Camera,
-    color: "text-indigo-600",
-    bg: "bg-indigo-50",
-    auditPeriod: "MARCH 2024",
-    summary: [
-      { period: "DESEMBER", posts: "12", eng: "46.63%", followers: "705", unfollow: "10" },
-      { period: "JANUARI", posts: "7", eng: "16.94%", followers: "901", unfollow: "47" },
-    ],
-    growth: { posts: "-70.8%", eng: "+63.6%", followers: "+27.8%", unfollow: "+370%" },
-    retention: [
-      { name: "JANUARY", value: 40 },
-      { name: "FEBRUARY", value: 70 },
-    ],
-    granular: [
-      { month: "DESEMBER", posts: "12", reach: "5,258", likes: "126", comments: "6", saves: "6", visits: "210" },
-      { month: "JANUARI", posts: "7", reach: "2.5M+", likes: "1,191", comments: "171", saves: "63", visits: "2,920" },
-    ]
-  },
-  FACEBOOK: {
-    id: "FACEBOOK",
-    label: "FACEBOOK",
-    icon: MessageCircle,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    auditPeriod: "MARCH 2024",
-    summary: [
-      { period: "DESEMBER", posts: "8", eng: "12.45%", followers: "2,450", unfollow: "15" },
-      { period: "JANUARI", posts: "10", eng: "14.20%", followers: "2,580", unfollow: "22" },
-    ],
-    growth: { posts: "+25%", eng: "+14.1%", followers: "+5.3%", unfollow: "+46.6%" },
-    retention: [
-      { name: "JANUARY", value: 55 },
-      { name: "FEBRUARY", value: 60 },
-    ],
-    granular: [
-      { month: "DESEMBER", posts: "8", reach: "12,400", likes: "450", comments: "32", saves: "12", visits: "85" },
-      { month: "JANUARI", posts: "10", reach: "15,800", likes: "520", comments: "48", saves: "18", visits: "110" },
-    ]
-  },
-  YOUTUBE: {
-    id: "YOUTUBE",
-    label: "YOUTUBE",
-    icon: Video,
-    color: "text-rose-600",
-    bg: "bg-rose-50",
-    auditPeriod: "MARCH 2024",
-    summary: [
-      { period: "DESEMBER", posts: "4", eng: "8.12%", followers: "1,200", unfollow: "5" },
-      { period: "JANUARI", posts: "6", eng: "10.45%", followers: "1,450", unfollow: "8" },
-    ],
-    growth: { posts: "+50%", eng: "+28.7%", followers: "+20.8%", unfollow: "+60%" },
-    retention: [
-      { name: "JANUARY", value: 30 },
-      { name: "FEBRUARY", value: 45 },
-    ],
-    granular: [
-      { month: "DESEMBER", posts: "4", reach: "45,000", likes: "2,100", comments: "150", saves: "45", visits: "320" },
-      { month: "JANUARI", posts: "6", reach: "72,000", likes: "3,400", comments: "280", saves: "92", visits: "540" },
-    ]
-  },
-  TIKTOK: {
-    id: "TIKTOK",
-    label: "TIKTOK",
-    icon: Music2,
-    color: "text-slate-900",
-    bg: "bg-slate-50",
-    auditPeriod: "MARCH 2024",
-    summary: [
-      { period: "DESEMBER", posts: "20", eng: "25.60%", followers: "5,400", unfollow: "80" },
-      { period: "JANUARI", posts: "25", eng: "32.10%", followers: "6,800", unfollow: "120" },
-    ],
-    growth: { posts: "+25%", eng: "+25.4%", followers: "+25.9%", unfollow: "+50%" },
-    retention: [
-      { name: "JANUARY", value: 65 },
-      { name: "FEBRUARY", value: 90 },
-    ],
-    granular: [
-      { month: "DESEMBER", posts: "20", reach: "150,000", likes: "12,500", comments: "840", saves: "1,200", visits: "3,400" },
-      { month: "JANUARI", posts: "25", reach: "280,000", likes: "24,800", comments: "1,560", saves: "2,450", visits: "6,200" },
-    ]
-  }
+  return (
+    <svg viewBox="0 0 500 150" style={{ width: "100%", height: "180px", overflow: "visible" }}>
+      <defs>
+        <linearGradient id={`grad-${color.replace("#", "")}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.2 }} />
+          <stop offset="100%" style={{ stopColor: color, stopOpacity: 0 }} />
+        </linearGradient>
+        {color2 && (
+          <linearGradient id={`grad-${color2.replace("#", "")}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: color2, stopOpacity: 0.2 }} />
+            <stop offset="100%" style={{ stopColor: color2, stopOpacity: 0 }} />
+          </linearGradient>
+        )}
+      </defs>
+      {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => (
+        <line
+          key={idx}
+          x1="0"
+          y1={String(150 * ratio)}
+          x2="500"
+          y2={String(150 * ratio)}
+          stroke="#F1F5F9"
+          strokeWidth="1"
+        />
+      ))}
+      <path
+        d={`M ${a}`}
+        fill="none"
+        stroke={color}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d={`M ${a} L 500,150 L 0,150 Z`} fill={`url(#grad-${color.replace("#", "")})`} />
+      {o && (
+        <>
+          <path
+            d={`M ${o}`}
+            fill="none"
+            stroke={color2!}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d={`M ${o} L 500,150 L 0,150 Z`} fill={`url(#grad-${color2!.replace("#", "")})`} />
+        </>
+      )}
+      {data.map((val, idx) => (
+        <circle
+          key={idx}
+          cx={idx * i}
+          cy={150 - (val / maxVal) * 150}
+          r="4"
+          fill="white"
+          stroke={color}
+          strokeWidth="2"
+        />
+      ))}
+    </svg>
+  );
 };
 
 // --- DATA TRANSFORMATION HELPERS ---
 function formatRupiah(value: number): string {
-  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(1)} M`;
+  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)} M`;
   if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)} Jt`;
   if (value >= 1_000) return `Rp ${(value / 1_000).toFixed(0)}k`;
   return `Rp ${value.toLocaleString()}`;
@@ -160,160 +116,14 @@ function formatNumber(value: number): string {
   return value.toLocaleString();
 }
 
-function mapTrends(trends: any[]): typeof DEFAULT_TREND_DATA {
-  if (!trends || trends.length === 0) return DEFAULT_TREND_DATA;
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return trends.map((t: any, i: number) => ({
-    month: t.month || monthNames[i % 12] || `M${i + 1}`,
-    leads: t.leads || 0,
-    cpl: Math.round(t.cpl || 0),
-    closing: t.closing || 0,
-    cpa: Math.round(t.cpa || 0),
-  }));
-}
-
-function mapPlatforms(apiData: any): typeof DEFAULT_PLATFORM_DATA {
-  const platforms = apiData.platforms || [];
-  const platformHealth = apiData.platformHealth || [];
-
-  const platformMap: Record<string, string> = {
-    IG_ADS: "INSTAGRAM", FB_ADS: "FACEBOOK",
-    TIKTOK_ADS: "TIKTOK", GOOGLE_ADS: "YOUTUBE",
-    IG_ORGANIC: "INSTAGRAM", FB_ORGANIC: "FACEBOOK",
-    TIKTOK_ORGANIC: "TIKTOK",
-  };
-
-  const iconMap: Record<string, any> = {
-    INSTAGRAM: Camera, FACEBOOK: MessageCircle,
-    YOUTUBE: Video, TIKTOK: Music2,
-  };
-
-  const colorMap: Record<string, { color: string; bg: string }> = {
-    INSTAGRAM: { color: "text-indigo-600", bg: "bg-indigo-50" },
-    FACEBOOK: { color: "text-blue-600", bg: "bg-blue-50" },
-    YOUTUBE: { color: "text-rose-600", bg: "bg-rose-50" },
-    TIKTOK: { color: "text-slate-900", bg: "bg-slate-50" },
-  };
-
-  const result: any = { ...DEFAULT_PLATFORM_DATA };
-
-  for (const key of ["INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK"]) {
-    const paid = platforms.find((p: any) => platformMap[p.name] === key);
-    const organic = platformHealth.find((h: any) => platformMap[h.platform] === key);
-
-    const posts = organic?.postsCount || 0;
-    const followers = organic?.totalFollowers || 0;
-    const unfollows = organic?.unfollows || 0;
-    const reach = organic?.totalReach || 0;
-    const likes = organic?.likesCount || 0;
-    const comments = organic?.commentsCount || 0;
-    const saves = organic?.savesCount || 0;
-    const visits = organic?.profileVisits || 0;
-    const followerGrowth = organic?.followerGrowth || 0;
-
-    const eng = posts > 0 ? ((likes + comments + saves) / (reach || 1)) * 100 : 0;
-
-    const periodLabel = "APRIL 2026";
-
-    result[key] = {
-      id: key,
-      label: key,
-      icon: iconMap[key],
-      color: colorMap[key].color,
-      bg: colorMap[key].bg,
-      auditPeriod: getAuditPeriod(apiData),
-      summary: [
-        {
-          period: "PREV PERIOD",
-          posts: String(Math.max(1, Math.round(posts * 0.7))),
-          eng: `${(eng * 0.85).toFixed(2)}%`,
-          followers: String(Math.max(1, Math.round(followers * 0.85))),
-          unfollow: String(Math.max(0, Math.round(unfollows * 0.7))),
-        },
-        {
-          period: periodLabel,
-          posts: String(posts),
-          eng: `${eng.toFixed(2)}%`,
-          followers: String(followers),
-          unfollow: String(unfollows),
-        },
-      ],
-      growth: {
-        posts: posts > 0 ? `+${Math.round(30)}%` : "0%",
-        eng: eng > 0 ? `+${Math.round(15)}%` : "0%",
-        followers: followers > 0 ? `+${Math.round(followerGrowth / Math.max(1, followers) * 100)}%` : "0%",
-        unfollow: unfollows > 0 ? `+${Math.round(30)}%` : "0%",
-      },
-      retention: [
-        { name: "PREV MONTH", value: Math.max(10, Math.round(followers * 0.003)) },
-        { name: "CURRENT", value: Math.max(15, Math.round(followers * 0.005)) },
-      ],
-      granular: [
-        {
-          month: "PREV PERIOD",
-          posts: String(Math.max(1, Math.round(posts * 0.7))),
-          reach: formatNumber(Math.round(reach * 0.7)),
-          likes: String(Math.max(1, Math.round(likes * 0.7))),
-          comments: String(Math.max(0, Math.round(comments * 0.7))),
-          saves: String(Math.max(0, Math.round(saves * 0.7))),
-          visits: String(Math.max(0, Math.round(visits * 0.7))),
-        },
-        {
-          month: periodLabel,
-          posts: String(posts),
-          reach: formatNumber(reach),
-          likes: String(likes),
-          comments: String(comments),
-          saves: String(saves),
-          visits: String(visits),
-        },
-      ],
-    };
-  }
-
-  return result as typeof DEFAULT_PLATFORM_DATA;
-}
-
-function getAuditPeriod(apiData: any): string {
-  try {
-    const date = new Date();
-    return `${date.toLocaleString('default', { month: 'long' }).toUpperCase()} ${date.getFullYear()}`;
-  } catch {
-    return "APRIL 2026";
-  }
-}
-
-function mapContentLeaders(topContent: any[]): { title: string; er: string; color: string }[] {
-  if (!topContent || topContent.length === 0) {
-    return [
-      { title: "Day in Life: Formula R&D Perfection", er: "12.4% ER", color: "text-emerald-500" },
-      { title: "Serum Brightening: Before vs After", er: "10.2% ER", color: "text-emerald-500" },
-      { title: "Founder Insights: Brand Scalability", er: "15.6% ER", color: "text-emerald-500" },
-    ];
-  }
-  return topContent.slice(0, 5).map((c: any) => ({
-    title: c.title || "Untitled",
-    er: `${Number(c.engagement || 0).toFixed(1)}% ER`,
-    color: "text-emerald-500",
-  }));
-}
-
-function mapLeadSources(sources: any[]): { name: string; leads: string }[] {
-  if (!sources || sources.length === 0) {
-    return [
-      { name: "Linktree", leads: "450 Leads" },
-      { name: "Instagram", leads: "320 Leads" },
-      { name: "TikTok", leads: "280 Leads" },
-    ];
-  }
-  return sources.slice(0, 5).map((s: any) => ({
-    name: s.name || "Unknown",
-    leads: s.leads || "0 Leads",
-  }));
+function scaleTrendData(raw: number[] | undefined, defaultVal: number[]): number[] {
+  if (!raw || raw.length === 0) return defaultVal;
+  const max = Math.max(...raw, 1);
+  return raw.map(v => 40 + (v / max) * 100);
 }
 
 export default function MarketingDashboardClient() {
-  const [activePlatform, setActivePlatform] = useState<keyof typeof DEFAULT_PLATFORM_DATA>("INSTAGRAM");
+  const [activePlatform, setActivePlatform] = useState<"INSTAGRAM" | "FACEBOOK" | "YOUTUBE" | "TIKTOK">("INSTAGRAM");
 
   const { data } = useQuery({
     queryKey: ["marketing-analytics"],
@@ -321,487 +131,895 @@ export default function MarketingDashboardClient() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const TREND_DATA = data?.trends?.length ? mapTrends(data.trends) : DEFAULT_TREND_DATA;
-  const PRODUCT_PERFORMANCE = data?.productPerformance ?? DEFAULT_PRODUCT_PERFORMANCE;
-  const PLATFORM_DATA: typeof DEFAULT_PLATFORM_DATA = data ? mapPlatforms(data) : DEFAULT_PLATFORM_DATA;
+  // Dynamic values or fallback
+  const revenueVal = data?.acquisition?.revenue ? formatRupiah(data.acquisition.revenue) : "Rp 3.24 M";
+  const revenueTargetPercent = data?.acquisition?.revenue
+    ? Math.min(Math.round((data.acquisition.revenue / 4500000000) * 100), 100)
+    : 72;
+  const clientAcqVal = data?.acquisition?.clientsAcquired ? String(data.acquisition.clientsAcquired) : "42";
+  const avgCpaVal = data?.acquisition?.avgCpa ? formatRupiah(data.acquisition.avgCpa) : "Rp 1.4M";
 
-  const acquisition = data?.acquisition;
-  const funnel = data?.funnel;
-  const budget = data?.budget;
-  const vitality = data?.vitality;
-  const platformHealthArr = data?.platformHealth || [];
-  const topContent = data?.topContent;
-  const leadSourceRanking = data?.leadSourceRanking;
-  const searchVisibility = data?.searchVisibility;
+  const leadsQualifiedVal = data?.funnel?.leadsQualified ? formatNumber(data.funnel.leadsQualified) : "1,240";
+  const leadToSampleRateVal = data?.funnel?.leadToSampleRate ? `${data.funnel.leadToSampleRate}%` : "45%";
+  const prospectsVal = data?.funnel?.prospects ? String(data.funnel.prospects) : "84";
+  const closingRateVal = data?.funnel?.closingRate ? `${data.funnel.closingRate}%` : "64.2%";
 
-  const platform = PLATFORM_DATA[activePlatform];
-  const PlatformIcon = platform.icon;
+  const totalAdSpendVal = data?.budget?.totalAdSpend ? formatRupiah(data.budget.totalAdSpend) : "Rp 342.5 Jt";
+  const budgetUsagePercentVal = data?.budget?.budgetUsagePercent ? `${Math.round(data.budget.budgetUsagePercent)}%` : "68%";
+  const costPerLeadVal = data?.budget?.costPerLead ? formatRupiah(data.budget.costPerLead) : "Rp 28k";
+  const costPerSampleVal = data?.budget?.costPerSample ? formatRupiah(data.budget.costPerSample) : "Rp 145k";
+
+  // Trends
+  const rawLeadsTrend = data?.trends?.map((t: any) => t.leads as number);
+  const rawCplTrend = data?.trends?.map((t: any) => t.cpl as number);
+  const rawClosingTrend = data?.trends?.map((t: any) => t.closing as number);
+  const rawCpaTrend = data?.trends?.map((t: any) => t.cpa as number);
+
+  const leadsTrend = scaleTrendData(rawLeadsTrend, [40, 55, 45, 78, 85, 60, 95, 110, 90, 120, 130, 140]);
+  const cplTrend = scaleTrendData(rawCplTrend, [120, 110, 105, 95, 80, 85, 70, 65, 75, 70, 60, 55]);
+  const closingTrend = scaleTrendData(rawClosingTrend, [60, 65, 82, 75, 95, 88, 70, 95, 110, 85, 120, 135]);
+  const cpaTrend = scaleTrendData(rawCpaTrend, [140, 130, 125, 115, 100, 105, 90, 85, 95, 90, 80, 75]);
+
+  // Product performance
+  const productPerformance = data?.productPerformance || [
+    { cat: "SKINCARE - SERUM ACTIVE", leads: 450, sample: 42, deal: 18 },
+    { cat: "BODYCARE - BRIGHTENING LOTION", leads: 320, sample: 28, deal: 12 },
+    { cat: "HAIRCARE - ANTI FALL SHAMPOO", leads: 180, sample: 15, deal: 5 },
+    { cat: "COSMETIC - MATTE LIPSTICK", leads: 290, sample: 36, deal: 14 }
+  ];
+
+  // Vitality & Platform específicos
+  const disciplinePostsVal = data?.vitality?.totalPosts ? String(data.vitality.totalPosts) : "24";
+  const disciplineTargetVal = data?.vitality?.postTarget ? String(data.vitality.postTarget) : "30";
+  const disciplineProgressVal = data?.vitality?.totalPosts && data?.vitality?.postTarget
+    ? Math.round((data.vitality.totalPosts / data.vitality.postTarget) * 100)
+    : 80;
+  const erRateVal = data?.vitality?.avgEngagement ? `${data.vitality.avgEngagement.toFixed(1)}%` : "4.2%";
+  const followersVal = data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "18.4K";
+
+  // Platform specific deep dive calculations
+  const platformDataMap = {
+    INSTAGRAM: {
+      color: "#E1306C",
+      icon: Globe,
+      growth: "+63.6%",
+      followers: data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "18.4K"
+    },
+    FACEBOOK: {
+      color: "#1877F2",
+      icon: Globe,
+      growth: "+14.1%",
+      followers: "2,580"
+    },
+    YOUTUBE: {
+      color: "#FF0000",
+      icon: Globe,
+      growth: "+28.7%",
+      followers: "1,450"
+    },
+    TIKTOK: {
+      color: "#000000",
+      icon: Music,
+      growth: "+25.4%",
+      followers: "6,800"
+    }
+  };
+
+  const selectedPlatformInfo = platformDataMap[activePlatform];
+  const SelectedPlatformIcon = selectedPlatformInfo.icon;
+
+  // Search visibility
+  const searchImpressions = data?.searchVisibility?.impressions ? formatNumber(data.searchVisibility.impressions) : "2.4M";
+  const searchClicks = data?.searchVisibility?.clicks ? formatNumber(data.searchVisibility.clicks) : "185.3K";
+  const searchCtr = data?.searchVisibility?.avgCtr ? `${data.searchVisibility.avgCtr}%` : "7.7%";
+  const searchPosition = data?.searchVisibility?.avgPosition ? String(data.searchVisibility.avgPosition) : "4.2";
 
   return (
-    <div className="p-6 bg-[#F3F4F6] min-h-screen space-y-4 max-w-[1600px] mx-auto overflow-x-hidden">
-      {/* HEADER SECTION - ULTRA COMPACT */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="space-y-0.5">
-          <h1 className="text-[28px] font-black text-slate-900 tracking-tighter uppercase leading-none">
-            MARKETING <span className="text-primary">COMMAND CENTER</span>
-          </h1>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
-            Nex Matrix v2.0: Funnel Audit & Content Vitality
+    <div
+      className="view-section active"
+      style={{ paddingBottom: "10rem", background: "#F8FAFC", minHeight: "100vh" }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginBottom: "2rem",
+        }}
+      >
+        <div>
+          <h2 className="dashboard-title" style={{ margin: 0 }}>
+            MARKETING COMMAND CENTER
+          </h2>
+          <p style={{ margin: "4px 0 0 0", color: "#64748B", fontSize: "14px", fontWeight: 500 }}>
+            Aureon Matrix v2.0: Funnel Audit & Content Vitality
           </p>
         </div>
-        <div className="flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm scale-90 origin-right">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span className="text-[11px] font-black text-slate-900 uppercase">{acquisition ? getAuditPeriod(data) : "March 2024"}</span>
-        </div>
-      </div>
-
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Revenue MTD"
-          value={acquisition ? formatRupiah(acquisition.revenue) : "Rp 3.24 M"}
-          targetPct={Math.min(Math.round((acquisition?.revenue / 350000000 * 100) || 72), 100)}
-          icon={<DollarSign />}
-        />
-        <KpiCard
-          label="Lead→Sample Rate"
-          value={`${funnel?.leadToSampleRate || 45}%`}
-          targetPct={funnel?.leadToSampleRate || 45}
-          icon={<TrendingUp />}
-        />
-        <KpiCard
-          label="Closing Rate"
-          value={`${funnel?.closingRate || 64}%`}
-          targetPct={funnel?.closingRate || 64}
-          icon={<Target />}
-        />
-        <KpiCard
-          label="Budget Usage"
-          value={`${budget ? Math.round(budget.budgetUsagePercent) : 68}%`}
-          targetPct={100 - (budget?.budgetUsagePercent || 68)}
-          icon={<Wallet />}
-        />
-        <KpiCard
-          label="Content Production"
-          value={vitality ? `${vitality.totalPosts || 0} / ${vitality.postTarget || 30}` : "24 / 30"}
-          targetPct={Math.round((vitality?.totalPosts / vitality?.postTarget) * 100) || 80}
-          icon={<PenTool />}
-        />
-        <KpiCard
-          label="Engagement"
-          value={`${vitality?.avgEngagement?.toFixed(1) || 4.2}%`}
-          targetPct={Math.min((vitality?.avgEngagement || 4.2) * 20, 100)}
-          icon={<BarChart3 />}
-        />
-        <KpiCard
-          label="CTR"
-          value={`${searchVisibility?.avgCtr || 7.7}%`}
-          targetPct={searchVisibility?.avgCtr >= 5.5 ? 100 : (searchVisibility?.avgCtr || 0) / 5.5 * 100}
-          icon={<Globe />}
-        />
-        <KpiCard
-          label="Avg Position"
-          value={`${searchVisibility?.avgPosition ?? 4.2}`}
-          targetPct={searchVisibility?.avgPosition <= 3 ? 100 : Math.max(0, 100 - searchVisibility?.avgPosition * 10)}
-          icon={<Search />}
-        />
-      </div>
-
-      {/* TREND CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* CHART II */}
-        <Card className="bento-card p-4 shadow-sm border-slate-100/80 bg-white overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[11px] font-black text-slate-900 uppercase italic tracking-wider">
-              II. Analisa Tren Tahunan (Leads & CPL)
-            </h3>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">Leads</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-teal-400" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">CPL</span>
-              </div>
-            </div>
-          </div>
-          <div className="h-[210px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={TREND_DATA} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorCPL" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800, fill: '#94A3B8' }} dy={5} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800, fill: '#94A3B8' }} />
-                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '10px' }} />
-                <Area type="monotone" dataKey="leads" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#colorLeads)" dot={{ r: 3, fill: '#FFFFFF', stroke: '#2563EB', strokeWidth: 2 }} />
-                <Area type="monotone" dataKey="cpl" stroke="#2DD4BF" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCPL)" dot={{ r: 3, fill: '#FFFFFF', stroke: '#2DD4BF', strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* CHART III */}
-        <Card className="bento-card p-4 shadow-sm border-slate-100/80 bg-white overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[11px] font-black text-slate-900 uppercase italic tracking-wider">
-              III. Tren Samples & Akuisisi (CPA)
-            </h3>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">Closing</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-rose-500" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">CPA</span>
-              </div>
-            </div>
-          </div>
-          <div className="h-[210px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={TREND_DATA} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorClosing" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorCPA" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F43F5E" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#F43F5E" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800, fill: '#94A3B8' }} dy={5} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800, fill: '#94A3B8' }} />
-                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '10px' }} />
-                <Area type="monotone" dataKey="closing" stroke="#F59E0B" strokeWidth={2.5} fillOpacity={1} fill="url(#colorClosing)" dot={{ r: 3, fill: '#FFFFFF', stroke: '#F59E0B', strokeWidth: 2 }} />
-                <Area type="monotone" dataKey="cpa" stroke="#F43F5E" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCPA)" dot={{ r: 3, fill: '#FFFFFF', stroke: '#F43F5E', strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      {/* SECTION IV & V */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* IV. TOP LIST PRODUCT PERFORMANCE */}
-        <Card className="lg:col-span-7 bento-card p-6 shadow-sm border-slate-100/80 bg-white">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-1 h-4 bg-primary rounded-full" />
-            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              IV. TOP LIST PRODUCT PERFORMANCE (LEADS & CONVERSION)
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                  <th className="pb-4 font-black">Product Category</th>
-                  <th className="pb-4 text-right font-black">Leads</th>
-                  <th className="pb-4 text-right font-black">Samples</th>
-                  <th className="pb-4 text-right font-black text-emerald-600">Client Deal</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {PRODUCT_PERFORMANCE.map((p: any, i: number) => (
-                  <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4">
-                      <p className="text-[13px] font-black text-slate-900 mb-2">{p.name}</p>
-                      <div className="h-1 w-32 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-600" style={{ width: `${p.progress}%` }} />
-                      </div>
-                    </td>
-                    <td className="py-4 text-right text-[14px] font-black text-slate-900 tabular">{p.leads}</td>
-                    <td className="py-4 text-right text-[14px] font-bold text-slate-500 tabular">{p.samples}</td>
-                    <td className="py-4 text-right">
-                      <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-tight whitespace-nowrap">
-                        {p.deals}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* V. VITALITAS KONTEN */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-1 h-4 bg-purple-600 rounded-full" />
-            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              V. VITALITAS KONTEN (ORGANIC REACH/ENGAGEMENT)
-            </h3>
-          </div>
-
-          <Card className="p-4 bento-card bg-white border-slate-100 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">FOLLOWERS INSTAGRAM</p>
-              <h2 className="text-[24px] font-black text-slate-900 mb-1 tabular">
-                {(() => {
-                  const igHealth = platformHealthArr.find((h: any) => h.platform === 'IG_ORGANIC' || h.platform === 'INSTAGRAM');
-                  return igHealth ? formatNumber(igHealth.totalFollowers || 0) : "18.4K";
-                })()}
-              </h2>
-              <p className="text-[10px] font-bold text-emerald-500">
-                {(() => {
-                  const igHealth = platformHealthArr.find((h: any) => h.platform === 'IG_ORGANIC' || h.platform === 'INSTAGRAM');
-                  return igHealth?.followerGrowth ? `↑ ${Math.round((igHealth.followerGrowth / Math.max(1, igHealth.totalFollowers - igHealth.followerGrowth)) * 100)}% vs Prev` : "↑ 12% vs Prev";
-                })()}
-              </p>
-            </Card>
-
-          <Card className="p-4 bg-gray-50 border border-gray-200 shadow-xl rounded-2xl grid grid-cols-4 gap-2">
-            <div className="text-center">
-              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">LIKES</p>
-              <p className="text-[14px] font-black text-gray-900 tabular">{vitality?.engagementByType?.likes ? formatNumber(vitality.engagementByType.likes) : "1.2K"}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">COMMENTS</p>
-              <p className="text-[14px] font-black text-gray-900 tabular">{vitality?.engagementByType?.shares ? String(Math.round(vitality.engagementByType.shares / 3)) : "84"}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">SHARES</p>
-              <p className="text-[14px] font-black text-gray-900 tabular">{vitality?.engagementByType?.saves ? formatNumber(vitality.engagementByType.saves) : "312"}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">SAVE</p>
-              <p className="text-[14px] font-black text-gray-900 tabular">{vitality?.engagementByType?.saves ? formatNumber(Math.round(vitality.engagementByType.saves * 0.5)) : "156"}</p>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* SECTION VI: PLATFORM-SPECIFIC ENGAGEMENT AUDIT */}
-      <div className="space-y-4 pt-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-4 bg-orange-500 rounded-full" />
-            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              VI. PLATFORM-SPECIFIC ENGAGEMENT AUDIT
-            </h3>
-          </div>
-          <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[9px] font-black rounded-lg uppercase tracking-widest border border-amber-100">
-            PLATFORM DEEP DIVE
+        <div
+          style={{
+            background: "white",
+            padding: "10px 18px",
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <Calendar size={14} color="#64748B" />
+          <span style={{ fontSize: "12px", fontWeight: 800, color: "#1E293B" }}>
+            MARCH 2024
           </span>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-          {/* SIDEBAR: AUDIT SOURCES */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-              <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4 px-2">AUDIT SOURCES</p>
-              <div className="space-y-2">
-                {(Object.keys(PLATFORM_DATA) as Array<keyof typeof PLATFORM_DATA>).map((key) => {
-                  const p = PLATFORM_DATA[key];
-                  const Icon = p.icon;
-                  const isActive = activePlatform === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setActivePlatform(key)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all",
-                        isActive
-                          ? "bg-slate-800 text-white shadow-lg shadow-slate-200"
-                          : "text-slate-400 hover:bg-slate-50"
-                      )}
-                    >
-                      <Icon size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{p.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+      {/* Top 3 Cards Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "1.25rem",
+          marginBottom: "2.5rem",
+        }}
+      >
+        {/* Card A: Acquisition Hub */}
+        <div
+          style={{
+            background: "white",
+            padding: "1.5rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 950,
+                color: "#2563EB",
+                background: "#EFF6FF",
+                padding: "4px 10px",
+                borderRadius: "8px",
+              }}
+            >
+              ACQUISITION HUB
+            </span>
+            <TrendingUp color="#2563EB" size={16} />
+          </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <p style={{ margin: 0, fontSize: "10px", fontWeight: 800, color: "#94A3B8" }}>
+              REVENUE SALES (MTD)
+            </p>
+            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>
+              {revenueVal}
+            </h3>
+            <div
+              style={{
+                height: "6px",
+                background: "#F1F5F9",
+                borderRadius: "3px",
+                position: "relative",
+                overflow: "hidden",
+                marginTop: "8px",
+              }}
+            >
+              <div
+                style={{
+                  width: `${revenueTargetPercent}%`,
+                  height: "100%",
+                  background: "#2563EB",
+                }}
+              />
             </div>
-
-            <div className="bg-white rounded-2xl p-4 border border-slate-100">
-              <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">LIVE STATUS</p>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-900 uppercase">TRACKING</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-[9px] font-black text-emerald-500 uppercase">ONLINE</span>
-                </div>
-              </div>
+            <p style={{ margin: "6px 0 0 0", fontSize: "10px", fontWeight: 700, color: "#64748B" }}>
+              Target: Rp 4.5M{" "}
+              <span style={{ color: "#2563EB" }}>
+                ({revenueTargetPercent}%)
+              </span>
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              paddingTop: "1.25rem",
+              borderTop: "1px solid #F1F5F9",
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                CLIENT ACQ.
+              </p>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+                {clientAcqVal}{" "}
+                <span style={{ fontSize: "10px", color: "#10B981" }}>+12%</span>
+              </p>
+            </div>
+            <div style={{ flex: 1, borderLeft: "1px solid #F1F5F9", paddingLeft: "1rem" }}>
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                AVG CPA
+              </p>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+                {avgCpaVal}
+              </p>
             </div>
           </div>
+        </div>
 
-          {/* MAIN CONTENT AREA */}
-          <Card className="lg:col-span-10 bento-card p-5 bg-white border-slate-100 shadow-sm space-y-6">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-4">
-                <div className={cn("p-2.5 rounded-2xl", platform.bg, platform.color)}>
-                  <PlatformIcon size={22} />
-                </div>
-                <div>
-                  <h2 className="text-[20px] font-black text-slate-900 tracking-tighter leading-none mb-1">
-                    {platform.label.charAt(0) + platform.label.slice(1).toLowerCase()} Analytics
-                  </h2>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                    CONTENT VITALITY AUDIT • PERIOD: {platform.auditPeriod}
-                  </p>
-                </div>
-              </div>
-              <div className={cn("flex items-center gap-2 px-4 py-2 rounded-xl", platform.bg, platform.color)}>
-                <CheckCircle2 size={14} />
-                <span className="text-[10px] font-black uppercase">VERIFIED DATA</span>
-              </div>
+        {/* Card B: Funnel Efficiency */}
+        <div
+          style={{
+            background: "white",
+            padding: "1.5rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 950,
+                color: "#8B5CF6",
+                background: "#F5F3FF",
+                padding: "4px 10px",
+                borderRadius: "8px",
+              }}
+            >
+              FUNNEL EFFICIENCY
+            </span>
+            <Filter color="#8B5CF6" size={16} />
+          </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <p style={{ margin: 0, fontSize: "10px", fontWeight: 800, color: "#94A3B8" }}>
+              LEADS QUALIFIED
+            </p>
+            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>
+              {leadsQualifiedVal}
+            </h3>
+            <p style={{ margin: 0, fontSize: "10px", fontWeight: 700, color: "#8B5CF6" }}>
+              Conversion Lead-to-Sample: {leadToSampleRateVal}
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              paddingTop: "1.25rem",
+              borderTop: "1px solid #F1F5F9",
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                PROSPECT
+              </p>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+                {prospectsVal}
+              </p>
             </div>
-
-            {/* SUMMARY GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-              <div className="lg:col-span-8 overflow-hidden rounded-xl border border-slate-100 shadow-sm">
-                <table className="w-full text-center">
-                  <thead>
-                    <tr className="text-[9px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50 bg-slate-50/30">
-                      <th className="py-3 px-4">PERIOD</th>
-                      <th className="py-3 px-4">CREATED POST</th>
-                      <th className="py-3 px-4">ENG. RATE</th>
-                      <th className="py-3 px-4">FOLLOWERS</th>
-                      <th className="py-3 px-4 text-rose-500">UNFOLLOW</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {platform.summary.map((row, idx) => (
-                      <tr key={idx} className={idx === 1 ? platform.bg.replace('bg-', 'bg-').replace('50', '50/20') : ""}>
-                        <td className={cn("py-3 px-4 text-[11px] font-black uppercase tracking-widest", idx === 1 ? platform.color : "text-slate-400")}>
-                          {row.period}
-                        </td>
-                        <td className="py-3 px-4 text-[14px] font-black text-slate-900 tabular">{row.posts}</td>
-                        <td className={cn("py-3 px-4 text-[14px] font-black tabular text-emerald-500", idx === 1 && platform.color)}>
-                          {row.eng}
-                        </td>
-                        <td className={cn("py-3 px-4 text-[14px] font-black tabular", idx === 1 ? platform.color : "text-slate-900")}>
-                          {row.followers}
-                        </td>
-                        <td className="py-3 px-4 text-[14px] font-black text-rose-500 tabular">{row.unfollow}</td>
-                      </tr>
-                    ))}
-                    <tr className={cn("text-white border-none", platform.color.replace('text-', 'bg-'))}>
-                      <td className="py-3 px-4 text-[11px] font-black uppercase tracking-widest">GROWTH</td>
-                      <td className="py-3 px-4 text-[14px] font-black tabular">{platform.growth.posts}</td>
-                      <td className="py-3 px-4 text-[14px] font-black tabular">{platform.growth.eng}</td>
-                      <td className="py-3 px-4 text-[14px] font-black tabular">{platform.growth.followers}</td>
-                      <td className="py-3 px-4 text-[14px] font-black tabular">{platform.growth.unfollow}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="lg:col-span-4 space-y-2">
-                <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 flex justify-between items-center">
-                  <span className="text-[10px] font-black text-slate-900 uppercase">LOYALTY RETENTION</span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase bg-white px-2 py-1 rounded-lg border border-slate-100">TREND: ↑ 22%</span>
-                </div>
-                <div className="h-[120px] w-full bg-white border border-slate-100 rounded-xl p-4 flex items-end justify-around relative overflow-hidden">
-                  {/* Custom Simple Bars */}
-                  <div className="flex flex-col items-center gap-3 z-10">
-                    <div className={cn("w-12 rounded-t-xl", platform.bg.replace('50', '100'))} style={{ height: `${platform.retention[0].value}px` }} />
-                    <span className="text-[9px] font-black text-slate-300 uppercase">{platform.retention[0].name}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-3 z-10">
-                    <div className={cn("w-12 rounded-t-xl shadow-lg", platform.color.replace('text-', 'bg-'), platform.color.replace('text-', 'shadow-').replace('600', '200'))} style={{ height: `${platform.retention[1].value}px` }} />
-                    <span className={cn("text-[9px] font-black uppercase tracking-widest", platform.color)}>{platform.retention[1].name}</span>
-                  </div>
-                  {/* Decorative waves or background lines */}
-                  <div className="absolute inset-0 opacity-[0.03] flex items-center justify-center pointer-events-none">
-                    <PlatformIcon size={110} />
-                  </div>
-                </div>
-              </div>
+            <div style={{ flex: 1, borderLeft: "1px solid #F1F5F9", paddingLeft: "1rem" }}>
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                CLOSING RATE
+              </p>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+                {closingRateVal}
+              </p>
             </div>
+          </div>
+        </div>
 
-            {/* GRANULAR METRICS */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-[1px] bg-slate-200" />
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">GRANULAR ENGAGEMENT METRICS</span>
-              </div>
-              <div className="bg-[#F8FAFC]/50 rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-                <table className="w-full text-center">
-                  <thead>
-                    <tr className="text-[9px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50">
-                      <th className="py-3 px-4 text-left">MONTH</th>
-                      <th className="py-3 px-4">POSTS</th>
-                      <th className="py-3 px-4">REACH</th>
-                      <th className="py-3 px-4">LIKES</th>
-                      <th className="py-3 px-4">COMMENT</th>
-                      <th className="py-3 px-4">SAVE</th>
-                      <th className="py-3 px-4" style={{ color: platform.color.includes('text-') ? undefined : platform.color }}>VISIT</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {platform.granular.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-white transition-colors">
-                        <td className="py-3.5 px-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">{row.month}</td>
-                        <td className="py-3.5 px-4 text-[14px] font-black text-slate-900">{row.posts}</td>
-                        <td className="py-3.5 px-4 text-[14px] font-black text-slate-900 tabular">{row.reach}</td>
-                        <td className="py-3.5 px-4 text-[14px] font-black text-slate-900 tabular">{row.likes}</td>
-                        <td className="py-3.5 px-4 text-[14px] font-black text-slate-900 tabular">{row.comments}</td>
-                        <td className="py-3.5 px-4 text-[14px] font-black text-slate-900 tabular">{row.saves}</td>
-                        <td className={cn("py-3.5 px-4 text-[14px] font-black tabular", platform.color)}>{row.visits}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+        {/* Card C: Budget Audit */}
+        <div
+          style={{
+            background: "white",
+            padding: "1.5rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 950,
+                color: "#EF4444",
+                background: "#FEF2F2",
+                padding: "4px 10px",
+                borderRadius: "8px",
+              }}
+            >
+              BUDGET AUDIT
+            </span>
+            <Wallet color="#EF4444" size={16} />
+          </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <p style={{ margin: 0, fontSize: "10px", fontWeight: 800, color: "#94A3B8" }}>
+              TOTAL AD SPEND
+            </p>
+            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>
+              {totalAdSpendVal}
+            </h3>
+            <p style={{ margin: 0, fontSize: "10px", fontWeight: 700, color: "#EF4444" }}>
+              Used: {budgetUsagePercentVal} of Monthly Budget
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              paddingTop: "1.25rem",
+              borderTop: "1px solid #F1F5F9",
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                COST PER LEAD
+              </p>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+                {costPerLeadVal}
+              </p>
             </div>
-          </Card>
+            <div style={{ flex: 1, borderLeft: "1px solid #F1F5F9", paddingLeft: "1rem" }}>
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                COST / SAMPLE
+              </p>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+                {costPerSampleVal}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* SECTION VII & VIII */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* VII. TOP 5 CONTENT LEADERS */}
-        <Card className="lg:col-span-7 bento-card p-6 bg-white border-slate-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-1 h-4 bg-blue-600 rounded-full" />
-            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              VII. TOP 5 CONTENT LEADERS
+      {/* Annual Trend Charts Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "2rem",
+          marginBottom: "2.5rem",
+        }}
+      >
+        {/* Trend Chart A: leads & cpl */}
+        <div
+          style={{
+            background: "white",
+            padding: "2.5rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "2rem",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+              II. ANALISA TREN TAHUNAN (LEADS & CPL)
             </h3>
-          </div>
-          <div className="space-y-3">
-            {mapContentLeaders(topContent).slice(0, 5).map((item, i) => (
-              <div key={i} className="flex justify-between items-center p-3 bg-slate-50/50 rounded-xl border border-slate-100/50 hover:bg-white hover:shadow-sm transition-all group">
-                <span className="text-[12px] font-black text-slate-700 tracking-tight">{item.title}</span>
-                <span className={cn("text-[11px] font-black uppercase tabular tracking-wider", item.color)}>{item.er}</span>
+            <div style={{ display: "flex", gap: "15px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563EB" }} />
+                <span style={{ fontSize: "9px", fontWeight: 950, color: "#64748B" }}>LEADS</span>
               </div>
-            ))}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#06B6D4" }} />
+                <span style={{ fontSize: "9px", fontWeight: 950, color: "#64748B" }}>CPL</span>
+              </div>
+            </div>
           </div>
-        </Card>
+          <CustomChart data={leadsTrend} color="#2563EB" data2={cplTrend} color2="#06B6D4" />
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "15px" }}>
+            {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
+              (m) => (
+                <span key={m} style={{ fontSize: "9px", fontWeight: 900, color: "#94A3B8" }}>
+                  {m}
+                </span>
+              )
+            )}
+          </div>
+        </div>
 
-        {/* VIII. RANKING SUMBER LEADS */}
-        <Card className="lg:col-span-5 bento-card p-6 bg-[#FDFEFE] border-purple-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-purple-600 group-hover:scale-110 transition-transform duration-700">
-            <TrendingUp size={120} />
+        {/* Trend Chart B: samples & cpa */}
+        <div
+          style={{
+            background: "white",
+            padding: "2.5rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "2rem",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+              III. TREN SAMPLES & AKUISISI (CPA)
+            </h3>
+            <div style={{ display: "flex", gap: "15px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#F59E0B" }} />
+                <span style={{ fontSize: "9px", fontWeight: 950, color: "#64748B" }}>CLOSING</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#EF4444" }} />
+                <span style={{ fontSize: "9px", fontWeight: 950, color: "#64748B" }}>CPA</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-1 h-4 bg-purple-600 rounded-full" />
-            <h3 className="text-[11px] font-black text-purple-400 uppercase tracking-[0.2em]">
-              VIII. RANKING SUMBER LEADS
+          <CustomChart data={closingTrend} color="#F59E0B" data2={cpaTrend} color2="#EF4444" />
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "15px" }}>
+            {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
+              (m) => (
+                <span key={m} style={{ fontSize: "9px", fontWeight: 900, color: "#94A3B8" }}>
+                  {m}
+                </span>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Product Performance Table */}
+      <div
+        style={{
+          background: "white",
+          borderRadius: "32px",
+          border: "1px solid #E2E8F0",
+          padding: "1.5rem",
+          marginBottom: "2.5rem",
+        }}
+      >
+        <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+          IV. TOP LIST PRODUCT PERFORMANCE
+        </h3>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "2px solid #F1F5F9" }}>
+              <th style={{ padding: "12px", fontSize: "11px", fontWeight: 950, color: "#64748B" }}>
+                PRODUCT CATEGORY
+              </th>
+              <th style={{ padding: "12px", fontSize: "11px", fontWeight: 950, color: "#64748B" }}>
+                LEADS
+              </th>
+              <th style={{ padding: "12px", fontSize: "11px", fontWeight: 950, color: "#64748B" }}>
+                SAMPLES
+              </th>
+              <th style={{ padding: "12px", fontSize: "11px", fontWeight: 950, color: "#64748B" }}>
+                CLIENT DEAL
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {productPerformance.map((p: any, idx: number) => (
+              <tr key={idx} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                <td style={{ padding: "16px 12px", fontSize: "13px", fontWeight: 900, color: "#1E293B" }}>
+                  {p.cat || p.name}
+                </td>
+                <td style={{ padding: "16px 12px", fontSize: "13px", fontWeight: 800 }}>
+                  {p.leads}
+                </td>
+                <td style={{ padding: "16px 12px", fontSize: "13px", fontWeight: 800 }}>
+                  {p.sample || p.samples}
+                </td>
+                <td style={{ padding: "16px 12px", fontSize: "13px", fontWeight: 950, color: "#2563EB" }}>
+                  {p.deal || p.deals}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Vitalitas Konten & Platform Deep dive */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "2rem",
+          marginBottom: "2.5rem",
+        }}
+      >
+        {/* Vitalitas Konten */}
+        <div
+          style={{
+            background: "white",
+            padding: "2rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "2rem" }}>
+            <Activity color="#EC4899" />
+            <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+              V. VITALITAS KONTEN
             </h3>
           </div>
-          <div className="space-y-3 relative z-10">
-            {mapLeadSources(leadSourceRanking).map((item, i) => (
-              <div key={i} className="flex justify-between items-center p-3 bg-purple-50/30 rounded-xl border border-purple-50 hover:bg-white hover:shadow-sm transition-all group">
-                <span className="text-[12px] font-black text-slate-700 tracking-tight">{item.name}</span>
-                <span className="text-[11px] font-black text-purple-600 uppercase tabular tracking-wider">{item.leads}</span>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1.5rem",
+              marginBottom: "2rem",
+            }}
+          >
+            <div
+              style={{
+                background: "#FDF2F8",
+                padding: "1.5rem",
+                borderRadius: "24px",
+                border: "1px solid #FCE7F3",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: "10px", fontWeight: 900, color: "#BE185D" }}>
+                DISIPLIN PRODUKSI
+              </p>
+              <h4 style={{ margin: "14px 0", fontSize: "24px", fontWeight: 950, color: "#1E293B" }}>
+                {disciplinePostsVal}{" "}
+                <span style={{ fontSize: "12px", color: "#64748B" }}>/ {disciplineTargetVal} Konten</span>
+              </h4>
+              <div style={{ height: "6px", background: "white", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: `${disciplineProgressVal}%`, height: "100%", background: "#EC4899" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div
+                style={{
+                  background: "#F8FAFC",
+                  padding: "12px",
+                  borderRadius: "16px",
+                  border: "1px solid #E2E8F0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontSize: "9px", fontWeight: 800, color: "#64748B" }}>ER RATE</span>
+                <span style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{erRateVal}</span>
+              </div>
+              <div
+                style={{
+                  background: "#F0F9FF",
+                  padding: "12px",
+                  borderRadius: "16px",
+                  border: "1px solid #E0F2FE",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontSize: "9px", fontWeight: 800, color: "#0369A1" }}>FOLLOWERS</span>
+                <span style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{followersVal}</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+            {[Heart, MessageCircle, Share2, Bookmark].map((Icon, idx) => (
+              <div
+                key={idx}
+                style={{
+                  textAlign: "center",
+                  background: "#F8FAFC",
+                  padding: "12px 5px",
+                  borderRadius: "16px",
+                  border: "1px solid #F1F5F9",
+                }}
+              >
+                <Icon size={12} color="#94A3B8" style={{ display: "inline" }} />
               </div>
             ))}
           </div>
-        </Card>
+        </div>
+
+        {/* Platform Specific Audit */}
+        <div
+          style={{
+            background: "white",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+            overflow: "hidden",
+            display: "flex",
+          }}
+        >
+          {/* Sidebar */}
+          <div
+            style={{
+              width: "160px",
+              background: "#F8FAFC",
+              borderRight: "1px solid #E2E8F0",
+              display: "flex",
+              flexDirection: "column",
+              padding: "1.5rem 0",
+            }}
+          >
+            <p style={{ margin: "0 1.5rem 1rem", fontSize: "9px", fontWeight: 950, color: "#94A3B8" }}>
+              VI. PLATFORM
+            </p>
+            {(["INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK"] as const).map((key) => {
+              const info = platformDataMap[key];
+              const Icon = info.icon;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActivePlatform(key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 1.5rem",
+                    border: "none",
+                    background: activePlatform === key ? "white" : "transparent",
+                    color: activePlatform === key ? "#1E293B" : "#94A3B8",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  <Icon size={14} color={activePlatform === key ? info.color : "#94A3B8"} />
+                  <span style={{ fontSize: "9px", fontWeight: 950 }}>{key}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Detail */}
+          <div style={{ flex: 1, padding: "1.5rem" }}>
+            <h4 style={{ margin: "0 0 1rem 0", fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>
+              {activePlatform} Audit
+            </h4>
+            <div
+              style={{
+                background: "#F8FAFC",
+                padding: "12px",
+                borderRadius: "16px",
+                border: "1px solid #F1F5F9",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
+                ENGAGEMENT GROWTH
+              </p>
+              <p style={{ margin: "4px 0", fontSize: "18px", fontWeight: 950, color: "#10B981" }}>
+                {selectedPlatformInfo.growth}
+              </p>
+            </div>
+            <div
+              style={{
+                background: "#F0F9FF",
+                padding: "12px",
+                borderRadius: "16px",
+                border: "1px solid #E0F2FE",
+                marginTop: "12px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: "9px", fontWeight: 800, color: "#0369A1" }}>TOTAL FOLLOWERS</span>
+              <span style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>
+                {selectedPlatformInfo.followers}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top 5 Content Leaders & Ranking Sumber Leads */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.2fr 1fr",
+          gap: "2rem",
+          marginBottom: "2.5rem",
+        }}
+      >
+        {/* Top 5 Content Leaders */}
+        <div
+          style={{
+            background: "white",
+            padding: "1.5rem",
+            borderRadius: "32px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+            VII. TOP 5 CONTENT LEADERS
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {[
+              { name: "Day in Life: Formula R&D Perfection", eng: "12.4%" },
+              { name: "Serum Brightening: Before vs After", eng: "10.2%" },
+              { name: "Founder Insights: Brand Scalability", eng: "15.6%" },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10px 15px",
+                  background: "#F8FAFC",
+                  borderRadius: "12px",
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 800 }}>{item.name}</span>
+                <span style={{ fontSize: "11px", fontWeight: 950, color: "#10B981" }}>
+                  {item.eng} ER
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ranking Sumber Leads */}
+        <div
+          style={{
+            background: "#F5F3FF",
+            padding: "1.5rem",
+            borderRadius: "32px",
+            border: "1px solid #DDD6FE",
+          }}
+        >
+          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "12px", fontWeight: 950, color: "#5B21B6" }}>
+            VIII. RANKING SUMBER LEADS
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {[
+              { p: "Linktree", c: "450" },
+              { p: "Instagram", c: "320" },
+              { p: "TikTok", c: "280" },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "white",
+                  padding: "12px 15px",
+                  borderRadius: "16px",
+                  border: "1px solid #E9D5FF",
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 950 }}>{item.p}</span>
+                <span style={{ fontSize: "12px", fontWeight: 950, color: "#5B21B6" }}>
+                  {item.c} Leads
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Search Visibility Audit (SEO/Ads Overview) */}
+      <div style={{ borderTop: "2px solid #F1F5F9", paddingTop: "2.5rem" }}>
+        <h3
+          style={{
+            margin: "0 0 1.5rem 0",
+            fontSize: "12px",
+            fontWeight: 950,
+            color: "#94A3B8",
+            letterSpacing: "0.1em",
+          }}
+        >
+          IX. SEARCH VISIBILITY AUDIT (SEO/ADS OVERVIEW)
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }}>
+          {[
+            {
+              label: "TOTAL IMPRESSIONS",
+              val: searchImpressions,
+              sub: "+18.4% vs Prev",
+              icon: Eye,
+              color: "#6366F1",
+              bg: "#EEF2FF",
+            },
+            {
+              label: "TOTAL CLICKS",
+              val: searchClicks,
+              sub: "+4.2% Growth",
+              icon: MousePointer2,
+              color: "#10B981",
+              bg: "#ECFDF5",
+            },
+            {
+              label: "AVG. CTR",
+              val: searchCtr,
+              sub: "Target 5.5%",
+              icon: MousePointerClick,
+              color: "#F59E0B",
+              bg: "#FFFBEB",
+            },
+            {
+              label: "AVG. POSITION",
+              val: searchPosition,
+              sub: "Top 10 Benchmark",
+              icon: BarChart3,
+              color: "#8B5CF6",
+              bg: "#F5F3FF",
+            },
+          ].map((card, idx) => {
+            const CardIcon = card.icon;
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: "white",
+                  padding: "1.5rem",
+                  borderRadius: "24px",
+                  border: "1px solid #E2E8F0",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      background: card.bg,
+                      borderRadius: "10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CardIcon color={card.color} size={18} />
+                  </div>
+                  <span style={{ fontSize: "10px", fontWeight: 950, color: card.color }}>
+                    {card.sub}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: "9px", fontWeight: 900, color: "#94A3B8" }}>
+                    {card.label}
+                  </p>
+                  <h3 style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: 950, color: "#1E293B" }}>
+                    {card.val}
+                  </h3>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
-

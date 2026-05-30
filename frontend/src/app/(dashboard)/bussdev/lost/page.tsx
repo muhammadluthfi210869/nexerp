@@ -62,9 +62,12 @@ export default function LostPage() {
     ["SPK_SIGNED", "PRODUCTION_PROCESS", "READY_TO_SHIP", "WON_DEAL"].includes(l.lastKnownStage || l.stage)
   );
 
-  const currentData = section === "prospect" ? prospectFail : churnClient;
+  const filteredProspects = prospectFail?.filter(l =>
+    l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.brandName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const filtered = currentData?.filter(l =>
+  const filteredChurn = churnClient?.filter(l =>
     l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.brandName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -91,169 +94,185 @@ export default function LostPage() {
         {/* ── Dashboard Cards ──────────────────────────────────────── */}
         <DashboardCards variant="lost" data={analytics} />
 
-        {/* ── Section Toggle ───────────────────────────────────────── */}
-        <div className="flex items-center gap-2 bg-white rounded-2xl p-2 shadow-sm border border-slate-100 w-fit">
-          <button
-            onClick={() => setSection("prospect")}
-            className={cn(
-              "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all",
-              section === "prospect"
-                ? "bg-rose-600 text-white shadow-sm shadow-rose-500/20"
-                : "text-slate-400 hover:text-slate-700"
-            )}
-          >
-            Section A · Prospect Gagal ({prospectFail?.length || 0})
-          </button>
-          <button
-            onClick={() => setSection("churn")}
-            className={cn(
-              "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all",
-              section === "churn"
-                ? "bg-slate-800 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-700"
-            )}
-          >
-            Section B · Churn After Delivery ({churnClient?.length || 0})
-          </button>
+        {/* ── Search bar ───────────────────────────────────────────── */}
+        <div className="flex justify-end bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="w-full md:w-80">
+            <DnaInput
+              placeholder="FILTER BRAND / CLIENT..."
+              icon={<Search className="h-4 w-4" />}
+              className="font-black text-xs uppercase"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
-        {/* ── Main Table ───────────────────────────────────────────── */}
-        <TableWrapper
-          filters={
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className={cn("w-1.5 h-6 rounded-full animate-pulse", section === "prospect" ? "bg-rose-600" : "bg-slate-800")} />
-                <div>
-                  <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
-                    {section === "prospect" ? "Section A: Lost Sebelum Deal (Prospect Gagal)" : "Section B: Lost Setelah Delivery (Churn Customer)"}
-                  </h3>
-                  <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">
-                    {section === "prospect" ? "Leads yang tidak pernah mencapai tahap produksi" : "Client yang pernah order namun tidak repeat"}
-                  </p>
-                </div>
-              </div>
-              <div className="w-full md:w-80">
-                <DnaInput
-                  placeholder="Filter brand / client..."
-                  icon={<Search className="h-4 w-4" />}
-                  className="font-black"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-          }
-        >
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow>
-                  {section === "prospect" ? (
-                    ["No", "Brand & Produk", "PIC BD", "Est. Value Deal", "Stage Terakhir", "Alasan Lost", "FU Terakhir", "Durasi"].map(h => (
-                      <TableHead key={h} className="py-2.5 font-black uppercase text-[9px] text-slate-500 tracking-wider whitespace-nowrap px-3">{h}</TableHead>
-                    ))
-                  ) : (
-                    ["No", "Brand & Produk Terakhir", "PIC BD", "Qty Terakhir", "Tgl Terakhir Order", "Est. Value", "Status", "Alasan Churn"].map(h => (
-                      <TableHead key={h} className="py-2.5 font-black uppercase text-[9px] text-slate-500 tracking-wider whitespace-nowrap px-3">{h}</TableHead>
-                    ))
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered && filtered.length > 0 ? (
-                  filtered.map((lead: any, idx: number) => {
+        {/* ── Section A: Prospect Gagal ─────────────────────────────── */}
+        <div style={{ marginBottom: "4rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.5rem" }}>
+            <div style={{ width: "8px", height: "8px", background: "#EF4444", borderRadius: "50%" }} />
+            <h2 style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B", textTransform: "uppercase", letterSpacing: "0.2em", margin: 0 }}>
+              SECTION A: LOST SEBELUM DEAL (PROSPECT GAGAL)
+            </h2>
+          </div>
+          
+          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflowX: "auto" }}>
+            <table style={{ width: "100%", minWidth: "1000px", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>BRAND & PRODUK</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>PIC BD</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B", textAlign: "right" }}>EST. VALUE DEAL</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B", textAlign: "center" }}>STAGE TERAKHIR</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#DC2626" }}>ALASAN LOST (CRITICAL)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProspects && filteredProspects.length > 0 ? (
+                  filteredProspects.map((lead: any) => {
                     const lostReasonCfg = LOST_REASON_LABELS[lead.lostReason] || LOST_REASON_LABELS.OTHER;
-                    const days = Math.floor((renderTimestamp - new Date(lead.updatedAt || lead.createdAt).getTime()) / (1000 * 3600 * 24));
-
-                    if (section === "prospect") {
-                      return (
-                        <TableRow key={lead.id} className="group hover:bg-rose-50/20 transition-colors border-slate-50">
-                          <TableCell className="px-3 text-[10px] font-black text-slate-400">{idx + 1}</TableCell>
-                          <TableCell className="px-3">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-rose-100 flex items-center justify-center">
-                                <XCircle className="h-5 w-5 text-rose-500" />
-                              </div>
-                              <div className="whitespace-nowrap">
-                                <p className="font-black text-slate-900 uppercase tracking-tight leading-none mb-1">{lead.brandName || lead.clientName}</p>
-                                <p className="text-[10px] font-medium text-slate-400">{lead.productInterest}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-3 font-black text-[9px] text-blue-600">
-                            {lead.pic?.name || "Unassigned"}
-                          </TableCell>
-                          <TableCell className="px-3 font-black text-[10px] text-rose-600 whitespace-nowrap">
-                            {formatCurrency(Number(lead.estimatedValue || 0))}
-                          </TableCell>
-                          <TableCell className="px-3 text-center">
-                            <DnaBadge status="default">{STAGE_LABELS[lead.stage] || lead.stage}</DnaBadge>
-                          </TableCell>
-                          <TableCell className="px-3 text-center">
-                            <DnaBadge status={lostReasonCfg.status}>{lostReasonCfg.label}</DnaBadge>
-                          </TableCell>
-                          <TableCell className="px-3 text-[9px] font-black text-slate-500 whitespace-nowrap">
-                            {lead.lastFollowUpAt
-                              ? new Date(lead.lastFollowUpAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="px-3 text-center">
-                            <span className="text-[10px] font-black text-slate-700">{days}h</span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    }
-
-                    // Section B
                     return (
-                      <TableRow key={lead.id} className="group hover:bg-slate-50/50 transition-colors border-slate-50">
-                        <TableCell className="px-3 text-[10px] font-black text-slate-400">{idx + 1}</TableCell>
-                        <TableCell className="px-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                              <TrendingDown className="h-5 w-5 text-slate-500" />
+                      <tr key={lead.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                        <td style={{ padding: "1.2rem" }}>
+                          <p style={{ fontSize: "13px", fontWeight: 900, color: "#1E293B", margin: 0 }}>
+                            {(lead.brandName || lead.clientName || "—").toUpperCase()}
+                          </p>
+                          <p style={{ fontSize: "10px", fontWeight: 600, color: "#64748B", margin: "2px 0 0 0" }}>
+                            {lead.productInterest || "—"}
+                          </p>
+                        </td>
+                        <td style={{ padding: "1.2rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "20px", height: "20px", background: "#F1F5F9", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>
+                              👤
                             </div>
-                            <div className="whitespace-nowrap">
-                              <p className="font-black text-slate-900 uppercase tracking-tight leading-none mb-1">{lead.brandName || lead.clientName}</p>
-                              <p className="text-[10px] font-medium text-slate-400">{lead.productInterest}</p>
-                            </div>
+                            <p style={{ fontSize: "12px", fontWeight: 800, color: "#111827", margin: 0 }}>
+                              {lead.pic?.name || "Unassigned"}
+                            </p>
                           </div>
-                        </TableCell>
-                        <TableCell className="px-3 font-black text-[9px] text-blue-600">
-                          {lead.pic?.name || "—"}
-                        </TableCell>
-                        <TableCell className="px-3 text-center font-black text-[10px] text-slate-900">
-                          {lead.moq?.toLocaleString("id-ID") || "—"} pcs
-                        </TableCell>
-                        <TableCell className="px-3 text-[9px] font-black text-slate-500 whitespace-nowrap">
-                          {lead.wonAt
-                            ? new Date(lead.wonAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="px-3 font-black text-[10px] text-slate-700 whitespace-nowrap">
+                        </td>
+                        <td className="tabular-nums" style={{ padding: "1.2rem", textAlign: "right", fontSize: "13px", fontWeight: 900, color: "#EF4444" }}>
                           {formatCurrency(Number(lead.estimatedValue || 0))}
-                        </TableCell>
-                        <TableCell className="px-3 text-center">
-                          <DnaBadge status="critical">LOST</DnaBadge>
-                        </TableCell>
-                        <TableCell className="px-3 text-center">
-                          <DnaBadge status={lostReasonCfg.status}>{lostReasonCfg.label}</DnaBadge>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                        <td style={{ padding: "1.2rem", textAlign: "center" }}>
+                          <span style={{ fontSize: "9px", fontWeight: 900, padding: "4px 10px", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: "100px", color: "#64748B" }}>
+                            {(STAGE_LABELS[lead.stage] || lead.stage || "—").toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={{ padding: "1.2rem" }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 12px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "8px" }}>
+                            <XCircle className="h-3 w-3 text-red-600 shrink-0" />
+                            <span style={{ fontSize: "11px", fontWeight: 900, color: "#DC2626" }}>
+                              {(lostReasonCfg.label || "Lainnya").toUpperCase()}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-16 text-slate-400 font-black text-sm">
-                      <XCircle className="h-8 w-8 text-slate-200 mx-auto mb-3" />
-                      Tidak ada data lost di section ini.
-                    </TableCell>
-                  </TableRow>
+                  <tr>
+                    <td colSpan={5} style={{ padding: "4rem", textAlign: "center", color: "#94A3B8", fontSize: "12px" }}>
+                      Tidak ada data lost sebelum deal.
+                    </td>
+                  </tr>
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
-        </TableWrapper>
+        </div>
+
+        {/* ── Section B: Churn Customer ────────────────────────────── */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.5rem" }}>
+            <div style={{ width: "8px", height: "8px", background: "#7C3AED", borderRadius: "50%" }} />
+            <h2 style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B", textTransform: "uppercase", letterSpacing: "0.2em", margin: 0 }}>
+              SECTION B: LOST SETELAH DELIVERY (CHURN CUSTOMER)
+            </h2>
+          </div>
+          
+          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflowX: "auto" }}>
+            <table style={{ width: "100%", minWidth: "1000px", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>BRAND & PRODUK TERAKHIR</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>QTY TERAKHIR</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>TGL TERAKHIR ORDER</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B", textAlign: "center" }}>STATUS</th>
+                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#DC2626" }}>ALASAN CHURN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredChurn && filteredChurn.length > 0 ? (
+                  filteredChurn.map((lead: any) => {
+                    const lostReasonCfg = LOST_REASON_LABELS[lead.lostReason] || LOST_REASON_LABELS.OTHER;
+                    
+                    // Formatting order date
+                    const lastDateStr = lead.wonAt
+                      ? new Date(lead.wonAt).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
+                      : "—";
+
+                    // Estimated repeat order date (e.g. last order date + 60 days)
+                    const estNextStr = lead.wonAt
+                      ? new Date(new Date(lead.wonAt).getTime() + 60 * 24 * 3600 * 1000).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
+                      : "—";
+
+                    return (
+                      <tr key={lead.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                        <td style={{ padding: "1.2rem" }}>
+                          <p style={{ fontSize: "13px", fontWeight: 900, color: "#1E293B", margin: 0 }}>
+                            {(lead.brandName || lead.clientName || "—").toUpperCase()}
+                          </p>
+                          <p style={{ fontSize: "10px", fontWeight: 600, color: "#64748B", margin: "2px 0 0 0" }}>
+                            {lead.productInterest || "—"}
+                          </p>
+                        </td>
+                        <td className="tabular-nums" style={{ padding: "1.2rem", fontSize: "12px", fontWeight: 800, color: "#1E293B" }}>
+                          {lead.moq ? `${Number(lead.moq).toLocaleString()} Pcs` : "—"}
+                        </td>
+                        <td style={{ padding: "1.2rem" }}>
+                          <p className="tabular-nums" style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", margin: 0 }}>
+                            {lastDateStr}
+                          </p>
+                          <p style={{ fontSize: "8px", color: "#94A3B8", margin: 0 }}>
+                            EST. REPEAT: {estNextStr}
+                          </p>
+                        </td>
+                        <td style={{ padding: "1.2rem", textAlign: "center" }}>
+                          <span style={{
+                            fontSize: "9px",
+                            fontWeight: 900,
+                            padding: "4px 10px",
+                            borderRadius: "100px",
+                            background: "#FEF2F2",
+                            color: "#DC2626",
+                            border: "1px solid #FEE2E2"
+                          }}>
+                            LOST
+                          </span>
+                        </td>
+                        <td style={{ padding: "1.2rem" }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 12px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "8px" }}>
+                            <XCircle className="h-3 w-3 text-red-600 shrink-0" />
+                            <span style={{ fontSize: "11px", fontWeight: 900, color: "#DC2626" }}>
+                              {(lostReasonCfg.label || "Lainnya").toUpperCase()}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ padding: "4rem", textAlign: "center", color: "#94A3B8", fontSize: "12px" }}>
+                      Tidak ada data churn customer.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </TableShell>
   );

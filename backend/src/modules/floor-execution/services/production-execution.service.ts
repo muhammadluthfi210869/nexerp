@@ -73,20 +73,22 @@ export class ProductionExecutionService {
 
     if (currentIndex > 0) {
       const prevStage = stages[currentIndex - 1];
-      const prevLog = await this.prisma.productionLog.findFirst({
-        where: { workOrderId: dto.workOrderId, stage: prevStage },
-        include: { qcAudits: true },
-        orderBy: { loggedAt: 'desc' },
+      const prevStepLog = await this.prisma.productionStepLog.findFirst({
+        where: {
+          wo: { workOrders: { some: { id: dto.workOrderId } } },
+          stage: prevStage as any,
+        },
+        include: { qcAudits: { where: { status: QCStatus.GOOD }, take: 1 } },
+        orderBy: { createdAt: 'desc' },
       });
 
-      if (!prevLog) {
+      if (!prevStepLog) {
         throw new BadRequestException(
           `QC Interlock: Tahap ${prevStage} belum dicatat.`,
         );
       }
 
-      const isPassed = prevLog.qcAudits.some((a) => a.status === QCStatus.GOOD);
-      if (!isPassed) {
+      if (prevStepLog.qcAudits.length === 0) {
         throw new BadRequestException(
           `QC Interlock: Tahap ${prevStage} belum lulus uji QC.`,
         );

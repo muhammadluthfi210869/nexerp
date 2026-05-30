@@ -159,7 +159,7 @@
 
   /* ═══ VISUAL_DNA LAYOUT TOKENS (§4) ═══ */
   --page-px: 48px;
-  --page-py: 24px;
+  --page-py: 48px;
   --page-pb: 48px;
   --max-content-width: 1600px;
   --section-gap: 40px;
@@ -268,6 +268,9 @@
     font-weight: 800;
     letter-spacing: 0.3em;
     text-transform: uppercase;
+    border-left: 3px solid var(--primary, #2563EB);
+    padding-left: 1rem;
+    display: block;
   }
   .text-micro-label {
     font-size: 9px;
@@ -362,6 +365,180 @@
 @keyframes kpi-pulse-border {
   0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.2); }
   50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+
+/* ═══ PROTOTYPE PARITY UTILITY CLASSES ═══ */
+.dashboard-title {
+  color: var(--gray-900);
+  margin-bottom: 2rem;
+  letter-spacing: -.05em !important;
+  font-size: 32px !important;
+  font-weight: 900 !important;
+}
+
+.section-label {
+  border-left: 3px solid var(--primary, #2563EB);
+  padding-left: 1rem;
+  display: block;
+  text-transform: uppercase !important;
+  letter-spacing: .3em !important;
+  color: var(--primary, #2563EB) !important;
+  margin-bottom: 2rem !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  position: relative;
+}
+
+.micro-label {
+  text-transform: uppercase !important;
+  letter-spacing: .1em !important;
+  color: var(--gray-400, #9CA3AF) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+}
+
+.value, .val {
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -.02em;
+  color: var(--gray-900, #111827);
+  line-height: 1;
+  font-size: 32px !important;
+  font-weight: 900 !important;
+}
+
+.macro-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 3rem;
+  display: grid;
+}
+
+.macro-card {
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: #fff;
+  border-radius: 24px;
+  padding: 2rem;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+}
+
+.macro-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);
+}
+
+.macro-card.inverted {
+  background: var(--dark-accent, #111827);
+  color: #fff;
+  border: none;
+}
+
+.macro-card .label {
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--gray-500, #6B7280);
+  margin-bottom: 1rem;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.macro-card.inverted .label {
+  color: #94a3b8;
+}
+
+.pipeline-row {
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+  display: flex;
+}
+
+.diag-node {
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: #fff;
+  border-radius: 20px;
+  flex: 1;
+  padding: 1.75rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.diag-node.critical {
+  border-color: var(--status-critical, #dc2626);
+}
+
+.diag-node.dark {
+  background: var(--dark-accent, #111827);
+  color: #fff;
+  border: none;
+}
+
+.diag-node .val {
+  font-size: 1.75rem;
+  font-weight: 900;
+}
+
+.diag-node .lbl {
+  text-transform: uppercase;
+  color: var(--gray-500, #6B7280);
+  margin-top: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  display: block;
+}
+
+.data-table-container {
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+}
+
+.row-progress-bg {
+  background: var(--gray-100, #e5e7eb);
+  border-radius: 2px;
+  width: 100%;
+  height: 4px;
+  margin-top: 10px;
+  position: relative;
+}
+
+.row-progress-fill {
+  border-radius: 2px;
+  height: 100%;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+.badge {
+  text-transform: uppercase;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.badge-success {
+  color: #059669;
+  background: #ecfdf5;
+}
+
+.badge-critical {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums !important;
+}
+
+.flex-between {
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+}
+
+.pulse {
+  animation: 2s infinite pulse-red;
 }
 
 

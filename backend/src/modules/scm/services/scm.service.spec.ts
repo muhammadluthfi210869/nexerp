@@ -32,7 +32,9 @@ describe('ScmService', () => {
     sampleRequest: { findFirst: jest.fn() },
     salesOrder: { findFirst: jest.fn() },
     salesLead: { findFirst: jest.fn() },
-    $transaction: jest.fn((fn: Function) => fn(mockPrismaService)),
+    $transaction: jest.fn((fn: (...args: any[]) => any) =>
+      fn(mockPrismaService),
+    ),
   };
 
   beforeEach(async (): Promise<void> => {

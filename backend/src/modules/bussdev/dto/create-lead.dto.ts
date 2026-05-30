@@ -126,6 +126,7 @@ export class CreateLeadDto {
   notes?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   moq?: number;
 

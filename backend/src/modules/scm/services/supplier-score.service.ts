@@ -6,7 +6,9 @@ export class SupplierScoreService {
   constructor(private prisma: PrismaService) {}
 
   async recalculateAll() {
-    const suppliers = await this.prisma.supplier.findMany({ select: { id: true } });
+    const suppliers = await this.prisma.supplier.findMany({
+      select: { id: true },
+    });
     await Promise.all(
       suppliers.map(async (s) => {
         const score = await this.calculateScore(s.id);
@@ -36,7 +38,8 @@ export class SupplierScoreService {
         ? p.inbounds[0].receivedAt <= p.estArrival
         : false,
     );
-    const otdRate = delivered.length > 0 ? (onTime.length / delivered.length) * 100 : 0;
+    const otdRate =
+      delivered.length > 0 ? (onTime.length / delivered.length) * 100 : 0;
 
     // Quality Rate (35% weight) — completed POs / total POs
     const completed = pos.filter((p) => p.status === 'RECEIVED').length;
@@ -48,7 +51,9 @@ export class SupplierScoreService {
     for (const po of pos) {
       for (const item of po.items) {
         if (item.material?.unitPrice && Number(item.material.unitPrice) > 0) {
-          const variance = Math.abs(Number(item.unitPrice) - Number(item.material.unitPrice)) / Number(item.material.unitPrice);
+          const variance =
+            Math.abs(Number(item.unitPrice) - Number(item.material.unitPrice)) /
+            Number(item.material.unitPrice);
           comparisons.push(Math.max(0, (1 - variance) * 100));
         }
       }

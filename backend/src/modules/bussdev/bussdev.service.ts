@@ -220,7 +220,9 @@ export class BussdevService {
 
       // 1. AUTO-HANDOVER: SAMPLE_APPROVED -> SPK_SIGNED
       const isAutoProduction = dto.newStatus === WorkflowStatus.SAMPLE_APPROVED;
-      const finalStatus = isAutoProduction ? WorkflowStatus.SPK_SIGNED : dto.newStatus;
+      const finalStatus = isAutoProduction
+        ? WorkflowStatus.SPK_SIGNED
+        : dto.newStatus;
 
       // 2. Resolve File Paths
       const paymentProofUrl =
@@ -297,7 +299,8 @@ export class BussdevService {
             action: 'SAMPLE_APPROVED',
             previousStatus: currentLead.status,
             newStatus: WorkflowStatus.SAMPLE_APPROVED,
-            notes: 'AUTO_HANDOVER: Sample approved by client. Lead otomatis dipindahkan ke Production Pipeline.',
+            notes:
+              'AUTO_HANDOVER: Sample approved by client. Lead otomatis dipindahkan ke Production Pipeline.',
             loggedBy: 'SYSTEM_ORCHESTRATOR',
           },
         });
@@ -307,7 +310,8 @@ export class BussdevService {
             action: 'AUTO_PRODUCTION_HANDOVER',
             previousStatus: WorkflowStatus.SAMPLE_APPROVED,
             newStatus: WorkflowStatus.SPK_SIGNED,
-            notes: 'AUTO_HANDOVER: Lead otomatis masuk ke Production Pipeline sebagai SPK_SIGNED.',
+            notes:
+              'AUTO_HANDOVER: Lead otomatis masuk ke Production Pipeline sebagai SPK_SIGNED.',
             loggedBy: 'SYSTEM_ORCHESTRATOR',
           },
         });
@@ -1051,8 +1055,13 @@ export class BussdevService {
     });
   }
 
-  async getLeads() {
+  async getLeads(userId?: string) {
+    const where: any = {};
+    if (userId) {
+      where.bdId = userId;
+    }
     return this.prisma.salesLead.findMany({
+      where,
       include: {
         pic: true,
         activities: { orderBy: { createdAt: 'desc' }, take: 1 },
@@ -1876,7 +1885,8 @@ export class BussdevService {
         contactChannel: dto.contactChannel ?? lead.contactChannel,
         sku: dto.sku ?? lead.sku,
         unitPrice: dto.unitPrice ?? lead.unitPrice,
-        packagingSuggestion: dto.packagingSuggestion ?? lead.packagingSuggestion,
+        packagingSuggestion:
+          dto.packagingSuggestion ?? lead.packagingSuggestion,
         designSuggestion: dto.designSuggestion ?? lead.designSuggestion,
         valueSuggestion: dto.valueSuggestion ?? lead.valueSuggestion,
       },

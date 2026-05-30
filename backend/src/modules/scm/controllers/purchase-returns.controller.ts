@@ -33,13 +33,23 @@ export class PurchaseReturnsController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE, UserRole.FINANCE)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.WAREHOUSE,
+    UserRole.FINANCE,
+  )
   async findAll() {
     return this.service.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE, UserRole.FINANCE)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.WAREHOUSE,
+    UserRole.FINANCE,
+  )
   async findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }

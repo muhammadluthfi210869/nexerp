@@ -83,48 +83,76 @@ function BukuTamuContent() {
           <DnaInput placeholder="CARI TAMU / LEAD..." icon={<Search className="h-3.5 w-3.5" />} className="font-black text-[10px] uppercase tracking-widest" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         </div>
       </div>
-      <TableWrapper>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-table-header text-slate-400">SUMBER</th>
-                <th className="px-6 py-4 text-table-header text-slate-400">NAMA</th>
-                <th className="px-6 py-4 text-table-header text-slate-400">KONTAK</th>
-                <th className="px-6 py-4 text-table-header text-slate-400">PRODUK</th>
-                <th className="px-6 py-4 text-table-header text-slate-400">TANGGAL</th>
-                <th className="px-6 py-4 text-table-header text-slate-400 text-right">AKSI</th>
+      <div className="overflow-x-auto" style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", tableLayout: "fixed" }}>
+          <thead>
+            <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+              <th style={{ padding: "1rem 0.5rem 1rem 1.5rem", width: "12%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>SUMBER</th>
+              <th style={{ padding: "1rem 0.5rem", width: "20%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>NAMA</th>
+              <th style={{ padding: "1rem 0.5rem", width: "20%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>KONTAK</th>
+              <th style={{ padding: "1rem 0.5rem", width: "20%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>PRODUK</th>
+              <th style={{ padding: "1rem 0.5rem", width: "13%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>TANGGAL</th>
+              <th style={{ padding: "1rem 1.5rem 1rem 0.5rem", width: "15%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "right" }}>AKSI</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length > 0 ? (
+              filtered.map((item) => (
+                <tr key={item.id} style={{ borderBottom: "1px solid #F1F5F9", transition: "background 0.2s" }} className="hover:bg-blue-50/10">
+                  <td style={{ padding: "1rem 0.5rem 1rem 1.5rem" }}>
+                    <span style={{
+                      background: item.type === "guest" ? "#FFF7ED" : "#EFF6FF",
+                      color: item.type === "guest" ? "#C2410C" : "#1D4ED8",
+                      border: `1px solid ${item.type === "guest" ? "#FFEDD5" : "#DBEAFE"}`,
+                      padding: "2px 8px",
+                      borderRadius: "10px",
+                      fontSize: "8px",
+                      fontWeight: 950,
+                      display: "inline-block"
+                    }}>
+                      {item.type === "guest" ? "TAMU" : "INTAKE"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "1rem 0.5rem" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
+                      {item.clientName.toUpperCase()}
+                    </span>
+                  </td>
+                  <td style={{ padding: "1rem 0.5rem" }}>
+                    <span style={{ fontSize: "10px", fontWeight: 800, color: "#1E293B" }}>
+                      {item.contactInfo || "—"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "1rem 0.5rem" }}>
+                    <span style={{ fontSize: "10px", fontWeight: 950, color: "#2563EB" }}>
+                      {(item.productInterest || "—").toUpperCase()}
+                    </span>
+                  </td>
+                  <td style={{ padding: "1rem 0.5rem" }}>
+                    <span className="tabular-nums" style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>
+                      {item.date ? new Date(item.date).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "1rem 1.5rem 1rem 0.5rem", textAlign: "right" }}>
+                    {item.type === "guest" ? (
+                      <DnaButton variant="primary" size="sm" icon={<ArrowUpRight className="w-3 h-3" />} onClick={() => convertMutation.mutate(item.id)} disabled={convertMutation.isPending} className="text-[8px] font-black uppercase">Konversi</DnaButton>
+                    ) : (
+                      <span style={{ fontSize: "8px", fontWeight: 950, color: "#2563EB" }}>SUDAH LEAD</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} style={{ padding: "4rem", textAlign: "center", color: "#94A3B8", fontSize: "12px" }}>
+                  Tidak ada data tamu atau lead.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.length > 0 ? (
-                filtered.map((item) => (
-                  <tr key={item.id} className="group hover:bg-slate-50/30 transition-all">
-                    <td className="px-6 py-4">
-                      <DnaBadge status={item.type === "guest" ? "warning" : "info"}>
-                        {item.type === "guest" ? "Tamu" : "Intake"}
-                      </DnaBadge>
-                    </td>
-                    <td className="px-6 py-4"><span className="font-black text-slate-900 uppercase italic text-xs">{item.clientName}</span></td>
-                    <td className="px-6 py-4"><span className="text-[10px] font-medium text-slate-500">{item.contactInfo || "—"}</span></td>
-                    <td className="px-6 py-4"><span className="text-[10px] font-black text-blue-600 uppercase italic">{item.productInterest || "—"}</span></td>
-                    <td className="px-6 py-4"><span className="text-[10px] font-black text-slate-500 tabular-nums">{item.date ? new Date(item.date).toLocaleDateString("id-ID") : "—"}</span></td>
-                    <td className="px-6 py-4 text-right">
-                      {item.type === "guest" ? (
-                        <DnaButton variant="primary" size="sm" icon={<ArrowUpRight className="w-3 h-3" />} onClick={() => convertMutation.mutate(item.id)} disabled={convertMutation.isPending} className="text-[8px] font-black uppercase">Konversi</DnaButton>
-                      ) : (
-                        <span className="text-[8px] font-black text-blue-500 uppercase">Sudah Lead</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan={6} className="px-6 py-12 text-center"><p className="text-[10px] font-black text-slate-300 uppercase italic">Tidak ada data</p></td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </TableWrapper>
+            )}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 }
@@ -287,77 +315,90 @@ function ROContent() {
             <DnaInput placeholder="SEARCH VIP PARTNER / BRAND..." icon={<Search className="h-3.5 w-3.5" />} className="font-black text-[10px] uppercase tracking-widest" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
         </div>
-        <TableWrapper>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-table-header text-slate-400">BRAND & CLIENT</th>
-                  <th className="px-6 py-4 text-table-header text-slate-400">INTEREST</th>
-                  <th className="px-4 py-4 text-table-header text-slate-400 text-center">ORDERS</th>
-                  <th className="px-4 py-4 text-table-header text-slate-400 text-right">TOTAL SPENT</th>
-                  <th className="px-4 py-4 text-table-header text-slate-400 text-center">LOYALTY</th>
-                  <th className="px-4 py-4 text-table-header text-slate-400 text-center">FOLLOW UP</th>
+        <div className="overflow-x-auto" style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", tableLayout: "fixed" }}>
+            <thead>
+              <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                <th style={{ padding: "1rem 0.5rem 1rem 1.5rem", width: "25%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>BRAND & CLIENT</th>
+                <th style={{ padding: "1rem 0.5rem", width: "20%", fontSize: "8px", fontWeight: 950, color: "#94A3B8" }}>INTEREST</th>
+                <th style={{ padding: "1rem 0.5rem", width: "10%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>ORDERS</th>
+                <th style={{ padding: "1rem 0.5rem", width: "15%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "right" }}>TOTAL SPENT</th>
+                <th style={{ padding: "1rem 0.5rem", width: "15%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>LOYALTY</th>
+                <th style={{ padding: "1rem 1.5rem 1rem 0.5rem", width: "15%", fontSize: "8px", fontWeight: 950, color: "#94A3B8", textAlign: "center" }}>FOLLOW UP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <td style={{ padding: "1rem 0.5rem 1rem 1.5rem" }}><div className="h-4 w-full bg-slate-100 rounded animate-pulse" /></td>
+                    <td style={{ padding: "1rem 0.5rem" }}><div className="h-4 w-full bg-slate-100 rounded animate-pulse" /></td>
+                    <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}><div className="h-4 w-8 bg-slate-100 rounded animate-pulse mx-auto" /></td>
+                    <td style={{ padding: "1rem 0.5rem", textAlign: "right" }}><div className="h-4 w-16 bg-slate-100 rounded animate-pulse ml-auto" /></td>
+                    <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}><div className="h-4 w-12 bg-slate-100 rounded animate-pulse mx-auto" /></td>
+                    <td style={{ padding: "1rem 1.5rem 1rem 0.5rem", textAlign: "center" }}><div className="h-4 w-12 bg-slate-100 rounded animate-pulse mx-auto" /></td>
+                  </tr>
+                ))
+              ) : filtered?.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: "4rem", textAlign: "center", color: "#94A3B8", fontSize: "12px" }}>
+                    No repeat order data found
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  [...Array(3)].map((_, i) => (
-                    <tr key={i} className="border-b border-slate-50">
-                      {[...Array(6)].map((_, j) => (<td key={j} className="px-4 py-4"><div className="h-4 w-full bg-slate-100 rounded animate-pulse" /></td>))}
-                    </tr>
-                  ))
-                ) : filtered?.length === 0 ? (
-                  <tr><td colSpan={6} className="py-16 text-center text-[10px] font-black text-slate-400 uppercase">No repeat order data found</td></tr>
-                ) : (
-                  filtered?.map((lead: any) => {
-                    const totalSpent = Number(lead.planOmset || lead.estimatedValue || 0);
-                    const orderCount = lead.orderCount || 0;
-                    const loyaltyLevel = orderCount >= 3 ? "GOLD" : orderCount >= 1 ? "SILVER" : "BRONZE";
-                    const fuStatus = lead.fuStatus || "NOT_FOLLOWED_UP";
-                    const fuConfig = FU_CONFIG[fuStatus] || FU_CONFIG.NOT_FOLLOWED_UP;
+              ) : (
+                filtered?.map((lead: any) => {
+                  const totalSpent = Number(lead.planOmset || lead.estimatedValue || 0);
+                  const orderCount = lead.orderCount || 0;
+                  const loyaltyLevel = orderCount >= 3 ? "GOLD" : orderCount >= 1 ? "SILVER" : "BRONZE";
+                  const fuStatus = lead.fuStatus || "NOT_FOLLOWED_UP";
+                  const fuConfig = FU_CONFIG[fuStatus] || FU_CONFIG.NOT_FOLLOWED_UP;
 
-                    return (
-                      <tr key={lead.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-all group">
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-xs uppercase italic">{lead.clientName}</span>
-                            {lead.brandName && <span className="text-[9px] font-medium text-slate-500 uppercase">({lead.brandName})</span>}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4"><span className="text-[10px] font-medium text-slate-600 uppercase">{lead.productInterest}</span></td>
-                        <td className="px-4 py-4 text-center"><span className="font-black text-slate-900 text-xs">{orderCount}x</span></td>
-                        <td className="px-4 py-4 text-right"><span className="font-black text-slate-900 text-xs tabular-nums">{formatCurrency(totalSpent)}</span></td>
-                        <td className="px-4 py-4 text-center">
-                          <DnaBadge status={loyaltyLevel === "GOLD" ? "warning" : loyaltyLevel === "SILVER" ? "default" : "critical"}>
-                            <Star className="h-2.5 w-2.5" />{loyaltyLevel}
-                          </DnaBadge>
-                        </td>
-                        <td className="px-4 py-4 text-center relative">
-                          <div className="relative inline-block">
-                            <button onClick={() => setFuDropdownOpen(fuDropdownOpen === lead.id ? null : lead.id)} className={cn("px-3 py-1 rounded-lg text-[8px] font-black uppercase border transition-all cursor-pointer", fuConfig.color)}>
-                              {fuConfig.label} <ChevronDown className="inline h-2.5 w-2.5 ml-1" />
-                            </button>
-                            {fuDropdownOpen === lead.id && (
-                              <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-10 p-1">
-                                {Object.entries(FU_CONFIG).map(([key, config]) => (
-                                  <button key={key} onClick={() => { updateFuMutation.mutate({ leadId: lead.id, fuStatus: key }); setFuDropdownOpen(null); }}
-                                    className={cn("w-full text-left px-3 py-2 rounded-lg text-[8px] font-black uppercase hover:bg-slate-50 transition-colors", config.color)}>
-                                    {config.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TableWrapper>
+                  return (
+                    <tr key={lead.id} style={{ borderBottom: "1px solid #F1F5F9", transition: "background 0.2s" }} className="hover:bg-blue-50/10">
+                      <td style={{ padding: "1rem 0.5rem 1rem 1.5rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{lead.clientName.toUpperCase()}</span>
+                          {lead.brandName && <span style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>({lead.brandName.toUpperCase()})</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: "1rem 0.5rem" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 950, color: "#2563EB" }}>{lead.productInterest.toUpperCase()}</span>
+                      </td>
+                      <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{orderCount}x</span>
+                      </td>
+                      <td style={{ padding: "1rem 0.5rem", textAlign: "right" }}>
+                        <span className="tabular-nums" style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{formatCurrency(totalSpent)}</span>
+                      </td>
+                      <td style={{ padding: "1rem 0.5rem", textAlign: "center" }}>
+                        <DnaBadge status={loyaltyLevel === "GOLD" ? "warning" : loyaltyLevel === "SILVER" ? "default" : "critical"}>
+                          <Star className="h-2.5 w-2.5" />{loyaltyLevel}
+                        </DnaBadge>
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem 1rem 0.5rem", textAlign: "center" }}>
+                        <div className="relative inline-block">
+                          <button onClick={() => setFuDropdownOpen(fuDropdownOpen === lead.id ? null : lead.id)} className={cn("px-3 py-1 rounded-lg text-[8px] font-black uppercase border transition-all cursor-pointer", fuConfig.color)}>
+                            {fuConfig.label} <ChevronDown className="inline h-2.5 w-2.5 ml-1" />
+                          </button>
+                          {fuDropdownOpen === lead.id && (
+                            <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-10 p-1">
+                              {Object.entries(FU_CONFIG).map(([key, config]) => (
+                                <button key={key} onClick={() => { updateFuMutation.mutate({ leadId: lead.id, fuStatus: key }); setFuDropdownOpen(null); }}
+                                  className={cn("w-full text-left px-3 py-2 rounded-lg text-[8px] font-black uppercase hover:bg-slate-50 transition-colors", config.color)}>
+                                  {config.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       <div className="space-y-4">
         <div className="flex items-center gap-2">

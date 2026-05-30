@@ -6,10 +6,14 @@ import {
   Param,
   Query,
   Request,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductionService } from './production.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('production')
+@UseGuards(JwtAuthGuard)
 export class ProductionController {
   constructor(private readonly productionService: ProductionService) {}
 
@@ -49,8 +53,8 @@ export class ProductionController {
   }
 
   @Get('work-orders')
-  async getWorkOrders() {
-    return this.productionService.getWorkOrders();
+  async getWorkOrders(@Req() req: any, @Query('mine') mine?: string) {
+    return this.productionService.getWorkOrders(mine === 'true' ? req.user.id : undefined);
   }
 
   @Get('active')

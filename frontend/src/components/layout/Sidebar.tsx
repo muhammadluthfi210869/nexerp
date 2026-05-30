@@ -52,6 +52,13 @@ interface NavGroup {
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
+    label: "MY DASHBOARD",
+    icon: LayoutDashboard,
+    items: [
+      { name: "My Dashboard", href: "/my-dashboard", type: "dashboard" },
+    ]
+  },
+  {
     label: "EXECUTIVE",
     icon: ShieldAlert,
     roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
@@ -81,6 +88,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
       { name: "Client Database", href: "/master/customers", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
+      { name: "My Performance", href: "/bussdev/my-performance", type: "action" },
     ]
   },
   {
@@ -141,6 +149,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Operasional", href: "/production/operations", type: "dashboard" },
       { name: "Pipeline", href: "/production/pipeline", type: "history" },
       { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
+      { name: "My Performance", href: "/production/my-performance", type: "action" },
     ]
   },
   {
@@ -199,6 +208,10 @@ const MODULE_STRUCTURE: NavGroup[] = [
 ];
 
 const TIER_STRUCTURE = [
+  {
+    tier: "PERSONAL",
+    groups: ["MY DASHBOARD"]
+  },
   {
     tier: "CORE INTELLIGENCE",
     groups: ["EXECUTIVE", "DIGITAL MARKETING", "BUSSDEV"]
