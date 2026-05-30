@@ -60,6 +60,9 @@ export default function QCInspectionsPage() {
   const [selectedPendingId, setSelectedPendingId] = useState<string | null>(null);
   const [paramResults, setParamResults] = useState<Record<string, "GOOD" | "REJECT" | null>>({});
   const [defectDetails, setDefectDetails] = useState<Record<string, DefectDetail>>({});
+  const [paramQtyTotal, setParamQtyTotal] = useState<Record<string, number>>({});
+  const [paramQtyFailed, setParamQtyFailed] = useState<Record<string, number>>({});
+  const [paramValues, setParamValues] = useState<Record<string, string>>({});
   const [inspectionNotes, setInspectionNotes] = useState("");
   const qc = useQueryClient();
 
@@ -114,7 +117,18 @@ export default function QCInspectionsPage() {
     setDefectDetails((prev) => ({ ...prev, [param]: { ...prev[param], [field]: value } }));
   };
 
-  const handleReset = () => { setParamResults({}); setDefectDetails({}); setInspectionNotes(""); };
+  const handleReset = () => {
+    setParamResults({});
+    setDefectDetails({});
+    setParamQtyTotal({});
+    setParamQtyFailed({});
+    setParamValues({});
+    setInspectionNotes("");
+  };
+
+  const totalInspected = Object.values(paramQtyTotal).reduce((s: number, v) => s + (v || 0), 0);
+  const totalFailed = Object.values(paramQtyFailed).reduce((s: number, v) => s + (v || 0), 0);
+  const totalPassed = totalInspected - totalFailed;
 
   const handleSubmit = () => {
     const params = QC_STAGE_META[activeTab]?.params || [];
@@ -138,7 +152,13 @@ export default function QCInspectionsPage() {
     for (const param of params) {
       const field = PARAM_FIELD_MAP[param];
       const r = paramResults[param];
+      const totalQty = paramQtyTotal[param] || 0;
+      const failQty = paramQtyFailed[param] || 0;
       if (r && field) payload[field] = r === "GOOD" ? "PASS" : "FAIL";
+      if (totalQty > 0) payload[`${field}QtyTotal`] = totalQty;
+      if (failQty > 0) payload[`${field}QtyFailed`] = failQty;
+      const measuredVal = paramValues[param];
+      if (measuredVal) payload[`${field}Value`] = measuredVal;
     }
     auditMutation.mutate(payload);
   };
@@ -212,24 +232,77 @@ export default function QCInspectionsPage() {
                     const dd = defectDetails[param];
                     const isReject = result === "REJECT";
                     const isGood = result === "GOOD";
+                    const totalQty = paramQtyTotal[param] || 0;
+                    const failQty = paramQtyFailed[param] || 0;
+                    const passQty = Math.max(0, totalQty - failQty);
+                    const measuredVal = paramValues[param] || "";
+                    const isNumeric = ["pH Value", "Viscosity", "Organoleptic", "Sampling Volume", "Sampling Weight (±1%)"].includes(param);
                     return (
                       <div key={i}>
                         <div className={cn(
-                          "flex items-center justify-between p-4 rounded-[24px] bg-slate-50 border transition-all",
-                          isReject && "border-rose-300 bg-rose-50/50", isGood && "border-emerald-200 bg-emerald-50/50", !isReject && !isGood && "border-slate-100",
+                          "p-4 rounded-[24px] bg-slate-50 border transition-all space-y-3",
+                          isReject && "border-rose-300 bg-rose-50/50",
+                          isGood && "border-emerald-200 bg-emerald-50/50",
+                          !isReject && !isGood && "border-slate-100",
                         )}>
-                          <span className="text-sm font-semibold text-slate-700">{param}</span>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={() => handleParamClick(param, "GOOD")}
-                              className={cn("inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border-2",
-                                isGood ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm" : "bg-white border-slate-200 text-slate-400 hover:border-emerald-300 hover:text-emerald-600")}>
-                              <CheckCircle2 className="h-3 w-3" /> OK
-                            </button>
-                            <button type="button" onClick={() => handleParamClick(param, "REJECT")}
-                              className={cn("inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border-2",
-                                isReject ? "bg-rose-50 border-rose-500 text-rose-700 shadow-sm" : "bg-white border-slate-200 text-slate-400 hover:border-rose-300 hover:text-rose-600")}>
-                              <XCircle className="h-3 w-3" /> NOK
-                            </button>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-slate-700">{param}</span>
+                            <div className="flex gap-2">
+                              <button type="button" onClick={() => handleParamClick(param, "GOOD")}
+                                className={cn("inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border-2",
+                                  isGood ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm" : "bg-white border-slate-200 text-slate-400 hover:border-emerald-300 hover:text-emerald-600")}>
+                                <CheckCircle2 className="h-3 w-3" /> OK
+                              </button>
+                              <button type="button" onClick={() => handleParamClick(param, "REJECT")}
+                                className={cn("inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border-2",
+                                  isReject ? "bg-rose-50 border-rose-500 text-rose-700 shadow-sm" : "bg-white border-slate-200 text-slate-400 hover:border-rose-300 hover:text-rose-600")}>
+                                <XCircle className="h-3 w-3" /> NOK
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Quantity inputs row */}
+                          <div className="grid grid-cols-4 gap-2">
+                            <div className="space-y-1">
+                              <label className="text-[8px] font-black text-slate-400 uppercase">Total Diperiksa</label>
+                              <input type="number" min="0" placeholder="0"
+                                value={totalQty || ""}
+                                onChange={(e) => {
+                                  const v = parseInt(e.target.value) || 0;
+                                  setParamQtyTotal((p) => ({ ...p, [param]: v }));
+                                }}
+                                className="w-full h-9 bg-white border border-slate-200 rounded-xl px-3 text-[11px] font-bold text-slate-900 tabular focus:outline-none focus:border-blue-400" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] font-black text-slate-400 uppercase">Gagal</label>
+                              <input type="number" min="0" max={totalQty} placeholder="0"
+                                value={failQty || ""}
+                                onChange={(e) => {
+                                  const v = parseInt(e.target.value) || 0;
+                                  setParamQtyFailed((p) => ({ ...p, [param]: Math.min(v, totalQty) }));
+                                  if (v > 0 && !isReject) handleParamClick(param, "REJECT");
+                                }}
+                                className="w-full h-9 bg-white border border-slate-200 rounded-xl px-3 text-[11px] font-bold text-slate-900 tabular focus:outline-none focus:border-rose-400" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] font-black text-slate-400 uppercase">Lolos</label>
+                              <input type="number" readOnly
+                                value={passQty || ""}
+                                className="w-full h-9 bg-emerald-50/50 border border-emerald-100 rounded-xl px-3 text-[11px] font-bold text-emerald-700 tabular cursor-default" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] font-black text-slate-400 uppercase">{isNumeric ? "Nilai Ukur" : "% Lolos"}</label>
+                              {isNumeric ? (
+                                <input type="text" placeholder="e.g., 6.2"
+                                  value={measuredVal}
+                                  onChange={(e) => setParamValues((p) => ({ ...p, [param]: e.target.value }))}
+                                  className="w-full h-9 bg-white border border-slate-200 rounded-xl px-3 text-[11px] font-bold text-slate-900 tabular focus:outline-none focus:border-blue-400" />
+                              ) : (
+                                <input type="text" readOnly
+                                  value={totalQty > 0 ? `${Math.round((passQty / totalQty) * 100)}%` : "—"}
+                                  className="w-full h-9 bg-blue-50/50 border border-blue-100 rounded-xl px-3 text-[11px] font-bold text-blue-700 tabular cursor-default" />
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -238,7 +311,9 @@ export default function QCInspectionsPage() {
                           <div className="mt-2 ml-2 p-4 rounded-[24px] bg-rose-50/30 border border-rose-200 space-y-3">
                             <div className="flex items-center gap-2">
                               <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
-                              <span className="text-[9px] font-black text-rose-600 uppercase tracking-widest">Defect Detail Required — {param}</span>
+                              <span className="text-[9px] font-black text-rose-600 uppercase tracking-widest">
+                                Defect Detail — {failQty} unit gagal pada {param}
+                              </span>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                               {selectField("Kategori Cacat", dd.defectCategory, (v) => updateDefectDetail(param, "defectCategory", v), DEFECT_CATEGORIES.map((c) => ({ value: c, label: c })))}
@@ -261,7 +336,7 @@ export default function QCInspectionsPage() {
                     <DnaButton variant="outline" size="md" onClick={handleReset}>Reset</DnaButton>
                     <DnaButton variant="secondary" className="gap-2" onClick={handleSubmit} disabled={auditMutation.isPending || paramsChecked === 0}>
                       {auditMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                      {auditMutation.isPending ? "Submitting..." : `Submit Inspection (${paramsChecked}/${paramsTotal})`}
+                      {auditMutation.isPending ? "Submitting..." : `Submit (${totalInspected} insp / ${totalFailed} gagal)`}
                     </DnaButton>
                   </div>
                 </div>
@@ -269,9 +344,32 @@ export default function QCInspectionsPage() {
 
               {/* --- INSPECTION NOTES --- */}
               <div className="rounded-[24px] border border-[var(--border-color)] shadow-sm p-6 bg-white">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Inspection Summary</h3>
+                {totalInspected > 0 ? (
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-500">Total Diperiksa</span>
+                      <span className="text-[14px] font-black text-slate-900 tabular">{totalInspected}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-500">Lolos</span>
+                      <span className="text-[14px] font-black text-emerald-600 tabular">{totalPassed}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-500">Gagal</span>
+                      <span className="text-[14px] font-black text-rose-600 tabular">{totalFailed}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-[10px] font-bold text-slate-500">Pass Rate</span>
+                      <span className="text-[14px] font-black text-slate-900 tabular">{totalInspected > 0 ? Math.round((totalPassed / totalInspected) * 100) : 0}%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400 italic mb-6">Isi jumlah sampel diperiksa di parameter checklist</p>
+                )}
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Inspection Notes</h3>
                 <textarea placeholder="Catatan inspektur..." value={inspectionNotes} onChange={(e) => setInspectionNotes(e.target.value)}
-                  className="w-full h-32 p-4 rounded-[24px] border border-[var(--border-color)] bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                  className="w-full h-24 p-4 rounded-[24px] border border-[var(--border-color)] bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center gap-2 text-xs text-slate-500"><ShieldCheck className="h-3 w-3 text-blue-500" />Hasil akan tercatat di QCAudit</div>
                   <div className="flex items-center gap-2 text-xs text-slate-500"><AlertTriangle className="h-3 w-3 text-amber-500" />FAIL trigger auto RejectExecution</div>
