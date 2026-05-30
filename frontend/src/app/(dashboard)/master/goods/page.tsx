@@ -5,7 +5,6 @@ import {
   Plus,
   Search,
   Package,
-  Box as BoxIcon,
   Activity,
   AlertTriangle,
   ShieldCheck,
@@ -16,7 +15,7 @@ import {
   Clock,
   History,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { DnaInput } from "@/components/dna/DnaInput";
 import {
   Table,
   TableBody,
@@ -47,7 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { DnaBadge } from "@/components/dna/DnaBadge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
@@ -260,10 +259,10 @@ export default function MasterGoodsPage() {
       filters={
         <div className="flex-1 flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
+            <DnaInput
+              icon={<Search />}
               placeholder="Search by name or SKU..."
-              className="h-10 pl-10 bg-white border-slate-200 text-[11px] font-bold uppercase placeholder:text-slate-300 focus:ring-blue-500/20 rounded-xl"
+              className="bg-white text-[11px] font-bold uppercase"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
@@ -325,9 +324,9 @@ export default function MasterGoodsPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-black text-slate-900 text-xs uppercase">{good.name}</span>
                           {good.isDummy && (
-                            <Badge className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase px-1.5 py-0.5 h-auto border-none rounded">
+                            <DnaBadge status="warning">
                               DUMMY
-                            </Badge>
+                            </DnaBadge>
                           )}
                         </div>
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{good.code || "PENDING_SKU"}</span>
@@ -403,11 +402,11 @@ export default function MasterGoodsPage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Product Name</Label>
-                    <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-11 bg-slate-50 border-none font-bold text-sm uppercase focus:bg-white transition-all rounded-xl" />
+                    <DnaInput value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="border-none font-bold uppercase" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">SKU / Code</Label>
-                    <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="h-11 bg-slate-50 border-none font-bold text-sm uppercase focus:bg-white transition-all rounded-xl" />
+                    <DnaInput value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="border-none font-bold uppercase" />
                   </div>
                 </div>
 
@@ -454,7 +453,7 @@ export default function MasterGoodsPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-bold text-slate-400 uppercase">Lead Time (Days)</Label>
-                      <Input type="number" value={formData.leadTime} onChange={(e) => setFormData({ ...formData, leadTime: Number(e.target.value) })} className="h-10 bg-white border-slate-200 font-bold text-sm rounded-xl" />
+                      <DnaInput type="number" value={formData.leadTime} onChange={(e) => setFormData({ ...formData, leadTime: Number(e.target.value) })} className="h-10 bg-white border-slate-200 font-bold" />
                     </div>
                   </div>
                   <div className="space-y-4 border-l border-slate-200 pl-6">
@@ -470,7 +469,7 @@ export default function MasterGoodsPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-bold text-slate-400 uppercase">Usage Unit</Label>
-                      <Input value={formData.usageUnit || ""} onChange={(e) => setFormData({ ...formData, usageUnit: e.target.value })} className="h-10 bg-white border-slate-200 font-bold text-sm uppercase rounded-xl" />
+                      <DnaInput value={formData.usageUnit || ""} onChange={(e) => setFormData({ ...formData, usageUnit: e.target.value })} className="h-10 bg-white border-slate-200 font-bold uppercase" />
                     </div>
                   </div>
                 </div>
@@ -518,14 +517,13 @@ export default function MasterGoodsPage() {
                                 </DnaButton>
                               </>
                             )}
-                            <Badge className={cn(
-                              "border-none font-black text-[8px] uppercase h-6 px-2 rounded",
-                              batch.qcStatus === 'GOOD' ? "bg-emerald-100 text-emerald-700" :
-                              batch.qcStatus === 'QUARANTINE' ? "bg-amber-100 text-amber-700" :
-                              "bg-rose-100 text-rose-700"
-                            )}>
+                            <DnaBadge status={
+                              batch.qcStatus === 'GOOD' ? "success" :
+                              batch.qcStatus === 'QUARANTINE' ? "warning" :
+                              "critical"
+                            }>
                               {batch.qcStatus}
-                            </Badge>
+                            </DnaBadge>
                           </div>
                         </div>
                       ))

@@ -7,6 +7,9 @@ import {
   Edit2,
   Trash2,
   Zap,
+  Layers,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import {
   Table,
@@ -36,6 +39,7 @@ import { DnaBadge } from "@/components/dna/DnaBadge";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { DnaInput } from "@/components/dna/DnaInput";
 import { TableShell } from "@/components/layout/TableShell";
+import { StatCard } from "@/components/dna/StatCard";
 
 type Category = {
   id: string;
@@ -143,6 +147,11 @@ export default function MasterCategoriesPage() {
         </DnaButton>
       }
     >
+      <div className="grid grid-cols-3 gap-6">
+        <StatCard label="Total Categories" value={categories.length} subValue={activeTab === "GOODS" ? "Goods Categories" : activeTab === "SUPPLIER" ? "Supplier Categories" : "Customer Categories"} icon={<Layers />} />
+        <StatCard label="Active" value={categories.filter(c => c.isActive).length} subValue="Live Classifications" icon={<CheckCircle2 />} />
+        <StatCard label="Inactive" value={categories.filter(c => !c.isActive).length} subValue="Archived Taxonomies" icon={<XCircle />} />
+      </div>
       <Tabs defaultValue="GOODS" onValueChange={(v) => setActiveTab(v as any)} className="w-full">
         <TableWrapper
           filters={

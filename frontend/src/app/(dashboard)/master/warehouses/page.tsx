@@ -5,6 +5,7 @@ import {
   Plus,
   Search,
   MapPin,
+  Phone,
   User,
   Activity,
   Edit2,
@@ -21,7 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { DnaButton } from "@/components/dna/DnaButton";
@@ -224,8 +225,8 @@ export default function MasterWarehousesPage() {
 
                 {(warehouse.phone || warehouse.province || warehouse.city || warehouse.address) && (
                   <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-bold text-slate-500">
-                    {warehouse.phone && <span>📞 {warehouse.phone}</span>}
-                    {warehouse.city && <span>📍 {[warehouse.city, warehouse.province].filter(Boolean).join(", ")}</span>}
+                    {warehouse.phone && <span><Phone className="w-3.5 h-3.5 text-slate-400" /> {warehouse.phone}</span>}
+                    {warehouse.city && <span><MapPin className="w-3.5 h-3.5 text-slate-400" /> {[warehouse.city, warehouse.province].filter(Boolean).join(", ")}</span>}
                   </div>
                 )}
 
