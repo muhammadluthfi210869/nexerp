@@ -5,14 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogTitle,
@@ -26,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { DataCard, StatCard, DnaInput } from "@/components/dna";
+import { DataCard, StatCard, DnaInput, TableWrapper } from "@/components/dna";
 import { ModuleHeader } from "@/components/layout/ModuleHeader";
 import { cn } from "@/lib/utils";
 import {
@@ -250,164 +242,166 @@ export function PipelineContent() {
           </span>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50/50">
-              <TableHead className="py-4 px-4 text-[10px] font-black uppercase tracking-tight text-slate-400">
-                Sample
-              </TableHead>
-              <TableHead className="py-4 px-4 text-[10px] font-black uppercase tracking-tight text-slate-400 text-center">
-                Stage
-              </TableHead>
-              <TableHead className="py-4 px-4 text-[10px] font-black uppercase tracking-tight text-slate-400 text-center">
-                Revision Status
-              </TableHead>
-              <TableHead className="py-4 px-4 text-[10px] font-black uppercase tracking-tight text-slate-400 text-center">
-                Aging
-              </TableHead>
-              <TableHead className="py-4 px-4 text-[10px] font-black uppercase tracking-tight text-slate-400 text-right">
-                Action
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredSamples.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="h-32 text-center text-slate-400 text-sm italic"
-                >
-                  No samples in this stage.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredSamples.map((sample) => {
-                const config = STAGE_CONFIG[sample.stage] || STAGE_CONFIG.QUEUE;
-                const StageIcon = config.icon;
-                const aging = getAgingDays(sample.requestedAt);
-                const validStages = STAGE_TRANSITIONS[sample.stage] || [];
-                const isTerminal = validStages.length === 0;
-
-                return (
-                  <TableRow
-                    key={sample.id}
-                    className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50"
+        <TableWrapper>
+          <table className="w-full">
+            <thead>
+              <tr className="bg-slate-50/50">
+                <th className="py-4 px-4 text-table-header text-slate-400 text-left">
+                  Sample
+                </th>
+                <th className="py-4 px-4 text-table-header text-slate-400 text-center">
+                  Stage
+                </th>
+                <th className="py-4 px-4 text-table-header text-slate-400 text-center">
+                  Revision Status
+                </th>
+                <th className="py-4 px-4 text-table-header text-slate-400 text-center">
+                  Aging
+                </th>
+                <th className="py-4 px-4 text-table-header text-slate-400 text-right">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSamples.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="h-32 text-center text-slate-400 text-sm italic"
                   >
-                    <TableCell className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
-                          {sample.productName?.charAt(0) || "?"}
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-900 text-[13px] tracking-tight">
-                            {sample.productName}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider mt-0.5">
-                            {sample.sampleNumber} •{" "}
-                            {sample.lead?.brandName || sample.lead?.clientName}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
+                    No samples in this stage.
+                  </td>
+                </tr>
+              ) : (
+                filteredSamples.map((sample) => {
+                  const config = STAGE_CONFIG[sample.stage] || STAGE_CONFIG.QUEUE;
+                  const StageIcon = config.icon;
+                  const aging = getAgingDays(sample.requestedAt);
+                  const validStages = STAGE_TRANSITIONS[sample.stage] || [];
+                  const isTerminal = validStages.length === 0;
 
-                    <TableCell className="py-4 px-4 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
+                  return (
+                    <tr
+                      key={sample.id}
+                      className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50"
+                    >
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
+                            {sample.productName?.charAt(0) || "?"}
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-900 text-[13px] tracking-tight">
+                              {sample.productName}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider mt-0.5">
+                              {sample.sampleNumber} •{" "}
+                              {sample.lead?.brandName || sample.lead?.clientName}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4 text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className={cn(
+                                "rounded-lg px-3 py-1.5 font-black uppercase text-[9px] shadow-sm flex items-center gap-1.5 cursor-pointer mx-auto",
+                                config.bg,
+                                config.color
+                              )}
+                            >
+                              <StageIcon className="h-3 w-3" />
+                              {config.label}
+                              <ChevronDown className="h-3 w-3 opacity-50" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="rounded-xl border-none shadow-sm p-2 bg-white min-w-[180px]">
+                            {validStages.length === 0 ? (
+                              <DropdownMenuItem disabled className="text-[9px] text-slate-400 font-medium">
+                                No further stages
+                              </DropdownMenuItem>
+                            ) : (
+                              validStages.map((stage) => {
+                                const SIcon = STAGE_CONFIG[stage]?.icon || ArrowRight;
+                                return (
+                                  <DropdownMenuItem
+                                    key={stage}
+                                    onClick={() => handleAdvanceClick(sample, stage)}
+                                    className="rounded-lg h-9 px-3 font-black uppercase text-[8px] hover:bg-blue-50 cursor-pointer flex justify-between"
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      <SIcon className="h-3 w-3 text-slate-400" />
+                                      {STAGE_CONFIG[stage]?.label || stage}
+                                    </div>
+                                    <ArrowRight className="h-3 w-3 text-blue-500" />
+                                  </DropdownMenuItem>
+                                );
+                              })
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+
+                      <td className="py-4 px-4 text-center">
+                        {sample.revisionStatus ? (
+                          <span
                             className={cn(
-                              "rounded-lg px-3 py-1.5 font-black uppercase text-[9px] shadow-sm flex items-center gap-1.5 cursor-pointer mx-auto",
-                              config.bg,
-                              config.color
+                              "rounded-lg px-2.5 py-1 font-black uppercase text-[8px] shadow-sm",
+                              REVISION_STATUS_CONFIG[sample.revisionStatus]?.className ||
+                                "bg-slate-50 text-slate-600 border border-slate-100"
                             )}
                           >
-                            <StageIcon className="h-3 w-3" />
-                            {config.label}
-                            <ChevronDown className="h-3 w-3 opacity-50" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="rounded-xl border-none shadow-sm p-2 bg-white min-w-[180px]">
-                          {validStages.length === 0 ? (
-                            <DropdownMenuItem disabled className="text-[9px] text-slate-400 font-medium">
-                              No further stages
-                            </DropdownMenuItem>
-                          ) : (
-                            validStages.map((stage) => {
-                              const SIcon = STAGE_CONFIG[stage]?.icon || ArrowRight;
-                              return (
-                                <DropdownMenuItem
-                                  key={stage}
-                                  onClick={() => handleAdvanceClick(sample, stage)}
-                                  className="rounded-lg h-9 px-3 font-black uppercase text-[8px] hover:bg-blue-50 cursor-pointer flex justify-between"
-                                >
-                                  <div className="flex items-center gap-1.5">
-                                    <SIcon className="h-3 w-3 text-slate-400" />
-                                    {STAGE_CONFIG[stage]?.label || stage}
-                                  </div>
-                                  <ArrowRight className="h-3 w-3 text-blue-500" />
-                                </DropdownMenuItem>
-                              );
-                            })
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                            {REVISION_STATUS_CONFIG[sample.revisionStatus]?.label ||
+                              sample.revisionStatus}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-black text-slate-300">—</span>
+                        )}
+                      </td>
 
-                    <TableCell className="py-4 px-4 text-center">
-                      {sample.revisionStatus ? (
-                        <span
-                          className={cn(
-                            "rounded-lg px-2.5 py-1 font-black uppercase text-[8px] shadow-sm",
-                            REVISION_STATUS_CONFIG[sample.revisionStatus]?.className ||
-                              "bg-slate-50 text-slate-600 border border-slate-100"
-                          )}
-                        >
-                          {REVISION_STATUS_CONFIG[sample.revisionStatus]?.label ||
-                            sample.revisionStatus}
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-black text-slate-300">—</span>
-                      )}
-                    </TableCell>
+                      <td className="py-4 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Clock
+                            className={cn(
+                              "h-3 w-3",
+                              aging > 7 ? "text-rose-500" : "text-slate-300"
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "text-[11px] font-black",
+                              aging > 7 ? "text-rose-600" : "text-slate-500"
+                            )}
+                          >
+                            {aging}d
+                          </span>
+                        </div>
+                      </td>
 
-                    <TableCell className="py-4 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Clock
-                          className={cn(
-                            "h-3 w-3",
-                            aging > 7 ? "text-rose-500" : "text-slate-300"
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "text-[11px] font-black",
-                            aging > 7 ? "text-rose-600" : "text-slate-500"
-                          )}
-                        >
-                          {aging}d
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="py-4 px-4 text-right">
-                      {!isTerminal && (
-                        <Button
-                          onClick={() => {
-                            const nextStage = validStages[0];
-                            if (nextStage) handleAdvanceClick(sample, nextStage);
-                          }}
-                          className="h-8 px-4 rounded-xl font-black uppercase text-[9px] bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Send className="h-3 w-3 mr-1.5" />
-                          Advance
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      <td className="py-4 px-4 text-right">
+                        {!isTerminal && (
+                          <Button
+                            onClick={() => {
+                              const nextStage = validStages[0];
+                              if (nextStage) handleAdvanceClick(sample, nextStage);
+                            }}
+                            className="h-8 px-4 rounded-xl font-black uppercase text-[9px] bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Send className="h-3 w-3 mr-1.5" />
+                            Advance
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </TableWrapper>
       </DataCard>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>

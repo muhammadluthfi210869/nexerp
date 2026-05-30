@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { BarChart4, Layers, Loader2 } from "lucide-react";
+import { BarChart4, Layers } from "lucide-react";
 
 const KebutuhanPage = dynamic(() => import("../kebutuhan-barang/page"), {
   loading: () => <Skeleton />,
