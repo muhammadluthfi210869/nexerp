@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, DnaInput, TableWrapper, DnaBadge } from "@/components/dna";
+import { StatCard, KpiCard, DnaInput, TableWrapper, DnaBadge } from "@/components/dna";
 
 interface ChecklistProgress {
   id: string;
@@ -136,7 +136,7 @@ export default function ChecklistProgressPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <StatCard icon={<ListChecks className="text-blue-600" />} label="Total Checklist" value={totalChecklists} />
-            <StatCard icon={<Target className="text-emerald-600" />} label="Rata-rata Progres" value={`${avgProgress}%`} />
+            <KpiCard icon={<Target />} label="Rata-rata Progres" value={`${avgProgress}%`} targetPct={avgProgress} />
             <StatCard icon={<CheckCircle2 className="text-emerald-500" />} label="Selesai" value={completedCount} />
             <StatCard icon={<AlertTriangle className="text-rose-500" />} label="Terlambat" value={overdueCount} />
           </div>

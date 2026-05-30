@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
+import { StatCard, KpiCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
 
 interface ChecklistTracking {
   id: string;
@@ -124,7 +124,7 @@ export default function ChecklistTrackingPage() {
             <StatCard icon={<ClipboardCheck className="text-blue-600" />} label="Total Selesai" value={totalCompleted} />
             <StatCard icon={<CheckCircle2 className="text-emerald-600" />} label="Terverifikasi" value={verifiedCount} />
             <StatCard icon={<Users className="text-purple-600" />} label="PIC Aktif" value={pics.length - 1} />
-            <StatCard icon={<History className="text-amber-600" />} label="Rata-rata Pass Rate" value={`${avgPassRate}%`} />
+            <KpiCard icon={<History />} label="Rata-rata Pass Rate" value={`${avgPassRate}%`} targetPct={avgPassRate} />
           </div>
 
           {/* Filters */}

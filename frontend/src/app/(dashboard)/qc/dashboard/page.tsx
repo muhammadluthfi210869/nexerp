@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/dna/KpiCard";
+import { TableWrapper, DnaBadge } from "@/components/dna";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -13,7 +14,7 @@ import {
 } from "recharts";
 import {
   Activity, AlertTriangle, FlaskConical, Clock,
-  AlertCircle, Target, DollarSign, Package
+  AlertCircle, Target, DollarSign, Package, ShieldCheck
 } from "lucide-react";
 
 // --- Types ---
@@ -53,10 +54,26 @@ interface ReworkHoldItem {
   heldHours: number;
 }
 
-interface FunnelDataItem {
-  stage: string;
-  input: number;
-  output: number;
+interface PhaseBreakdownItem {
+  phase: string;
+  totalAudits: number;
+  passCount: number;
+  rejectCount: number;
+  holdCount: number;
+  passRate: number;
+  topRejectReasons: { defectCategory: string; count: number }[];
+  topDefectTypes: { defectType: string; count: number }[];
+  severityBreakdown: Record<string, number>;
+  dispositionBreakdown: Record<string, number>;
+}
+
+interface PhaseBreakdownData {
+  phases: PhaseBreakdownItem[];
+  overall: {
+    totalPass: number;
+    totalReject: number;
+    overallPassRate: number;
+  };
 }
 
 // --- Fetchers ---
@@ -65,6 +82,7 @@ const fetchPareto = async (): Promise<ParetoItem[]> => (await api.get("/qc/analy
 const fetchSupplierQuality = async (): Promise<SupplierQualityItem[]> => (await api.get("/qc/analytics/supplier-quality")).data;
 const fetchVendorWatchlist = async (): Promise<VendorWatchlistItem[]> => (await api.get("/qc/analytics/vendor-watchlist")).data;
 const fetchReworkHold = async (): Promise<ReworkHoldItem[]> => (await api.get("/qc/analytics/rework-hold-log")).data;
+const fetchPhaseBreakdown = async (): Promise<PhaseBreakdownData> => (await api.get("/qc/analytics/phase-breakdown")).data;
 
 function formatRp(n: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -84,6 +102,7 @@ export default function QCAnalyticsDashboard() {
   const { data: supplierQuality } = useQuery({ queryKey: ["qc-supplier-quality"], queryFn: fetchSupplierQuality });
   const { data: vendorWatchlist } = useQuery({ queryKey: ["qc-vendor-watchlist"], queryFn: fetchVendorWatchlist });
   const { data: reworkHold } = useQuery({ queryKey: ["qc-rework-hold"], queryFn: fetchReworkHold });
+  const { data: phaseBreakdown } = useQuery({ queryKey: ["qc-phase-breakdown"], queryFn: fetchPhaseBreakdown });
 
   return (
     <div className="p-10 space-y-10 animate-in fade-in duration-1000 max-w-[1600px] mx-auto">
@@ -124,6 +143,115 @@ export default function QCAnalyticsDashboard() {
           icon={<Package />}
         />
       </div>
+
+      {/* Phase Breakdown */}
+      {phaseBreakdown && (
+        <div className="space-y-6">
+          <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" /> PHASE BREAKDOWN
+              </CardTitle>
+              <CardDescription className="text-zinc-500 text-[10px] uppercase">
+                Pass / Reject per inspection phase
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="rounded-xl border border-zinc-900 overflow-hidden mx-6 mb-6">
+                <Table>
+                  <TableHeader className="bg-zinc-900/50">
+                    <TableRow className="border-zinc-900">
+                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Phase</TableHead>
+                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Pass</TableHead>
+                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Reject</TableHead>
+                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Pass Rate</TableHead>
+                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Top Defect</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {phaseBreakdown.phases.map((p) => {
+                      const topDefect = p.topDefectTypes[0];
+                      return (
+                        <TableRow key={p.phase} className="border-zinc-900 hover:bg-white/[0.02]">
+                          <TableCell className="font-bold text-white text-sm">{p.phase}</TableCell>
+                          <TableCell className="text-right text-emerald-400 font-bold">{p.passCount}</TableCell>
+                          <TableCell className="text-right text-red-400 font-bold">{p.rejectCount}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-emerald-500 transition-all"
+                                  style={{ width: `${p.passRate}%` }}
+                                />
+                              </div>
+                              <span className="text-zinc-400 text-xs font-mono">{p.passRate}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-zinc-400 text-xs">
+                            {topDefect ? (
+                              <DnaBadge status="warning" className="text-[9px]">
+                                {topDefect.defectType} ({topDefect.count})
+                              </DnaBadge>
+                            ) : (
+                              <span className="text-zinc-600">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Defect Categories */}
+          <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-400" /> DEFECT CATEGORIES
+              </CardTitle>
+              <CardDescription className="text-zinc-500 text-[10px] uppercase">
+                Aggregated defect categories across all phases
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {(() => {
+                  const categoryMap: Record<string, number> = {};
+                  for (const p of phaseBreakdown.phases) {
+                    for (const r of p.topRejectReasons) {
+                      categoryMap[r.defectCategory] = (categoryMap[r.defectCategory] || 0) + r.count;
+                    }
+                  }
+                  const categoryColors: Record<string, string> = {
+                    FISIK: "bg-red-500/20 text-red-400 border-red-500/40",
+                    KIMIA: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+                    MIKROBIOLOGI: "bg-purple-500/20 text-purple-400 border-purple-500/40",
+                    LABEL_DOKUMEN: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+                    KEMASAN: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+                    LAINNYA: "bg-zinc-500/20 text-zinc-400 border-zinc-500/40",
+                  };
+                  return Object.entries(categoryMap)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([cat, count]) => (
+                      <Badge
+                        key={cat}
+                        className={`border text-[10px] font-black uppercase rounded-none px-3 py-1.5 ${categoryColors[cat] || "bg-zinc-500/20 text-zinc-400 border-zinc-500/40"}`}
+                      >
+                        {cat}: {count}
+                      </Badge>
+                    ));
+                })()}
+                {(() => {
+                  const hasAny = phaseBreakdown.phases.some((p) => p.topRejectReasons.length > 0);
+                  return !hasAny ? <p className="text-zinc-600 text-xs">No defect data</p> : null;
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

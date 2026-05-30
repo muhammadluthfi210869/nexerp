@@ -533,10 +533,10 @@ export class QCAuditsService {
 
     const total = Object.values(groups).reduce((s, c) => s + c, 0);
     return Object.entries(groups)
-      .map(([defectType, count]) => ({
-        defectType,
+      .map(([defect, count]) => ({
+        defect,
         count,
-        pct: total > 0 ? Math.round((count / total) * 100) : 0,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
       }))
       .sort((a, b) => b.count - a.count);
   }
@@ -572,14 +572,23 @@ export class QCAuditsService {
     const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
 
     return Object.entries(groups)
-      .map(([id, data]) => ({
-        supplierId: id,
-        supplierName: supplierMap.get(id) || 'Unknown',
-        totalInbound: data.total,
-        rejectCount: data.reject,
-        rejectRate:
-          data.total > 0 ? Math.round((data.reject / data.total) * 100) : 0,
-      }))
+      .map(([id, data]) => {
+        const acceptRate =
+          data.total > 0
+            ? Math.round(((data.total - data.reject) / data.total) * 100)
+            : 100;
+        return {
+          supplierId: id,
+          supplier: supplierMap.get(id) || 'Unknown',
+          totalInbound: data.total,
+          rejectCount: data.reject,
+          rejectRate:
+            data.total > 0 ? Math.round((data.reject / data.total) * 100) : 0,
+          quality: acceptRate,
+          delivery: Math.min(100, data.total * 10),
+          compliance: Math.max(0, 100 - Math.round((data.reject / Math.max(1, data.total)) * 100 * 1.5)),
+        };
+      })
       .sort((a, b) => b.rejectRate - a.rejectRate);
   }
 
@@ -659,7 +668,7 @@ export class QCAuditsService {
             : 100;
         return {
           supplierId: id,
-          supplierName: sup?.name || 'Unknown',
+          supplier: sup?.name || 'Unknown',
           totalInbound: data.total,
           rejectCount: data.reject,
           acceptRate,
@@ -687,9 +696,9 @@ export class QCAuditsService {
 
     return audits.map((a) => ({
       id: a.id.substring(0, 8).toUpperCase(),
-      batchId: a.stepLogId?.substring(0, 8).toUpperCase() || '—',
+      batch: a.stepLogId?.substring(0, 8).toUpperCase() || '—',
       phase: a.phase,
-      defectType: a.defectType,
+      defect: a.defectType,
       severity: a.severity,
       disposition: a.disposition,
       notes: a.notes,
@@ -735,5 +744,102 @@ export class QCAuditsService {
       },
     });
     return pending;
+  }
+
+  async getPhaseBreakdown(from?: string, to?: string) {
+    const where: any = {};
+    if (from || to) {
+      where.createdAt = {};
+      if (from) where.createdAt.gte = new Date(from);
+      if (to) where.createdAt.lte = new Date(to);
+    }
+
+    const audits = await this.prisma.qCAudit.findMany({
+      where,
+      select: {
+        phase: true,
+        status: true,
+        defectCategory: true,
+        defectType: true,
+        severity: true,
+        disposition: true,
+      },
+    });
+
+    const phaseKeys = ['INBOUND', 'MIXING', 'FILLING', 'PACKING', 'FINAL'] as const;
+
+    const phases = phaseKeys.map((phase) => {
+      const phaseAudits = audits.filter((a) => a.phase === phase);
+      const totalAudits = phaseAudits.length;
+      const passCount = phaseAudits.filter((a) => a.status === 'GOOD').length;
+      const rejectCount = phaseAudits.filter((a) => a.status === 'REJECT').length;
+      const holdCount = phaseAudits.filter((a) => a.status === 'QUARANTINE').length;
+      const passRate =
+        passCount + rejectCount > 0
+          ? Math.round((passCount / (passCount + rejectCount)) * 100 * 10) / 10
+          : 0;
+
+      const rejectAudits = phaseAudits.filter((a) => a.status === 'REJECT');
+
+      const defectCategoryGroups: Record<string, number> = {};
+      const defectTypeGroups: Record<string, number> = {};
+      const severityGroups: Record<string, number> = {};
+      const dispositionGroups: Record<string, number> = {};
+
+      for (const a of rejectAudits) {
+        if (a.defectCategory) {
+          defectCategoryGroups[a.defectCategory] =
+            (defectCategoryGroups[a.defectCategory] || 0) + 1;
+        }
+        if (a.defectType) {
+          defectTypeGroups[a.defectType] =
+            (defectTypeGroups[a.defectType] || 0) + 1;
+        }
+        if (a.severity) {
+          severityGroups[a.severity] = (severityGroups[a.severity] || 0) + 1;
+        }
+        if (a.disposition) {
+          dispositionGroups[a.disposition] =
+            (dispositionGroups[a.disposition] || 0) + 1;
+        }
+      }
+
+      const topRejectReasons = Object.entries(defectCategoryGroups)
+        .map(([defectCategory, count]) => ({ defectCategory, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const topDefectTypes = Object.entries(defectTypeGroups)
+        .map(([defectType, count]) => ({ defectType, count }))
+        .sort((a, b) => b.count - a.count);
+
+      return {
+        phase,
+        totalAudits,
+        passCount,
+        rejectCount,
+        holdCount,
+        passRate,
+        topRejectReasons,
+        topDefectTypes,
+        severityBreakdown: severityGroups,
+        dispositionBreakdown: dispositionGroups,
+      };
+    });
+
+    const totalPass = phases.reduce((s, p) => s + p.passCount, 0);
+    const totalReject = phases.reduce((s, p) => s + p.rejectCount, 0);
+    const overallPassRate =
+      totalPass + totalReject > 0
+        ? Math.round((totalPass / (totalPass + totalReject)) * 100 * 10) / 10
+        : 0;
+
+    return {
+      phases,
+      overall: {
+        totalPass,
+        totalReject,
+        overallPassRate,
+      },
+    };
   }
 }

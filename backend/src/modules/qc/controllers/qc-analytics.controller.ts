@@ -1,4 +1,5 @@
 import { Controller, Get, Query, Param, UseGuards } from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -38,5 +39,12 @@ export class QCAnalyticsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.PRODUCTION_OP)
   getReworkHoldLog() {
     return this.qcService.getReworkHoldLog();
+  }
+
+  @Get('phase-breakdown')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR, UserRole.PRODUCTION, UserRole.PRODUCTION_OP)
+  @ApiOperation({ summary: 'Get per-phase quality breakdown with pass/reject counts and defect details' })
+  getPhaseBreakdown(@Query('from') from?: string, @Query('to') to?: string) {
+    return this.qcService.getPhaseBreakdown(from, to);
   }
 }
