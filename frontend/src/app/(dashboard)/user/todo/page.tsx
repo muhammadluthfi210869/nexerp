@@ -24,9 +24,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { DashboardCard } from "@/components/dna/DashboardCard";
 import { 
   Table, 
   TableBody, 
@@ -135,7 +134,7 @@ export default function TodoListPrototype() {
                    onClick={() => handleOpenBoard(board)}
                    className="group cursor-pointer"
                  >
-                    <Card className="rounded-[24px] border-none shadow-xl bg-white p-8 space-y-6 hover:shadow-2xl transition-all border-b-8 group-hover:-translate-y-2 duration-300" style={{ borderBottomColor: board.warna }}>
+                      <DashboardCard className="!p-8 space-y-6" style={{ borderBottomColor: board.warna, borderBottomWidth: 8, borderBottomStyle: "solid" }}>
                        <div className="flex justify-between items-start">
                           <div className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: board.warna }}>
                              <Layout className="h-6 w-6" />
@@ -155,19 +154,19 @@ export default function TodoListPrototype() {
                           </div>
                           <span className="text-[9px] font-bold text-slate-300 uppercase">{board.tanggal}</span>
                        </div>
-                    </Card>
+                    </DashboardCard>
                  </motion.div>
                ))}
-               <Card className="rounded-[24px] border-4 border-dashed border-slate-200 bg-white/50 flex flex-col items-center justify-center p-8 space-y-4 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group">
+                <DashboardCard className="!border-4 !border-dashed !border-slate-200 !bg-white/50 flex flex-col items-center justify-center !p-8 space-y-4">
                   <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                      <Plus className="h-8 w-8" />
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-blue-600 transition-all">Provision New Board</span>
-               </Card>
+               </DashboardCard>
              </div>
 
              {/* Table View */}
-             <Card className="rounded-[24px] border-none shadow-2xl shadow-slate-200/30 overflow-hidden bg-white">
+              <DashboardCard className="!p-0 overflow-hidden">
                 <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white">
                   <h3 className="text-sm font-black uppercase italic tracking-widest text-slate-900">Protocol <span className="text-blue-600">Directory</span></h3>
                   <div className="flex gap-4">
@@ -223,7 +222,7 @@ export default function TodoListPrototype() {
                     ))}
                   </TableBody>
                 </Table>
-             </Card>
+                             </DashboardCard>
           </motion.div>
         ) : (
           <motion.div
@@ -279,7 +278,7 @@ export default function TodoListPrototype() {
                            layoutId={String(task.id)}
                            className="group cursor-grab active:cursor-grabbing"
                          >
-                            <Card className="rounded-[1.5rem] border-none shadow-md p-6 bg-white space-y-4 hover:shadow-xl transition-all border-l-2 border-transparent hover:border-blue-400">
+                             <DashboardCard className="!rounded-[1.5rem] !p-6 space-y-4 !border-l-2 !border-l-transparent">
                                <div className="flex justify-between items-start">
                                   <div className="flex flex-wrap gap-1">
                                      {task.labels.map(l => (
@@ -313,7 +312,7 @@ export default function TodoListPrototype() {
                                      {task.assignee}
                                   </div>
                                </div>
-                            </Card>
+                            </DashboardCard>
                          </motion.div>
                        ))}
 

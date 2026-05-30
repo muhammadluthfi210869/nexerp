@@ -50,7 +50,7 @@ function formatRupiah(value: number): string {
 
 export function DashboardCards({ variant, data }: DashboardCardsProps) {
   if (!data && variant === 'dashboard') {
-    // Return empty shell or fall back to mock data
+    return null;
   }
 
   // 🔴 1. MAIN BD DASHBOARD
@@ -208,7 +208,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
             <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
               <div
                 style={{
-                  width: "74%",
+                  width: `${Math.min(100, ((activity.activeLeads ?? 320) / 30) * 100)}%`,
                   height: "100%",
                   background: "#EAB308",
                 }}

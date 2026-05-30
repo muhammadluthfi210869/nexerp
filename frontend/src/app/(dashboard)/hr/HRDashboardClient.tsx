@@ -96,6 +96,7 @@ const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; ic
               const pct = totalDays > 0 ? Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100)) : 100;
               
               const leftDays = Math.ceil((new Date(end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+              const daysLeftBarWidth = Math.min(100, Math.max(5, (Math.max(0, leftDays) / 365) * 100));
               const isCritical = leftDays < 60;
               const isLowKpi = e.kpi < 70;
 
@@ -137,7 +138,7 @@ const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; ic
                   </td>
                   <td style={{ padding: "0.75rem 1rem" }}>
                     <div style={{ width: "100%", height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
-                      <div style={{ width: `${pct}%`, height: "100%", background: isCritical ? "#EF4444" : "#10B981" }} />
+                      <div style={{ width: `${daysLeftBarWidth}%`, height: "100%", background: isCritical ? "#EF4444" : "#10B981" }} />
                     </div>
                   </td>
                   <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>

@@ -176,6 +176,10 @@ export default function MarketingDashboardClient() {
     : 80;
   const erRateVal = data?.vitality?.avgEngagement ? `${data.vitality.avgEngagement.toFixed(1)}%` : "4.2%";
   const followersVal = data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "18.4K";
+  const engLikes = data?.vitality?.engagementByType?.likes ?? 0;
+  const engComments = data?.vitality?.engagementByType?.saves ?? 0;
+  const engShares = data?.vitality?.engagementByType?.shares ?? 0;
+  const engSaves = data?.vitality?.engagementByType?.saves ?? 0;
 
   // Platform specific deep dive calculations
   const platformDataMap = {
@@ -219,40 +223,7 @@ export default function MarketingDashboardClient() {
       className="view-section active"
       style={{ paddingBottom: "10rem", background: "#F8FAFC", minHeight: "100vh" }}
     >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: "2rem",
-        }}
-      >
-        <div>
-          <h2 className="dashboard-title" style={{ margin: 0 }}>
-            MARKETING COMMAND CENTER
-          </h2>
-          <p style={{ margin: "4px 0 0 0", color: "#64748B", fontSize: "14px", fontWeight: 500 }}>
-            Aureon Matrix v2.0: Funnel Audit & Content Vitality
-          </p>
-        </div>
-        <div
-          style={{
-            background: "white",
-            padding: "10px 18px",
-            borderRadius: "12px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <Calendar size={14} color="#64748B" />
-          <span style={{ fontSize: "12px", fontWeight: 800, color: "#1E293B" }}>
-            MARCH 2024
-          </span>
-        </div>
-      </div>
+
 
       {/* Top 3 Cards Grid */}
       <div
@@ -726,20 +697,34 @@ export default function MarketingDashboardClient() {
             </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-            {[Heart, MessageCircle, Share2, Bookmark].map((Icon, idx) => (
-              <div
-                key={idx}
-                style={{
-                  textAlign: "center",
-                  background: "#F8FAFC",
-                  padding: "12px 5px",
-                  borderRadius: "16px",
-                  border: "1px solid #F1F5F9",
-                }}
-              >
-                <Icon size={12} color="#94A3B8" style={{ display: "inline" }} />
-              </div>
-            ))}
+            {[
+              { icon: Heart, label: "Likes", value: formatNumber(engLikes) },
+              { icon: MessageCircle, label: "Comments", value: formatNumber(engComments) },
+              { icon: Share2, label: "Shares", value: formatNumber(engShares) },
+              { icon: Bookmark, label: "Save", value: formatNumber(engSaves) },
+            ].map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    textAlign: "center",
+                    background: "#F8FAFC",
+                    padding: "12px 5px",
+                    borderRadius: "16px",
+                    border: "1px solid #F1F5F9",
+                  }}
+                >
+                  <Icon size={12} color="#94A3B8" style={{ display: "inline", marginBottom: "4px" }} />
+                  <p style={{ margin: "4px 0 0 0", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+                    {item.value}
+                  </p>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>
+                    {item.label}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

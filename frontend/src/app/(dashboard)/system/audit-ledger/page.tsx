@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/dna/StatCard";
+import { DnaButton } from "@/components/dna/DnaButton";
+import { DnaInput } from "@/components/dna/DnaInput";
+import { DashboardCard } from "@/components/dna/DashboardCard";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function AuditLedgerPage() {
@@ -74,9 +77,9 @@ export default function AuditLedgerPage() {
             <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-tighter">Live Stream Active</span>
           </div>
-          <Button className="bg-brand-black hover:bg-slate-800 text-white font-bold rounded-2xl px-6 h-12 shadow-xl shadow-black/10 transition-all active:scale-95">
+          <DnaButton variant="primary" className="bg-brand-black hover:bg-slate-800 text-white font-bold rounded-2xl px-6 h-12">
             EXPORT LEDGER
-          </Button>
+          </DnaButton>
         </div>
       }
       filters={
@@ -118,16 +121,16 @@ export default function AuditLedgerPage() {
             <p className="font-bold text-sm uppercase tracking-widest">Hydrating Ledger...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="bg-white rounded-[2rem] border border-slate-200 border-dashed py-20 flex flex-col items-center justify-center text-slate-300 gap-4">
+          <DashboardCard className="!border-dashed py-20 flex flex-col items-center justify-center text-slate-300 gap-4">
             <Database className="w-16 h-16 opacity-20" />
             <p className="font-bold text-sm uppercase tracking-widest">No matching logs found in the ledger</p>
-          </div>
+          </DashboardCard>
         ) : (
           filteredLogs.map((log, idx) => (
-            <div 
+            <DashboardCard 
               key={log.id} 
-              className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col lg:flex-row lg:items-center gap-6 group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500 hover:border-slate-300"
-              style={{ animationDelay: `${idx * 50}ms` }}
+              className="flex flex-col lg:flex-row lg:items-center gap-6 !p-6 animate-in fade-in"
+              style={idx > 0 ? { animationDelay: `${idx * 50}ms` } : undefined}
             >
               {/* Timeline Info */}
               <div className="flex lg:flex-col items-center lg:items-start gap-4 lg:gap-1 min-w-[140px]">
@@ -197,29 +200,17 @@ export default function AuditLedgerPage() {
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </DashboardCard>
           ))
         )}
       </div>
 
       {/* Statistics Section */}
       <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { label: "Total Events", value: logs.length, icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
-          { label: "Auto Transitions", value: logs.filter(l => !l.changedById).length, icon: RefreshCw, color: "text-blue-500", bg: "bg-blue-50" },
-          { label: "Manual Override", value: logs.filter(l => l.changedById).length, icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-50" },
-          { label: "Ledger Integrity", value: "99.9%", icon: ShieldCheck, color: "text-emerald-500", bg: "bg-emerald-50" }
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-4 group hover:border-slate-300 transition-all">
-            <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110 duration-500", stat.bg, stat.color)}>
-              <stat.icon className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
-              <p className="text-2xl font-black text-brand-black tracking-tight tabular-nums">{stat.value}</p>
-            </div>
-          </div>
-        ))}
+        <StatCard label="Total Events" value={logs.length} icon={<Zap />} />
+        <StatCard label="Auto Transitions" value={logs.filter(l => !l.changedById).length} icon={<RefreshCw />} />
+        <StatCard label="Manual Override" value={logs.filter(l => l.changedById).length} icon={<AlertCircle />} />
+        <StatCard label="Ledger Integrity" value="99.9%" icon={<ShieldCheck />} />
       </div>
     </TableShell>
   );
