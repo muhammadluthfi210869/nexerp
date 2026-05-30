@@ -28,6 +28,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import { IndustrialNumpad } from "@/components/production/IndustrialNumpad";
 import { TerminalTabNav } from "@/components/production/TerminalTabNav";
 import { toast } from "sonner";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function MixingTerminalV4() {
   useWakeLock();
@@ -227,10 +228,8 @@ export default function MixingTerminalV4() {
   const isFinished = materials.every((m: any) => m.qtyActual > 0);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 p-0 font-sans flex flex-col overflow-hidden select-none">
-      <div className="px-10 pt-3">
-        <TerminalTabNav />
-      </div>
+    <DashboardShell title="Terminal" titleAccent="Mixing V.4" subtitle={`Batch: ${activeSchedule.scheduleNumber}`}>
+      <TerminalTabNav />
       {/* Top Status Bar */}
       <header className="h-20 border-b border-gray-200 flex items-center justify-between px-10 bg-white z-50">
         <div className="flex items-center gap-8">
@@ -482,7 +481,7 @@ export default function MixingTerminalV4() {
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
       `}</style>
-    </div>
+    </DashboardShell>
   );
 }
 

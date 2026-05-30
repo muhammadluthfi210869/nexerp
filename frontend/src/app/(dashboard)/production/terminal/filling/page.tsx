@@ -20,6 +20,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import { IndustrialNumpad } from "@/components/production/IndustrialNumpad";
 import { TerminalTabNav } from "@/components/production/TerminalTabNav";
 import { toast } from "sonner";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function FillingTerminalV4() {
   useWakeLock();
@@ -201,10 +202,8 @@ export default function FillingTerminalV4() {
   const activeComponent = components.find((c: any) => !c.qtyActual);
 
   return (
-    <div className="flex flex-col h-screen bg-white text-gray-900 font-sans overflow-hidden">
-      <div className="px-10 pt-3">
-        <TerminalTabNav />
-      </div>
+    <DashboardShell title="Terminal" titleAccent="Filling V.4" subtitle={`Batch: ${activeSchedule.scheduleNumber}`}>
+      <TerminalTabNav />
       <header className="h-20 border-b border-gray-200 flex items-center justify-between px-10 bg-white">
          <div className="flex items-center gap-6">
             <div>
@@ -430,7 +429,7 @@ export default function FillingTerminalV4() {
         @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
         .animate-scan { animation: scan 3s linear infinite; }
       `}</style>
-    </div>
+    </DashboardShell>
   );
 }
 

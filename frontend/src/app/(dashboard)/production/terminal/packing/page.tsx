@@ -30,6 +30,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function PackingTerminalV4() {
   const queryClient = useQueryClient();
@@ -163,10 +164,8 @@ export default function PackingTerminalV4() {
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 p-0 font-sans flex flex-col overflow-hidden select-none">
-      <div className="px-10 pt-3">
-        <TerminalTabNav />
-      </div>
+    <DashboardShell title="Terminal" titleAccent="Packing V.4" subtitle={`Batch: ${activeSchedule.scheduleNumber}`}>
+      <TerminalTabNav />
       {/* Top Status Bar */}
       <header className="h-20 border-b border-gray-200 flex items-center justify-between px-10 bg-gray-50 z-50">
         <div className="flex items-center gap-8">
@@ -471,7 +470,7 @@ export default function PackingTerminalV4() {
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
       `}</style>
-    </div>
+    </DashboardShell>
   );
 }
 
