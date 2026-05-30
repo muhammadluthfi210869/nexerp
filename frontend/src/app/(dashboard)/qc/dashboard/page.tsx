@@ -436,6 +436,21 @@ export default function QCAnalyticsDashboard() {
 
       </div>
 
+      {/* Recent Audits */}
+      <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
+        <CardHeader>
+          <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
+            <Activity className="h-4 w-4 text-emerald-500" /> RECENT AUDITS
+          </CardTitle>
+          <CardDescription className="text-zinc-500 text-[10px] uppercase">
+            Latest 10 QC audit records
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <RecentAuditsTable />
+        </CardContent>
+      </Card>
+
       <style>{`
         @keyframes blink-red {
           0%, 100% { background-color: transparent; }
@@ -445,6 +460,95 @@ export default function QCAnalyticsDashboard() {
           animation: blink-red 1.5s ease-in-out infinite;
         }
       `}</style>
+    </div>
+  );
+}
+
+function RecentAuditsTable() {
+  const { data: audits, isLoading } = useQuery({
+    queryKey: ["qc-recent-audits"],
+    queryFn: async () => {
+      const res = await api.get("/qc/report");
+      return (res.data || []).slice(0, 10);
+    },
+    staleTime: 30_000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-400" />
+        <span className="ml-3 text-zinc-500 text-xs">Loading audit records...</span>
+      </div>
+    );
+  }
+
+  if (!audits || audits.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-zinc-800 font-black text-xl uppercase tracking-tight italic opacity-20">
+          No audit records yet
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-900 overflow-hidden mx-6 mb-6">
+      <Table>
+        <TableHeader className="bg-zinc-900/50">
+          <TableRow className="border-zinc-900">
+            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Date</TableHead>
+            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Phase</TableHead>
+            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Status</TableHead>
+            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Defect Type</TableHead>
+            <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Inspector</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {audits.map((a: any, i: number) => {
+            const isReject = a.status === "REJECT" || a.status === "FAILED";
+            return (
+              <TableRow key={a.id || i} className="border-zinc-900 hover:bg-white/[0.02]">
+                <TableCell className="text-zinc-400 text-xs font-mono">
+                  {new Date(a.createdAt).toLocaleDateString("id-ID")}
+                </TableCell>
+                <TableCell>
+                  <DnaBadge status="info" className="text-[9px]">
+                    {a.phase || "—"}
+                  </DnaBadge>
+                </TableCell>
+                <TableCell>
+                  <DnaBadge
+                    status={
+                      a.status === "GOOD" || a.status === "PASSED"
+                        ? "success"
+                        : isReject
+                          ? "critical"
+                          : "warning"
+                    }
+                    className="text-[9px]"
+                  >
+                    {a.status === "GOOD" ? "PASSED" : a.status === "REJECT" ? "FAILED" : a.status || "—"}
+                  </DnaBadge>
+                </TableCell>
+                <TableCell className="text-zinc-400 text-xs">
+                  {isReject && a.defectType ? (
+                    <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-[9px] font-mono rounded-none px-2">
+                      {a.defectType}
+                    </Badge>
+                  ) : (
+                    <span className="text-zinc-600">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right text-zinc-400 text-xs">
+                  {a.qc?.fullName || "—"}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }
