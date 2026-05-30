@@ -52,13 +52,6 @@ interface NavGroup {
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
-    label: "MY DASHBOARD",
-    icon: LayoutDashboard,
-    items: [
-      { name: "My Dashboard", href: "/my-dashboard", type: "dashboard" },
-    ]
-  },
-  {
     label: "EXECUTIVE",
     icon: ShieldAlert,
     roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
@@ -208,10 +201,6 @@ const MODULE_STRUCTURE: NavGroup[] = [
 ];
 
 const TIER_STRUCTURE = [
-  {
-    tier: "PERSONAL",
-    groups: ["MY DASHBOARD"]
-  },
   {
     tier: "CORE INTELLIGENCE",
     groups: ["EXECUTIVE", "DIGITAL MARKETING", "BUSSDEV"]

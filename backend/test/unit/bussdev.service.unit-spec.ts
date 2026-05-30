@@ -50,7 +50,7 @@ const mockIdGenerator = { generateId: jest.fn().mockResolvedValue('WO-001') };
 const mockCacheService = { get: jest.fn(), set: jest.fn() };
 const mockScmService = {};
 
-describe.skip('BussdevService — Unit (DI unresolved — CacheService + forwardRef ScmService)', () => {
+describe('BussdevService — Unit (DI unresolved — CacheService + forwardRef ScmService)', () => {
   let service: BussdevService;
 
   beforeAll(async () => {

@@ -36,7 +36,7 @@ describe('DataCard', () => {
         <p>Data</p>
       </DataCard>,
     );
-    expect(container.firstChild).not.toHaveClass('shadow-card');
+    expect(container.firstChild).not.toHaveClass('shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]');
   });
 
   it('applies shadow class by default', () => {
@@ -45,7 +45,7 @@ describe('DataCard', () => {
         <p>Data</p>
       </DataCard>,
     );
-    expect(container.firstChild).toHaveClass('shadow-card');
+    expect(container.firstChild).toHaveClass('shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]');
   });
 
   it('applies custom className', () => {

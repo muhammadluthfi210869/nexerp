@@ -50,7 +50,7 @@ export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProp
 
   return (
     <div
-      className={`bg-white border border-[var(--border-color)] rounded-[24px] p-8 shadow-sm transition-all group overflow-hidden relative flex items-center animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] ${borderClass}`}
+      className={`bg-white border rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in ${borderClass}`}
       style={
         isUnder
           ? { animation: "kpi-pulse-border 2s cubic-bezier(0.22, 1, 0.36, 1) infinite" }

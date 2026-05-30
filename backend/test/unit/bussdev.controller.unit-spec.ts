@@ -80,9 +80,7 @@ describe('BussdevController — Unit', () => {
     it('has correct role decorator', () => {
       const roles = Reflect.getMetadata(
         'roles',
-        BussdevController.prototype.createLead.bind(
-          BussdevController.prototype,
-        ),
+        BussdevController.prototype.createLead,
       );
       expect(roles).toEqual([UserRole.COMMERCIAL, UserRole.SUPER_ADMIN]);
     });
@@ -143,9 +141,7 @@ describe('BussdevController — Unit', () => {
     it('has correct role decorator', () => {
       const roles = Reflect.getMetadata(
         'roles',
-        BussdevController.prototype.advanceLead.bind(
-          BussdevController.prototype,
-        ),
+        BussdevController.prototype.advanceLead,
       );
       expect(roles).toEqual([UserRole.COMMERCIAL, UserRole.SUPER_ADMIN]);
     });
@@ -204,7 +200,7 @@ describe('BussdevController — Unit', () => {
     it('returns all leads', async () => {
       const mockLeads = [{ id: 'L1', clientName: 'Client A' }];
       mockService.getLeads.mockResolvedValue(mockLeads);
-      const result = await controller.getLeads();
+      const result = await controller.getLeads({ user: { id: 'U1' } }, undefined);
       expect(result).toHaveLength(1);
     });
   });
@@ -340,9 +336,7 @@ describe('BussdevController — Unit', () => {
     it('is restricted to SUPER_ADMIN', () => {
       const roles = Reflect.getMetadata(
         'roles',
-        BussdevController.prototype.emergencyOverride.bind(
-          BussdevController.prototype,
-        ),
+        BussdevController.prototype.emergencyOverride,
       );
       expect(roles).toEqual([UserRole.SUPER_ADMIN]);
     });
