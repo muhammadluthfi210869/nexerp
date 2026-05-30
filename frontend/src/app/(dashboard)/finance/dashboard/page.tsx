@@ -5,10 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { 
   TrendingUp, 
+  TrendingDown,
   Wallet, 
   Zap, 
   BarChart3, 
   AlertTriangle,
+  ArrowDownToLine,
   Search,
   CheckCircle2,
   Clock,
@@ -31,7 +33,8 @@ import {
 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, TableWrapper, DataCard, DnaInput, DnaButton, DnaBadge } from "@/components/dna";
+import { TableWrapper, DnaButton, DnaBadge } from "@/components/dna";
+import { KpiCard } from "@/components/dna/KpiCard";
 import { 
   Table, 
   TableBody, 
@@ -111,144 +114,38 @@ export default function FinanceDashboardPage() {
       titleAccent="COMMAND CENTER"
       subtitle="Cash Health, Profit Audit & Real-time Fiscal Pulse"
     >
-      {/* I. EXECUTIVE CARDS - 5 COLUMN RECTANGULAR */}
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6">
-        
-        {/* A. REVENUE & COLLECTION */}
-        <DataCard
-          dotColor="bg-blue-500"
-          title="A. REVENUE & COLLECTION"
-          titleColor="text-slate-900"
-          className="h-[210px] !py-4 !px-5"
-        >
-          <div className="mt-1">
-             <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">TOTAL REVENUE</p>
-             <h2 className="text-[26px] font-black text-slate-900 tracking-tighter tabular leading-none">{fmtShort(metrics?.totalRevenue ?? metrics?.revenue)}</h2>
-          </div>
-
-          <div className="space-y-1.5 mt-auto">
-             <div className="flex justify-between items-center">
-                <span className="text-[7px] font-black text-slate-400 uppercase">COLLECTION RATE</span>
-                <span className="text-[9px] font-black text-emerald-500 tabular">{fmtPct(metrics?.collectionRate)}</span>
-             </div>
-             <div className="h-1 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                <div className="h-full bg-blue-500" style={{ width: `${metrics?.collectionRate || 82.5}%` }} />
-             </div>
-             <div className="flex justify-between items-center pt-0.5">
-                <span className="text-[7px] font-black text-slate-400 uppercase">UNCOLLECTED</span>
-                <span className="text-[9px] font-black text-rose-500 tabular">{fmtShort(metrics?.uncollected)}</span>
-             </div>
-          </div>
-        </DataCard>
-
-        {/* B. EXPENSE CONTROL */}
-        <DataCard
-          dotColor="bg-amber-500"
-          title="B. EXPENSE CONTROL"
-          titleColor="text-slate-900"
-          className="h-[210px] !py-4 !px-5"
-        >
-          <div className="mt-1">
-             <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">TOTAL EXPENSE (MTD)</p>
-             <h2 className="text-[26px] font-black text-amber-500 tracking-tighter tabular leading-none">{fmtShort(metrics?.totalExpense ?? metrics?.expense)}</h2>
-          </div>
-
-          <div className="space-y-1.5 mt-auto">
-             <div className="flex justify-between text-[9px] font-black tabular">
-                <span className="text-slate-400 font-black text-[7px] uppercase">COGS</span>
-                <span>{fmtShort(metrics?.cogs)}</span>
-             </div>
-             <div className="flex justify-between text-[9px] font-black tabular">
-                <span className="text-slate-400 font-black text-[7px] uppercase">OPERATIONAL</span>
-                <span>{fmtShort(metrics?.operational)}</span>
-             </div>
-             <div className="mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100 flex justify-between items-center">
-                <span className="text-[7px] font-black text-slate-400 uppercase">EXPENSE RATIO</span>
-                <span className="text-[9px] font-black text-amber-500 tabular">{fmtPct(metrics?.expenseRatio)}</span>
-             </div>
-          </div>
-        </DataCard>
-
-        {/* C. CASH FLOW HEALTH */}
-        <DataCard
-          dotColor="bg-emerald-500"
-          title="C. CASH FLOW HEALTH"
-          titleColor="text-slate-900"
-          className="h-[210px] !py-4 !px-5 bg-emerald-50/20 border-emerald-100"
-        >
-          <div className="text-center mt-1">
-             <h2 className="text-[26px] font-black text-slate-900 tracking-tighter tabular leading-none">{fmtShort(metrics?.netCashFlow)}</h2>
-             <p className="text-[7px] font-black text-emerald-600 uppercase tracking-widest mt-1 leading-none">NET CASH FLOW (MTD)</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 mt-auto">
-             <div className="bg-white p-2 rounded-xl border border-emerald-100 flex flex-col">
-                <span className="text-[6px] font-black text-slate-400 uppercase">CASH IN</span>
-                <span className="text-[9px] font-black text-emerald-500 tabular">{fmtShort(metrics?.cashIn)}</span>
-             </div>
-             <div className="bg-white p-2 rounded-xl border border-emerald-100 flex flex-col">
-                <span className="text-[6px] font-black text-slate-400 uppercase">CASH OUT</span>
-                <span className="text-[9px] font-black text-rose-500 tabular">{fmtShort(metrics?.cashOut)}</span>
-             </div>
-          </div>
-
-          <div className="text-center pt-1.5 border-t border-emerald-100/30 mt-2">
-             <p className="text-[7px] font-black text-slate-400 uppercase tracking-tighter italic">BALANCE: <span className="text-slate-900">{fmtShort(metrics?.balance ?? metrics?.currentBalance)}</span></p>
-          </div>
-        </DataCard>
-
-        {/* D. PROFITABILITY */}
-        <DataCard
-          dotColor="bg-blue-500"
-          title="D. PROFITABILITY"
-          titleColor="text-slate-900"
-          className="h-[210px] !py-4 !px-5"
-        >
-          <div className="flex justify-between items-end mt-1">
-             <div>
-                <p className="text-[7px] font-black text-slate-400 uppercase leading-none">NET PROFIT</p>
-                <h2 className="text-[22px] font-black text-slate-900 tracking-tighter tabular leading-none mt-1">{fmtShort(metrics?.netProfit)}</h2>
-             </div>
-             <div className="text-right">
-                <p className="text-[7px] font-black text-slate-400 uppercase leading-none">MARGIN</p>
-                <span className="text-[16px] font-black text-blue-500 tabular leading-none">{fmtPct(metrics?.margin)}</span>
-             </div>
-          </div>
-
-          <div className="space-y-1.5 mt-auto pt-2 border-t border-slate-50">
-             <div className="flex justify-between items-center text-[9px] font-black tabular">
-                <span className="text-slate-400 font-black text-[7px] uppercase">GROSS PROFIT</span>
-                <span>{fmtShort(metrics?.grossProfit)}</span>
-             </div>
-             <div className="flex justify-between items-center text-[9px] font-black tabular">
-                <span className="text-slate-400 font-black text-[7px] uppercase">GP MARGIN</span>
-                <span>{fmtPct(metrics?.gpMargin)}</span>
-             </div>
-          </div>
-        </DataCard>
-
-        {/* E. FINANCIAL RISK */}
-        <DataCard
-          dotColor="bg-rose-500"
-          title="E. FINANCIAL RISK"
-          titleColor="text-rose-800"
-          className="h-[210px] !py-4 !px-5 bg-rose-50/20 border-rose-100"
-        >
-          <div className="space-y-2 mt-1">
-             <div className="bg-white p-1.5 rounded-xl border border-rose-100 flex justify-between items-center">
-                <span className="text-[6.5px] font-black text-rose-500 uppercase">OVERDUE A/R</span>
-                <span className="text-[9px] font-black tabular font-mono">{fmtShortJt(metrics?.overdueAR)}</span>
-             </div>
-             <div className="bg-white p-1.5 rounded-xl border border-rose-100 flex justify-between items-center">
-                <span className="text-[6.5px] font-black text-amber-600 uppercase">OVERDUE A/P</span>
-                <span className="text-[9px] font-black tabular font-mono">{fmtShortJt(metrics?.overdueAP)}</span>
-             </div>
-          </div>
-
-          <button className="w-full bg-rose-900 text-white py-2 rounded-lg font-black text-[7.5px] uppercase tracking-tighter leading-tight h-9 mt-auto border-none cursor-pointer hover:bg-rose-950 transition-colors">
-             RISK ALERT<br/>CASH RUNWAY &lt; 3 MONTHS
-          </button>
-        </DataCard>
+      {/* I. EXECUTIVE KPI CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        <KpiCard
+          label="REVENUE"
+          value={formatCurrency(metrics?.totalRevenue ?? metrics?.revenue)}
+          targetPct={82}
+          icon={<DollarSign />}
+        />
+        <KpiCard
+          label="COLLECTION RATE"
+          value={`${metrics?.collectionRate ?? 82.5}%`}
+          targetPct={metrics?.collectionRate ?? 82}
+          icon={<TrendingUp />}
+        />
+        <KpiCard
+          label="EXPENSE RATIO"
+          value={`${metrics?.expenseRatio ?? 45}%`}
+          targetPct={100 - (metrics?.expenseRatio ?? 45)}
+          icon={<ArrowDownToLine />}
+        />
+        <KpiCard
+          label="NET CASH FLOW"
+          value={formatCurrency(metrics?.netCashFlow)}
+          targetPct={(metrics?.netCashFlow ?? 0) > 0 ? 100 : 0}
+          icon={<TrendingDown />}
+        />
+        <KpiCard
+          label="MARGIN"
+          value={`${metrics?.margin ?? 0}%`}
+          targetPct={Math.round((metrics?.margin ?? 0) / 20 * 100)}
+          icon={<AlertTriangle />}
+        />
       </div>
 
       {/* II. TRANSACTION LOG - ULTRA COMPACT TABLE */}

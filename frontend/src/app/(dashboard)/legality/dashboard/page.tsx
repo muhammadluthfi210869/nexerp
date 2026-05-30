@@ -9,11 +9,17 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  ShieldCheck,
+  FileCheck,
+  Beaker,
+  BookOpen,
+  Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { TableWrapper, DataCard, DnaBadge, DnaButton } from "@/components/dna";
+import { KpiCard } from "@/components/dna/KpiCard";
 
 export default function LegalityDashboard() {
   const { data: metrics, isLoading } = useQuery({
@@ -45,145 +51,50 @@ export default function LegalityDashboard() {
       title="LEGALITY & COMPLIANCE"
       subtitle="Regulatory Surveillance & HKI Audit"
     >
-      {/* I. EXECUTIVE CARDS - RECTANGULAR & COMPACT */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-slide-in">
-        
-        {/* A. OVERALL REGISTRATION */}
-        <DataCard
-          dotColor="bg-blue-500"
-          title="A. OVERALL REGISTRATION"
-          titleColor="text-brand-black"
-          className="h-[180px] !py-4 !px-5"
-        >
-          <div className="flex justify-between items-end mt-1">
-            <div>
-              <h2 className="text-[32px] font-black text-brand-black tracking-tighter tabular leading-none">{metrics?.overall?.activeTotal ?? 0}</h2>
-              <p className="text-table-header text-slate-400 uppercase tracking-widest mt-1">ACTIVE TOTAL</p>
-            </div>
-            <div className="text-right">
-              <span className="text-[20px] font-black text-emerald-500 tabular leading-none">{metrics?.overall?.thisMonth ?? 0}</span>
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">THIS MONTH</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 mt-auto">
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-start">
-              <span className="text-[12px] font-black text-brand-black leading-none">{metrics?.overall?.onProgress ?? 0}</span>
-              <span className="text-[7px] font-bold text-slate-400 uppercase mt-1">ON PROGRESS</span>
-            </div>
-            <div className="bg-rose-50/50 p-2 rounded-xl border border-rose-100 flex flex-col items-start">
-              <span className="text-[12px] font-black text-rose-600 leading-none">{metrics?.overall?.delayed ?? 0}</span>
-              <span className="text-[7px] font-bold text-rose-400 uppercase mt-1">DELAYED</span>
-            </div>
-          </div>
-        </DataCard>
-
-        {/* B. BPOM PERFORMANCE */}
-        <DataCard
-          dotColor="bg-emerald-500"
-          title="B. BPOM PERFORMANCE"
-          titleColor="text-emerald-800"
-          className="h-[180px] !py-4 !px-5 bg-emerald-50/10 border-emerald-100"
-        >
-          <div className="flex-1 flex flex-col items-center justify-center -mt-2">
-            <div className="flex items-baseline gap-1">
-              <h2 className="text-[32px] font-black text-brand-black tracking-tighter tabular leading-none">{metrics?.bpomStats?.avgTime?.replace(' Days', '') ?? '0'}</h2>
-              <span className="text-sm font-black text-slate-400">days</span>
-            </div>
-            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-1">AVG PROCESSING TIME</p>
-          </div>
-
-          <div className="space-y-1 pt-2 border-t border-emerald-100/30 mt-auto">
-            <div className="flex justify-between items-center text-[10px] font-black tabular">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">LAB TEST</span>
-              <span>{metrics?.bpomStats?.labTest ?? 0}d</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-black tabular">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">GOV EVAL</span>
-              <span>{metrics?.bpomStats?.govEval ?? 0}d</span>
-            </div>
-          </div>
-        </DataCard>
-
-        {/* C. HKI PERFORMANCE */}
-        <DataCard
-          dotColor="bg-purple-500"
-          title="C. HKI PERFORMANCE"
-          titleColor="text-brand-black"
-          className="h-[180px] !py-4 !px-5"
-        >
-          <div className="flex-1 flex flex-col items-center justify-center -mt-2">
-            <div className="flex items-baseline gap-1">
-              <h2 className="text-[32px] font-black text-brand-black tracking-tighter tabular leading-none">{metrics?.hkiStats?.avgTime?.replace(' Days', '') ?? '0'}</h2>
-              <span className="text-sm font-black text-slate-400">days</span>
-            </div>
-            <p className="text-table-header text-slate-400 uppercase tracking-widest mt-1">AVG PROCESSING TIME</p>
-          </div>
-
-          <div className="space-y-1 pt-2 border-t border-slate-50 mt-auto">
-            <div className="flex justify-between items-center text-[10px] font-black tabular">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">DOC PREP</span>
-              <span>{metrics?.hkiStats?.docPrep ?? 0}d</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-black tabular">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">GOV PROCESS</span>
-              <span>{metrics?.hkiStats?.govProcess ?? 0}d</span>
-            </div>
-          </div>
-        </DataCard>
-
-        {/* D. HALAL CERTIFICATION */}
-        <DataCard
-          dotColor="bg-emerald-700"
-          title="D. HALAL CERTIFICATION"
-          titleColor="text-emerald-800"
-          className="h-[180px] !py-4 !px-5 bg-emerald-50/10 border-emerald-100"
-        >
-          <div className="flex-1 flex flex-col items-center justify-center -mt-2">
-            <div className="flex items-baseline gap-1">
-              <h2 className="text-[32px] font-black text-brand-black tracking-tighter tabular leading-none">{metrics?.halalStats?.activeHalal ?? 0}</h2>
-              <span className="text-sm font-black text-slate-400">active</span>
-            </div>
-            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-1">ACTIVE CERTIFICATION</p>
-          </div>
-
-          <div className="space-y-1 pt-2 border-t border-emerald-100/30 mt-auto">
-            <div className="flex justify-between items-center text-[10px] font-black tabular">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">DRAFT / SUBMITTED</span>
-              <span>{metrics?.halalStats?.draft ?? 0} / {metrics?.halalStats?.submitted ?? 0}</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-black tabular">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">CERTIFIED</span>
-              <span className="text-emerald-600">{metrics?.halalStats?.certified ?? 0}</span>
-            </div>
-          </div>
-        </DataCard>
-
-        {/* E. RISK MONITOR */}
-        <DataCard
-          dotColor="bg-rose-500"
-          title="E. RISK MONITOR"
-          titleColor="text-rose-800"
-          className="h-[180px] !py-4 !px-5 bg-rose-50/20 border-rose-100"
-        >
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-sm flex flex-col">
-              <p className="text-[7px] font-black text-rose-800 uppercase tracking-widest mb-0.5">EXPIRED</p>
-              <p className="text-[18px] font-black text-rose-600 tabular leading-none">{metrics?.riskMonitor?.expired ?? 0}</p>
-            </div>
-            <div className="bg-white p-2 rounded-xl border border-amber-100 shadow-sm flex flex-col">
-              <p className="text-[7px] font-black text-amber-800 uppercase tracking-widest mb-0.5">&lt; 90 DAYS</p>
-              <p className="text-[18px] font-black text-amber-600 tabular leading-none">{metrics?.riskMonitor?.under90Days ?? 0}</p>
-            </div>
-          </div>
-
-          <DnaButton
-            variant="danger"
-            className="w-full h-8 text-[8px] mt-auto font-black bg-rose-900 text-white hover:bg-rose-950 border-none rounded-lg"
-          >
-            CRITICAL ACTION REQUIRED
-          </DnaButton>
-        </DataCard>
+      {/* I. EXECUTIVE CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-slide-in">
+        <KpiCard
+          label="Active Total"
+          value={String(metrics?.overall?.activeTotal ?? 0)}
+          targetPct={50}
+          icon={<ShieldCheck />}
+        />
+        <KpiCard
+          label="Delayed"
+          value={String(metrics?.overall?.delayed ?? 0)}
+          targetPct={(metrics?.overall?.delayed ?? 0) === 0 ? 100 : 0}
+          icon={<Clock />}
+        />
+        <KpiCard
+          label="Expired"
+          value={String(metrics?.riskMonitor?.expired ?? 0)}
+          targetPct={(metrics?.riskMonitor?.expired ?? 0) === 0 ? 100 : 0}
+          icon={<AlertTriangle />}
+        />
+        <KpiCard
+          label="Under 90 Days"
+          value={String(metrics?.riskMonitor?.under90Days ?? 0)}
+          targetPct={(metrics?.riskMonitor?.under90Days ?? 0) === 0 ? 100 : 0}
+          icon={<FileCheck />}
+        />
+        <KpiCard
+          label="BPOM Avg Time"
+          value={`${metrics?.bpomStats?.avgTime?.replace(" Days", "") ?? "0"} days`}
+          targetPct={50}
+          icon={<Beaker />}
+        />
+        <KpiCard
+          label="HKI Avg Time"
+          value={`${metrics?.hkiStats?.avgTime?.replace(" Days", "") ?? "0"} days`}
+          targetPct={50}
+          icon={<BookOpen />}
+        />
+        <KpiCard
+          label="Halal Certified"
+          value={String(metrics?.halalStats?.certified ?? 0)}
+          targetPct={(metrics?.halalStats?.certified ?? 0) > 0 ? 100 : 50}
+          icon={<Award />}
+        />
       </div>
 
       {/* II. HKI TRACKING HUB - ULTRA COMPACT TABLE */}

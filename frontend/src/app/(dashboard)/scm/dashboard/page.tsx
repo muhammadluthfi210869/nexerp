@@ -62,7 +62,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, TableWrapper, DnaBadge, DnaButton, DnaInput, StatCard } from "@/components/dna";
+import { DataCard, TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
+import { KpiCard } from "@/components/dna/KpiCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -241,88 +242,15 @@ export default function ScmDashboardPage() {
       subtitle="Pusat Komando & Audit Kinerja"
     >
       {/* I. SCM STRATEGIC OVERVIEW (Executive Command) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* A. STOCK HEALTH */}
-        <DataCard title="A. STOCK HEALTH" dotColor="bg-rose-500">
-           <div className="flex justify-between items-end">
-              <div>
-                 <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">TOTAL STOCK VALUE</p>
-                 <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Rp 6.8 M</h2>
-              </div>
-              <div className="text-right space-y-1.5 pb-1">
-                 <div className="flex items-center justify-end gap-3">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">EXCESS STOCK</span>
-                    <span className="text-[11px] font-black text-rose-500 tabular tracking-tighter">Rp 450 Jt</span>
-                 </div>
-                 <div className="flex items-center justify-end gap-3">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">DEAD STOCK</span>
-                    <span className="text-[11px] font-black text-slate-900 tabular tracking-tighter">Rp 120 Jt</span>
-                 </div>
-              </div>
-           </div>
-
-           <div className="pt-4 border-t border-slate-50 flex justify-between items-center mt-3">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest italic">TURNOVER AVG</span>
-              <span className="text-[11px] font-black text-blue-600 tabular">18 DAYS</span>
-           </div>
-        </DataCard>
-
-        {/* B. MATERIAL READINESS */}
-        <DataCard title="B. MATERIAL READINESS" dotColor="bg-emerald-500" className="bg-[#f1fdf6]/70 border-emerald-100">
-           <div className="flex-1 flex flex-col items-center justify-center -mt-2">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">92%</h2>
-              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-2">READY TO PRODUCE</p>
-           </div>
-           
-           <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="bg-white p-3 rounded-2xl border border-emerald-100 flex flex-col items-center shadow-sm">
-                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">SHORTAGE</p>
-                 <p className="text-2xl font-black text-rose-500 tabular leading-none">5</p>
-              </div>
-              <div className="bg-rose-50/50 p-3 rounded-2xl border border-rose-100 flex flex-col items-center shadow-sm">
-                 <p className="text-[8px] font-black text-rose-800 uppercase tracking-widest mb-1">MUST BUY</p>
-                 <p className="text-2xl font-black text-rose-600 tabular leading-none">12</p>
-              </div>
-           </div>
-        </DataCard>
-
-        {/* C. COST EFFICIENCY */}
-        <DataCard title="C. COST EFFICIENCY" dotColor="bg-amber-500">
-           <div className="space-y-4 px-1">
-              <div className="flex justify-between items-center">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">AVG VARIANCE</span>
-                 <span className="text-xs font-black text-amber-600 tabular tracking-tighter">+2.4%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">COST SAVING</span>
-                 <span className="text-xs font-black text-emerald-600 tabular tracking-tighter">Rp 85 Jt</span>
-              </div>
-           </div>
-
-           <div className="bg-rose-50/50 p-3.5 rounded-2xl border border-rose-100 flex justify-between items-center mt-6">
-              <p className="text-[9px] font-black text-rose-800 uppercase tracking-widest">OVERPAYING MATERIALS</p>
-              <p className="text-xs font-black text-slate-900 tabular">8 <span className="text-[9px] font-black text-slate-400">ITEMS</span></p>
-           </div>
-        </DataCard>
-
-        {/* D. PURCHASE PERFORMANCE */}
-        <DataCard title="D. PURCHASE PERFORMANCE" dotColor="bg-blue-600">
-           <div className="space-y-5 px-1">
-              <div className="flex justify-between items-center">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">ON-TIME PURCHASE</span>
-                 <span className="text-xs font-black text-blue-700 tabular tracking-tighter">88.5%</span>
-              </div>
-              <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-sm">
-                 <div className="h-full bg-blue-500" style={{ width: '88.5%' }} />
-              </div>
-              <div className="flex justify-between items-center">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">AVG LEAD TIME</span>
-                 <span className="text-xs font-black text-slate-900 tabular tracking-tighter">8.2d</span>
-              </div>
-           </div>
-        </DataCard>
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard label="STOCK VALUE" value="Rp 6.8 M" targetPct={50} subValue="Total Inventory" icon={<Package className="w-4 h-4" />} />
+        <KpiCard label="EXCESS STOCK" value="Rp 450 Jt" targetPct={0} icon={<AlertTriangle className="w-4 h-4" />} />
+        <KpiCard label="DEAD STOCK" value="Rp 120 Jt" targetPct={0} icon={<TrendingDown className="w-4 h-4" />} />
+        <KpiCard label="TURNOVER DAYS" value="18 DAYS" targetPct={18 <= 30 ? 100 : Math.max(0, 100 - (18 - 30) * 5)} icon={<Clock className="w-4 h-4" />} />
+        <KpiCard label="MATERIAL READINESS" value="92%" targetPct={92} icon={<Target className="w-4 h-4" />} />
+        <KpiCard label="SHORTAGE" value="5" targetPct={0} icon={<AlertTriangle className="w-4 h-4" />} />
+        <KpiCard label="COST VARIANCE" value="+2.4%" targetPct={2.4 <= 3 ? 80 : 40} subValue="Rp 85 Jt Saved" icon={<DollarSign className="w-4 h-4" />} />
+        <KpiCard label="ON-TIME PURCHASE" value="88.5%" targetPct={88.5} icon={<Clock className="w-4 h-4" />} />
       </div>
 
       {/* II. WORK ORDER READINESS */}

@@ -2,12 +2,13 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { KpiCard } from "@/components/dna/KpiCard";
 import { cn, formatCurrency } from "@/lib/utils";
 import {
   Users, Activity, Calendar, Target, FlaskConical, TrendingUp,
   CheckCircle2, DollarSign, Timer, Award, RefreshCw, Star,
   AlertTriangle, ArrowUpRight, Factory, XCircle, Percent,
-  BarChart3, Shield
+  BarChart3, Shield, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -52,58 +53,49 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
     const fmt = (n: any) => (n ?? 0).toLocaleString();
     const fmtM = (n: any) => `Rp ${(Number(n || 0) / 1000000).toFixed(1)}M`;
 
+    const contactRate = overview.contactRate || 0;
+    const sampleRate = overview.sampleRate || 0;
+    const dpRate = overview.dpRate || 0;
+    const dealRate = overview.dealRate || 0;
+    const retentionRate = overview.retentionRate || 0;
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Card A - Funnel Overview */}
-        <Card className="bento-card p-8 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
-          <div className="flex items-center gap-3 mb-10">
+        {/* A. FUNNEL OVERVIEW */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 pl-1">
             <div className="flex gap-1.5">
                <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                <div className="w-2.5 h-2.5 rounded-full bg-rose-200" />
             </div>
-            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">A. FUNNEL OVERVIEW</h3>
+            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">A. FUNNEL</h3>
           </div>
-          <div className="space-y-6">
-             <div className="flex justify-between items-center border-b border-slate-50 pb-4">
-                <span className="text-[13px] font-black text-slate-500 uppercase tracking-tight">Total Leads</span>
-                <div className="flex items-center gap-2">
-                   <span className="text-lg font-black text-slate-900 tabular">{fmt(overview.totalLeads)}</span>
-                   <span className="text-[9px] font-black text-emerald-500 uppercase">(Inflow)</span>
-                </div>
-             </div>
-             <div className="space-y-5">
-                {[
-                  { label: "Leads Contacted", val: overview.contactedLeads, pct: overview.contactRate },
-                  { label: "Sample Process", val: overview.sampleProcess, pct: overview.sampleRate },
-                  { label: "DP Received", val: overview.dpReceived, pct: overview.dpRate },
-                  { label: "Deal Confirmed", val: overview.dealConfirmed, pct: overview.dealRate },
-                  { label: "Repeat Order", val: overview.repeatOrder, pct: overview.retentionRate },
-                ].map((item, i) => (
-                  <div key={i} className="flex justify-between items-center group/item">
-                    <span className="text-[12px] font-black text-slate-500 uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">{item.label}</span>
-                    <div className="flex items-center gap-3">
-                       <span className="text-[13px] font-black text-slate-900 tabular">{fmt(item.val)}</span>
-                       <span className="text-[10px] font-black text-emerald-500 uppercase">({item.pct ?? 0}%)</span>
-                    </div>
-                  </div>
-                ))}
-             </div>
+          <div className="space-y-3">
+            <KpiCard label="CONTACT RATE" value={`${contactRate}%`} targetPct={contactRate} icon={<Users className="w-4 h-4" />} />
+            <KpiCard label="SAMPLE RATE" value={`${sampleRate}%`} targetPct={sampleRate} icon={<FlaskConical className="w-4 h-4" />} />
+            <KpiCard label="DP RATE" value={`${dpRate}%`} targetPct={dpRate} icon={<DollarSign className="w-4 h-4" />} />
+            <KpiCard label="DEAL RATE" value={`${dealRate}%`} targetPct={dealRate} icon={<CheckCircle2 className="w-4 h-4" />} />
+            <KpiCard label="RETENTION" value={`${retentionRate}%`} targetPct={retentionRate} icon={<RefreshCw className="w-4 h-4" />} />
           </div>
-        </Card>
- 
-        {/* Card B - Revenue Pipeline */}
-        <Card className="bento-card p-8 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
-          <div className="flex items-center gap-3 mb-10">
+        </div>
+
+        {/* B. REVENUE PIPELINE */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 pl-1">
             <div className="flex gap-1.5">
                <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
                <div className="w-2.5 h-2.5 rounded-full bg-orange-200" />
             </div>
-            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">B. REVENUE PIPELINE</h3>
+            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">B. REVENUE</h3>
           </div>
-          <div>
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">TOTAL PIPELINE VALUE</p>
-            <h2 className="text-[32px] font-black text-slate-900 tabular tracking-tighter mb-10 leading-none">Rp {(Number(revenue.totalPipelineValue || 0) / 1000000).toFixed(1)} M</h2>
-            <div className="space-y-4 pt-8 border-t border-slate-50">
+          <KpiCard
+            label="PIPELINE VALUE"
+            value={`Rp ${(Number(revenue.totalPipelineValue || 0) / 1000000).toFixed(1)} M`}
+            targetPct={50}
+            icon={<DollarSign className="w-4 h-4" />}
+          />
+          <Card className="bento-card p-5 bg-white border-slate-100 shadow-sm rounded-[2rem]">
+            <div className="space-y-3">
                {[
                  { label: "Potential Sample", val: fmtM(revenue.potentialSample) },
                  { label: "Potential Deal", val: fmtM(revenue.potentialDeal) },
@@ -111,72 +103,75 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
                  { label: "Repeat Order Value", val: fmtM(revenue.repeatOrderValue), color: "text-emerald-500" },
                ].map((item, i) => (
                  <div key={i} className="flex justify-between items-center group/item">
-                    <span className="text-[12px] font-black text-slate-500 uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">{item.label}</span>
-                    <span className={cn("text-[13px] font-black tabular", item.color || "text-slate-900")}>{item.val}</span>
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-tight">{item.label}</span>
+                    <span className={cn("text-[12px] font-black tabular", item.color || "text-slate-900")}>{item.val}</span>
                  </div>
                ))}
             </div>
-          </div>
-        </Card>
- 
-        {/* Card C - Activity Performance */}
-        <Card className="bento-card p-8 bg-white border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
-          <div className="flex items-center gap-3 mb-10">
+          </Card>
+        </div>
+
+        {/* C. ACTIVITY PERFORMANCE */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 pl-1">
             <div className="flex gap-1.5">
                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
                <div className="w-2.5 h-2.5 rounded-full bg-orange-400" />
             </div>
-            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">C. ACTIVITY PERFORMANCE</h3>
+            <h3 className="text-[12px] font-black text-brand-black uppercase tracking-[0.1em]">C. ACTIVITY</h3>
           </div>
-          <div className="space-y-12">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-yellow-50/60 rounded-2xl p-5 border border-yellow-100 flex flex-col items-start">
-                <p className="text-[10px] font-black text-yellow-800 uppercase leading-tight mb-2">FOLLOW-UP<br/>TODAY</p>
-                <span className="text-3xl font-black text-slate-900 tabular tracking-tighter leading-none">{fmt(activity.followUpToday)}</span>
-              </div>
-              <div className="bg-emerald-50/60 rounded-2xl p-5 border border-emerald-100 flex flex-col items-start">
-                <p className="text-[10px] font-black text-emerald-800 uppercase leading-tight mb-2">AVG RESPONSE<br/>TIME</p>
-                <div className="flex items-baseline gap-0.5">
-                   <span className="text-3xl font-black text-slate-900 tabular tracking-tighter leading-none">{(activity.avgResponse ?? 0).toFixed(1)}</span>
-                   <span className="text-[12px] font-black text-slate-900">h</span>
-                </div>
-              </div>
+          <KpiCard
+            label="AVG RESPONSE"
+            value={`${(activity.avgResponse ?? 0).toFixed(1)}h`}
+            targetPct={(activity.avgResponse ?? 99) <= 2 ? 100 : 50}
+            icon={<Clock className="w-4 h-4" />}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-yellow-50/60 rounded-2xl p-5 border border-yellow-100 flex flex-col items-start">
+              <p className="text-[10px] font-black text-yellow-800 uppercase leading-tight mb-2">FOLLOW-UP<br/>TODAY</p>
+              <span className="text-2xl font-black text-slate-900 tabular tracking-tighter leading-none">{fmt(activity.followUpToday)}</span>
             </div>
-            <div className="space-y-4">
-               <div className="flex justify-between items-end">
-                  <span className="text-[12px] font-black text-slate-500 uppercase tracking-tight">Active Leads</span>
-                  <span className="text-[16px] font-black text-slate-900 tabular">{fmt(activity.activeLeads)}</span>
-               </div>
-               <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${Math.min(100, (activity.activeLeads || 0) / 5)}%` }} />
-               </div>
+            <div className="bg-slate-50/60 rounded-2xl p-5 border border-slate-100 flex flex-col items-start">
+              <p className="text-[10px] font-black text-slate-500 uppercase leading-tight mb-2">ACTIVE<br/>LEADS</p>
+              <span className="text-2xl font-black text-slate-900 tabular tracking-tighter leading-none">{fmt(activity.activeLeads)}</span>
             </div>
           </div>
-        </Card>
- 
-        {/* Card D - Critical Alert */}
-        <Card className="bento-card p-8 bg-[#FFF5F5] border-rose-100 shadow-sm flex flex-col justify-between group hover:shadow-xl transition-all duration-500 rounded-[2rem]">
-          <div className="flex items-center gap-3 mb-10">
+        </div>
+
+        {/* D. CRITICAL ALERTS */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 pl-1">
             <div className="flex gap-1.5">
                <div className="w-2.5 h-2.5 rounded-full bg-rose-600" />
                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
             </div>
-            <h3 className="text-[12px] font-black text-rose-800 uppercase tracking-[0.1em]">D. CRITICAL ALERT</h3>
+            <h3 className="text-[12px] font-black text-rose-800 uppercase tracking-[0.1em]">D. ALERTS</h3>
           </div>
-          <div className="space-y-2.5">
-            {[
-              { label: "Unfollowed Leads", val: alerts.unfollowedLeads },
-              { label: "Stuck Samples (>14d)", val: alerts.stuckSamples },
-              { label: "Stuck Negotiation", val: alerts.stuckNego },
-              { label: "At Risk Clients", val: alerts.atRiskClients },
-            ].map((item, i) => (
-              <div key={i} className="flex justify-between items-center py-4 px-6 bg-white rounded-xl border border-rose-100/50 hover:border-rose-200 transition-all shadow-sm">
-                 <span className="text-[11px] font-black text-slate-600 uppercase tracking-tight">{item.label}</span>
-                 <span className="text-lg font-black text-rose-600 tabular">{fmt(item.val)}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+          <KpiCard
+            label="UNFOLLOWED LEADS"
+            value={`${fmt(alerts.unfollowedLeads)}`}
+            targetPct={(alerts.unfollowedLeads ?? 1) === 0 ? 100 : 0}
+            icon={<AlertTriangle className="w-4 h-4" />}
+          />
+          <KpiCard
+            label="STUCK SAMPLES"
+            value={`${fmt(alerts.stuckSamples)}`}
+            targetPct={(alerts.stuckSamples ?? 1) === 0 ? 100 : 0}
+            icon={<FlaskConical className="w-4 h-4" />}
+          />
+          <KpiCard
+            label="AT RISK CLIENTS"
+            value={`${fmt(alerts.atRiskClients)}`}
+            targetPct={(alerts.atRiskClients ?? 1) === 0 ? 100 : 0}
+            icon={<XCircle className="w-4 h-4" />}
+          />
+          {alerts.stuckNego != null && (
+            <div className="flex justify-between items-center py-3 px-5 bg-white rounded-xl border border-rose-100/50 shadow-sm">
+              <span className="text-[10px] font-black text-slate-600 uppercase">STUCK NEGO</span>
+              <span className="text-base font-black text-rose-600 tabular">{fmt(alerts.stuckNego)}</span>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

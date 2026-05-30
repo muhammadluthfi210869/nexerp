@@ -15,11 +15,13 @@ import {
   Route,
   Layers,
   Zap,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { DnaBadge, DnaButton, TableWrapper } from "@/components/dna";
+import { KpiCard } from "@/components/dna/KpiCard";
 
 const LEVEL_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   fatal: { icon: ShieldAlert, color: "text-red-600", bg: "bg-red-50", label: "Fatal" },
@@ -79,34 +81,29 @@ export default function ErrorDashboardPage() {
     >
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-6">
-        <StatCard
+        <KpiCard
           label="Total Errors"
-          value={summary?.totalErrors || 0}
-          icon={<ShieldAlert className="w-5 h-5" />}
-          color="text-red-600"
-          bg="bg-red-50"
+          value={String(summary.totalErrors)}
+          targetPct={summary.totalErrors === 0 ? 100 : Math.max(0, 100 - summary.totalErrors * 2)}
+          icon={<AlertTriangle />}
         />
-        <StatCard
+        <KpiCard
           label="Critical"
-          value={summary?.criticalErrors || 0}
-          icon={<Zap className="w-5 h-5" />}
-          color="text-rose-600"
-          bg="bg-rose-50"
+          value={String(summary.criticalErrors)}
+          targetPct={summary.criticalErrors === 0 ? 100 : 0}
+          icon={<Zap />}
         />
-        <StatCard
+        <KpiCard
           label="Unique Routes"
-          value={summary?.byRoute?.length || 0}
-          icon={<Route className="w-5 h-5" />}
-          color="text-indigo-600"
-          bg="bg-indigo-50"
+          value={String(summary.byRoute?.length || 0)}
+          targetPct={50}
+          icon={<Globe />}
         />
-        <StatCard
-          label="Last {hours}h"
-          value={hours}
-          icon={<Clock className="w-5 h-5" />}
-          color="text-slate-600"
-          bg="bg-slate-50"
-          suffix="hrs"
+        <KpiCard
+          label={`Last ${hours}h`}
+          value={String(hours)}
+          targetPct={50}
+          icon={<Clock />}
         />
       </div>
 
@@ -259,28 +256,5 @@ export default function ErrorDashboardPage() {
         </table>
       </TableWrapper>
     </DashboardShell>
-  );
-}
-
-function StatCard({ label, value, icon, color, bg, suffix }: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
-  bg: string;
-  suffix?: string;
-}) {
-  return (
-    <Card className="p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:translate-y-[-2px] transition-all duration-300">
-      <div className="flex items-center justify-between">
-        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", bg)}>
-          <span className={color}>{icon}</span>
-        </div>
-                        <span className="text-3xl font-black text-slate-900 tracking-tighter tabular-nums">
-          {value}{suffix && <span className="text-sm text-slate-400 ml-1">{suffix}</span>}
-        </span>
-      </div>
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-4">{label}</p>
-    </Card>
   );
 }

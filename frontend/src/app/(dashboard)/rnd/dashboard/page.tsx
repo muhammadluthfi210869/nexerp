@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2, Plus, TestTube, ClipboardCheck, Dna, Binary } from "lucide-react";
+import { Loader2, Plus, TestTube, ClipboardCheck, Dna, Binary, Clock, CheckCircle2, FlaskConical, TrendingUp, AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { FormulaBuilder } from "@/components/rnd/formula-builder";
 import { DnaButton } from "@/components/dna";
+import { KpiCard } from "@/components/dna/KpiCard";
 
 
 export default function RndExecutiveDashboard() {
@@ -149,91 +150,43 @@ export default function RndExecutiveDashboard() {
         {/* TAB 1 — EXECUTIVE DASHBOARD                 */}
         {/* ════════════════════════════════════════════ */}
         <TabsContent value="executive">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            <div className="rounded-xl p-4 border border-slate-100 shadow-sm bg-white flex flex-col justify-between min-h-[180px]">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">A. TIMELINESS</p>
-              </div>
-              <div className="bg-slate-50/50 rounded-lg p-2.5 flex flex-col items-center justify-center mb-2">
-                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">ON-TIME SAMPLE RATE</p>
-                <p className="text-2xl font-black text-emerald-500 tabular tracking-tighter leading-none">{metrics?.timeliness?.onTimeRate ?? 85.4}%</p>
-              </div>
-              <div className="flex justify-between items-end border-t border-slate-50 pt-1.5">
-                <div>
-                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest leading-none">AVG CYCLE</p>
-                  <p className="text-[11px] font-black text-slate-900 uppercase">{metrics?.timeliness?.avgCycleTime ?? 4.2} <span className="text-[7px] text-slate-400">DAYS</span></p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest leading-none">OVERDUE</p>
-                  <p className="text-[11px] font-black text-rose-500 uppercase">{metrics?.timeliness?.overdueCount ?? 3} <span className="text-[7px]">SAMPLES</span></p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4 border border-slate-100 shadow-sm bg-white flex flex-col justify-between min-h-[180px]">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">B. ACCURACY</p>
-              </div>
-              <div className="bg-slate-50/50 rounded-lg p-2.5 flex flex-col items-center justify-center mb-2">
-                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">FIRST-TIME APPROVAL</p>
-                <p className="text-2xl font-black text-blue-600 tabular tracking-tighter leading-none">{metrics?.accuracy?.firstTimeApprovalRate ?? 72.1}%</p>
-              </div>
-              <div className="flex justify-between items-end border-t border-slate-50 pt-1.5">
-                <div>
-                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest leading-none">AVG REVISION</p>
-                  <p className="text-[11px] font-black text-slate-900 uppercase">{metrics?.accuracy?.avgRevision ?? 1.4} <span className="text-[7px] text-slate-400">x</span></p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest leading-none">FAILED</p>
-                  <p className="text-[11px] font-black text-rose-500 uppercase">{metrics?.accuracy?.failedItemsCount ?? 5} <span className="text-[7px]">ITEMS</span></p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4 border border-slate-100 shadow-sm bg-white flex flex-col justify-between min-h-[180px]">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">C. APPROVAL PERFORMANCE</p>
-              </div>
-              <div className="flex flex-col items-center justify-center flex-1 py-1">
-                <p className="text-2xl font-black text-slate-900 tabular tracking-tighter leading-none">{metrics?.approval?.overallRate ?? 84.4}%</p>
-                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">OVERALL APPROVAL RATE</p>
-              </div>
-              <div className="bg-amber-50/50 border border-amber-100/50 rounded-lg p-2 flex justify-between items-center">
-                <div className="text-center flex-1 border-r border-amber-100/50">
-                  <p className="text-[7px] font-black text-amber-600 uppercase">SUBMITTED</p>
-                  <p className="text-sm font-black text-slate-900 tabular leading-none">{metrics?.approval?.submitted ?? 45}</p>
-                </div>
-                <div className="text-center flex-1">
-                  <p className="text-[7px] font-black text-amber-600 uppercase">APPROVED</p>
-                  <p className="text-sm font-black text-slate-900 tabular leading-none">{metrics?.approval?.approved ?? 38}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4 border border-slate-100 shadow-sm bg-white flex flex-col justify-between min-h-[180px]">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">D. R&D PERFORMANCE</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <div className="bg-blue-50 rounded-lg p-2">
-                  <p className="text-[6px] font-black text-blue-600 uppercase mb-0.5">ACTIVE PRKT</p>
-                  <p className="text-base font-black text-slate-900 tabular leading-none">{metrics?.performance?.activeProjects ?? 12}</p>
-                </div>
-                <div className="bg-emerald-50 rounded-lg p-2">
-                  <p className="text-[6px] font-black text-emerald-600 uppercase mb-0.5">COMPLETED</p>
-                  <p className="text-base font-black text-slate-900 tabular leading-none">{metrics?.performance?.completedProjects ?? 28}</p>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">UTILIZATION RATE</p>
-                  <p className="text-[8px] font-black text-slate-900 leading-none">{metrics?.performance?.utilizationRate ?? 92}%</p>
-                </div>
-                <div className="h-1 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                  <div className="h-full bg-blue-600 rounded-full" style={{ width: `${metrics?.performance?.utilizationRate ?? 92}%` }} />
-                </div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+            <KpiCard
+              label="ON-TIME RATE"
+              value={`${metrics?.timeliness?.onTimeRate ?? 85.4}%`}
+              targetPct={metrics?.timeliness?.onTimeRate ?? 85}
+              icon={<Clock />}
+            />
+            <KpiCard
+              label="FIRST-TIME APPROVAL"
+              value={`${metrics?.accuracy?.firstTimeApprovalRate ?? 72.1}%`}
+              targetPct={metrics?.accuracy?.firstTimeApprovalRate ?? 72}
+              icon={<CheckCircle2 />}
+            />
+            <KpiCard
+              label="OVERALL APPROVAL"
+              value={`${metrics?.approval?.overallRate ?? 84.4}%`}
+              targetPct={metrics?.approval?.overallRate ?? 84}
+              icon={<FlaskConical />}
+            />
+            <KpiCard
+              label="UTILIZATION"
+              value={`${metrics?.performance?.utilizationRate ?? 92}%`}
+              targetPct={metrics?.performance?.utilizationRate ?? 92}
+              icon={<TrendingUp />}
+            />
+            <KpiCard
+              label="OVERDUE"
+              value={String(metrics?.timeliness?.overdueCount ?? 3)}
+              targetPct={(metrics?.timeliness?.overdueCount ?? 3) === 0 ? 100 : 0}
+              icon={<AlertTriangle />}
+            />
+            <KpiCard
+              label="FAILED ITEMS"
+              value={String(metrics?.accuracy?.failedItemsCount ?? 5)}
+              targetPct={(metrics?.accuracy?.failedItemsCount ?? 5) === 0 ? 100 : Math.max(0, 100 - (metrics?.accuracy?.failedItemsCount ?? 5) * 20)}
+              icon={<X />}
+            />
           </div>
 
           <div className="space-y-3">

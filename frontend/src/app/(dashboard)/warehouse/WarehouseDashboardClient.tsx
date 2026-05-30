@@ -10,10 +10,14 @@ import {
    ChevronRight,
    Zap,
    Clock,
-   Beaker
+   Beaker,
+   Warehouse,
+   Target,
+   Layers,
+   RefreshCw
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { StatCard } from "@/components/dna/StatCard";
+import { KpiCard } from "@/components/dna/KpiCard";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 
 interface WarehouseDashboardClientProps {
@@ -42,29 +46,45 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
    const audit = initialAudit || {};
    return (
       <div className="flex flex-col gap-[2rem]">
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <StatCard
-               label="CAPACITY & ACCURACY"
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KpiCard
+               label="CAPACITY"
                value={`${stats.capacity?.utility || '0'}%`}
-               subValue={`Accuracy ${typeof stats.capacity?.accuracy === 'number' ? stats.capacity.accuracy.toFixed(1) : '0'}% • FIFO ${stats.capacity?.fifoScore || '0.0'}/10`}
-               icon={<Box className="w-4 h-4" />}
+               targetPct={Number(stats.capacity?.utility) || 0}
+               subValue="Space Utilization"
+               icon={<Warehouse className="w-4 h-4" />}
             />
-            <StatCard
+            <KpiCard
+               label="ACCURACY"
+               value={`${typeof stats.capacity?.accuracy === 'number' ? stats.capacity.accuracy.toFixed(1) : '0'}%`}
+               targetPct={stats.capacity?.accuracy || 0}
+               icon={<Target className="w-4 h-4" />}
+            />
+            <KpiCard
+               label="FIFA SCORE"
+               value={`${stats.capacity?.fifoScore || '0.0'}/10`}
+               targetPct={(Number(stats.capacity?.fifoScore) || 0) * 10}
+               icon={<Layers className="w-4 h-4" />}
+            />
+            <KpiCard
                label="VALUATION AUDIT"
                value={`Rp ${(Number(stats.valuation?.total || 0) >= 1000 ? (Number(stats.valuation?.total || 0) / 1000).toFixed(2) + ' T' : Number(stats.valuation?.total || 0).toFixed(2) + ' B').replace('.', ',')}`}
+               targetPct={50}
                subValue="Total Inventory Value"
                icon={<DollarSign className="w-4 h-4" />}
             />
-            <StatCard
-               label="TURNOVER & HEALTH"
+            <KpiCard
+               label="TURNOVER"
                value={`${stats.turnover?.ratio || '0'}x`}
+               targetPct={stats.turnover?.health || 0}
                subValue={`Health ${stats.turnover?.health || 0}%`}
-               icon={<TrendingUp className="w-4 h-4" />}
+               icon={<RefreshCw className="w-4 h-4" />}
             />
-            <StatCard
-               label="RISK ANALYTICS"
-               value={`Rp ${(stats.risk?.deadStock || 0).toLocaleString().replace(/,/g, '.')}`}
-               subValue={`${stats.risk?.criticalItems || 0} Items Critical`}
+            <KpiCard
+               label="RISK"
+               value={`${stats.risk?.criticalItems || 0}`}
+               targetPct={(stats.risk?.criticalItems ?? 0) === 0 ? 100 : 0}
+               subValue="Items Critical"
                icon={<ShieldAlert className="w-4 h-4" />}
             />
          </div>
