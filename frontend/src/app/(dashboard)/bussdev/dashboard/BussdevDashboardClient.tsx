@@ -30,30 +30,7 @@ export default function BussdevDashboardClient() {
   const lostData = dashboard?.lostChurn;
 
   return (
-    <div className="space-y-8 animate-fade-slide-in">
-      {/* 🚀 I. BUSINESS DEVELOPMENT COMMAND HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">SALES INTELLIGENCE ACTIVE</span>
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">
-            DIVISI PENGEMBANGAN <span className="text-slate-300">BISNIS</span>
-          </h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">(Pusat Komando Pertumbuhan)</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden md:block">
-            <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">PIPELINE VELOCITY</p>
-            <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">OPTIMIZED PERFORMANCE</p>
-          </div>
-          <div className="flex items-center gap-2 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-            <span className="text-[10px] font-black text-slate-900 uppercase">LIVE SYNC</span>
-          </div>
-        </div>
-      </div>
+    <>
       <DashboardCards variant="dashboard" data={dashboard} />
 
       {/* 📊 II & III. PERFORMANCE & CHURN MATRIX */}
@@ -173,7 +150,7 @@ export default function BussdevDashboardClient() {
       </div>
 
       <StageConfirmDialog isOpen={isActionModalOpen} onOpenChange={setIsActionModalOpen} lead={selectedLead} targetStage="" />
-    </div>
+    </>
   );
 }
 

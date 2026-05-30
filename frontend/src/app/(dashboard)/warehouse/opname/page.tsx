@@ -17,10 +17,9 @@ import {
   ShieldCheck,
   Trash2
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatCard } from "@/components/dna/StatCard";
+import { StatCard, DashboardCard } from "@/components/dna";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { 
@@ -141,9 +140,9 @@ export default function StockOpnamePage() {
                const totalDiff = session.items?.reduce((sum: number, i: any) => sum + Number(i.difference || 0), 0) || 0;
                const isDraft = session.status === 'DRAFT';
                return (
-                  <Card key={session.id} className={cn(
-                     "bento-card overflow-hidden group transition-all duration-500",
-                     isDraft ? "bg-brand-black text-white border-amber-500/20" : "bg-white border-slate-100"
+                  <DashboardCard key={session.id} className={cn(
+                     "overflow-hidden !p-0",
+                     isDraft ? "!bg-brand-black text-white !border-amber-500/20" : ""
                   )}>
                      <div className="p-8 space-y-8">
                         <div className="flex justify-between items-start">
@@ -198,7 +197,7 @@ export default function StockOpnamePage() {
                            </div>
                         )}
                      </div>
-                  </Card>
+                  </DashboardCard>
                );
             })}
          </div>
@@ -206,7 +205,7 @@ export default function StockOpnamePage() {
 
       {/* 🛠️ IV. ADVANCED AUDIT TOOLS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-         <Card className="bento-card p-10 bg-white group relative overflow-hidden">
+         <DashboardCard className="!p-10 relative overflow-hidden">
             <div className="relative z-10 flex items-center gap-8">
                <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:rotate-6 transition-transform">
                   <FileSpreadsheet className="h-10 w-10 text-slate-300 group-hover:text-amber-500 transition-colors" />
@@ -218,9 +217,9 @@ export default function StockOpnamePage() {
                </div>
             </div>
             <Zap className="h-40 w-40 text-slate-50 absolute -right-10 -bottom-10 group-hover:scale-110 transition-transform duration-1000" />
-         </Card>
+         </DashboardCard>
 
-         <Card className="bento-card p-10 bg-white group relative overflow-hidden">
+         <DashboardCard className="!p-10 relative overflow-hidden">
             <div className="relative z-10 flex items-center gap-8">
                <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:-rotate-6 transition-transform">
                   <Barcode className="h-10 w-10 text-slate-300 group-hover:text-indigo-500 transition-colors" />
@@ -232,7 +231,7 @@ export default function StockOpnamePage() {
                </div>
             </div>
             <ClipboardCheck className="h-40 w-40 text-slate-50 absolute -right-10 -bottom-10 group-hover:scale-110 transition-transform duration-1000" />
-         </Card>
+         </DashboardCard>
       </div>
 
       {/* PIN Approval Dialog */}

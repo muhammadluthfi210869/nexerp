@@ -10,7 +10,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard } from "@/components/dna/StatCard";
+import { StatCard, DashboardCard } from "@/components/dna";
 import { DataCard } from "@/components/dna/DataCard";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { DnaBadge } from "@/components/dna/DnaBadge";
@@ -31,7 +31,6 @@ import {
   Search,
   ChevronRight,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -112,7 +111,7 @@ export default function StokPage() {
             <StatCard label="Unique Categories" value={String(new Set(catalog?.map((i: any) => i.category?.name).filter(Boolean)).size || 0)} subValue="Material Types" icon={<Package />} />
           </div>
 
-          <Card className="bg-white border-slate-200 p-4 rounded-[1.5rem] mb-6 flex gap-4 items-center shadow-sm">
+          <DashboardCard className="!p-4 !rounded-[1.5rem] mb-6 flex items-center gap-4">
             <Warehouse className="w-4 h-4 text-slate-400" />
             <Select value={warehouseFilter} onValueChange={(v) => v && setWarehouseFilter(v)}>
               <SelectTrigger className="w-64 bg-slate-50 border-slate-200 rounded-xl h-[46px] text-[10px] font-black uppercase italic tracking-widest">
@@ -125,7 +124,7 @@ export default function StokPage() {
                 ))}
               </SelectContent>
             </Select>
-          </Card>
+          </DashboardCard>
 
           <TableWrapper>
             <div className="overflow-x-auto">
@@ -222,9 +221,9 @@ export default function StokPage() {
               const isDraft = session.status === 'DRAFT';
               const totalDiff = session.items?.reduce((sum: number, i: any) => sum + Number(i.difference || 0), 0) || 0;
               return (
-                <Card key={session.id} className={cn(
-                  "bento-card overflow-hidden group transition-all duration-500",
-                  isDraft ? "bg-brand-black text-white border-amber-500/20" : "bg-white border-slate-100"
+                <DashboardCard key={session.id} className={cn(
+                  "overflow-hidden !p-0",
+                  isDraft ? "!bg-brand-black text-white !border-amber-500/20" : ""
                 )}>
                   <div className="p-8 space-y-8">
                     <div className="flex justify-between items-start">
@@ -262,7 +261,7 @@ export default function StokPage() {
                       </div>
                     )}
                   </div>
-                </Card>
+          </DashboardCard>
               );
             })}
             {(!opnames || opnames.length === 0) && (
@@ -328,7 +327,7 @@ export default function StokPage() {
             <StatCard label="Capacity Util" value="78%" subValue="Current Load" icon={<Map />} />
           </div>
 
-          <Card className="bento-card overflow-hidden bg-white">
+          <DashboardCard className="overflow-hidden !p-0">
             <div className="p-10 text-center">
               <div className="h-64 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center">
                 <Map className="h-16 w-16 text-slate-300 mb-4" />
@@ -336,7 +335,7 @@ export default function StokPage() {
                 <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-2">Interactive warehouse map will be rendered here</p>
               </div>
             </div>
-          </Card>
+          </DashboardCard>
         </TabsContent>
       </Tabs>
     </DashboardShell>

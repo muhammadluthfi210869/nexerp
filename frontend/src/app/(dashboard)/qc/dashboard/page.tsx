@@ -16,6 +16,7 @@ import {
   Activity, AlertTriangle, FlaskConical, Clock,
   AlertCircle, Target, DollarSign, Package, ShieldCheck
 } from "lucide-react";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---
 interface QCStats {
@@ -105,16 +106,8 @@ export default function QCAnalyticsDashboard() {
   const { data: phaseBreakdown } = useQuery({ queryKey: ["qc-phase-breakdown"], queryFn: fetchPhaseBreakdown });
 
   return (
-    <div className="p-10 space-y-10 animate-in fade-in duration-1000 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-5xl font-black tracking-tighter text-white uppercase italic">QC Analytics</h1>
-          <p className="text-zinc-500 font-sans text-sm uppercase tracking-tight mt-2">
-            <span className="text-emerald-500 animate-pulse">●</span> Quality Intelligence Dashboard
-          </p>
-        </div>
-      </div>
+    <DashboardShell title="QC" titleAccent="Dashboard" subtitle="Quality analytics, phase breakdown, defect tracking, and vendor monitoring.">
+      <div className="space-y-10">
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -459,8 +452,9 @@ export default function QCAnalyticsDashboard() {
         .blink-red {
           animation: blink-red 1.5s ease-in-out infinite;
         }
-      `}</style>
-    </div>
+      `}        </style>
+      </div>
+    </DashboardShell>
   );
 }
 

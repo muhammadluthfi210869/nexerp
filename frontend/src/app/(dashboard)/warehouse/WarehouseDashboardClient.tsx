@@ -106,18 +106,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
    };
 
    return (
-      <div className="view-section active" style={{ paddingBottom: "10rem", background: "#F8FAFC", minHeight: "100vh" }}>
-         {/* HEADER */}
-         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2.5rem" }}>
-            <div>
-               <h2 className="dashboard-title" style={{ marginBottom: "0.25rem" }}>WHAREHOUSE AUDIT COMMAND</h2>
-               <p style={{ fontSize: "12px", color: "#64748B", fontWeight: 500 }}>Zero-Scroll Geometric Audit Protocol v7.0</p>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-               <div style={{ background: "#E2E8F0", padding: "6px 12px", borderRadius: "12px", fontSize: "10px", fontWeight: 950 }}>AUTO-SYNC: ACTIVE</div>
-               <div style={{ background: "#1E293B", color: "white", padding: "6px 12px", borderRadius: "12px", fontSize: "10px", fontWeight: 950 }}>LEVEL: EXECUTIVE</div>
-            </div>
-         </div>
+      <>
 
          {/* I. EXECUTIVE KPI CARDS (4 COLUMNS GRID) */}
          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem", marginBottom: "3rem" }}>
@@ -625,6 +614,6 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
 
          </div>
 
-      </div>
+      </>
    );
 }
