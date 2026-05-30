@@ -21,10 +21,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DataCard } from "@/components/dna/DataCard";
+import { DnaButton } from "@/components/dna/DnaButton";
+import { DnaInput } from "@/components/dna/DnaInput";
 import {
   Dialog,
   DialogContent,
@@ -410,11 +410,11 @@ export default function QCWorkbenchPage() {
                 Step Log ID
               </span>
             </div>
-            <Input
+            <DnaInput
               value={stepLogId}
               onChange={(e) => setStepLogId(e.target.value)}
               placeholder="Auto from URL or paste here..."
-              className="max-w-md h-10 rounded-xl bg-slate-50 border border-[var(--border-color)] font-medium text-sm"
+              className="max-w-md h-10 font-medium text-sm"
             />
           </div>
         </div>
@@ -422,28 +422,26 @@ export default function QCWorkbenchPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main: Parameter Inputs */}
           <div className="lg:col-span-2 space-y-8">
-            <Card className="border border-[var(--border-color)] shadow-sm rounded-2xl bg-white overflow-hidden">
-              <CardHeader className="p-6 border-b border-slate-50 bg-slate-50/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white border border-[var(--border-color)] flex items-center justify-center shadow-sm">
-                      {React.createElement(PHASES.find((p) => p.id === activePhase)!.icon, {
-                        className: "h-5 w-5 text-slate-700",
-                      })}
-                    </div>
-                    <div>
-                      <CardTitle className="text-sm font-black uppercase tracking-tight">
-                        {activePhase} Inspection
-                      </CardTitle>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                        {PHASES.find((p) => p.id === activePhase)!.description}
-                      </p>
-                    </div>
+            <DataCard className="overflow-hidden">
+              <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between -mx-8 -mt-8 mb-0" style={{ marginLeft: -32, marginRight: -32, marginTop: -32 }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-[var(--border-color)] flex items-center justify-center shadow-sm">
+                    {React.createElement(PHASES.find((p) => p.id === activePhase)!.icon, {
+                      className: "h-5 w-5 text-slate-700",
+                    })}
                   </div>
-                  <DnaBadge status="info">{activePhase}</DnaBadge>
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-tight">
+                      {activePhase} Inspection
+                    </h3>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                      {PHASES.find((p) => p.id === activePhase)!.description}
+                    </p>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
+                <DnaBadge status="info">{activePhase}</DnaBadge>
+              </div>
+              <div className="space-y-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activePhase}
@@ -526,34 +524,35 @@ export default function QCWorkbenchPage() {
                     )}
                   </motion.div>
                 </AnimatePresence>
-              </CardContent>
-            </Card>
+              </div>
+            </DataCard>
 
             {/* Action Buttons */}
             <div className="flex gap-4">
-              <Button
+              <DnaButton
                 onClick={handleReject}
                 disabled={auditMutation.isPending}
-                variant="outline"
-                className="flex-1 h-16 rounded-2xl border-2 border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 font-black uppercase text-xs tracking-widest transition-all"
+                variant="danger"
+                className="flex-1 h-16 rounded-2xl text-xs tracking-widest"
               >
                 <XCircle className="h-5 w-5" />
                 Reject / NCR
-              </Button>
-              <Button
+              </DnaButton>
+              <DnaButton
                 onClick={handleHold}
                 disabled={auditMutation.isPending}
                 variant="outline"
-                className="h-16 rounded-2xl border-2 border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300 font-black uppercase text-xs tracking-widest transition-all px-6"
+                className="h-16 rounded-2xl border-2 border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300 tracking-widest px-6"
               >
                 <PauseCircle className="h-5 w-5" />
                 HOLD
-              </Button>
-              <Button
+              </DnaButton>
+              <DnaButton
                 onClick={handlePass}
                 disabled={auditMutation.isPending || !hasAllPass}
+                variant="primary"
                 className={cn(
-                  "flex-[2] h-16 rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-lg",
+                  "flex-[2] h-16 rounded-2xl text-sm tracking-widest shadow-lg",
                   hasAllPass
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 hover:scale-[1.02]"
                     : "bg-slate-100 text-slate-400 cursor-not-allowed"
@@ -561,22 +560,18 @@ export default function QCWorkbenchPage() {
               >
                 <CheckCircle2 className="h-5 w-5" />
                 {auditMutation.isPending ? "Submitting..." : "PASS & Sign Off"}
-              </Button>
+              </DnaButton>
             </div>
           </div>
 
           {/* Sidebar: Summary */}
           <div className="space-y-6">
-            <Card className="border border-[var(--border-color)] shadow-sm rounded-2xl bg-white">
-              <CardHeader className="p-5 border-b border-slate-50">
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-slate-400" />
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Parameter Summary
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-5 space-y-3">
+            <DataCard
+              title="Parameter Summary"
+              dotColor="bg-slate-400"
+              className="space-y-3"
+              noShadow
+            >
                 {getParameters().map((param, i) => (
                   <div
                     key={i}
@@ -609,20 +604,17 @@ export default function QCWorkbenchPage() {
                     {hasAllPass ? "ALL PASS" : "FAIL DETECTED"}
                   </DnaBadge>
                 </div>
-              </CardContent>
-            </Card>
+            </DataCard>
 
-            <Card className="border border-[var(--border-color)] shadow-sm rounded-2xl bg-slate-900 text-white overflow-hidden relative">
+            <DataCard
+              title="Audit Info"
+              dotColor="bg-emerald-400"
+              titleColor="text-white/60"
+              className="bg-slate-900 text-white overflow-hidden relative"
+              noShadow
+            >
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-16 -mt-16" />
-              <CardHeader className="p-5 border-b border-white/10 relative">
-                <div className="flex items-center gap-2">
-                  <Hash className="h-4 w-4 text-emerald-400" />
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-white/60">
-                    Audit Info
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-5 space-y-4 relative">
+              <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Stage</span>
                   <DnaBadge status="info" className="text-[8px]">{activePhase}</DnaBadge>
@@ -642,8 +634,8 @@ export default function QCWorkbenchPage() {
                     "All QC data is timestamped and encrypted. Audit trail is immutable once submitted."
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </DataCard>
           </div>
         </div>
       </div>
@@ -670,11 +662,11 @@ export default function QCWorkbenchPage() {
           <div className="p-6 space-y-5">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Reject Quantity (pcs)</Label>
-              <Input
+              <DnaInput
                 type="number"
                 value={rejectQty}
                 onChange={(e) => setRejectQty(Number(e.target.value))}
-                className="h-12 rounded-xl border-slate-200 font-bold text-lg"
+                className="h-12 font-bold text-lg"
                 min={0}
               />
             </div>
@@ -710,20 +702,21 @@ export default function QCWorkbenchPage() {
             </div>
           </div>
           <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-            <Button
+            <DnaButton
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
               className="flex-1 h-12 rounded-xl font-bold"
             >
               Cancel
-            </Button>
-            <Button
+            </DnaButton>
+            <DnaButton
+              variant="primary"
               onClick={handleConfirmHold}
               disabled={auditMutation.isPending || !rejectCause}
-              className="flex-1 h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-lg shadow-amber-200"
+              className="flex-1 h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200"
             >
               {auditMutation.isPending ? "Submitting..." : "Confirm HOLD"}
-            </Button>
+            </DnaButton>
           </div>
         </DialogContent>
       </Dialog>
