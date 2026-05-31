@@ -20,7 +20,7 @@ import {
   Building2,
   Package
 } from "lucide-react";
-import { DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
+import { DnaBadge, DnaButton, StatCard, KpiCard, TableWrapper } from "@/components/dna";
 import { 
   Table, 
   TableBody, 
@@ -75,8 +75,8 @@ export default function VendorPerformancePage() {
     >
       {/* High Level Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <StatCard label="Kualitas Rata-rata" value={`${avgQuality}%`} subValue={`${avgQuality > 90 ? '+2.4%' : '-1.2%'} vs Kuartal Lalu`} icon={<ShieldCheck className="text-emerald-500" />} />
-         <StatCard label="Kepatuhan Pengiriman" value={`${avgDelivery}%`} subValue={`${avgDelivery > 85 ? '+1.8%' : '-2.1%'} vs Kuartal Lalu`} icon={<Clock className="text-amber-500" />} />
+         <KpiCard label="Kualitas Rata-rata" value={`${avgQuality}%`} targetPct={avgQuality} icon={<ShieldCheck className="text-emerald-500" />} />
+         <KpiCard label="Kepatuhan Pengiriman" value={`${avgDelivery}%`} targetPct={avgDelivery} icon={<Clock className="text-amber-500" />} />
          <StatCard label="Optimalisasi Biaya" value={`Rp ${(avgScore * 1000000).toLocaleString()}`} subValue="+8.5% vs Kuartal Lalu" icon={<DollarSign className="text-blue-500" />} />
          <StatCard label="Eksposur Risiko" value={avgScore > 80 ? "RENDAH" : "SEDANG"} subValue={avgScore > 80 ? "STABIL" : "WASPADA"} icon={<Zap className="text-blue-500" />} />
       </div>

@@ -132,22 +132,22 @@ export default function MarketingDashboardClient() {
   });
 
   // Dynamic values or fallback
-  const revenueVal = data?.acquisition?.revenue ? formatRupiah(data.acquisition.revenue) : "Rp 3.24 M";
+  const revenueVal = data?.acquisition?.revenue ? formatRupiah(data.acquisition.revenue) : "—";
   const revenueTargetPercent = data?.acquisition?.revenue
     ? Math.min(Math.round((data.acquisition.revenue / 4500000000) * 100), 100)
-    : 72;
-  const clientAcqVal = data?.acquisition?.clientsAcquired ? String(data.acquisition.clientsAcquired) : "42";
-  const avgCpaVal = data?.acquisition?.avgCpa ? formatRupiah(data.acquisition.avgCpa) : "Rp 1.4M";
+    : 0;
+  const clientAcqVal = data?.acquisition?.clientsAcquired ? String(data.acquisition.clientsAcquired) : "—";
+  const avgCpaVal = data?.acquisition?.avgCpa ? formatRupiah(data.acquisition.avgCpa) : "—";
 
-  const leadsQualifiedVal = data?.funnel?.leadsQualified ? formatNumber(data.funnel.leadsQualified) : "1,240";
-  const leadToSampleRateVal = data?.funnel?.leadToSampleRate ? `${data.funnel.leadToSampleRate}%` : "45%";
-  const prospectsVal = data?.funnel?.prospects ? String(data.funnel.prospects) : "84";
-  const closingRateVal = data?.funnel?.closingRate ? `${data.funnel.closingRate}%` : "64.2%";
+  const leadsQualifiedVal = data?.funnel?.leadsQualified ? formatNumber(data.funnel.leadsQualified) : "—";
+  const leadToSampleRateVal = data?.funnel?.leadToSampleRate ? `${data.funnel.leadToSampleRate}%` : "—";
+  const prospectsVal = data?.funnel?.prospects ? String(data.funnel.prospects) : "—";
+  const closingRateVal = data?.funnel?.closingRate ? `${data.funnel.closingRate}%` : "—";
 
-  const totalAdSpendVal = data?.budget?.totalAdSpend ? formatRupiah(data.budget.totalAdSpend) : "Rp 342.5 Jt";
-  const budgetUsagePercentVal = data?.budget?.budgetUsagePercent ? `${Math.round(data.budget.budgetUsagePercent)}%` : "68%";
-  const costPerLeadVal = data?.budget?.costPerLead ? formatRupiah(data.budget.costPerLead) : "Rp 28k";
-  const costPerSampleVal = data?.budget?.costPerSample ? formatRupiah(data.budget.costPerSample) : "Rp 145k";
+  const totalAdSpendVal = data?.budget?.totalAdSpend ? formatRupiah(data.budget.totalAdSpend) : "—";
+  const budgetUsagePercentVal = data?.budget?.budgetUsagePercent ? `${Math.round(data.budget.budgetUsagePercent)}%` : "—";
+  const costPerLeadVal = data?.budget?.costPerLead ? formatRupiah(data.budget.costPerLead) : "—";
+  const costPerSampleVal = data?.budget?.costPerSample ? formatRupiah(data.budget.costPerSample) : "—";
 
   // Trends
   const rawLeadsTrend = data?.trends?.map((t: any) => t.leads as number);
@@ -155,27 +155,22 @@ export default function MarketingDashboardClient() {
   const rawClosingTrend = data?.trends?.map((t: any) => t.closing as number);
   const rawCpaTrend = data?.trends?.map((t: any) => t.cpa as number);
 
-  const leadsTrend = scaleTrendData(rawLeadsTrend, [40, 55, 45, 78, 85, 60, 95, 110, 90, 120, 130, 140]);
-  const cplTrend = scaleTrendData(rawCplTrend, [120, 110, 105, 95, 80, 85, 70, 65, 75, 70, 60, 55]);
-  const closingTrend = scaleTrendData(rawClosingTrend, [60, 65, 82, 75, 95, 88, 70, 95, 110, 85, 120, 135]);
-  const cpaTrend = scaleTrendData(rawCpaTrend, [140, 130, 125, 115, 100, 105, 90, 85, 95, 90, 80, 75]);
+  const leadsTrend = scaleTrendData(rawLeadsTrend, []);
+  const cplTrend = scaleTrendData(rawCplTrend, []);
+  const closingTrend = scaleTrendData(rawClosingTrend, []);
+  const cpaTrend = scaleTrendData(rawCpaTrend, []);
 
   // Product performance
-  const productPerformance = data?.productPerformance || [
-    { cat: "SKINCARE - SERUM ACTIVE", leads: 450, sample: 42, deal: 18 },
-    { cat: "BODYCARE - BRIGHTENING LOTION", leads: 320, sample: 28, deal: 12 },
-    { cat: "HAIRCARE - ANTI FALL SHAMPOO", leads: 180, sample: 15, deal: 5 },
-    { cat: "COSMETIC - MATTE LIPSTICK", leads: 290, sample: 36, deal: 14 }
-  ];
+  const productPerformance = data?.productPerformance || [];
 
   // Vitality & Platform específicos
-  const disciplinePostsVal = data?.vitality?.totalPosts ? String(data.vitality.totalPosts) : "24";
-  const disciplineTargetVal = data?.vitality?.postTarget ? String(data.vitality.postTarget) : "30";
+  const disciplinePostsVal = data?.vitality?.totalPosts ? String(data.vitality.totalPosts) : "—";
+  const disciplineTargetVal = data?.vitality?.postTarget ? String(data.vitality.postTarget) : "—";
   const disciplineProgressVal = data?.vitality?.totalPosts && data?.vitality?.postTarget
     ? Math.round((data.vitality.totalPosts / data.vitality.postTarget) * 100)
-    : 80;
-  const erRateVal = data?.vitality?.avgEngagement ? `${data.vitality.avgEngagement.toFixed(1)}%` : "4.2%";
-  const followersVal = data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "18.4K";
+    : 0;
+  const erRateVal = data?.vitality?.avgEngagement ? `${data.vitality.avgEngagement.toFixed(1)}%` : "—";
+  const followersVal = data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "—";
   const engLikes = data?.vitality?.engagementByType?.likes ?? 0;
   const engComments = data?.vitality?.engagementByType?.saves ?? 0;
   const engShares = data?.vitality?.engagementByType?.shares ?? 0;
@@ -186,26 +181,26 @@ export default function MarketingDashboardClient() {
     INSTAGRAM: {
       color: "#E1306C",
       icon: Globe,
-      growth: "+63.6%",
-      followers: data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "18.4K"
+      growth: "—",
+      followers: "—"
     },
     FACEBOOK: {
       color: "#1877F2",
       icon: Globe,
-      growth: "+14.1%",
-      followers: "2,580"
+      growth: "—",
+      followers: "—"
     },
     YOUTUBE: {
       color: "#FF0000",
       icon: Globe,
-      growth: "+28.7%",
-      followers: "1,450"
+      growth: "—",
+      followers: "—"
     },
     TIKTOK: {
       color: "#000000",
       icon: Music,
-      growth: "+25.4%",
-      followers: "6,800"
+      growth: "—",
+      followers: "—"
     }
   };
 
@@ -213,10 +208,10 @@ export default function MarketingDashboardClient() {
   const SelectedPlatformIcon = selectedPlatformInfo.icon;
 
   // Search visibility
-  const searchImpressions = data?.searchVisibility?.impressions ? formatNumber(data.searchVisibility.impressions) : "2.4M";
-  const searchClicks = data?.searchVisibility?.clicks ? formatNumber(data.searchVisibility.clicks) : "185.3K";
-  const searchCtr = data?.searchVisibility?.avgCtr ? `${data.searchVisibility.avgCtr}%` : "7.7%";
-  const searchPosition = data?.searchVisibility?.avgPosition ? String(data.searchVisibility.avgPosition) : "4.2";
+  const searchImpressions = data?.searchVisibility?.impressions ? formatNumber(data.searchVisibility.impressions) : "—";
+  const searchClicks = data?.searchVisibility?.clicks ? formatNumber(data.searchVisibility.clicks) : "—";
+  const searchCtr = data?.searchVisibility?.avgCtr ? `${data.searchVisibility.avgCtr}%` : "—";
+  const searchPosition = data?.searchVisibility?.avgPosition ? String(data.searchVisibility.avgPosition) : "—";
 
   return (
     <div
@@ -842,11 +837,7 @@ export default function MarketingDashboardClient() {
             VII. TOP 5 CONTENT LEADERS
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {[
-              { name: "Day in Life: Formula R&D Perfection", eng: "12.4%" },
-              { name: "Serum Brightening: Before vs After", eng: "10.2%" },
-              { name: "Founder Insights: Brand Scalability", eng: "15.6%" },
-            ].map((item, idx) => (
+            {(data?.topContent || []).map((item: any, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -858,9 +849,9 @@ export default function MarketingDashboardClient() {
                   borderRadius: "12px",
                 }}
               >
-                <span style={{ fontSize: "12px", fontWeight: 800 }}>{item.name}</span>
+                <span style={{ fontSize: "12px", fontWeight: 800 }}>{item.title}</span>
                 <span style={{ fontSize: "11px", fontWeight: 950, color: "#10B981" }}>
-                  {item.eng} ER
+                  {item.engagement}% ER
                 </span>
               </div>
             ))}
@@ -880,11 +871,7 @@ export default function MarketingDashboardClient() {
             VIII. RANKING SUMBER LEADS
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {[
-              { p: "Linktree", c: "450" },
-              { p: "Instagram", c: "320" },
-              { p: "TikTok", c: "280" },
-            ].map((item, idx) => (
+            {(data?.leadSourceRanking || []).map((item: any, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -897,9 +884,9 @@ export default function MarketingDashboardClient() {
                   border: "1px solid #E9D5FF",
                 }}
               >
-                <span style={{ fontSize: "11px", fontWeight: 950 }}>{item.p}</span>
+                <span style={{ fontSize: "11px", fontWeight: 950 }}>{item.name}</span>
                 <span style={{ fontSize: "12px", fontWeight: 950, color: "#5B21B6" }}>
-                  {item.c} Leads
+                  {item.leads}
                 </span>
               </div>
             ))}

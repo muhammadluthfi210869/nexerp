@@ -20,9 +20,16 @@ export default function BussdevDashboardClient() {
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const { data: granularData } = useGranularData();
 
-  const { data: dashboard } = useQuery({
+  const { data: dashboard, isLoading: dashLoading } = useQuery({
     queryKey: ["dashboardAnalytics"],
     queryFn: async () => (await api.get("/bussdev/dashboard")).data,
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+
+  const { data: staffPerformance, isLoading: staffLoading } = useQuery({
+    queryKey: ["staffPerformance"],
+    queryFn: async () => (await api.get("/bussdev/analytics/staff-performance")).data,
     staleTime: 30000,
     refetchInterval: 60000,
   });
@@ -55,41 +62,37 @@ export default function BussdevDashboardClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {[
-                    { name: "Andi Pratama", leads: 450, fu: 1240, crSmpl: 26, crDeal: 18, clsSmpl: 117, clsNew: 81, clsRo: 42, rev: "3.24M", status: "MELAMPAUI TARGET" },
-                    { name: "Citra Kirana", leads: 320, fu: 980, crSmpl: 29, crDeal: 15, clsSmpl: 92, clsNew: 48, clsRo: 28, rev: "2.15M", status: "SESUAI TARGET" },
-                    { name: "Budi Santoso", leads: 180, fu: 420, crSmpl: 12, crDeal: 8, clsSmpl: 22, clsNew: 14, clsRo: 5, rev: "0.85M", status: "BAWAH TARGET" },
-                  ].map((staff) => (
-                    <tr key={staff.name} className="group hover:bg-slate-50/50 transition-all cursor-default border-b border-slate-50">
+                  {(staffPerformance || []).map((s: any) => (
+                    <tr key={s.name} className="group hover:bg-slate-50/50 transition-all cursor-default border-b border-slate-50">
                       <td className="px-6 py-4">
-                        <p className="text-xs font-black text-slate-900 uppercase">{staff.name}</p>
+                        <p className="text-xs font-black text-slate-900 uppercase">{s.name}</p>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-slate-900 tabular">{staff.leads}</span>
+                        <span className="text-xs font-black text-slate-900 tabular">{s.leads}</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-slate-900 tabular">{staff.fu}</span>
+                        <span className="text-xs font-black text-slate-900 tabular">{s.followUp}</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-blue-600 tabular">{staff.crSmpl}%</span>
+                        <span className="text-xs font-black text-blue-600 tabular">{parseFloat(s.crSample).toFixed(1)}%</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-blue-600 tabular">{staff.crDeal}%</span>
+                        <span className="text-xs font-black text-blue-600 tabular">{parseFloat(s.crDeal).toFixed(1)}%</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-slate-900 tabular">{staff.clsSmpl}</span>
+                        <span className="text-xs font-black text-slate-900 tabular">{s.clsSample}</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-slate-900 tabular">{staff.clsNew} JT</span>
+                        <span className="text-xs font-black text-slate-900 tabular">{Math.round(s.clsNewClient / 1_000_000)} JT</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-xs font-black text-slate-900 tabular">{staff.clsRo} JT</span>
+                        <span className="text-xs font-black text-slate-900 tabular">{Math.round(s.clsRO / 1_000_000)} JT</span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <p className="text-xs font-black text-slate-900 tabular">Rp {staff.rev}</p>
+                        <p className="text-xs font-black text-slate-900 tabular">Rp {(s.actualRevenue / 1_000_000).toFixed(2)}M</p>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <StatusBadge status={staff.status} />
+                        <StatusBadge status={s.status} />
                       </td>
                     </tr>
                   ))}
@@ -107,18 +110,14 @@ export default function BussdevDashboardClient() {
               <span className="text-[9px] font-black text-rose-600 uppercase">LOST VALUE</span>
             </div>
             <div className="divide-y divide-slate-100 bg-white">
-              {[
-                { brand: "Nature Glow", reason: "Price", bd: "Andi P.", val: "250Jt" },
-                { brand: "Zen Skin", reason: "Sample", bd: "Budi S.", val: "120Jt" },
-                { brand: "Aqua Pure", reason: "Ghosting", bd: "Andi P.", val: "450Jt" },
-              ].map((l, i) => (
+              {(lostData || []).map((l: any, i: number) => (
                 <div key={i} className="px-6 py-4 flex justify-between items-center group hover:bg-rose-50/10 transition-all cursor-default border-b border-slate-50 last:border-none">
                   <div className="space-y-0.5">
                     <p className="text-xs font-black text-slate-900 uppercase group-hover:text-rose-600 transition-colors">{l.brand}</p>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{l.reason} ({l.bd})</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-rose-600 tabular tracking-tighter">Rp {l.val}</p>
+                    <p className="text-xs font-black text-rose-600 tabular tracking-tighter">Rp {l.lostValue >= 1_000_000 ? `${(l.lostValue / 1_000_000).toFixed(0)}Jt` : l.lostValue.toLocaleString()}</p>
                   </div>
                 </div>
               ))}

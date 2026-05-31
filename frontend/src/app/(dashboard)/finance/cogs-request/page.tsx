@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { 
   Calculator, 
   History, 
   Eye, 
   Search, 
-  Calendar, 
   Boxes,
   ShieldAlert,
   CheckCircle2,
@@ -15,9 +16,9 @@ import {
   Save,
   FileText,
   PieChart,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { TableWrapper, StatCard, DataCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
@@ -58,7 +59,31 @@ export default function COGSRequestPrototype() {
     setCurrentMoq("");
   };
 
-  const filteredRequests = STATIC_HPP_REQUESTS.filter((req) => {
+  const { data: hppRequests = [], isLoading: hppLoading } = useQuery<any[]>({
+    queryKey: ["cogs-hpp-requests"],
+    queryFn: async () => {
+      try {
+        const resp = await api.get("/finance/cogs-requests");
+        return resp.data;
+      } catch {
+        return STATIC_HPP_REQUESTS;
+      }
+    },
+  });
+
+  const { data: samples = {}, isLoading: samplesLoading } = useQuery({
+    queryKey: ["rnd-samples-for-cogs"],
+    queryFn: async () => {
+      try {
+        const resp = await api.get("/rnd/samples");
+        return resp.data;
+      } catch {
+        return MOCK_SAMPLES;
+      }
+    },
+  });
+
+  const filteredRequests = hppRequests.filter((req: any) => {
     const term = searchTerm.toLowerCase();
     return (
       req.pelanggan.toLowerCase().includes(term) ||
@@ -161,7 +186,13 @@ export default function COGSRequestPrototype() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.length === 0 ? (
+                {hppLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-4 py-12 text-center">
+                      <Loader2 className="w-5 h-5 text-slate-400 animate-spin mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ) : filteredRequests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
                       Tidak ada data yang cocok dengan pencarian Anda
@@ -292,9 +323,15 @@ export default function COGSRequestPrototype() {
                     className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider focus:outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer"
                   >
                     <option value="">— SELECT APPROVED SAMPLE —</option>
-                    <option value="Sample-A">SSI-001 | Anti-Aging Serum</option>
-                    <option value="Sample-B">SSI-005 | Brightening Day Cream</option>
-                    <option value="Sample-C">SSI-006 | Niacinamide Toner</option>
+                    {samplesLoading ? (
+                      <option disabled>Loading...</option>
+                    ) : (
+                      <>
+                        <option value="Sample-A">SSI-001 | Anti-Aging Serum</option>
+                        <option value="Sample-B">SSI-005 | Brightening Day Cream</option>
+                        <option value="Sample-C">SSI-006 | Niacinamide Toner</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -303,19 +340,19 @@ export default function COGSRequestPrototype() {
                     <div className="space-y-0.5">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Product Name</p>
                       <p className="font-black text-slate-900 text-[11px] uppercase italic">
-                        {MOCK_SAMPLES[selectedSample as keyof typeof MOCK_SAMPLES]?.name}
+                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.name}
                       </p>
                     </div>
                     <div className="space-y-0.5 text-left md:text-center">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Netto / Size</p>
                       <p className="font-black text-slate-900 text-[11px] uppercase">
-                        {MOCK_SAMPLES[selectedSample as keyof typeof MOCK_SAMPLES]?.netto}
+                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.netto}
                       </p>
                     </div>
                     <div className="space-y-0.5 text-left md:text-right">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Current Formula</p>
                       <DnaBadge status="purple">
-                        {MOCK_SAMPLES[selectedSample as keyof typeof MOCK_SAMPLES]?.formula} {MOCK_SAMPLES[selectedSample as keyof typeof MOCK_SAMPLES]?.revision}
+                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.formula} {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.revision}
                       </DnaBadge>
                     </div>
                   </div>

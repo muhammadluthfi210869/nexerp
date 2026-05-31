@@ -75,63 +75,6 @@ import {
 } from "@/components/ui/sheet";
 
 
-interface ScmDashboardData {
-  cards: {
-    inventory: {
-      accuracy: number;
-      totalSku: number;
-      criticalStock: number;
-      insight: string;
-    };
-    procurement: {
-      leadTime: number;
-      supplierPerf: number;
-      savingPercent: number;
-      insight: string;
-    };
-    warehouse: {
-      putawaySpeed: string;
-      fulfillment: number;
-      returnRate: number;
-      insight: string;
-    };
-    logistics: {
-      shippingPerUnit: number;
-      damageRate: string;
-      otd: number;
-      insight: string;
-    };
-  };
-  tables: {
-    reconciliation: Array<{
-      sku: string;
-      name: string;
-      systemStock: number;
-      actualStock: number;
-      variance: number;
-      lastAudit: string;
-      status: string;
-    }>;
-    procurementTracker: Array<{
-      poId: string;
-      vendor: string;
-      item: string;
-      poDate: string;
-      recvDate: string;
-      leadTime: number;
-      quality: string;
-    }>;
-    expirationWatch: Array<{
-      sku: string;
-      batch: string;
-      expDate: string;
-      daysRemaining: number;
-      value: number;
-      action: string;
-    }>;
-  };
-}
-
 interface DashStats {
   cards: {
     inventory: { accuracy: number; totalSku: number; criticalStock: number; insight: string };
@@ -194,14 +137,6 @@ export default function ScmDashboardPage() {
     }
   });
 
-  const { data: dashboard, isLoading } = useQuery<ScmDashboardData>({
-    queryKey: ["scm-executive-dashboard"],
-    queryFn: async () => {
-      const res = await api.get("/scm/dashboard");
-      return unwrapResponse(res);
-    },
-  });
-
   const { data: dashStats, isLoading: statsLoading } = useQuery<DashStats>({
     queryKey: ["scm-dashboard-stats"],
     queryFn: async () => {
@@ -226,7 +161,43 @@ export default function ScmDashboardPage() {
     ) || [];
   }, [workOrders, searchTerm]);
 
-  if (isLoading || statsLoading || woLoading) {
+  const shortageCount = dashStats?.procurementSuggestions?.filter(p => p.priority === 'URGENT').length || 0;
+  const mustBuyCount = dashStats?.procurementSuggestions?.length || 0;
+
+  const avgOtd = (arr: any[]) => arr?.length ? Math.round(arr.reduce((sum, s) => sum + (s.otd || 0), 0) / arr.length) : null;
+
+  const perfScore = [
+    { label: "SCM GENERAL", key: null as any[] | null, color: "#1E293B" },
+    { label: "BAHAN BAKU (RAW)", key: dashStats?.tables?.perfRaw, color: "#EF4444" },
+    { label: "BAHAN KEMAS (PACK)", key: dashStats?.tables?.perfPack, color: "#10B981" },
+    { label: "BOX AUDIT", key: dashStats?.tables?.perfBox, color: "#78350F" },
+    { label: "LABEL ACCURACY", key: dashStats?.tables?.perfLabel, color: "#8B5CF6" },
+  ];
+
+  const velocityCategories = useMemo(() => {
+    const hf = dashStats?.highFrequency;
+    const entries = [
+      { key: 'raw' as const, label: "BAHAN BAKU (RAW)", color: "#EF4444", icon: Droplets },
+      { key: 'pack' as const, label: "BAHAN KEMAS (PACK)", color: "#F59E0B", icon: Box },
+      { key: 'box' as const, label: "BOX & CARDBOARD", color: "#78350F", icon: Package },
+      { key: 'label' as const, label: "LABEL AUDIT", color: "#8B5CF6", icon: Tag },
+    ];
+    return entries.map(({ key, label, color, icon }) => {
+      const items = hf?.[key] || [];
+      const fast = items.filter((i: any) => i.freq > 5).length;
+      const ontime = items.filter((i: any) => i.freq >= 2 && i.freq <= 5).length;
+      const late = items.filter((i: any) => i.freq === 1).length;
+      const pending = items.filter((i: any) => i.freq === 0).length;
+      const activeCount = items.filter((i: any) => i.freq > 0).length;
+      const score = items.length ? Math.round((activeCount / items.length) * 100) : 0;
+      const status = score >= 90 ? "FAST" : score >= 70 ? "STABLE" : "DELAYED";
+      const arrival = `${score}% READY`;
+      const pulse = score >= 70 ? "#10B981" : score >= 50 ? "#F59E0B" : "#EF4444";
+      return { label, color, icon, score, status, pulse, stats: { fast, ontime, late, pending }, arrival };
+    });
+  }, [dashStats?.highFrequency]);
+
+  if (statsLoading || woLoading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center gap-6 bg-base">
         <div className="h-16 w-16 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
@@ -250,21 +221,21 @@ export default function ScmDashboardPage() {
             <p className="font-black text-[11px] text-slate-900 tracking-[0.05em] uppercase">A. STOCK HEALTH</p>
           </div>
           <div className="mb-4">
-            <p className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider margin-0">TOTAL STOCK VALUE</p>
-            <p className="font-black text-2xl text-slate-900 mt-1 mb-2">Rp 6.8 M</p>
+            <p className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider margin-0">TOTAL ACTIVE SKU</p>
+            <p className="font-black text-2xl text-slate-900 mt-1 mb-2">{dashStats?.cards.inventory.totalSku ?? "—"}</p>
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex justify-between">
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase">EXCESS STOCK</span>
-              <span className="text-[11px] font-black text-rose-600">Rp 450 Jt</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">CRITICAL STOCK</span>
+              <span className="text-[11px] font-black text-rose-600">{dashStats?.cards.inventory.criticalStock ?? "—"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[10px] font-extrabold text-slate-500 uppercase">DEAD STOCK</span>
-              <span className="text-[11px] font-black text-slate-900">Rp 120 Jt</span>
+              <span className="text-[11px] font-black text-slate-900">—</span>
             </div>
             <div className="flex justify-between pt-1.5 border-t border-slate-100 mt-1">
-              <span className="text-[10px] font-extrabold text-blue-600 uppercase">TURNOVER AVG</span>
-              <span className="text-[11px] font-black text-blue-600">18 DAYS</span>
+              <span className="text-[10px] font-extrabold text-blue-600 uppercase">FULFILLMENT</span>
+              <span className="text-[11px] font-black text-blue-600">{dashStats?.cards.warehouse.fulfillment ?? "—"}%</span>
             </div>
           </div>
         </div>
@@ -276,17 +247,17 @@ export default function ScmDashboardPage() {
             <p className="font-black text-[11px] text-emerald-800 tracking-[0.05em] uppercase">B. MATERIAL READINESS</p>
           </div>
           <div className="text-center mb-5">
-            <p className="font-black text-3xl text-slate-900 m-0">92%</p>
-            <p className="font-extrabold text-[9px] text-emerald-800 m-0">READY TO PRODUCE</p>
+            <p className="font-black text-3xl text-slate-900 m-0">{dashStats?.cards.inventory.accuracy ?? "—"}%</p>
+            <p className="font-extrabold text-[9px] text-emerald-800 m-0">INVENTORY ACCURACY</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
               <p className="text-[8px] font-extrabold text-slate-500 m-0">SHORTAGE</p>
-              <p className="text-sm font-black text-rose-500 m-0">5</p>
+              <p className="text-sm font-black text-rose-500 m-0">{shortageCount}</p>
             </div>
             <div className="bg-rose-50 p-2.5 rounded-xl border border-rose-200">
               <p className="text-[8px] font-extrabold text-rose-800 m-0">MUST BUY</p>
-              <p className="text-sm font-black text-rose-600 m-0">12</p>
+              <p className="text-sm font-black text-rose-600 m-0">{mustBuyCount}</p>
             </div>
           </div>
         </div>
@@ -299,16 +270,16 @@ export default function ScmDashboardPage() {
           </div>
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase">AVG VARIANCE</span>
-              <span className="text-[12px] font-black text-amber-500">+2.4%</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">SAVING %</span>
+              <span className="text-[12px] font-black text-emerald-500">{dashStats?.cards.procurement.savingPercent ?? "—"}%</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-extrabold text-slate-500 uppercase">COST SAVING</span>
-              <span className="text-[12px] font-black text-emerald-500">Rp 85 Jt</span>
+              <span className="text-[12px] font-black text-emerald-500">—</span>
             </div>
             <div className="bg-rose-50 p-2.5 rounded-xl border border-rose-100">
-              <p className="text-[8px] font-extrabold text-rose-800 m-0">OVERPAYING MATERIALS</p>
-              <p className="text-sm font-black text-slate-900 m-0 mt-0.5">8 <span className="text-[9px] font-bold">ITEMS</span></p>
+              <p className="text-[8px] font-extrabold text-rose-800 m-0">PENDING PROCUREMENT</p>
+              <p className="text-sm font-black text-slate-900 m-0 mt-0.5">{mustBuyCount} <span className="text-[9px] font-bold">ITEMS</span></p>
             </div>
           </div>
         </div>
@@ -321,15 +292,15 @@ export default function ScmDashboardPage() {
           </div>
           <div className="flex flex-col gap-2.5">
             <div className="flex justify-between">
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase">ON-TIME PURCHASE</span>
-              <span className="text-[12px] font-black text-blue-700">88.5%</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">ON-TIME DELIVERY</span>
+              <span className="text-[12px] font-black text-blue-700">{dashStats?.cards.logistics.otd ?? "—"}%</span>
             </div>
             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500" style={{ width: "88.5%" }} />
+              <div className="h-full bg-blue-500" style={{ width: `${dashStats?.cards.logistics.otd ?? 0}%` }} />
             </div>
             <div className="flex justify-between mt-1">
               <span className="text-[10px] font-extrabold text-slate-500 uppercase">AVG LEAD TIME</span>
-              <span className="text-[12px] font-black text-slate-900">8.2d</span>
+              <span className="text-[12px] font-black text-slate-900">{dashStats?.cards.procurement.leadTime ?? "—"}d</span>
             </div>
           </div>
         </div>
@@ -338,20 +309,20 @@ export default function ScmDashboardPage() {
         <div className="macro-card">
           <div className="flex items-center gap-2 mb-5">
             <ShieldCheck className="w-4 h-4 text-purple-500" />
-            <p className="font-black text-[11px] text-slate-900 tracking-[0.05em] uppercase">E. COST SAVINGS</p>
+            <p className="font-black text-[11px] text-slate-900 tracking-[0.05em] uppercase">E. SUPPLIER QUALITY</p>
           </div>
           <div className="mb-3">
-            <p className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider m-0">TOTAL SAVINGS (MTD)</p>
-            <p className="font-black text-2xl text-purple-600 mt-1 mb-2">Rp 215 Jt</p>
+            <p className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider m-0">SUPPLIER PERF. SCORE</p>
+            <p className="font-black text-2xl text-purple-600 mt-1 mb-2">{dashStats?.cards.procurement.supplierPerf ?? "—"}%</p>
           </div>
           <div className="flex flex-col gap-2.5">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase">NEGOTIATION WIN</span>
-              <span className="text-[12px] font-black text-emerald-500">12.4%</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">WAREHOUSE RETURN</span>
+              <span className="text-[12px] font-black text-rose-500">{dashStats?.cards.warehouse.returnRate ?? "—"}%</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase">LOSS AVOIDED</span>
-              <span className="text-[12px] font-black text-slate-900">Rp 340 Jt</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">SHIPPING / UNIT</span>
+              <span className="text-[12px] font-black text-slate-900">{dashStats?.cards.logistics.shippingPerUnit ?? "—"}</span>
             </div>
           </div>
         </div>
@@ -363,18 +334,17 @@ export default function ScmDashboardPage() {
             <p className="font-black text-[11px] text-slate-900 tracking-[0.05em] uppercase">F. PERFORMANCE SCORECARD</p>
           </div>
           <div className="flex flex-col gap-1.5">
-            {[
-              { label: "SCM GENERAL", val: "94%", color: "#1E293B" },
-              { label: "BAHAN BAKU (RAW)", val: "90%", color: "#EF4444" },
-              { label: "BAHAN KEMAS (PACK)", val: "96%", color: "#10B981" },
-              { label: "BOX AUDIT", val: "98%", color: "#78350F" },
-              { label: "LABEL ACCURACY", val: "88%", color: "#8B5CF6" },
-            ].map((e, idx) => (
-              <div key={idx} className="flex justify-between py-1 border-b border-black/5 last:border-0 last:pb-0">
-                <span className="text-[9px] font-black text-slate-400">{e.label}</span>
-                <span className="text-[11px] font-black" style={{ color: e.color }}>{e.val}</span>
-              </div>
-            ))}
+            {perfScore.map((e, idx) => {
+              const val = idx === 0
+                ? (dashStats?.cards.logistics.otd !== undefined ? `${dashStats.cards.logistics.otd}%` : "—")
+                : (e.key ? `${avgOtd(e.key)}%` : "—");
+              return (
+                <div key={idx} className="flex justify-between py-1 border-b border-black/5 last:border-0 last:pb-0">
+                  <span className="text-[9px] font-black text-slate-400">{e.label}</span>
+                  <span className="text-[11px] font-black" style={{ color: e.color }}>{val}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -467,33 +437,12 @@ export default function ScmDashboardPage() {
         
         {/* EXECUTIVE CATEGORY VELOCITY CLOUD */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "2.5rem" }}>
-          {[
-            { 
-              label: "1. BAHAN BAKU (RAW)", score: "92", status: "STABLE", pulse: "#10B981",
-              stats: { fast: 3, ontime: 12, late: 1, pending: 4 },
-              arrival: "85% READY", theme: "#EF4444" 
-            },
-            { 
-              label: "2. BAHAN KEMAS (PACK)", score: "78", status: "DELAYED", pulse: "#EF4444",
-              stats: { fast: 0, ontime: 8, late: 5, pending: 2 },
-              arrival: "62% READY", theme: "#F59E0B" 
-            },
-            { 
-              label: "3. LABEL AUDIT", score: "88", status: "STABLE", pulse: "#10B981",
-              stats: { fast: 2, ontime: 18, late: 2, pending: 5 },
-              arrival: "92% READY", theme: "#8B5CF6" 
-            },
-            { 
-              label: "4. BOX & CARDBOARD", score: "98", status: "FAST", pulse: "#10B981",
-              stats: { fast: 8, ontime: 15, late: 0, pending: 1 },
-              arrival: "98% READY", theme: "#78350F" 
-            }
-          ].map((cat, i) => (
+          {velocityCategories.map((cat, i) => (
             <div 
               key={i} 
               style={{ background: "white", padding: "1.25rem", borderRadius: "24px", border: "1px solid #E2E8F0", position: "relative", overflow: "hidden", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}
             >
-              <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: cat.theme }} />
+              <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: cat.color }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
                 <div>
                   <p style={{ fontSize: "9px", fontWeight: 950, color: "#64748B", margin: 0, textTransform: "uppercase" }}>{cat.label}</p>
@@ -528,7 +477,7 @@ export default function ScmDashboardPage() {
                     <span style={{ fontSize: "9px", fontWeight: 950, color: "#1E293B" }}>{cat.arrival}</span>
                  </div>
                  <div style={{ width: "50px", height: "3px", background: "#F1F5F9", borderRadius: "2px", overflow: "hidden" }}>
-                   <div style={{ height: "100%", background: cat.theme, width: `${cat.arrival.split("%")[0]}%` }} />
+                   <div style={{ height: "100%", background: cat.color, width: `${cat.arrival.split("%")[0]}%` }} />
                  </div>
               </div>
             </div>
@@ -551,34 +500,33 @@ export default function ScmDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { wo: "WO-2024-001", prod: "Serum Brightening X", target: "50,000 Pcs", needs: "500 Kg", wh: "320 Kg", gap: "180 Kg", poQty: "200 Kg", poStatus: "IN TRANSIT", eta: "2024-04-05", impact: "READY", score: "4.8/5" },
-                  { wo: "WO-2024-005", prod: "Acne Cream Night", target: "25,000 Pcs", needs: "125 Kg", wh: "20 Kg", gap: "105 Kg", poQty: "105 Kg", poStatus: "WAITING DP", eta: "2024-04-12", impact: "DELAYED", reason: "Nego Pending", score: "4.2/5" },
-                  { wo: "WO-2024-008", prod: "Body Lotion Ultra", target: "10,000 Pcs", needs: "400 Kg", wh: "450 Kg", gap: "0", poQty: "-", poStatus: "COMPLETE", eta: "-", impact: "READY", score: "5.0/5" },
-                ].map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "left" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.wo}</div>
-                      <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>{row.prod}</div>
-                    </td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontSize: "11px", fontWeight: 900, color: "#1E293B" }}>{row.target}</td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontSize: "11px", fontWeight: 950 }}>
-                      {row.needs} / {row.wh} / <span style={{ color: row.gap === "0" ? "#10B981" : "#EF4444" }}>{row.gap}</span>
-                    </td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      <div style={{ fontSize: "10px", fontWeight: 950, color: "#2563EB" }}>{row.poQty}</div>
-                      <div style={{ fontSize: "8px", fontWeight: 800, color: "#64748B" }}>{row.poStatus}</div>
-                    </td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 800, color: "#64748B" }}>{row.eta}</td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      <span style={{ background: row.impact === "READY" ? "#10B981" : "#EF4444", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "8px", fontWeight: 950 }}>
-                        {row.impact}
-                      </span>
-                      {row.reason && <div style={{ fontSize: "8px", color: "#EF4444", marginTop: "4px", fontWeight: 700 }}>{row.reason}</div>}
-                    </td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "right", fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.score}</td>
-                  </tr>
-                ))}
+                {filteredWOs.map((wo, i) => {
+                  const isReady = wo.boStatus === "READY";
+                  return (
+                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setSelectedWO(wo)}>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "left" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{wo.woNumber}</div>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>{wo.product}</div>
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontSize: "11px", fontWeight: 900, color: "#1E293B" }}>{wo.targetQty?.toLocaleString?.() ?? wo.targetQty} Pcs</td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontSize: "11px", fontWeight: 950 }}>
+                        {wo.gap > 0 ? `MISSING ${wo.gap} UNITS` : "READY"}
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                        <div style={{ fontSize: "10px", fontWeight: 950, color: "#2563EB" }}>{wo.poStatus || "—"}</div>
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 800, color: "#64748B" }}>
+                        {wo.estArrival ? new Date(wo.estArrival).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                        <span style={{ background: isReady ? "#10B981" : "#EF4444", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "8px", fontWeight: 950 }}>
+                          {isReady ? "READY" : "DELAYED"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "right", fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{wo.supplierScore}/5</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -674,38 +622,33 @@ export default function ScmDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { name: "PT Surya Kimia", mat: "Niacinamide Alpha", p: "Monthly", qty: "500 Kg", cnt: "5", price: "12.5k", var: "+2.1%", spend: "125M", otd: "85%", dly: "1", rej: "5Kg", score: "90", brr: "0.5%", risk: "LOW", critical: true },
-                      { name: "Indo Chemical", mat: "Retinol Kapsul", p: "Monthly", qty: "100 Kg", cnt: "2", price: "110k", var: "+5.4%", spend: "11M", otd: "72%", dly: "1", rej: "2Kg", score: "78", brr: "2.0%", risk: "MEDIUM", critical: true },
-                    ].map((row, i) => (
+                    {(dashStats?.tables.perfRaw || []).map((s: any, i: number) => (
                       <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                         <td style={{ padding: "1.25rem" }}>
-                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.name}</div>
-                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>
-                            {row.mat} {row.critical && <span style={{ color: "#EF4444" }}>(CRITICAL)</span>}
-                          </div>
+                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{s.supplier}</div>
+                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{s.material || "—"}</div>
                         </td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>{row.p}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "11px", fontWeight: 800, color: "#64748B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.qty}</div>
-                          <div style={{ fontSize: "9px", color: "#64748B" }}>{row.cnt} ORDERS</div>
+                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{s.volume?.toLocaleString?.() ?? s.volume ?? "—"}</div>
+                          <div style={{ fontSize: "9px", color: "#64748B" }}>—</div>
                         </td>
                         <td style={{ padding: "1.25rem", textAlign: "right" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>Rp {row.spend}</div>
-                          <div style={{ fontSize: "9px", fontWeight: 700, color: row.var.includes("+") ? "#EF4444" : "#10B981" }}>{row.var} @{row.price}</div>
+                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>—</div>
+                          <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>—</div>
                         </td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.otd}</div>
-                          <div style={{ fontSize: "9px", fontWeight: 700, color: "#EF4444" }}>{row.dly} DELAYED</div>
+                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{s.otd}%</div>
+                          <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>—</div>
                         </td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.score}</div>
-                          <div style={{ fontSize: "9px", color: "#64748B" }}>REJ: {row.rej}</div>
+                          <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{s.quality || "—"}</div>
+                          <div style={{ fontSize: "9px", color: "#64748B" }}>—</div>
                         </td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#D97706" }}>{row.brr}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <span style={{ background: row.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
-                            {row.risk}
+                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                            {s.risk}
                           </span>
                         </td>
                       </tr>
@@ -739,23 +682,20 @@ export default function ScmDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { name: "Global Kemasindo", mat: "Botol Serum 30ml", qty: "10,000 Pcs", spend: "25M", otd: "100%", excess: "1,000", mismatch: "1.2%", risk: "LOW" },
-                      { name: "Putra Pack", mat: "Cap Pump White", qty: "15,000 Pcs", spend: "15M", otd: "92%", excess: "2,500", mismatch: "4.8%", risk: "MEDIUM" },
-                    ].map((row, i) => (
+                    {(dashStats?.tables.perfPack || []).map((s: any, i: number) => (
                       <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                         <td style={{ padding: "1.25rem" }}>
-                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.name}</div>
-                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{row.mat}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{s.supplier}</div>
+                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{s.material || "—"}</div>
                         </td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.qty}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "right", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>Rp {row.spend}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{row.otd}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#EF4444" }}>{row.excess}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#F59E0B" }}>{row.mismatch}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{s.volume?.toLocaleString?.() ?? s.volume ?? "—"}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "right", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>—</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{s.otd}%</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <span style={{ background: row.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
-                            {row.risk}
+                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                            {s.risk}
                           </span>
                         </td>
                       </tr>
@@ -788,21 +728,18 @@ export default function ScmDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { name: "Sinar Printing", mat: "Box Acne Serum", qty: "5,000 Pcs", unit: "1.2k", spend: "6M", util: "98%", risk: "LOW" },
-                      { name: "Berkat Alam", mat: "Box Master Carton", qty: "1,000 Pcs", unit: "8.5k", spend: "8.5M", util: "95%", risk: "LOW" },
-                    ].map((row, i) => (
+                    {(dashStats?.tables.perfBox || []).map((s: any, i: number) => (
                       <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                         <td style={{ padding: "1.25rem" }}>
-                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.name}</div>
-                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{row.mat}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{s.supplier}</div>
+                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{s.material || "—"}</div>
                         </td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.qty}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "right", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>Rp {row.unit}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>Rp {row.spend}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#3B82F6" }}>{row.util}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{s.volume?.toLocaleString?.() ?? s.volume ?? "—"}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "right", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>—</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>—</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#3B82F6" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "right" }}>
-                          <span style={{ background: "#10B981", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>{row.risk}</span>
+                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>{s.risk}</span>
                         </td>
                       </tr>
                     ))}
@@ -834,22 +771,19 @@ export default function ScmDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { name: "Sinar Print", mat: "Label Glow-Up", rev: "2", mis: "2.5%", otd: "80%", score: "75", risk: "MEDIUM" },
-                      { name: "Labelindo", mat: "Label Aqua Pure", rev: "0", mis: "0.1%", otd: "100%", score: "98", risk: "LOW" },
-                    ].map((row, i) => (
+                    {(dashStats?.tables.perfLabel || []).map((s: any, i: number) => (
                       <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                         <td style={{ padding: "1.25rem" }}>
-                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.name}</div>
-                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{row.mat}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{s.supplier}</div>
+                          <div style={{ fontSize: "10px", color: "#64748B", fontWeight: 700 }}>{s.material || "—"}</div>
                         </td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "14px", fontWeight: 950, color: row.rev === "0" ? "#10B981" : "#EF4444" }}>{row.rev}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#F59E0B" }}>{row.mis}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950 }}>{row.otd}</td>
-                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950 }}>{row.score}</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "14px", fontWeight: 950, color: "#64748B" }}>—</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{s.otd}%</td>
+                        <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950 }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "right" }}>
-                          <span style={{ background: row.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
-                            {row.risk}
+                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                            {s.risk}
                           </span>
                         </td>
                       </tr>

@@ -18,13 +18,20 @@ export default function CommercialDashboard() {
     }
   }, []);
 
-  const { data: leads } = useQuery({
+  const { data: leads, isLoading: leadsLoading } = useQuery({
     queryKey: ["leads"],
     queryFn: async () => {
       const res = await api.get("/leads");
       return res.data;
     }
   });
+
+  const conversionRate = leads?.length
+    ? `${((leads.filter((l: any) => l.status === 'WON_DEAL').length / leads.length) * 100).toFixed(1)}%`
+    : "—";
+  const slaViolationRate = leads?.length
+    ? `${((leads.filter((l: any) => l.is_sla_warning).length / leads.length) * 100).toFixed(1)}%`
+    : "—";
 
   const { data: retentionRadar } = useQuery({
     queryKey: ["retention-radar"],
@@ -82,14 +89,14 @@ export default function CommercialDashboard() {
                 <CardDescription className="text-[10px] text-zinc-500 font-sans">Live Conversion Data</CardDescription>
              </CardHeader>
              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                   <span className="text-xs text-zinc-400">Conversion Rate</span>
-                    <span className="text-sm font-bold text-gray-900">4.2%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                   <span className="text-xs text-zinc-400">SLA Violation Rate</span>
-                   <span className="text-sm font-bold text-red-500">12%</span>
-                </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-xs text-zinc-400">Conversion Rate</span>
+                    <span className="text-sm font-bold text-gray-900">{conversionRate}</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-xs text-zinc-400">SLA Violation Rate</span>
+                    <span className="text-sm font-bold text-red-500">{slaViolationRate}</span>
+                 </div>
              </CardContent>
            </Card>
         </div>

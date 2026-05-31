@@ -23,7 +23,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaBadge, DnaButton, StatCard, KpiCard, TableWrapper } from "@/components/dna";
 import {
   Table,
   TableBody,
@@ -153,7 +153,7 @@ export default function DownPaymentPrototype() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard label="Total DP" value="Rp 750,000" subValue="2 Records MTD" icon={<CreditCard className="text-blue-600" />} />
               <StatCard label="Saldo Outstanding" value="Rp 150,000" subValue="Menunggu Rekonsiliasi Faktur" icon={<AlertCircle className="text-amber-500" />} />
-              <StatCard label="Tingkat Rekonsiliasi" value="80%" subValue="Efisiensi Operasional" icon={<CheckCircle2 className="text-emerald-500" />} />
+              <KpiCard label="Tingkat Rekonsiliasi" value="80%" targetPct={80} icon={<CheckCircle2 className="text-emerald-500" />} />
             </div>
 
             {/* List Table */}

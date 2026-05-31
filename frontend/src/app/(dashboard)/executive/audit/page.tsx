@@ -28,6 +28,7 @@ import {
 import { DnaButton, DnaBadge } from "@/components/dna";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { StatCard } from "@/components/dna/StatCard";
+import { KpiCard } from "@/components/dna/KpiCard";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { format } from "date-fns";
 
@@ -80,7 +81,7 @@ export default function AuditTrailPage() {
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-[var(--card-gap)]">
         <StatCard label="Active Sessions" value="24" icon={<User />} />
-        <StatCard label="System Integrity" value="100%" icon={<Lock />} />
+        <KpiCard label="System Integrity" value="100%" targetPct={100} icon={<Lock />} />
         <StatCard label="Today's Mutations" value="1,402" icon={<Database />} />
         <StatCard label="Risk Index" value="0.00" icon={<AlertCircle />} />
       </div>

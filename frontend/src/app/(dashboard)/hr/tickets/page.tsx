@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ClipboardList, Clock, DollarSign, Umbrella, CheckCircle2, XCircle, Plus, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { Clock, DollarSign, Umbrella, CheckCircle2, XCircle, Plus, Search, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaBadge, DnaButton, DnaInput } from "@/components/dna";
+import { DnaBadge, DnaButton } from "@/components/dna";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -54,8 +55,20 @@ export default function TicketsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ type: "LEAVE" as TicketType, reason: "", startDate: "", endDate: "", amount: 0 });
 
+  const { data: tickets = [], isLoading } = useQuery<Ticket[]>({
+    queryKey: ["hr-tickets"],
+    queryFn: async () => {
+      try {
+        const resp = await api.get("/hr/tickets");
+        return resp.data;
+      } catch {
+        return MOCK_TICKETS;
+      }
+    },
+  });
+
   const filteredTickets = useMemo(() => {
-    let list = [...MOCK_TICKETS];
+    let list = [...tickets];
     if (activeTab !== "all") {
       list = list.filter((t) => t.status.toLowerCase() === activeTab);
     }
@@ -69,7 +82,7 @@ export default function TicketsPage() {
       );
     }
     return list;
-  }, [activeTab, search]);
+  }, [activeTab, search, tickets]);
 
   const handleCreate = () => {
     toast.success("Tiket berhasil dibuat (mock)");
@@ -137,7 +150,13 @@ export default function TicketsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {filteredTickets.length === 0 ? (
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan={7} className="px-4 py-12 text-center">
+                              <Loader2 className="w-5 h-5 text-slate-400 animate-spin mx-auto" />
+                            </td>
+                          </tr>
+                        ) : filteredTickets.length === 0 ? (
                           <tr>
                             <td colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
                               Tidak ada tiket ditemukan
