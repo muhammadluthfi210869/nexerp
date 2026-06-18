@@ -156,10 +156,20 @@ export class ProductionService {
   ) {
     return await this.prisma
       .$transaction(async (tx: any) => {
+        const machine = await tx.machine.findUnique({
+          where: { id: machineId },
+        });
+        if (!machine) throw new NotFoundException('Machine not found');
+
+        const workOrder = await tx.workOrder.findUnique({
+          where: { id: workOrderId },
+        });
+        if (!workOrder) throw new NotFoundException('Work Order not found');
+
         // Update Machine Status
         await tx.machine.update({
           where: { id: machineId },
-          data: { status: 'DOWN' },
+          data: { isActive: false },
         });
 
         // Log the Incident
@@ -1522,6 +1532,11 @@ export class ProductionService {
   }) {
     return this.prisma
       .$transaction(async (tx: any) => {
+        const machine = await tx.machine.findUnique({
+          where: { id: dto.machineId },
+        });
+        if (!machine) throw new BadRequestException('Machine not found');
+
         const scheduleNumber = await this.idGenerator.generateId('SCH');
 
         // Upscale Intelligence
@@ -1636,20 +1651,23 @@ export class ProductionService {
       const machineRate = schedule.machine?.costPerHour || 50000;
       const laborRate = 25000; // Standard operator rate
 
-      // PHASE 3: Physical Law Validation (Filling Stage)
-      // Prevent Good Output (pcs) from exceeding the logic limit of Actual Bulk (kg) consumed.
+      // PHASE 3: QC Interlock (Filling Stage)
+      // Prevent FILLING if Mixing QC has not passed.
       if (schedule.stage === 'FILLING') {
-        // 1. QC Interlock: Check if Bulk (Mixing) has passed QC
-        const mixingStepLog = await tx.productionStepLog.findFirst({
+        const mixingLog = await tx.productionLog.findFirst({
           where: {
-            wo: { workOrders: { some: { id: schedule.workOrderId } } },
+            workOrderId: schedule.workOrderId,
             stage: 'MIXING',
           },
-          include: { qcAudits: { where: { status: 'PASS' as any }, take: 1 } },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { loggedAt: 'desc' },
         });
 
-        const isBulkPassed = mixingStepLog?.qcAudits?.length > 0;
+        const bulkQcPass = mixingLog
+          ? await tx.qCAudit.findFirst({
+              where: { stepLogId: mixingLog.id, status: 'GOOD' as any },
+            })
+          : null;
+        const isBulkPassed = !!bulkQcPass;
 
         if (!isBulkPassed) {
           this.eventEmitter.emit('production.qc_interlock_triggered', {
@@ -1668,17 +1686,16 @@ export class ProductionService {
             message: `Layar Merah: AKSES DITOLAK. Curah (Mixing) belum lulus uji lab atau status belum PASS. Dilarang melakukan pengisian!`,
           });
         }
+      }
 
-        // 2. Physical Law validation
+      // PHASE 3b: Physical Law Validation (All Stages)
+      // Prevent Good Output (pcs) from exceeding the logic limit of Actual Bulk (kg) consumed.
+      if (schedule.stage === 'FILLING' || schedule.stage === 'MIXING') {
         const bulkComponent = schedule.stepDetails.find(
           (d: any) => d.category === 'BULK',
         );
-        if (
-          bulkComponent &&
-          bulkComponent.qtyActual &&
-          bulkComponent.qtyTheoretical
-        ) {
-          const actualBulk = Number(bulkComponent.qtyActual);
+        if (bulkComponent && bulkComponent.qtyTheoretical) {
+          const actualBulk = Number(bulkComponent.qtyActual ?? bulkComponent.qtyTheoretical);
           const theoreticalBulk = Number(bulkComponent.qtyTheoretical);
           const targetPcs = Number(schedule.targetQty);
 

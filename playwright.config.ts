@@ -6,6 +6,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
+  globalSetup: './tests/global-setup.ts',
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['line'],
@@ -14,6 +15,7 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     extraHTTPHeaders: {
       'Content-Type': 'application/json',
+      ...(process.env.E2E_AUTH_TOKEN ? { 'Authorization': `Bearer ${process.env.E2E_AUTH_TOKEN}` } : {}),
     },
     actionTimeout: 15000,
     navigationTimeout: 30000,
@@ -28,6 +30,9 @@ export default defineConfig({
     {
       name: 'production-e2e',
       testMatch: '**/production/*.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3002',
+      },
     },
     {
       name: 'scm-e2e',

@@ -31,6 +31,6 @@ test.describe('Production — Breakdown & Recovery', () => {
     const machines = await machinesRes.json();
     const machine = machines.find((m: any) => m.id === TEST_MACHINE_IDS.mixing);
     expect(machine).toBeDefined();
-    expect(machine!.status).toBe('DOWN');
+    expect(machine!.isActive).toBe(false);
   });
 });
