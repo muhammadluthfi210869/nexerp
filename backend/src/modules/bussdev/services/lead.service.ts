@@ -428,6 +428,13 @@ export class LeadService {
         },
       });
 
+      // Emit event for document automation (Quotation auto-generation on NEGOTIATION)
+      this.eventEmitter.emit('lead.status.changed', {
+        leadId,
+        previousStatus: lead.status,
+        newStatus: newStatus,
+      });
+
       return updatedLead;
     });
   }

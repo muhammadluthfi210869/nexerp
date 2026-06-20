@@ -43,6 +43,9 @@ model User {
   purchaseRequests    PurchaseRequest[]            @relation("PurchaseRequestCreator")
   requisitions        MaterialRequisitionHeader[] @relation("RequisitionRequester")
   qcChecklists        QCChecklist[]               @relation("QCChecklistCreator")
+  createdDrafts       DocumentDraft[]             @relation("DraftCreator")
+  approvedDrafts      DocumentDraft[]             @relation("DocumentDraftApprover")
+  rejectedDrafts      DocumentDraft[]             @relation("DocumentDraftRejecter")
 
   @@map("users")
 }

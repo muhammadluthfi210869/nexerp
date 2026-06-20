@@ -29,7 +29,20 @@ import {
   Archive,
   Palette,
   Box,
-  Landmark
+  Landmark,
+  Cog,
+  Heart,
+  AlertOctagon,
+  Bell,
+  BookOpen,
+  TrendingDown,
+  DollarSign,
+  Package,
+  ClipboardList,
+  Star,
+  Wallet,
+  Briefcase,
+  Barcode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -137,7 +150,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Dashboard", href: "/production", type: "dashboard" },
       { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
       { name: "Operasional", href: "/production/operations", type: "dashboard" },
-      { name: "Pipeline", href: "/production/pipeline", type: "history" },
+      { name: "Pipeline", href: "/production/operations?tab=pipeline", type: "history" },
       { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
     ]
   },
@@ -193,6 +206,24 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "System Health", href: "/system/health", type: "dashboard" },
       { name: "Global Categories", href: "/master/categories", type: "action" },
     ]
+  },
+  {
+    label: "AUTOMATION ENGINE",
+    icon: Cog,
+    items: [
+      { name: "Document Center", href: "/documents/drafts", type: "action", badge: "NEW" },
+      { name: "Overview", href: "/automation", type: "dashboard" },
+      { name: "Foundation", href: "/automation", type: "action" },
+      { name: "BussDev", href: "/automation", type: "action" },
+      { name: "Finance", href: "/automation", type: "action" },
+      { name: "Warehouse", href: "/automation", type: "action" },
+      { name: "Production", href: "/automation", type: "action" },
+      { name: "SCM", href: "/automation", type: "action" },
+      { name: "HR & All Divisions", href: "/automation", type: "action" },
+      { name: "Executive", href: "/automation", type: "action" },
+      { name: "System", href: "/automation", type: "action" },
+      { name: "Legality", href: "/automation", type: "action" },
+    ]
   }
 ];
 
@@ -208,6 +239,10 @@ const TIER_STRUCTURE = [
   {
     tier: "STRATEGIC SUPPORT",
     groups: ["LEGALITAS / APJ", "HUMAN RESOURCES", "CREATIVE HUB", "SYSTEM CONTROL"]
+  },
+  {
+    tier: "AUTOMATION ENGINE",
+    groups: ["AUTOMATION ENGINE"]
   }
 ];
 

@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Plus, 
-  Search, 
-  FileCheck2, 
+import {
+  Plus,
+  Search,
+  FileCheck2,
   ArrowUpRight,
   UserCheck,
   CreditCard,
@@ -19,26 +19,32 @@ import {
   Zap
 } from "lucide-react";
 import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { FinalDocumentPdfButton } from "@/components/documents/FinalDocumentPdfButton";
 
 interface Invoice {
   id: string;
+  invoiceNumber: string;
   customer: string;
   date: string;
   dueDate: string;
   amount: number;
   status: string;
   source: string;
+  type: string;
+  clientName: string;
+  brandName: string;
+  items: any[];
 }
 
 export default function InvoicingPage() {
@@ -50,17 +56,22 @@ export default function InvoicingPage() {
       const resp = await api.get("/finance/invoices");
       return resp.data.map((inv: any) => ({
         id: inv.invoiceNumber,
-        customer: inv.customerName,
-        date: new Date().toISOString().split('T')[0],
+        invoiceNumber: inv.invoiceNumber,
+        customer: inv.customerName || inv.so?.lead?.clientName || "Unknown",
+        date: new Date(inv.issuedAt || inv.createdAt).toISOString().split('T')[0],
         dueDate: new Date(inv.dueDate).toISOString().split('T')[0],
-        amount: Number(inv.totalAmount),
+        amount: Number(inv.amountDue || inv.totalAmount || 0),
         status: inv.status,
-        source: "Sales Order"
+        source: inv.type === "DP" ? "DP Invoice" : "Final Invoice",
+        type: inv.type,
+        clientName: inv.customerName || inv.so?.lead?.clientName || "Unknown",
+        brandName: inv.so?.brandName || "",
+        items: inv.so?.items || [],
       }));
     }
   });
 
-  const filteredInvoices = invoices?.filter(inv => 
+  const filteredInvoices = invoices?.filter(inv =>
     inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inv.customer.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -108,7 +119,7 @@ export default function InvoicingPage() {
         <TableWrapper
           filters={
             <div className="relative w-full max-w-md">
-              <DnaInput 
+              <DnaInput
                 icon={<Search className="h-4 w-4" />}
                 placeholder="Search invoices..."
                 value={searchTerm}
@@ -165,9 +176,20 @@ export default function InvoicingPage() {
                   </TableCell>
                   <TableCell className="pr-6 text-right">
                     <div className="flex justify-end gap-1.5">
-                      <DnaButton variant="outline" size="sm" icon={<Printer className="h-3.5 w-3.5" />} />
+                      <FinalDocumentPdfButton
+                        documentType={inv.type === "DP" ? "INVOICE_DP" : "INVOICE_FINAL"}
+                        documentNumber={inv.invoiceNumber}
+                        data={{
+                          clientName: inv.clientName,
+                          brandName: inv.brandName,
+                          soNumber: inv.id,
+                          amount: inv.amount,
+                          items: inv.items,
+                          dueDate: inv.dueDate,
+                          notes: `${inv.source} for ${inv.clientName}`,
+                        }}
+                      />
                       <DnaButton variant="outline" size="sm" icon={<Mail className="h-3.5 w-3.5" />} />
-                      <DnaButton variant="outline" size="sm" icon={<MoreHorizontal className="h-3.5 w-3.5" />} />
                     </div>
                   </TableCell>
                 </TableRow>

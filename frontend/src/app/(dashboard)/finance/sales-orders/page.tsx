@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import { cn, formatCurrency } from "@/lib/utils";
 import { TableShell } from "@/components/layout/TableShell";
+import { FinalDocumentPdfButton } from "@/components/documents/FinalDocumentPdfButton";
 
 export default function SalesOrderPage() {
   const queryClient = useQueryClient();
@@ -196,9 +197,23 @@ export default function SalesOrderPage() {
                 </TableCell>
 
                 <TableCell className="text-right pr-6">
-                    <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-400">
-                      <ChevronRight className="h-4 w-4" />
-                    </DnaButton>
+                    <div className="flex justify-end gap-1">
+                      <FinalDocumentPdfButton
+                        documentType="QUOTATION"
+                        documentNumber={order.orderNumber}
+                        data={{
+                          clientName: order.lead?.clientName || "Unknown",
+                          brandName: order.brandName || "",
+                          items: order.items || [],
+                          totalAmount: order.totalAmount,
+                          notes: `Sales Order ${order.orderNumber}`,
+                        }}
+                        label="PDF"
+                      />
+                      <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-400">
+                        <ChevronRight className="h-4 w-4" />
+                      </DnaButton>
+                    </div>
                 </TableCell>
               </TableRow>
             ))}

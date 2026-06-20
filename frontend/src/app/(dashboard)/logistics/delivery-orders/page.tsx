@@ -14,7 +14,6 @@ import {
   ArrowRight,
   Boxes
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { 
   Dialog,
   DialogContent,
@@ -28,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
+import { DashboardCard, StatCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
+import { FinalDocumentPdfButton } from "@/components/documents/FinalDocumentPdfButton";
 
 export default function DeliveryOrdersPage() {
   const { data: deliveryOrders, isLoading } = useQuery({
@@ -198,13 +198,27 @@ export default function DeliveryOrdersPage() {
                               </DnaBadge>
                           </td>
                            <td className="px-6 py-6 text-right">
-                              <DnaButton 
-                                 variant={doOrder.status === 'AWAITING_FLEET' ? "secondary" : "outline"}
-                                 size="sm"
-                                 className={cn("italic shadow-lg shadow-slate-200", doOrder.status === 'AWAITING_FLEET' ? "shadow-lg shadow-slate-200" : "")}
-                              >
-                                 {doOrder.status === 'AWAITING_FLEET' ? "ASSIGN FLEET" : "VIEW MANIFEST"} <ChevronRight className="ml-2 h-3 w-3" />
-                              </DnaButton>
+                              <div className="flex justify-end gap-1">
+                                <FinalDocumentPdfButton
+                                  documentType="DELIVERY_ORDER"
+                                  documentNumber={doOrder.id}
+                                  data={{
+                                    clientName: doOrder.client,
+                                    shippingAddress: doOrder.destination,
+                                    shipDate: doOrder.date,
+                                    items: doOrder.items || [],
+                                    notes: `Delivery Order ${doOrder.id}`,
+                                  }}
+                                  label="DO PDF"
+                                />
+                                <DnaButton
+                                   variant={doOrder.status === 'AWAITING_FLEET' ? "secondary" : "outline"}
+                                   size="sm"
+                                   className={cn("italic shadow-lg shadow-slate-200", doOrder.status === 'AWAITING_FLEET' ? "shadow-lg shadow-slate-200" : "")}
+                                >
+                                   {doOrder.status === 'AWAITING_FLEET' ? "ASSIGN FLEET" : "VIEW MANIFEST"} <ChevronRight className="ml-2 h-3 w-3" />
+                                </DnaButton>
+                              </div>
                            </td>
                        </tr>
                     ))}
@@ -215,7 +229,7 @@ export default function DeliveryOrdersPage() {
        </div>
 
       {/* 🛡️ IV. INTEGRITY PROTOCOL */}
-      <Card className="bento-card bg-brand-black text-white p-12 relative overflow-hidden group rounded-[24px]">
+      <DashboardCard inverted className="!p-12 relative overflow-hidden">
          <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
             <div className="h-32 w-32 bg-white/10 backdrop-blur-xl rounded-[24px] border border-white/20 flex items-center justify-center group-hover:rotate-6 transition-transform duration-700">
                <ShieldCheck className="h-16 w-16 text-blue-400" />
@@ -236,7 +250,7 @@ export default function DeliveryOrdersPage() {
             </DnaButton>
          </div>
          <Truck className="h-64 w-64 text-white/[0.02] absolute -right-16 -bottom-16 group-hover:scale-110 transition-transform duration-1000" />
-      </Card>
+      </DashboardCard>
     </TableShell>
   );
 }

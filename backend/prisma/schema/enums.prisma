@@ -501,6 +501,8 @@ enum SourceDocumentType {
   PURCHASE_RETURN
   PRODUCTION_PLAN
   MATERIAL_REQUISITION
+  WORK_ORDER
+  DELIVERY_ORDER
 }
 
 enum PeriodStatus {
