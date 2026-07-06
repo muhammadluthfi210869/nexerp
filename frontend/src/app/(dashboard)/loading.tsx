@@ -14,7 +14,7 @@ export default function Loading() {
             style={{ animation: "spin 1.5s ease-in-out infinite" }}
           />
           <div className="absolute w-14 h-14 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white bg-white">
-            <img src="/N letter logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
+            <img src="/nexerp-logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="flex flex-col items-center">

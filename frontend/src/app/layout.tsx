@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "Next-Generation Enterprise Resource Planning",
   manifest: "/manifest.json",
   icons: {
-    icon: "/N letter logo.jpeg",
+    icon: "/nexerp-logo.jpeg",
   },
 };
 

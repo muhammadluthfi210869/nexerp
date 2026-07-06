@@ -295,7 +295,7 @@ export function Sidebar() {
       <div className="p-7 pb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-slate-200 ring-4 ring-slate-50 flex items-center justify-center bg-white">
-            <img src="/N letter logo.jpeg" alt="NEX ERP Logo" className="w-full h-full object-cover" />
+            <img src="/nexerp-logo.jpeg" alt="NEX ERP Logo" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-[15px] font-black tracking-[-0.03em] text-brand-black uppercase leading-tight">

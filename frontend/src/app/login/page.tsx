@@ -75,7 +75,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-10 relative z-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
         <div className="text-center space-y-4 flex flex-col items-center">
           <div className="w-20 h-20 rounded-[2rem] overflow-hidden shadow-2xl ring-8 ring-white mb-2">
-            <img src="/N letter logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
+            <img src="/nexerp-logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div className="space-y-1">
              <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">
