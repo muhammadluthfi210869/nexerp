@@ -21,7 +21,7 @@ export function ModuleHeader({ title, titleAccent, subtitle, actions }: ModuleHe
         </h1>
         {subtitle && (
           <p 
-            className="font-bold text-slate-400 uppercase tracking-tight mt-1.5"
+            className="font-bold text-slate-400 tracking-tight mt-1.5"
             style={{ fontSize: 'var(--module-subtitle-size)' }}
           >
             {subtitle}

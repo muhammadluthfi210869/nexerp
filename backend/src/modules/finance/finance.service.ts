@@ -473,6 +473,9 @@ export class FinanceService {
       });
 
       if (!invoice) throw new NotFoundException('Invoice not found');
+      if (invoice.status === 'PAID' || Number(invoice.outstandingAmount) <= 0) {
+        throw new BadRequestException('Invoice already verified');
+      }
 
       const updated = await tx.invoice.update({
         where: { id: invoiceId },
@@ -521,12 +524,15 @@ export class FinanceService {
     const so = await this.prisma.salesOrder.findUnique({
       where: { id: dto.id },
       include: { lead: true },
-    });
-    if (!so) throw new NotFoundException('Sales Order not found');
+      });
+      if (!so) throw new NotFoundException('Sales Order not found');
+      if (so.status === 'LOCKED_ACTIVE' || so.status === 'COMPLETED') {
+        throw new BadRequestException('Sales Order already verified');
+      }
 
-    // Create a lead activity to track payment verification
-    await this.prisma.leadActivity.create({
-      data: {
+      // Create a lead activity to track payment verification
+      await this.prisma.leadActivity.create({
+        data: {
         leadId: so.leadId,
         activityType: 'DOWN_PAYMENT',
         amount: so.totalAmount,
@@ -987,6 +993,15 @@ export class FinanceService {
   }
 
   async validatePayment(invoiceId: string) {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
+
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    if (invoice.status === 'PAID' || Number(invoice.outstandingAmount) <= 0) {
+      throw new BadRequestException('Invoice already validated');
+    }
+
     return this.prisma.invoice.update({
       where: { id: invoiceId },
       data: {
@@ -1004,6 +1019,9 @@ export class FinanceService {
       });
 
       if (!activity) throw new NotFoundException('Lead Activity not found');
+      if (activity.isValidated) {
+        throw new BadRequestException('Payment already validated');
+      }
 
       const updatedActivity = await tx.leadActivity.update({
         where: { id: activityId },

@@ -131,7 +131,7 @@ export class BussdevController {
   // --- LEAD FETCHING ---
 
   @Get('leads')
-  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.RND)
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Get all leads' })
   getLeads(@Req() req: any, @Query('mine') mine?: string) {
     return this.bussdevService.getLeads(mine === 'true' ? req.user.id : undefined);

@@ -10,10 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from '../services/categories.service';
-import {
-  CreateCategoryDto,
-  UpdateCategoryDto,
-} from '../dto/category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
@@ -24,7 +21,11 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  @ApiQuery({ name: 'type', required: false, enum: ['GOODS', 'SUPPLIER', 'CUSTOMER'] })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['GOODS', 'SUPPLIER', 'CUSTOMER'],
+  })
   findAll(@Query('type') type?: string) {
     return this.categoriesService.findAll(type);
   }
@@ -49,5 +50,3 @@ export class CategoriesController {
     return this.categoriesService.remove(id);
   }
 }
-
-

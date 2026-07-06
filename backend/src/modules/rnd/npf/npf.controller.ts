@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { NpfService } from './npf.service';
+import { RndService } from '../rnd.service';
 import { CreateNPFDto } from '../dto/create-npf.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
@@ -9,23 +9,23 @@ import { UserRole } from '@prisma/client';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('rnd/npf')
 export class NpfController {
-  constructor(private readonly npfService: NpfService) {}
+  constructor(private readonly rndService: RndService) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL) // BusDev usually initiates NPF
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
   create(@Body() createNPFDto: CreateNPFDto) {
-    return this.npfService.create(createNPFDto);
+    return this.rndService.createNPF(createNPFDto);
   }
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.RND)
   findAll() {
-    return this.npfService.findAll();
+    return this.rndService.getNPFs();
   }
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.RND)
   findOne(@Param('id') id: string) {
-    return this.npfService.findOne(id);
+    return this.rndService.getNPF(id);
   }
 }

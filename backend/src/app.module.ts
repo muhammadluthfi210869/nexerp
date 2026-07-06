@@ -25,11 +25,13 @@ import { CreativeModule } from './modules/creative/creative.module';
 import { HrModule } from './modules/hr/hr.module';
 import { ExecutiveModule } from './modules/executive/executive.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ActivityStreamModule } from './modules/activity-stream/activity-stream.module';
 import { SharedModule } from './shared/shared.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { EventsModule } from './modules/events/events.module';
 import { SystemModule } from './modules/system/system.module';
+import { DocumentAutomationModule } from './modules/document-automation/document-automation.module';
 
 import { MasterModule } from './modules/master/master.module';
 import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
@@ -68,11 +70,13 @@ import { join } from 'path';
     MasterModule,
     MyDashboardModule,
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     ActivityStreamModule,
     SharedModule,
     NotificationModule,
     EventsModule,
     SystemModule,
+    DocumentAutomationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -8,6 +8,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:backend:unit": "npm --prefix backend run test:unit",
+    "test:marketing-prototype": "npx playwright test --config playwright.e2e.config.ts tests/e2e/marketing-prototype.qa.spec.ts",
+    "test:go-live": "npm run test:backend:unit && npm --prefix backend run test:e2e -- --runInBand test/contract/api-contract.e2e-spec.ts && npx playwright test --config playwright.config.ts tests/e2e/role-based-access.spec.ts tests/e2e/communication-protocol.spec.ts tests/e2e/error-paths.spec.ts tests/e2e/edge-cases.spec.ts tests/e2e/golden-thread/01-lead-to-deal.spec.ts tests/e2e/golden-thread/02-dp-to-qc.spec.ts tests/e2e/golden-thread/03-delivery-to-ro.spec.ts",
     "sync:types": "npx openapi-typescript ./backend/swagger-spec.json --output ./frontend/src/types/api.ts",
     "prebuild": "npm run sync:types"
   },

@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { StatCard } from "@/components/dna";
-import { Calendar, Factory, AlertTriangle, Activity, ShieldAlert, BarChart3, Package } from "lucide-react";
+import { Calendar, Factory, ClipboardList } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
@@ -25,55 +25,50 @@ export default async function ProductionDashboardPage() {
     <DashboardShell
       title="PRODUCTION"
       titleAccent="DASHBOARD"
-      subtitle="Real-time production monitoring & intelligence hub"
+      subtitle="Production management hub"
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           label="Output"
-          value={`${cards.output?.total || 0} pcs`}
-          subValue={`${cards.output?.completed || 0} completed`}
-          icon={<Activity />}
+          value={`${cards.achievement?.actual || 0} pcs`}
+          subValue={`${cards.achievement?.completedOrders || 0} completed`}
+          icon={<Factory />}
         />
         <StatCard
           label="Quality Rate"
-          value={`${cards.quality?.rate || 0}%`}
-          subValue="Pass rate against standard"
-          icon={<ShieldAlert />}
-        />
-        <StatCard
-          label="OEE"
-          value={`${data?.oee?.average || 0}%`}
-          subValue="Overall Equipment Effectiveness"
-          icon={<BarChart3 />}
+          value={`${100 - (cards.quality?.defectRate || 0)}%`}
+          subValue="Pass rate"
+          icon={<ClipboardList />}
         />
         <StatCard
           label="WIP"
-          value={data?.wip || 0}
+          value={(data?.workshops?.queue || 0) + (data?.workshops?.mixing || 0) + (data?.workshops?.filling || 0) + (data?.workshops?.packing || 0)}
           subValue="Work in Progress"
-          icon={<Package />}
+          icon={<Factory />}
+        />
+        <StatCard
+          label="Active Schedules"
+          value={cards.achievement?.totalOrders || 0}
+          subValue="In production"
+          icon={<Calendar />}
         />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Link href="/production/schedule" className="p-5 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
-          <Calendar className="w-5 h-5 text-slate-400 group-hover:text-slate-900 mb-3" />
-          <p className="text-xs font-black uppercase">Penjadwalan</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">Schedule & Gantt</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link href="/production/schedule" className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
+          <Calendar className="w-6 h-6 text-slate-400 group-hover:text-slate-900 mb-3" />
+          <p className="text-sm font-black uppercase">Penjadwalan</p>
+          <p className="text-[10px] text-slate-400 mt-1">Schedule & Gantt Chart</p>
         </Link>
-        <Link href="/production/floor" className="p-5 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
-          <Factory className="w-5 h-5 text-slate-400 group-hover:text-slate-900 mb-3" />
-          <p className="text-xs font-black uppercase">Operasional</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">Production Floor</p>
+        <Link href="/production/operations" className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
+          <Factory className="w-6 h-6 text-slate-400 group-hover:text-slate-900 mb-3" />
+          <p className="text-sm font-black uppercase">Operasional</p>
+          <p className="text-[10px] text-slate-400 mt-1">Work Orders & Progress Tracking</p>
         </Link>
-        <Link href="/production/batch-records" className="p-5 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
-          <Activity className="w-5 h-5 text-slate-400 group-hover:text-slate-900 mb-3" />
-          <p className="text-xs font-black uppercase">Pipeline</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">Batch Records</p>
-        </Link>
-        <Link href="/production/leakage" className="p-5 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
-          <AlertTriangle className="w-5 h-5 text-slate-400 group-hover:text-slate-900 mb-3" />
-          <p className="text-xs font-black uppercase">Leakage</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">Loss Analysis</p>
+        <Link href="/production/batch-records" className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-slate-900 hover:shadow-lg transition-all group">
+          <ClipboardList className="w-6 h-6 text-slate-400 group-hover:text-slate-900 mb-3" />
+          <p className="text-sm font-black uppercase">Batch Records</p>
+          <p className="text-[10px] text-slate-400 mt-1">Production Log & Documentation</p>
         </Link>
       </div>
     </DashboardShell>

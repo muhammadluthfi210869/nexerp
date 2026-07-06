@@ -20,7 +20,7 @@ const KPI_DATA: KpiData[] = [
   { employeeEmail: 'yulia@dreamlab.com', division: Division.MANAGEMENT, avgScore: 96, discipline: 100, output: 'EXCEED', attitude: 5.0 },
   { employeeEmail: 'diaz@dreamlab.com', division: Division.MANAGEMENT, avgScore: 78, discipline: 92, output: 'NORMAL', attitude: 4.1 },
   { employeeEmail: 'bagus@dreamlab.com', division: Division.SYSTEM, avgScore: 90, discipline: 98, output: 'EXCEED', attitude: 4.8 },
-  { employeeEmail: 'revita@dreamlab.com', division: Division.CREATIVE, avgScore: 82, discipline: 94, output: 'NORMAL', attitude: 4.3 },
+  { employeeEmail: 'revita@nexerp.id', division: Division.CREATIVE, avgScore: 82, discipline: 94, output: 'NORMAL', attitude: 4.3 },
   { employeeEmail: 'gusti@dreamlab.com', division: Division.CREATIVE, avgScore: 88, discipline: 96, output: 'NORMAL', attitude: 4.7 },
   { employeeEmail: 'zarkasi@dreamlab.com', division: Division.CREATIVE, avgScore: 75, discipline: 90, output: 'NORMAL', attitude: 4.0 },
   { employeeEmail: 'nisa@dreamlab.com', division: Division.BD, avgScore: 81, discipline: 93, output: 'NORMAL', attitude: 4.1 },

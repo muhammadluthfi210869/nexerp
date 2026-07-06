@@ -140,6 +140,39 @@ describe('PurchasePaymentsService', () => {
         }),
       );
     });
+
+    it('should propagate transaction failure without completing payment', async () => {
+      prisma.invoice.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        outstandingAmount: 100000,
+      });
+      prisma.payment.create.mockResolvedValue({ id: 'pay-1' });
+      prisma.invoice.update.mockRejectedValue(new Error('DB write failed'));
+
+      await expect(
+        service.pay({ invoiceId: 'inv-1', amount: 100000 }, userId),
+      ).rejects.toThrow('DB write failed');
+
+      expect(prisma.payment.create).toHaveBeenCalledTimes(1);
+      expect(prisma.invoice.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reject duplicate full payment after invoice becomes PAID', async () => {
+      prisma.invoice.findUnique
+        .mockResolvedValueOnce({ id: 'inv-1', outstandingAmount: 50000 })
+        .mockResolvedValueOnce({ id: 'inv-1', outstandingAmount: 0 });
+      prisma.payment.create.mockResolvedValue({ id: 'pay-1' });
+      prisma.payment.findUnique.mockResolvedValue({
+        id: 'pay-1',
+        invoice: { supplier: {} },
+        verifier: { fullName: 'Admin' },
+      });
+
+      await service.pay({ invoiceId: 'inv-1', amount: 50000 }, userId);
+      await expect(
+        service.pay({ invoiceId: 'inv-1', amount: 50000 }, userId),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('findAll', () => {

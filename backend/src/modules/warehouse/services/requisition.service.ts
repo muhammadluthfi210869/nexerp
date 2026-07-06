@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
-import { CreateRequisitionDto, UpdateRequisitionStatusDto } from '../dto/requisition.dto';
+import {
+  CreateRequisitionDto,
+  UpdateRequisitionStatusDto,
+} from '../dto/requisition.dto';
 
 @Injectable()
 export class RequisitionService {

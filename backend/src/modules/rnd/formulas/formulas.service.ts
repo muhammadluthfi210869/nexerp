@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreateFormulaDto } from '../dto/create-formula.dto';
 import { UpdateFormulaV4Dto } from '../dto/update-formula-v4.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, RevisionStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { LegalityService } from '../../legality/legality.service';
@@ -148,7 +148,7 @@ export class FormulasService {
             },
           },
         },
-        qcParameters: true,
+        qcparameter: true,
         sampleRequest: {
           include: {
             lead: true,
@@ -245,7 +245,7 @@ export class FormulasService {
           phases: {
             include: { items: true },
           },
-          qcParameters: true,
+          qcparameter: true,
         },
       });
 
@@ -278,14 +278,14 @@ export class FormulasService {
           targetYieldGram: source.targetYieldGram,
           version: nextVersion,
           status: 'DRAFT',
-          qcParameters: source.qcParameters
+          qcparameter: source.qcparameter
             ? {
                 create: {
-                  targetPh: source.qcParameters.targetPh,
-                  targetViscosity: source.qcParameters.targetViscosity,
-                  targetColor: source.qcParameters.targetColor,
-                  targetAroma: source.qcParameters.targetAroma,
-                  appearance: source.qcParameters.appearance,
+                  targetPh: source.qcparameter.targetPh,
+                  targetViscosity: source.qcparameter.targetViscosity,
+                  targetColor: source.qcparameter.targetColor,
+                  targetAroma: source.qcparameter.targetAroma,
+                  appearance: source.qcparameter.appearance,
                 },
               }
             : undefined,
@@ -315,6 +315,16 @@ export class FormulasService {
           });
         }
       }
+
+      // Set Sample Request Revision Status to IN_PROGRESS
+      await tx.sampleRequest.update({
+        where: { id: source.sampleRequestId },
+        data: {
+          revisionStatus: RevisionStatus.IN_PROGRESS,
+          latestRevisionDate: new Date(),
+          revisionCount: { increment: 1 },
+        },
+      });
 
       this.eventEmitter.emit('state.transition', {
         entityType: 'FORMULA',

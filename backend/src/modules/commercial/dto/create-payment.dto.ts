@@ -18,4 +18,8 @@ export class CreatePaymentDto {
   @IsDateString()
   @IsOptional()
   paymentDate?: string;
+
+  @IsString()
+  @IsOptional()
+  coaId?: string;
 }

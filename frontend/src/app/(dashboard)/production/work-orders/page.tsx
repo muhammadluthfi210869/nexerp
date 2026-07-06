@@ -208,15 +208,15 @@ export default function WorkOrdersPage() {
             </DnaButton>
           </DialogTrigger>
           <DialogContent className="max-w-md bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-            <div className="bg-slate-900 p-5 text-white">
+<div className="bg-slate-900 p-5 text-white">
                <h2 className="text-lg font-black uppercase tracking-tight">New Work Order</h2>
                <p className="text-slate-400 text-[8px] font-black mt-1.5 uppercase tracking-widest">Manufacturing Batch Scheduling Protocol</p>
             </div>
-            <div className="p-5 space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-5 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Product (Sales Lead) <span className="text-red-500">*</span></label>
-                 <Select onValueChange={(val: string | null) => setSelectedLead(val ?? "")}>
-                  <SelectTrigger className="h-11 bg-slate-50 border-slate-250 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all"><SelectValue placeholder="Select product..." /></SelectTrigger>
+                 <Select onValueChange={(val: string | null) => setSelectedLead(val ?? "")} value={selectedLead}>
+                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all"><SelectValue placeholder="Select product..." /></SelectTrigger>
                   <SelectContent className="rounded-xl border border-slate-100 shadow-xl p-1.5 max-h-[300px]">
                     {leads?.map((l: any) => <SelectItem key={l.id} value={l.id} className="rounded-lg h-12 px-3 font-bold text-[10px] uppercase tracking-wider">{l.brandName} - {l.productInterest} ({l.clientName})</SelectItem>)}
                   </SelectContent>
@@ -226,21 +226,21 @@ export default function WorkOrdersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Target Qty (pcs) <span className="text-red-500">*</span></label>
-                  <Input type="number" value={targetQty} onChange={(e) => setTargetQty(e.target.value)} placeholder="e.g. 5000" className="h-11 bg-slate-50 border-slate-200 rounded-xl font-bold text-[10px] uppercase placeholder:text-slate-400 focus:bg-white transition-all" />
+                  <Input type="number" value={targetQty} onChange={(e) => setTargetQty(e.target.value)} placeholder="e.g. 5000" className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-bold text-[10px] uppercase placeholder:text-slate-400 focus:bg-white transition-all" min="1" required />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Target Completion <span className="text-red-500">*</span></label>
-                  <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="h-11 bg-slate-50 border-slate-200 rounded-xl font-bold text-[10px] focus:bg-white transition-all text-slate-800" />
+                  <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-bold text-[10px] focus:bg-white transition-all text-slate-800" required />
                 </div>
               </div>
 
               <div className="flex gap-3 pt-4 border-t border-slate-100">
-                <DnaButton variant="outline" size="md" onClick={() => setIsModalOpen(false)}>Cancel</DnaButton>
-                <DnaButton variant="primary" size="md" onClick={handleSubmit} disabled={createMutation.isPending} className="flex-1 mb-0">
+                <DnaButton type="button" variant="outline" size="md" onClick={() => setIsModalOpen(false)}>Cancel</DnaButton>
+                <DnaButton type="submit" variant="primary" size="md" disabled={createMutation.isPending} className="flex-1 mb-0">
                   Generate Work Order
                 </DnaButton>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       }

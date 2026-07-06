@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request as apiRequest } from '@playwright/test';
 
 const API_URL = process.env.API_URL || 'http://localhost:3002';
 
@@ -19,7 +19,7 @@ const SEED_USERS: Record<string, { email: string; password: string }> = {
   marketing:       { email: 'nisa@dreamlab.com',        password: 'password123' }, // MARKETING
   compliance:      { email: 'amira@dreamlab.com',       password: 'password123' }, // COMPLIANCE + RND
   itAdmin:         { email: 'bagus@dreamlab.com',       password: 'password123' }, // IT_SYS
-  digimar:         { email: 'revita@dreamlab.com',      password: 'password123' }, // DIGIMAR
+  digimar:         { email: 'revita@nexerp.id',         password: 'password123' }, // DIGIMAR
 };
 
 // ── DIVISION ROUTES (routes that exist in the controller) ────────────────────
@@ -47,6 +47,9 @@ const DIVISION_ACCESS: Record<string, string[]> = {
   SYSTEM:     ['*'],                                                   // NO guards — publicly accessible
   EXECUTIVE:  ['SUPER_ADMIN', 'HEAD_OPS', 'FINANCE'],                 // executive.controller.ts
 };
+
+// Divisions that are truly anonymous/public in the backend (no JWT guard at all).
+const PUBLIC_DIVISIONS = new Set(['HR', 'SYSTEM']);
 
 // Representative GET routes to test per division
 const DIVISION_ROUTES: Record<string, string[]> = {
@@ -180,18 +183,32 @@ test.describe('Role-Based Access Control (RBAC)', () => {
 
   // ─── Unauthenticated access ────────────────────────────────────────────────
   test.describe('Unauthenticated requests', () => {
+    let anonRequest: any;
+
+    test.beforeAll(async () => {
+      // Playwright request contexts inherit project-level headers, so clear auth explicitly.
+      anonRequest = await apiRequest.newContext({
+        extraHTTPHeaders: {
+          Authorization: '',
+        },
+      });
+    });
+
+    test.afterAll(async () => {
+      await anonRequest?.dispose();
+    });
     for (const [division, routes] of Object.entries(DIVISION_ROUTES)) {
-      const isPublic = DIVISION_ACCESS[division].includes('*');
+      const isPublic = PUBLIC_DIVISIONS.has(division);
 
       for (const route of routes) {
         if (isPublic) {
           test(`GET ${route} — public (no guard)`, async ({ request }) => {
-            const res = await request.get(`${API_URL}${route}`);
+            const res = await anonRequest.get(`${API_URL}${route}`);
             expect(res.status()).toBeLessThan(400);
           });
         } else {
           test(`GET ${route} — rejected (no token)`, async ({ request }) => {
-            const res = await request.get(`${API_URL}${route}`);
+            const res = await anonRequest.get(`${API_URL}${route}`);
             // NestJS returns 401 for missing JWT when JwtAuthGuard is active
             expect(res.status(), `Expected 401, got ${res.status()}`).toBe(401);
           });

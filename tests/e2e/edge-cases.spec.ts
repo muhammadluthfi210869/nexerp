@@ -1,9 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request as apiRequest } from '@playwright/test';
 
 const API = 'http://localhost:3002';
 
 test.describe('Business Logic Edge Cases', () => {
   let token: string;
+  let anonRequest: any;
 
   test.beforeAll(async ({ request }) => {
     const res = await request.post(`${API}/auth/login`, {
@@ -12,6 +13,15 @@ test.describe('Business Logic Edge Cases', () => {
     expect([200, 201]).toContain(res.status());
     token = (await res.json()).access_token;
     expect(token).toBeDefined();
+    anonRequest = await apiRequest.newContext({
+      extraHTTPHeaders: {
+        Authorization: '',
+      },
+    });
+  });
+
+  test.afterAll(async () => {
+    await anonRequest?.dispose();
   });
 
   // ===========================================================================
@@ -84,7 +94,7 @@ test.describe('Business Logic Edge Cases', () => {
           loggedBy: 'admin',
         },
       });
-      expect([200, 500]).toContain(res.status());
+      expect(res.status()).toBe(400);
     });
 
     test('1.6 Advance SPK_SIGNED → WON_DEAL', async ({ request }) => {
@@ -657,7 +667,7 @@ test.describe('Business Logic Edge Cases', () => {
   // ===========================================================================
   test.describe('8. Auth & Security Edges', () => {
     test('8.1 Access protected endpoint without token — should fail', async ({ request }) => {
-      const res = await request.get(`${API}/bussdev/leads`);
+      const res = await anonRequest.get(`${API}/bussdev/leads`);
       expect([401, 403]).toContain(res.status());
     });
 

@@ -7,6 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   SampleStage,
   FormulaStatus,
+  RevisionStatus,
   Division,
   StreamEventType,
 } from '@prisma/client';
@@ -392,6 +393,146 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
 
       expect(phases.length).toBe(0);
       expect(items.length).toBe(0);
+    });
+  });
+
+  describe('Section 8: RevisionStatus Auto-Sync', () => {
+    it('should set revisionStatus IN_PROGRESS on createRevision', async () => {
+      const { lead } = await createSetup();
+      const sample = await prisma.sampleRequest.create({
+        data: {
+          sampleCode: 'SMP-AUDIT-8',
+          leadId: lead.id,
+          productName: 'Revision Sync Audit',
+          targetFunction: 'Test',
+          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+        },
+      });
+      await markAsPaid(sample.id, lead.id);
+      const { formula } = await rndService.acceptSample(sample.id);
+
+      await formulasService.createRevision(formula.id);
+
+      const updated = await prisma.sampleRequest.findUnique({
+        where: { id: sample.id },
+      });
+      expect(updated?.revisionStatus).toBe(RevisionStatus.IN_PROGRESS);
+      expect(updated?.revisionCount).toBe(1);
+    });
+
+    it('should set revisionStatus DONE when stage is APPROVED', async () => {
+      const { lead } = await createSetup();
+      const sample = await prisma.sampleRequest.create({
+        data: {
+          sampleCode: 'SMP-AUDIT-8b',
+          leadId: lead.id,
+          productName: 'Revision Done Audit',
+          targetFunction: 'Test',
+          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+        },
+      });
+      await markAsPaid(sample.id, lead.id);
+      await rndService.acceptSample(sample.id);
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.LAB_TEST,
+      });
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.READY_TO_SHIP,
+      });
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.SHIPPED,
+      });
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.RECEIVED,
+      });
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.CLIENT_REVIEW,
+      });
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.APPROVED,
+      });
+
+      const updated = await prisma.sampleRequest.findUnique({
+        where: { id: sample.id },
+      });
+      expect(updated?.revisionStatus).toBe(RevisionStatus.DONE);
+    });
+  });
+
+  describe('Section 9: Stage Velocity Tracking', () => {
+    it('should record durationDays for each stage', async () => {
+      const { lead } = await createSetup();
+      const sample = await prisma.sampleRequest.create({
+        data: {
+          sampleCode: 'SMP-AUDIT-9',
+          leadId: lead.id,
+          productName: 'Velocity Audit',
+          targetFunction: 'Test',
+          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+        },
+      });
+      await markAsPaid(sample.id, lead.id);
+      await rndService.acceptSample(sample.id);
+      await rndService.advanceSampleStage(sample.id, {
+        newStage: SampleStage.LAB_TEST,
+      });
+
+      const logs = await prisma.sampleStageLog.findMany({
+        where: { sampleRequestId: sample.id },
+        orderBy: { enteredAt: 'asc' },
+      });
+
+      expect(logs.length).toBeGreaterThanOrEqual(2);
+      expect(logs[0].enteredAt).toBeTruthy();
+
+      // First stage (QUEUE) should have leftAt when transitioned out
+      if (logs[0].leftAt) {
+        expect(logs[0].durationDays).toBeGreaterThanOrEqual(0);
+      }
+    });
+  });
+
+  describe('Section 10: Revision Tracker API', () => {
+    it('getRevisions only returns active revisions', async () => {
+      const { lead } = await createSetup();
+      const sample = await prisma.sampleRequest.create({
+        data: {
+          sampleCode: 'SMP-AUDIT-10a',
+          leadId: lead.id,
+          productName: 'Revision API Audit',
+          targetFunction: 'Test',
+          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+        },
+      });
+
+      const revisions = await rndService.getRevisions();
+
+      // NOT_STARTED samples should appear
+      const found = revisions.find(r => r.id === sample.id);
+      expect(found).toBeTruthy();
+      expect(found!.revisionStatus).toBe(RevisionStatus.NOT_STARTED);
+    });
+
+    it('getRevisionHistory only returns completed revisions', async () => {
+      const { lead } = await createSetup();
+      const sample = await prisma.sampleRequest.create({
+        data: {
+          sampleCode: 'SMP-AUDIT-10b',
+          leadId: lead.id,
+          productName: 'Revision History Audit',
+          targetFunction: 'Test',
+          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+        },
+      });
+      await markAsPaid(sample.id, lead.id);
+
+      // Complete the revision
+      await rndService.completeRevision(sample.id);
+
+      const history = await rndService.getRevisionHistory();
+      const found = history.find(r => r.id === sample.id);
+      expect(found).toBeTruthy();
+      expect(found!.revisionStatus).toBe(RevisionStatus.DONE);
     });
   });
 });

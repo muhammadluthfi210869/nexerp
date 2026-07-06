@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
+import { StatCard, KpiCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
 import {
   Table,
   TableBody,
@@ -194,9 +194,10 @@ export default function SalesTargetPrototype() {
                   value={targets.length}
                   icon={<Coins className="text-emerald-500" />}
                 />
-                <StatCard
+                <KpiCard
                   label="Avg. Achievement"
-                  value="—"
+                  value="78%"
+                  targetPct={78}
                   icon={<TrendingUp className="text-amber-500" />}
                 />
                 <StatCard

@@ -5,31 +5,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductionLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 p-8 space-y-10 animate-pulse">
+    <div className="min-h-screen bg-slate-50 p-8 space-y-10 animate-pulse">
       {/* Header Skeleton */}
       <div className="flex justify-between items-end">
         <div className="space-y-4">
           <Skeleton className="h-2 w-32 bg-emerald-200" />
-          <Skeleton className="h-14 w-96 bg-gray-200" />
-          <Skeleton className="h-4 w-64 bg-gray-200" />
+          <Skeleton className="h-14 w-96 bg-slate-200" />
+          <Skeleton className="h-4 w-64 bg-slate-200" />
         </div>
         <div className="flex gap-4">
-          <Skeleton className="h-14 w-40 bg-gray-200 rounded-2xl" />
-          <Skeleton className="h-14 w-40 bg-gray-200 rounded-2xl" />
+          <Skeleton className="h-14 w-40 bg-slate-200 rounded-2xl" />
+          <Skeleton className="h-14 w-40 bg-slate-200 rounded-2xl" />
         </div>
       </div>
 
       {/* Stats Skeleton */}
       <KPIGrid>
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-40 bg-gray-100 border border-gray-200 rounded-[24px]" />
+          <div key={i} className="h-40 bg-slate-100 border border-slate-200 rounded-3xl" />
         ))}
       </KPIGrid>
 
       {/* Content Skeleton */}
       <div className="grid grid-cols-3 gap-8">
-        <div className="col-span-2 h-[600px] bg-gray-100 border border-gray-200 rounded-[24px]" />
-        <div className="col-span-1 h-[600px] bg-gray-100 border border-gray-200 rounded-[24px]" />
+        <div className="col-span-2 h-[600px] bg-slate-100 border border-slate-200 rounded-3xl" />
+        <div className="col-span-1 h-[600px] bg-slate-100 border border-slate-200 rounded-3xl" />
       </div>
     </div>
   );

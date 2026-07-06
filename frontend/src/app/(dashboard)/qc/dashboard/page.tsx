@@ -1,58 +1,38 @@
 "use client";
 
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { TableWrapper, DnaBadge } from "@/components/dna";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-  Legend, ResponsiveContainer
-} from "recharts";
-import {
-  Activity, AlertTriangle, FlaskConical, Clock,
-  AlertCircle, Target, DollarSign, Package, ShieldCheck
+import { 
+  ShieldCheck, 
+  AlertTriangle, 
+  TrendingUp,
+  TrendingDown,
+  FlaskConical,
+  Activity,
+  Package,
+  Clock,
+  Search,
+  Filter,
+  Loader2
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { StatCard, SectionLabel, TableWrapper, DnaBadge, DnaInput } from "@/components/dna";
 
-// --- Types ---
-interface QCStats {
-  fty: number;
-  copq: number;
-  leakageHotspot: string;
-  activeQuarantines: number;
-}
-
-interface ParetoItem {
-  defect: string;
-  count: number;
-  percentage: number;
-}
-
-interface SupplierQualityItem {
-  supplier: string;
-  quality: number;
-  delivery: number;
-  compliance: number;
-}
-
-interface VendorWatchlistItem {
-  supplier: string;
-  rejectCount: number;
-  acceptRate: number;
-  topDefects: string[];
-}
-
-interface ReworkHoldItem {
-  batch: string;
-  phase: string;
-  defect: string;
-  severity: "CRITICAL" | "MAJOR" | "MINOR";
-  disposition: string;
-  heldHours: number;
+interface QCAudit {
+  id: string;
+  phase: string | null;
+  status: string;
+  defectType: string | null;
+  defectCategory: string | null;
+  defectCause: string | null;
+  severity: string | null;
+  disposition: string | null;
+  createdAt: string;
+  qc?: { fullName: string };
 }
 
 interface PhaseBreakdownItem {
@@ -60,489 +40,393 @@ interface PhaseBreakdownItem {
   totalAudits: number;
   passCount: number;
   rejectCount: number;
-  holdCount: number;
   passRate: number;
-  topRejectReasons: { defectCategory: string; count: number }[];
-  topDefectTypes: { defectType: string; count: number }[];
-  severityBreakdown: Record<string, number>;
-  dispositionBreakdown: Record<string, number>;
+  topDefect: { defectType: string; count: number } | null;
 }
 
 interface PhaseBreakdownData {
   phases: PhaseBreakdownItem[];
-  overall: {
-    totalPass: number;
-    totalReject: number;
-    overallPassRate: number;
-  };
+  overall: { totalPass: number; totalReject: number; overallPassRate: number };
 }
 
-// --- Fetchers ---
-const fetchStats = async (): Promise<QCStats> => (await api.get("/production/qc/stats")).data;
-const fetchPareto = async (): Promise<ParetoItem[]> => (await api.get("/qc/analytics/defect-pareto")).data;
-const fetchSupplierQuality = async (): Promise<SupplierQualityItem[]> => (await api.get("/qc/analytics/supplier-quality")).data;
-const fetchVendorWatchlist = async (): Promise<VendorWatchlistItem[]> => (await api.get("/qc/analytics/vendor-watchlist")).data;
-const fetchReworkHold = async (): Promise<ReworkHoldItem[]> => (await api.get("/qc/analytics/rework-hold-log")).data;
-const fetchPhaseBreakdown = async (): Promise<PhaseBreakdownData> => (await api.get("/qc/analytics/phase-breakdown")).data;
-
-function formatRp(n: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
-}
-
-function severityColor(s: string) {
-  switch (s) {
-    case "CRITICAL": return "bg-red-500/20 text-red-400 border-red-500/40";
-    case "MAJOR": return "bg-amber-500/20 text-amber-400 border-amber-500/40";
-    default: return "bg-zinc-500/20 text-zinc-400 border-zinc-500/40";
-  }
+interface QCStats {
+  totalInspections: number;
+  passRate: number;
+  totalReject: number;
+  activeQuarantine: number;
+  lastMonthInspections?: number;
+  lastMonthReject?: number;
 }
 
 export default function QCAnalyticsDashboard() {
-  const { data: stats } = useQuery({ queryKey: ["qc-stats"], queryFn: fetchStats });
-  const { data: pareto } = useQuery({ queryKey: ["qc-pareto"], queryFn: fetchPareto });
-  const { data: supplierQuality } = useQuery({ queryKey: ["qc-supplier-quality"], queryFn: fetchSupplierQuality });
-  const { data: vendorWatchlist } = useQuery({ queryKey: ["qc-vendor-watchlist"], queryFn: fetchVendorWatchlist });
-  const { data: reworkHold } = useQuery({ queryKey: ["qc-rework-hold"], queryFn: fetchReworkHold });
-  const { data: phaseBreakdown } = useQuery({ queryKey: ["qc-phase-breakdown"], queryFn: fetchPhaseBreakdown });
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [dateRange, setDateRange] = React.useState<"today" | "week" | "month" | "all">("month");
+
+  const { data: stats, isLoading: statsLoading } = useQuery<QCStats>({
+    queryKey: ["qc-stats-simple"],
+    queryFn: async () => {
+      const res = await api.get("/production/qc/stats");
+      const data = res.data || {};
+      return {
+        totalInspections: data.totalInspections || 0,
+        passRate: data.passRate || 0,
+        totalReject: data.totalReject || 0,
+        activeQuarantine: data.activeQuarantine || 0,
+        lastMonthInspections: data.lastMonthInspections,
+        lastMonthReject: data.lastMonthReject,
+      };
+    },
+  });
+
+  const { data: phaseBreakdown, isLoading: phaseLoading } = useQuery<PhaseBreakdownData>({
+    queryKey: ["qc-phase-breakdown"],
+    queryFn: async () => {
+      const res = await api.get("/qc/analytics/phase-breakdown");
+      return res.data || { phases: [], overall: { totalPass: 0, totalReject: 0, overallPassRate: 0 } };
+    },
+  });
+
+  const { data: audits, isLoading: auditsLoading } = useQuery<QCAudit[]>({
+    queryKey: ["qc-recent-audits", dateRange],
+    queryFn: async () => {
+      const res = await api.get("/qc/report");
+      const allAudits = res.data || [];
+      const now = new Date();
+      const filtered = allAudits.filter((a: QCAudit) => {
+        const date = new Date(a.createdAt);
+        switch (dateRange) {
+          case "today":
+            return date.toDateString() === now.toDateString();
+          case "week":
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return date >= weekAgo;
+          case "month":
+            const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+            return date >= monthAgo;
+          default:
+            return true;
+        }
+      });
+      return filtered.slice(0, 50);
+    },
+  });
+
+  const filteredAudits = useMemo(() => {
+    if (!audits) return [];
+    if (!searchTerm) return audits;
+    const term = searchTerm.toLowerCase();
+    return audits.filter(
+      (a) =>
+        a.phase?.toLowerCase().includes(term) ||
+        a.status?.toLowerCase().includes(term) ||
+        a.defectType?.toLowerCase().includes(term) ||
+        a.qc?.fullName?.toLowerCase().includes(term)
+    );
+  }, [audits, searchTerm]);
+
+  const compareInspections = useMemo(() => {
+    if (!stats) return null;
+    const current = stats.totalInspections;
+    const last = stats.lastMonthInspections || 0;
+    if (last === 0) return null;
+    const diff = ((current - last) / last) * 100;
+    return { diff, isPositive: diff >= 0 };
+  }, [stats]);
+
+  const compareReject = useMemo(() => {
+    if (!stats) return null;
+    const current = stats.totalReject;
+    const last = stats.lastMonthReject || 0;
+    if (last === 0) return null;
+    const diff = ((current - last) / last) * 100;
+    return { diff, isPositive: diff <= 0 };
+  }, [stats]);
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+
+  const severityStyle = (s: string | null) => {
+    switch (s) {
+      case "CRITICAL": return "bg-rose-50 text-rose-600 border border-rose-100";
+      case "MAJOR": return "bg-amber-50 text-amber-600 border border-amber-100";
+      default: return "bg-slate-50 text-slate-500 border border-slate-100";
+    }
+  };
+
+  const statusStyle = (s: string | null) => {
+    switch (s) {
+      case "GOOD": case "PASSED": return "bg-emerald-50 text-emerald-600 border border-emerald-100";
+      case "REJECT": case "FAILED": return "bg-rose-50 text-rose-600 border border-rose-100";
+      default: return "bg-blue-50 text-blue-600 border border-blue-100";
+    }
+  };
+
+  const getDateRangeLabel = (range: string) => {
+    switch (range) {
+      case "today": return "Hari Ini";
+      case "week": return "7 Hari";
+      case "month": return "Bulan Ini";
+      default: return "Semua";
+    }
+  };
 
   return (
-    <DashboardShell title="QC" titleAccent="Dashboard" subtitle="Quality analytics, phase breakdown, defect tracking, and vendor monitoring.">
-      <div className="space-y-10">
+    <DashboardShell
+      title="QC"
+      titleAccent="Dashboard"
+      subtitle="Quality analytics dan track aktivitas inspeksi"
+    >
+      {/* ── SECTION 1: KPI CARDS ── */}
+      <SectionLabel className="flex items-center gap-2 text-slate-500">
+          <Activity className="h-3.5 w-3.5" />
+          KEY PERFORMANCE INDICATORS
+        </SectionLabel>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <KpiCard
-          label="FTY (First Time Yield)"
-          value={stats ? `${(stats.fty * 100).toFixed(1)}%` : "—"}
-          targetPct={stats ? Math.round(stats.fty * 100) : 0}
-          icon={<Target />}
-        />
-        <KpiCard
-          label="COPQ"
-          value={stats ? formatRp(stats.copq) : "—"}
-          targetPct={stats ? (stats.copq < 1e9 ? 80 : stats.copq < 5e9 ? 50 : 20) : 0}
-          icon={<DollarSign />}
-        />
-        <KpiCard
-          label="LEAKAGE HOTSPOT"
-          value={stats?.leakageHotspot ?? "—"}
-          targetPct={stats?.leakageHotspot ? 50 : 100}
-          icon={<AlertTriangle />}
-        />
-        <KpiCard
-          label="ACTIVE QUARANTINES"
-          value={stats ? String(stats.activeQuarantines) : "—"}
-          targetPct={stats ? (stats.activeQuarantines === 0 ? 100 : 0) : 0}
-          icon={<Package />}
-        />
-      </div>
-
-      {/* Phase Breakdown */}
-      {phaseBreakdown && (
-        <div className="space-y-6">
-          <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" /> PHASE BREAKDOWN
-              </CardTitle>
-              <CardDescription className="text-zinc-500 text-[10px] uppercase">
-                Pass / Reject per inspection phase
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="rounded-xl border border-zinc-900 overflow-hidden mx-6 mb-6">
-                <Table>
-                  <TableHeader className="bg-zinc-900/50">
-                    <TableRow className="border-zinc-900">
-                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Phase</TableHead>
-                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Pass</TableHead>
-                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Reject</TableHead>
-                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Pass Rate</TableHead>
-                      <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Top Defect</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {phaseBreakdown.phases.map((p) => {
-                      const topDefect = p.topDefectTypes[0];
-                      return (
-                        <TableRow key={p.phase} className="border-zinc-900 hover:bg-white/[0.02]">
-                          <TableCell className="font-bold text-white text-sm">{p.phase}</TableCell>
-                          <TableCell className="text-right text-emerald-400 font-bold">{p.passCount}</TableCell>
-                          <TableCell className="text-right text-red-400 font-bold">{p.rejectCount}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="w-20 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-emerald-500 transition-all"
-                                  style={{ width: `${p.passRate}%` }}
-                                />
-                              </div>
-                              <span className="text-zinc-400 text-xs font-mono">{p.passRate}%</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-zinc-400 text-xs">
-                            {topDefect ? (
-                              <DnaBadge status="warning" className="text-[9px]">
-                                {topDefect.defectType} ({topDefect.count})
-                              </DnaBadge>
-                            ) : (
-                              <span className="text-zinc-600">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Defect Categories */}
-          <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-400" /> DEFECT CATEGORIES
-              </CardTitle>
-              <CardDescription className="text-zinc-500 text-[10px] uppercase">
-                Aggregated defect categories across all phases
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {(() => {
-                  const categoryMap: Record<string, number> = {};
-                  for (const p of phaseBreakdown.phases) {
-                    for (const r of p.topRejectReasons) {
-                      categoryMap[r.defectCategory] = (categoryMap[r.defectCategory] || 0) + r.count;
-                    }
-                  }
-                  const categoryColors: Record<string, string> = {
-                    FISIK: "bg-red-500/20 text-red-400 border-red-500/40",
-                    KIMIA: "bg-blue-500/20 text-blue-400 border-blue-500/40",
-                    MIKROBIOLOGI: "bg-purple-500/20 text-purple-400 border-purple-500/40",
-                    LABEL_DOKUMEN: "bg-amber-500/20 text-amber-400 border-amber-500/40",
-                    KEMASAN: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
-                    LAINNYA: "bg-zinc-500/20 text-zinc-400 border-zinc-500/40",
-                  };
-                  return Object.entries(categoryMap)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([cat, count]) => (
-                      <Badge
-                        key={cat}
-                        className={`border text-[10px] font-black uppercase rounded-none px-3 py-1.5 ${categoryColors[cat] || "bg-zinc-500/20 text-zinc-400 border-zinc-500/40"}`}
-                      >
-                        {cat}: {count}
-                      </Badge>
-                    ));
-                })()}
-                {(() => {
-                  const hasAny = phaseBreakdown.phases.some((p) => p.topRejectReasons.length > 0);
-                  return !hasAny ? <p className="text-zinc-600 text-xs">No defect data</p> : null;
-                })()}
-              </div>
-            </CardContent>
-          </Card>
+      {statsLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse">
+              <div className="h-4 bg-slate-100 rounded w-1/2 mb-4" />
+              <div className="h-10 bg-slate-100 rounded w-3/4" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+          <StatCard
+            label="Total Inspeksi"
+            value={String(stats?.totalInspections || 0)}
+            subValue={compareInspections ? (
+              <span className={`flex items-center gap-1 text-[9px] font-bold uppercase ${compareInspections.isPositive ? "text-emerald-600" : "text-rose-600"}`}>
+                {compareInspections.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {Math.abs(Number(compareInspections.diff)).toFixed(1)}% vs last month
+              </span>
+            ) : "vs last month"}
+            icon={<FlaskConical className="text-blue-600" />}
+          />
+          <StatCard
+            label="Pass Rate"
+            value={`${Number(stats?.passRate || 0).toFixed(1)}%`}
+            subValue={Number(stats?.passRate || 0) >= 95 ? "Above target" : "Below target 95%"}
+            icon={<ShieldCheck className="text-emerald-500" />}
+          />
+          <StatCard
+            label="Total Reject"
+            value={String(stats?.totalReject || 0)}
+            subValue={compareReject ? (
+              <span className={`flex items-center gap-1 text-[9px] font-bold uppercase ${compareReject.isPositive ? "text-emerald-600" : "text-rose-600"}`}>
+                {compareReject.isPositive ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                {Math.abs(Number(compareReject.diff)).toFixed(1)}% vs last month
+              </span>
+            ) : "vs last month"}
+            icon={<AlertTriangle className="text-rose-500" />}
+          />
+          <StatCard
+            label="Active Quarantine"
+            value={String(stats?.activeQuarantine || 0)}
+            subValue={(stats?.activeQuarantine || 0) === 0 ? "No holds" : "Needs attention"}
+            icon={<Package className="text-amber-500" />}
+          />
         </div>
       )}
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* ── SECTION 2: PHASE BREAKDOWN TABLE ── */}
+      <SectionLabel className="flex items-center gap-2 text-slate-500">
+          <Clock className="h-3.5 w-3.5" />
+          PHASE BREAKDOWN
+        </SectionLabel>
 
-        {/* Pareto Defect Distribution */}
-        <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-              <FlaskConical className="h-4 w-4 text-emerald-500" /> Pareto Defect Distribution
-            </CardTitle>
-            <CardDescription className="text-zinc-500 text-[10px] uppercase">
-              Defect frequency sorted by impact
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={pareto ?? []} layout="vertical" margin={{ top: 0, right: 30, left: 60, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis type="number" tick={{ fill: "#a1a1aa", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="defect" tick={{ fill: "#a1a1aa", fontSize: 10 }} axisLine={false} tickLine={false} width={100} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: "#fff" }}
-                  formatter={(value) => [value, "Count"]}
-                />
-                <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Supplier Quality Radar */}
-        <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-              <Activity className="h-4 w-4 text-emerald-500" /> Supplier Quality Radar
-            </CardTitle>
-            <CardDescription className="text-zinc-500 text-[10px] uppercase">
-              Multi-dimensional score per supplier
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={320}>
-              <RadarChart data={supplierQuality ?? []} cx="50%" cy="50%" outerRadius="75%">
-                <PolarGrid stroke="#27272a" />
-                <PolarAngleAxis dataKey="supplier" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#a1a1aa", fontSize: 9 }} />
-                <Radar name="Quality" dataKey="quality" stroke="#10b981" fill="#10b981" fillOpacity={0.15} />
-                <Radar name="Delivery" dataKey="delivery" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} />
-                <Radar name="Compliance" dataKey="compliance" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.15} />
-                <Legend wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: "#fff" }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
+      <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden mb-10 shadow-sm">
+        {phaseLoading ? (
+          <div className="p-8 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 text-slate-300 animate-spin" />
+          </div>
+        ) : phaseBreakdown?.phases && phaseBreakdown.phases.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent border-slate-100">
+                  <TableHead className="py-4 px-6 text-table-header text-slate-400 font-black uppercase tracking-wider">Phase</TableHead>
+                  <TableHead className="py-4 px-6 text-table-header text-slate-400 text-center font-black uppercase tracking-wider">Total</TableHead>
+                  <TableHead className="py-4 px-6 text-table-header text-slate-400 text-center font-black uppercase tracking-wider">Pass</TableHead>
+                  <TableHead className="py-4 px-6 text-table-header text-slate-400 text-center font-black uppercase tracking-wider">Reject</TableHead>
+                  <TableHead className="py-4 px-6 text-table-header text-slate-400 font-black uppercase tracking-wider">Pass Rate</TableHead>
+                  <TableHead className="py-4 px-6 text-table-header text-slate-400 font-black uppercase tracking-wider">Top Defect</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {phaseBreakdown.phases.map((p, i) => (
+                  <TableRow key={p.phase || i} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                    <TableCell className="py-4 px-6 font-black text-slate-900 text-sm uppercase">
+                      {p.phase}
+                    </TableCell>
+                    <TableCell className="py-4 px-6 text-center font-bold text-slate-600 text-sm tabular-nums">
+                      {p.totalAudits}
+                    </TableCell>
+                    <TableCell className="py-4 px-6 text-center font-bold text-emerald-600 text-sm tabular-nums">
+                      {p.passCount}
+                    </TableCell>
+                    <TableCell className="py-4 px-6 text-center font-bold text-rose-600 text-sm tabular-nums">
+                      {p.rejectCount}
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              Number(p.passRate || 0) >= 95 ? "bg-emerald-500" : Number(p.passRate || 0) >= 80 ? "bg-amber-500" : "bg-rose-500"
+                            }`}
+                            style={{ width: `${Number(p.passRate || 0)}%` }}
+                          />
+                        </div>
+                        <span className={`font-black text-xs tabular-nums ${
+                          Number(p.passRate || 0) >= 95 ? "text-emerald-600" : Number(p.passRate || 0) >= 80 ? "text-amber-600" : "text-rose-600"
+                        }`}>
+                          {Number(p.passRate || 0).toFixed(1)}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      {p.topDefect ? (
+                        <Badge className="bg-rose-50 text-rose-600 border border-rose-100 text-[9px] font-black uppercase rounded-lg px-2.5 py-1">
+                          {p.topDefect.defectType} ({p.topDefect.count})
+                        </Badge>
+                      ) : (
+                        <span className="text-slate-300 text-xs font-bold uppercase">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="p-12 flex flex-col items-center justify-center text-center">
+            <FlaskConical className="h-10 w-10 text-slate-200 mb-3" />
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">No phase data available</p>
+            <p className="text-[9px] text-slate-300 mt-1">Start an inspection to see breakdown</p>
+          </div>
+        )}
       </div>
 
-      {/* Tables Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* ── SECTION 3: RECENT AUDITS TABLE ── */}
+      <SectionLabel className="flex items-center gap-2 text-slate-500">
+          <Activity className="h-3.5 w-3.5" />
+          RECENT AUDITS
+        </SectionLabel>
 
-        {/* Critical Vendor Watchlist */}
-        <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-red-400" /> Critical Vendor Watchlist
-              </CardTitle>
-              <CardDescription className="text-zinc-500 text-[10px] uppercase">
-                Suppliers flagged below 90% acceptance
-              </CardDescription>
+      <TableWrapper
+        filters={
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="status-dot bg-emerald-500" />
+              <div>
+                <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
+                  Audit Trail
+                </h3>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                  Real-time • {filteredAudits.length} Records
+                </p>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="rounded-xl border border-zinc-900 overflow-hidden mx-6 mb-6">
-              <Table>
-                <TableHeader className="bg-zinc-900/50">
-                  <TableRow className="border-zinc-900">
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Supplier</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Rejects</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Accept Rate</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Top Defects</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(vendorWatchlist ?? []).map(v => (
-                    <TableRow
-                      key={v.supplier}
-                      className={`border-zinc-900 hover:bg-white/[0.02] ${v.acceptRate < 90 ? "bg-red-950/20" : ""}`}
-                    >
-                      <TableCell className={`font-bold text-sm ${v.acceptRate < 90 ? "text-red-400" : "text-white"}`}>
-                        {v.supplier}
-                        {v.acceptRate < 90 && (
-                          <Badge className="ml-2 bg-red-500/20 text-red-400 border-red-500/40 text-[8px] font-black uppercase rounded-none">FLAGGED</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-zinc-300">{v.rejectCount}</TableCell>
-                      <TableCell className={`text-right font-bold ${v.acceptRate < 90 ? "text-red-400" : "text-emerald-400"}`}>
-                        {v.acceptRate.toFixed(1)}%
-                      </TableCell>
-                      <TableCell className="text-zinc-400 text-xs">
-                        <div className="flex flex-wrap gap-1">
-                          {v.topDefects.map(d => (
-                            <Badge key={d} className="bg-zinc-900 border-zinc-800 text-zinc-400 text-[9px] font-mono rounded-none px-2">{d}</Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(vendorWatchlist ?? []).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-16">
-                        <p className="text-zinc-800 font-black text-xl uppercase tracking-tight italic opacity-20">No flagged vendors</p>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-150">
+                {(["today", "week", "month", "all"] as const).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setDateRange(range)}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all border-none cursor-pointer ${
+                      dateRange === range
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    {getDateRangeLabel(range)}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1 md:w-56">
+                <DnaInput
+                  icon={<Search />}
+                  placeholder="Cari audit..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Rework & Hold Action Log */}
-        <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-400" /> Rework &amp; Hold Action Log
-            </CardTitle>
-            <CardDescription className="text-zinc-500 text-[10px] uppercase">
-              Batches exceeding 24h hold are blinking red
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="rounded-xl border border-zinc-900 overflow-hidden mx-6 mb-6">
-              <Table>
-                <TableHeader className="bg-zinc-900/50">
-                  <TableRow className="border-zinc-900">
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Batch</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Phase</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Defect</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Severity</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Disposition</TableHead>
-                    <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Held Hours</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(reworkHold ?? []).map((r, i) => (
-                    <TableRow
-                      key={`${r.batch}-${i}`}
-                      className={`border-zinc-900 hover:bg-white/[0.02] ${r.heldHours > 24 ? "blink-red" : ""}`}
-                    >
-                      <TableCell className="font-bold text-white text-sm">{r.batch}</TableCell>
-                      <TableCell className="text-zinc-400 text-xs">{r.phase}</TableCell>
-                      <TableCell className="text-zinc-300">{r.defect}</TableCell>
-                      <TableCell>
-                        <Badge className={`border text-[9px] font-black uppercase rounded-none ${severityColor(r.severity)}`}>
-                          {r.severity}
+          </div>
+        }
+      >
+        {auditsLoading ? (
+          <div className="p-12 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 text-slate-300 animate-spin" />
+          </div>
+        ) : filteredAudits.length === 0 ? (
+          <div className="p-12 flex flex-col items-center justify-center text-center">
+            <Activity className="h-10 w-10 text-slate-200 mb-3" />
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">No audit records found</p>
+            <p className="text-[9px] text-slate-300 mt-1">Try adjusting date range or search term</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent border-slate-100">
+                  <TableHead className="py-4 px-4 text-table-header text-slate-400 font-black uppercase tracking-wider">Date</TableHead>
+                  <TableHead className="py-4 px-4 text-table-header text-slate-400 font-black uppercase tracking-wider">Phase</TableHead>
+                  <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center font-black uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="py-4 px-4 text-table-header text-slate-400 font-black uppercase tracking-wider">Defect Type</TableHead>
+                  <TableHead className="py-4 px-4 text-table-header text-slate-400 font-black uppercase tracking-wider">Severity</TableHead>
+                  <TableHead className="py-4 px-4 text-table-header text-slate-400 font-black uppercase tracking-wider">Inspector</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAudits.map((a, i) => {
+                  const isReject = a.status === "REJECT" || a.status === "FAILED";
+                  return (
+                    <TableRow key={a.id || i} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                      <TableCell className="py-3 px-4 text-slate-500 text-xs font-mono tabular-nums">
+                        {formatDate(a.createdAt)}
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <DnaBadge status="info" className="text-[9px]">
+                          {a.phase || "—"}
+                        </DnaBadge>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-center">
+                        <Badge className={`text-[8px] font-black uppercase rounded-lg px-2.5 py-1 border-none shadow-sm ${statusStyle(a.status)}`}>
+                          {a.status === "GOOD" ? "PASSED" : a.status === "REJECT" ? "FAILED" : a.status || "—"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-zinc-400 text-xs">{r.disposition}</TableCell>
-                      <TableCell className={`text-right font-bold ${r.heldHours > 24 ? "text-red-400" : "text-zinc-300"}`}>
-                        {r.heldHours}h
+                      <TableCell className="py-3 px-4">
+                        {isReject && a.defectType ? (
+                          <Badge className="bg-rose-50 text-rose-600 border border-rose-100 text-[9px] font-mono rounded-lg px-2.5 py-1">
+                            {a.defectType}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-300 text-xs font-bold uppercase">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        {a.severity ? (
+                          <Badge className={`text-[8px] font-black uppercase rounded-lg px-2.5 py-1 border-none ${severityStyle(a.severity)}`}>
+                            {a.severity}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-300 text-xs font-bold uppercase">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-slate-500 text-xs font-semibold">
+                        {a.qc?.fullName || "—"}
                       </TableCell>
                     </TableRow>
-                  ))}
-                  {(reworkHold ?? []).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-16">
-                        <p className="text-zinc-800 font-black text-xl uppercase tracking-tight italic opacity-20">Clean floor — no holds</p>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-
-      </div>
-
-      {/* Recent Audits */}
-      <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
-        <CardHeader>
-          <CardTitle className="text-white uppercase tracking-tighter text-sm font-bold flex items-center gap-2">
-            <Activity className="h-4 w-4 text-emerald-500" /> RECENT AUDITS
-          </CardTitle>
-          <CardDescription className="text-zinc-500 text-[10px] uppercase">
-            Latest 10 QC audit records
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <RecentAuditsTable />
-        </CardContent>
-      </Card>
-
-      <style>{`
-        @keyframes blink-red {
-          0%, 100% { background-color: transparent; }
-          50% { background-color: rgba(239, 68, 68, 0.15); }
-        }
-        .blink-red {
-          animation: blink-red 1.5s ease-in-out infinite;
-        }
-      `}        </style>
-      </div>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </TableWrapper>
     </DashboardShell>
-  );
-}
-
-function RecentAuditsTable() {
-  const { data: audits, isLoading } = useQuery({
-    queryKey: ["qc-recent-audits"],
-    queryFn: async () => {
-      const res = await api.get("/qc/report");
-      return (res.data || []).slice(0, 10);
-    },
-    staleTime: 30_000,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-400" />
-        <span className="ml-3 text-zinc-500 text-xs">Loading audit records...</span>
-      </div>
-    );
-  }
-
-  if (!audits || audits.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-zinc-800 font-black text-xl uppercase tracking-tight italic opacity-20">
-          No audit records yet
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-xl border border-zinc-900 overflow-hidden mx-6 mb-6">
-      <Table>
-        <TableHeader className="bg-zinc-900/50">
-          <TableRow className="border-zinc-900">
-            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Date</TableHead>
-            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Phase</TableHead>
-            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Status</TableHead>
-            <TableHead className="font-sans text-[10px] uppercase text-zinc-500">Defect Type</TableHead>
-            <TableHead className="font-sans text-[10px] uppercase text-zinc-500 text-right">Inspector</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {audits.map((a: any, i: number) => {
-            const isReject = a.status === "REJECT" || a.status === "FAILED";
-            return (
-              <TableRow key={a.id || i} className="border-zinc-900 hover:bg-white/[0.02]">
-                <TableCell className="text-zinc-400 text-xs font-mono">
-                  {new Date(a.createdAt).toLocaleDateString("id-ID")}
-                </TableCell>
-                <TableCell>
-                  <DnaBadge status="info" className="text-[9px]">
-                    {a.phase || "—"}
-                  </DnaBadge>
-                </TableCell>
-                <TableCell>
-                  <DnaBadge
-                    status={
-                      a.status === "GOOD" || a.status === "PASSED"
-                        ? "success"
-                        : isReject
-                          ? "critical"
-                          : "warning"
-                    }
-                    className="text-[9px]"
-                  >
-                    {a.status === "GOOD" ? "PASSED" : a.status === "REJECT" ? "FAILED" : a.status || "—"}
-                  </DnaBadge>
-                </TableCell>
-                <TableCell className="text-zinc-400 text-xs">
-                  {isReject && a.defectType ? (
-                    <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-[9px] font-mono rounded-none px-2">
-                      {a.defectType}
-                    </Badge>
-                  ) : (
-                    <span className="text-zinc-600">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right text-zinc-400 text-xs">
-                  {a.qc?.fullName || "—"}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
   );
 }

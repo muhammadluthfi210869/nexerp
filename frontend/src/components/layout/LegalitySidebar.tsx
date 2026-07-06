@@ -9,7 +9,12 @@ import {
   Scale,
   History,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  FileText,
+  Inbox,
+  Beaker,
+  Moon,
+  PlusCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,8 +35,32 @@ const legalityLinks = [
   {
     name: "Compliance Inbox",
     href: "/legality/inbox",
-    icon: History,
+    icon: Inbox,
     description: "Meja Kurasi APJ"
+  },
+  {
+    name: "Entry Portal",
+    href: "/legality/input",
+    icon: PlusCircle,
+    description: "Input HKI / BPOM / Halal"
+  },
+  {
+    name: "Records",
+    href: "/legality/records",
+    icon: FileText,
+    description: "Auditory Log"
+  },
+  {
+    name: "Permits",
+    href: "/legality/permits",
+    icon: Scale,
+    description: "Legal Registry"
+  },
+  {
+    name: "Master INCI",
+    href: "/legality/master-inci",
+    icon: Beaker,
+    description: "Regulatory Brain"
   }
 ];
 

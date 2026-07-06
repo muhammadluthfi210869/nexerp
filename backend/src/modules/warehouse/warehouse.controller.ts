@@ -43,12 +43,7 @@ export class WarehouseController {
   }
 
   @Get('catalog')
-  @Roles(
-    UserRole.SUPER_ADMIN,
-    UserRole.WAREHOUSE,
-    UserRole.PURCHASING,
-    UserRole.PRODUCTION,
-  )
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getCatalog(@Query('warehouseId') warehouseId?: string) {
     return this.warehouseService.getCatalog(warehouseId);
   }
@@ -66,26 +61,31 @@ export class WarehouseController {
   }
 
   @Get('check-thresholds')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async checkThresholds() {
     return this.warehouseService.checkHoldThresholds();
   }
 
   @Get('locations')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getLocations() {
     return this.warehouseService.getLocations();
   }
 
   @Get('suggest-batch/:materialId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getSuggestedBatch(@Param('materialId') materialId: string) {
     return this.warehouseService.getSuggestedBatch(materialId);
   }
 
   @Post('validate-handover')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async validateHandover(@Body() data: any) {
     return this.warehouseService.validateHandover(data);
   }
 
   @Post('opname/:id/approve')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveOpname(
     @Param('id') id: string,
     @Body() body: { userId: string },
@@ -94,11 +94,13 @@ export class WarehouseController {
   }
 
   @Post('release/:workOrderId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async releaseMaterial(@Param('workOrderId') workOrderId: string) {
     return this.warehouseService.releaseMaterial(workOrderId);
   }
 
   @Post('batches/:id/status')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async updateBatchStatus(
     @Param('id') id: string,
     @Body() body: { status: any; userId: string },
@@ -113,16 +115,19 @@ export class WarehouseController {
   // === PHASE 2: Transfer Orders ===
 
   @Post('transfers')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createTransfer(@Body() data: any) {
     return this.warehouseService.createTransferOrder(data);
   }
 
   @Get('transfers')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getTransfers() {
     return this.warehouseService.getTransferOrders();
   }
 
   @Post('transfers/:id/execute')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async executeTransfer(
     @Param('id') id: string,
     @Body() body: { userId: string },
@@ -133,16 +138,19 @@ export class WarehouseController {
   // === PHASE 2: Stock Opname ===
 
   @Post('opname')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createOpname(@Body() data: any) {
     return this.warehouseService.createOpname(data);
   }
 
   @Get('opname')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getOpnames() {
     return this.warehouseService.getOpnames();
   }
 
   @Post('opname/:id/approve-pin')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveOpnameWithPin(
     @Param('id') id: string,
     @Body() body: { userId: string; pin: string },
@@ -157,11 +165,13 @@ export class WarehouseController {
   // === PHASE 1: Inbound Management ===
 
   @Get('inbounds')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getInbounds() {
     return this.warehouseService.getInbounds();
   }
 
   @Post('inbounds')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createInbound(@Body() data: any) {
     return this.warehouseService.createInbound(data);
   }
@@ -169,16 +179,19 @@ export class WarehouseController {
   // === PHASE 1: Stock Adjustment ===
 
   @Get('adjustments')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getAdjustments() {
     return this.warehouseService.getAdjustments();
   }
 
   @Post('adjustments')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createAdjustment(@Body() data: any) {
     return this.warehouseService.createAdjustment(data);
   }
 
   @Post('adjustments/:id/approve')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveAdjustment(
     @Param('id') id: string,
     @Body() body: { status: string; userId: string },
@@ -193,6 +206,7 @@ export class WarehouseController {
   // === PHASE 1: Release Requests ===
 
   @Get('release-requests')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getReleaseRequests() {
     return this.warehouseService.getReleaseRequests();
   }

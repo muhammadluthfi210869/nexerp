@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseInterceptors,
   UploadedFiles,
   Req,
@@ -12,15 +13,18 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CreativeService } from './creative.service';
-import { ApprovalStatus } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { ApjReviewDto } from './dto/apj-review.dto';
+import { ClientReviewDto } from './dto/client-review.dto';
+import { UploadVersionDto } from './dto/upload-version.dto';
+import { UnlockTaskDto } from './dto/unlock-task.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('creative')
@@ -29,14 +33,26 @@ export class CreativeController {
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
   @Get('board')
-  getBoard() {
-    return this.creativeService.getBoard();
+  getBoard(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<any> {
+    return this.creativeService.getBoard(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 50,
+    );
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
   @Get('tasks')
-  getAllTasks() {
-    return this.creativeService.getAllTasks();
+  getAllTasks(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<any> {
+    return this.creativeService.getAllTasks(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 50,
+    );
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
@@ -47,21 +63,14 @@ export class CreativeController {
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
   @Post('task')
-  createTask(
-    @Body()
-    dto: {
-      leadId: string;
-      brief: string;
-      soId?: string;
-      taskType?: string;
-    },
-  ) {
-    return this.creativeService.createTask(
-      dto.leadId,
-      dto.brief,
-      dto.soId,
-      dto.taskType,
-    );
+  createTask(@Body() dto: CreateTaskDto, @Req() req: any) {
+    return this.creativeService.createTask({
+      leadId: dto.leadId,
+      brief: dto.brief,
+      soId: dto.soId,
+      taskType: dto.taskType,
+      createdBy: req.user?.id,
+    });
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
@@ -86,16 +95,56 @@ export class CreativeController {
         limits: {
           fileSize: 50 * 1024 * 1024,
         },
+        fileFilter: (req: any, file: any, cb: any) => {
+          const allowedMimes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/svg+xml',
+            'application/postscript',
+            'application/illustrator',
+            'image/tiff',
+            'application/vnd.corel-draw',
+          ];
+          const allowedExts = [
+            '.pdf',
+            '.ai',
+            '.cdr',
+            '.jpg',
+            '.jpeg',
+            '.png',
+            '.svg',
+            '.tif',
+            '.tiff',
+          ];
+          const ext = extname(file.originalname).toLowerCase();
+          if (
+            !allowedMimes.includes(file.mimetype) &&
+            !allowedExts.includes(ext)
+          ) {
+            return cb(
+              new BadRequestException(`File type ${file.mimetype} not allowed`),
+              false,
+            );
+          }
+          cb(null, true);
+        },
       },
     ),
   )
   uploadVersion(
     @Param('id') id: string,
     @UploadedFiles() files: { artwork?: any[]; mockup?: any[] },
-    @Body() dto: { printSpecs?: string; uploadedBy?: string },
+    @Body() dto: UploadVersionDto,
+    @Req() req: any,
   ) {
-    if (files.mockup && files.mockup[0].size > 5 * 1024 * 1024) {
-      throw new BadRequestException('Mockup file too large (Max 5MB)');
+    let printSpecs: any = undefined;
+    if (dto.printSpecs) {
+      try {
+        printSpecs = JSON.parse(dto.printSpecs);
+      } catch {
+        throw new BadRequestException('Invalid JSON in printSpecs');
+      }
     }
 
     const artworkUrl = files.artwork
@@ -109,8 +158,8 @@ export class CreativeController {
       taskId: id,
       artworkUrl,
       mockupUrl,
-      printSpecs: dto.printSpecs ? JSON.parse(dto.printSpecs) : undefined,
-      uploadedBy: dto.uploadedBy,
+      printSpecs,
+      uploadedBy: req.user?.id,
     });
   }
 
@@ -124,20 +173,14 @@ export class CreativeController {
   @Patch('task/:id/apj-review')
   apjReview(
     @Param('id') id: string,
-    @Body()
-    dto: {
-      status: ApprovalStatus;
-      notes: string;
-      authorId: string;
-      pin: string;
-    },
-    @Req() req: Request,
+    @Body() dto: ApjReviewDto,
+    @Req() req: any,
   ) {
     return this.creativeService.apjReview({
       taskId: id,
       status: dto.status,
       notes: dto.notes,
-      authorId: dto.authorId,
+      authorId: req.user?.id,
       pin: dto.pin,
       ipAddress: req.ip ?? null,
     });
@@ -145,10 +188,7 @@ export class CreativeController {
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
   @Patch('task/:id/client-review')
-  clientReview(
-    @Param('id') id: string,
-    @Body() dto: { status: ApprovalStatus; notes?: string },
-  ) {
+  clientReview(@Param('id') id: string, @Body() dto: ClientReviewDto) {
     return this.creativeService.clientReview(id, dto.status, dto.notes);
   }
 
@@ -156,8 +196,14 @@ export class CreativeController {
   @Patch('task/:id/unlock')
   unlockTask(
     @Param('id') id: string,
-    @Body() dto: { action: 'CHARGE' | 'WAIVE'; managerPin?: string },
+    @Body() dto: UnlockTaskDto,
+    @Req() req: any,
   ) {
-    return this.creativeService.unlockTask(id, dto.action, dto.managerPin);
+    return this.creativeService.unlockTask({
+      taskId: id,
+      action: dto.action,
+      managerPin: dto.managerPin,
+      userId: req.user?.id,
+    });
   }
 }

@@ -48,7 +48,6 @@ export class LegalityController {
   @Post('hki')
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
   async createHki(@Body() data: any) {
-    console.log('[LegalityController] Received HKI creation request:', data);
     return this.legalityService.createHki(data);
   }
 
@@ -68,6 +67,36 @@ export class LegalityController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
   async advanceBpom(@Param('id') id: string) {
     return this.legalityService.advanceBpomStage(id);
+  }
+
+  // --- HALAL CERTIFICATION ENDPOINTS ---
+
+  @Get('halal')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async getHalal() {
+    return this.legalityService.getHalalRecords();
+  }
+
+  @Post('halal')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async createHalal(@Body() data: any) {
+    return this.legalityService.createHalal(data);
+  }
+
+  @Patch('halal/:id/advance')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async advanceHalal(@Param('id') id: string) {
+    return this.legalityService.advanceHalalStage(id);
+  }
+
+  // --- EXPIRY TRACKING ---
+
+  @Get('expiry')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async getExpiryData(@Query('limit') limit?: string) {
+    return this.legalityService.getExpiryData(
+      limit ? parseInt(limit) : undefined,
+    );
   }
 
   @Get(':id/logs')

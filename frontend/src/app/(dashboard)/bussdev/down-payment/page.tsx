@@ -33,7 +33,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
+import { StatCard, KpiCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
 
 // Static Data from Plan
 const STATIC_DP_LIST = [
@@ -107,26 +107,12 @@ export default function SalesDownPaymentPrototype() {
                 icon={<AlertCircle />}
               />
 
-              <div className="bg-blue-600 border-none rounded-2xl p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in text-white">
-                <div className="flex justify-between items-center relative z-10 w-full">
-                  <div className="space-y-2 flex-1 min-w-0 pr-4">
-                    <p className="text-[10px] font-black text-blue-200 uppercase tracking-[0.25em]">
-                      Contract Security Rate
-                    </p>
-                    <h3 className="text-[26px] font-black text-white tracking-tight tabular leading-tight italic">
-                      100%
-                    </h3>
-                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-lg text-emerald-400 animate-pulse">
-                      <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">No Default Risk</span>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-white/10 rounded-xl transition-all shadow-sm shrink-0 text-white">
-                    <CheckCircle2 className="w-[18px] h-[18px]" />
-                  </div>
-                </div>
-                <CheckCircle2 className="w-[110px] h-[110px] stroke-[0.75px] text-white/10 transition-all duration-700 absolute -bottom-5 -right-5 pointer-events-none select-none z-0" />
-              </div>
+              <KpiCard
+                label="Contract Security Rate"
+                value="100%"
+                targetPct={100}
+                icon={<CheckCircle2 />}
+              />
             </div>
 
             {/* List Table */}

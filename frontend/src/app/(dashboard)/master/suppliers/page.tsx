@@ -36,6 +36,7 @@ import { DnaButton } from "@/components/dna/DnaButton";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { DnaInput } from "@/components/dna/DnaInput";
 import { StatCard } from "@/components/dna/StatCard";
+import { DashboardCard } from "@/components/dna/DashboardCard";
 import { TableShell } from "@/components/layout/TableShell";
 import { CascadingAddress } from "@/components/ui/cascading-address";
 
@@ -190,9 +191,9 @@ export default function MasterSuppliersPage() {
           </div>
         ) : (
           filteredSuppliers.map((supplier) => (
-            <div key={supplier.id} className="bg-white border border-[var(--border-color)] rounded-2xl shadow-card hover:shadow-xl transition-all group overflow-hidden flex flex-col">
-              <div className="p-6 flex-1">
-                <div className="flex justify-between items-start mb-4">
+            <DashboardCard key={supplier.id} className="flex flex-col !p-0 overflow-hidden">
+              <div className="p-8 flex-1">
+                <div className="flex justify-between items-start mb-6">
                   <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
                     <Truck className="w-6 h-6" />
                   </div>
@@ -202,7 +203,7 @@ export default function MasterSuppliersPage() {
                 </div>
 
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-1">{supplier.name}</h3>
-                <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 mb-4">
+                <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 mb-6">
                   <ShieldCheck className="w-3 h-3 text-emerald-500" />
                   PIC: {supplier.contact || "N/A"}
                 </p>
@@ -218,21 +219,21 @@ export default function MasterSuppliersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 border-t border-slate-50 pt-5">
+                <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-6">
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Net Terms</p>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Net Terms</p>
                     <p className="text-sm font-black text-slate-900">{supplier.term_of_payment} Days</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Pajak</p>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Pajak</p>
                     <p className="text-sm font-black text-slate-900">{supplier.tax != null ? `${supplier.tax}%` : "---"}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Kota</p>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Kota</p>
                     <p className="text-sm font-black text-slate-900">{supplier.city || "---"}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Performance</p>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Performance</p>
                     <div className="flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                       <span className="text-sm font-black text-slate-900">4.8</span>
@@ -268,7 +269,7 @@ export default function MasterSuppliersPage() {
                   <DnaButton variant="ghost" onClick={() => handleDelete(supplier.id)}><Trash2 className="w-3.5 h-3.5 text-red-500" /></DnaButton>
                 </div>
               </div>
-            </div>
+            </DashboardCard>
           ))
         )}
       </div>

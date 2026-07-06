@@ -65,6 +65,12 @@ interface OrganicEntry {
   sharesCount: number;
 }
 
+function getCriticalCardClass(isCritical: boolean) {
+  return isCritical
+    ? "border-[#FECDD3] shadow-[0_0_0_1px_rgba(220,38,38,0.08),0_18px_40px_-16px_rgba(220,38,38,0.34)]"
+    : "border-slate-200 shadow-sm";
+}
+
 export default function MarketingCommandCenter() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("paid");
@@ -308,11 +314,41 @@ export default function MarketingCommandCenter() {
     return { s, l, c, i };
   }, [adsMatrix]);
 
+  const paidDataMissing = totals.s === 0 && totals.l === 0 && totals.c === 0 && totals.i === 0;
+  const ctr = totals.i > 0 ? (totals.c / totals.i) * 100 : 0;
+  const cpa = totals.l > 0 ? totals.s / totals.l : 0;
+  const paidEfficiencyCritical = totals.i > 0 && ctr < 1.2;
+  const paidCostCritical = totals.l > 0 && cpa > 150000;
+
+  const organicTotals = useMemo(() => ({
+    followers: Object.values(organicMatrix).reduce((a, c) => a + c.totalFollowers, 0),
+    reach: Object.values(organicMatrix).reduce((a, c) => a + c.totalReach, 0),
+    posts: Object.values(organicMatrix).reduce((a, c) => a + c.postsCount, 0),
+    engagement:
+      Object.values(organicMatrix).reduce(
+        (a, c) => a + c.likesCount + c.commentsCount + c.savesCount + c.sharesCount,
+        0
+      ),
+  }), [organicMatrix]);
+
+  const organicDataMissing =
+    organicTotals.followers === 0 &&
+    organicTotals.reach === 0 &&
+    organicTotals.posts === 0 &&
+    organicTotals.engagement === 0;
+  const contentIncomplete = !contentData.title.trim() || !contentData.url.trim();
+  const targetsIncomplete =
+    targetData.revenueTarget <= 0 ||
+    targetData.leadTarget <= 0 ||
+    targetData.postTarget <= 0 ||
+    targetData.adBudget <= 0;
+
   return (
     <FormShell
       title="MARKETING"
       titleAccent="OPERATIONS HUB"
       subtitle="Executive Command Matrix v5.4"
+      fullWidth
       actions={
         <div className="flex items-center gap-4">
            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl px-5 py-3 flex items-center gap-4 transition-all hover:border-blue-400">
@@ -349,7 +385,7 @@ export default function MarketingCommandCenter() {
       }
     >
       <TooltipProvider>
-        <div className="max-w-7xl mx-auto px-0 mt-4">
+        <div className="w-full max-w-[1400px] mt-4">
         <Tabs defaultValue="paid" className="space-y-8" onValueChange={(val) => { setActiveTab(val); setIsDraftLoaded(false); }}>
           
           <div className="flex items-center justify-between">
@@ -376,13 +412,37 @@ export default function MarketingCommandCenter() {
 
           <TabsContent value="paid" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <StatCard label="Aggregated Spend" value={`Rp ${totals.s.toLocaleString()}`} icon={<DollarSign />} />
-              <StatCard label="Leads Acquired" value={totals.l} icon={<Users />} />
-              <StatCard label="Efficiency (CTR)" value={`${totals.i > 0 ? ((totals.c/totals.i)*100).toFixed(2) : 0}%`} icon={<TrendingUp />} />
-              <StatCard label="Avg. CPA" value={`Rp ${totals.l > 0 ? (totals.s/totals.l).toLocaleString() : 0}`} icon={<Target />} />
+              <StatCard
+                label="Aggregated Spend"
+                value={`Rp ${totals.s.toLocaleString()}`}
+                icon={<DollarSign />}
+                subValue="Budget feed ready"
+                className={paidDataMissing ? `${getCriticalCardClass(true)} [&_h3]:text-[#DC2626]` : undefined}
+              />
+              <StatCard
+                label="Leads Acquired"
+                value={totals.l}
+                icon={<Users />}
+                subValue="Lead stream detected"
+                className={paidDataMissing ? `${getCriticalCardClass(true)} [&_h3]:text-[#DC2626]` : undefined}
+              />
+              <StatCard
+                label="Efficiency (CTR)"
+                value={`${totals.i > 0 ? ctr.toFixed(2) : 0}%`}
+                icon={<TrendingUp />}
+                subValue="CTR within normal range"
+                className={paidEfficiencyCritical ? `${getCriticalCardClass(true)} [&_h3]:text-[#DC2626]` : undefined}
+              />
+              <StatCard
+                label="Avg. CPA"
+                value={`Rp ${totals.l > 0 ? cpa.toLocaleString() : 0}`}
+                icon={<Target />}
+                subValue="Acquisition cost stable"
+                className={paidCostCritical ? `${getCriticalCardClass(true)} [&_h3]:text-[#DC2626]` : undefined}
+              />
             </div>
 
-            <Card className="border border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+            <Card className={`rounded-2xl overflow-hidden bg-white ${getCriticalCardClass(paidDataMissing)}`}>
               <div className="overflow-x-auto">
                 <TableWrapper>
                 <table className="w-full border-collapse">
@@ -467,7 +527,7 @@ export default function MarketingCommandCenter() {
           </TabsContent>
 
           <TabsContent value="organic" className="mt-0">
-             <Card className="border border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+             <Card className={`rounded-2xl overflow-hidden bg-white ${getCriticalCardClass(organicDataMissing)}`}>
                 <div className="overflow-x-auto">
                   <TableWrapper>
                   <table className="w-full border-collapse">
@@ -516,15 +576,15 @@ export default function MarketingCommandCenter() {
           </TabsContent>
 
            <TabsContent value="content">
-             <Card className="p-6 border border-slate-200 shadow-sm bg-white rounded-2xl relative overflow-hidden">
+             <Card className={`p-6 bg-white rounded-2xl relative overflow-hidden ${contentIncomplete ? `${getCriticalCardClass(true)} [&_h2]:text-[#DC2626] [&_.content-critical]:text-[#DC2626]` : getCriticalCardClass(false)}`}>
                 <div className="absolute top-0 right-0 p-6 text-blue-50/40 rotate-12"><Sparkles size={120} /></div>
-                <div className="relative z-10 max-w-4xl space-y-8">
+                <div className="relative z-10 w-full space-y-8">
                    <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
                          <TrendingUp className="text-white w-6 h-6" />
                       </div>
                       <div>
-                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Content <span className="text-blue-600">Performance</span></h2>
+                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Content <span className={contentIncomplete ? "content-critical" : "text-blue-600"}>Performance</span></h2>
                          <p className="text-xs font-medium text-slate-500">Audit individual posts for conversion and engagement</p>
                       </div>
                    </div>
@@ -572,11 +632,11 @@ export default function MarketingCommandCenter() {
           </TabsContent>
 
            <TabsContent value="targets">
-             <Card className="p-6 border border-slate-200 shadow-sm bg-white rounded-2xl overflow-hidden">
+             <Card className={`p-6 bg-white rounded-2xl overflow-hidden ${targetsIncomplete ? `${getCriticalCardClass(true)} [&_h3]:text-[#DC2626] [&_.target-critical]:text-[#DC2626]` : getCriticalCardClass(false)}`}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                    <div className="space-y-8">
                       <div className="space-y-1">
-                         <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Fiscal <span className="text-blue-600">KPIs</span></h3>
+                         <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Fiscal <span className={targetsIncomplete ? "target-critical" : "text-blue-600"}>KPIs</span></h3>
                          <p className="text-xs font-medium text-slate-400">Set the benchmark for current marketing period</p>
                       </div>
 
@@ -599,15 +659,6 @@ export default function MarketingCommandCenter() {
                         </div>
                       </div>
 
-                      {!canEditTargets && (
-                        <div className="p-5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                           <AlertTriangle className="text-amber-600 shrink-0 mt-1" size={18} />
-                           <div>
-                              <p className="text-[11px] font-bold text-amber-900 uppercase tracking-tight">Audit Protocol Active</p>
-                              <p className="text-[10px] font-medium text-amber-700 leading-relaxed">Marketing targets are managed exclusively by the Finance division. If a correction is needed, please coordinate with the auditor.</p>
-                           </div>
-                        </div>
-                      )}
                    </div>
 
                    <div className="bg-blue-600 rounded-2xl p-6 text-white flex flex-col justify-between relative shadow-xl">

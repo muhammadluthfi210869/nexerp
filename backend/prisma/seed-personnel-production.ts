@@ -28,7 +28,7 @@ async function main() {
     { name: 'Yulia', email: 'yulia@dreamlab.com', roles: [UserRole.HR], division: Division.LEGAL, position: 'Manager HR & Legal' },
     { name: 'Diaz', email: 'diaz@dreamlab.com', roles: [UserRole.HR, UserRole.MARKETING], division: Division.LEGAL, position: 'Asst HR, Legal & Tracking Klien' },
     { name: 'Bagus', email: 'bagus@dreamlab.com', roles: [UserRole.IT_SYS], division: Division.SYSTEM, position: 'System & Web' },
-    { name: 'Revita', email: 'revita@dreamlab.com', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, position: 'Digital Marketing Strategy' },
+    { name: 'Revita', email: 'revita@nexerp.id', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, position: 'Digital Marketing Strategy' },
     { name: 'Gusti', email: 'gusti@dreamlab.com', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, position: 'Graphic Designer' },
     { name: 'Zarkasi', email: 'zarkasi@dreamlab.com', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, position: 'Video Editor' },
     { name: 'Nisa', email: 'nisa@dreamlab.com', roles: [UserRole.MARKETING], division: Division.BD, position: 'Marketing' },

@@ -50,7 +50,19 @@ export class CustomersService {
   }
 
   async create(dto: CreateCustomerDto) {
-    const { instansi, phone, address, alamatDetail, provinsi, kota, kecamatan, salesAssignee, creditLimit, taxId, ...rest } = dto;
+    const {
+      instansi,
+      phone,
+      address,
+      alamatDetail,
+      provinsi,
+      kota,
+      kecamatan,
+      salesAssignee,
+      creditLimit,
+      taxId,
+      ...rest
+    } = dto;
     return this.prisma.salesLead.create({
       data: {
         clientName: dto.clientName,
@@ -73,7 +85,19 @@ export class CustomersService {
     const customer = await this.prisma.salesLead.findUnique({ where: { id } });
     if (!customer) throw new NotFoundException('Customer not found');
 
-    const { instansi, phone, address, alamatDetail, provinsi, kota, kecamatan, salesAssignee, creditLimit, taxId, ...rest } = dto;
+    const {
+      instansi,
+      phone,
+      address,
+      alamatDetail,
+      provinsi,
+      kota,
+      kecamatan,
+      salesAssignee,
+      creditLimit,
+      taxId,
+      ...rest
+    } = dto;
     return this.prisma.salesLead.update({
       where: { id },
       data: {
@@ -86,7 +110,9 @@ export class CustomersService {
         ...(alamatDetail !== undefined && { addressDetail: alamatDetail }),
         ...(dto.status !== undefined && { status: dto.status as any }),
         ...(creditLimit !== undefined && { estimatedValue: creditLimit }),
-        ...(dto.categoryId !== undefined && { categoryId: dto.categoryId || null }),
+        ...(dto.categoryId !== undefined && {
+          categoryId: dto.categoryId || null,
+        }),
         ...(salesAssignee !== undefined && { picId: salesAssignee }),
       },
     });
@@ -102,7 +128,9 @@ export class CustomersService {
   }
 
   private async getDefaultPicId(): Promise<string> {
-    const staff = await this.prisma.bussdevStaff.findFirst({ orderBy: { name: 'asc' } });
+    const staff = await this.prisma.bussdevStaff.findFirst({
+      orderBy: { name: 'asc' },
+    });
     return staff?.id || '';
   }
 }

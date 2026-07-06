@@ -30,7 +30,7 @@ import {
   Loader2,
   History,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, StatCard, KpiCard, TableWrapper } from "@/components/dna";
 import {
   Table,
   TableBody,
@@ -123,7 +123,7 @@ function FakturJualTab() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard label="Total Receivables" value="Rp 170.0M" subValue="Rp 45.0M Overdue 14 Days" icon={<CreditCard className="text-blue-600" />} />
-        <StatCard label="Collected (MTD)" value="Rp 89.2M" subValue="65% Target Completion" icon={<Wallet className="text-emerald-500" />} />
+        <KpiCard label="Collected (MTD)" value="Rp 89.2M" targetPct={65} icon={<Wallet className="text-emerald-500" />} />
         <StatCard label="Pending Approval" value="4 Invoices" subValue="Execute Review Gate" icon={<AlertTriangle className="text-amber-500" />} />
       </div>
 
@@ -541,7 +541,7 @@ function ARHubTab() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard label="Total Receivables" value="Rp 125.4M" subValue="+12.5% MTD" icon={<TrendingUp className="text-blue-600" />} />
         <StatCard label="Overdue (30+ Days)" value="Rp 12.0M" subValue="Risk Profile: Low" icon={<CreditCard className="text-rose-600" />} />
-        <StatCard label="Collections (MTD)" value="Rp 89.2M" subValue="70% Target Completion" icon={<Wallet className="text-emerald-500" />} />
+        <KpiCard label="Collections (MTD)" value="Rp 89.2M" targetPct={70} icon={<Wallet className="text-emerald-500" />} />
         <StatCard label="Sample Revenue" value="Rp 2.4M" subValue="R&D Commitment" icon={<FlaskConical className="text-amber-500" />} />
       </div>
 

@@ -37,14 +37,14 @@ export class PurchaseOrdersController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
   @ApiOperation({ summary: 'Get all Purchase Orders' })
   findAll() {
     return this.poService.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
   @ApiOperation({ summary: 'Get a single Purchase Order by ID' })
   findOne(@Param('id') id: string) {
     return this.poService.findOne(id);

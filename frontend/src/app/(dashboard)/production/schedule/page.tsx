@@ -322,7 +322,7 @@ function SchedulesTableView() {
                 <div className="space-y-1.5">
                   <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Work Order</label>
                   <Select onValueChange={(val: string | null) => setSelectedWO(val ?? "")}>
-                    <SelectTrigger className="h-11 bg-slate-50 border-slate-250 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all">
+                    <SelectTrigger className="h-11 bg-slate-50 border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all">
                       <SelectValue placeholder="Select WO..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border border-slate-100 shadow-xl p-1.5 max-h-[300px]">
@@ -337,7 +337,7 @@ function SchedulesTableView() {
                 <div className="space-y-1.5">
                   <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Machine</label>
                   <Select onValueChange={(val: string | null) => setSelectedMachine(val ?? "")}>
-                    <SelectTrigger className="h-11 bg-slate-50 border-slate-250 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all">
+                    <SelectTrigger className="h-11 bg-slate-50 border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-800 focus:bg-white transition-all">
                       <SelectValue placeholder="Select machine..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border border-slate-100 shadow-xl p-1.5 max-h-[300px]">

@@ -231,6 +231,37 @@ enum QCStatus {
   REJECT
 }
 
+enum QcInspectionPhase {
+  INBOUND
+  MIXING
+  FILLING
+  PACKING
+  FINAL
+}
+
+enum QcDefectCategory {
+  FISIK
+  KIMIA
+  MIKROBIOLOGI
+  LABEL_DOKUMEN
+  KEMASAN
+  LAINNYA
+}
+
+enum QcSeverity {
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum QcDisposition {
+  REWORK
+  SCRAP
+  RETURN_TO_VENDOR
+  USE_AS_IS
+  SORTING
+}
+
 enum LifecycleStatus {
   PLANNING
   WAITING_MATERIAL

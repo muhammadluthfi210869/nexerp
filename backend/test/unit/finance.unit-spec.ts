@@ -56,6 +56,22 @@ describe('FinanceService — Unit', () => {
       expect(result.status).toBe('PAID');
     });
 
+    it('rejects already paid invoice', async () => {
+      prisma.invoice.findUnique = jest.fn().mockResolvedValue({
+        id: invoiceId,
+        type: 'INVOICE',
+        status: 'PAID',
+        outstandingAmount: 0,
+        soId: null,
+        so: null,
+      });
+
+      await expect(
+        service.verifyPayment(invoiceId, 'finance-user'),
+      ).rejects.toThrow('Invoice already verified');
+      expect(prisma.invoice.update).not.toHaveBeenCalled();
+    });
+
     it('advances SO to ACTIVE when DP invoice paid', async () => {
       prisma.invoice.findUnique = jest.fn().mockResolvedValue({
         id: invoiceId,
@@ -79,6 +95,27 @@ describe('FinanceService — Unit', () => {
       await expect(
         service.verifyPayment('NONEXISTENT', 'user'),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('verifyOrderPayment', () => {
+    it('rejects an already verified sales order', async () => {
+      prisma.salesOrder.findUnique = jest.fn().mockResolvedValue({
+        id: soId,
+        status: 'LOCKED_ACTIVE',
+        leadId: 'LEAD-1',
+        totalAmount: 1000000,
+        orderNumber: 'SO-001',
+        lead: { id: 'LEAD-1' },
+      });
+
+      await expect(
+        service.verifyOrderPayment({
+          type: 'DP',
+          id: soId,
+          verifiedBy: 'finance-user',
+        }),
+      ).rejects.toThrow('Sales Order already verified');
     });
   });
 
@@ -176,6 +213,99 @@ describe('FinanceService — Unit', () => {
 
       const result = await service.validatePayment(invoiceId);
       expect(result).toBeDefined();
+    });
+
+    it('rejects already validated invoice', async () => {
+      prisma.invoice = {
+        findUnique: jest.fn().mockResolvedValue({
+          id: invoiceId,
+          outstandingAmount: 0,
+          status: 'PAID',
+        }),
+        update: jest.fn(),
+      };
+
+      await expect(service.validatePayment(invoiceId)).rejects.toThrow(
+        'Invoice already validated',
+      );
+      expect(prisma.invoice.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createJournalEntry', () => {
+    it('should reject unbalanced journal entry', async () => {
+      prisma.financialPeriod = { findFirst: jest.fn().mockResolvedValue(null) };
+      prisma.account.findMany.mockResolvedValue([
+        { id: 'acc-1', code: '4100' },
+        { id: 'acc-2', code: '5100' },
+      ]);
+
+      await expect(
+        service.createJournalEntry({
+          date: '2026-06-15',
+          description: 'Unbalanced test',
+          lines: [
+            { accountId: 'acc-1', debit: 100000, credit: 0 },
+            { accountId: 'acc-2', debit: 0, credit: 50000 },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject journal entry in locked period', async () => {
+      prisma.financialPeriod = {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'fp-1',
+          name: 'CLOSED-PERIOD',
+          status: 'CLOSED',
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2026-01-31'),
+        }),
+      };
+
+      await expect(
+        service.createJournalEntry({
+          date: '2026-01-15',
+          description: 'Test in locked period',
+          lines: [
+            { accountId: 'acc-1', debit: 100000, credit: 0 },
+            { accountId: 'acc-2', debit: 0, credit: 100000 },
+          ],
+        }),
+      ).rejects.toThrow('sudah dikunci');
+    });
+
+    it('should reject expense journal without attachment', async () => {
+      prisma.financialPeriod = { findFirst: jest.fn().mockResolvedValue(null) };
+      prisma.account.findMany.mockResolvedValue([
+        { id: 'expense-acc', code: '6100' },
+        { id: 'cash-acc', code: '1100' },
+      ]);
+
+      await expect(
+        service.createJournalEntry({
+          date: '2026-06-15',
+          description: 'Expense without attachment',
+          lines: [
+            { accountId: 'expense-acc', debit: 100000, credit: 0 },
+            { accountId: 'cash-acc', debit: 0, credit: 100000 },
+          ],
+        }),
+      ).rejects.toThrow('Proof of payment');
+    });
+  });
+
+  describe('reverseJournalEntry', () => {
+    it('should reject reversing a reversal journal', async () => {
+      prisma.journalEntry.findUnique.mockResolvedValue({
+        id: 'rev-1',
+        reference: 'REV-ORIGINAL-001',
+        lines: [],
+      });
+
+      await expect(
+        service.reverseJournalEntry('rev-1'),
+      ).rejects.toThrow('Cannot reverse a reversal');
     });
   });
 });

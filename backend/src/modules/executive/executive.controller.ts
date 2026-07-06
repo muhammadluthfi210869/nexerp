@@ -11,13 +11,13 @@ export class ExecutiveController {
 
   @Get('metrics')
   @Roles('SUPER_ADMIN', 'HEAD_OPS', 'FINANCE')
-  async getMetrics() {
+  async getMetrics(): Promise<any> {
     return this.executiveService.getExecutiveMetrics();
   }
 
   @Get('alerts')
   @Roles('SUPER_ADMIN', 'HEAD_OPS', 'FINANCE')
-  async getAlerts() {
+  async getAlerts(): Promise<any> {
     return this.executiveService.getExecutiveAlerts();
   }
 }

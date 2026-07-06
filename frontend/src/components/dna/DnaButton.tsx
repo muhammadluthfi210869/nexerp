@@ -39,12 +39,14 @@ export function DnaButton({
   children,
   className,
   loading,
+  type = "button",
   ...props
 }: DnaButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const isGhost = variant === "ghost"
 
   return (
     <button
+      type={type}
       disabled={loading || props.disabled}
       className={cn(
         "inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all",

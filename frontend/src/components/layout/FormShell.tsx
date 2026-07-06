@@ -7,6 +7,7 @@ interface FormShellProps {
   subtitle?: string;
   actions?: React.ReactNode;
   sidebar?: React.ReactNode;
+  fullWidth?: boolean;
   children: React.ReactNode;
 }
 
@@ -15,7 +16,15 @@ interface FormShellProps {
  * Enforces a 2/3 + 1/3 split layout with consistent spacing.
  * Right sidebar is sticky for action panels.
  */
-export function FormShell({ title, titleAccent, subtitle, actions, sidebar, children }: FormShellProps) {
+export function FormShell({
+  title,
+  titleAccent,
+  subtitle,
+  actions,
+  sidebar,
+  fullWidth = false,
+  children,
+}: FormShellProps) {
   return (
     <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
       <ModuleHeader
@@ -36,7 +45,10 @@ export function FormShell({ title, titleAccent, subtitle, actions, sidebar, chil
           </div>
         </div>
       ) : (
-        <div className="max-w-4xl flex flex-col" style={{ gap: 'var(--section-gap)' }}>
+        <div
+          className={fullWidth ? "w-full flex flex-col" : "max-w-4xl flex flex-col"}
+          style={{ gap: 'var(--section-gap)' }}
+        >
           {children}
         </div>
       )}

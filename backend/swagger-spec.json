@@ -584,6 +584,385 @@
         ]
       }
     },
+    "/marketing/prototype/bundle": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getBundle",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/reset": {
+      "post": {
+        "operationId": "MarketingPrototypeController_reset",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/dashboard": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/projects": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getProjects",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "post": {
+        "operationId": "MarketingPrototypeController_createProject",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/projects/{id}": {
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "delete": {
+        "operationId": "MarketingPrototypeController_deleteProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getTasks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "post": {
+        "operationId": "MarketingPrototypeController_createTask",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks/{id}": {
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "delete": {
+        "operationId": "MarketingPrototypeController_deleteTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks/{id}/status": {
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks/{id}/comment": {
+      "post": {
+        "operationId": "MarketingPrototypeController_comment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/performance": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getPerformance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/notifications": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/notifications/read-all": {
+      "post": {
+        "operationId": "MarketingPrototypeController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/settings": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/profile/{id}": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/finance/cash/disburse": {
+      "post": {
+        "operationId": "FinanceController_disburseCash",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CashDisburseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kas Keluar — unified cash disbursement",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/cash/receive": {
+      "post": {
+        "operationId": "FinanceController_receiveCash",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CashReceiveDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kas Masuk — unified cash receipt",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
     "/finance/dashboard": {
       "get": {
         "operationId": "FinanceController_getDashboard",
@@ -681,7 +1060,16 @@
     "/finance/fund-requests": {
       "get": {
         "operationId": "FinanceController_getAllFundRequests",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "mine",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -730,6 +1118,24 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "finance"
+        ]
+      },
+      "post": {
+        "operationId": "FinanceController_createAccount",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new COA account",
         "tags": [
           "finance"
         ]
@@ -1568,6 +1974,82 @@
         ]
       }
     },
+    "/finance/accounts/{id}": {
+      "patch": {
+        "operationId": "FinanceController_updateAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a COA account",
+        "tags": [
+          "finance"
+        ]
+      },
+      "delete": {
+        "operationId": "FinanceController_softDeleteAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a COA account (set isActive=false)",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/payment/verify": {
+      "post": {
+        "operationId": "FinanceController_verifyPaymentAlias",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Alias for POST /finance/verify-payment",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
     "/scm/purchase-orders": {
       "post": {
         "operationId": "PurchaseOrdersController_create",
@@ -1640,6 +2122,35 @@
           }
         ],
         "summary": "Get a single Purchase Order by ID",
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/scm/purchase-orders/{id}/status": {
+      "patch": {
+        "operationId": "PurchaseOrdersController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update PO status (approve/reject)",
         "tags": [
           "scm"
         ]
@@ -2002,10 +2513,19 @@
         ]
       }
     },
-    "/scm/purchase-order": {
+    "/scm/purchase-requests/{id}/reject": {
       "post": {
-        "operationId": "ScmController_createPurchaseOrder",
-        "parameters": [],
+        "operationId": "ScmController_rejectPurchaseRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
@@ -2136,9 +2656,31 @@
         ]
       }
     },
-    "/master/materials": {
+    "/scm/purchase-invoices": {
+      "post": {
+        "operationId": "PurchaseInvoicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseInvoices"
+        ]
+      },
       "get": {
-        "operationId": "RouteAliasController_getMasterMaterials",
+        "operationId": "PurchaseInvoicesController_findAll",
         "parameters": [],
         "responses": {
           "200": {
@@ -2146,13 +2688,58 @@
           }
         },
         "tags": [
-          "RouteAlias"
+          "PurchaseInvoices"
         ]
       }
     },
-    "/warehouse/warehouses": {
+    "/scm/purchase-invoices/{id}": {
       "get": {
-        "operationId": "RouteAliasController_getWarehouseWarehouses",
+        "operationId": "PurchaseInvoicesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseInvoices"
+        ]
+      }
+    },
+    "/scm/purchase-payments": {
+      "post": {
+        "operationId": "PurchasePaymentsController_pay",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchasePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchasePayments"
+        ]
+      },
+      "get": {
+        "operationId": "PurchasePaymentsController_findAll",
         "parameters": [],
         "responses": {
           "200": {
@@ -2160,7 +2747,7 @@
           }
         },
         "tags": [
-          "RouteAlias"
+          "PurchasePayments"
         ]
       }
     },
@@ -2275,6 +2862,78 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Legality"
+        ]
+      }
+    },
+    "/legality/halal": {
+      "get": {
+        "operationId": "LegalityController_getHalal",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Legality"
+        ]
+      },
+      "post": {
+        "operationId": "LegalityController_createHalal",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Legality"
+        ]
+      }
+    },
+    "/legality/halal/{id}/advance": {
+      "patch": {
+        "operationId": "LegalityController_advanceHalal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Legality"
+        ]
+      }
+    },
+    "/legality/expiry": {
+      "get": {
+        "operationId": "LegalityController_getExpiryData",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -2909,7 +3568,16 @@
     "/bussdev/leads": {
       "get": {
         "operationId": "BussdevController_getLeads",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "mine",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -3006,6 +3674,24 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "bussdev"
+        ]
+      },
+      "post": {
+        "operationId": "BussdevController_createSample",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new sample sales order",
         "tags": [
           "bussdev"
         ]
@@ -3283,10 +3969,219 @@
         ]
       }
     },
+    "/bussdev/lead/{id}": {
+      "get": {
+        "operationId": "BussdevController_getLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single lead detail",
+        "tags": [
+          "bussdev"
+        ]
+      },
+      "put": {
+        "operationId": "BussdevController_updateLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a lead",
+        "tags": [
+          "bussdev"
+        ]
+      },
+      "delete": {
+        "operationId": "BussdevController_deleteLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a lead",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/bussdev/sample-request": {
+      "post": {
+        "operationId": "BussdevController_createSampleRequest",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create sample request (from SOT)",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/bussdev/sample-request/{id}": {
+      "patch": {
+        "operationId": "BussdevController_updateSampleRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a sample request",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/bussdev/approve-sample": {
+      "post": {
+        "operationId": "BussdevController_approveSample",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve a sample",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/bussdev/sales-order": {
+      "post": {
+        "operationId": "BussdevController_createSalesOrder",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a sales order",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/bussdev/sales-orders": {
+      "get": {
+        "operationId": "BussdevController_getSalesOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all sales orders",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
     "/creative/board": {
       "get": {
         "operationId": "CreativeController_getBoard",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -3300,7 +4195,24 @@
     "/creative/tasks": {
       "get": {
         "operationId": "CreativeController_getAllTasks",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -3329,6 +4241,16 @@
       "post": {
         "operationId": "CreativeController_createTask",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -3352,6 +4274,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadVersionDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -3398,6 +4330,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApjReviewDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -3421,6 +4363,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientReviewDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -3444,6 +4396,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnlockTaskDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -3485,6 +4447,29 @@
     "/warehouse/catalog": {
       "get": {
         "operationId": "WarehouseController_getCatalog",
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/warehouses": {
+      "get": {
+        "operationId": "WarehouseController_getWarehouses",
         "parameters": [],
         "responses": {
           "200": {
@@ -3840,6 +4825,223 @@
         ]
       }
     },
+    "/warehouse/inbounds/{id}/release": {
+      "post": {
+        "operationId": "WarehouseController_releaseFromQuarantine",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/stock-intelligence/abc": {
+      "get": {
+        "operationId": "WarehouseController_getABCAnalysis",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/stock-intelligence/dead-stock": {
+      "get": {
+        "operationId": "WarehouseController_getDeadStock",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/stock-intelligence/fast-movers": {
+      "get": {
+        "operationId": "WarehouseController_getFastMovers",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/stock-intelligence/slow-movers": {
+      "get": {
+        "operationId": "WarehouseController_getSlowMovers",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/stock-intelligence/reorder-suggestions": {
+      "get": {
+        "operationId": "WarehouseController_getReorderSuggestions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/stock-intelligence/critical": {
+      "get": {
+        "operationId": "WarehouseController_getCriticalItems",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/requisitions": {
+      "post": {
+        "operationId": "WarehouseController_createRequisition",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequisitionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      },
+      "get": {
+        "operationId": "WarehouseController_listRequisitions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/requisitions/{id}": {
+      "get": {
+        "operationId": "WarehouseController_getRequisition",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/warehouse/requisitions/{id}/status": {
+      "patch": {
+        "operationId": "WarehouseController_updateRequisitionStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequisitionStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
     "/guests": {
       "post": {
         "operationId": "GuestsController_create",
@@ -4041,24 +5243,21 @@
         ]
       },
       "get": {
-        "operationId": "FormulasController_findAll",
-        "parameters": [
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "RndController_getFormulas",
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all formulas",
         "tags": [
-          "Formulas"
+          "rnd"
         ]
       }
     },
@@ -4558,6 +5757,104 @@
         ]
       }
     },
+    "/rnd/revisions": {
+      "get": {
+        "operationId": "RndController_getRevisions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get active revisions (NOT_STARTED + IN_PROGRESS)",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revisions/history": {
+      "get": {
+        "operationId": "RndController_getRevisionHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get completed revision history",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revision/{id}/start": {
+      "post": {
+        "operationId": "RndController_startRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a revision (set IN_PROGRESS)",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revision/{id}/complete": {
+      "post": {
+        "operationId": "RndController_completeRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Complete a revision (set DONE)",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
     "/rnd/lab-test-results": {
       "get": {
         "operationId": "RndController_getAllLabTestResults",
@@ -4627,6 +5924,55 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/qc-parameters/{formulaId}": {
+      "post": {
+        "operationId": "RndController_setQcParameters",
+        "parameters": [
+          {
+            "name": "formulaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set QC target parameters for a formula",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/pipeline": {
+      "get": {
+        "operationId": "RndController_getPipeline",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get R&D pipeline (all samples with phases)",
         "tags": [
           "rnd"
         ]
@@ -5104,6 +6450,106 @@
         ]
       }
     },
+    "/qc/dashboard": {
+      "get": {
+        "operationId": "QcController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get QC dashboard stats",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/qc/workbench": {
+      "get": {
+        "operationId": "QcController_getWorkbench",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get QC workbench (quarantine audits)",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/qc": {
+      "post": {
+        "operationId": "QcController_createLegacy",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit QC audit (alias for POST /qc/audits with snake_case support)",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/qc/report": {
+      "get": {
+        "operationId": "QcController_getReport",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get QC audit report",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/qc/analytics/reject-analysis": {
+      "get": {
+        "operationId": "QcController_getRejectAnalysis",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get reject analysis",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
     "/qc/audits": {
       "post": {
         "operationId": "QCAuditsController_create",
@@ -5145,6 +6591,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "mine",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5157,9 +6611,59 @@
         ]
       }
     },
-    "/qc": {
+    "/qc/audits/{id}": {
+      "get": {
+        "operationId": "QCAuditsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAudits"
+        ]
+      }
+    },
+    "/qc/checklists": {
+      "get": {
+        "operationId": "QCChecklistsController_findAll",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all checklists with progress",
+        "tags": [
+          "qc"
+        ]
+      },
       "post": {
-        "operationId": "QcController_createLegacy",
+        "operationId": "QCChecklistsController_create",
         "parameters": [],
         "responses": {
           "201": {
@@ -5171,9 +6675,230 @@
             "bearer": []
           }
         ],
-        "summary": "Submit QC audit (alias for POST /qc/audits with snake_case support)",
+        "summary": "Create checklist",
         "tags": [
           "qc"
+        ]
+      }
+    },
+    "/qc/checklists/completed": {
+      "get": {
+        "operationId": "QCChecklistsController_findCompleted",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List completed checklists",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/qc/checklists/{id}": {
+      "get": {
+        "operationId": "QCChecklistsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single checklist detail",
+        "tags": [
+          "qc"
+        ]
+      },
+      "patch": {
+        "operationId": "QCChecklistsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update checklist status",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/qc/analytics/defect-pareto": {
+      "get": {
+        "operationId": "QCAnalyticsController_getDefectPareto",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/qc/analytics/supplier-quality": {
+      "get": {
+        "operationId": "QCAnalyticsController_getSupplierQuality",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/qc/analytics/funnel-degradation/{planId}": {
+      "get": {
+        "operationId": "QCAnalyticsController_getFunnelDegradation",
+        "parameters": [
+          {
+            "name": "planId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/qc/analytics/vendor-watchlist": {
+      "get": {
+        "operationId": "QCAnalyticsController_getVendorWatchlist",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/qc/analytics/rework-hold-log": {
+      "get": {
+        "operationId": "QCAnalyticsController_getReworkHoldLog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/qc/analytics/phase-breakdown": {
+      "get": {
+        "operationId": "QCAnalyticsController_getPhaseBreakdown",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get per-phase quality breakdown with pass/reject counts and defect details",
+        "tags": [
+          "QCAnalytics"
         ]
       }
     },
@@ -5410,7 +7135,16 @@
       },
       "get": {
         "operationId": "ProductionController_getWorkOrders",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "mine",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -5799,6 +7533,29 @@
         ]
       }
     },
+    "/production/batch-records/{batchNo}/detail": {
+      "get": {
+        "operationId": "ProductionController_getBatchRecordDetail",
+        "parameters": [
+          {
+            "name": "batchNo",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
     "/production/qc/verify": {
       "post": {
         "operationId": "ProductionController_verifyQC",
@@ -5873,6 +7630,83 @@
         ]
       }
     },
+    "/production/floor": {
+      "get": {
+        "operationId": "ProductionController_getFloor",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
+    "/production/leakage": {
+      "get": {
+        "operationId": "ProductionController_getLeakage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
+    "/production/work-orders/{woId}/timeline": {
+      "get": {
+        "operationId": "ProductionController_getTimeline",
+        "parameters": [
+          {
+            "name": "woId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
+    "/production/formula-adjustments": {
+      "get": {
+        "operationId": "ProductionController_getFormulaAdjustments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      },
+      "post": {
+        "operationId": "ProductionController_createFormulaAdjustment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
     "/logistics/deliverable": {
       "get": {
         "operationId": "LogisticsController_getDeliverableOrders",
@@ -5911,6 +7745,34 @@
       }
     },
     "/hr/employees": {
+      "post": {
+        "operationId": "HrController_createEmployee",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new employee",
+        "tags": [
+          "hr"
+        ]
+      },
       "get": {
         "operationId": "HrController_getEmployees",
         "parameters": [],
@@ -5924,7 +7786,100 @@
             "bearer": []
           }
         ],
-        "summary": "Get all employees",
+        "summary": "Get all active employees",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/hr/employees/{id}": {
+      "get": {
+        "operationId": "HrController_getEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get employee by ID",
+        "tags": [
+          "hr"
+        ]
+      },
+      "patch": {
+        "operationId": "HrController_updateEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmployeeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an employee",
+        "tags": [
+          "hr"
+        ]
+      },
+      "delete": {
+        "operationId": "HrController_deleteEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete an employee",
         "tags": [
           "hr"
         ]
@@ -6095,6 +8050,35 @@
         ]
       }
     },
+    "/hr/attendance/clock-out": {
+      "post": {
+        "operationId": "HrController_clockOut",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClockOutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "hr"
+        ]
+      }
+    },
     "/hr/kpi/employee/{id}": {
       "get": {
         "operationId": "HrController_getEmployeeKPI",
@@ -6118,6 +8102,35 @@
         ],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/hr/kpi/subjective": {
+      "post": {
+        "operationId": "HrController_recordSubjectiveScore",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubjectiveScoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -6203,6 +8216,20 @@
         },
         "tags": [
           "Executive"
+        ]
+      }
+    },
+    "/master/materials": {
+      "get": {
+        "operationId": "MaterialsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Materials"
         ]
       }
     },
@@ -6328,6 +8355,20 @@
         },
         "tags": [
           "Master Data"
+        ]
+      }
+    },
+    "/master/warehouses/active": {
+      "get": {
+        "operationId": "WarehousesController_findActive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouses"
         ]
       }
     },
@@ -6510,6 +8551,191 @@
         "tags": [
           "Suppliers"
         ]
+      },
+      "delete": {
+        "operationId": "SuppliersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ]
+      }
+    },
+    "/master/customers": {
+      "get": {
+        "operationId": "CustomersController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all customers (for dropdown)",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "CustomersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a customer",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/master/customers/{id}": {
+      "get": {
+        "operationId": "CustomersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get customer detail",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a customer",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a customer",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/my-dashboard/stats": {
+      "get": {
+        "operationId": "MyDashboardController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MyDashboard"
+        ]
       }
     },
     "/upload": {
@@ -6540,6 +8766,29 @@
         },
         "tags": [
           "Upload"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "NotificationController_getAll",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
         ]
       }
     },
@@ -6686,6 +8935,343 @@
           "System"
         ]
       }
+    },
+    "/document-automation/drafts": {
+      "get": {
+        "operationId": "DocumentAutomationController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/drafts/stats": {
+      "get": {
+        "operationId": "DocumentAutomationController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/drafts/{id}": {
+      "get": {
+        "operationId": "DocumentAutomationController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      },
+      "patch": {
+        "operationId": "DocumentAutomationController_updateDraft",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/drafts/{id}/pdf": {
+      "get": {
+        "operationId": "DocumentAutomationController_downloadDraftPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/drafts/{id}/approve": {
+      "post": {
+        "operationId": "DocumentAutomationController_approveDraft",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/drafts/{id}/reject": {
+      "post": {
+        "operationId": "DocumentAutomationController_rejectDraft",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/process-auto-approvals": {
+      "post": {
+        "operationId": "DocumentAutomationController_processAutoApprovals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/generate/quotation/{leadId}": {
+      "post": {
+        "operationId": "DocumentAutomationController_generateQuotation",
+        "parameters": [
+          {
+            "name": "leadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/generate/dp-invoice/{salesOrderId}": {
+      "post": {
+        "operationId": "DocumentAutomationController_generateDpInvoice",
+        "parameters": [
+          {
+            "name": "salesOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/generate/final-invoice/{workOrderId}": {
+      "post": {
+        "operationId": "DocumentAutomationController_generateFinalInvoice",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/generate/goods-requirement/{salesOrderId}": {
+      "post": {
+        "operationId": "DocumentAutomationController_generateGoodsRequirement",
+        "parameters": [
+          {
+            "name": "salesOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/generate/delivery-order/{workOrderId}": {
+      "post": {
+        "operationId": "DocumentAutomationController_generateDeliveryOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/generate/surat-jalan/{deliveryOrderId}": {
+      "post": {
+        "operationId": "DocumentAutomationController_generateSuratJalan",
+        "parameters": [
+          {
+            "name": "deliveryOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
+    },
+    "/document-automation/pdf": {
+      "post": {
+        "operationId": "DocumentAutomationController_generatePdfDirect",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DocumentAutomation"
+        ]
+      }
     }
   },
   "info": {
@@ -6712,6 +9298,14 @@
   "components": {
     "schemas": {
       "LoginDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CashDisburseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CashReceiveDto": {
         "type": "object",
         "properties": {}
       },
@@ -6818,14 +9412,13 @@
       "CreatePurchaseOrderDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "PO-2024-001",
-            "description": "Human-readable PO ID"
-          },
           "supplierId": {
             "type": "string",
             "example": "uuid-supplier-123"
+          },
+          "warehouseId": {
+            "type": "string",
+            "example": "uuid-warehouse-456"
           },
           "leadId": {
             "type": "string",
@@ -6841,9 +9434,19 @@
             "type": "number",
             "example": 1500000
           },
+          "taxPercent": {
+            "type": "number"
+          },
           "estArrival": {
             "type": "string",
             "example": "2024-12-31"
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2024-12-31"
+          },
+          "notes": {
+            "type": "string"
           },
           "escalationPin": {
             "type": "string"
@@ -6853,7 +9456,6 @@
           }
         },
         "required": [
-          "id",
           "supplierId"
         ]
       },
@@ -6881,11 +9483,156 @@
         "type": "object",
         "properties": {}
       },
+      "CreatePurchaseInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "inboundId": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "inboundId"
+        ]
+      },
+      "CreatePurchasePaymentDto": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "paymentDate": {
+            "type": "string"
+          },
+          "receivingAccountId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceId",
+          "amount"
+        ]
+      },
       "CreateLeadDto": {
         "type": "object",
         "properties": {}
       },
       "AdvanceLeadDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateTaskDto": {
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string"
+          },
+          "brief": {
+            "type": "string",
+            "example": "Design brief description"
+          },
+          "soId": {
+            "type": "string"
+          },
+          "taskType": {
+            "type": "string",
+            "example": "PACKAGING_DESIGN"
+          }
+        },
+        "required": [
+          "leadId",
+          "brief"
+        ]
+      },
+      "UploadVersionDto": {
+        "type": "object",
+        "properties": {
+          "printSpecs": {
+            "type": "string"
+          },
+          "uploadedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "ApjReviewDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "WAITING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "example": "Wrong logo placement"
+          },
+          "pin": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "status",
+          "pin"
+        ]
+      },
+      "ClientReviewDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "WAITING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "UnlockTaskDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "CHARGE",
+              "WAIVE"
+            ]
+          },
+          "managerPin": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "CreateRequisitionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRequisitionStatusDto": {
         "type": "object",
         "properties": {}
       },
@@ -7141,10 +9888,6 @@
         "type": "object",
         "properties": {}
       },
-      "CreateRequisitionDto": {
-        "type": "object",
-        "properties": {}
-      },
       "IssueRequisitionDto": {
         "type": "object",
         "properties": {}
@@ -7158,6 +9901,22 @@
         "properties": {}
       },
       "UpdateShipmentStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateEmployeeDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateEmployeeDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ClockOutDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SubjectiveScoreDto": {
         "type": "object",
         "properties": {}
       },
@@ -7186,6 +9945,26 @@
         "properties": {}
       },
       "UpdateWarehouseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCustomerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCustomerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDraftDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApproveDraftDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RejectDraftDto": {
         "type": "object",
         "properties": {}
       }

@@ -91,7 +91,6 @@ model Formula {
   lockedBy        User?           @relation("FormulaLockedBy", fields: [lockedById], references: [id])
   sampleRequest   SampleRequest   @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
   labTestResults  LabTestResult[]
-  qcParameters    QCParameter?
   registrations   RegulatoryPipeline[]
 
   @@map("formulas")
@@ -120,19 +119,6 @@ model FormulaItem {
   phase            FormulaPhase  @relation(fields: [phaseId], references: [id], onDelete: Cascade)
 
   @@map("formula_items")
-}
-
-model QCParameter {
-  id              String  @id @default(uuid()) @db.Uuid
-  formulaId       String  @unique @db.Uuid
-  targetPh        String?
-  targetViscosity String?
-  targetColor     String?
-  targetAroma     String?
-  appearance      String?
-  formula         Formula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
-
-  @@map("qc_parameters")
 }
 
 model SampleFeedback {

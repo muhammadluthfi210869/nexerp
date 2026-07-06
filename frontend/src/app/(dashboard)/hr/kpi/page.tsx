@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { BarChart3, Calendar, Activity, Filter } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaBadge, DnaButton } from "@/components/dna";
+import { StatCard, KpiCard, DnaBadge, DnaButton } from "@/components/dna";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -64,10 +64,10 @@ export default function KPIPage() {
       <div className="space-y-6 animate-fade-slide-in">
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
+          <KpiCard
             label="Avg KPI Score"
             value={`${avgScore}`}
-            subValue="out of 100"
+            targetPct={avgScore}
             icon={<BarChart3 className="text-blue-500" />}
           />
           <StatCard

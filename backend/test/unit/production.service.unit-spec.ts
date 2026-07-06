@@ -123,6 +123,15 @@ describe('ProductionService — Unit', () => {
 
   describe('reportBreakdown', () => {
     it('should set machine to DOWN and log breakdown', async () => {
+      prisma.machine.findUnique = jest.fn().mockResolvedValue({
+        id: mockMachineId,
+        name: 'Mixer A',
+        status: 'IDLE',
+      });
+      prisma.workOrder.findUnique = jest.fn().mockResolvedValue({
+        id: mockWoId,
+        stage: 'MIXING',
+      });
       prisma.machine.update = jest.fn();
       prisma.productionLog.create = jest
         .fn()
@@ -138,7 +147,7 @@ describe('ProductionService — Unit', () => {
       expect(prisma.machine.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockMachineId },
-          data: { status: 'DOWN' },
+          data: { isActive: false },
         }),
       );
       expect(result.id).toBe('LOG-BRK');

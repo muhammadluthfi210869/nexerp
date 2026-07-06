@@ -1548,6 +1548,19 @@ export class BussdevService {
         data: { lastFollowUpAt: new Date() },
       });
 
+      this.eventEmitter.emit(ACTIVITY_EVENT, {
+        leadId: dto.leadId,
+        senderDivision: Division.BD,
+        eventType: StreamEventType.STATE_CHANGE,
+        notes: dto.notes,
+        loggedBy: 'SYSTEM_BD',
+        payload: {
+          activityType: dto.activityType,
+          sequenceNumber: targetSequence,
+          amount: dto.downPaymentAmount,
+        },
+      });
+
       return activity;
     });
   }

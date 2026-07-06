@@ -14,6 +14,10 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
+# Compile seed files
+RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true
+RUN for f in prisma/seed-*.ts; do npx tsc "$f" --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true; done
+
 # Stage 2: Runtime
 FROM node:20-alpine
 
@@ -26,11 +30,12 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY init-db.sh ./
-RUN chmod +x init-db.sh
+RUN sed -i 's/\r$//' init-db.sh && chmod +x init-db.sh
 
 # Install production dependencies only
 RUN npm ci --omit=dev && npm cache clean --force
+RUN npx prisma generate
 
 EXPOSE 3001
 
-CMD ["./init-db.sh"]
+CMD ["sh", "./init-db.sh"]

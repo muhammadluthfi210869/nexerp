@@ -32,22 +32,27 @@ export class LegalityService {
     const bpomAll = await this.prisma.bpomRecord.findMany({
       include: { pic: true },
     });
+    const halalAll = await this.prisma.halalRecord.findMany({
+      include: { pic: true },
+    });
+
+    const allRecords = [...hkiAll, ...bpomAll, ...halalAll];
 
     // 1. Overall Metrics
-    const thisMonthRecords = [...hkiAll, ...bpomAll].filter((r) => {
+    const thisMonthRecords = allRecords.filter((r) => {
       const d = new Date(r.applicationDate);
       return (
         d.getMonth() === today.getMonth() &&
         d.getFullYear() === today.getFullYear()
       );
     });
-    const delayedRecords = [...hkiAll, ...bpomAll].filter(
+    const delayedRecords = allRecords.filter(
       (r) =>
         r.status === LegalStatus.IN_PROGRESS &&
         r.expiryDate &&
         new Date(r.expiryDate) < today,
     );
-    const expiredRecords = [...hkiAll, ...bpomAll].filter(
+    const expiredRecords = allRecords.filter(
       (r) => r.expiryDate && new Date(r.expiryDate) < today,
     );
     const criticalHkis = hkiAll.filter(
@@ -62,7 +67,14 @@ export class LegalityService {
         new Date(r.expiryDate) <= expiryThreshold &&
         new Date(r.expiryDate) >= today,
     );
-    const criticalTotal = criticalHkis.length + criticalBpoms.length;
+    const criticalHalals = halalAll.filter(
+      (r) =>
+        r.expiryDate &&
+        new Date(r.expiryDate) <= expiryThreshold &&
+        new Date(r.expiryDate) >= today,
+    );
+    const criticalTotal =
+      criticalHkis.length + criticalBpoms.length + criticalHalals.length;
 
     // Compute average processing time
     const bpomDays = bpomAll
@@ -129,7 +141,8 @@ export class LegalityService {
     ).length;
     const activeTotal =
       hkiAll.filter((r) => r.status === LegalStatus.IN_PROGRESS).length +
-      bpomAll.filter((r) => r.status === LegalStatus.IN_PROGRESS).length;
+      bpomAll.filter((r) => r.status === LegalStatus.IN_PROGRESS).length +
+      halalAll.filter((r) => r.status === LegalStatus.IN_PROGRESS).length;
 
     return {
       overall: {
@@ -181,6 +194,16 @@ export class LegalityService {
               p.currentStage === RegStage.EVALUATION,
           ).length,
       },
+      halalStats: {
+        activeHalal: halalAll.filter(
+          (r) => r.status === LegalStatus.IN_PROGRESS,
+        ).length,
+        draft: halalAll.filter((r) => r.stage === 'DRAFT').length,
+        submitted: halalAll.filter(
+          (r) => r.stage === 'SUBMITTED' || r.stage === 'AUDIT',
+        ).length,
+        certified: halalAll.filter((r) => r.status === LegalStatus.DONE).length,
+      },
       riskMonitor: {
         expired: expiredRecords.length,
         under90Days: criticalTotal,
@@ -227,6 +250,19 @@ export class LegalityService {
             days: `${tm.daysElapsed}d`,
           };
         }),
+        halalTracking: halalAll.map((r) => {
+          const tm = this.injectTimeMetrics(r);
+          return {
+            product: tm.productName,
+            id: tm.halalId,
+            manufacturer: tm.manufacturer,
+            pic: tm.pic?.name || 'UNASSIGNED',
+            date: new Date(tm.applicationDate).toISOString().split('T')[0],
+            stage: tm.stage?.replace(/_/g, ' '),
+            status: tm.status,
+            days: `${tm.daysElapsed}d`,
+          };
+        }),
         pipelines: pipelines.map((p) => ({
           id: p.id,
           brand: p.lead.brandName,
@@ -234,14 +270,22 @@ export class LegalityService {
           stage: p.currentStage,
           pnbp: p.pnbpStatus ? 'PAID' : 'PENDING',
         })),
-        criticalExpiry: [...criticalHkis, ...criticalBpoms].map((r) => {
+        criticalExpiry: [
+          ...criticalHkis,
+          ...criticalBpoms,
+          ...criticalHalals,
+        ].map((r) => {
           const isBpom = 'bpomId' in r;
+          const isHki = 'hkiId' in r;
+          const isHalal = 'halalId' in r;
           const tm = this.injectTimeMetrics(r);
           const daysLeft = tm.daysLeft ?? 0;
+          const typeLabel = isBpom ? 'BPOM' : isHki ? 'HKI' : 'HALAL';
+          const certId = isBpom ? tm.bpomId : isHki ? tm.hkiId : tm.halalId;
           return {
-            type: tm.brandName || tm.productName,
-            sub: `[${isBpom ? 'BPOM' : 'HKI'}] | CLIENT: ${tm.clientName}`,
-            cert: isBpom ? tm.bpomId : tm.hkiId,
+            type: tm.brandName || tm.productName || tm.manufacturer,
+            sub: `[${typeLabel}] | CLIENT: ${tm.clientName || tm.manufacturer}`,
+            cert: certId,
             expiry: tm.expiryDate
               ? new Date(tm.expiryDate).toISOString().split('T')[0]
               : 'N/A',
@@ -249,9 +293,13 @@ export class LegalityService {
             color:
               daysLeft <= 0
                 ? 'bg-rose-500'
-                : daysLeft <= 90
-                  ? 'bg-amber-500'
-                  : 'bg-emerald-500',
+                : daysLeft <= 30
+                  ? 'bg-rose-500'
+                  : daysLeft <= 60
+                    ? 'bg-amber-500'
+                    : daysLeft <= 90
+                      ? 'bg-amber-400'
+                      : 'bg-emerald-500',
           };
         }),
         staffHistory: staffPerformance,
@@ -269,9 +317,11 @@ export class LegalityService {
 
   async createHki(data: any) {
     return this.prisma.$transaction(async (tx) => {
+      const { picId, ...rest } = data;
       const record = await tx.hkiRecord.create({
         data: {
-          ...data,
+          ...rest,
+          pic: { connect: { id: picId } },
           status: LegalStatus.IN_PROGRESS,
           stage: 'DRAFT',
           auditRisk: 'OK',
@@ -285,7 +335,7 @@ export class LegalityService {
           action: 'CREATED',
           newStage: 'DRAFT',
           notes: 'Record initialized in auditory log.',
-          staffName: 'System', // Idealnya dari req.user
+          staffName: 'System',
         },
       });
 
@@ -296,18 +346,24 @@ export class LegalityService {
   async advanceHkiStage(id: string) {
     const record = await this.prisma.hkiRecord.findUnique({ where: { id } });
     if (!record) throw new Error('HKI Record not found');
+    if (record.status === LegalStatus.DONE)
+      throw new Error('Record is already completed');
 
-    let nextStage = record.stage;
-    let nextStatus = record.status;
-
-    if (record.stage === 'DRAFT') {
-      nextStage = 'SUBMITTED';
-    } else if (record.stage === 'SUBMITTED') {
-      nextStage = 'EVALUATION';
-    } else if (record.stage === 'EVALUATION') {
-      nextStage = 'PUBLISHED';
-      nextStatus = LegalStatus.DONE;
+    const stageOrder = [
+      'DRAFT',
+      'SUBMITTED',
+      'EVALUATION',
+      'REVISION',
+      'PUBLISHED',
+    ];
+    const currentIdx = stageOrder.indexOf(record.stage);
+    if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
+      throw new Error('Cannot advance from current stage');
     }
+
+    const nextStage = stageOrder[currentIdx + 1];
+    const nextStatus =
+      nextStage === 'PUBLISHED' ? LegalStatus.DONE : LegalStatus.IN_PROGRESS;
 
     return this.addLog({
       recordId: id,
@@ -330,9 +386,11 @@ export class LegalityService {
 
   async createBpom(data: any) {
     return this.prisma.$transaction(async (tx) => {
+      const { picId, ...rest } = data;
       const record = await tx.bpomRecord.create({
         data: {
-          ...data,
+          ...rest,
+          pic: { connect: { id: picId } },
           status: LegalStatus.IN_PROGRESS,
           stage: 'DRAFT',
           auditRisk: 'OK',
@@ -357,22 +415,91 @@ export class LegalityService {
   async advanceBpomStage(id: string) {
     const record = await this.prisma.bpomRecord.findUnique({ where: { id } });
     if (!record) throw new Error('BPOM Record not found');
+    if (record.status === LegalStatus.DONE)
+      throw new Error('Record is already completed');
 
-    let nextStage = record.stage;
-    let nextStatus = record.status;
-
-    if (record.stage === 'DRAFT') {
-      nextStage = 'SUBMITTED';
-    } else if (record.stage === 'SUBMITTED') {
-      nextStage = 'EVALUATION';
-    } else if (record.stage === 'EVALUATION') {
-      nextStage = 'PUBLISHED';
-      nextStatus = LegalStatus.DONE;
+    const stageOrder = [
+      'DRAFT',
+      'SUBMITTED',
+      'EVALUATION',
+      'REVISION',
+      'PUBLISHED',
+    ];
+    const currentIdx = stageOrder.indexOf(record.stage);
+    if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
+      throw new Error('Cannot advance from current stage');
     }
+
+    const nextStage = stageOrder[currentIdx + 1];
+    const nextStatus =
+      nextStage === 'PUBLISHED' ? LegalStatus.DONE : LegalStatus.IN_PROGRESS;
 
     return this.addLog({
       recordId: id,
       recordType: 'BPOM',
+      action: 'STAGE_UPDATED',
+      previousStage: record.stage,
+      newStage: nextStage,
+      notes: `Automated advance from ${record.stage} to ${nextStage}`,
+      staffName: 'System',
+    });
+  }
+
+  async getHalalRecords() {
+    const records = await this.prisma.halalRecord.findMany({
+      include: { pic: true },
+      orderBy: { applicationDate: 'desc' },
+    });
+    return records.map((r) => this.injectTimeMetrics(r));
+  }
+
+  async createHalal(data: any) {
+    return this.prisma.$transaction(async (tx) => {
+      const { picId, ...rest } = data;
+      const record = await tx.halalRecord.create({
+        data: {
+          ...rest,
+          pic: { connect: { id: picId } },
+          status: LegalStatus.IN_PROGRESS,
+          stage: 'DRAFT',
+          auditRisk: 'OK',
+        },
+      });
+
+      await tx.legalTimelineLog.create({
+        data: {
+          recordId: record.id,
+          recordType: 'HALAL',
+          action: 'CREATED',
+          newStage: 'DRAFT',
+          notes: 'Halal record initialized in auditory log.',
+          staffName: 'System',
+        },
+      });
+
+      return record;
+    });
+  }
+
+  async advanceHalalStage(id: string) {
+    const record = await this.prisma.halalRecord.findUnique({ where: { id } });
+    if (!record) throw new Error('Halal Record not found');
+    if (record.status === LegalStatus.DONE)
+      throw new Error('Record is already completed');
+
+    const stageOrder = ['DRAFT', 'SUBMITTED', 'AUDIT', 'PUBLISHED'];
+    const currentIdx = stageOrder.indexOf(record.stage);
+    if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
+      throw new Error('Cannot advance from current stage');
+    }
+
+    const nextStage = stageOrder[currentIdx + 1];
+    const nextStatus =
+      nextStage === 'PUBLISHED' ? LegalStatus.DONE : LegalStatus.IN_PROGRESS;
+
+    return this.addLog({
+      recordId: id,
+      recordType: 'HALAL',
       action: 'STAGE_UPDATED',
       previousStage: record.stage,
       newStage: nextStage,
@@ -420,6 +547,13 @@ export class LegalityService {
             metadata: { newStage, status, recordType },
           });
         }
+      } else if (recordType === 'HALAL') {
+        const status =
+          newStage === 'PUBLISHED' ? LegalStatus.DONE : LegalStatus.IN_PROGRESS;
+        await tx.halalRecord.update({
+          where: { id: recordId },
+          data: { stage: newStage, status },
+        });
       }
 
       // Create log entry
@@ -464,6 +598,10 @@ export class LegalityService {
     });
     const hkiWithReg = await this.prisma.hkiRecord.findMany({
       where: { hkiId: { not: '' } },
+      orderBy: { applicationDate: 'desc' },
+    });
+    const halalWithReg = await this.prisma.halalRecord.findMany({
+      where: { halalId: { not: '' } },
       orderBy: { applicationDate: 'desc' },
     });
     const permits: Array<{
@@ -511,24 +649,24 @@ export class LegalityService {
       });
     }
 
-    permits.push(
-      {
-        id: 'PRM-IUI-001',
-        name: 'Izin Usaha Industri',
-        type: 'Operational',
-        expiry: '2027-11-30',
-        status: 'ACTIVE',
-        issuer: 'OSS / Kemenperin',
-      },
-      {
-        id: 'PRM-HALAL-001',
-        name: 'Sertifikasi Halal (Logistik)',
+    for (const halal of halalWithReg) {
+      const expired =
+        halal.expiryDate && new Date(halal.expiryDate) < new Date();
+      const expiring =
+        halal.expiryDate &&
+        new Date(halal.expiryDate) > new Date() &&
+        new Date(halal.expiryDate) <= new Date(Date.now() + 90 * 86400000);
+      permits.push({
+        id: halal.halalId,
+        name: `Sertifikasi Halal — ${halal.productName}`,
         type: 'Compliance',
-        expiry: '2026-06-20',
-        status: 'ACTIVE',
+        expiry: halal.expiryDate
+          ? new Date(halal.expiryDate).toISOString().split('T')[0]
+          : 'N/A',
+        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
         issuer: 'MUI / BPJPH',
-      },
-    );
+      });
+    }
 
     return permits.sort((a, b) => a.status.localeCompare(b.status));
   }
@@ -920,13 +1058,18 @@ export class LegalityService {
 
   async requestPNBP(
     pipelineId: string,
-    data: { amount: number; description: string; pic: string },
+    data: {
+      amount: number;
+      description: string;
+      pic: string;
+      billingCode?: string;
+    },
   ) {
     return this.prisma.pNBPRequest.create({
       data: {
         pipelineId,
         amount: data.amount,
-        billingCode: data.description, // Mapping description to billingCode for now
+        billingCode: data.billingCode || null,
         isPaid: false,
       },
     });
@@ -965,6 +1108,123 @@ export class LegalityService {
       success: true,
       message: `PNBP ${pnbpId} verified. Pipeline advancing to EVALUATION.`,
     };
+  }
+
+  async getExpiryData(limit?: number) {
+    const [hkiAll, bpomAll, halalAll] = await Promise.all([
+      this.prisma.hkiRecord.findMany({ where: { expiryDate: { not: null } } }),
+      this.prisma.bpomRecord.findMany({ where: { expiryDate: { not: null } } }),
+      this.prisma.halalRecord.findMany({
+        where: { expiryDate: { not: null } },
+      }),
+    ]);
+
+    const today = new Date();
+    const items: Array<{
+      id: string;
+      name: string;
+      type: 'HKI' | 'BPOM' | 'HALAL';
+      certNumber: string;
+      expiry: string;
+      daysLeft: number;
+      status: 'EXPIRED' | 'CRITICAL' | 'WARNING' | 'SAFE';
+    }> = [];
+
+    for (const r of hkiAll) {
+      if (!r.expiryDate) continue;
+      const daysLeft = Math.floor(
+        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      items.push({
+        id: r.id,
+        name: r.brandName,
+        type: 'HKI',
+        certNumber: r.hkiId,
+        expiry: r.expiryDate.toISOString().split('T')[0],
+        daysLeft,
+        status:
+          daysLeft <= 0
+            ? 'EXPIRED'
+            : daysLeft <= 30
+              ? 'CRITICAL'
+              : daysLeft <= 60
+                ? 'WARNING'
+                : 'SAFE',
+      });
+    }
+
+    for (const r of bpomAll) {
+      if (!r.expiryDate) continue;
+      const daysLeft = Math.floor(
+        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      items.push({
+        id: r.id,
+        name: r.productName,
+        type: 'BPOM',
+        certNumber: r.bpomId,
+        expiry: r.expiryDate.toISOString().split('T')[0],
+        daysLeft,
+        status:
+          daysLeft <= 0
+            ? 'EXPIRED'
+            : daysLeft <= 30
+              ? 'CRITICAL'
+              : daysLeft <= 60
+                ? 'WARNING'
+                : 'SAFE',
+      });
+    }
+
+    for (const r of halalAll) {
+      if (!r.expiryDate) continue;
+      const daysLeft = Math.floor(
+        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      items.push({
+        id: r.id,
+        name: r.productName,
+        type: 'HALAL',
+        certNumber: r.halalId,
+        expiry: r.expiryDate.toISOString().split('T')[0],
+        daysLeft,
+        status:
+          daysLeft <= 0
+            ? 'EXPIRED'
+            : daysLeft <= 30
+              ? 'CRITICAL'
+              : daysLeft <= 60
+                ? 'WARNING'
+                : 'SAFE',
+      });
+    }
+
+    items.sort((a, b) => a.daysLeft - b.daysLeft);
+
+    const grouped = {
+      expired: items.filter(
+        (i) => i.status === 'EXPIRED' && (!limit || items.indexOf(i) < limit),
+      ),
+      critical: items.filter(
+        (i) => i.status === 'CRITICAL' && (!limit || items.indexOf(i) < limit),
+      ),
+      warning: items.filter(
+        (i) => i.status === 'WARNING' && (!limit || items.indexOf(i) < limit),
+      ),
+      safe: items.filter(
+        (i) => i.status === 'SAFE' && (!limit || items.indexOf(i) < limit),
+      ),
+      nearestExpiring: items.slice(0, limit || 20),
+      summary: {
+        total: items.length,
+        expired: items.filter((i) => i.status === 'EXPIRED').length,
+        critical: items.filter((i) => i.status === 'CRITICAL').length,
+        warning: items.filter((i) => i.status === 'WARNING').length,
+        safe: items.filter((i) => i.status === 'SAFE').length,
+      },
+    };
+
+    return grouped;
   }
 
   private injectTimeMetrics(record: any) {

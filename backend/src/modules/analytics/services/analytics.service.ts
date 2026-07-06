@@ -211,10 +211,10 @@ export class AnalyticsService {
 
     const leadMap = new Map(leadCounts.map((l) => [l.source, l._count.id]));
 
-    return agg.map((entry) => {
+    return (agg as any[]).map((entry) => {
       const platform = entry.platform;
       const spend = Number(entry._sum.spend) || 0;
-      const pLeads = leadMap.get(platform as any) || 0;
+      const pLeads = leadMap.get(platform) || 0;
       return {
         platform,
         spend,

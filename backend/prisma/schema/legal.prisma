@@ -1,9 +1,10 @@
 model LegalStaff {
-  id    String       @id @default(uuid()) @db.Uuid
+  id    String        @id @default(uuid()) @db.Uuid
   name  String
-  role  String       @default("LEGAL_OFFICER")
+  role  String        @default("LEGAL_OFFICER")
   bpoms BpomRecord[]
   hkis  HkiRecord[]
+  halals HalalRecord[]
 
   @@map("legal_staffs")
 }
@@ -42,6 +43,23 @@ model BpomRecord {
   @@map("bpom_records")
 }
 
+model HalalRecord {
+  id              String      @id @default(uuid()) @db.Uuid
+  halalId         String      @unique
+  productName     String
+  manufacturer    String
+  category        String
+  picId           String      @db.Uuid
+  applicationDate DateTime
+  expiryDate      DateTime?
+  stage           String      @default("DRAFT")
+  status          LegalStatus @default(IN_PROGRESS)
+  auditRisk       AuditRiskLevel @default(OK)
+  pic             LegalStaff  @relation(fields: [picId], references: [id])
+
+  @@map("halal_records")
+}
+
 model LegalTimelineLog {
   id            String   @id @default(uuid())
   recordId      String
@@ -70,50 +88,51 @@ model InternalAudit {
 
   @@map("internal_audits")
 }
+
 model RegulatoryPipeline {
-  id              String         @id @default(uuid()) @db.Uuid
-  leadId          String         @db.Uuid
-  sampleRequestId String?        @db.Uuid
+  id              String    @id @default(uuid()) @db.Uuid
+  leadId          String    @db.Uuid
+  sampleRequestId String?   @db.Uuid
   type            RegType
-  currentStage    RegStage       @default(DRAFT)
-  pnbpStatus      Boolean        @default(false)
+  currentStage    RegStage  @default(DRAFT)
+  pnbpStatus      Boolean   @default(false)
   registrationNo  String?
   expiryDate      DateTime?
-  daysInStage     Int            @default(0)
-  logHistory      Json           @default("[]")
-  legalPicId      String         @db.Uuid
-  materialItemId  String?        @db.Uuid
-  formulaId       String?        @db.Uuid
+  daysInStage     Int       @default(0)
+  logHistory      Json      @default("[]")
+  legalPicId      String    @db.Uuid
+  materialItemId  String?   @db.Uuid
+  formulaId       String?   @db.Uuid
 
-  lead            SalesLead      @relation(fields: [leadId], references: [id])
-  sampleRequest   SampleRequest? @relation(fields: [sampleRequestId], references: [id])
-  formula         Formula?       @relation(fields: [formulaId], references: [id])
-  legalPic        User           @relation("LegalPIC", fields: [legalPicId], references: [id])
-  materialItem    MaterialItem?  @relation(fields: [materialItemId], references: [id])
-  artworkReviews  ArtworkReview[]
-  pnbpRequests    PNBPRequest[]
+  lead           SalesLead       @relation(fields: [leadId], references: [id])
+  sampleRequest  SampleRequest?  @relation(fields: [sampleRequestId], references: [id])
+  formula        Formula?        @relation(fields: [formulaId], references: [id])
+  legalPic       User            @relation("LegalPIC", fields: [legalPicId], references: [id])
+  materialItem   MaterialItem?   @relation(fields: [materialItemId], references: [id])
+  artworkReviews ArtworkReview[]
+  pnbpRequests   PNBPRequest[]
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([leadId, type, currentStage])
   @@map("regulatory_pipelines")
 }
 
 model ArtworkReview {
-  id               String             @id @default(uuid()) @db.Uuid
-  pipelineId       String             @db.Uuid
-  designerPicId    String             @db.Uuid
-  artworkUrl       String
-  claimRisk        ClaimRisk          @default(LOW)
-  notes            String?
-  isApproved       Boolean            @default(false)
-  approvedAt       DateTime?
-  approvedById     String?            @db.Uuid
-  pipeline         RegulatoryPipeline @relation(fields: [pipelineId], references: [id])
+  id            String             @id @default(uuid()) @db.Uuid
+  pipelineId    String             @db.Uuid
+  designerPicId String             @db.Uuid
+  artworkUrl    String
+  claimRisk     ClaimRisk          @default(LOW)
+  notes         String?
+  isApproved    Boolean            @default(false)
+  approvedAt    DateTime?
+  approvedById  String?            @db.Uuid
+  pipeline      RegulatoryPipeline @relation(fields: [pipelineId], references: [id])
 
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("artwork_reviews")
 }
@@ -129,22 +148,22 @@ model PNBPRequest {
   financeRecordId String?            @db.Uuid
   pipeline        RegulatoryPipeline @relation(fields: [pipelineId], references: [id])
 
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("pnbp_requests")
 }
 
 model MasterInci {
-  id                 String             @id @default(uuid()) @db.Uuid
-  inciName           String             @unique
-  casNumber          String?
-  category           IngredientCategory @default(ALLOWED)
-  maxConcentration   Decimal?           @db.Decimal(10, 5)
-  prohibitedContext  String?
-  warningText        String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                String             @id @default(uuid()) @db.Uuid
+  inciName          String             @unique
+  casNumber         String?
+  category          IngredientCategory @default(ALLOWED)
+  maxConcentration  Decimal?           @db.Decimal(10, 5)
+  prohibitedContext String?
+  warningText       String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@map("master_inci")
 }

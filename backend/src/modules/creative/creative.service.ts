@@ -15,9 +15,19 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BussdevService } from '../bussdev/bussdev.service';
 import { Inject, forwardRef } from '@nestjs/common';
 
+const VALID_TRANSITIONS: Record<DesignState, DesignState[]> = {
+  [DesignState.INBOX]: [DesignState.IN_PROGRESS],
+  [DesignState.IN_PROGRESS]: [DesignState.WAITING_APJ],
+  [DesignState.WAITING_APJ]: [DesignState.WAITING_CLIENT, DesignState.REVISION],
+  [DesignState.WAITING_CLIENT]: [DesignState.LOCKED, DesignState.REVISION],
+  [DesignState.REVISION]: [DesignState.IN_PROGRESS],
+  [DesignState.LOCKED]: [],
+};
+
 @Injectable()
 export class CreativeService {
   private readonly REVISION_LIMIT = 3;
+  private readonly DEFAULT_SLA_DAYS = 14;
 
   constructor(
     private prisma: PrismaService,
@@ -25,6 +35,15 @@ export class CreativeService {
     @Inject(forwardRef(() => BussdevService))
     private bussdevService: BussdevService,
   ) {}
+
+  private assertTransition(from: DesignState, to: DesignState, action: string) {
+    const allowed = VALID_TRANSITIONS[from];
+    if (!allowed || !allowed.includes(to)) {
+      throw new BadRequestException(
+        `Invalid state transition: Cannot move from ${from} to ${to} (${action})`,
+      );
+    }
+  }
 
   async getAvailableSalesOrders() {
     return this.prisma.salesOrder.findMany({
@@ -44,29 +63,35 @@ export class CreativeService {
     });
   }
 
-  async createTask(
-    leadId: string,
-    brief: string,
-    soId?: string,
-    taskType?: string,
-  ) {
+  async createTask(data: {
+    leadId: string;
+    brief: string;
+    soId?: string;
+    taskType?: string;
+    createdBy?: string;
+  }) {
+    const slaDeadline = new Date();
+    slaDeadline.setDate(slaDeadline.getDate() + this.DEFAULT_SLA_DAYS);
+
     const task = await this.prisma.designTask.create({
       data: {
-        leadId,
-        brief,
-        soId,
+        leadId: data.leadId,
+        brief: data.brief,
+        soId: data.soId,
+        taskType: data.taskType,
+        slaDeadline,
       },
     });
 
     this.eventEmitter.emit('creative.task.created', {
       taskId: task.id,
-      leadId,
-      soId,
+      leadId: data.leadId,
+      soId: data.soId,
     });
     this.eventEmitter.emit('activity.logged', {
       senderDivision: 'CREATIVE',
-      notes: `Design task created for lead ${leadId}: ${brief.slice(0, 60)}`,
-      loggedBy: 'SYSTEM:CREATIVE',
+      notes: `Design task created for lead ${data.leadId}: ${data.brief.slice(0, 60)}`,
+      loggedBy: data.createdBy || 'SYSTEM:CREATIVE',
     });
 
     return task;
@@ -87,6 +112,17 @@ export class CreativeService {
 
       if (!task) throw new NotFoundException('Design Task not found');
 
+      // State Machine: only INBOX, IN_PROGRESS, or REVISION can upload
+      if (
+        task.kanbanState !== DesignState.INBOX &&
+        task.kanbanState !== DesignState.IN_PROGRESS &&
+        task.kanbanState !== DesignState.REVISION
+      ) {
+        throw new BadRequestException(
+          `Cannot upload version in state ${task.kanbanState}. Task is with Legal or Client.`,
+        );
+      }
+
       // Constraint: Revision Cap Limit
       if (task.revisionCount >= this.REVISION_LIMIT && task.isLocked) {
         throw new BadRequestException(
@@ -96,23 +132,30 @@ export class CreativeService {
 
       const nextVersionNumber = task.versions.length + 1;
 
-      // Update task state & revision count
-      // Revision count starts after the first version (V1) is uploaded.
-      // So V1 -> 0 revisions, V2 -> 1 revision, V3 -> 2 revisions, V4 -> 3 revisions (MAX).
       const newRevisionCount =
         nextVersionNumber > 1 ? nextVersionNumber - 1 : 0;
 
-      const result = await tx.designTask.update({
+      const nextState =
+        task.kanbanState === DesignState.INBOX ||
+        task.kanbanState === DesignState.REVISION
+          ? DesignState.IN_PROGRESS
+          : task.kanbanState;
+
+      // Lock the task when revision limit is hit by the upload itself
+      const shouldLock = newRevisionCount >= this.REVISION_LIMIT;
+
+      await tx.designTask.update({
         where: { id: data.taskId },
         data: {
-          kanbanState: DesignState.IN_PROGRESS,
+          kanbanState: nextState,
           revisionCount: newRevisionCount,
+          isLocked: shouldLock,
         },
       });
 
       this.eventEmitter.emit('creative.update', {
         taskId: data.taskId,
-        state: DesignState.IN_PROGRESS,
+        state: nextState,
       });
       this.eventEmitter.emit('creative.version.uploaded', {
         taskId: data.taskId,
@@ -125,7 +168,6 @@ export class CreativeService {
         loggedBy: data.uploadedBy || 'SYSTEM:CREATIVE',
       });
 
-      // Create version record (Immutable history)
       return tx.designVersion.create({
         data: {
           taskId: data.taskId,
@@ -145,9 +187,16 @@ export class CreativeService {
       include: { versions: true },
     });
 
-    if (!task || task.versions.length === 0) {
+    if (!task) throw new NotFoundException('Task not found');
+    if (task.versions.length === 0) {
       throw new BadRequestException('Cannot submit: No artwork uploaded yet.');
     }
+
+    this.assertTransition(
+      task.kanbanState,
+      DesignState.WAITING_APJ,
+      'submitToApj',
+    );
 
     const result = await this.prisma.designTask.update({
       where: { id: taskId },
@@ -158,9 +207,7 @@ export class CreativeService {
       taskId,
       state: DesignState.WAITING_APJ,
     });
-    this.eventEmitter.emit('creative.task.submitted', {
-      taskId,
-    });
+    this.eventEmitter.emit('creative.task.submitted', { taskId });
     this.eventEmitter.emit('activity.logged', {
       senderDivision: 'CREATIVE',
       notes: `Design task ${taskId.slice(0, 8)} submitted to Legal (APJ)`,
@@ -172,13 +219,12 @@ export class CreativeService {
   async apjReview(data: {
     taskId: string;
     status: ApprovalStatus;
-    notes: string;
+    notes?: string;
     authorId: string;
     pin: string;
     ipAddress: string | null;
   }) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. PIN Verification (Internal E-Signature)
       const user = await tx.user.findUnique({ where: { id: data.authorId } });
       if (!user) throw new NotFoundException('User not found');
       if (!user.approvalPin) {
@@ -196,7 +242,14 @@ export class CreativeService {
       });
       if (!task) throw new NotFoundException('Task not found');
 
-      // 2. Create Feedback Log (Audit Trail)
+      this.assertTransition(
+        task.kanbanState,
+        data.status === ApprovalStatus.APPROVED
+          ? DesignState.WAITING_CLIENT
+          : DesignState.REVISION,
+        'apjReview',
+      );
+
       await tx.designFeedback.create({
         data: {
           taskId: data.taskId,
@@ -212,7 +265,6 @@ export class CreativeService {
         },
       });
 
-      // 3. Update State
       const nextState =
         data.status === ApprovalStatus.APPROVED
           ? DesignState.WAITING_CLIENT
@@ -255,6 +307,14 @@ export class CreativeService {
 
       if (!task) throw new NotFoundException('Task not found');
 
+      this.assertTransition(
+        task.kanbanState,
+        status === ApprovalStatus.APPROVED
+          ? DesignState.LOCKED
+          : DesignState.REVISION,
+        'clientReview',
+      );
+
       const latestVersion = task.versions[0];
 
       if (status === ApprovalStatus.APPROVED) {
@@ -268,11 +328,10 @@ export class CreativeService {
           },
         });
 
-        // INTERLOCK: Auto-generate Printing PO in SCM
         await tx.purchaseOrder.create({
           data: {
-            poNumber: `PO-DESIGN-${task.id.slice(0, 8)}`,
-            notes: `AUTO-GEN FROM DESIGN TASK: ${task.id}`,
+            poNumber: `PO-DESIGN-${task.id.slice(0, 8)}-${Date.now().toString(36).toUpperCase()}`,
+            notes: `AUTO-GEN FROM DESIGN TASK: ${task.id} | Lead: ${task.leadId} | Artwork: ${latestVersion?.artworkUrl || 'N/A'}`,
             lead: task.leadId ? { connect: { id: task.leadId } } : undefined,
             status: POStatus.ORDERED,
           },
@@ -293,7 +352,6 @@ export class CreativeService {
           loggedBy: 'SYSTEM:CREATIVE',
         });
 
-        // TRIGGER READINESS CHECK
         if (task.leadId) {
           await this.bussdevService.checkSalesOrderReadiness(task.leadId);
         }
@@ -312,10 +370,7 @@ export class CreativeService {
           taskId,
           state: DesignState.REVISION,
         });
-        this.eventEmitter.emit('creative.task.rejected', {
-          taskId,
-          notes,
-        });
+        this.eventEmitter.emit('creative.task.rejected', { taskId, notes });
         this.eventEmitter.emit('activity.logged', {
           senderDivision: 'CREATIVE',
           notes: `Client rejected design task ${taskId.slice(0, 8)} → REVISION`,
@@ -326,60 +381,105 @@ export class CreativeService {
     });
   }
 
-  async unlockTask(
-    taskId: string,
-    action: 'CHARGE' | 'WAIVE',
-    managerPin?: string,
-  ) {
+  async unlockTask(data: {
+    taskId: string;
+    action: 'CHARGE' | 'WAIVE';
+    managerPin?: string;
+    userId: string;
+  }) {
     const task = await this.prisma.designTask.findUnique({
-      where: { id: taskId },
+      where: { id: data.taskId },
       include: { salesOrder: true },
     });
     if (!task) throw new NotFoundException('Task not found');
+    if (!task.isLocked) {
+      throw new BadRequestException('Task is not locked.');
+    }
 
-    // If WAIVE, we might want to check managerPin here (similar to apjReview)
-    // For now, we unlock.
+    if (data.action === 'WAIVE') {
+      if (!data.managerPin) {
+        throw new BadRequestException('Manager PIN required for WAIVE action.');
+      }
+      const user = await this.prisma.user.findUnique({
+        where: { id: data.userId },
+      });
+      if (!user?.managerPin) {
+        throw new BadRequestException(
+          'Manager PIN not set. Please set it in your profile.',
+        );
+      }
+      const isValid = await bcrypt.compare(data.managerPin, user.managerPin);
+      if (!isValid) {
+        throw new BadRequestException('INVALID MANAGER PIN: Unlock denied.');
+      }
+    }
 
     const result = await this.prisma.designTask.update({
-      where: { id: taskId },
+      where: { id: data.taskId },
       data: { isLocked: false },
     });
 
     this.eventEmitter.emit('creative.update', {
-      taskId,
+      taskId: data.taskId,
       state: result.kanbanState,
     });
     this.eventEmitter.emit('creative.task.unlocked', {
-      taskId,
-      action,
+      taskId: data.taskId,
+      action: data.action,
     });
     this.eventEmitter.emit('activity.logged', {
       senderDivision: 'MANAGEMENT',
-      notes: `Design task ${taskId.slice(0, 8)} unlocked (${action}) by BusDev override`,
-      loggedBy: 'SYSTEM:MANAGEMENT',
+      notes: `Design task ${data.taskId.slice(0, 8)} unlocked (${data.action}) by BusDev override`,
+      loggedBy: data.userId,
     });
 
     return result;
   }
 
-  async getAllTasks() {
-    return this.prisma.designTask.findMany({
-      include: {
-        lead: true,
-        versions: { orderBy: { versionNumber: 'desc' }, take: 1 },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+  async getAllTasks(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [tasks, total] = await Promise.all([
+      this.prisma.designTask.findMany({
+        skip,
+        take: limit,
+        include: {
+          lead: {
+            select: {
+              id: true,
+              clientName: true,
+              brandName: true,
+              productInterest: true,
+            },
+          },
+          versions: { orderBy: { versionNumber: 'desc' }, take: 1 },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.designTask.count(),
+    ]);
+    return { data: tasks, total, page, limit };
   }
 
-  async getBoard() {
-    return this.prisma.designTask.findMany({
-      include: {
-        lead: {
-          select: { clientName: true, brandName: true, productInterest: true },
+  async getBoard(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [tasks, total] = await Promise.all([
+      this.prisma.designTask.findMany({
+        skip,
+        take: limit,
+        include: {
+          lead: {
+            select: {
+              clientName: true,
+              brandName: true,
+              productInterest: true,
+            },
+          },
+          versions: { orderBy: { versionNumber: 'desc' }, take: 1 },
         },
-        versions: { orderBy: { versionNumber: 'desc' }, take: 1 },
-      },
-    });
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.designTask.count(),
+    ]);
+    return { data: tasks, total, page, limit };
   }
 }

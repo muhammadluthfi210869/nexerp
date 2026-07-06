@@ -34,9 +34,10 @@ async function bootstrap() {
   );
 
   // Enable CORS — locked to production domain, wide open for dev
-  const corsOrigin = process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGIN || 'https://nexerp.id')
-    : true;
+  const corsOrigin =
+    process.env.NODE_ENV === 'production'
+      ? process.env.CORS_ORIGIN || 'https://nexerp.id'
+      : true;
   app.enableCors({
     origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

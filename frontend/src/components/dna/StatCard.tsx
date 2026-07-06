@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 interface StatCardProps {
   label: string
   value: string | number
-  subValue?: string
+  subValue?: string | React.ReactNode
   icon?: React.ReactNode
   className?: string
 }
@@ -20,22 +20,28 @@ export function StatCard({ label, value, subValue, icon, className }: StatCardPr
   return (
     <div
       className={cn(
-        "bg-white border border-[var(--border-color)] rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in",
+        "bg-white border border-[var(--border-color)] rounded-[24px] p-8 shadow-sm transition-all group overflow-hidden relative flex items-center animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)]",
         className
       )}
     >
       <div className="flex justify-between items-center relative z-10 w-full">
         <div className="space-y-2 flex-1 min-w-0 pr-4">
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em] group-hover:text-slate-900 transition-colors">
+          <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.1em] group-hover:text-slate-900 transition-colors">
             {label}
           </p>
           <h3 className="text-[32px] font-black text-slate-900 tracking-[-0.02em] tabular leading-tight">
             {value ?? "—"}
           </h3>
           {subValue && (
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
-              {subValue}
-            </p>
+            typeof subValue === "string" ? (
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
+                {subValue}
+              </p>
+            ) : (
+              <div className="text-[11px] font-bold uppercase tracking-wider leading-tight">
+                {subValue}
+              </div>
+            )
           )}
         </div>
         {iconEl && (

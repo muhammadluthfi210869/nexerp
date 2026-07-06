@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { 
@@ -18,6 +18,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function WarehouseControlPage() {
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: requisitions, isLoading } = useQuery({
     queryKey: ["allRequisitions"],
@@ -40,6 +41,14 @@ export default function WarehouseControlPage() {
       toast.error("Shortage Escalated to SCM");
     }
   });
+
+  const filteredRequisitions = searchTerm 
+    ? requisitions?.filter((r: any) => 
+        r.reqNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.workOrder?.woNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.workOrder?.lead?.brandName?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : requisitions;
 
   return (
     <DashboardShell
@@ -72,7 +81,13 @@ export default function WarehouseControlPage() {
         filters={
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <DnaInput icon={<Search className="w-4 h-4" />} placeholder="Search batch or material..." className="w-80" />
+              <DnaInput 
+                icon={<Search className="w-4 h-4" />} 
+                placeholder="Search batch or material..." 
+                className="w-80"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               <DnaButton variant="outline" size="sm" icon={<Filter className="w-3 h-3" />}>
                 Filter Status
               </DnaButton>
@@ -101,14 +116,16 @@ export default function WarehouseControlPage() {
                  <tr>
                     <td colSpan={6} className="p-20 text-center font-black text-slate-300 italic">Syncing inventory signals...</td>
                  </tr>
-              ) : requisitions?.length === 0 ? (
+              ) : filteredRequisitions?.length === 0 ? (
                  <tr>
                     <td colSpan={6} className="p-20 text-center">
                        <Box className="w-12 h-12 mx-auto text-slate-200 mb-2" />
-                       <p className="font-black text-slate-300 italic">No active requisitions from production.</p>
+                       <p className="font-black text-slate-300 italic">
+                         {searchTerm ? "No matching requisitions found." : "No active requisitions from production."}
+                       </p>
                     </td>
                  </tr>
-              ) : requisitions.map((req: any) => (
+              ) : filteredRequisitions.map((req: any) => (
                 <tr key={req.id} className="hover:bg-slate-50/30 transition-colors group">
                   <td className="p-6">
                     <div className="flex flex-col">

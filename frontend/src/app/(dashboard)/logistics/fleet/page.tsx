@@ -14,7 +14,7 @@ import {
   Globe,
   Radar
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { DashboardCard } from "@/components/dna/DashboardCard";
 import { cn } from "@/lib/utils";
 import { DnaBadge, DnaButton } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -56,7 +56,7 @@ export default function FleetControlCenter() {
     >
 
       {/* 📡 II. STRATEGIC TELEMETRY HUB */}
-      <Card className="bento-card bg-brand-black h-[500px] relative overflow-hidden group">
+      <DashboardCard inverted className="h-[500px] relative overflow-hidden !p-0">
          <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]" />
          
@@ -103,7 +103,7 @@ export default function FleetControlCenter() {
                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> LIVE TELEMETRY STREAM
             </DnaBadge>
          </div>
-      </Card>
+      </DashboardCard>
 
       {/* 🚛 III. FLEET ASSET REGISTRY */}
       <div className="space-y-4">
@@ -112,8 +112,8 @@ export default function FleetControlCenter() {
            <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">📑 III. FLEET ASSET REGISTRY</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-           {fleet?.map((unit: any) => (
-              <Card key={unit.id} className="bento-card p-8 bg-white group hover:translate-y-[-5px] transition-all relative overflow-hidden">
+            {fleet?.map((unit: any) => (
+               <DashboardCard key={unit.id} className="relative overflow-hidden">
                  <div className="flex justify-between items-start mb-8 relative z-10">
                     <div className="h-14 w-14 rounded-2xl bg-white text-slate-900 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all shadow-lg shadow-slate-200 border border-slate-200">
                        <Truck className="h-6 w-6" />
@@ -158,7 +158,7 @@ export default function FleetControlCenter() {
                        <p className="text-[9px] font-black uppercase italic group-hover:text-white tabular">{unit.eta}</p>
                     </div>
                  </div>
-              </Card>
+              </DashboardCard>
            ))}
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function FleetControlCenter() {
 
 function PerformanceCard({ label, desc, icon: Icon, color, invert = false }: any) {
   return (
-     <Card className={cn("bento-card p-10 overflow-hidden relative group transition-all hover:translate-y-[-5px]", color, invert ? "text-brand-black" : "text-white")}>
+      <DashboardCard className={cn("!p-10 overflow-hidden relative", color, invert ? "text-brand-black" : "text-white")} inverted={!invert}>
         <div className="relative z-10 flex flex-col gap-8">
            <div className={cn("h-20 w-20 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:rotate-12", invert ? "bg-white border border-slate-100" : "bg-white/10 backdrop-blur-md border border-white/10")}>
               <Icon className={cn("h-10 w-10", invert ? "text-orange-500" : "text-white")} />
@@ -186,7 +186,7 @@ function PerformanceCard({ label, desc, icon: Icon, color, invert = false }: any
            </div>
         </div>
         <Icon className={cn("h-48 w-48 absolute -right-12 -bottom-12 opacity-5 rotate-12 transition-transform group-hover:scale-110", invert ? "text-black" : "text-white")} />
-     </Card>
+     </DashboardCard>
   );
 }
 

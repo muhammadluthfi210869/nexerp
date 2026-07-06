@@ -45,20 +45,20 @@ export class RndController {
   }
 
   @Get('dashboard')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.DIRECTOR)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   @ApiOperation({ summary: 'Get R&D dashboard metrics' })
   getDashboard() {
     return this.rndService.getDashboardMetrics();
   }
 
   @Get('samples')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   getSamples() {
     return this.rndService.getSamples();
   }
 
   @Get('samples/:id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   getSample(@Param('id') id: string) {
     return this.rndService.getSample(id);
   }
@@ -88,7 +88,7 @@ export class RndController {
   }
 
   @Get('samples/:id/feedback')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   getFeedback(@Param('id') id: string) {
     return this.rndService.getFeedback(id);
   }
@@ -122,6 +122,7 @@ export class RndController {
   }
 
   @Get('lab-test-results')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   @ApiOperation({
     summary: 'Get all lab test results (supports ?type=stability)',
   })
@@ -130,11 +131,13 @@ export class RndController {
   }
 
   @Get('lab-test-results/:formulaId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   getLabTestResults(@Param('formulaId') formulaId: string) {
     return this.rndService.getLabTestResults(formulaId);
   }
 
   @Post('qc-parameters/:formulaId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   @ApiOperation({ summary: 'Set QC target parameters for a formula' })
   async setQcParameters(
     @Param('formulaId') formulaId: string,
@@ -151,6 +154,7 @@ export class RndController {
   }
 
   @Post('lab-test-results')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   createLabTestResult(
     @Body()
     dto: {
@@ -172,14 +176,14 @@ export class RndController {
   }
 
   @Get('formulas')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.PRODUCTION)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   @ApiOperation({ summary: 'List all formulas' })
   getFormulas() {
     return this.rndService.getFormulas();
   }
 
   @Get('pipeline')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
   @ApiOperation({ summary: 'Get R&D pipeline (all samples with phases)' })
   getPipeline() {
     return this.rndService.getPipeline();

@@ -226,6 +226,54 @@ export class NotificationService {
     });
   }
 
+  // --- DOCUMENT AUTOMATION NOTIFICATIONS ---
+
+  @OnEvent('document.draft_created')
+  async handleDocumentDraftCreated(payload: {
+    draftId: string;
+    documentType: string;
+    sourceType: string;
+  }) {
+    await this.sendToRole('FINANCE', {
+      title: '📄 New Document Draft',
+      body: `Auto-generated ${payload.documentType} draft created. Review in Document Center.`,
+      type: 'HANDOVER',
+      referenceType: 'document_draft',
+      referenceId: payload.draftId,
+      link: '/document-center',
+    });
+  }
+
+  @OnEvent('document.draft_approved')
+  async handleDocumentDraftApproved(payload: {
+    draftId: string;
+    documentType: string;
+  }) {
+    await this.sendToRole('FINANCE', {
+      title: '✅ Document Approved',
+      body: `${payload.documentType} draft has been approved and executed.`,
+      type: 'GATE_OPENED',
+      referenceType: 'document_draft',
+      referenceId: payload.draftId,
+      link: '/document-center',
+    });
+  }
+
+  @OnEvent('document.draft_auto_approved')
+  async handleDocumentDraftAutoApproved(payload: {
+    draftId: string;
+    documentType: string;
+  }) {
+    await this.sendToRole('FINANCE', {
+      title: '⚡ Document Auto-Approved',
+      body: `${payload.documentType} draft was auto-approved (no edits within deadline).`,
+      type: 'GATE_OPENED',
+      referenceType: 'document_draft',
+      referenceId: payload.draftId,
+      link: '/document-center',
+    });
+  }
+
   // --- QUERIES ---
 
   async getAllNotifications(userId: string, limit: number = 50) {

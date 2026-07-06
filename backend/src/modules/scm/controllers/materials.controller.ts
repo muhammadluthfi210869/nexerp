@@ -21,18 +21,13 @@ export class MaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}
 
   @Get()
-  @Roles(
-    UserRole.SUPER_ADMIN,
-    UserRole.PURCHASING,
-    UserRole.RND,
-    UserRole.COMMERCIAL,
-  )
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
   findAll() {
     return this.materialsService.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.RND)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
   findOne(@Param('id') id: string) {
     return this.materialsService.findOne(id);
   }

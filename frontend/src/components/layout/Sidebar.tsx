@@ -76,10 +76,11 @@ const MODULE_STRUCTURE: NavGroup[] = [
   {
     label: "DIGITAL MARKETING",
     icon: BarChart3,
-    roles: ["SUPER_ADMIN", "MARKETING", "DIRECTOR"],
+    roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
       { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
       { name: "Campaign Input", href: "/marketing/input", type: "input" },
+      { name: "Management Task", href: "/marketing/management-task", type: "action" },
       { name: "Lead Logs", href: "/marketing/logs", type: "history" },
     ]
   },
@@ -252,6 +253,7 @@ const getIconByType = (type: string) => {
     case "input": return PlusCircle;
     case "action": return Zap;
     case "history": return History;
+    case "settings": return Cog;
     case "bussdev_lost": return XCircle;
     default: return Activity;
   }
@@ -279,6 +281,7 @@ export function Sidebar() {
   }, [pathname]);
 
   const isExecutive = user?.roles?.includes("DIRECTOR");
+  const isRevitaMarketingOnly = user?.email?.toLowerCase?.() === "revita@nexerp.id";
 
   const toggleGroup = (label: string) => {
     setOpenGroups(prev =>
@@ -324,7 +327,8 @@ export function Sidebar() {
         {TIER_STRUCTURE.map((tier) => {
           const tierGroups = MODULE_STRUCTURE.filter(group => 
             tier.groups.includes(group.label) && 
-            (!user || !group.roles || group.roles.some(role => user.roles.includes(role)))
+            (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
+            (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
           );
 
           if (tierGroups.length === 0) return null;

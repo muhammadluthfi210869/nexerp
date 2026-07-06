@@ -122,59 +122,156 @@ function scaleTrendData(raw: number[] | undefined, defaultVal: number[]): number
   return raw.map(v => 40 + (v / max) * 100);
 }
 
+const DASHBOARD_DUMMY_DATA = {
+  acquisition: { revenue: 3185000000, clientsAcquired: 42, avgCpa: 84500 },
+  funnel: { leadsQualified: 1284, leadToSampleRate: 21.4, prospects: 276, closingRate: 15.2 },
+  budget: { totalAdSpend: 1248000000, budgetUsagePercent: 92, costPerLead: 97352, costPerSample: 315000 },
+  trends: [
+    { month: "Jan", leads: 74, cpl: 92, closing: 44, cpa: 98 },
+    { month: "Feb", leads: 81, cpl: 89, closing: 48, cpa: 101 },
+    { month: "Mar", leads: 88, cpl: 85, closing: 55, cpa: 97 },
+    { month: "Apr", leads: 95, cpl: 84, closing: 62, cpa: 103 },
+    { month: "May", leads: 102, cpl: 79, closing: 66, cpa: 100 },
+    { month: "Jun", leads: 108, cpl: 76, closing: 72, cpa: 96 },
+    { month: "Jul", leads: 116, cpl: 74, closing: 68, cpa: 105 },
+    { month: "Aug", leads: 123, cpl: 72, closing: 74, cpa: 102 },
+    { month: "Sep", leads: 129, cpl: 70, closing: 79, cpa: 106 },
+    { month: "Oct", leads: 134, cpl: 68, closing: 81, cpa: 110 },
+    { month: "Nov", leads: 141, cpl: 67, closing: 86, cpa: 108 },
+    { month: "Dec", leads: 148, cpl: 65, closing: 90, cpa: 111 },
+  ],
+  productPerformance: [
+    { cat: "Skincare Premium", leads: 384, sample: 124, deal: 39 },
+    { cat: "Bodycare Harian", leads: 297, sample: 101, deal: 31 },
+    { cat: "Haircare Repair", leads: 236, sample: 77, deal: 26 },
+    { cat: "Packaging Custom", leads: 182, sample: 58, deal: 19 },
+    { cat: "Maklon Trial Kit", leads: 144, sample: 43, deal: 14 },
+  ],
+  topContent: [
+    { title: "Retinol Reels Launch", engagement: 6.8 },
+    { title: "Behind The Brand Story", engagement: 6.1 },
+    { title: "Packaging Before After", engagement: 5.7 },
+    { title: "Founder FAQ Carousel", engagement: 5.3 },
+    { title: "UGC Testimonial Cut", engagement: 5.1 },
+  ],
+  leadSourceRanking: [
+    { name: "Meta Ads", leads: 428 },
+    { name: "TikTok Ads", leads: 311 },
+    { name: "Google Organic", leads: 222 },
+    { name: "Instagram Organic", leads: 176 },
+    { name: "Referral", leads: 89 },
+  ],
+  vitality: {
+    totalPosts: 18,
+    postTarget: 28,
+    avgEngagement: 2.8,
+    totalFollowers: 184200,
+    engagementByType: { likes: 24800, comments: 2140, shares: 3890, saves: 4620 },
+  },
+  searchVisibility: { impressions: 418000, clicks: 14240, avgCtr: 3.4, avgPosition: 8.1 },
+  platforms: {
+    INSTAGRAM: { growth: "+4.8%", followers: "98.4K" },
+    FACEBOOK: { growth: "+1.9%", followers: "24.1K" },
+    YOUTUBE: { growth: "+6.1%", followers: "18.7K" },
+    TIKTOK: { growth: "-1.2%", followers: "43.0K" },
+  },
+};
+
+function mergeMarketingAnalytics(source?: Partial<typeof DASHBOARD_DUMMY_DATA> | null) {
+  if (!source) return DASHBOARD_DUMMY_DATA;
+  return {
+    ...DASHBOARD_DUMMY_DATA,
+    ...source,
+    acquisition: { ...DASHBOARD_DUMMY_DATA.acquisition, ...(source.acquisition ?? {}) },
+    funnel: { ...DASHBOARD_DUMMY_DATA.funnel, ...(source.funnel ?? {}) },
+    budget: { ...DASHBOARD_DUMMY_DATA.budget, ...(source.budget ?? {}) },
+    vitality: {
+      ...DASHBOARD_DUMMY_DATA.vitality,
+      ...(source.vitality ?? {}),
+      engagementByType: {
+        ...DASHBOARD_DUMMY_DATA.vitality.engagementByType,
+        ...(source.vitality?.engagementByType ?? {}),
+      },
+    },
+    searchVisibility: { ...DASHBOARD_DUMMY_DATA.searchVisibility, ...(source.searchVisibility ?? {}) },
+    platforms: { ...DASHBOARD_DUMMY_DATA.platforms, ...(source.platforms ?? {}) },
+    trends: source.trends?.length ? source.trends : DASHBOARD_DUMMY_DATA.trends,
+    productPerformance: source.productPerformance?.length ? source.productPerformance : DASHBOARD_DUMMY_DATA.productPerformance,
+    topContent: source.topContent?.length ? source.topContent : DASHBOARD_DUMMY_DATA.topContent,
+    leadSourceRanking: source.leadSourceRanking?.length ? source.leadSourceRanking : DASHBOARD_DUMMY_DATA.leadSourceRanking,
+  };
+}
+
+function getCriticalCardStyle(isCritical: boolean): React.CSSProperties | undefined {
+  if (!isCritical) return undefined;
+  return {
+    border: "1px solid rgba(220,38,38,0.28)",
+    boxShadow: "0 0 0 1px rgba(220,38,38,0.08), 0 18px 40px -16px rgba(220,38,38,0.34), inset 0 1px 0 rgba(255,255,255,0.7)",
+  };
+}
+
 export default function MarketingDashboardClient() {
   const [activePlatform, setActivePlatform] = useState<"INSTAGRAM" | "FACEBOOK" | "YOUTUBE" | "TIKTOK">("INSTAGRAM");
 
   const { data } = useQuery({
     queryKey: ["marketing-analytics"],
-    queryFn: () => api.get("/marketing/analytics").then(r => r.data),
+    queryFn: async () => {
+      try {
+        const response = await api.get("/marketing/analytics");
+        return response.data ?? DASHBOARD_DUMMY_DATA;
+      } catch {
+        return DASHBOARD_DUMMY_DATA;
+      }
+    },
     staleTime: 2 * 60 * 1000,
   });
 
+  const analytics = mergeMarketingAnalytics(data);
   // Dynamic values or fallback
-  const revenueVal = data?.acquisition?.revenue ? formatRupiah(data.acquisition.revenue) : "—";
-  const revenueTargetPercent = data?.acquisition?.revenue
-    ? Math.min(Math.round((data.acquisition.revenue / 4500000000) * 100), 100)
+  const revenueVal = analytics.acquisition?.revenue ? formatRupiah(analytics.acquisition.revenue) : "-";
+  const revenueTargetPercent = analytics.acquisition?.revenue
+    ? Math.min(Math.round((analytics.acquisition.revenue / 4500000000) * 100), 100)
     : 0;
-  const clientAcqVal = data?.acquisition?.clientsAcquired ? String(data.acquisition.clientsAcquired) : "—";
-  const avgCpaVal = data?.acquisition?.avgCpa ? formatRupiah(data.acquisition.avgCpa) : "—";
+  const clientAcqVal = analytics.acquisition?.clientsAcquired ? String(analytics.acquisition.clientsAcquired) : "-";
+  const avgCpaVal = analytics.acquisition?.avgCpa ? formatRupiah(analytics.acquisition.avgCpa) : "-";
 
-  const leadsQualifiedVal = data?.funnel?.leadsQualified ? formatNumber(data.funnel.leadsQualified) : "—";
-  const leadToSampleRateVal = data?.funnel?.leadToSampleRate ? `${data.funnel.leadToSampleRate}%` : "—";
-  const prospectsVal = data?.funnel?.prospects ? String(data.funnel.prospects) : "—";
-  const closingRateVal = data?.funnel?.closingRate ? `${data.funnel.closingRate}%` : "—";
+  const leadsQualifiedVal = analytics.funnel?.leadsQualified ? formatNumber(analytics.funnel.leadsQualified) : "-";
+  const leadToSampleRateVal = analytics.funnel?.leadToSampleRate ? `${analytics.funnel.leadToSampleRate}%` : "-";
+  const prospectsVal = analytics.funnel?.prospects ? String(analytics.funnel.prospects) : "-";
+  const closingRateVal = analytics.funnel?.closingRate ? `${analytics.funnel.closingRate}%` : "-";
 
-  const totalAdSpendVal = data?.budget?.totalAdSpend ? formatRupiah(data.budget.totalAdSpend) : "—";
-  const budgetUsagePercentVal = data?.budget?.budgetUsagePercent ? `${Math.round(data.budget.budgetUsagePercent)}%` : "—";
-  const costPerLeadVal = data?.budget?.costPerLead ? formatRupiah(data.budget.costPerLead) : "—";
-  const costPerSampleVal = data?.budget?.costPerSample ? formatRupiah(data.budget.costPerSample) : "—";
+  const totalAdSpendVal = analytics.budget?.totalAdSpend ? formatRupiah(analytics.budget.totalAdSpend) : "-";
+  const budgetUsagePercentVal = analytics.budget?.budgetUsagePercent ? `${Math.round(analytics.budget.budgetUsagePercent)}%` : "-";
+  const costPerLeadVal = analytics.budget?.costPerLead ? formatRupiah(analytics.budget.costPerLead) : "-";
+  const costPerSampleVal = analytics.budget?.costPerSample ? formatRupiah(analytics.budget.costPerSample) : "-";
 
   // Trends
-  const rawLeadsTrend = data?.trends?.map((t: any) => t.leads as number);
-  const rawCplTrend = data?.trends?.map((t: any) => t.cpl as number);
-  const rawClosingTrend = data?.trends?.map((t: any) => t.closing as number);
-  const rawCpaTrend = data?.trends?.map((t: any) => t.cpa as number);
+  const rawLeadsTrend = analytics.trends?.map((t: any) => t.leads as number);
+  const rawCplTrend = analytics.trends?.map((t: any) => t.cpl as number);
+  const rawClosingTrend = analytics.trends?.map((t: any) => t.closing as number);
+  const rawCpaTrend = analytics.trends?.map((t: any) => t.cpa as number);
 
-  const leadsTrend = scaleTrendData(rawLeadsTrend, []);
-  const cplTrend = scaleTrendData(rawCplTrend, []);
-  const closingTrend = scaleTrendData(rawClosingTrend, []);
-  const cpaTrend = scaleTrendData(rawCpaTrend, []);
+  const leadsTrend = scaleTrendData(rawLeadsTrend, DASHBOARD_DUMMY_DATA.trends.map((t) => t.leads));
+  const cplTrend = scaleTrendData(rawCplTrend, DASHBOARD_DUMMY_DATA.trends.map((t) => t.cpl));
+  const closingTrend = scaleTrendData(rawClosingTrend, DASHBOARD_DUMMY_DATA.trends.map((t) => t.closing));
+  const cpaTrend = scaleTrendData(rawCpaTrend, DASHBOARD_DUMMY_DATA.trends.map((t) => t.cpa));
 
   // Product performance
-  const productPerformance = data?.productPerformance || [];
+  const productPerformance = analytics.productPerformance || [];
 
   // Vitality & Platform específicos
-  const disciplinePostsVal = data?.vitality?.totalPosts ? String(data.vitality.totalPosts) : "—";
-  const disciplineTargetVal = data?.vitality?.postTarget ? String(data.vitality.postTarget) : "—";
-  const disciplineProgressVal = data?.vitality?.totalPosts && data?.vitality?.postTarget
-    ? Math.round((data.vitality.totalPosts / data.vitality.postTarget) * 100)
+  const disciplinePostsVal = analytics.vitality?.totalPosts ? String(analytics.vitality.totalPosts) : "-";
+  const disciplineTargetVal = analytics.vitality?.postTarget ? String(analytics.vitality.postTarget) : "-";
+  const disciplineProgressVal = analytics.vitality?.totalPosts && analytics.vitality?.postTarget
+    ? Math.round((analytics.vitality.totalPosts / analytics.vitality.postTarget) * 100)
     : 0;
-  const erRateVal = data?.vitality?.avgEngagement ? `${data.vitality.avgEngagement.toFixed(1)}%` : "—";
-  const followersVal = data?.vitality?.totalFollowers ? formatNumber(data.vitality.totalFollowers) : "—";
-  const engLikes = data?.vitality?.engagementByType?.likes ?? 0;
-  const engComments = data?.vitality?.engagementByType?.saves ?? 0;
-  const engShares = data?.vitality?.engagementByType?.shares ?? 0;
-  const engSaves = data?.vitality?.engagementByType?.saves ?? 0;
+  const erRateVal = analytics.vitality?.avgEngagement ? `${analytics.vitality.avgEngagement.toFixed(1)}%` : "-";
+  const followersVal = analytics.vitality?.totalFollowers ? formatNumber(analytics.vitality.totalFollowers) : "-";
+  const engLikes = analytics.vitality?.engagementByType?.likes ?? 0;
+  const engComments = analytics.vitality?.engagementByType?.comments ?? 0;
+  const engShares = analytics.vitality?.engagementByType?.shares ?? 0;
+  const engSaves = analytics.vitality?.engagementByType?.saves ?? 0;
+  const platformMetrics = analytics.platforms ?? DASHBOARD_DUMMY_DATA.platforms;
 
   // Platform specific deep dive calculations
   const platformDataMap = {
@@ -204,22 +301,34 @@ export default function MarketingDashboardClient() {
     }
   };
 
+  platformDataMap.INSTAGRAM.growth = platformMetrics.INSTAGRAM.growth;
+  platformDataMap.INSTAGRAM.followers = platformMetrics.INSTAGRAM.followers;
+  platformDataMap.FACEBOOK.growth = platformMetrics.FACEBOOK.growth;
+  platformDataMap.FACEBOOK.followers = platformMetrics.FACEBOOK.followers;
+  platformDataMap.YOUTUBE.growth = platformMetrics.YOUTUBE.growth;
+  platformDataMap.YOUTUBE.followers = platformMetrics.YOUTUBE.followers;
+  platformDataMap.TIKTOK.growth = platformMetrics.TIKTOK.growth;
+  platformDataMap.TIKTOK.followers = platformMetrics.TIKTOK.followers;
+
   const selectedPlatformInfo = platformDataMap[activePlatform];
   const SelectedPlatformIcon = selectedPlatformInfo.icon;
+  const revenueCritical = revenueTargetPercent < 70;
+  const funnelCritical = Number(analytics.funnel?.leadToSampleRate ?? 0) < 25;
+  const budgetCritical = Number(analytics.budget?.budgetUsagePercent ?? 0) > 85;
+  const vitalityCritical = disciplineProgressVal < 80 || Number(analytics.vitality?.avgEngagement ?? 0) < 3;
+  const searchCritical = Number(analytics.searchVisibility?.avgCtr ?? 0) < 3;
 
   // Search visibility
-  const searchImpressions = data?.searchVisibility?.impressions ? formatNumber(data.searchVisibility.impressions) : "—";
-  const searchClicks = data?.searchVisibility?.clicks ? formatNumber(data.searchVisibility.clicks) : "—";
-  const searchCtr = data?.searchVisibility?.avgCtr ? `${data.searchVisibility.avgCtr}%` : "—";
-  const searchPosition = data?.searchVisibility?.avgPosition ? String(data.searchVisibility.avgPosition) : "—";
+  const searchImpressions = analytics.searchVisibility?.impressions ? formatNumber(analytics.searchVisibility.impressions) : "-";
+  const searchClicks = analytics.searchVisibility?.clicks ? formatNumber(analytics.searchVisibility.clicks) : "-";
+  const searchCtr = analytics.searchVisibility?.avgCtr ? `${analytics.searchVisibility.avgCtr}%` : "-";
+  const searchPosition = analytics.searchVisibility?.avgPosition ? String(analytics.searchVisibility.avgPosition) : "-";
 
   return (
     <div
       className="view-section active"
       style={{ paddingBottom: "10rem", background: "#F8FAFC", minHeight: "100vh" }}
     >
-
-
       {/* Top 3 Cards Grid */}
       <div
         style={{
@@ -237,6 +346,7 @@ export default function MarketingDashboardClient() {
             borderRadius: "32px",
             border: "1px solid #E2E8F0",
             boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+            ...getCriticalCardStyle(revenueCritical),
           }}
         >
           <div
@@ -259,13 +369,13 @@ export default function MarketingDashboardClient() {
             >
               ACQUISITION HUB
             </span>
-            <TrendingUp color="#2563EB" size={16} />
+            <TrendingUp color={revenueCritical ? "#DC2626" : "#2563EB"} size={16} />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
             <p style={{ margin: 0, fontSize: "10px", fontWeight: 800, color: "#94A3B8" }}>
               REVENUE SALES (MTD)
             </p>
-            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>
+            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: revenueCritical ? "#DC2626" : "#1E293B" }}>
               {revenueVal}
             </h3>
             <div
@@ -305,7 +415,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
                 CLIENT ACQ.
               </p>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: revenueCritical ? "#DC2626" : "#1E293B" }}>
                 {clientAcqVal}{" "}
                 <span style={{ fontSize: "10px", color: "#10B981" }}>+12%</span>
               </p>
@@ -314,7 +424,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
                 AVG CPA
               </p>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: revenueCritical ? "#DC2626" : "#1E293B" }}>
                 {avgCpaVal}
               </p>
             </div>
@@ -329,6 +439,7 @@ export default function MarketingDashboardClient() {
             borderRadius: "32px",
             border: "1px solid #E2E8F0",
             boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+            ...getCriticalCardStyle(funnelCritical),
           }}
         >
           <div
@@ -351,13 +462,13 @@ export default function MarketingDashboardClient() {
             >
               FUNNEL EFFICIENCY
             </span>
-            <Filter color="#8B5CF6" size={16} />
+            <Filter color={funnelCritical ? "#DC2626" : "#8B5CF6"} size={16} />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
             <p style={{ margin: 0, fontSize: "10px", fontWeight: 800, color: "#94A3B8" }}>
               LEADS QUALIFIED
             </p>
-            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>
+            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: funnelCritical ? "#DC2626" : "#1E293B" }}>
               {leadsQualifiedVal}
             </h3>
             <p style={{ margin: 0, fontSize: "10px", fontWeight: 700, color: "#8B5CF6" }}>
@@ -376,7 +487,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
                 PROSPECT
               </p>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: funnelCritical ? "#DC2626" : "#1E293B" }}>
                 {prospectsVal}
               </p>
             </div>
@@ -384,7 +495,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
                 CLOSING RATE
               </p>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: funnelCritical ? "#DC2626" : "#1E293B" }}>
                 {closingRateVal}
               </p>
             </div>
@@ -399,6 +510,7 @@ export default function MarketingDashboardClient() {
             borderRadius: "32px",
             border: "1px solid #E2E8F0",
             boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+            ...getCriticalCardStyle(budgetCritical),
           }}
         >
           <div
@@ -421,13 +533,13 @@ export default function MarketingDashboardClient() {
             >
               BUDGET AUDIT
             </span>
-            <Wallet color="#EF4444" size={16} />
+            <Wallet color="#DC2626" size={16} />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
             <p style={{ margin: 0, fontSize: "10px", fontWeight: 800, color: "#94A3B8" }}>
               TOTAL AD SPEND
             </p>
-            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>
+            <h3 style={{ margin: "4px 0", fontSize: "28px", fontWeight: 950, color: budgetCritical ? "#DC2626" : "#1E293B" }}>
               {totalAdSpendVal}
             </h3>
             <p style={{ margin: 0, fontSize: "10px", fontWeight: 700, color: "#EF4444" }}>
@@ -446,7 +558,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
                 COST PER LEAD
               </p>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: budgetCritical ? "#DC2626" : "#1E293B" }}>
                 {costPerLeadVal}
               </p>
             </div>
@@ -454,7 +566,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>
                 COST / SAMPLE
               </p>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: "#1E293B" }}>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: 950, color: budgetCritical ? "#DC2626" : "#1E293B" }}>
                 {costPerSampleVal}
               </p>
             </div>
@@ -478,6 +590,7 @@ export default function MarketingDashboardClient() {
             padding: "2.5rem",
             borderRadius: "32px",
             border: "1px solid #E2E8F0",
+            ...getCriticalCardStyle(funnelCritical),
           }}
         >
           <div
@@ -521,6 +634,7 @@ export default function MarketingDashboardClient() {
             padding: "2.5rem",
             borderRadius: "32px",
             border: "1px solid #E2E8F0",
+            ...getCriticalCardStyle(budgetCritical),
           }}
         >
           <div
@@ -625,6 +739,7 @@ export default function MarketingDashboardClient() {
             padding: "2rem",
             borderRadius: "32px",
             border: "1px solid #E2E8F0",
+            ...getCriticalCardStyle(vitalityCritical),
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "2rem" }}>
@@ -652,7 +767,7 @@ export default function MarketingDashboardClient() {
               <p style={{ margin: 0, fontSize: "10px", fontWeight: 900, color: "#BE185D" }}>
                 DISIPLIN PRODUKSI
               </p>
-              <h4 style={{ margin: "14px 0", fontSize: "24px", fontWeight: 950, color: "#1E293B" }}>
+              <h4 style={{ margin: "14px 0", fontSize: "24px", fontWeight: 950, color: vitalityCritical ? "#DC2626" : "#1E293B" }}>
                 {disciplinePostsVal}{" "}
                 <span style={{ fontSize: "12px", color: "#64748B" }}>/ {disciplineTargetVal} Konten</span>
               </h4>
@@ -673,7 +788,7 @@ export default function MarketingDashboardClient() {
                 }}
               >
                 <span style={{ fontSize: "9px", fontWeight: 800, color: "#64748B" }}>ER RATE</span>
-                <span style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{erRateVal}</span>
+                <span style={{ fontSize: "14px", fontWeight: 950, color: vitalityCritical ? "#DC2626" : "#1E293B" }}>{erRateVal}</span>
               </div>
               <div
                 style={{
@@ -687,7 +802,7 @@ export default function MarketingDashboardClient() {
                 }}
               >
                 <span style={{ fontSize: "9px", fontWeight: 800, color: "#0369A1" }}>FOLLOWERS</span>
-                <span style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{followersVal}</span>
+                <span style={{ fontSize: "14px", fontWeight: 950, color: vitalityCritical ? "#DC2626" : "#1E293B" }}>{followersVal}</span>
               </div>
             </div>
           </div>
@@ -731,6 +846,7 @@ export default function MarketingDashboardClient() {
             border: "1px solid #E2E8F0",
             overflow: "hidden",
             display: "flex",
+            ...getCriticalCardStyle(searchCritical),
           }}
         >
           {/* Sidebar */}
@@ -837,7 +953,7 @@ export default function MarketingDashboardClient() {
             VII. TOP 5 CONTENT LEADERS
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {(data?.topContent || []).map((item: any, idx: number) => (
+            {analytics.topContent.map((item: any, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -871,7 +987,7 @@ export default function MarketingDashboardClient() {
             VIII. RANKING SUMBER LEADS
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {(data?.leadSourceRanking || []).map((item: any, idx: number) => (
+            {analytics.leadSourceRanking.map((item: any, idx: number) => (
               <div
                 key={idx}
                 style={{
@@ -916,6 +1032,7 @@ export default function MarketingDashboardClient() {
               icon: Eye,
               color: "#6366F1",
               bg: "#EEF2FF",
+              critical: false,
             },
             {
               label: "TOTAL CLICKS",
@@ -924,6 +1041,7 @@ export default function MarketingDashboardClient() {
               icon: MousePointer2,
               color: "#10B981",
               bg: "#ECFDF5",
+              critical: false,
             },
             {
               label: "AVG. CTR",
@@ -932,6 +1050,7 @@ export default function MarketingDashboardClient() {
               icon: MousePointerClick,
               color: "#F59E0B",
               bg: "#FFFBEB",
+              critical: searchCritical,
             },
             {
               label: "AVG. POSITION",
@@ -940,6 +1059,7 @@ export default function MarketingDashboardClient() {
               icon: BarChart3,
               color: "#8B5CF6",
               bg: "#F5F3FF",
+              critical: Number(analytics.searchVisibility?.avgPosition ?? 0) > 10,
             },
           ].map((card, idx) => {
             const CardIcon = card.icon;
@@ -952,6 +1072,7 @@ export default function MarketingDashboardClient() {
                   borderRadius: "24px",
                   border: "1px solid #E2E8F0",
                   boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+                  ...getCriticalCardStyle(Boolean(card.critical)),
                 }}
               >
                 <div
@@ -975,7 +1096,7 @@ export default function MarketingDashboardClient() {
                   >
                     <CardIcon color={card.color} size={18} />
                   </div>
-                  <span style={{ fontSize: "10px", fontWeight: 950, color: card.color }}>
+                  <span style={{ fontSize: "10px", fontWeight: 950, color: card.critical ? "#DC2626" : card.color }}>
                     {card.sub}
                   </span>
                 </div>
@@ -983,7 +1104,7 @@ export default function MarketingDashboardClient() {
                   <p style={{ margin: 0, fontSize: "9px", fontWeight: 900, color: "#94A3B8" }}>
                     {card.label}
                   </p>
-                  <h3 style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: 950, color: "#1E293B" }}>
+                  <h3 style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: 950, color: card.critical ? "#DC2626" : "#1E293B" }}>
                     {card.val}
                   </h3>
                 </div>

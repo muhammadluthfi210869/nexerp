@@ -1,9 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request as apiRequest } from '@playwright/test';
 
 const API = 'http://localhost:3002';
 
 test.describe('Error Paths — API Validation', () => {
   let token: string;
+  let anonRequest: any;
 
   test.beforeAll(async ({ request }) => {
     const res = await request.post(`${API}/auth/login`, {
@@ -11,6 +12,15 @@ test.describe('Error Paths — API Validation', () => {
     });
     expect([200, 201]).toContain(res.status());
     token = (await res.json()).access_token;
+    anonRequest = await apiRequest.newContext({
+      extraHTTPHeaders: {
+        Authorization: '',
+      },
+    });
+  });
+
+  test.afterAll(async () => {
+    await anonRequest?.dispose();
   });
 
   // ─────────────────────────────────────────────
@@ -40,7 +50,7 @@ test.describe('Error Paths — API Validation', () => {
     });
 
     test('GET /auth/profile — no token returns 401', async ({ request }) => {
-      const res = await request.get(`${API}/auth/profile`);
+      const res = await anonRequest.get(`${API}/auth/profile`);
       expect(res.status()).toBe(401);
     });
 
@@ -404,7 +414,7 @@ test.describe('Error Paths — API Validation', () => {
     });
 
     test('POST /qc/audits — no token returns 401', async ({ request }) => {
-      const res = await request.post(`${API}/qc/audits`, {
+      const res = await anonRequest.post(`${API}/qc/audits`, {
         data: { status: 'PASS' },
       });
       expect(res.status()).toBe(401);
@@ -516,7 +526,7 @@ test.describe('Error Paths — API Validation', () => {
 
     test('POST /notifications/:id/read — no token returns 401', async ({ request }) => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const res = await request.post(`${API}/notifications/${fakeId}/read`);
+      const res = await anonRequest.post(`${API}/notifications/${fakeId}/read`);
       expect(res.status()).toBe(401);
     });
 

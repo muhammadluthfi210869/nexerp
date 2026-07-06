@@ -22,17 +22,18 @@ model User {
   verifiedPayments Payment[]        @relation("FinanceVerifier")
   prodPlans        ProductionPlan[] @relation("ProdAdmin")
   scmPO            PurchaseOrder[]  @relation("SCMProcessor")
-  qcAudits         QCAudit[]        @relation("QCOfficer")
   registrations    RegulatoryPipeline[]   @relation("LegalPIC")
   leadsManaged     SalesLead[]      @relation("BDLeads")
   salesTargets     SalesTarget[]
   rndSamples       SampleRequest[]  @relation("RNDFormulator")
   logistics        Shipment[]       @relation("LogisticsOfficer")
   laborGrade       LaborGrade?
-  escalationsApproved AuditEscalation[] @relation("EscalationApprover")
   employeeProfile  Employee?
   approvedTickets  Ticket[]         @relation("TicketApprover")
   authorizedPayrolls Payroll[]      @relation("PayrollApprover")
+  internalAudits     InternalAudit[] @relation("InternalAuditPic")
+  qcAudits           QCAudit[]        @relation("QCOfficer")
+  escalationsApproved AuditEscalation[] @relation("EscalationApprover")
 
   @@map("users")
 }

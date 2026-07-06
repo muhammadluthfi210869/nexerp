@@ -5,6 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSalesOrderDto } from '../dto/create-sales-order.dto';
 import { UpdateSalesOrderDto } from '../dto/update-sales-order.dto';
 import { SOStatus, InvoiceType, InvoiceStatus } from '@prisma/client';
@@ -17,11 +18,12 @@ export class SalesOrdersService {
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(dto: CreateSalesOrderDto) {
     const orderNumber = await this.idGenerator.generateId('SO');
-    return this.prisma.salesOrder.create({
+    const so = await this.prisma.salesOrder.create({
       data: {
         orderNumber,
         leadId: dto.leadId,
@@ -44,6 +46,11 @@ export class SalesOrdersService {
         },
       },
     });
+
+    // Emit event for document automation
+    this.eventEmitter.emit('sales_order.created', { salesOrderId: so.id });
+
+    return so;
   }
 
   async findAll() {
@@ -105,6 +112,9 @@ export class SalesOrdersService {
       this.logger.log(
         `[BROADCAST] SO Activated: ${id}. Notifying PRODUCTION to create schedule.`,
       );
+
+      // Emit event for document automation (Goods Requirement)
+      this.eventEmitter.emit('sales_order.activated', { salesOrderId: id });
     }
 
     // Whitelist: only allow specific fields to prevent mass assignment

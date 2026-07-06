@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole, Division, ContractType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 interface PersonnelSeed {
   email: string;
@@ -32,7 +33,7 @@ const PERSONNEL: PersonnelSeed[] = [
   { email: 'diaz@dreamlab.com', fullName: 'Diaz', roles: [UserRole.HR, UserRole.MARKETING], division: Division.MANAGEMENT, roleName: 'Asst HR & Legal', joinedAt: '14/11/2022', contractType: ContractType.CONTRACT, contractEnd: '14/11/2024' },
   // DIGITAL MARKETING / CREATIVE
   { email: 'bagus@dreamlab.com', fullName: 'Bagus', roles: [UserRole.IT_SYS], division: Division.SYSTEM, roleName: 'System & Web', joinedAt: '10/01/2021', contractType: ContractType.PERMANENT },
-  { email: 'revita@dreamlab.com', fullName: 'Revita', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'DM Strategy', joinedAt: '05/03/2023', contractType: ContractType.CONTRACT, contractEnd: '05/03/2026' },
+  { email: 'revita@nexerp.id', fullName: 'Revita', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'DM Strategy', joinedAt: '05/03/2023', contractType: ContractType.CONTRACT, contractEnd: '05/03/2026' },
   { email: 'gusti@dreamlab.com', fullName: 'Gusti', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'Graphic Designer', joinedAt: '12/06/2023', contractType: ContractType.CONTRACT, contractEnd: '12/06/2024' },
   { email: 'zarkasi@dreamlab.com', fullName: 'Zarkasi', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'Video Editor', joinedAt: '01/08/2023', contractType: ContractType.CONTRACT, contractEnd: '01/08/2024' },
   // MARKETING & DEVELOPMENT
@@ -54,6 +55,17 @@ const PERSONNEL: PersonnelSeed[] = [
   { email: 'ghufran@dreamlab.com', fullName: 'Ghufran', roles: [UserRole.WAREHOUSE], division: Division.WAREHOUSE, roleName: 'Head Warehouse', joinedAt: '01/01/2020', contractType: ContractType.PERMANENT },
   { email: 'raka@dreamlab.com', fullName: 'Raka', roles: [UserRole.WAREHOUSE], division: Division.WAREHOUSE, roleName: 'Warehouse Staff', joinedAt: '12/03/2023', contractType: ContractType.CONTRACT, contractEnd: '12/03/2024' },
 ];
+
+function encrypt(text: string): string {
+  const secret = process.env.AES_SECRET_KEY || 'default-seed-key-32bytes-long!!';
+  const key = Buffer.alloc(32, secret);
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
 
 function parseDate(dateStr: string): Date {
   const [dd, mm, yyyy] = dateStr.split('/').map(Number);
@@ -93,7 +105,7 @@ export async function seedPersonnel(prisma: PrismaClient) {
         contractType: p.contractType,
         contractEnd: p.contractEnd ? parseDate(p.contractEnd) : null,
         isActive: true,
-        baseSalary: 'ENCRYPTED_DUMMY',
+        baseSalary: encrypt('5000000'),
       },
       create: {
         userId: user.id,
@@ -102,7 +114,7 @@ export async function seedPersonnel(prisma: PrismaClient) {
         contractType: p.contractType,
         contractEnd: p.contractEnd ? parseDate(p.contractEnd) : null,
         isActive: true,
-        baseSalary: 'ENCRYPTED_DUMMY',
+        baseSalary: encrypt('5000000'),
       },
     });
 

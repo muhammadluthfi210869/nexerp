@@ -37,6 +37,7 @@ const mockPrisma = {
   journalEntry: {
     findMany: jest.fn(),
     create: jest.fn(),
+    findUnique: jest.fn(),
   },
   salesOrder: { findMany: jest.fn() },
   deliveryOrder: { findMany: jest.fn() },
@@ -183,6 +184,77 @@ describe('FinanceService — Unit', () => {
       };
 
       await expect(service.createJournalEntry(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('throws BadRequestException when expense journal has no proof attachment', async () => {
+      mockPrisma.financialPeriod.findFirst.mockResolvedValue(null);
+      mockPrisma.account.findMany.mockResolvedValue([
+        { id: 'a1', code: '6102', name: 'Beban Selisih Persediaan', type: 'EXPENSE' },
+        { id: 'a2', code: '1100', name: 'Kas', type: 'ASSET' },
+      ]);
+
+      const dto = {
+        date: '2024-01-15',
+        description: 'Expense without proof',
+        lines: [
+          { accountId: 'a1', debit: 100000, credit: 0 },
+          { accountId: 'a2', debit: 0, credit: 100000 },
+        ],
+      };
+
+      await expect(service.createJournalEntry(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('reverseJournalEntry', () => {
+    it('creates a reversal journal with swapped debit and credit', async () => {
+      mockPrisma.journalEntry.findUnique.mockResolvedValue({
+        id: 'j1',
+        reference: 'JRN-001',
+        description: 'Original Journal',
+        lines: [
+          { accountId: 'a1', debit: 100000, credit: 0 },
+          { accountId: 'a2', debit: 0, credit: 100000 },
+        ],
+      });
+      mockPrisma.journalEntry.create.mockResolvedValue({
+        id: 'rev-1',
+        reference: 'REV-JRN-001',
+      });
+
+      const result = await service.reverseJournalEntry('j1');
+
+      expect(result.id).toBe('rev-1');
+      expect(mockPrisma.journalEntry.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            reference: 'REV-JRN-001',
+            description: 'REVERSAL of: Original Journal',
+          }),
+        }),
+      );
+
+      const createdLines =
+        mockPrisma.journalEntry.create.mock.calls[0][0].data.lines.create;
+      expect(createdLines).toEqual([
+        { accountId: 'a1', debit: 0, credit: 100000 },
+        { accountId: 'a2', debit: 100000, credit: 0 },
+      ]);
+    });
+
+    it('rejects reversal of an already reversed journal', async () => {
+      mockPrisma.journalEntry.findUnique.mockResolvedValue({
+        id: 'j1',
+        reference: 'REV-JRN-001',
+        description: 'Already reversed',
+        lines: [{ accountId: 'a1', debit: 100000, credit: 0 }],
+      });
+
+      await expect(service.reverseJournalEntry('j1')).rejects.toThrow(
         BadRequestException,
       );
     });

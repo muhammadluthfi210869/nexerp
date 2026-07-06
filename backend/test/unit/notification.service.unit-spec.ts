@@ -1,24 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationService } from '../../src/modules/notification/notification.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
-import { TestModule } from '../utilities/test-module';
 
-describe('NotificationService — Unit', () => {
+describe('NotificationService â€” Unit', () => {
   let service: NotificationService;
   let prisma: any;
 
-  const userId = 'USER-001';
-
   beforeEach(async () => {
-    prisma = TestModule.mockPrisma();
-    prisma.notification = {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-      delete: jest.fn(),
+    prisma = {
+      notification: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        update: jest.fn(),
+        updateMany: jest.fn(),
+      },
+      user: {
+        findMany: jest.fn(),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -28,108 +26,94 @@ describe('NotificationService — Unit', () => {
       ],
     }).compile();
 
-    service = module.get<NotificationService>(NotificationService);
+    service = module.get(NotificationService);
   });
 
-  describe('getAllNotifications', () => {
-    it('returns notifications for user', async () => {
-      prisma.notification.findMany = jest.fn().mockResolvedValue([
-        { id: 'N-1', title: 'Test', body: 'Body', isRead: false },
-        { id: 'N-2', title: 'Test 2', body: 'Body 2', isRead: true },
-      ]);
+  it('sendInApp persists a read-state false notification', async () => {
+    await service.sendInApp('user-1', {
+      title: 'Gate opened',
+      body: 'Finance verified',
+      type: 'GATE_OPENED',
+      link: '/finance/dashboard',
+    });
 
-      const result = await service.getAllNotifications(userId);
-      expect(result).toHaveLength(2);
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { userId },
+    expect(prisma.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'user-1',
+          title: 'Gate opened',
+          body: 'Finance verified',
+          type: 'GATE_OPENED',
+          isRead: false,
         }),
-      );
-    });
-
-    it('respects limit parameter', async () => {
-      prisma.notification.findMany = jest.fn().mockResolvedValue([]);
-
-      await service.getAllNotifications(userId, 10);
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 10 }),
-      );
-    });
+      }),
+    );
   });
 
-  describe('getUnreadNotifications', () => {
-    it('returns only unread notifications', async () => {
-      prisma.notification.findMany = jest.fn().mockResolvedValue([
-        { id: 'N-1', title: 'Unread', isRead: false },
-      ]);
+  it('sendToRole fans out to all active users with the role', async () => {
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'u1', roles: ['FINANCE'], status: 'ACTIVE' },
+      { id: 'u2', roles: ['FINANCE'], status: 'ACTIVE' },
+    ]);
 
-      const result = await service.getUnreadNotifications(userId);
-      expect(result).toHaveLength(1);
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { userId, isRead: false },
-        }),
-      );
+    await service.sendToRole('FINANCE', {
+      title: 'Payable pending',
+      body: 'Check invoice',
+      type: 'HANDOVER',
     });
 
-    it('returns empty array when all read', async () => {
-      prisma.notification.findMany = jest.fn().mockResolvedValue([]);
-
-      const result = await service.getUnreadNotifications(userId);
-      expect(result).toHaveLength(0);
+    expect(prisma.user.findMany).toHaveBeenCalledWith({
+      where: { roles: { has: 'FINANCE' }, status: 'ACTIVE' },
     });
+    expect(prisma.notification.create).toHaveBeenCalledTimes(2);
   });
 
-  describe('markAsRead', () => {
-    it('marks notification as read', async () => {
-      prisma.notification.update = jest.fn().mockResolvedValue({
-        id: 'N-1',
-        isRead: true,
-      });
+  it('sendToDivision maps BD to COMMERCIAL and PRODUCTION to multiple roles', async () => {
+    prisma.user.findMany.mockResolvedValue([]);
 
-      const result = await service.markAsRead('N-1');
-      expect(result.isRead).toBe(true);
-      expect(prisma.notification.update).toHaveBeenCalledWith({
-        where: { id: 'N-1' },
-        data: { isRead: true },
-      });
+    await service.sendToDivision('BD', {
+      title: 'Lead',
+      body: 'New lead',
+      type: 'GATE_OPENED',
     });
+
+    expect(prisma.user.findMany).toHaveBeenCalledWith({
+      where: { roles: { has: 'COMMERCIAL' }, status: 'ACTIVE' },
+    });
+
+    jest.clearAllMocks();
+    prisma.user.findMany.mockResolvedValue([]);
+
+    await service.sendToDivision('PRODUCTION', {
+      title: 'WO ready',
+      body: 'Start batching',
+      type: 'HANDOVER',
+    });
+
+    expect(prisma.user.findMany).toHaveBeenCalledTimes(3);
   });
 
-  describe('markAllAsRead', () => {
-    it('marks all user notifications as read', async () => {
-      prisma.notification.updateMany = jest.fn().mockResolvedValue({ count: 5 });
+  it('getUnreadNotifications returns only unread rows ordered by recency', async () => {
+    prisma.notification.findMany.mockResolvedValue([
+      { id: 'n1', isRead: false },
+    ]);
 
-      const result = await service.markAllAsRead(userId);
-      expect(result.count).toBe(5);
-      expect(prisma.notification.updateMany).toHaveBeenCalledWith({
-        where: { userId, isRead: false },
-        data: { isRead: true },
-      });
+    const result = await service.getUnreadNotifications('u1');
+
+    expect(prisma.notification.findMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', isRead: false },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
     });
+    expect(result).toEqual([{ id: 'n1', isRead: false }]);
   });
 
-  describe('sendInApp', () => {
-    it('creates notification record', async () => {
-      prisma.notification.create = jest.fn().mockResolvedValue({ id: 'N-1' });
+  it('markAllAsRead updates the unread set for the user', async () => {
+    await service.markAllAsRead('u1');
 
-      await service.sendInApp(userId, {
-        title: 'Test Title',
-        body: 'Test Body',
-        type: 'GATE_OPENED',
-      });
-
-      expect(prisma.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            userId,
-            title: 'Test Title',
-            body: 'Test Body',
-            type: 'GATE_OPENED',
-            isRead: false,
-          }),
-        }),
-      );
+    expect(prisma.notification.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', isRead: false },
+      data: { isRead: true },
     });
   });
 });

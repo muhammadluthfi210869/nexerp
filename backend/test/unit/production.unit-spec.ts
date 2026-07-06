@@ -7,7 +7,7 @@ import { IdGeneratorService } from '../../src/modules/system/id-generator.servic
 import { BadRequestException } from '@nestjs/common';
 import { TestModule } from '../utilities/test-module';
 
-describe.skip('ProductionService — Unit (DI unresolved — $transaction mock)', () => {
+describe('ProductionService — Unit (DI unresolved — $transaction mock)', () => {
   let service: ProductionService;
   let prisma: any;
 
@@ -62,12 +62,24 @@ describe.skip('ProductionService — Unit (DI unresolved — $transaction mock)'
     it('issues material and creates production log', async () => {
       prisma.$transaction = jest.fn((fn: any) => fn(prisma));
       prisma.materialRequisition = {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'REQ-1',
+          workOrderId: 'WO-1',
+          materialId: 'MAT-1',
+          qtyRequested: 50,
+          reqNumber: 'REQ-001',
+          material: { stockQty: 100, name: 'Zinc Oxide', unit: 'kg' },
+          workOrder: { stage: 'WAITING_MATERIAL' },
+        }),
         update: jest.fn().mockResolvedValue({
           id: 'REQ-1',
           workOrderId: 'WO-1',
+          qtyIssued: 50,
           workOrder: { stage: 'WAITING_MATERIAL' },
         }),
       };
+      prisma.materialItem = { update: jest.fn() };
+      prisma.inventoryTransaction = { create: jest.fn() };
       prisma.productionLog = { create: jest.fn() };
 
       const result = await service.issueMaterial('REQ-1');

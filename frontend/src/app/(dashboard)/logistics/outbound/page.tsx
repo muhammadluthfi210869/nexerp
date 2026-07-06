@@ -14,13 +14,12 @@ import {
   ShieldCheck,
   History
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { 
   Dialog, 
   DialogContent
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { StatCard, DnaButton, DnaInput } from "@/components/dna";
+import { StatCard, DashboardCard, DnaButton, DnaInput } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function LogisticsOutboundPage() {
@@ -129,7 +128,7 @@ export default function LogisticsOutboundPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredOrders.map((order) => (
-              <Card key={order.id} className="bento-card overflow-hidden bg-white group hover:translate-y-[-5px] transition-all">
+              <DashboardCard key={order.id} className="overflow-hidden !p-0">
                 <div className="bg-brand-black p-6 flex justify-between items-center">
                    <div className="flex items-center gap-2">
                       <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />
@@ -171,7 +170,7 @@ export default function LogisticsOutboundPage() {
                      VERIFY & SHIP
                    </DnaButton>
                 </div>
-              </Card>
+              </DashboardCard>
             ))}
           </div>
         )}
@@ -186,7 +185,7 @@ export default function LogisticsOutboundPage() {
       </div>
 
       {/* 🛡️ IV. INTEGRITY PROTOCOL */}
-      <Card className="bento-card bg-brand-black text-white p-12 relative overflow-hidden group rounded-[24px]">
+      <DashboardCard inverted className="!p-12 relative overflow-hidden">
          <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
             <div className="h-32 w-32 bg-white/10 backdrop-blur-xl rounded-[24px] border border-white/20 flex items-center justify-center group-hover:rotate-6 transition-transform duration-700">
                <ShieldCheck className="h-16 w-16 text-orange-400" />
@@ -203,7 +202,7 @@ export default function LogisticsOutboundPage() {
             </div>
          </div>
          <Truck className="h-64 w-64 text-white/[0.02] absolute -right-16 -bottom-16 group-hover:scale-110 transition-transform duration-1000" />
-      </Card>
+      </DashboardCard>
 
       {/* Shipment Verification Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

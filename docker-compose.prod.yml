@@ -28,6 +28,8 @@ services:
       PORT: 3001
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:-super-secret-key-change-me}
+      AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://nexerp.id}
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
@@ -36,7 +38,7 @@ services:
     networks:
       - erp_network
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:3001/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/system/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

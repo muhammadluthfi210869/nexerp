@@ -1,7 +1,19 @@
 
 import { PrismaClient, ContractType, Division, AttendanceStatus } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+import * as crypto from 'crypto';
 import { randomElement, randomInt } from './utils';
+
+function encryptBaseSalary(text: string): string {
+  const secret = process.env.AES_SECRET_KEY || 'default-seed-key-32bytes-long!!';
+  const key = Buffer.alloc(32, secret);
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
 
 export async function seedHR(prisma: PrismaClient) {
   console.log('🌱 Seeding HR Data...');
@@ -15,7 +27,7 @@ export async function seedHR(prisma: PrismaClient) {
         name: user.fullName || faker.person.fullName(),
         joinedAt: faker.date.past(),
         contractType: randomElement(Object.values(ContractType)),
-        baseSalary: 'ENCRYPTED_DUMMY_VALUE',
+        baseSalary: encryptBaseSalary('5000000'),
       }
     });
 

@@ -1,34 +1,34 @@
 model SalesLead {
-  id                  String            @id @default(uuid()) @db.Uuid
+  id                  String               @id @default(uuid()) @db.Uuid
   clientName          String
   brandName           String?
-  brandCode           String?           @unique
+  brandCode           String?              @unique
   contactInfo         String
   source              String
   productInterest     String
-  estimatedValue      Decimal           @default(0) @db.Decimal(15, 2)
-  status              WorkflowStatus    @default(NEW_LEAD)
+  estimatedValue      Decimal              @default(0) @db.Decimal(15, 2)
+  status              WorkflowStatus       @default(NEW_LEAD)
   lostReason          LostReason?
-  picId               String            @db.Uuid
-  isRepeatOrder       Boolean           @default(false)
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime?         @updatedAt
-  hkiMode             HkiMode           @default(NEW)
-  paymentType         PaymentType       @default(PREPAID)
+  picId               String               @db.Uuid
+  isRepeatOrder       Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime?            @updatedAt
+  hkiMode             HkiMode              @default(NEW)
+  paymentType         PaymentType          @default(PREPAID)
   lastFollowUpAt      DateTime?
-  marginPercentage    Decimal           @default(0) @db.Decimal(5, 2)
-  moq                 Int               @default(0)
-  planOmset           Decimal           @default(0) @db.Decimal(15, 2)
+  marginPercentage    Decimal              @default(0) @db.Decimal(5, 2)
+  moq                 Int                  @default(0)
+  planOmset           Decimal              @default(0) @db.Decimal(15, 2)
   categoryEnum        ProductCategory?
-  categoryId          String?           @db.Uuid
+  categoryId          String?              @db.Uuid
   province            String?
   city                String?
   district            String?
   addressDetail       String?
   campaignName        String?
-  isHighValue         Boolean           @default(false)
-  slaStart            DateTime?         @db.Timestamp(6)
-  bdId                String?           @db.Uuid
+  isHighValue         Boolean              @default(false)
+  slaStart            DateTime?            @db.Timestamp(6)
+  bdId                String?              @db.Uuid
   email               String?
   contactChannel      String?
   launchingPlan       String?
@@ -37,21 +37,21 @@ model SalesLead {
   notes               String?
   packagingSuggestion String?
   sku                 String?
-  unitPrice           Decimal?          @db.Decimal(15, 2)
+  unitPrice           Decimal?             @db.Decimal(15, 2)
   valueSuggestion     String?
   convertedToProdAt   DateTime?
   convertedToSampleAt DateTime?
   firstFollowUpAt     DateTime?
-  isEmergencyOverride Boolean           @default(false)
-  lastStageAt         DateTime          @default(now())
-  orderCount          Int               @default(0)
+  isEmergencyOverride Boolean              @default(false)
+  lastStageAt         DateTime             @default(now())
+  orderCount          Int                  @default(0)
   overrideNote        String?
-  statusDuration      Int               @default(0)
+  statusDuration      Int                  @default(0)
   wonAt               DateTime?
-  formulaId           String?           @db.Uuid
-  isFormulaLocked     Boolean           @default(false)
+  formulaId           String?              @db.Uuid
+  isFormulaLocked     Boolean              @default(false)
   spkFileUrl          String?
-  logoRevision        Int               @default(0)
+  logoRevision        Int                  @default(0)
   hkiProgress         String?
   activityStreams     ActivityStream[]
   designTasks         DesignTask[]
@@ -62,9 +62,9 @@ model SalesLead {
   purchaseOrders      PurchaseOrder[]
   registrations       RegulatoryPipeline[]
   retention           RetentionEngine?
-  bd                  User?             @relation("BDLeads", fields: [bdId], references: [id])
-  category            MasterCategory?   @relation("CustomerToCategory", fields: [categoryId], references: [id])
-  pic                 BussdevStaff      @relation(fields: [picId], references: [id])
+  bd                  User?                @relation("BDLeads", fields: [bdId], references: [id])
+  category            MasterCategory?      @relation("CustomerToCategory", fields: [categoryId], references: [id])
+  pic                 BussdevStaff         @relation(fields: [picId], references: [id])
   salesOrders         SalesOrder[]
   sampleRequests      SampleRequest[]
   workOrders          WorkOrder[]
@@ -158,35 +158,35 @@ model NewProductForm {
 }
 
 model SalesOrder {
-  id                String           @id @default(uuid()) @db.Uuid
-  orderNumber       String           @unique
-  transactionDate   DateTime         @default(now())
-  dueDate           DateTime?
-  leadId            String           @db.Uuid
-  sampleId          String           @db.Uuid
-  totalAmount       Decimal          @db.Decimal(15, 2)
-  quantity          Int              @default(1)
-  status            SOStatus         @default(PENDING_DP)
-  salesCategory     String?
-  brandName         String?
-  taxId             String?          @db.Uuid
-  currencyId        String?          @db.Uuid
-  netto             Decimal?         @db.Decimal(10, 2)
-  deletedAt         DateTime?
-  createdAt         DateTime         @default(now())
-  stockStatus       StockStatus      @default(PENDING_CHECK)
-  designTasks       DesignTask[]
-  invoices          Invoice[]
-  workOrders        ProductionPlan[]
-  items             SalesOrderItem[]
-  currency          Currency?        @relation(fields: [currencyId], references: [id])
-  lead              SalesLead        @relation(fields: [leadId], references: [id])
-  sample            SampleRequest    @relation(fields: [sampleId], references: [id])
-  tax               TaxRate?         @relation(fields: [taxId], references: [id])
-  returns           SalesReturn[]
-  shipments         Shipment[]
-  journalEntries    JournalEntry[]
-  kpiLogs           KpiPointLog[]
+  id              String           @id @default(uuid()) @db.Uuid
+  orderNumber     String           @unique
+  transactionDate DateTime         @default(now())
+  dueDate         DateTime?
+  leadId          String           @db.Uuid
+  sampleId        String           @db.Uuid
+  totalAmount     Decimal          @db.Decimal(15, 2)
+  quantity        Int              @default(1)
+  status          SOStatus         @default(PENDING_DP)
+  salesCategory   String?
+  brandName       String?
+  taxId           String?          @db.Uuid
+  currencyId      String?          @db.Uuid
+  netto           Decimal?         @db.Decimal(10, 2)
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  stockStatus     StockStatus      @default(PENDING_CHECK)
+  designTasks     DesignTask[]
+  invoices        Invoice[]
+  workOrders      ProductionPlan[]
+  items           SalesOrderItem[]
+  currency        Currency?        @relation(fields: [currencyId], references: [id])
+  lead            SalesLead        @relation(fields: [leadId], references: [id])
+  sample          SampleRequest    @relation(fields: [sampleId], references: [id])
+  tax             TaxRate?         @relation(fields: [taxId], references: [id])
+  returns         SalesReturn[]
+  shipments       Shipment[]
+  journalEntries  JournalEntry[]
+  kpiLogs         KpiPointLog[]
 
   @@index([leadId, status])
   @@map("sales_orders")
@@ -212,17 +212,17 @@ model SalesOrderItem {
 }
 
 model SalesReturn {
-  id           String            @id @default(uuid()) @db.Uuid
-  returnDate   DateTime          @default(now())
-  soId         String            @db.Uuid
-  warehouseId  String            @db.Uuid
-  notes        String
-  returnStatus String            @default("POTONG_TAGIHAN")
-  deletedAt    DateTime?
-  createdAt    DateTime          @default(now())
-  items        SalesReturnItem[]
-  so           SalesOrder        @relation(fields: [soId], references: [id])
-  warehouse    Warehouse         @relation(fields: [warehouseId], references: [id])
+  id             String            @id @default(uuid()) @db.Uuid
+  returnDate     DateTime          @default(now())
+  soId           String            @db.Uuid
+  warehouseId    String            @db.Uuid
+  notes          String
+  returnStatus   String            @default("POTONG_TAGIHAN")
+  deletedAt      DateTime?
+  createdAt      DateTime          @default(now())
+  items          SalesReturnItem[]
+  so             SalesOrder        @relation(fields: [soId], references: [id])
+  warehouse      Warehouse         @relation(fields: [warehouseId], references: [id])
   journalEntries JournalEntry[]
 
   @@map("sales_returns")
@@ -250,19 +250,17 @@ model RetentionEngine {
   @@map("retention_engine")
 }
 
-
-
 model LeadTimelineLog {
-  id            String           @id @default(uuid()) @db.Uuid
-  leadId        String           @db.Uuid
-  action        String
+  id             String           @id @default(uuid()) @db.Uuid
+  leadId         String           @db.Uuid
+  action         String
   previousStatus WorkflowStatus?
   newStatus      WorkflowStatus?
-  notes         String?
-  createdAt     DateTime         @default(now())
-  loggedBy      String
-  category      ActivityCategory @default(OTHER)
-  lead          SalesLead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  notes          String?
+  createdAt      DateTime         @default(now())
+  loggedBy       String
+  category       ActivityCategory @default(OTHER)
+  lead           SalesLead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@map("lead_timeline_logs")
 }

@@ -26,6 +26,7 @@ services:
       PORT: 3002
       CORS_ORIGIN: http://localhost:3000
       NODE_ENV: production
+      AES_SECRET_KEY: aureon-erp-v4-ultra-secret-key-32bytes!!
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:

@@ -41,7 +41,7 @@ export default function ProductionMyPerformancePage() {
           <KpiCard label="Quality" value={String(completedWO || 0)} targetPct={50} icon={<Gauge />} />
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-[24px] p-8">
+        <div className="bg-white border border-slate-200 rounded-3xl p-8">
           <SectionLabel>My Work Orders</SectionLabel>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left">
@@ -75,7 +75,7 @@ export default function ProductionMyPerformancePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-8">
-          <div className="bg-white border border-slate-200 rounded-[24px] p-8">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8">
             <SectionLabel>Activity Summary</SectionLabel>
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between py-2 border-b border-slate-100">
@@ -93,7 +93,7 @@ export default function ProductionMyPerformancePage() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-[24px] p-8">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8">
             <SectionLabel>Tips</SectionLabel>
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3 p-3 bg-[#EFF6FF] border border-[#DBEAFE] rounded-[16px] text-[10px] font-bold text-[#1E40AF]">
