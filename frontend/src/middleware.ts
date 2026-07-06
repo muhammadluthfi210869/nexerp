@@ -73,7 +73,8 @@ export async function middleware(request: NextRequest) {
     pathname === '/login' ||
     pathname === '/favicon.ico' ||
     pathname.startsWith('/static') ||
-    pathname === '/manifest.json'
+    pathname === '/manifest.json' ||
+    /\.(jpg|jpeg|png|gif|svg|webp|ico|css)$/.test(pathname)
   ) {
     return NextResponse.next()
   }
