@@ -24,9 +24,11 @@ services:
     environment:
       DATABASE_URL: postgresql://erp_user:erp_password_secure@db:5432/erp_database?schema=public
       PORT: 3002
-      CORS_ORIGIN: http://localhost:3000
       NODE_ENV: production
-      AES_SECRET_KEY: aureon-erp-v4-ultra-secret-key-32bytes!!
+      JWT_SECRET: ${JWT_SECRET:-dreamlab_prod_jwt_secret_2026}
+      JWT_EXPIRES_IN: 60m
+      AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
+      CORS_ORIGIN: http://localhost:3000
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:

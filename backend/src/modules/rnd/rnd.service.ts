@@ -100,7 +100,12 @@ export class RndService {
         npfId: dto.npfId,
         rndId: dto.rndId,
         version: dto.version || 1,
-        leadId: npf?.leadId || 'UNKNOWN_UUID',
+    if (!npf || !npf.leadId) {
+      throw new BadRequestException(
+        `NPF ${dto.npfId} not found or has no associated lead. Cannot create sample without a valid lead.`,
+      );
+    }
+        leadId: npf.leadId,
         productName: 'Sample from NPF',
         targetFunction: 'General',
         textureReq: 'Standard',

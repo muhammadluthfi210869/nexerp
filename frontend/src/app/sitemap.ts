@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://5.223.80.88';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://nexerp.id';
 
   let articleEntries: MetadataRoute.Sitemap = [];
   

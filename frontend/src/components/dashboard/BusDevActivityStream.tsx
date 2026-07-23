@@ -23,7 +23,7 @@ export function BusDevActivityStream() {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || "http://5.223.80.88"}/events/busdev`);
+    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || "https://nexerp.id"}/events/busdev`);
 
     eventSource.onopen = () => setIsConnected(true);
     
