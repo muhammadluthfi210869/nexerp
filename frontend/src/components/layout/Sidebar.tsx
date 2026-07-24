@@ -13,7 +13,6 @@ import {
   History,
   LogOut,
   UserCircle,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,9 +34,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     label: "DIGITAL MARKETING",
     icon: BarChart3,
     items: [
-      { name: "Dashboard", href: "/marketing/dashboard", type: "dashboard" },
       { name: "Management Task", href: "/marketing/management-task", type: "action" },
-      { name: "Campaign Input", href: "/marketing/input", type: "input" },
     ]
   },
   {
@@ -47,14 +44,6 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Analytics Trend", href: "/rnd/analytics", type: "dashboard" },
       { name: "Daily Tracking", href: "/rnd/daily-tracking", type: "action" },
       { name: "Project Monitoring", href: "/rnd/project-monitoring", type: "action" },
-    ]
-  },
-  {
-    label: "HUMAN RESOURCES",
-    icon: Users,
-    items: [
-      { name: "Dashboard", href: "/hr/dashboard", type: "dashboard" },
-      { name: "Personnel", href: "/master/personnel", type: "input" },
     ]
   },
 ];

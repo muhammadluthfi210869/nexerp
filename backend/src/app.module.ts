@@ -6,7 +6,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { RndModule } from './modules/rnd/rnd.module';
-import { HrModule } from './modules/hr/hr.module';
+// import { HrModule } from './modules/hr/hr.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SharedModule } from './shared/shared.module';
@@ -58,7 +58,7 @@ import { join } from 'path';
     // ── Aktif (Prioritas) ──
     MarketingModule,
     RndModule,
-    HrModule,
+    // HrModule,
 
     // ── Global ──
     EventEmitterModule.forRoot(),
