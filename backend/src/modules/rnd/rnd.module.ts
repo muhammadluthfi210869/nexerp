@@ -1,24 +1,15 @@
 import { Module } from '@nestjs/common';
-import { NpfController } from './npf/npf.controller';
-import { SamplesController } from './samples/samples.controller';
-import { FormulasService } from './formulas/formulas.service';
-import { FormulasController } from './formulas/formulas.controller';
-import { RndService } from './rnd.service';
-import { RndController } from './rnd.controller';
+import { RndTasksController } from './tasks/rnd-tasks.controller';
+import { RndTasksService } from './tasks/rnd-tasks.service';
 
-// ⚠️ PRODUCTION-LIGHT: LegalityModule dihapus dari imports
-// karena FormulasService sudah tidak menggunakan LegalityService.
-// Lihat PRODUCTION_LIGHT.md untuk detail.
+// ⚠️ PRODUCTION-LIGHT: Hanya menyisakan tasks controller + service
+// untuk 3 halaman: Analytics Trend, Daily Tracking, Project Monitoring.
+// Formulas, Samples, NPF, Listener di-archive.
+// Lihat PRODUCTION_LIGHT.md untuk cara mengembalikan.
 
 @Module({
-  imports: [],
-  providers: [FormulasService, RndService],
-  controllers: [
-    NpfController,
-    SamplesController,
-    FormulasController,
-    RndController,
-  ],
-  exports: [RndService],
+  controllers: [RndTasksController],
+  providers: [RndTasksService],
+  exports: [RndTasksService],
 })
 export class RndModule {}

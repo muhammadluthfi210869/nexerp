@@ -510,8 +510,18 @@ Siklus:
 | 6.4b RND: hapus LegalityService | ✅ | Formulas.service.ts (stub) & rnd.module.ts |
 | 6.5 Bersihkan Backend Scripts | ✅ | Deploy scripts, test files, seed files → _archive |
 | 6.6 Pruning Frontend Pages | ✅ | 18 page folders di-archive, 5 dipertahankan |
-| 6.7 Buat Branch production-light | ✅ | Branch dibuat & siap di-commit |
-| Verifikasi Build | ⏳ | Perlu di-test setelah commit & deploy |
+| 6.7 Buat Branch production-light | ✅ | Branch dibuat & commit berhasil |
+| Verifikasi Build | ⏳ | Perlu di-test setelah deploy |
+
+### Hasil Akhir
+
+| Metrik | Sebelum | Sesudah |
+|---|---|---|
+| Backend modules aktif | 28 | 5 |
+| Frontend page routes | 23 | 5 |
+| Total files di commit | - | 477 file berubah |
+| Baris kode dihapus | - | 92,555 baris |
+| Baris kode ditambah | - | 703 baris (dokumentasi + stub) |
 
 ### File yang Dimodifikasi (Final)
 
@@ -523,10 +533,343 @@ Siklus:
 | `backend/src/modules/rnd/formulas/formulas.service.ts` | Stub legality.validateFormula |
 | `backend/src/modules/rnd/rnd.module.ts` | Hapus LegalityModule import |
 | `.gitignore` | Tambah aturan untuk agent folders, logs, archive |
+| `PRODUCTION_LIGHT.md` | Dokumentasi (file baru) |
 
 ---
 
-## 10. Catatan Penting
+## 10. Simplification Plan — Beyond Seed & AppModule
+
+> **Tujuan**: Bikin proyek beneran ramping, gampang di-build, di-debug, dan di-test.
+> Hanya untuk RND + Digital Marketing + HR.
+>
+> Ada 3 Tier. Kerjakan urut dari Tier 1 dulu.
+
+---
+
+### Tier 1: 🔥 Quick Wins (Masing-masing < 30 menit)
+
+#### 1.1 Sidebar Navigation — Buang Link Module Mati
+
+**Lokasi**: `frontend/src/components/layout/Sidebar.tsx`
+
+**Sekarang**: Sidebar masih punya 11 nav group (Executive, Bussdev, Finance, Legalitas, SCM, Production, QC, Gudang, Creative, HR, dll). Tapi halaman-halaman itu sudah tidak ada.
+
+**Harusnya jadi**: Cuma 3 nav group: **DIGITAL MARKETING**, **RESEARCH & DEV**, **HUMAN RESOURCES**.
+
+```typescript
+const MODULE_STRUCTURE: NavGroup[] = [
+  {
+    label: "DIGITAL MARKETING",
+    icon: BarChart3,
+    items: [
+      { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
+      { name: "Management Task", href: "/marketing/management-task", type: "action" },
+    ]
+  },
+  {
+    label: "RESEARCH & DEV",
+    icon: Beaker,
+    items: [
+      { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
+      { name: "Formula Repository", href: "/rnd/repository", type: "history" },
+      { name: "Analytics Trend", href: "/rnd/analytics", type: "dashboard" },
+      { name: "Project Monitoring", href: "/rnd/project-monitoring", type: "action" },
+    ]
+  },
+  {
+    label: "HUMAN RESOURCES",
+    icon: Users,
+    items: [
+      { name: "Dashboard", href: "/hr/dashboard", type: "dashboard" },
+      { name: "Personnel", href: "/master/personnel", type: "input" },
+    ]
+  },
+];
+```
+
+**Efek**: Sidebar dari ~150+ baris jadi ~60 baris. Navigasi lebih jelas. User gak bingung lihat menu yang error.
+
+---
+
+#### 1.2 Seed Files — Archive Semua Kecuali Marketing + RND
+
+**Lokasi**: `backend/prisma/seeders/`
+
+**Sekarang**: Ada 15+ file seeder. Sebagian besar tidak dipakai.
+
+**Tindakan**:
+
+```bash
+mkdir -p _archive/backend/prisma/seeders
+
+# Archive seeder yang tidak dipakai
+mv backend/prisma/seeders/bussdev.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/creative.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/finance.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/hr.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/kpi-metrics.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/kpi-scores.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/legal.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/master.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/orders.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/personnel.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/production.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/warehouse.seeder.ts _archive/backend/prisma/seeders/
+mv backend/prisma/seeders/website.seeder.ts _archive/backend/prisma/seeders/
+```
+
+**Dipertahankan**: `marketing.seeder.ts`, `rnd.seeder.ts`, `utils.ts`
+**Update**: `backend/prisma/seed.ts` — buang semua import seeder yang di-archive
+
+**Efek**: Perintah `npx prisma db seed` jadi cepat, gak loading 15 seeder yang gak dipakai.
+
+---
+
+#### 1.3 Dockerfile — Sederhanakan Build Stage
+
+**Lokasi**: `backend/Dockerfile`
+
+**Sekarang**: Mungkin punya multi-stage build yang besar.
+
+**Saran**: Pastikan Dockerfile cuma build module yang aktif (udah otomatis karena module di-comment di app.module.ts, tapi build tetap kompilasi semua file).
+
+**Optimasi**: Tambahkan `.dockerignore` untuk mengecualikan module yang tidak dipakai:
+
+```
+# .dockerignore
+node_modules/
+dist/
+src/modules/finance/
+src/modules/warehouse/
+src/modules/production/
+src/modules/scm/
+src/modules/bussdev/
+src/modules/legality/
+src/modules/creative/
+src/modules/qc/
+src/modules/logistics/
+src/modules/fulfillment/
+src/modules/crm/
+src/modules/commercial/
+src/modules/analytics/
+src/modules/executive/
+src/modules/master/
+src/modules/my-dashboard/
+src/modules/activity-stream/
+src/modules/notification/
+src/modules/events/
+src/modules/system/
+src/modules/document-automation/
+src/modules/guests/
+src/modules/production-planning/
+src/modules/floor-execution/
+```
+
+**Efek**: Build image dari ~1.5GB jadi ~300MB. Build time turun drastis.
+
+---
+
+#### 1.4 Hapus Icon Import Gak Kepake di Sidebar
+
+**Lokasi**: `frontend/src/components/layout/Sidebar.tsx`
+
+**Sekarang**: Import 30+ icon dari lucide-react. Setelah pruning nav group, 20+ icon gak dipakai.
+
+**Tindakan**: Hapus import icon yang gak dipakai (ShieldAlert, Activity, Landmark, Scale, Factory, Truck, Warehouse, FlaskConical, Palette, dll)
+
+**Efek**: Bundle size frontend turun. Build lebih cepat.
+
+---
+
+### Tier 2: 🟡 Perlu Agak Hati-hati (Masing-masing 30-60 menit)
+
+#### 2.1 Prisma Schema — Archive File Schema yang Tidak Dipakai
+
+**Lokasi**: `backend/prisma/schema/`
+
+**Sekarang**: 17 file schema. Tapi model RND mereferensi model dari bussdev & scm.
+
+**Yang BISA di-archive** (aman, gak ada dependensi dari RND/Marketing/HR):
+
+```bash
+# Aman dihapus — tidak direferensi oleh RND/Marketing/HR
+mv backend/prisma/schema/creative.prisma _archive/backend/prisma/
+mv backend/prisma/schema/document-automation.prisma _archive/backend/prisma/
+mv backend/prisma/schema/finance.prisma _archive/backend/prisma/
+mv backend/prisma/schema/production.prisma _archive/backend/prisma/
+mv backend/prisma/schema/qc.prisma _archive/backend/prisma/
+mv backend/prisma/schema/logistics.prisma _archive/backend/prisma/    # (kalo ada)
+mv backend/prisma/schema/fulfillment.prisma _archive/backend/prisma/  # (kalo ada)
+mv backend/prisma/schema/system.prisma _archive/backend/prisma/
+mv backend/prisma/schema/website.prisma _archive/backend/prisma/
+mv backend/prisma/schema/warehouse.prisma _archive/backend/prisma/
+```
+
+**Yang HARUS ditahan** (direferensi oleh RND):
+
+| File | Direferensi oleh RND |
+|---|---|
+| `bussdev.prisma` | Model `SalesLead` (FK di SampleRequest) |
+| `scm.prisma` | Model `MaterialItem` (FK di FormulaItem & BillOfMaterial) |
+
+**Solusi jangka panjang**: Pindahkan model `SalesLead` dan `MaterialItem` ke schema RND, lalu archive bussdev & scm. Tapi ini perlu edit kode backend juga (import path berubah).
+
+---
+
+#### 2.2 Backend Module Code — Hapus Module yang Sudah Di-comment
+
+**Lokasi**: `backend/src/modules/`
+
+**Sekarang**: Walaupun di-comment di app.module.ts, code 24 module masih ada di disk.
+
+**Tindakan**:
+
+```bash
+# Archive module code yang sudah di-comment
+mkdir -p _archive/backend/src/modules
+
+for mod in finance warehouse production scm bussdev legality creative qc logistics fulfillment crm commercial analytics executive master my-dashboard activity-stream notification events system document-automation guests production-planning floor-execution todo; do
+    mv "backend/src/modules/$mod" "_archive/backend/src/modules/"
+done
+```
+
+**⚠️ Peringatan**: Pastikan module yang di-archive benar-benar tidak di-import oleh module aktif. Cek dulu:
+- MarketingModule → udah dihapus import FinanceModule ✅
+- RndModule → udah dihapus import LegalityModule ✅
+- AuthModule → cuma import UsersModule ✅
+
+**Efek**: Folder backend dari 28 module jadi ~5 module. File watcher, build, semua lebih cepat.
+
+---
+
+#### 2.3 Frontend Components — Archive Component yang Tidak Dipakai
+
+**Lokasi**: `frontend/src/components/`
+
+**Sekarang**: Beberapa component folder masih ada (automation, bussdev, commercial, dna, documents, executive, finance, production, qc).
+
+**Tindakan**:
+
+```bash
+mv frontend/src/components/automation _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/bussdev _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/commercial _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/dna _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/documents _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/executive _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/finance _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/production _archive/frontend/components/ 2>/dev/null
+mv frontend/src/components/qc _archive/frontend/components/ 2>/dev/null
+```
+
+**Dipertahankan**: `charts`, `dashboard`, `hr`, `layout`, `marketing`, `providers`, `rnd`, `ui`
+
+---
+
+#### 2.4 API Client — Bersihkan Endpoint
+
+**Lokasi**: `frontend/src/lib/api.ts`
+
+**Sekarang**: 54 line, kemungkinan besar ada fungsi untuk setiap module.
+
+**Tindakan**: Hapus fungsi API yang tidak dipakai (finance, warehouse, production, dll). Sisakan hanya marketing, rnd, hr, auth, users.
+
+---
+
+### Tier 3: 🔴 Butuh Pengerjaan Lebih Lama (1-3 jam per item)
+
+#### 3.1 Resolusi Cross-Schema Prisma
+
+**Masalah**: `rnd.prisma` butuh `SalesLead` (dari bussdev.prisma) dan `MaterialItem` (dari scm.prisma).
+
+**Opsi A (Rekomendasi)**: Copy model yang dibutuhkan ke `rnd.prisma` dengan nama berbeda, lalu hapus relasi FK-nya sementara:
+
+```prisma
+// Di rnd.prisma — tambahkan model minimal untuk SalesLead
+model RndSalesLead {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyName String?
+  // ...field lain yang dibutuhkan
+  
+  @@map("sales_leads")  // akses tabel yang sama
+}
+```
+
+Tapi ini rumit. **Opsi lebih praktis**: Archive dulu yang benar-benar aman, biarkan bussdev & scm schema tetap ada.
+
+**Prioritas**: Kerjakan TERAKHIR, setelah Tier 1 & 2 selesai.
+
+---
+
+#### 3.2 Dependency Audit — Hapus Package Tidak Terpakai
+
+**Lokasi**: `backend/package.json`, `frontend/package.json`
+
+**Contoh package yang mungkin tidak dipakai** (perlu dicek):
+- `html-pdf-node` — mungkin cuma dipakai module document-automation
+- `ssh2` — mungkin cuma untuk deploy script
+- `@nestjs/websockets` / `socket.io` — mungkin cuma untuk event-notification
+- `compression` — mungkin gak kepakai
+- `winston` / `winston-daily-rotate-file` — logging, bisa diganti console.log untuk development
+
+**Efek**: `npm install` jadi lebih cepat. node_modules lebih kecil. Security footprint berkurang.
+
+---
+
+#### 3.3 Database Migration — Reset & Fresh
+
+**Lokasi**: `backend/prisma/migrations/`
+
+**Sekarang**: 2 migration folder dengan semua tabel untuk 28 module.
+
+**Tindakan** (kalo database bisa direset):
+
+```bash
+# 1. Hapus folder migration lama
+rm -rf backend/prisma/migrations
+
+# 2. Buat migration baru dari schema yang already trimmed
+npx prisma migrate dev --name init_production_light
+
+# 3. Generate Prisma client
+npx prisma generate
+```
+
+**⚠️ Peringatan**: Ini hanya untuk development/UAT. Jangan untuk production yang sudah ada data.
+
+---
+
+### Ringkasan Prioritas Eksekusi
+
+| No | Item | Tier | Estimasi | Efek ke Build | Efek ke Debug |
+|---|---|---|---|---|---|
+| 1 | Sidebar pruning | 🔥 Quick | 15 menit | Rendah | ⭐ Sedang (gak bingung lihat menu error) |
+| 2 | Seed files cleanup | 🔥 Quick | 15 menit | Rendah | ⭐⭐ Tinggi (seed cepat) |
+| 3 | Docker ignore | 🔥 Quick | 10 menit | ⭐⭐ Tinggi | Rendah |
+| 4 | Icon import cleanup | 🔥 Quick | 5 menit | Rendah | Rendah |
+| 5 | Prisma schema archive | 🟡 Medium | 30 menit | ⭐⭐ Tinggi | ⭐⭐ Tinggi |
+| 6 | Backend module code hapus | 🟡 Medium | 30 menit | ⭐⭐⭐ Sangat Tinggi | ⭐⭐ Tinggi |
+| 7 | Frontend component hapus | 🟡 Medium | 15 menit | ⭐⭐ Tinggi | ⭐ Sedang |
+| 8 | API client cleanup | 🟡 Medium | 15 menit | Rendah | ⭐ Sedang |
+| 9 | Prisma cross-schema fix | 🔴 Berat | 1-2 jam | ⭐⭐ Tinggi | ⭐⭐ Tinggi |
+| 10 | Dependency audit | 🔴 Berat | 1 jam | ⭐⭐ Tinggi | Rendah |
+| 11 | Migration reset | 🔴 Berat | 1 jam | ⭐⭐ Tinggi | ⭐⭐ Tinggi |
+
+### Rekomendasi Eksekusi
+
+**Minggu ini (Tier 1):**
+1. ✅ Seed files cleanup (15 menit)
+2. ✅ Hapus code backend module (30 menit) — paling besar efeknya
+3. ✅ Sidebar pruning (15 menit)
+4. ✅ Docker ignore (10 menit)
+
+**Minggu depan (Tier 2):**
+5. Prisma schema archive (30 menit)
+6. Frontend component archive (15 menit)
+
+**Kalau masih ada waktu (Tier 3):**
+7. Dependency audit
+8. Database migration reset
 
 1. **Jangan commit langsung ke `production-light`** — semua development di `main`, lalu rebase
 2. **File di `_archive/` TIDAK ikut git** — folder ini di .gitignore. Fungsinya hanya sebagai temporary placeholder sebelum yakin mau hapus permanen.

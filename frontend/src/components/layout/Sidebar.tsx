@@ -1,48 +1,19 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Activity,
   ChevronDown,
-  ShieldAlert,
   BarChart3,
   Beaker,
-  Layers,
-  Factory,
-  CreditCard,
-  LogOut,
-  UserCircle,
   LayoutDashboard,
+  PlusCircle,
   Zap,
   History,
-  Scale,
-  Truck,
-  Warehouse,
-  FileSearch,
+  LogOut,
+  UserCircle,
   Users,
-  FlaskConical,
-  XCircle,
-  PlusCircle,
-  ClipboardCheck,
-  Archive,
-  Palette,
-  Box,
-  Landmark,
-  Cog,
-  Heart,
-  AlertOctagon,
-  Bell,
-  BookOpen,
-  TrendingDown,
-  DollarSign,
-  Package,
-  ClipboardList,
-  Star,
-  Wallet,
-  Briefcase,
-  Barcode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -50,201 +21,42 @@ import { Button } from "@/components/ui/button";
 interface SubMenuItem {
   name: string;
   href: string;
-  type: "dashboard" | "input" | "action" | "history" | "bussdev_sample" | "bussdev_prod" | "bussdev_ro" | "bussdev_lost" | "settings";
-  roles?: string[];
-  badge?: string;
-  badgeVariant?: "default" | "warning" | "critical";
+  type: "dashboard" | "input" | "action" | "history";
 }
 
 interface NavGroup {
   label: string;
   icon: any;
   items: SubMenuItem[];
-  roles?: string[];
 }
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
-    label: "EXECUTIVE",
-    icon: ShieldAlert,
-    roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
-    items: [
-      { name: "Dashboard Eksekutif", href: "/executive/dashboard", type: "dashboard" },
-      { name: "Dashboard Notifikasi", href: "/executive/dashboard?tab=notifications", type: "action", badge: "12" },
-    ]
-  },
-  {
     label: "DIGITAL MARKETING",
     icon: BarChart3,
-    roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
-      { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
-      { name: "Campaign Input", href: "/marketing/input", type: "input" },
+      { name: "Dashboard", href: "/marketing/dashboard", type: "dashboard" },
       { name: "Management Task", href: "/marketing/management-task", type: "action" },
-      { name: "Lead Logs", href: "/marketing/logs", type: "history" },
-    ]
-  },
-  {
-    label: "BUSSDEV",
-    icon: Activity,
-    roles: ["SUPER_ADMIN", "COMMERCIAL", "MARKETING", "DIRECTOR"],
-    items: [
-      { name: "Command Center", href: "/bussdev/dashboard", type: "dashboard" },
-      { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
-      { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
-      { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
-    ]
-  },
-  {
-    label: "FINANCE",
-    icon: Landmark,
-    roles: ["SUPER_ADMIN", "FINANCE", "DIRECTOR"],
-    items: [
-      { name: "Pusat Komando", href: "/finance/dashboard", type: "dashboard" },
-      { name: "Kas & Bank", href: "/finance/kas", type: "input" },
-      { name: "Jurnal & COA", href: "/finance/jurnal", type: "history" },
-      { name: "Uang Muka (DP)", href: "/finance/dp", type: "input" },
-      { name: "Pembayaran", href: "/finance/bayar", type: "input" },
-      { name: "Piutang & Hutang", href: "/finance/piutang", type: "action", badge: "3" },
-      { name: "Fund & Approval", href: "/finance/fund", type: "action" },
-      { name: "Laporan", href: "/finance/reports", type: "history" },
-    ]
-  },
-  {
-    label: "LEGALITAS / APJ",
-    icon: Scale,
-    roles: ["SUPER_ADMIN", "COMPLIANCE", "DIRECTOR"],
-    items: [
-      { name: "Watchdog Hub", href: "/legality/dashboard", type: "dashboard" },
-      { name: "Regulatory Pipeline", href: "/legality/pipeline", type: "action" },
-      { name: "Compliance Inbox", href: "/legality/inbox", type: "input" },
+      { name: "Campaign Input", href: "/marketing/input", type: "input" },
     ]
   },
   {
     label: "RESEARCH & DEV",
     icon: Beaker,
-    roles: ["SUPER_ADMIN", "RND", "DIRECTOR"],
     items: [
-      { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
-      { name: "Formula Repository", href: "/rnd/repository", type: "history" },
-      { name: "Sample Inbox", href: "/rnd/inbox", type: "input", badge: "New" },
-      { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
-    ]
-  },
-  {
-    label: "SUPPLY CHAIN",
-    icon: Truck,
-    roles: ["SUPER_ADMIN", "SCM", "PURCHASING", "DIRECTOR"],
-    items: [
-      { name: "Dashboard", href: "/scm/dashboard", type: "dashboard" },
-      { name: "Pembelian", href: "/scm/pembelian", type: "action", badge: "5", badgeVariant: "warning" },
-      { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", type: "action" },
-      { name: "Barang", href: "/master/goods", type: "input" },
-      { name: "Supplier", href: "/master/suppliers", type: "input" },
-    ]
-  },
-  {
-    label: "PRODUCTION",
-    icon: Factory,
-    roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
-    items: [
-      { name: "Dashboard", href: "/production", type: "dashboard" },
-      { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
-      { name: "Operasional", href: "/production/operations", type: "dashboard" },
-      { name: "Pipeline", href: "/production/operations?tab=pipeline", type: "history" },
-      { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
-    ]
-  },
-  {
-    label: "QUALITY CONTROL",
-    icon: FlaskConical,
-    roles: ["SUPER_ADMIN", "QC_LAB", "DIRECTOR"],
-    items: [
-      { name: "Quality Analytics", href: "/qc/dashboard", type: "dashboard" },
-      { name: "Lab Inspections", href: "/qc/inspections", type: "action" },
-      { name: "Stability Tests", href: "/qc/stability", type: "action" },
-      { name: "CoA Center", href: "/qc/coa", type: "history" },
-      { name: "Audit Trail", href: "/executive/audit", type: "history" },
-    ]
-  },
-  {
-    label: "GUDANG",
-    icon: Warehouse,
-    roles: ["SUPER_ADMIN", "WAREHOUSE", "SCM", "DIRECTOR"],
-    items: [
-      { name: "Dashboard", href: "/warehouse", type: "dashboard" },
-      { name: "Gudang", href: "/warehouse/gudang", type: "action" },
-      { name: "Stok", href: "/warehouse/stok", type: "history" },
-      { name: "Data Gudang", href: "/master/warehouses", type: "input" },
-    ]
-  },
-  {
-    label: "CREATIVE HUB",
-    icon: Palette,
-    roles: ["SUPER_ADMIN", "CREATIVE", "DIRECTOR"],
-    items: [
-      { name: "Design Board", href: "/creative/board", type: "dashboard" },
+      { name: "Analytics Trend", href: "/rnd/analytics", type: "dashboard" },
+      { name: "Daily Tracking", href: "/rnd/daily-tracking", type: "action" },
+      { name: "Project Monitoring", href: "/rnd/project-monitoring", type: "action" },
     ]
   },
   {
     label: "HUMAN RESOURCES",
     icon: Users,
-    roles: ["SUPER_ADMIN", "HR", "DIRECTOR"],
     items: [
       { name: "Dashboard", href: "/hr/dashboard", type: "dashboard" },
       { name: "Personnel", href: "/master/personnel", type: "input" },
-      { name: "Attendance", href: "/hr/attendance", type: "action" },
-      { name: "Payroll", href: "/hr/payroll", type: "history" },
     ]
   },
-  {
-    label: "SYSTEM CONTROL",
-    icon: Zap,
-    roles: ["SUPER_ADMIN", "MANAGEMENT", "DIRECTOR"],
-    items: [
-      { name: "Audit Ledger", href: "/system/audit-ledger", type: "history" },
-      { name: "Event Protocol", href: "/system/protocol", type: "dashboard" },
-      { name: "System Health", href: "/system/health", type: "dashboard" },
-      { name: "Global Categories", href: "/master/categories", type: "action" },
-    ]
-  },
-  {
-    label: "AUTOMATION ENGINE",
-    icon: Cog,
-    items: [
-      { name: "Document Center", href: "/documents/drafts", type: "action", badge: "NEW" },
-      { name: "Overview", href: "/automation", type: "dashboard" },
-      { name: "Foundation", href: "/automation", type: "action" },
-      { name: "BussDev", href: "/automation", type: "action" },
-      { name: "Finance", href: "/automation", type: "action" },
-      { name: "Warehouse", href: "/automation", type: "action" },
-      { name: "Production", href: "/automation", type: "action" },
-      { name: "SCM", href: "/automation", type: "action" },
-      { name: "HR & All Divisions", href: "/automation", type: "action" },
-      { name: "Executive", href: "/automation", type: "action" },
-      { name: "System", href: "/automation", type: "action" },
-      { name: "Legality", href: "/automation", type: "action" },
-    ]
-  }
-];
-
-const TIER_STRUCTURE = [
-  {
-    tier: "CORE INTELLIGENCE",
-    groups: ["EXECUTIVE", "DIGITAL MARKETING", "BUSSDEV"]
-  },
-  {
-    tier: "OPERATIONAL EXCELLENCE",
-    groups: ["FINANCE", "SUPPLY CHAIN", "PRODUCTION", "QUALITY CONTROL", "GUDANG", "RESEARCH & DEV"]
-  },
-  {
-    tier: "STRATEGIC SUPPORT",
-    groups: ["LEGALITAS / APJ", "HUMAN RESOURCES", "CREATIVE HUB", "SYSTEM CONTROL"]
-  },
-  {
-    tier: "AUTOMATION ENGINE",
-    groups: ["AUTOMATION ENGINE"]
-  }
 ];
 
 const getIconByType = (type: string) => {
@@ -253,9 +65,7 @@ const getIconByType = (type: string) => {
     case "input": return PlusCircle;
     case "action": return Zap;
     case "history": return History;
-    case "settings": return Cog;
-    case "bussdev_lost": return XCircle;
-    default: return Activity;
+    default: return LayoutDashboard;
   }
 };
 
@@ -264,7 +74,6 @@ export function Sidebar() {
   const router = useRouter();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -280,13 +89,16 @@ export function Sidebar() {
     }
   }, [pathname]);
 
-  const isExecutive = user?.roles?.includes("DIRECTOR");
-  const isRevitaMarketingOnly = user?.email?.toLowerCase?.() === "revita@nexerp.id";
-
   const toggleGroup = (label: string) => {
     setOpenGroups(prev =>
       prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
     );
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
   };
 
   return (
@@ -301,260 +113,82 @@ export function Sidebar() {
             <span className="text-[15px] font-black tracking-[-0.03em] text-brand-black uppercase leading-tight">
               NEX <span className="text-slate-400 font-bold">ERP</span>
             </span>
-            <span className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase">Intelligence Hub</span>
+            <span className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase">Production Light</span>
           </div>
         </div>
       </div>
 
-      {/* Command Search */}
-      <div className="px-6 py-4">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <FileSearch className="w-4 h-4 text-slate-300 group-focus-within:text-brand-black transition-colors" />
+      {/* User Info */}
+      {user && (
+        <div className="px-6 pb-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50">
+            <UserCircle className="w-5 h-5 text-slate-400" />
+            <span className="text-xs font-semibold text-slate-600 truncate">{user.fullName || user.email}</span>
           </div>
-          <input
-            type="text"
-            placeholder="Command + K..."
-            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
         </div>
-      </div>
+      )}
 
-      {/* Navigation Space */}
-      <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
-        {TIER_STRUCTURE.map((tier) => {
-          const tierGroups = MODULE_STRUCTURE.filter(group => 
-            tier.groups.includes(group.label) && 
-            (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
-            (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
-          );
-
-          if (tierGroups.length === 0) return null;
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-200">
+        {MODULE_STRUCTURE.map((group) => {
+          const Icon = group.icon;
+          const isGroupActive = group.items.some(i => i.href === pathname);
+          const isOpen = openGroups.includes(group.label);
 
           return (
-            <div key={tier.tier} className="space-y-4">
-              <div className="flex items-center gap-3 px-3">
-                <div className="h-[1px] flex-1 bg-slate-100"></div>
-                <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase whitespace-nowrap">
-                  {tier.tier}
-                </span>
-                <div className="h-[1px] flex-1 bg-slate-100"></div>
-              </div>
+            <div key={group.label}>
+              <button
+                onClick={() => toggleGroup(group.label)}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150",
+                  isGroupActive
+                    ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className={cn("w-4 h-4", isGroupActive ? "text-white" : "text-slate-400")} />
+                  <span>{group.label}</span>
+                </div>
+                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-150", isOpen && "rotate-180")} />
+              </button>
 
-              <div className="space-y-1.5">
-                {tierGroups.map((group) => {
-                  const dashItems = group.items.filter(i => i.type === "dashboard");
-                  const isGroupActive = group.items.some(i => i.href === pathname);
-
-                  // --- EXECUTIVE MODE (DIRECTOR role) ---
-                  if (isExecutive) {
-                    if (dashItems.length === 0) return null;
-                    const primaryHref = dashItems[0].href;
-                    const isPrimaryActive = pathname === primaryHref;
-                    const extraItems = dashItems.slice(1);
-
+              {isOpen && (
+                <div className="ml-3 mt-1 space-y-0.5 border-l-2 border-slate-100 pl-3">
+                  {group.items.map((item) => {
+                    const ItemIcon = getIconByType(item.type);
+                    const isActive = pathname === item.href;
                     return (
-                      <div key={group.label} className="space-y-1">
-                        <Link
-                          href={primaryHref}
-                          onMouseEnter={() => router.prefetch(primaryHref)}
-                          className={cn(
-                            "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
-                            isPrimaryActive
-                              ? "bg-brand-black text-white shadow-md shadow-slate-200"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                          )}
-                        >
-                          <div className="flex items-center gap-3.5">
-                            <div className={cn(
-                              "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
-                              isPrimaryActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
-                            )}>
-                              <group.icon className={cn(
-                                "w-4 h-4",
-                                isPrimaryActive ? "text-white" : "text-slate-400 group-hover:text-brand-black"
-                              )} />
-                            </div>
-                            <span className={cn(
-                              "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
-                              isPrimaryActive ? "text-white" : "text-inherit"
-                            )}>
-                              {group.label}
-                            </span>
-                          </div>
-                        </Link>
-
-                        {extraItems.length > 0 && (
-                          <div className="ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
-                            {extraItems.map((item) => {
-                              const isExtraActive = pathname === item.href;
-                              return (
-                                <Link
-                                  key={item.name}
-                                  href={item.href}
-                                  onMouseEnter={() => router.prefetch(item.href)}
-                                  className={cn(
-                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
-                                    isExtraActive
-                                      ? "bg-slate-50 text-brand-black font-bold"
-                                      : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <Zap className={cn(
-                                      "w-3.5 h-3.5 transition-colors",
-                                      isExtraActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
-                                    )} />
-                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
-                                      {item.name}
-                                    </span>
-                                  </div>
-                                  {item.badge && (
-                                    <span className={cn(
-                                      "px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider",
-                                      item.badgeVariant === "critical" ? "bg-rose-100 text-rose-600" :
-                                      item.badgeVariant === "warning" ? "bg-amber-100 text-amber-600" :
-                                      "bg-slate-100 text-slate-500"
-                                    )}>
-                                      {item.badge}
-                                    </span>
-                                  )}
-                                  {isExtraActive && (
-                                    <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
-                                  )}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  // --- NORMAL MODE (non-DIRECTOR) ---
-                  const isOpen = openGroups.includes(group.label);
-                  return (
-                    <div key={group.label} className="space-y-1">
-                      <button
-                        onClick={() => toggleGroup(group.label)}
-                        className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
-                          isGroupActive
-                            ? "bg-brand-black text-white shadow-md shadow-slate-200"
-                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                        )}
-                      >
-                        <div className="flex items-center gap-3.5">
-                          <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
-                            isGroupActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
-                          )}>
-                            <group.icon className={cn(
-                              "w-4 h-4",
-                              isGroupActive ? "text-white" : "text-slate-400 group-hover:text-brand-black"
-                            )} />
-                          </div>
-                          <span className={cn(
-                            "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
-                            isGroupActive ? "text-white" : "text-inherit"
-                          )}>
-                            {group.label}
-                          </span>
+                      <Link key={item.href} href={item.href}>
+                        <div className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-150",
+                          isActive
+                            ? "text-slate-900 bg-slate-100"
+                            : "text-slate-400 hover:text-slate-600"
+                        )}>
+                          <ItemIcon className="w-3 h-3" />
+                          <span>{item.name}</span>
                         </div>
-                        <ChevronDown className={cn(
-                          "w-3.5 h-3.5 transition-transform duration-500",
-                          isOpen ? "rotate-180" : "text-slate-300"
-                        )} />
-                      </button>
-                        {isOpen && (
-                          <div className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
-                            {group.items.map((item) => {
-                              const isActive = pathname === item.href;
-                              const IconType = getIconByType(item.type);
-                              return (
-                                <Link
-                                  key={item.name}
-                                  href={item.href}
-                                  onMouseEnter={() => router.prefetch(item.href)}
-                                  className={cn(
-                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
-                                    isActive
-                                      ? "bg-slate-50 text-brand-black font-bold"
-                                      : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <IconType className={cn(
-                                      "w-3.5 h-3.5 transition-colors",
-                                      isActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
-                                    )} />
-                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
-                                      {item.name}
-                                    </span>
-                                  </div>
-                                  {item.badge && (
-                                    <span className={cn(
-                                      "px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider",
-                                      item.badgeVariant === "critical" ? "bg-rose-100 text-rose-600" :
-                                      item.badgeVariant === "warning" ? "bg-amber-100 text-amber-600" :
-                                      "bg-slate-100 text-slate-500"
-                                    )}>
-                                      {item.badge}
-                                    </span>
-                                  )}
-                                  {isActive && (
-                                    <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
-                                  )}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                    </div>
-                  );
-                })}
-              </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
       </nav>
 
-      {/* Footer Profile */}
-      <div className="p-6 bg-slate-50/50 border-t border-slate-100 mt-auto">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden group">
-              <UserCircle className="w-6 h-6 text-slate-300 group-hover:text-brand-black transition-colors" />
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></div>
-            </div>
-            <div className="flex flex-col">
-              <p className="text-[12px] font-black text-brand-black line-clamp-1 leading-none mb-1">
-                {user?.full_name || "Authorized"}
-              </p>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                  {user?.roles?.[0] || "Active Session"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-xl hover:bg-rose-50 text-slate-300 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-none"
-            onClick={() => {
-              localStorage.removeItem('token');
-              window.location.href = '/login';
-            }}
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
+      {/* Logout */}
+      <div className="p-5 border-t border-slate-100">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </button>
       </div>
     </aside>
   );
 }
-

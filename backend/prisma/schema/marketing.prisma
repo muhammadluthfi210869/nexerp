@@ -13,7 +13,6 @@ model DailyAdsMetric {
   auditedAt      DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  verifier       User?         @relation("AdsVerifier", fields: [auditedById], references: [id])
 
   @@unique([date, platform, campaignName])
   @@map("daily_ads_metrics")

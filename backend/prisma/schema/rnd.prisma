@@ -1,171 +1,117 @@
-model RndStaff {
-  id                String          @id @default(uuid()) @db.Uuid
-  name              String
-  specialty         String
-  isActive          Boolean         @default(true)
-  maxWeeklyCapacity Int             @default(5)
-  sampleRequests    SampleRequest[]
+// ═══════════════════════════════════════════════════════════════
+// 🟢 PRODUCTION-LIGHT: Hanya model yang dipakai oleh 3 halaman:
+//    Analytics Trend, Daily Tracking, Project Monitoring
+//    Lihat PRODUCTION_LIGHT.md untuk cara mengembalikan.
+// ═══════════════════════════════════════════════════════════════
 
-  @@map("rnd_staffs")
+model RndDailyTask {
+  id                String    @id @default(uuid()) @db.Uuid
+  date              DateTime  @db.Date
+  pic               String
+  noNpf             String?
+  projectName       String
+  category          String    @default("New Sample")
+  busdev            String?
+  task              String?
+  targetSampleCount Int       @default(1)
+  status            String    @default("On Progress")
+  progress          Int       @default(0)
+  kendala           String?
+  nextAction        String?
+  deadline          DateTime? @db.Date
+  tanggalMasuk      DateTime  @db.Date
+  tanggalDone       DateTime? @db.Date
+  createdById       String?   @db.Uuid
+  createdAt         DateTime  @default(now())
+
+  @@map("rnd_daily_tasks")
 }
 
-model SampleRequest {
-  id                  String               @id @default(uuid()) @db.Uuid
-  sampleCode          String               @unique
-  leadId              String               @db.Uuid
-  productName         String
-  targetFunction      String
-  textureReq          String
-  colorReq            String
-  aromaReq            String
-  version             Int                  @default(1)
-  stage               SampleStage          @default(QUEUE)
-  picId               String?              @db.Uuid
-  requestedAt         DateTime             @default(now())
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @default(now()) @updatedAt
-  completedAt         DateTime?
-  feedback            String?
-  latestRevisionDate  DateTime?
-  revisionCount       Int                  @default(0)
-  suggestDesign       String?
-  suggestPackaging    String?
-  suggestValue        String?
-  difficultyLevel     Int                  @default(1)
-  pnfFileUrl          String?
-  currentExpectations String?
-  feedbackHistory     Json?                @default("[]")
-  courierName         String?
-  trackingNumber      String?
-  shippedAt           DateTime?
-  deliveredAt         DateTime?
-  clientRating        Int?
-  clientComment       String?
-  paymentProofUrl     String?
-  paymentApprovedAt   DateTime?
-  paymentApprovedById String?              @db.Uuid
-  paymentApprovedBy   User?                @relation("PaymentApprovedBy", fields: [paymentApprovedById], references: [id])
-  isApprovedByClient  Boolean              @default(false)
-  targetDeadline      DateTime?            @db.Date
-  targetHpp           Decimal?             @db.Decimal(15, 2)
-  rejectionReason     String?              @db.VarChar(100)
-  revisionStatus      RevisionStatus       @default(NOT_STARTED)
-  npfId               String?              @db.Uuid
-  rndId               String?              @db.Uuid
-  billOfMaterials     BillOfMaterial[]
-  formulas            Formula[]
-  registrations       RegulatoryPipeline[]
-  salesOrderItems     SalesOrderItem[]
-  salesOrders         SalesOrder[]
-  feedbacks           SampleFeedback[]
-  lead                SalesLead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  npf                 NewProductForm?      @relation(fields: [npfId], references: [id])
-  pic                 RndStaff?            @relation(fields: [picId], references: [id])
-  rnd                 User?                @relation("RNDFormulator", fields: [rndId], references: [id])
-  stageLogs           SampleStageLog[]
+model RndProject {
+  id             String    @id @default(uuid()) @db.Uuid
+  projectName    String
+  pic            String
+  client         String?
+  category       String?
+  noNpf          String?
+  busdev         String?
+  status         String    @default("In progress")
+  startDate      DateTime  @db.Date
+  deadline       DateTime? @db.Date
+  totalDays      Int?
+  revisionCount  Int       @default(0)
+  trialCount     Int       @default(0)
+  notes          String?
+  createdById    String?   @db.Uuid
+  createdAt      DateTime  @default(now())
 
-  @@index([stage, leadId])
-  @@map("sample_requests")
+  @@map("rnd_projects")
 }
 
-model SampleStageLog {
-  id              String        @id @default(uuid()) @db.Uuid
-  sampleRequestId String        @db.Uuid
-  stage           SampleStage
-  enteredAt       DateTime      @default(now())
-  leftAt          DateTime?
-  durationDays    Float?
-  notes           String?
-  rejectionReason String?       @db.VarChar(100)
-  sampleRequest   SampleRequest @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
+model RndWeeklyPerformance {
+  id               String   @id @default(uuid()) @db.Uuid
+  pic              String
+  weekLabel        String
+  weekStart        DateTime @db.Date
+  weekEnd          DateTime @db.Date
+  totalTask        Int      @default(0)
+  doneCount        Int      @default(0)
+  delayedCount     Int      @default(0)
+  failedTrial      Int      @default(0)
+  revisionCount    Int      @default(0)
+  ontimePct        Float    @default(0)
+  trialSuccessRate Float    @default(0)
+  initiativeScore  Float    @default(0)
+  weeklyScore      Float    @default(0)
+  notes            String?
+  createdAt        DateTime @default(now())
 
-  @@map("sample_stage_logs")
+  @@map("rnd_weekly_performances")
 }
 
-model Formula {
-  id              String               @id @default(uuid()) @db.Uuid
-  formulaCode     String               @unique
-  sampleRequestId String               @db.Uuid
-  version         Int                  @default(1)
-  createdAt       DateTime             @default(now())
-  lockedById      String?              @db.Uuid
-  targetYieldGram Decimal              @default(1000.000) @db.Decimal(15, 3)
-  updatedAt       DateTime             @default(now()) @updatedAt
-  status          FormulaStatus        @default(DRAFT)
-  phases          FormulaPhase[]
-  lockedBy        User?                @relation("FormulaLockedBy", fields: [lockedById], references: [id])
-  sampleRequest   SampleRequest        @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
-  labTestResults  LabTestResult[]
-  registrations   RegulatoryPipeline[]
-  productionPlans ProductionPlan[]
-  qcparameter     QCParameter?
+model RndFailedTrial {
+  id                  String   @id @default(uuid()) @db.Uuid
+  date                DateTime @db.Date
+  projectFormula      String
+  pic                 String
+  problemSymptom      String
+  rootCause           String?
+  correctionAttempted String?
+  solution            String?
+  finalLearning       String?
+  applicableTo        String?
+  createdAt           DateTime @default(now())
 
-  @@map("formulas")
+  @@map("rnd_failed_trials")
 }
 
-model FormulaPhase {
-  id           String        @id @default(uuid()) @db.Uuid
-  formulaId    String        @db.Uuid
-  prefix       String
-  customName   String?
-  instructions String?
-  order        Int
-  items        FormulaItem[]
-  formula      Formula       @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+model RndHeadTracker {
+  id                String   @id @default(uuid()) @db.Uuid
+  date              DateTime @db.Date
+  strategicTask     String?
+  teamSupport       String?
+  approvalGiven     String?
+  innovationConcept String?
+  escalationHandled String?
+  notes             String?
+  createdById       String?  @db.Uuid
+  createdAt         DateTime @default(now())
 
-  @@map("formula_phases")
+  @@map("rnd_head_trackers")
 }
 
-model FormulaItem {
-  id               String        @id @default(uuid()) @db.Uuid
-  materialId       String?       @db.Uuid
-  dosagePercentage Decimal       @db.Decimal(10, 5)
-  costSnapshot     Decimal?      @db.Decimal(15, 2)
-  phaseId          String        @db.Uuid
-  material         MaterialItem? @relation(fields: [materialId], references: [id])
-  phase            FormulaPhase  @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+model RndMonthlyKpi {
+  id                   String @id @default(uuid()) @db.Uuid
+  month                String
+  pic                  String
+  ontimePct            Float   @default(0)
+  trialSuccessRate     Float   @default(0)
+  revisionRate         Float   @default(0)
+  initiativeScore      Float   @default(0)
+  knowledgeContribution Float  @default(0)
+  compositeScore       Float?
+  grade                String?
+  createdAt            DateTime @default(now())
 
-  @@map("formula_items")
-}
-
-model SampleFeedback {
-  id              String        @id @default(uuid()) @db.Uuid
-  sampleRequestId String        @db.Uuid
-  feedbackText    String
-  createdAt       DateTime      @default(now())
-  sampleRequest   SampleRequest @relation(fields: [sampleRequestId], references: [id])
-
-  @@map("sample_feedback")
-}
-
-model BillOfMaterial {
-  id              String        @id @default(uuid()) @db.Uuid
-  sampleId        String        @db.Uuid
-  materialId      String        @db.Uuid
-  quantityPerUnit Decimal       @db.Decimal(15, 2)
-  material        MaterialItem  @relation(fields: [materialId], references: [id])
-  sample          SampleRequest @relation(fields: [sampleId], references: [id])
-
-  @@map("bill_of_materials")
-}
-
-model LabTestResult {
-  id              String   @id @default(uuid()) @db.Uuid
-  formulaId       String   @db.Uuid
-  testDate        DateTime @default(now())
-  testerId        String?  @db.Uuid
-  actualPh        String?
-  actualViscosity String?
-  actualDensity   String?
-  colorResult     String?
-  aromaResult     String?
-  textureResult   String?
-  stability40C    String?
-  stabilityRT     String?
-  stability4C     String?
-  notes           String?
-  formula         Formula  @relation(fields: [formulaId], references: [id], onDelete: Cascade)
-  tester          User?    @relation(fields: [testerId], references: [id])
-
-  @@map("lab_test_results")
+  @@map("rnd_monthly_kpis")
 }
