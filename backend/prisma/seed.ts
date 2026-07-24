@@ -15,11 +15,11 @@ async function main() {
   console.log('🌱 RESETTING DATABASE (Production Light)...');
 
   // Cleanup — hanya tabel yang masih ada di skema aktif
+  // (tabel marketing dihapus dari skema, jangan di-truncate)
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE
     users, employees, employee_role_mappings, kpi_point_logs, kpi_scores,
     kpi_metric_definitions, attendances, payroll_items, payrolls, tickets,
-    daily_ads_metrics, marketing_targets, content_assets, search_visibility_metrics,
-    account_health_logs, rnd_daily_tasks, rnd_projects, rnd_weekly_performances,
+    rnd_daily_tasks, rnd_projects, rnd_weekly_performances,
     rnd_failed_trials, rnd_head_trackers, rnd_monthly_kpis
   RESTART IDENTITY CASCADE`);
 
