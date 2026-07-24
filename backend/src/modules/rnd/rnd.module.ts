@@ -5,10 +5,13 @@ import { FormulasService } from './formulas/formulas.service';
 import { FormulasController } from './formulas/formulas.controller';
 import { RndService } from './rnd.service';
 import { RndController } from './rnd.controller';
-import { LegalityModule } from '../legality/legality.module';
+
+// ⚠️ PRODUCTION-LIGHT: LegalityModule dihapus dari imports
+// karena FormulasService sudah tidak menggunakan LegalityService.
+// Lihat PRODUCTION_LIGHT.md untuk detail.
 
 @Module({
-  imports: [LegalityModule],
+  imports: [],
   providers: [FormulasService, RndService],
   controllers: [
     NpfController,

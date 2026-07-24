@@ -20,10 +20,15 @@ frontend/.env
 *.zip
 *.tar.gz
 
-# Logs
+# Logs — all patterns
 *.log
+*.out.log
+*.err.log
 backend_error.txt
 backend_out.txt
+backend_dev.log
+backend-test-server.log
+frontend_dev.log
 
 # IDE / Tooling
 .vscode/
@@ -33,3 +38,47 @@ backend_out.txt
 # Playwright
 playwright-report/
 test-results/
+.playwright/
+.playwright-browsers/
+.playwright-cli/
+
+# Agent / AI tool folders (local config only)
+.agents/
+.claude/
+.claudeignore
+.codex/
+.fcc-*/
+.fcc-home/
+.fcc-free-home/
+.fcc-launch-home/
+.fcc-opencode-home/
+.mimocode/
+.opencode/
+.superpowers/
+
+# Temporary & scratch
+tmp/
+scratch/
+_archive/
+_archive/**/*
+
+# Old deploy scripts (single-use files)
+check_admins.js
+check_user.js
+reset_admin.js
+temp_fix3.js
+deploy*.ps1
+deploy*.sh
+fix-localhost.ps1
+fcc-*.cmd
+fcc-*.ps1
+GO_ONLINE.ps1
+
+# Test artifacts
+test-results/
+tests/
+playwright-report/
+playwright-*.json
+storageState.json
+rbac-report*.json
+go-live-playwright.json

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { FinanceService } from '../../finance/finance.service';
+
+// ⚠️ PRODUCTION-LIGHT: FinanceService tidak dipakai
+// (hanya di-inject tanpa method call). Dihapus untuk
+// memutus dependency ke FinanceModule.
+// Lihat PRODUCTION_LIGHT.md untuk detail.
 
 @Injectable()
 export class MarketingService {
@@ -18,7 +22,6 @@ export class MarketingService {
 
   constructor(
     private prisma: PrismaService,
-    private finance: FinanceService,
     private eventEmitter: EventEmitter2,
   ) {}
 

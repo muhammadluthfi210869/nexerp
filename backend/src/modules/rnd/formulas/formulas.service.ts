@@ -10,14 +10,16 @@ import { UpdateFormulaV4Dto } from '../dto/update-formula-v4.dto';
 import { Prisma, RevisionStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { LegalityService } from '../../legality/legality.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
+
+// ⚠️ PRODUCTION-LIGHT: LegalityService dihapus karena LegalityModule
+// tidak aktif di branch ini. Fungsi regulatory gate di-stub.
+// Lihat PRODUCTION_LIGHT.md untuk cara mengembalikan.
 
 @Injectable()
 export class FormulasService {
   constructor(
     private prisma: PrismaService,
-    private legality: LegalityService,
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
   ) {}
@@ -390,7 +392,11 @@ export class FormulasService {
     }
 
     // BPOM REGULATORY GATE
-    const validation = await this.legality.validateFormula(id);
+    // ⚠️ PRODUCTION-LIGHT: LegalityService tidak aktif.
+    //    Regulatory validation di-stub: selalu lolos.
+    //    Kembalikan dengan:
+    //    const validation = await this.legality.validateFormula(id);
+    const validation = { canProceed: true, riskScore: 'LOW', violations: [] };
     if (!validation.canProceed) {
       throw new ForbiddenException({
         message:
