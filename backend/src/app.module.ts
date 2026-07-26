@@ -14,7 +14,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SharedModule } from './shared/shared.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+import * as path from 'path';
 
 // ──────────────────────────────────────────────────
 // 🟢 PRODUCTION-LIGHT: Modul di bawah di-comment karena
@@ -49,7 +49,7 @@ import { join } from 'path';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: path.join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
     // ── Core / Wajib ──

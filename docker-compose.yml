@@ -28,9 +28,15 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dreamlab_prod_jwt_secret_2026}
       JWT_EXPIRES_IN: 60m
       AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
-      CORS_ORIGIN: http://localhost:3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      # ── Google Sheets API (Toribio Dashboard) ──
+      GOOGLE_SHEETS_PRIVATE_KEY: ${GOOGLE_SHEETS_PRIVATE_KEY:-}
+      GOOGLE_SHEETS_CLIENT_EMAIL: ${GOOGLE_SHEETS_CLIENT_EMAIL:-}
+      TORIBIO_SPREADSHEET_ID: ${TORIBIO_SPREADSHEET_ID:-1J1sdzYNVThhUGanHyYWETH6Lr3dlT77ckKZ5d89OEvU}
+      TORIBIO_REFRESH_INTERVAL_MS: ${TORIBIO_REFRESH_INTERVAL_MS:-60000}
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/dirlif-project-cbab4f5a2ec6.json:/app/dirlif-project-cbab4f5a2ec6.json:ro
     depends_on:
       db:
         condition: service_healthy
@@ -40,13 +46,15 @@ services:
       test: ["CMD-SHELL", "wget --spider http://localhost:3002/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3002
     restart: always
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3002
@@ -59,8 +67,8 @@ services:
       test: ["CMD-SHELL", "wget --spider http://localhost:3000 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
 volumes:
   postgres_data:

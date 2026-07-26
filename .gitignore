@@ -82,3 +82,35 @@ playwright-*.json
 storageState.json
 rbac-report*.json
 go-live-playwright.json
+
+# Backend test artifacts
+backend/test_*.json
+backend/weekly_test.json
+backend/test_ct*.json
+backend/test_final*.json
+backend/test_fixed*.json
+backend/test_golden.json
+backend/test_output*.json
+backend/test_pa.json
+backend/test_summary.json
+backend/test_v4.json
+
+# GCP service account key (SENSITIVE!)
+backend/dirlif-project-*.json
+
+# Base64 encoded blobs (sensitive)
+*.b64
+
+# Documentation & Excel files
+docs/
+*.xlsx
+
+# Frontend screenshots
+frontend/*.png
+
+# Embedded git repos
+quality-skill-sources-tmp/
+
+# Windows reserved filenames
+nul
+NUL

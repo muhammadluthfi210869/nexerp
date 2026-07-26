@@ -27,22 +27,28 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
       PORT: 3001
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-super-secret-key-change-me}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET environment variable is REQUIRED for production safety! Set it in .env or shell environment.}
       AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://nexerp.id}
+      # ── Google Sheets API (Toribio Dashboard) ──
+      GOOGLE_SHEETS_PRIVATE_KEY: ${GOOGLE_SHEETS_PRIVATE_KEY:-}
+      GOOGLE_SHEETS_CLIENT_EMAIL: ${GOOGLE_SHEETS_CLIENT_EMAIL:-}
+      TORIBIO_SPREADSHEET_ID: ${TORIBIO_SPREADSHEET_ID:-1J1sdzYNVThhUGanHyYWETH6Lr3dlT77ckKZ5d89OEvU}
+      TORIBIO_REFRESH_INTERVAL_MS: ${TORIBIO_REFRESH_INTERVAL_MS:-60000}
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/dirlif-project-cbab4f5a2ec6.json:/app/dirlif-project-cbab4f5a2ec6.json:ro
     depends_on:
       db:
         condition: service_healthy
     networks:
       - erp_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3001/system/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   frontend:
     build:

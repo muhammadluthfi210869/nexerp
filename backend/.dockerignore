@@ -2,5 +2,12 @@ node_modules
 dist
 .git
 .env
+.env.*
+!.env.example
 scratch
 *.log
+*.tar.gz
+test/
+_archive/
+docs/
+uploads/*.pdf

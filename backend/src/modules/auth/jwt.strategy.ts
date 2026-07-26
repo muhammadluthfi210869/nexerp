@@ -1,7 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../users.service';
+
+const DEFAULT_JWT_SECRET = 'ERP_SECRET_DEV_ONLY';
+const jwtSecret = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
+
+if (jwtSecret === DEFAULT_JWT_SECRET && process.env.NODE_ENV === 'production') {
+  Logger.warn(
+    '⚠️  JWT_SECRET is using DEFAULT value! Set JWT_SECRET environment variable for production security.',
+    'JwtStrategy',
+  );
+}
 
 interface JwtPayload {
   sub: string;
@@ -17,7 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'ERP_SECRET', // Ideally should use config service
+      secretOrKey: jwtSecret,
     });
   }
 

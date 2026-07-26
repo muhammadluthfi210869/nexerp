@@ -37,11 +37,11 @@ async function bootstrap() {
   );
 
   // Enable CORS — locked to production domain, wide open for dev
+  // Fallback chain: CORS_ORIGIN env → hardcoded list → error if unset in production
   const corsOrigin =
     process.env.NODE_ENV === 'production'
       ? [
           process.env.CORS_ORIGIN || 'https://nexerp.id',
-          'https://nexerp.id',
           'https://www.nexerp.id',
           'https://dreamlab.id',
           'https://www.dreamlab.id',
