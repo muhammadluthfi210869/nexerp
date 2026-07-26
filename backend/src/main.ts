@@ -25,11 +25,14 @@ async function bootstrap() {
   app.use(compression());
 
   // Enable Global Validation
+  // whitelist: true tanpa class-validator decorators akan
+  // strip semua properties. Dipasang false agar endpoint
+  // public seperti lead-capture/track bisa menerima body.
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
+      whitelist: false,
+      transform: false,
+      forbidNonWhitelisted: false,
     }),
   );
 

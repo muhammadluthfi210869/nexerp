@@ -36,12 +36,23 @@ enum UserStatus {
   INACTIVE
 }
 
+enum LeadStatus {
+  PENDING           // Clicked WA link, not yet messaged
+  WA_CONTACTED      // Has sent WA message
+  QUALIFIED         // Sales has qualified
+  DISQUALIFIED
+  CONVERTED         // Became a customer
+}
+
 enum LeadSource {
   INSTAGRAM
   TIKTOK
   LINKTREE
   GOOGLE
   OFFLINE
+  WEBSITE
+  DIRECT
+  REFERRAL
 }
 
 enum WorkflowStatus {

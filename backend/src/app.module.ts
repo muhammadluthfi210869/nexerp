@@ -6,6 +6,9 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { RndModule } from './modules/rnd/rnd.module';
+import { DigimarModule } from './modules/digimar/digimar.module';
+import { LeadCaptureModule } from './modules/lead-capture/lead-capture.module';
+import { WaWebhookModule } from './modules/wa-webhook/wa-webhook.module';
 // import { HrModule } from './modules/hr/hr.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -58,6 +61,9 @@ import { join } from 'path';
     // ── Aktif (Prioritas) ──
     MarketingModule,
     RndModule,
+    DigimarModule,
+    LeadCaptureModule,
+    WaWebhookModule,
     // HrModule,
 
     // ── Global ──

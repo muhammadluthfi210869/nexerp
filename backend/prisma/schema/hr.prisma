@@ -1,4 +1,4 @@
-﻿// ⚠️ PRODUCTION-LIGHT: HR models simplified — removed cross-schema
+// ⚠️ PRODUCTION-LIGHT: HR models simplified — removed cross-schema
 //    relations to SalesOrder, ProductionPlan, QCAudit, FinancialPeriod
 //    since those modules are archived. Restore via PRODUCTION_LIGHT.md.
 

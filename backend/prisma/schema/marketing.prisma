@@ -1,4 +1,76 @@
-// ⚠️ PRODUCTION-LIGHT: Semua model marketing dihapus karena
-// DigiMar Management Task menggunakan JSON file storage,
-// bukan database. Model sebelumnya (DailyAdsMetric, dll)
-// di-archive. Lihat PRODUCTION_LIGHT.md untuk mengembalikan.
+// ⚠️ PRODUCTION-LIGHT: Model marketing lama dihapus.
+// Lead Capture untuk DreamLab.id — sistem zero-friction WA lead capture.
+
+model LeadCapture {
+  id            String   @id @default(uuid()) @db.Uuid
+  trackingCode  String   @unique @db.VarChar(20)
+
+  // ── Website Tracking (invisible, captured before WA redirect) ──
+  sessionId     String?  @db.VarChar(100)
+  intent        String?  @db.Text          // "Konsultasi Produk", "Beli Bahan Baku", dll
+  pageUrl       String?  @db.Text
+  pageTitle     String?  @db.VarChar(255)
+  referrer      String?  @db.Text
+  utmSource     String?  @db.VarChar(100)
+  utmMedium     String?  @db.VarChar(100)
+  utmCampaign   String?  @db.VarChar(100)
+  utmContent    String?  @db.VarChar(100)
+  utmTerm       String?  @db.VarChar(100)
+  deviceType    String?  @db.VarChar(50)   // mobile / desktop / tablet
+  browser       String?  @db.VarChar(100)
+  ipAddress     String?  @db.VarChar(45)
+  city          String?  @db.VarChar(100)
+  country       String?  @db.VarChar(100)
+
+  // ── WhatsApp Data (captured when user messages) ──
+  phone         String?  @db.VarChar(20)   // extracted from WA
+  waName        String?  @db.VarChar(255)  // WhatsApp profile name
+  waMessage     String?  @db.Text          // first message content
+  contactedAt   DateTime?
+
+  // ── CRM Fields ──
+  fullName      String?  @db.VarChar(255)
+  company       String?  @db.VarChar(255)
+  email         String?  @db.VarChar(255)
+  notes         String?  @db.Text
+
+  status        LeadStatus @default(PENDING)
+  source        LeadSource?  // Linktree, Instagram, Google, dll
+
+  assignedTo    String?  @db.Uuid
+  assignedUser  User?    @relation(fields: [assignedTo], references: [id])
+
+  // ── Sales Pipeline ──
+  workflowStatus WorkflowStatus @default(NEW_LEAD)
+  lostReason     LostReason?
+  lostAt         DateTime?
+  wonAt          DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("lead_captures")
+}
+
+// ── Round Robin untuk distribusi lead ke 3 nomor WA ──
+
+model RoundRobinAgent {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(100)
+  phoneNumber String   @db.VarChar(20)
+  orderIndex  Int      // urutan: 0, 1, 2
+  isActive    Boolean  @default(true)
+  totalLeads  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("round_robin_agents")
+}
+
+model RoundRobinState {
+  id           String   @id @default("singleton")
+  currentIndex Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@map("round_robin_state")
+}

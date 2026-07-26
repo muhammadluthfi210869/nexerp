@@ -14,5 +14,13 @@ model User {
   createdAt    DateTime   @default(now())
   deletedAt    DateTime?
 
+  // HR relations
+  employee     Employee?
+  approvedTickets Ticket[]     @relation("TicketApprover")
+  approvedPayrolls Payroll[]  @relation("PayrollApprover")
+
+  // Lead Capture
+  assignedLeads LeadCapture[]
+
   @@map("users")
 }
