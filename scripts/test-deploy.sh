@@ -32,7 +32,8 @@ fi
 
 # ── 2. CORS Headers ──────────────────────────────────
 echo "📋 Test 2/6: CORS Headers"
-CORS=$(curl -s -I -X OPTIONS "$BASE_URL/health" 2>/dev/null | grep -i "access-control-allow-origin" || echo "")
+# Kirim Origin header biar NestJS merespon dengan CORS headers
+CORS=$(curl -s -I -X OPTIONS -H "Origin: http://localhost:3000" "$BASE_URL/health" 2>/dev/null | grep -i "access-control-allow-origin" || echo "")
 if [ -n "$CORS" ]; then
   green "CORS headers present: $(echo $CORS | tr -d '\r')"
   PASS=$((PASS+1))
