@@ -1,0 +1,55 @@
+# ═══════════════════════════════════════════════════════════
+#  NexERP Staging — port 3003 (backend) & 3004 (frontend)
+#  Tidak ada nginx, tidak ada SSL, langsung akses via IP
+# ═══════════════════════════════════════════════════════════
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-erp_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-erp_password_secure}
+      POSTGRES_DB: ${DB_NAME:-erp_database}
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-erp_user} -d ${DB_NAME:-erp_database}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-nexerp}/backend:latest
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
+      PORT: 3003
+      NODE_ENV: staging
+      JWT_SECRET: ${JWT_SECRET}
+      AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
+      CORS_ORIGIN: "*"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3003:3003"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:3003/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-nexerp}/frontend:latest
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3003
+      NODE_ENV: staging
+    depends_on:
+      - backend
+    ports:
+      - "3004:3000"
+
+volumes:
+  postgres_data_staging:
