@@ -29,7 +29,6 @@ export class DigimarService implements OnModuleInit {
 
   async onModuleInit() {
     await this.initializeSheetsClient();
-    this.logger.log(`DigimarService initialized. Sheet ID: ${this.spreadsheetId}`);
   }
 
   // ── Auth: initialize Google Sheets API client ──
@@ -65,10 +64,16 @@ export class DigimarService implements OnModuleInit {
         return;
       }
 
-      throw new Error('No Google Sheets credentials found (env vars or JSON file)');
+      // No credentials found — log warning and continue without sheets
+      this.logger.warn(
+        '⚠️  Google Sheets credentials not configured. ' +
+        'Digimar Toribio dashboard will be unavailable until GOOGLE_SHEETS_PRIVATE_KEY ' +
+        'and GOOGLE_SHEETS_CLIENT_EMAIL are set.'
+      );
+      this.sheets = null;
     } catch (err) {
-      this.logger.error('Failed to initialize Google Sheets client', err);
-      throw err;
+      this.logger.warn('Google Sheets client initialization skipped (non-fatal):', err.message);
+      this.sheets = null;
     }
   }
 
@@ -92,6 +97,10 @@ export class DigimarService implements OnModuleInit {
   // ── Raw sheet reader ──
 
   private async readRange(range: string): Promise<string[][]> {
+    if (!this.sheets) {
+      this.logger.warn(`Google Sheets not initialized — cannot read range: ${range}`);
+      return [];
+    }
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
@@ -112,6 +121,9 @@ export class DigimarService implements OnModuleInit {
   // ── Sheet names ──
 
   async getSheetNames(): Promise<string[]> {
+    if (!this.sheets) {
+      return [];
+    }
     return this.getCached('sheetNames', async () => {
       const response = await this.sheets.spreadsheets.get({
         spreadsheetId: this.spreadsheetId,
