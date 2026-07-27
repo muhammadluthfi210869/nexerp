@@ -342,6 +342,37 @@
   }
 }
 
+/* ═══ SIDEBAR — force Inter font + weight ═══ */
+.sidebar-root,
+.sidebar-root * {
+  font-family: var(--font-inter, 'Inter'), system-ui, -apple-system, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Force all sidebar text to be visible bold */
+.sidebar-root a,
+.sidebar-root button,
+.sidebar-root span,
+.sidebar-root p,
+.sidebar-root div {
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.sidebar-root .font-black {
+  font-weight: 900 !important;
+}
+.sidebar-root .font-bold {
+  font-weight: 700 !important;
+}
+.sidebar-root .font-semibold {
+  font-weight: 600 !important;
+}
+.sidebar-root .font-medium {
+  font-weight: 500 !important;
+}
+
 /* ═══ VISUAL_DNA §G — CUSTOM SCROLLBAR ═══ */
 ::-webkit-scrollbar {
   width: 4px;

@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-slim AS builder
+FROM node:20-bookworm AS builder
 
 WORKDIR /app
 
@@ -8,13 +8,13 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY package*.json ./
-RUN npm install
+RUN npm install && npm install lightningcss-linux-x64-gnu
 
 COPY . .
 RUN npm run build
 
 # Stage 2: Runtime
-FROM node:20-slim AS runner
+FROM node:20-bookworm AS runner
 
 WORKDIR /app
 

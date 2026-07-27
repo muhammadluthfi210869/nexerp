@@ -35,8 +35,12 @@ services:
       GOOGLE_SHEETS_CLIENT_EMAIL: ${GOOGLE_SHEETS_CLIENT_EMAIL:-}
       TORIBIO_SPREADSHEET_ID: ${TORIBIO_SPREADSHEET_ID:-1J1sdzYNVThhUGanHyYWETH6Lr3dlT77ckKZ5d89OEvU}
       TORIBIO_REFRESH_INTERVAL_MS: ${TORIBIO_REFRESH_INTERVAL_MS:-60000}
+      # ── Kommo CRM (Lead enrichment) ──
+      KOMMO_SUBDOMAIN: ${KOMMO_SUBDOMAIN:-}
+      KOMMO_API_TOKEN: ${KOMMO_API_TOKEN:-}
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
       - ./backend/dirlif-project-cbab4f5a2ec6.json:/app/dirlif-project-cbab4f5a2ec6.json:ro
     depends_on:
       db:

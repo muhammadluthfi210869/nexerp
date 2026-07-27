@@ -9,6 +9,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DashboardCard } from "@/components/dna";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { isRndHeadAccount } from "@/lib/rnd-access";
 import { TYPOGRAPHY, CHIP_CLASSES, deriveGrade, calcWeightedScore } from "@/components/rnd/rnd-constants";
 
 // ═══════════════════════════════════════════════════════════════
@@ -171,6 +172,9 @@ function TrendTab() {
   }
 
   const { summary, monthlyTrend, perPic, categoryBreakdown: catBrk } = data;
+  const completedCount = data.summary.doneTasks;
+  const activeCount = data.summary.activeTasks;
+  const totalCount = data.summary.totalTasks;
 
   // ── Transform API data to chart formats ──
   const ontimeChart = monthlyTrend.length > 0
@@ -195,10 +199,6 @@ function TrendTab() {
   const picPerformance = perPic.length > 0
     ? perPic.map(p => ({ name: p.pic, success: p.done, failed: p.failed }))
     : [{ name: "No Data", success: 0, failed: 0 }];
-
-  const completedCount = data.summary.doneTasks;
-  const activeCount = data.summary.activeTasks;
-  const totalCount = data.summary.totalTasks;
 
   return (
     <>
@@ -646,7 +646,7 @@ export default function AnalyticsTrendClient() {
 
   const isHead = currentUser.id
     ? (currentUser.roles?.includes?.("SUPER_ADMIN") ||
-       currentUser.email?.toLowerCase() === "amira@nexerp.id")
+       isRndHeadAccount(currentUser.email))
     : false;
 
   const allPics = ["Panca", "Yaya", "Amira"];

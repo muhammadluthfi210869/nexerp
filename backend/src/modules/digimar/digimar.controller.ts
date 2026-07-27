@@ -1,7 +1,9 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { DigimarService } from './digimar.service';
 import { MonthQueryDto, WeeklyQueryDto } from './dto/digimar-query.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('digimar')
 export class DigimarController {
   constructor(private readonly digimarService: DigimarService) {}

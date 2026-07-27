@@ -322,7 +322,7 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
   const [editingProjectCategoryValue, setEditingProjectCategoryValue] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
   const [saving, setSaving] = useState(false);
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState("2026-07-01");
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
     if (!selectedTaskId && tasks[0]) setSelectedTaskId(tasks[0].id);
@@ -387,7 +387,9 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
   const activeProjects = projects.filter((project) => project.status !== "Completed").length;
   const completedTasks = tasks.filter((task) => task.status === "Done").length;
   const overdueTasks = tasks.filter((task) => task.dueDate < today && !["Done", "Cancelled"].includes(task.status)).length;
-  const dueThisWeek = tasks.filter((task) => task.dueDate >= today && task.dueDate <= "2026-07-12" && !["Done", "Cancelled"].includes(task.status)).length;
+  const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 7);
+  const weekEndStr = weekEnd.toISOString().slice(0, 10);
+  const dueThisWeek = tasks.filter((task) => task.dueDate >= today && task.dueDate <= weekEndStr && !["Done", "Cancelled"].includes(task.status)).length;
   const inProgressTasks = tasks.filter((task) => task.status === "In Progress").length;
   const revisionTasks = tasks.filter((task) => task.status === "Revision");
   const recentlyAssignedTasks = [...tasks]
@@ -731,17 +733,24 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
   }
 
   const selectedTasks = tasks.filter((task) => task.projectId === selectedProject?.id).slice(0, 5);
+  const calendarDate = useMemo(() => new Date(), []);
+  const calendarYear = calendarDate.getFullYear();
+  const calendarMonth = calendarDate.getMonth(); // 0-indexed
+  const calendarMonthName = calendarDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
   const calendarDays = useMemo(() => {
-    const first = new Date("2026-07-01T00:00:00");
-    const startWeekday = (first.getDay() + 6) % 7;
-    const monthDays = 31;
+    const first = new Date(calendarYear, calendarMonth, 1);
+    const startWeekday = (first.getDay() + 6) % 7; // Mon=0
+    const monthDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
     return Array.from({ length: 35 }, (_, index) => index - startWeekday + 1).map((day, index) => ({
       day,
       index,
       valid: day > 0 && day <= monthDays,
-      date: day > 0 && day <= monthDays ? `2026-07-${String(day).padStart(2, "0")}` : `out-${index}`,
+      date: day > 0 && day <= monthDays
+        ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+        : `out-${index}`,
     }));
-  }, []);
+  }, [calendarYear, calendarMonth]);
 
   const tasksByDate = useMemo<Record<string, TaskRow[]>>(() => {
     return tasks.reduce((acc, task) => {
@@ -1239,7 +1248,7 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
         <TabsContent value="calendar" className="space-y-6">
           <PageSection title="Deadline Calendar">
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.85fr]">
-              <DashboardCard label="July 2026">
+              <DashboardCard label={calendarMonthName}>
                 <div className="grid grid-cols-7 gap-3">
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
                     <div key={day} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-center text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">

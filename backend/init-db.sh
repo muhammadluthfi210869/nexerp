@@ -4,6 +4,12 @@ set -e
 echo "=== 🟢 PRODUCTION-LIGHT INIT-DB ==="
 echo "DATABASE_URL is: ${DATABASE_URL:-(NOT SET!)}"
 
+# ── Create persistent data directories ──
+echo "=== Step 0: Creating data directories ==="
+mkdir -p /app/data
+chmod 755 /app/data
+echo "✅ /app/data/ ready"
+
 echo "Waiting 8 seconds for database to be ready..."
 sleep 8
 
@@ -27,9 +33,30 @@ USER_COUNT=$(node -e "
   prisma.user.count().then(c => { console.log(c); prisma.\$disconnect(); });
 " 2>/dev/null || echo "0")
 
+echo "Current user count: $USER_COUNT"
+
 if [ "$USER_COUNT" = "0" ]; then
   echo "No users found, running seed..."
-  node dist/prisma/seed.js 2>&1 || echo "⚠️ Seed failed (non-fatal, app will still start)"
+
+  if [ -f dist/prisma/seed.js ]; then
+    echo "Found seed.js, executing..."
+    node dist/prisma/seed.js 2>&1 || {
+      echo "❌ Seed via dist/prisma/seed.js failed!"
+      echo "Trying prisma db seed as fallback..."
+      npx prisma db seed 2>&1 || echo "❌ prisma db seed also failed. Database has no users."
+    }
+  else
+    echo "⚠️ dist/prisma/seed.js not found. Trying prisma db seed..."
+    npx prisma db seed 2>&1 || echo "❌ prisma db seed failed. Database has no users."
+  fi
+
+  # Verify seed result
+  FINAL_COUNT=$(node -e "
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    prisma.user.count().then(c => { console.log(c); prisma.\$disconnect(); });
+  " 2>/dev/null || echo "0")
+  echo "Users after seed: $FINAL_COUNT"
 else
   echo "✅ $USER_COUNT users already exist, skipping seed."
 fi

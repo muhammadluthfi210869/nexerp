@@ -18,6 +18,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DashboardCard, DnaButton, StatCard } from "@/components/dna";
 import { api } from "@/lib/api";
 import { ALL_PROJECT_MONITORING, ProjectMonitoringItem } from "@/lib/rnd-mock-data";
+import { isRndHeadAccount } from "@/lib/rnd-access";
 import { cn } from "@/lib/utils";
 import {
   RND_PICS,
@@ -403,8 +404,7 @@ export default function ProjectMonitoringClient() {
   // Head R&D detection: SUPER_ADMIN role OR Amira (Head of R&D)
   const isHead = currentUser.id
     ? (currentUser.roles?.includes?.("SUPER_ADMIN") ||
-       currentUser.email?.toLowerCase() === "amira@nexerp.id" ||
-       currentUser.email?.toLowerCase() === "amira@nexerp.com")
+       isRndHeadAccount(currentUser.email))
     : false;
   const staffPicName = currentUser.fullName || "";
 

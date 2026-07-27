@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { StatCard, DnaButton, PageSection, DashboardCard } from "@/components/dna";
 import { api } from "@/lib/api";
 import { ALL_DAILY_TRACKING } from "@/lib/rnd-mock-data";
+import { isRndHeadAccount } from "@/lib/rnd-access";
 import { cn } from "@/lib/utils";
 
 // SHARED RND COMPONENTS
@@ -518,7 +519,7 @@ export default function DailyTrackingClient() {
   useEffect(() => { try { const u = JSON.parse(localStorage.getItem("user") || "{}"); setCurrentUser(u); } catch {} }, []);
 
   const isHead = currentUser.id
-    ? (currentUser.roles?.includes?.("SUPER_ADMIN") || currentUser.email?.toLowerCase() === "amira@nexerp.id")
+    ? (currentUser.roles?.includes?.("SUPER_ADMIN") || isRndHeadAccount(currentUser.email))
     : false;
   const staffPicName = currentUser.fullName || "";
 
@@ -1077,5 +1078,4 @@ export default function DailyTrackingClient() {
     </DashboardShell>
   );
 }
-
 

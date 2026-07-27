@@ -178,6 +178,26 @@ async function main() {
   console.log(`  ✅ ${monthlyKpis.length} monthly KPI records`);
 
   console.log('');
+  console.log('🌱 Seeding Round Robin Agents (Lead Capture)...');
+  const agents = [
+    { name: 'Aurel', phoneNumber: '087712232389', orderIndex: 0, isActive: true, totalLeads: 0 },
+    { name: 'Revita', phoneNumber: '081952417051', orderIndex: 1, isActive: true, totalLeads: 0 },
+    { name: 'Zarkasi', phoneNumber: '087776550657', orderIndex: 2, isActive: true, totalLeads: 0 },
+  ];
+  for (const a of agents) {
+    await prisma.roundRobinAgent.create({ data: a });
+  }
+  console.log(`  ✅ ${agents.length} round robin agents`);
+
+  // Reset RoundRobinState
+  await prisma.roundRobinState.upsert({
+    where: { id: 'singleton' },
+    update: { currentIndex: 0 },
+    create: { id: 'singleton', currentIndex: 0 },
+  });
+  console.log('  ✅ RoundRobinState initialized');
+
+  console.log('');
   console.log('💎 SEEDING COMPLETE.');
   console.log('   🔐 Password untuk semua akun: password123');
 }

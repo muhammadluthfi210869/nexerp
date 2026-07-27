@@ -135,7 +135,18 @@ export class LeadCaptureService {
     const lead = await this.prisma.leadCapture.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException('Lead not found');
 
-    const updateData: any = { ...data };
+    const updateData: Record<string, unknown> = {};
+    // Only set defined fields to prevent mass assignment
+    if (data.fullName !== undefined) updateData.fullName = data.fullName;
+    if (data.company !== undefined) updateData.company = data.company;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.workflowStatus !== undefined) updateData.workflowStatus = data.workflowStatus;
+    if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo;
+    if (data.lostReason !== undefined) updateData.lostReason = data.lostReason;
+
     if (data.status === 'CONVERTED') updateData.wonAt = new Date();
     if (data.workflowStatus === 'LOST' || data.workflowStatus === 'ABORTED') {
       updateData.lostAt = new Date();
@@ -399,5 +410,59 @@ export class LeadCaptureService {
 
   async deleteRoundRobinAgent(id: string) {
     return this.prisma.roundRobinAgent.delete({ where: { id } });
+  }
+
+  // ──────────────────────────────────────────────
+  //  Find leads with phone but no name (for Kommo sync)
+  // ──────────────────────────────────────────────
+
+  async findLeadsWithoutName(limit = 50) {
+    return this.prisma.leadCapture.findMany({
+      where: {
+        phone: { not: null },
+        waName: null,
+      },
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  //  UPDATE LEAD FROM KOMMO DATA
+  // ══════════════════════════════════════════════
+
+  async updateLeadFromKommo(phone: string, name: string) {
+    // Normalize phone
+    const cleaned = phone.replace(/[^0-9]/g, '');
+    // Remove leading 0 or 62
+    const variants = [
+      cleaned,
+      '62' + cleaned.replace(/^0?62?/, ''),
+      '0' + cleaned.replace(/^0?62?/, ''),
+    ];
+
+    const lead = await this.prisma.leadCapture.findFirst({
+      where: {
+        OR: variants.map((p) => ({ phone: { contains: p.slice(-10) } })),
+        waName: null,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!lead) {
+      this.logger.warn(`[Kommo] No lead found for phone: ${phone} (cleaned: ${cleaned})`);
+      return null;
+    }
+
+    const updated = await this.prisma.leadCapture.update({
+      where: { id: lead.id },
+      data: {
+        waName: name,
+        fullName: lead.fullName || name,
+      },
+    });
+
+    this.logger.log(`[Kommo] Updated lead ${lead.trackingCode} with name: ${name}`);
+    return updated;
   }
 }

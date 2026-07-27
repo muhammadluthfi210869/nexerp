@@ -11,7 +11,10 @@ import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   namespace: '/digimar',
-  cors: { origin: '*', credentials: true },
+  cors: {
+    origin: process.env.CORS_ORIGIN?.split(',') ?? ['https://nexerp.id', 'https://www.nexerp.id', 'https://dreamlab.id'],
+    credentials: true,
+  },
 })
 export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
@@ -31,16 +34,27 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
     try {
-      const sockets = this.server?.sockets?.adapter
-        ? await this.server.sockets.adapter.fetchSockets()
-        : [];
-      if (sockets.length === 0 && this.refreshInterval) {
+      if (!this.server) {
+        this.logger.warn('Server not available for disconnect handling');
+        return;
+      }
+      let remainingSockets = 0;
+      try {
+        const sockets = this.server.sockets?.adapter
+          ? await this.server.sockets.adapter.fetchSockets?.()
+          : null;
+        remainingSockets = sockets?.length ?? 0;
+      } catch {
+        // fetchSockets might not be available in some Socket.IO versions
+        remainingSockets = this.server.engine?.clientsCount ?? 0;
+      }
+      if (remainingSockets === 0 && this.refreshInterval) {
         clearInterval(this.refreshInterval);
         this.refreshInterval = null;
         this.logger.log('Auto-refresh stopped (no clients)');
       }
     } catch (err) {
-      this.logger.warn(`Error checking remaining sockets: ${err.message}`);
+      this.logger.warn(`Error checking remaining sockets: ${(err as Error).message}`);
     }
   }
 

@@ -63,17 +63,19 @@ export class WaWebhookService {
           } else {
             // Tracking code gak ketemu — simpan sebagai orphan lead
             this.logger.warn(`⚠️ No tracking code in message from ${phone}`);
-            // Bisa dicari berdasarkan phone number atau dibuat baru
-            await this.leadCapture.track({
-              intent: 'WhatsApp Direct',
-              pageUrl: 'wa-direct',
-            }).then(async (lead) => {
+            try {
+              const lead = await this.leadCapture.track({
+                intent: 'WhatsApp Direct',
+                pageUrl: 'wa-direct',
+              });
               await this.leadCapture.updateFromWhatsApp(lead.trackingCode, {
                 phone,
                 waName: profileName,
                 waMessage: text,
               });
-            });
+            } catch (err) {
+              this.logger.error(`❌ Failed to create orphan lead for ${phone}:`, err);
+            }
           }
         }
 
@@ -81,16 +83,19 @@ export class WaWebhookService {
         if (msg.type === 'interactive' && msg.interactive?.button_reply) {
           const phone = msg.from;
           const text = msg.interactive.button_reply.title || '';
-          await this.leadCapture.track({
-            intent: 'Interactive: ' + text,
-            pageUrl: 'wa-interactive',
-          }).then(async (lead) => {
+          try {
+            const lead = await this.leadCapture.track({
+              intent: 'Interactive: ' + text,
+              pageUrl: 'wa-interactive',
+            });
             await this.leadCapture.updateFromWhatsApp(lead.trackingCode, {
               phone,
               waName: contacts?.[0]?.profile?.name || 'Unknown',
               waMessage: text,
             });
-          });
+          } catch (err) {
+            this.logger.error(`❌ Failed to process interactive message from ${phone}:`, err);
+          }
         }
       }
 

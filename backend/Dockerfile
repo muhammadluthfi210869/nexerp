@@ -15,7 +15,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Compile seed file — output ke dist/prisma/seed.js
-RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --skipLibCheck --module commonjs 2>&1 || echo "⚠️ Seed compilation failed (non-fatal)"
+RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --skipLibCheck --module commonjs 2>&1
 
 # Stage 2: Runtime
 FROM node:20-alpine

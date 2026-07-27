@@ -28,10 +28,10 @@ export default function NotFound() {
             The requested resource could not be located within the system.
           </p>
           <Link
-            href="/executive/dashboard"
+            href="/login"
             className="inline-flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-primary/20 transition-all active:scale-[0.98] hover:bg-primary/90"
           >
-            Return to Command Center
+            Return to Login
           </Link>
         </div>
 
