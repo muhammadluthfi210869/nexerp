@@ -20,7 +20,7 @@ services:
       retries: 5
 
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-nexerp}/backend:latest
+    image: ghcr.io/muhammadluthfi210869/nexerp/backend:latest
     restart: always
     environment:
       DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
@@ -41,7 +41,7 @@ services:
       retries: 3
 
   frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-nexerp}/frontend:latest
+    image: ghcr.io/muhammadluthfi210869/nexerp/frontend:latest
     restart: always
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3003
