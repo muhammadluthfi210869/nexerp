@@ -18,6 +18,12 @@ const compression = require('compression');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Health check endpoint
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // Enable Global Response Standardization
   app.useGlobalFilters(new GlobalExceptionFilter());
 
