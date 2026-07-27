@@ -72,6 +72,7 @@ jobs:
             -e NODE_ENV=production \
             -e DATABASE_URL="postgresql://test_user:test_pass@localhost:5432/test_db?schema=public" \
             -e JWT_SECRET="test-secret-do-not-use-in-production" \
+            -e AES_SECRET_KEY="aureon_erp_v4_ultra_secret_key_32" \
             -e CORS_ORIGIN="http://localhost:3000,https://nexerp.id" \
             nexerp-backend:test
 
