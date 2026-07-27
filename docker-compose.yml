@@ -50,6 +50,7 @@ services:
       KOMMO_AUTO_PULL_INTERVAL_MS: ${KOMMO_AUTO_PULL_INTERVAL_MS:-300000}
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
       - ./backend/dirlif-project-cbab4f5a2ec6.json:/app/dirlif-project-cbab4f5a2ec6.json:ro
     depends_on:
       db:
