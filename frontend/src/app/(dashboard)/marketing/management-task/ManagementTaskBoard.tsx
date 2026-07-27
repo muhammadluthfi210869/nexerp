@@ -532,12 +532,12 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
     // Persist field changes to backend (status uses dedicated endpoint, others use PATCH)
     const persistPromise = (() => {
-      if (field === "status") {
+      if (field === ("status" as typeof field)) {
         return api.patch(`/marketing/prototype/tasks/${taskId}/status`, { status: value, note: `Status changed to ${value}` });
       } else if (taskId.startsWith("local-")) {
         // Local-only tasks don't exist on backend yet, skip
         return Promise.resolve();
-      } else if (!isManager && field !== "startDate" && field !== "status") {
+      } else if (!isManager && field !== "startDate") {
         // Non-managers only can edit startDate & status (per backend updateTask)
         // Revert local state immediately to prevent UX confusion
         setLocalTasks(prevTasks);
