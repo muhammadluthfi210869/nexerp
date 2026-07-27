@@ -37,7 +37,7 @@ async function bootstrap() {
   );
 
   // Enable CORS — locked to production domain, wide open for dev
-  // Fallback chain: CORS_ORIGIN env → hardcoded list → error if unset in production
+  // Selalu include localhost untuk development & CI testing
   const corsOrigin =
     process.env.NODE_ENV === 'production'
       ? [
@@ -45,6 +45,11 @@ async function bootstrap() {
           'https://www.nexerp.id',
           'https://dreamlab.id',
           'https://www.dreamlab.id',
+          // Untuk health check & testing
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://localhost:3002',
+          'http://localhost:3003',
         ].filter(Boolean)
       : true;
   app.enableCors({
