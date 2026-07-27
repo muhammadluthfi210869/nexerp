@@ -419,6 +419,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       .map((value) => ({ value, label: formatMonthLabel(value) }));
   }, [localTasks]);
 
+  const visibleMembers = useMemo(
+    () => isManager ? overviewMembers : overviewMembers.filter((m) => m.slug === viewerSlug),
+    [isManager, viewerSlug],
+  );
+
   const visibleTasks = useMemo(
     () => (isOverview ? localTasks : localTasks.filter((task) => matchMember(task, selectedMember.slug))),
     [isOverview, localTasks, selectedMember.slug],
@@ -456,12 +461,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
           data,
         };
       }),
-    [chartMonths, localTasks, profiles],
-  );
-
-  const visibleMembers = useMemo(
-    () => isManager ? overviewMembers : overviewMembers.filter((m) => m.slug === viewerSlug),
-    [isManager, viewerSlug],
+    [chartMonths, localTasks, profiles, visibleMembers],
   );
 
   const snapshots = useMemo(
@@ -485,7 +485,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
           kpi: profile?.monthKpi ?? 0,
         };
       }),
-    [localTasks, profiles, today],
+    [localTasks, profiles, today, visibleMembers],
   );
 
   const stats = useMemo(() => {
