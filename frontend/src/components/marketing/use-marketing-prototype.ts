@@ -38,6 +38,10 @@ function buildFallbackBundle() {
         productivity: marketingSettings[3]?.value ?? 15,
       },
       workingHours: { start: "08:00", end: "17:00", days: ["Mon", "Tue", "Wed", "Thu", "Fri"] },
+      appearance: {
+        departmentDefaultTheme: "marketing-aesthetic",
+        allowUserOverride: true,
+      },
     },
     profiles: marketingProfiles,
     insights: marketingReportInsights,
@@ -66,6 +70,9 @@ export function useMarketingPrototypeBundle() {
     queryKey: ["marketing-prototype-bundle", user?.id ?? "anonymous"],
     queryFn: () => api.get("/marketing/prototype/bundle").then((response) => response.data),
     staleTime: 2 * 60 * 1000,
-    placeholderData: buildFallbackBundle(),
+    // placeholderData dihapus — data dummy menyebabkan:
+    // 1. Semua task/profil muncul sebelum API selesai
+    // 2. viewer.isManager = undefined → fallback ke localStorage role (bisa outdated)
+    // Lebih baik loading state daripada data salah
   });
 }

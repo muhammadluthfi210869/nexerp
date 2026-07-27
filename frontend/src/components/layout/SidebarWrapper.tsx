@@ -2,6 +2,11 @@
 
 import { Sidebar } from "@/components/layout/Sidebar";
 
-export function SidebarWrapper() {
-  return <Sidebar />;
+type SidebarWrapperProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+};
+
+export function SidebarWrapper({ isOpen, onClose }: SidebarWrapperProps) {
+  return <Sidebar isOpen={isOpen} onClose={onClose} />;
 }

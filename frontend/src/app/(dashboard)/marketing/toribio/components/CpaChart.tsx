@@ -50,15 +50,15 @@ export function CpaChart({ rows }: Props) {
     <div className="h-36">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} barCategoryGap="20%">
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 10, fontWeight: 600, fill: '#6B7280' }}
+            tick={{ fontSize: 10, fontWeight: 600, fill: 'var(--muted-foreground)' }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fontWeight: 600, fill: '#6B7280' }}
+            tick={{ fontSize: 10, fontWeight: 600, fill: 'var(--muted-foreground)' }}
             tickFormatter={(v: any) => `${(Number(v) / 1000).toFixed(0)}k`}
             tickLine={false}
             axisLine={false}
@@ -67,8 +67,8 @@ export function CpaChart({ rows }: Props) {
           <Tooltip
             contentStyle={{
               borderRadius: '16px',
-              border: '1px solid #E5E7EB',
-              background: '#fff',
+              border: '1px solid var(--border-color)',
+              background: 'var(--popover)',
               boxShadow: '0 16px 30px -22px rgba(15,23,42,0.28)',
               fontSize: '12px',
               fontWeight: 600,
@@ -82,14 +82,14 @@ export function CpaChart({ rows }: Props) {
           />
           <Bar
             dataKey="CPL"
-            fill="#2563EB"
+            fill="var(--primary)"
             radius={[4, 4, 0, 0]}
             name="CPL (Cost/Lead)"
             maxBarSize={32}
           />
           <Bar
             dataKey="CPA"
-            fill="#8B5CF6"
+            fill="var(--accent-purple)"
             radius={[4, 4, 0, 0]}
             name="CPA (Cost/Acquisition)"
             maxBarSize={32}

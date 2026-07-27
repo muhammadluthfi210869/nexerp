@@ -259,7 +259,7 @@ const marketingNameMap: Record<string, string> = {
   "Revita Yustianawati": "Revi",
   "Aulia Putra": "Zarka",
   "Nabila Salsabila": "Gusti",
-  "Dimas Pratama": "Edy",
+  "Dimas Pratama": "Luthfi",
   "Celine Maharani": "Aurel",
   "Raka Saputra": "Zarka",
   "Tasya Permata": "Revi",
@@ -270,7 +270,7 @@ const marketingRoleMap: Record<string, string> = {
   Zarka: "Video Editor",
   Gusti: "Digital Marketing Strategy",
   Aurel: "Content Creator",
-  Edy: "Packaging Designer",
+  Luthfi: "Packaging Designer",
 };
 
 const renameMarketingText = (value: string) =>
@@ -346,10 +346,10 @@ marketingProfiles.splice(
     breakdown: { completion: 84, discipline: 90, quality: 87, productivity: 91 },
   },
   {
-    id: "edy",
-    name: "Edy",
+    id: "luthfi",
+    name: "Luthfi",
     role: "Packaging Designer",
-    email: "edy@portoaureon.id",
+    email: "luthfi@portoaureon.id",
     phone: "+62 815-5555-0404",
     joinDate: "2024-04-08",
     bio: "Creates visual packaging direction and adapts brand assets for campaign surfaces.",

@@ -143,6 +143,7 @@
   --accent-foreground: #0F172A;
   --destructive: #EF4444;
   --border: #E2E8F0;
+  --border-color: #E2E8F0;
   --input: #E2E8F0;
   --ring: #3B82F6;
   --radius: 0.75rem;
@@ -196,6 +197,599 @@
   --status-stable-text: #0369A1;
   --status-sync-bg: #FDF2F8;
   --status-sync-text: #DC2626;
+}
+
+[data-ui-theme="marketing-aesthetic"] {
+  color-scheme: light;
+
+  --app-bg: #F8F5FF;
+  --base: #F8F5FF;
+  --surface: rgba(255, 255, 255, 0.86);
+  --card-surface: rgba(255, 255, 255, 0.86);
+  --text-main: #2F2A3D;
+  --text-muted: #8C86A3;
+
+  --background: #F8F5FF;
+  --foreground: #2F2A3D;
+  --card: rgba(255, 255, 255, 0.86);
+  --card-foreground: #2F2A3D;
+  --popover: rgba(255, 255, 255, 0.94);
+  --popover-foreground: #2F2A3D;
+  --primary: #7C5CFF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #51D6A7;
+  --secondary-foreground: #153F33;
+  --muted: #F6F3FB;
+  --muted-foreground: #8C86A3;
+  --accent: #E8E2FF;
+  --accent-foreground: #6F55E8;
+  --destructive: #FF7AAE;
+  --border: #E8E2FA;
+  --border-color: #E8E2FA;
+  --input: #E8E2FA;
+  --ring: #B8A8FF;
+  --radius: 1rem;
+
+  --brand-black: #2F2A3D;
+  --brand-blue: #7C5CFF;
+  --brand-orange: #F6C85F;
+  --dark-accent: #2F2A3D;
+
+  --status-action: #7C5CFF;
+  --status-success: #51D6A7;
+  --status-warning: #F6C85F;
+  --status-critical: #FF7AAE;
+  --accent-purple: #7C5CFF;
+
+  --gray-50: #FBFAFF;
+  --gray-100: #F0ECF8;
+  --gray-400: #B1ABBF;
+  --gray-500: #8C86A3;
+  --gray-900: #2F2A3D;
+
+  --sidebar: #F0ECFF;
+  --sidebar-foreground: #746E86;
+  --sidebar-primary: #7C5CFF;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #6F55E8;
+  --sidebar-border: #E8E2FA;
+  --sidebar-ring: #B8A8FF;
+
+  --card-radius: 22px;
+  --card-px: 24px;
+  --card-py: 24px;
+
+  --insight-success-bg: #DCFCEF;
+  --insight-success-border: #B9F3DD;
+  --insight-success-text: #24966F;
+  --insight-action-bg: #E8E2FF;
+  --insight-action-border: #D8CDF5;
+  --insight-action-text: #6F55E8;
+  --insight-warning-bg: #FFF3CF;
+  --insight-warning-border: #FFE49B;
+  --insight-warning-text: #B7791F;
+
+  --alert-critical-bg: #FFE3EF;
+  --alert-critical-border: #FFC2D9;
+  --alert-warning-bg: #FFF3CF;
+  --alert-warning-border: #FFE49B;
+
+  --status-stable-bg: #E0F1FF;
+  --status-stable-text: #3178C6;
+  --status-sync-bg: #FFE3EF;
+  --status-sync-text: #D94C7E;
+
+  --aesthetic-surface-soft: #FBFAFF;
+  --aesthetic-border-soft: #F0ECF8;
+  --aesthetic-shadow-xs: 0 2px 6px rgba(98, 83, 160, 0.06);
+  --aesthetic-shadow-sm: 0 8px 20px rgba(98, 83, 160, 0.08);
+  --aesthetic-shadow-card: 0 18px 42px rgba(98, 83, 160, 0.10);
+  --aesthetic-shadow-raised: 0 22px 56px rgba(98, 83, 160, 0.14);
+  --aesthetic-shadow-popover: 0 24px 70px rgba(65, 48, 120, 0.18);
+  --aesthetic-shadow-button: 0 10px 22px rgba(124, 92, 255, 0.28);
+  --aesthetic-shadow-icon: 0 8px 18px rgba(80, 60, 160, 0.14);
+}
+
+[data-ui-theme="marketing-aesthetic"].marketing-aesthetic-shell {
+  min-height: 100%;
+  color: #2F2A3D;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(232, 226, 255, 0.78), transparent 26%),
+    radial-gradient(circle at 86% 12%, rgba(255, 227, 239, 0.72), transparent 24%),
+    linear-gradient(180deg, #FBFAFF 0%, #F8F5FF 100%);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="card"],
+[data-ui-theme="marketing-aesthetic"] .bento-card,
+[data-ui-theme="marketing-aesthetic"] .macro-card,
+[data-ui-theme="marketing-aesthetic"] .diag-node,
+[data-ui-theme="marketing-aesthetic"] .data-table-container {
+  border-color: rgba(232, 226, 250, 0.9);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow:
+    var(--aesthetic-shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="card"]:hover,
+[data-ui-theme="marketing-aesthetic"] .bento-card-hover:hover,
+[data-ui-theme="marketing-aesthetic"] .macro-card:hover {
+  transform: translateY(-1px);
+  border-color: #D8CDF5;
+  box-shadow: var(--aesthetic-shadow-raised);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="button"] {
+  border-radius: 14px;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="button"][data-variant="default"] {
+  border-radius: 16px;
+  box-shadow: var(--aesthetic-shadow-button);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="button"][data-variant="outline"],
+[data-ui-theme="marketing-aesthetic"] [data-slot="button"][data-variant="secondary"] {
+  border-color: #E8E2FA;
+  background: rgba(255, 255, 255, 0.82);
+  color: #6F55E8;
+  box-shadow: var(--aesthetic-shadow-xs);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="button"][data-variant="destructive"] {
+  background: #FFE3EF;
+  color: #D94C7E;
+}
+
+[data-ui-theme="marketing-aesthetic"] input,
+[data-ui-theme="marketing-aesthetic"] textarea,
+[data-ui-theme="marketing-aesthetic"] select {
+  border-color: #E8E2FA;
+}
+
+[data-ui-theme="marketing-aesthetic"] input:focus,
+[data-ui-theme="marketing-aesthetic"] textarea:focus,
+[data-ui-theme="marketing-aesthetic"] select:focus {
+  border-color: #B8A8FF;
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.16);
+}
+
+[data-ui-theme="marketing-aesthetic"] table thead {
+  background: #FBFAFF;
+}
+
+[data-ui-theme="marketing-aesthetic"] table tr {
+  border-color: #F0ECF8;
+}
+
+[data-ui-theme="marketing-aesthetic"] table tbody tr:hover {
+  background: #F7F3FF;
+}
+
+[data-ui-theme="marketing-aesthetic"] .badge,
+[data-ui-theme="marketing-aesthetic"] [role="status"] {
+  border-radius: 999px;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="badge"][data-variant="default"] {
+  border-color: #D8CDF5;
+  background: #E8E2FF;
+  color: #6F55E8;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="badge"][data-variant="success"] {
+  border-color: #B9F3DD;
+  background: #DCFCEF;
+  color: #24966F;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="badge"][data-variant="warning"] {
+  border-color: #FFE49B;
+  background: #FFF3CF;
+  color: #B7791F;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="badge"][data-variant="critical"],
+[data-ui-theme="marketing-aesthetic"] [data-slot="badge"][data-variant="destructive"] {
+  border-color: #FFC2D9;
+  background: #FFE3EF;
+  color: #D94C7E;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="badge"][data-variant="info"] {
+  border-color: #BBDFFF;
+  background: #E0F1FF;
+  color: #3178C6;
+}
+
+[data-ui-theme="marketing-aesthetic"] .badge-success {
+  color: #24966F;
+  background: #DCFCEF;
+}
+
+[data-ui-theme="marketing-aesthetic"] .badge-critical {
+  color: #D94C7E;
+  background: #FFE3EF;
+}
+
+[data-ui-theme="marketing-aesthetic"] .marketing-aesthetic-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  box-shadow: var(--aesthetic-shadow-icon);
+}
+
+body[data-ui-theme="marketing-aesthetic"] {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(232, 226, 255, 0.78), transparent 26%),
+    radial-gradient(circle at 86% 12%, rgba(255, 227, 239, 0.72), transparent 24%),
+    linear-gradient(180deg, #FBFAFF 0%, #F8F5FF 100%);
+}
+
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root {
+  border-color: #E8E2FA !important;
+  background:
+    linear-gradient(180deg, rgba(240, 236, 255, 0.96) 0%, rgba(248, 245, 255, 0.98) 100%) !important;
+  box-shadow: 18px 0 48px rgba(98, 83, 160, 0.10);
+}
+
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root input {
+  border-color: #E8E2FA !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: #2F2A3D !important;
+  box-shadow: var(--aesthetic-shadow-xs);
+}
+
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root a div,
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root button {
+  border-radius: 16px !important;
+}
+
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root a div:hover,
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root button:hover {
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: #6F55E8 !important;
+}
+
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root .bg-slate-900,
+body[data-ui-theme="marketing-aesthetic"] .sidebar-root .bg-slate-100 {
+  border: 1px solid rgba(232, 226, 250, 0.8) !important;
+  background: #FFFFFF !important;
+  color: #6F55E8 !important;
+  box-shadow: var(--aesthetic-shadow-sm);
+}
+
+body[data-ui-theme="marketing-aesthetic"] [data-slot="dashboard-topbar"] {
+  border-color: #E8E2FA !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  box-shadow: 0 10px 32px rgba(98, 83, 160, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+body[data-ui-theme="marketing-aesthetic"] [data-slot="dashboard-search"] {
+  border-color: #E8E2FA !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: #2F2A3D !important;
+  border-radius: 18px !important;
+  box-shadow: var(--aesthetic-shadow-sm);
+}
+
+body[data-ui-theme="marketing-aesthetic"] [data-slot="dashboard-content"] {
+  background:
+    radial-gradient(circle at 16% 10%, rgba(232, 226, 255, 0.56), transparent 24%),
+    radial-gradient(circle at 90% 8%, rgba(255, 227, 239, 0.58), transparent 22%),
+    linear-gradient(180deg, #FBFAFF 0%, #F8F5FF 100%) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="dashboard-card"],
+[data-ui-theme="marketing-aesthetic"] [data-dna="data-card"],
+[data-ui-theme="marketing-aesthetic"] [data-dna="stat-card"],
+[data-ui-theme="marketing-aesthetic"] [data-dna="kpi-card"],
+[data-ui-theme="marketing-aesthetic"] [data-dna="table-wrapper"] {
+  border-color: rgba(232, 226, 250, 0.9) !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  box-shadow:
+    var(--aesthetic-shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(14px);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="dashboard-card"]:hover,
+[data-ui-theme="marketing-aesthetic"] [data-dna="data-card"]:hover,
+[data-ui-theme="marketing-aesthetic"] [data-dna="stat-card"]:hover,
+[data-ui-theme="marketing-aesthetic"] [data-dna="kpi-card"]:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: var(--aesthetic-shadow-raised) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="table-filters"] {
+  border-color: #F0ECF8 !important;
+  background: rgba(251, 250, 255, 0.82) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="input"] {
+  border-color: #E8E2FA !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  color: #2F2A3D !important;
+  border-radius: 14px !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="input"]:focus {
+  border-color: #B8A8FF !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.16) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="button"] {
+  border-radius: 16px !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="button"][data-variant="primary"] {
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  background: linear-gradient(180deg, #8A6BFF 0%, #6F55E8 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--aesthetic-shadow-button) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="button"][data-variant="secondary"] {
+  background: #2F2A3D !important;
+  color: #FFFFFF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="button"][data-variant="outline"] {
+  border-color: #E8E2FA !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  color: #6F55E8 !important;
+  box-shadow: var(--aesthetic-shadow-xs) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="button"][data-variant="ghost"] {
+  background: #F6F3FB !important;
+  color: #746E86 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="button"][data-variant="danger"] {
+  border-color: #FFC2D9 !important;
+  background: #FFE3EF !important;
+  color: #D94C7E !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"] {
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"][data-status="success"] {
+  border-color: #B9F3DD !important;
+  background: #DCFCEF !important;
+  color: #24966F !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"][data-status="info"] {
+  border-color: #BBDFFF !important;
+  background: #E0F1FF !important;
+  color: #3178C6 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"][data-status="warning"] {
+  border-color: #FFE49B !important;
+  background: #FFF3CF !important;
+  color: #B7791F !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"][data-status="critical"] {
+  border-color: #FFC2D9 !important;
+  background: #FFE3EF !important;
+  color: #D94C7E !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"][data-status="purple"] {
+  border-color: #D8CDF5 !important;
+  background: #E8E2FF !important;
+  color: #6F55E8 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="badge"][data-status="default"] {
+  border-color: #E8E2FA !important;
+  background: #F6F3FB !important;
+  color: #746E86 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-dna="stat-icon"] {
+  border-radius: 16px !important;
+  background: #E8E2FF !important;
+  color: #7C5CFF !important;
+  box-shadow: var(--aesthetic-shadow-icon) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] .row-progress-bg {
+  background: #F0ECF8;
+  border-radius: 999px;
+}
+
+[data-ui-theme="marketing-aesthetic"] .row-progress-fill {
+  border-radius: 999px;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="toolbar"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="panel"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="quick-add"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="task-group"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="chart-card"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="modal"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="filter-control"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="toribio-section"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="error-state"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="empty-state"] {
+  border-color: rgba(232, 226, 250, 0.9) !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  box-shadow:
+    var(--aesthetic-shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(14px);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="member-card"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="member-summary"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="mini-metric"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="lead-kpi"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="lead-mini-kpi"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="analytics-tile"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="pipeline-row"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="lead-card"],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .rounded-\[24px\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .rounded-\[20px\] {
+  border-color: #E8E2FA !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  box-shadow: var(--aesthetic-shadow-sm) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="lead-kpi"] {
+  border-radius: 22px !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="lead-kpi"] svg,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="analytics-tile"] svg {
+  border-radius: 16px;
+  color: #7C5CFF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="lead-mini-kpi"] {
+  background: #FBFAFF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="warning-tile"] {
+  border-color: #FFE49B !important;
+  background: #FFF3CF !important;
+  box-shadow: var(--aesthetic-shadow-xs) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="kanban-column"] {
+  border-color: #E8E2FA !important;
+  background: rgba(251, 250, 255, 0.78) !important;
+  box-shadow: var(--aesthetic-shadow-sm) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-surface="task-row"]:hover {
+  background: #F7F3FF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] select,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] textarea {
+  border-color: #E8E2FA !important;
+  background-color: rgba(255, 255, 255, 0.84) !important;
+  color: #2F2A3D !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] select:focus,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] textarea:focus {
+  border-color: #B8A8FF !important;
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.16) !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .bg-blue-500,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .bg-blue-600 {
+  background-color: #7C5CFF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .text-blue-600,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .text-blue-700 {
+  color: #6F55E8 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .border-blue-100,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .border-blue-200 {
+  border-color: #D8CDF5 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .bg-blue-50 {
+  background-color: #E8E2FF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .bg-slate-50 {
+  background-color: #FBFAFF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .border-slate-100,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .border-slate-200,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page] .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #F0ECF8 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] table thead tr,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] table tfoot tr {
+  background: #FBFAFF !important;
+  border-color: #E8E2FA !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] table tbody tr {
+  border-color: #F0ECF8 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] table tbody tr:hover {
+  background: #F7F3FF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .bg-\[\#ECFDF5\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .bg-emerald-50 {
+  background-color: #DCFCEF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-\[\#059669\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-emerald-600,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-emerald-700 {
+  color: #24966F !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .bg-\[\#EFF6FF\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .bg-\[\#F0F9FF\] {
+  background-color: #E0F1FF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-\[\#1E40AF\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-\[\#0369A1\] {
+  color: #3178C6 !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .bg-\[\#FFF7ED\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .bg-amber-50 {
+  background-color: #FFF3CF !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-\[\#9A3412\],
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-amber-600,
+[data-ui-theme="marketing-aesthetic"] [data-marketing-page="toribio"] .text-amber-700 {
+  color: #B7791F !important;
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="sheet-overlay"],
+[data-ui-theme="marketing-aesthetic"] [data-slot="dialog-overlay"],
+body[data-ui-theme="marketing-aesthetic"] [data-slot="sheet-overlay"],
+body[data-ui-theme="marketing-aesthetic"] [data-slot="dialog-overlay"] {
+  background: rgba(47, 42, 61, 0.28) !important;
+  backdrop-filter: blur(8px);
+}
+
+[data-ui-theme="marketing-aesthetic"] [data-slot="sheet-content"],
+[data-ui-theme="marketing-aesthetic"] [data-slot="dialog-content"],
+body[data-ui-theme="marketing-aesthetic"] [data-slot="sheet-content"],
+body[data-ui-theme="marketing-aesthetic"] [data-slot="dialog-content"] {
+  border-color: rgba(232, 226, 250, 0.95) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: #2F2A3D !important;
+  box-shadow: var(--aesthetic-shadow-raised) !important;
+  backdrop-filter: blur(18px);
+}
+
+body[data-ui-theme="marketing-aesthetic"] [data-slot="sheet-content"][data-side="right"],
+body[data-ui-theme="marketing-aesthetic"] [data-slot="sheet-content"] {
+  border-top-left-radius: 28px;
+  border-bottom-left-radius: 28px;
 }
 
 .dark {

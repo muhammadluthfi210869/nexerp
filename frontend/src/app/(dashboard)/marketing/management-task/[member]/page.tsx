@@ -7,7 +7,7 @@ type ManagementTaskMemberPageProps = {
   }>;
 };
 
-const validMembers = new Set(["overview", "aurel", "revi", "zarka", "gusti", "edy"]);
+const validMembers = new Set(["overview", "aurel", "revi", "zarka", "gusti", "luthfi"]);
 
 export default async function ManagementTaskMemberPage({ params }: ManagementTaskMemberPageProps) {
   const resolvedParams = (await params) ?? {};

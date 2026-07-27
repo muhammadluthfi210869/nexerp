@@ -118,6 +118,24 @@ export class MarketingPrototypeController {
     return this.service.updateSettings(req.user, body);
   }
 
+  @Get('ui-theme')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING, UserRole.DIGIMAR)
+  getUiTheme(@Req() req: any) {
+    return this.service.getUiThemePreference(req.user);
+  }
+
+  @Patch('ui-theme')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING, UserRole.DIGIMAR)
+  updateUiTheme(@Req() req: any, @Body() body: any) {
+    return this.service.updateUiThemePreference(req.user, body);
+  }
+
+  @Patch('ui-theme/default')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING)
+  updateUiThemeDefault(@Req() req: any, @Body() body: any) {
+    return this.service.updateUiThemeDefault(req.user, body);
+  }
+
   @Get('profile/:id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING, UserRole.DIGIMAR)
   getProfile(@Req() req: any, @Param('id') id: string) {

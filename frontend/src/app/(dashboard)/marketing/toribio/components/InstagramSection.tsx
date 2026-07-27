@@ -71,15 +71,15 @@ export function InstagramSection({ tracker, storiesKpi, weekly, bestContent }: P
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={followersChart}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-              <XAxis dataKey="month" tick={{ fontSize: 10, fontWeight: 600, fill: '#6B7280' }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fontWeight: 600, fill: '#6B7280' }} tickLine={false} axisLine={false} width={36} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fontWeight: 600, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fontWeight: 600, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} width={36} />
               <Tooltip
-                contentStyle={{ borderRadius: '16px', border: '1px solid #E5E7EB', background: '#fff', boxShadow: '0 16px 30px -22px rgba(15,23,42,0.28)', fontSize: '12px', fontWeight: 600 }}
+                contentStyle={{ borderRadius: '16px', border: '1px solid var(--border-color)', background: 'var(--popover)', boxShadow: '0 16px 30px -22px rgba(15,23,42,0.28)', fontSize: '12px', fontWeight: 600 }}
               />
               <Legend wrapperStyle={{ fontSize: 10, fontWeight: 700 }} iconType="circle" iconSize={8} />
-              <Bar dataKey="Followers" fill="#EC4899" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              <Bar dataKey="Unfollow" fill="#FBBF24" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="Followers" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="Unfollow" fill="var(--warning)" radius={[4, 4, 0, 0]} maxBarSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </div>

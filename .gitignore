@@ -30,6 +30,9 @@ backend_dev.log
 backend-test-server.log
 frontend_dev.log
 
+# Database backups (dibuat oleh scripts/deploy.sh)
+backups/
+
 # IDE / Tooling
 .vscode/
 .idea/
@@ -62,13 +65,13 @@ scratch/
 _archive/
 _archive/**/*
 
-# Old deploy scripts (single-use files)
+# Old deploy scripts (single-use files — sekarang pakai scripts/deploy.sh)
 check_admins.js
 check_user.js
 reset_admin.js
 temp_fix3.js
-deploy*.ps1
-deploy*.sh
+deploy-legacy*.ps1
+deploy-legacy*.sh
 fix-localhost.ps1
 fcc-*.cmd
 fcc-*.ps1

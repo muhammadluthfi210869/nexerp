@@ -15,6 +15,7 @@ import {
   FileSearch,
   SearchX,
   PhoneCall,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,15 +52,14 @@ const MODULE_STRUCTURE: NavGroup[] = [
     items: [
       {
         name: "Management Task",
-        href: "/marketing/management-task/overview",
+        href: "/marketing/management-task",
         type: "action",
         children: [
-          { name: "Overview", href: "/marketing/management-task/overview", type: "dashboard", memberSlug: "overview" },
           { name: "Aurel", href: "/marketing/management-task/aurel", type: "action", memberSlug: "aurel" },
           { name: "Revita", href: "/marketing/management-task/revi", type: "action", memberSlug: "revi" },
           { name: "Zarkasi", href: "/marketing/management-task/zarka", type: "action", memberSlug: "zarka" },
           { name: "Gusti", href: "/marketing/management-task/gusti", type: "action", memberSlug: "gusti" },
-          { name: "Edy", href: "/marketing/management-task/edy", type: "action", memberSlug: "edy" },
+          { name: "Luthfi", href: "/marketing/management-task/luthfi", type: "action", memberSlug: "luthfi" },
         ],
       },
       { name: "Toribio Dashboard", href: "/marketing/toribio", type: "dashboard" },
@@ -140,7 +140,12 @@ function computeMarketingViewer(user: any): { slug: string | null; isManager: bo
 }
 
 /* ─── COMPONENT ───────────────────────────────────────── */
-export function Sidebar() {
+type SidebarProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+};
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [openItems, setOpenItems] = useState<string[]>([]);
@@ -168,7 +173,7 @@ export function Sidebar() {
     });
 
     // Step 2: within DIGITAL MARKETING, filter Management Task children
-    //         untuk non-manager -> hanya Overview + page dia sendiri
+    //         untuk non-manager -> hanya page dia sendiri
     return modules.map(mod => {
       if (mod.label !== 'DIGITAL MARKETING') return mod;
       if (isManager) return mod; // manager sees all
@@ -178,19 +183,9 @@ export function Sidebar() {
         if (item.name !== 'Management Task' || !item.children) return item;
 
         const filteredChildren = item.children.filter((child) => {
-          // Overview selalu visible
-          if (child.memberSlug === 'overview') return true;
           // Untuk non-manager: hanya page yang sesuai slug-nya
           return child.memberSlug === slug;
         });
-
-        // Kalau setelah filter cuma tersisa 1 anak (overview), kita sembunyikan
-        // Management Task parent karena dia ga punya page spesifik
-        if (filteredChildren.length <= 1 && slug) {
-          // Hanya overview — tidak worth ditampilkan sendirian
-          // Tapi tetap tampilkan karena masih bisa lihat overview
-          // Biarkan saja dengan 1 child (overview) & tanpa page dia
-        }
 
         return { ...item, children: filteredChildren };
       }).filter(item => {
@@ -305,9 +300,27 @@ export function Sidebar() {
     : user?.roles?.includes("HR") ? "HR"
     : "Staff";
 
+  const handleNavigate = () => {
+    if (isSearching) clearSearch();
+    onClose?.();
+  };
+
   return (
+    <>
+    {isOpen && (
+      <button
+        type="button"
+        aria-label="Close navigation menu"
+        className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] lg:hidden"
+        onClick={onClose}
+      />
+    )}
     <aside
-      className="sidebar-root bg-white border-r border-gray-100 h-screen fixed left-0 top-0 flex flex-col z-50"
+      className={cn(
+        "sidebar-root bg-white border-r border-gray-100 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-200 ease-out",
+        "lg:translate-x-0",
+        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}
       style={{ width: "var(--sidebar-width)" }}
     >
       {/* ═══ BRAND — VISUAL_DNA §1 dashboard-title ═══ */}
@@ -324,6 +337,14 @@ export function Sidebar() {
               Production Light
             </span>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-100 text-gray-400 transition hover:bg-gray-50 hover:text-gray-700 lg:hidden"
+            aria-label="Close navigation menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -461,7 +482,7 @@ export function Sidebar() {
                                         const ChildIcon = getIconByType(child.type);
                                         const isChildActive = pathname === child.href;
                                         return (
-                                          <Link key={child.href} href={child.href} onClick={() => isSearching ? clearSearch() : undefined}>
+                                          <Link key={child.href} href={child.href} onClick={handleNavigate}>
                                             <div className={cn(
                                               "flex items-center gap-3 px-4 py-2 rounded-[10px] transition-all duration-150",
                                               "text-[11.5px] tracking-[-0.01em]",
@@ -488,7 +509,7 @@ export function Sidebar() {
 
                             // Regular item (no children) — render as link
                             return (
-                              <Link key={item.href} href={item.href} onClick={() => isSearching ? clearSearch() : undefined}>
+                              <Link key={item.href} href={item.href} onClick={handleNavigate}>
                                 <div className={cn(
                                   "flex items-center gap-3 px-4 py-2.5 rounded-[12px] transition-all duration-150",
                                   "text-[12px] tracking-[-0.01em]",
@@ -565,5 +586,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

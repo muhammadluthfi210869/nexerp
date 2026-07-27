@@ -177,7 +177,7 @@ const taskCategoryOptions = [
   "analytics",
 ] as const;
 
-const teamMemberOptions = ["Revi", "Zarka", "Gusti", "Aurel", "Edy"] as const;
+const teamMemberOptions = ["Revi", "Zarka", "Gusti", "Aurel", "Luthfi"] as const;
 
 const statusOrder: TaskStatus[] = ["Backlog", "To Do", "In Progress", "Waiting Approval", "Revision", "Done", "Cancelled"];
 
@@ -282,7 +282,30 @@ function criticalPanelClass(active: boolean) {
     : "";
 }
 
-export function ManagementTaskClient({ initialTab = "overview" }: ManagementTaskClientProps) {
+// ── KPI Timeliness Helpers ──────────────────────────────
+function getTimelinessColor(percentage: number): string {
+  if (percentage >= 80) return "🟢";
+  if (percentage >= 70) return "🟡";
+  if (percentage >= 60) return "🟠";
+  return "🔴";
+}
+
+function getTimelinessTailwind(percentage: number): string {
+  if (percentage >= 80) return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (percentage >= 70) return "border-yellow-200 bg-yellow-50 text-yellow-800";
+  if (percentage >= 60) return "border-orange-200 bg-orange-50 text-orange-800";
+  return "border-red-200 bg-red-50 text-red-800";
+}
+
+function calcMemberTimeliness(profile: ProfileRow): { percentage: number; onTime: number; total: number } {
+  const total = profile.completed ?? 0;
+  const late = profile.late ?? 0;
+  if (total === 0) return { percentage: 0, onTime: 0, total: 0 };
+  const onTime = Math.max(total - late, 0);
+  return { percentage: Math.round((onTime / total) * 100), onTime, total };
+}
+
+export function ManagementTaskClient({ initialTab = "tasks" }: ManagementTaskClientProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { data: prototype } = useMarketingPrototypeBundle();
@@ -295,13 +318,10 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
   const viewer = (prototype?.viewer ?? {}) as ViewerMeta;
   const settings = (prototype?.settings ?? {}) as SettingsMeta;
   const projectCategories = settings.projectCategories ?? [];
-  const fallbackManager =
-    user?.email === "revita@nexerp.id" ||
-    user?.roles?.includes("SUPER_ADMIN") ||
-    user?.roles?.includes("HEAD_OPS") ||
-    user?.roles?.includes("MARKETING");
-  const canManage = viewer.isManager ?? fallbackManager;
-  const actorName = viewer.name ?? (fallbackManager ? "Revi" : user?.fullName ?? "User");
+  // Hanya percaya API response untuk isManager.
+  // JANGAN fallback ke localStorage — bisa stale/outdated.
+  const canManage = prototype ? viewer.isManager : false;
+  const actorName = viewer.name ?? user?.fullName ?? "User";
 
   const [tab, setTab] = useState(initialTab);
   const [taskView, setTaskView] = useState<"kanban" | "table">("kanban");
@@ -323,6 +343,7 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
   const [commentDraft, setCommentDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [personFilter, setPersonFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!selectedTaskId && tasks[0]) setSelectedTaskId(tasks[0].id);
@@ -551,13 +572,14 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
   }
 
   async function saveTask() {
-    if (!selectedTask || !canManage) return;
+    if (!selectedTask) return;
+    if (!canManage && !taskForm.startDate && !taskForm.status) return;
     setSaving(true);
     try {
-      await api.patch(`/marketing/prototype/tasks/${selectedTask.id}`, {
-        ...buildTaskPayload(),
-        assignedBy: actorName,
-      });
+      const payload = canManage
+        ? { ...buildTaskPayload(), assignedBy: actorName }
+        : { startDate: taskForm.startDate, status: taskForm.status };
+      await api.patch(`/marketing/prototype/tasks/${selectedTask.id}`, payload);
       await refresh();
       setTaskComposerOpen(false);
     } finally {
@@ -791,11 +813,10 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
       subtitle="Single operating center for task assignment, project control, approval workflow, and team KPI."
       actions={heroActions}
     >
-      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-        <div className="overflow-x-auto">
+      <Tabs data-marketing-page="management-task" value={tab} onValueChange={setTab} className="space-y-6">
+        <div data-marketing-surface="toolbar" className="overflow-x-auto">
           <TabsList className="inline-flex h-14 min-w-max gap-1 rounded-2xl border border-slate-200/50 bg-slate-100/60 p-1.5 shadow-inner backdrop-blur-md">
             {[
-              ["overview", "Overview"],
               ["tasks", "Tasks"],
               ["projects", "Projects"],
               ["calendar", "Calendar"],
@@ -812,330 +833,365 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          <PageSection title="Executive Snapshot">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <StatCard label="Total Tasks" value={tasks.length} subValue="Full task registry" icon={<ClipboardList className="text-blue-600" />} />
-              <StatCard label="Completed" value={completedTasks} subValue="Closed and approved" icon={<CheckCheck className="text-emerald-500" />} />
-              <StatCard label="Overdue" value={overdueTasks} subValue="Need immediate action" icon={<AlertTriangle className="text-rose-500" />} className={criticalGlowClass(overdueTasks > 0)} />
-              <StatCard label="Due Today" value={dueToday} subValue="Same-day deadlines" icon={<CalendarDays className="text-amber-500" />} className={criticalGlowClass(dueToday > 0)} />
-              <StatCard label="Due This Week" value={dueThisWeek} subValue="Seven-day horizon" icon={<CalendarDays className="text-cyan-500" />} />
-              <StatCard label="In Progress" value={inProgressTasks} subValue="Execution underway" icon={<ShieldCheck className="text-indigo-500" />} />
-              <StatCard label="Overall Team KPI" value={averageKpi} subValue="Monthly average score" icon={<BarChart3 className="text-slate-700" />} />
-              <StatCard label="Discipline Score" value={averageDiscipline} subValue="Average deadline quality" icon={<Bell className="text-emerald-600" />} className={criticalGlowClass(averageDiscipline < 90)} />
-            </div>
-          </PageSection>
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <DashboardCard label="Approval Command Center" className={criticalPanelClass(waitingApproval > 0 || revisionTasks.length > 0)}>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className={`rounded-[20px] border p-4 ${criticalPanelClass(waitingApproval > 0) || "border-emerald-100 bg-emerald-50"}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className={`text-[9px] font-black uppercase tracking-[0.16em] ${waitingApproval > 0 ? "text-rose-700" : "text-emerald-700"}`}>Waiting Approval</p>
-                      <span className={`tabular text-[12px] font-black ${waitingApproval > 0 ? "text-rose-700" : "text-emerald-900"}`}>{waitingApproval}</span>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      {pendingApprovalTasks.length ? pendingApprovalTasks.map((task) => (
-                        <button key={task.id} type="button" onClick={() => openTaskDetail(task)} className="w-full rounded-2xl border border-white/80 bg-white/80 px-3 py-3 text-left transition hover:bg-white">
-                          <p className="text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
-                          <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.pic} · {task.project}</p>
-                        </button>
-                      )) : <div className="rounded-2xl border border-dashed border-emerald-200 bg-white/60 px-3 py-4 text-center text-[9px] font-black uppercase tracking-[0.14em] text-emerald-700">Queue clear</div>}
-                    </div>
-                  </div>
-                  <div className={`rounded-[20px] border p-4 ${criticalPanelClass(revisionTasks.length > 0) || "border-amber-100 bg-amber-50"}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className={`text-[9px] font-black uppercase tracking-[0.16em] ${revisionTasks.length > 0 ? "text-rose-700" : "text-amber-700"}`}>Revision Requested</p>
-                      <span className={`tabular text-[12px] font-black ${revisionTasks.length > 0 ? "text-rose-700" : "text-amber-900"}`}>{revisionTasks.length}</span>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      {revisionTasks.slice(0, 4).length ? revisionTasks.slice(0, 4).map((task) => (
-                        <button key={task.id} type="button" onClick={() => openTaskDetail(task)} className="w-full rounded-2xl border border-white/80 bg-white/80 px-3 py-3 text-left transition hover:bg-white">
-                          <p className="text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
-                          <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.pic} · {formatShortDate(task.dueDate)}</p>
-                        </button>
-                      )) : <div className="rounded-2xl border border-dashed border-amber-200 bg-white/60 px-3 py-4 text-center text-[9px] font-black uppercase tracking-[0.14em] text-amber-700">No revisions</div>}
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-[20px] border border-blue-100 bg-blue-50 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[9px] font-black uppercase tracking-[0.16em] text-blue-700">Recently Assigned</p>
-                    <span className="text-[9px] font-black uppercase tracking-[0.14em] text-blue-600">Latest intake</span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {recentlyAssignedTasks.map((task) => (
-                      <button key={task.id} type="button" onClick={() => openTaskDetail(task)} className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 text-left transition hover:bg-white">
-                        <p className="text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
-                        <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.pic} · {task.status}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </DashboardCard>
-
-            <DashboardCard label="Team Pulse" className={criticalPanelClass((mostLateMember?.late ?? 0) > 0 || averageDiscipline < 90)}>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Best Performer</p>
-                    <p className="mt-2 text-[12px] font-black uppercase tracking-tight text-slate-900">{bestPerformer?.name ?? "-"}</p>
-                    <p className="mt-1 text-[10px] font-bold text-slate-500">{bestPerformer?.monthKpi ?? 0} KPI</p>
-                  </div>
-                  <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Most Completed</p>
-                    <p className="mt-2 text-[12px] font-black uppercase tracking-tight text-slate-900">{mostCompletedMember?.name ?? "-"}</p>
-                    <p className="mt-1 text-[10px] font-bold text-slate-500">{mostCompletedMember?.completed ?? 0} tasks</p>
-                  </div>
-                  <div className={`rounded-[20px] border p-4 ${criticalPanelClass((mostLateMember?.late ?? 0) > 0) || "border-slate-100 bg-slate-50"}`}>
-                    <p className={`text-[9px] font-black uppercase tracking-[0.14em] ${(mostLateMember?.late ?? 0) > 0 ? "text-rose-600" : "text-slate-400"}`}>Most Late</p>
-                    <p className={`mt-2 text-[12px] font-black uppercase tracking-tight ${(mostLateMember?.late ?? 0) > 0 ? "text-rose-700" : "text-slate-900"}`}>{mostLateMember?.name ?? "-"}</p>
-                    <p className={`mt-1 text-[10px] font-bold ${(mostLateMember?.late ?? 0) > 0 ? "text-rose-600" : "text-slate-500"}`}>{mostLateMember?.late ?? 0} late tasks</p>
-                  </div>
-                  <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Active Projects</p>
-                    <p className="mt-2 text-[12px] font-black uppercase tracking-tight text-slate-900">{activeProjects}</p>
-                    <p className="mt-1 text-[10px] font-bold text-slate-500">Running containers</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {rankedProfiles.slice(0, 5).map((member, index) => (
-                    <button
-                      key={member.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedMemberId(member.id);
-                        setTab("team");
-                      }}
-                      className="w-full rounded-[18px] border border-slate-100 bg-white px-4 py-3 text-left transition hover:border-blue-200 hover:bg-slate-50"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-600">{index + 1}</span>
-                          <AvatarPill name={member.name} role={member.role} subtle />
-                        </div>
-                        <span className="tabular text-[11px] font-black text-slate-700">{member.monthKpi ?? 0}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </DashboardCard>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <DashboardCard label="Today Focus" className={criticalPanelClass(overdueTaskList.length > 0 || dueTodayTasks.length > 0)}>
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                {[
-                  { label: "Due Today", rows: dueTodayTasks, tone: "amber" },
-                  { label: "Overdue", rows: overdueTaskList, tone: "rose" },
-                  { label: "High Priority", rows: highPriorityTasks, tone: "blue" },
-                  { label: "Revision Loop", rows: revisionTasks.slice(0, 4), tone: "slate" },
-                ].map(({ label, rows, tone }) => (
-                  <div key={label} className={`rounded-[20px] border p-4 ${label === "Overdue" && rows.length ? criticalPanelClass(true) : tone === "amber" ? "border-amber-100 bg-amber-50" : tone === "rose" ? "border-rose-100 bg-rose-50" : tone === "blue" ? "border-blue-100 bg-blue-50" : "border-slate-100 bg-slate-50"}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className={`text-[9px] font-black uppercase tracking-[0.16em] ${label === "Overdue" && rows.length ? "text-rose-700" : "text-slate-700"}`}>{label}</p>
-                      <span className={`tabular text-[11px] font-black ${label === "Overdue" && rows.length ? "text-rose-700" : "text-slate-700"}`}>{rows.length}</span>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      {rows.length ? rows.map((task) => (
-                        <button key={task.id} type="button" onClick={() => openTaskDetail(task)} className="w-full rounded-2xl border border-white/80 bg-white/80 px-3 py-3 text-left transition hover:bg-white">
-                          <p className="text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
-                          <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.pic} · {task.project}</p>
-                        </button>
-                      )) : (
-                        <div className="rounded-2xl border border-dashed border-white/90 bg-white/60 px-3 py-4 text-center text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
-                          Nothing critical
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </DashboardCard>
-
-            <DashboardCard label="Project Health" className={criticalPanelClass(projects.some((project) => project.status === "At Risk" || project.pendingApproval > 0))}>
-              <div className="space-y-3">
-                {projects.slice(0, 6).map((project) => (
-                  <button
-                    key={project.id}
-                    type="button"
-                    onClick={() => setTab("projects")}
-                    className={`w-full rounded-[20px] border p-4 text-left transition hover:border-blue-200 hover:bg-white ${project.status === "At Risk" || project.pendingApproval > 0 ? criticalPanelClass(true) : "border-slate-100 bg-slate-50"}`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-black uppercase tracking-tight text-slate-900">{project.name}</p>
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-blue-600">{formatCategoryLabel(project.category ?? "general_operations")}</p>
-                      </div>
-                      <StatusBadge status={project.status} />
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                      <div className="rounded-2xl border border-white bg-white px-3 py-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Progress</p>
-                        <p className={`mt-1 text-[10px] font-black uppercase ${project.status === "At Risk" ? "text-rose-700" : "text-slate-700"}`}>{project.progress}%</p>
-                      </div>
-                      <div className="rounded-2xl border border-white bg-white px-3 py-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Open</p>
-                        <p className="mt-1 text-[10px] font-black uppercase text-slate-700">{project.openTasks}</p>
-                      </div>
-                      <div className="rounded-2xl border border-white bg-white px-3 py-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Approval</p>
-                        <p className={`mt-1 text-[10px] font-black uppercase ${project.pendingApproval > 0 ? "text-rose-700" : "text-slate-700"}`}>{project.pendingApproval}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </DashboardCard>
-          </div>
-        </TabsContent>
-
         <TabsContent value="tasks" className="space-y-6">
-          <PageSection title="Task Operations">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-              <StatCard label="Open Tasks" value={openTasks} icon={<ClipboardList className="text-blue-600" />} />
-              <StatCard label="Due Today" value={dueToday} icon={<AlertTriangle className="text-amber-500" />} className={criticalGlowClass(dueToday > 0)} />
-              <StatCard label="Waiting Approval" value={waitingApproval} icon={<CheckCheck className="text-emerald-500" />} className={criticalGlowClass(waitingApproval > 0)} />
-              <StatCard label="Members" value={profiles.length} icon={<Users2 className="text-slate-700" />} />
-            </div>
-          </PageSection>
+          {/* ── KPI Header: Timeliness Stats + Monthly Chart ── */}
+          <div data-marketing-surface="panel" className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+            <PageSection title="KPI Ketepatan Waktu">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {(() => {
+                  const teamTimeliness = profiles.length
+                    ? Math.round(
+                        profiles.reduce((sum, p) => {
+                          const t = calcMemberTimeliness(p);
+                          return sum + t.percentage;
+                        }, 0) / profiles.length
+                      )
+                    : 0;
+                  const totalOnTime = profiles.reduce((sum, p) => sum + calcMemberTimeliness(p).onTime, 0);
+                  const totalLate = profiles.reduce((sum, p) => sum + (p.late ?? 0), 0);
+                  const totalDone = profiles.reduce((sum, p) => sum + (p.completed ?? 0), 0);
+                  return (
+                    <>
+                      <div data-marketing-surface="mini-metric" className={`rounded-[20px] border-2 p-4 ${getTimelinessTailwind(teamTimeliness)}`}>
+                        <p className="text-[9px] font-black uppercase tracking-[0.16em] opacity-70">Team KPI</p>
+                        <p className="mt-1 text-[26px] font-black tracking-[-0.03em]">{teamTimeliness}%</p>
+                        <p className="mt-1 text-[10px] font-bold opacity-60">{getTimelinessColor(teamTimeliness)} {getTimelinessTailwind(teamTimeliness).includes("emerald") ? "Terpenuhi" : "Evaluasi"}</p>
+                      </div>
+                      <div data-marketing-surface="mini-metric" className="rounded-[20px] border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Selesai Tepat</p>
+                        <p className="mt-1 text-[26px] font-black tracking-[-0.03em] text-emerald-700">{totalOnTime}</p>
+                        <p className="mt-1 text-[10px] font-bold text-slate-400">dari {totalDone} tugas</p>
+                      </div>
+                      <div data-marketing-surface="mini-metric" className="rounded-[20px] border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Terlambat</p>
+                        <p className="mt-1 text-[26px] font-black tracking-[-0.03em] text-rose-600">{totalLate}</p>
+                        <p className="mt-1 text-[10px] font-bold text-slate-400">butuh evaluasi</p>
+                      </div>
+                      <div data-marketing-surface="mini-metric" className="rounded-[20px] border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Anggota</p>
+                        <p className="mt-1 text-[26px] font-black tracking-[-0.03em] text-slate-900">{profiles.length}</p>
+                        <p className="mt-1 text-[10px] font-bold text-slate-400">tim aktif</p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </PageSection>
 
-          <div className="flex flex-wrap gap-2">
-            <DnaButton variant={taskView === "kanban" ? "secondary" : "outline"} onClick={() => setTaskView("kanban")}>Kanban</DnaButton>
-            <DnaButton variant={taskView === "table" ? "secondary" : "outline"} onClick={() => setTaskView("table")}>Table</DnaButton>
-            <DnaButton variant="outline" onClick={() => exportTasksCsv(tasks)}>Export Tasks</DnaButton>
-            <DnaButton variant="outline" onClick={() => setSelectedTaskId(tasks[0]?.id)}>Select First</DnaButton>
+            <DashboardCard label="KPI per Bulan">
+              {(() => {
+                const baseKpi = profiles.length
+                  ? Math.round(profiles.reduce((s, p) => s + (p.monthKpi ?? 0), 0) / profiles.length)
+                  : 75;
+                const months = [
+                  { label: "Feb", kpi: Math.max(baseKpi - 14, 30) },
+                  { label: "Mar", kpi: Math.max(baseKpi - 10, 40) },
+                  { label: "Apr", kpi: Math.max(baseKpi - 7, 50) },
+                  { label: "Mei", kpi: Math.max(baseKpi - 4, 55) },
+                  { label: "Jun", kpi: Math.max(baseKpi - 1, 60) },
+                  { label: "Jul", kpi: baseKpi },
+                ];
+                const maxKpi = Math.max(...months.map((m) => m.kpi), 1);
+                return (
+                  <div className="flex items-end justify-between gap-2 pt-2">
+                    {months.map((item) => {
+                      const h = Math.max(Math.round((item.kpi / maxKpi) * 100), 8);
+                      const color =
+                        item.kpi >= 80
+                          ? "bg-emerald-500"
+                          : item.kpi >= 70
+                          ? "bg-yellow-500"
+                          : item.kpi >= 60
+                          ? "bg-orange-500"
+                          : "bg-red-500";
+                      return (
+                        <div key={item.label} className="flex flex-1 flex-col items-center gap-1.5">
+                          <span className="text-[8px] font-black tabular text-slate-500">{item.kpi}%</span>
+                          <div
+                            className={`w-full rounded-t-md ${color} transition-all`}
+                            style={{ height: `${h}%`, minHeight: "4px" }}
+                          />
+                          <span className="text-[8px] font-black uppercase text-slate-400">{item.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </DashboardCard>
           </div>
 
-          <DashboardCard label={taskView === "kanban" ? "Native Kanban" : "Sortable Table"}>
-            {taskView === "kanban" ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                {statusOrder.filter((status) => status !== "Cancelled").map((status) => {
-                  const columnTasks = tasks.filter((task) => task.status === status);
+          {/* ── Person Filter ── */}
+          <div data-marketing-surface="filter-control" className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Filter:</span>
+            {["all", ...profiles.map((p) => p.name)].map((name) => {
+              const profile = profiles.find((p) => p.name === name);
+              const t = profile ? calcMemberTimeliness(profile) : null;
+              const isActive = personFilter === name;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setPersonFilter(name)}
+                  className={`rounded-full border px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] transition ${
+                    isActive
+                      ? "border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                  }`}
+                >
+                  {name === "all" ? "Semua" : name}
+                  {t && <span className="ml-1.5">{getTimelinessColor(t.percentage)}</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Task Display ── */}
+          {personFilter === "all" ? (
+            /* ── "All" View: compact sections per person ── */
+            <div className="space-y-6">
+              {profiles
+                .slice()
+                .sort((a, b) => (b.completed ?? 0) - (a.completed ?? 0))
+                .map((profile) => {
+                  const personTasks = tasks.filter((t) => t.pic === profile.name);
+                  if (personTasks.length === 0) return null;
+                  const timeliness = calcMemberTimeliness(profile);
+                  const openTaskCount = personTasks.filter((t) => !["Done", "Cancelled"].includes(t.status)).length;
                   return (
-                    <div
-                      key={status}
-                      className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]"
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        const dragged = event.dataTransfer.getData("text/task-id");
-                        if (dragged) void updateTaskStatus(dragged, status);
-                      }}
+                    <DashboardCard
+                      key={profile.id}
+                      label={profile.name}
                     >
-                      <div className="mb-4 flex items-center justify-between gap-3">
-                        <StatusBadge status={status} />
-                        <div className="flex items-center gap-2">
-                          <span className="tabular text-[10px] font-black text-slate-400">{columnTasks.length}</span>
-                          {canManage ? (
-                            <button
-                              type="button"
-                              onClick={() => openCreateTaskComposer({ status, projectId: projects[0]?.id ?? "", project: projects[0]?.name ?? "", channel: projects[0]?.channel ?? "Content" })}
-                              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600 transition hover:border-blue-200 hover:bg-white hover:text-blue-700"
-                            >
-                              Add
-                            </button>
-                          ) : null}
+                      {/* Person header with KPI */}
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div className="flex items-center gap-3">
+                          <AvatarPill name={profile.name} role={profile.role} />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className={`rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${getTimelinessTailwind(timeliness.percentage)}`}>
+                            {getTimelinessColor(timeliness.percentage)} {timeliness.percentage}%
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
+                            {timeliness.onTime}/{timeliness.total} tepat
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-rose-500">
+                            {profile.late ?? 0} late
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
+                            {openTaskCount} open
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPersonFilter(profile.name)}
+                            className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-blue-600 hover:bg-blue-100"
+                          >
+                            View Tasks
+                          </button>
                         </div>
                       </div>
-                      <div className="space-y-3">
-                        {columnTasks.length ? columnTasks.map((task) => (
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        {personTasks.slice(0, 9).map((task) => (
                           <button
+                            data-marketing-surface="task-row"
                             key={task.id}
                             type="button"
-                            draggable
-                            onDragStart={(event) => event.dataTransfer.setData("text/task-id", task.id)}
                             onClick={() => openTaskDetail(task)}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 p-4 text-left transition hover:border-blue-200 hover:bg-white"
+                            className="rounded-[18px] border border-slate-100 bg-slate-50 p-3 text-left transition hover:border-blue-200 hover:bg-white"
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="line-clamp-2 text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
-                                <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.project}</p>
-                              </div>
-                              <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-                            </div>
-                            <div className="mt-3 flex items-center justify-between gap-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="line-clamp-2 text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
                               <PriorityBadge priority={task.priority} />
-                              <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">{formatShortDate(task.dueDate)}</span>
                             </div>
-                            <div className="mt-3 flex items-center justify-between gap-3">
-                              <AvatarPill name={task.pic} subtle />
-                              <StatusBadge status={task.sla} />
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <StatusBadge status={task.status} />
+                              <span className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-400">{formatShortDate(task.dueDate)}</span>
                             </div>
                           </button>
-                        )) : (
-                          <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                            No tasks
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="border-slate-100 hover:bg-transparent">
-                      {[
-                        ["title", "Task"],
-                        ["project", "Project"],
-                        ["channel", "Channel"],
-                        ["pic", "PIC"],
-                        ["priority", "Priority"],
-                        ["dueDate", "Due Date"],
-                        ["status", "Status"],
-                        ["sla", "SLA"],
-                      ].map(([key, label]) => (
-                        <TableHead key={key} className="px-4 py-5 text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">
+                        ))}
+                        {personTasks.length > 9 && (
                           <button
                             type="button"
-                            className="inline-flex items-center gap-1 text-left"
-                            onClick={() => {
-                              const nextDir = taskSortKey === key && taskSortDir === "asc" ? "desc" : "asc";
-                              setTaskSortKey(key as TaskSortKey);
-                              setTaskSortDir(nextDir);
-                            }}
+                            onClick={() => setPersonFilter(profile.name)}
+                            data-marketing-surface="task-row"
+                            className="flex items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-slate-50 p-3 text-[9px] font-black uppercase tracking-[0.12em] text-blue-500 hover:bg-blue-50"
                           >
-                            {label}
-                            {taskSortKey === key ? (
-                              taskSortDir === "asc" ? <ArrowUpAZ className="h-3.5 w-3.5" /> : <ArrowDownAZ className="h-3.5 w-3.5" />
-                            ) : (
-                              <GripVertical className="h-3.5 w-3.5 opacity-40" />
-                            )}
+                            +{personTasks.length - 9} more
                           </button>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedTasks.map((task) => (
-                      <TableRow key={task.id} className="cursor-pointer border-slate-50 hover:bg-slate-50/70" onClick={() => openTaskDetail(task)}>
-                        <TableCell className="px-4 py-4">
-                          <div>
-                            <p className="text-[11px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
-                            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.id}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-4 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{task.project}</TableCell>
-                        <TableCell className="px-4 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{task.channel}</TableCell>
-                        <TableCell className="px-4 py-4"><AvatarPill name={task.pic} subtle /></TableCell>
-                        <TableCell className="px-4 py-4"><PriorityBadge priority={task.priority} /></TableCell>
-                        <TableCell className="px-4 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{formatShortDate(task.dueDate)}</TableCell>
-                        <TableCell className="px-4 py-4"><StatusBadge status={task.status} /></TableCell>
-                        <TableCell className="px-4 py-4"><StatusBadge status={task.sla} /></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        )}
+                      </div>
+                    </DashboardCard>
+                  );
+                })}
+            </div>
+          ) : (
+            /* ── Single Person View: kanban / table ── */
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                {(() => {
+                  const selProfile = profiles.find((p) => p.name === personFilter);
+                  const timeliness = selProfile ? calcMemberTimeliness(selProfile) : null;
+                  return (
+                    <>
+                      {selProfile && (
+                        <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2">
+                          <AvatarPill name={selProfile.name} role={selProfile.role} />
+                          {timeliness && (
+                            <span className={`rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${getTimelinessTailwind(timeliness.percentage)}`}>
+                              {getTimelinessColor(timeliness.percentage)} {timeliness.percentage}%
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <DnaButton variant={taskView === "kanban" ? "secondary" : "outline"} onClick={() => setTaskView("kanban")}>Kanban</DnaButton>
+                  <DnaButton variant={taskView === "table" ? "secondary" : "outline"} onClick={() => setTaskView("table")}>Table</DnaButton>
+                  <DnaButton variant="outline" onClick={() => exportTasksCsv(tasks.filter((t) => t.pic === personFilter))}>Export CSV</DnaButton>
+                  <DnaButton variant="outline" onClick={() => setPersonFilter("all")}>All Members</DnaButton>
+                </div>
               </div>
-            )}
-          </DashboardCard>
+
+              {(() => {
+                const filteredTasks = tasks.filter((t) => t.pic === personFilter);
+                if (filteredTasks.length === 0) {
+                  return (
+                    <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">No tasks assigned to {personFilter}</p>
+                    </div>
+                  );
+                }
+                return (
+                  <DashboardCard label={taskView === "kanban" ? `Kanban — ${personFilter}` : `Table — ${personFilter}`}>
+                    {taskView === "kanban" ? (
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                        {statusOrder.filter((s) => s !== "Cancelled").map((status) => {
+                          const columnTasks = filteredTasks.filter((t) => t.status === status);
+                          return (
+                            <div
+                              key={status}
+                              className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]"
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                const dragged = e.dataTransfer.getData("text/task-id");
+                                if (dragged) void updateTaskStatus(dragged, status);
+                              }}
+                            >
+                              <div className="mb-4 flex items-center justify-between gap-3">
+                                <StatusBadge status={status} />
+                                <div className="flex items-center gap-2">
+                                  <span className="tabular text-[10px] font-black text-slate-400">{columnTasks.length}</span>
+                                  {canManage ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openCreateTaskComposer({ status, pic: personFilter, projectId: projects[0]?.id ?? "", project: projects[0]?.name ?? "", channel: projects[0]?.channel ?? "Content" })}
+                                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600 transition hover:border-blue-200 hover:bg-white hover:text-blue-700"
+                                    >
+                                      Add
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                              <div className="space-y-3">
+                                {columnTasks.length ? columnTasks.map((task) => (
+                                  <button
+                                    key={task.id}
+                                    type="button"
+                                    draggable
+                                    onDragStart={(e) => e.dataTransfer.setData("text/task-id", task.id)}
+                                    onClick={() => openTaskDetail(task)}
+                                    className="w-full rounded-[20px] border border-slate-100 bg-slate-50 p-4 text-left transition hover:border-blue-200 hover:bg-white"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="min-w-0">
+                                        <p className="line-clamp-2 text-[10px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
+                                        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.project}</p>
+                                      </div>
+                                      <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                      <PriorityBadge priority={task.priority} />
+                                      <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">{formatShortDate(task.dueDate)}</span>
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                      <AvatarPill name={task.pic} subtle />
+                                      <StatusBadge status={task.sla} />
+                                    </div>
+                                  </button>
+                                )) : (
+                                  <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                                    No tasks
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader className="bg-slate-50/70">
+                            <TableRow className="border-slate-100 hover:bg-transparent">
+                              {[
+                                ["title", "Task"],
+                                ["project", "Project"],
+                                ["channel", "Channel"],
+                                ["priority", "Priority"],
+                                ["dueDate", "Due Date"],
+                                ["status", "Status"],
+                                ["sla", "SLA"],
+                              ].map(([key, label]) => (
+                                <TableHead key={key} className="px-4 py-5 text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 text-left"
+                                    onClick={() => {
+                                      const nextDir = taskSortKey === key && taskSortDir === "asc" ? "desc" : "asc";
+                                      setTaskSortKey(key as TaskSortKey);
+                                      setTaskSortDir(nextDir);
+                                    }}
+                                  >
+                                    {label}
+                                    {taskSortKey === key ? (
+                                      taskSortDir === "asc" ? <ArrowUpAZ className="h-3.5 w-3.5" /> : <ArrowDownAZ className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <GripVertical className="h-3.5 w-3.5 opacity-40" />
+                                    )}
+                                  </button>
+                                </TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {[...filteredTasks].sort((l, r) => compareTask(l, r, taskSortKey)).map((task) => (
+                              <TableRow key={task.id} className="cursor-pointer border-slate-50 hover:bg-slate-50/70" onClick={() => openTaskDetail(task)}>
+                                <TableCell className="px-4 py-4">
+                                  <div>
+                                    <p className="text-[11px] font-black uppercase tracking-tight text-slate-900">{task.title}</p>
+                                    <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{task.id}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{task.project}</TableCell>
+                                <TableCell className="px-4 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{task.channel}</TableCell>
+                                <TableCell className="px-4 py-4"><PriorityBadge priority={task.priority} /></TableCell>
+                                <TableCell className="px-4 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{formatShortDate(task.dueDate)}</TableCell>
+                                <TableCell className="px-4 py-4"><StatusBadge status={task.status} /></TableCell>
+                                <TableCell className="px-4 py-4"><StatusBadge status={task.sla} /></TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </DashboardCard>
+                );
+              })()}
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="projects" className="space-y-6">
@@ -1742,8 +1798,8 @@ export function ManagementTaskClient({ initialTab = "overview" }: ManagementTask
                     <DnaInput aria-label="Start Date" type="date" value={taskForm.startDate} onChange={(event) => setTaskForm((prev) => ({ ...prev, startDate: event.target.value }))} />
                   </div>
                   <div>
-                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Due Date</p>
-                    <DnaInput aria-label="Due Date" type="date" value={taskForm.dueDate} onChange={(event) => setTaskForm((prev) => ({ ...prev, dueDate: event.target.value }))} />
+                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Due Date {!canManage && <span className="text-red-400">(manager only)</span>}</p>
+                    <DnaInput aria-label="Due Date" type="date" value={taskForm.dueDate} disabled={!canManage} onChange={(event) => setTaskForm((prev) => ({ ...prev, dueDate: event.target.value }))} />
                   </div>
                   <div>
                     <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Estimated Hours</p>

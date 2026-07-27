@@ -70,7 +70,7 @@ type ManagementTaskBoardProps = {
 };
 
 type MemberConfig = {
-  slug: "overview" | "aurel" | "revi" | "zarka" | "gusti" | "edy";
+  slug: "overview" | "aurel" | "revi" | "zarka" | "gusti" | "luthfi";
   label: string;
   role: string;
   aliases: string[];
@@ -104,7 +104,7 @@ const memberConfigs: MemberConfig[] = [
   { slug: "revi", label: "Revita", role: "Digital Marketing Strategy", aliases: ["revi", "revita"] },
   { slug: "zarka", label: "Zarkasi", role: "Full Stack Video Editor", aliases: ["zarka", "zarkasi"] },
   { slug: "gusti", label: "Gusti", role: "Full Stack Desain Graphic", aliases: ["gusti"] },
-  { slug: "edy", label: "Edy", role: "Design Logo & Packaging", aliases: ["edy"] },
+  { slug: "luthfi", label: "Luthfi", role: "Design Logo & Packaging", aliases: ["luthfi"] },
 ];
 
 const memberLookup = memberConfigs.reduce<Record<string, MemberConfig>>((acc, member) => {
@@ -259,6 +259,29 @@ function getDayLeftLabel(dueDate: string, today: string) {
 
 function stopRowClick(event: React.SyntheticEvent) {
   event.stopPropagation();
+}
+
+// ── KPI Timeliness Helpers ──────────────────────────────
+function getTimelinessColor(percentage: number): string {
+  if (percentage >= 80) return "🟢";
+  if (percentage >= 70) return "🟡";
+  if (percentage >= 60) return "🟠";
+  return "🔴";
+}
+
+function getTimelinessTailwind(percentage: number): string {
+  if (percentage >= 80) return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (percentage >= 70) return "border-yellow-200 bg-yellow-50 text-yellow-800";
+  if (percentage >= 60) return "border-orange-200 bg-orange-50 text-orange-800";
+  return "border-red-200 bg-red-50 text-red-800";
+}
+
+function calcMemberTimeliness(profile: ProfileRow): { percentage: number; onTime: number; total: number } {
+  const total = profile.completed ?? 0;
+  const late = profile.late ?? 0;
+  if (total === 0) return { percentage: 0, onTime: 0, total: 0 };
+  const onTime = Math.max(total - late, 0);
+  return { percentage: Math.round((onTime / total) * 100), onTime, total };
 }
 
 function ActionIconButton({
@@ -488,6 +511,26 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     [localTasks, profiles, today, visibleMembers],
   );
 
+  const selectedMemberSnapshot = useMemo(
+    () => snapshots.find(s => s.slug === selectedMember.slug) ?? null,
+    [snapshots, selectedMember.slug],
+  );
+
+  const selectedMemberChart = useMemo(
+    () => monthlyPerformance.find(m => m.slug === selectedMember.slug) ?? null,
+    [monthlyPerformance, selectedMember.slug],
+  );
+
+  const selectedMemberProfile = useMemo(
+    () => profiles.find((p) => normalize(p.id) === normalize(selectedMember.slug)) ?? null,
+    [profiles, selectedMember.slug],
+  );
+
+  const selectedMemberTimeliness = useMemo(
+    () => selectedMemberProfile ? calcMemberTimeliness(selectedMemberProfile) : null,
+    [selectedMemberProfile],
+  );
+
   const stats = useMemo(() => {
     const open = boardTasks.filter((task) => task.status !== "Done").length;
     const done = boardTasks.filter((task) => task.status === "Done").length;
@@ -691,8 +734,8 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   return (
     <DashboardShell title={title} titleAccent="Hub" subtitle={subtitle}>
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 rounded-[28px] border border-slate-200 bg-white/90 px-6 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)] backdrop-blur">
+      <div data-marketing-page="management-task" className="space-y-6">
+        <div data-marketing-surface="toolbar" className="flex flex-wrap items-end justify-between gap-4 rounded-[28px] border border-slate-200 bg-white/90 px-6 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)] backdrop-blur">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Marketing / Management Task</p>
             <h1 className="text-[18px] font-bold tracking-tight text-slate-900">{selectedMember?.label ?? "Overview"}</h1>
@@ -754,11 +797,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
         </div>
 
         {selectedMember?.slug === "overview" ? (
-          <section className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
+          <section data-marketing-surface="panel" className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Member Snapshot</p>
-                <h2 className="mt-1 text-[16px] font-bold tracking-tight text-slate-900">Member Performance Overview</h2>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">KPI Timeliness</p>
+                <h2 className="mt-1 text-[16px] font-bold tracking-tight text-slate-900">Ketepatan Waktu per Member</h2>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 <Users2 className="h-4 w-4" />
@@ -766,141 +809,130 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-5">
-              {snapshots.map((member) => (
-                <Link
-                  key={member.slug}
-                  href={`/marketing/management-task/${member.slug}`}
-                  className="w-full rounded-[24px] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white"
-                >
-                  <div className="flex items-start justify-between gap-3 min-h-[50px]">
-                    <div className="min-w-0 flex-[1]">
-                      <h3 className="text-[14px] font-bold tracking-tight text-slate-900 truncate">{member.label}</h3>
-                      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">{member.role}</p>
-                    </div>
-                    <div className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-sm whitespace-nowrap shrink-0 self-start">
-                      {member.total} Tasks
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      <span>Progress</span>
-                      <span className="text-slate-700">{member.progress}%</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                      <div className={`h-full rounded-full ${member.late > 0 ? "bg-rose-500" : "bg-blue-500"}`} style={{ width: `${member.progress}%` }} />
-                    </div>
-                  </div>
-                  {/* KPI Score */}
-                  <div className="mt-4 flex flex-col rounded-[16px] border px-4 py-3 bg-white shadow-sm gap-2"
-                    style={{
-                      borderColor: member.kpi >= 95 ? '#10B981' : member.kpi >= 90 ? '#3B82F6' : member.kpi >= 80 ? '#6366F1' : member.kpi >= 70 ? '#F59E0B' : '#EF4444',
-                    }}
+              {snapshots.map((member) => {
+                const profile = profiles.find((p) => normalize(p.id) === normalize(member.slug));
+                const t = profile ? calcMemberTimeliness(profile) : null;
+                return (
+                  <Link
+                    key={member.slug}
+                    href={`/marketing/management-task/${member.slug}`}
+                    data-marketing-surface="member-card"
+                    className="w-full rounded-[24px] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white"
                   >
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">KPI Score</span>
-                    <div className="flex items-end justify-between">
-                      <span className="text-[26px] font-black tabular-nums leading-none"
-                        style={{
-                          color: member.kpi >= 95 ? '#10B981' : member.kpi >= 90 ? '#3B82F6' : member.kpi >= 80 ? '#6366F1' : member.kpi >= 70 ? '#F59E0B' : '#EF4444',
-                        }}
-                      >
-                        {member.kpi}
+                    <div className="flex items-start justify-between gap-3 min-h-[50px]">
+                      <div className="min-w-0 flex-[1]">
+                        <h3 className="text-[14px] font-bold tracking-tight text-slate-900 truncate">{member.label}</h3>
+                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">{member.role}</p>
+                      </div>
+                      {t && (
+                        <div className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${getTimelinessTailwind(t.percentage)}`}>
+                          {getTimelinessColor(t.percentage)} {t.percentage}%
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>Progress</span>
+                        <span className="text-slate-700">{member.progress}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className={`h-full rounded-full ${member.late > 0 ? "bg-rose-500" : "bg-blue-500"}`} style={{ width: `${member.progress}%` }} />
+                      </div>
+                    </div>
+                    <div className={`mt-4 flex flex-col rounded-[16px] border px-4 py-3 bg-white shadow-sm gap-2 ${t ? getTimelinessTailwind(t.percentage).split(' ').slice(1).join(' ') : 'border-slate-200'}`}>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Ketepatan Waktu</span>
+                      <div className="flex items-end justify-between">
+                        <span className="text-[26px] font-black tabular-nums leading-none">{t ? `${t.percentage}%` : '-'}</span>
+                        {t && <span className="text-[9px] font-bold uppercase tracking-wider">{t.onTime}/{t.total} tepat</span>}
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <MetricMini label="Tasks" value={member.total} />
+                      <MetricMini label="Done" value={member.done} />
+                      <MetricMini label="Late" value={member.late} tone={member.late > 0 ? "danger" : "default"} />
+                      <MetricMini label="Open" value={member.open} />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : selectedMemberSnapshot ? (
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
+            {/* ── Member Snapshot ── */}
+            {(() => {
+              const kpiPct = selectedMemberTimeliness?.percentage ?? selectedMemberSnapshot.kpi;
+              const kpiColor = kpiPct >= 80 ? 'emerald' : kpiPct >= 70 ? 'yellow' : kpiPct >= 60 ? 'orange' : 'red';
+              const colorMap = { emerald: 'border-l-emerald-500 bg-emerald-50/40', yellow: 'border-l-yellow-500 bg-yellow-50/40', orange: 'border-l-orange-500 bg-orange-50/40', red: 'border-l-red-500 bg-red-50/40' };
+              const badgeMap = { emerald: 'bg-emerald-100 text-emerald-800', yellow: 'bg-yellow-100 text-yellow-800', orange: 'bg-orange-100 text-orange-800', red: 'bg-red-100 text-red-800' };
+              return (
+                <section data-marketing-surface="member-summary" className={`rounded-[20px] border border-l-4 border-slate-200 ${colorMap[kpiColor]} shadow-[0_8px_24px_-18px_rgba(15,23,42,0.2)] p-4`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-[15px] font-bold tracking-tight text-slate-900">{selectedMember.label}</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400/80">{selectedMemberSnapshot.role}</p>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <span className={`rounded-full px-3 py-1 text-[11px] font-black tabular-nums ${badgeMap[kpiColor]}`}>
+                        {kpiPct}%
                       </span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                        style={{
-                          backgroundColor: member.kpi >= 95 ? '#D1FAE5' : member.kpi >= 90 ? '#DBEAFE' : member.kpi >= 80 ? '#E0E7FF' : member.kpi >= 70 ? '#FEF3C7' : '#FEE2E2',
-                          color: member.kpi >= 95 ? '#065F46' : member.kpi >= 90 ? '#1E40AF' : member.kpi >= 80 ? '#3730A3' : member.kpi >= 70 ? '#92400E' : '#991B1B',
-                        }}
-                      >
-                        {member.kpi >= 95 ? 'Excellent' : member.kpi >= 90 ? 'Very Good' : member.kpi >= 80 ? 'Good' : member.kpi >= 70 ? 'Needs Work' : 'Critical'}
+                      <span className="rounded-full bg-white/80 border border-slate-200 px-2.5 py-1 text-[9px] font-bold text-slate-500">
+                        {selectedMemberSnapshot.total} tgs
                       </span>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <MetricMini label="Tasks" value={member.total} />
-                    <MetricMini label="Done" value={member.done} />
-                    <MetricMini label="Late" value={member.late} tone={member.late > 0 ? "danger" : "default"} />
-                    <MetricMini label="Open" value={member.open} />
+                  {/* Progress bar */}
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <div className="flex-1 h-2 rounded-full bg-white/70 border border-slate-100 overflow-hidden">
+                      <div className={`h-full rounded-full ${selectedMemberSnapshot.late > 0 ? "bg-rose-500" : "bg-blue-500"}`} style={{ width: `${selectedMemberSnapshot.progress}%` }} />
+                    </div>
+                    <span className="text-[10px] font-bold tabular-nums text-slate-400">{selectedMemberSnapshot.progress}%</span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-5">
-            {stats.map((card) => (
-              <div key={card.label} className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{card.label}</p>
-                <p className="mt-3 text-[24px] font-bold tracking-tight text-slate-900 tabular-nums">{card.value}</p>
-              </div>
-            ))}
-          </section>
-        )}
+                  {/* Metrics in a clear row */}
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    {[
+                      { label: 'Done', value: selectedMemberSnapshot.done, color: 'text-emerald-700' },
+                      { label: 'Late', value: selectedMemberSnapshot.late, color: selectedMemberSnapshot.late > 0 ? 'text-rose-600' : 'text-slate-400' },
+                      { label: 'Open', value: selectedMemberSnapshot.open, color: 'text-slate-700' },
+                      { label: 'On Time', value: selectedMemberTimeliness ? `${selectedMemberTimeliness.onTime}/${selectedMemberTimeliness.total}` : '-', color: 'text-emerald-700' },
+                    ].map(m => (
+                      <div key={m.label} data-marketing-surface="mini-metric" className="rounded-xl bg-white/70 border border-slate-100 px-2.5 py-2 text-center">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{m.label}</p>
+                        <p className={`mt-0.5 text-[14px] font-black tabular-nums ${m.color}`}>{m.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
 
-        {isOverview ? (
-          <section className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Monthly Performance</p>
-                <h2 className="mt-1 text-[16px] font-bold tracking-tight text-slate-900">Line graph per member</h2>
-              </div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Last {chartMonths.length} months</div>
-            </div>
-            <div className="grid grid-cols-1 gap-4 p-5 xl:grid-cols-2">
-              {monthlyPerformance.map((member) => (
-                <div key={member.slug} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{member.label}</p>
-                      <h3 className="mt-1 text-[14px] font-bold tracking-tight text-slate-900">{member.role}</h3>
-                    </div>
-                    <div className="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-sm">
-                      {member.profileKpi} KPI
-                    </div>
-                  </div>
-                  <div className="mt-4 h-[220px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={member.data} margin={{ top: 10, right: 10, bottom: 0, left: -10 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 600 }} />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          domain={[0, 100]}
-                          tickFormatter={(value) => `${value}%`}
-                          tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 600 }}
-                          width={36}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: "16px",
-                            border: "1px solid #E2E8F0",
-                            background: "#fff",
-                            boxShadow: "0 16px 30px -22px rgba(15,23,42,0.28)",
-                            fontSize: "12px",
-                          }}
-                          formatter={(value) => [`${Number(value ?? 0)}%`, "Performance"]}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="score"
-                          stroke="#2563EB"
-                          strokeWidth={3}
-                          dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+            {/* ── Monthly KPI Chart ── */}
+            {selectedMemberChart && (
+              <section data-marketing-surface="chart-card" className="rounded-[20px] border border-slate-200 bg-white shadow-[0_8px_24px_-18px_rgba(15,23,42,0.2)] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">KPI per Bulan</p>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{chartMonths.length} bln</span>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="mt-2 h-[130px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={selectedMemberChart.data} margin={{ top: 6, right: 6, bottom: 0, left: -14 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                      <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#94A3B8", fontSize: 10, fontWeight: 600 }} />
+                      <YAxis tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fill: "#94A3B8", fontSize: 9, fontWeight: 600 }} width={24} />
+                      <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #E2E8F0", background: "#fff", fontSize: "10px", padding: "6px 10px" }} formatter={(value) => [`${Number(value ?? 0)}%`, ""]} />
+                      <Line type="monotone" dataKey="score" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 1.5, fill: "#fff" }} activeDot={{ r: 5 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            )}
+          </div>
         ) : null}
 
         {!isOverview ? (
         <>
         {isManager && (
-        <div className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)] overflow-hidden">
+        <div data-marketing-surface="quick-add" className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)] overflow-hidden">
           <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Add Task</p>
           </div>
@@ -986,7 +1018,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
             const style = statusStyles[group.status];
 
             return (
-              <div key={group.status} className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
+              <div key={group.status} data-marketing-surface="task-group" className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
                 <div className={`flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 ${style.soft}`}>
                   <div className="flex items-center gap-3">
                     <span className={`h-9 w-1.5 rounded-full ${style.accent}`} />
@@ -1026,6 +1058,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   openEditDrawer(task);
                                 }
                               }}
+                              data-marketing-surface="task-row"
                               className="grid cursor-pointer grid-cols-[minmax(200px,2.2fr)_minmax(100px,1fr)_minmax(80px,0.8fr)_minmax(120px,1.1fr)_minmax(100px,0.9fr)_minmax(90px,0.8fr)_minmax(70px,0.7fr)] items-center gap-1.5 px-6 py-3 transition hover:bg-slate-50/80 focus-visible:bg-slate-50/80 focus-visible:outline-none"
                             >
                               <div className="min-w-0 flex flex-col">
@@ -1303,7 +1336,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       {/* Project Manager Modal */}
       {isProjectManagerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsProjectManagerOpen(false)}>
-          <div className="w-full max-w-[450px] rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+          <div data-marketing-surface="modal" className="w-full max-w-[450px] rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-[16px] font-bold tracking-tight text-slate-900">Manage Projects</h2>

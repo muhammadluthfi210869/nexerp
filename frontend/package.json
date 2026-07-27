@@ -9,6 +9,7 @@
     "clean": "npx rimraf .next",
     "start": "node scripts/start-standalone.js",
     "lint": "eslint",
+    "qa:marketing-phase4": "node scripts/qa-marketing-phase4.js",
     "test:perf": "playwright test tests/e2e/PERFORMANCE_INTEGRITY_AUDIT.spec.ts",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -21,6 +21,8 @@ interface DashboardCardProps {
 export function DashboardCard({ label, labelClassName, children, className, inverted, style }: DashboardCardProps) {
   return (
     <div
+      data-dna="dashboard-card"
+      data-inverted={inverted ? "true" : undefined}
       className={cn(
         "border border-[var(--border-color)] rounded-[24px] p-8 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative",
         inverted

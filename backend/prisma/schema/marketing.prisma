@@ -40,6 +40,22 @@ model LeadCapture {
   assignedTo    String?  @db.Uuid
   assignedUser  User?    @relation(fields: [assignedTo], references: [id])
 
+  // ── Kommo CRM metadata (Kommo is the third-party system, not the marketing source) ──
+  kommoLeadId              Int?
+  kommoResponsibleUserId   Int?
+  kommoResponsibleUserName String? @db.VarChar(255)
+  kommoPipelineId          Int?
+  kommoPipelineName        String? @db.VarChar(255)
+  kommoStatusId            Int?
+  kommoStatusName          String? @db.VarChar(255)
+  kommoSourceName          String? @db.VarChar(255)
+  kommoTags                String? @db.Text
+  kommoTalkStatus          String? @db.VarChar(50)
+  kommoTalkOrigin          String? @db.VarChar(100)
+  kommoTalkIsRead          Boolean?
+  kommoTalkIsInWork        Boolean?
+  kommoFirstResponseSec    Int?
+
   // ── Sales Pipeline ──
   workflowStatus WorkflowStatus @default(NEW_LEAD)
   lostReason     LostReason?

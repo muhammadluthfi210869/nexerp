@@ -65,7 +65,7 @@ export const marketingTeam = [
   { name: "Zarka", role: "Video Editor" },
   { name: "Gusti", role: "Digital Marketing Strategy" },
   { name: "Aurel", role: "Content Creator" },
-  { name: "Edy", role: "Packaging Designer" },
+  { name: "Luthfi", role: "Packaging Designer" },
 ];
 
 export const marketingProjects: MarketingProjectPrototype[] = [
@@ -601,7 +601,7 @@ const marketingNameMap: Record<string, string> = {
   "Revita Yustianawati": "Revi",
   "Aulia Putra": "Zarka",
   "Nabila Salsabila": "Gusti",
-  "Dimas Pratama": "Edy",
+  "Dimas Pratama": "Luthfi",
   "Celine Maharani": "Aurel",
   "Raka Saputra": "Zarka",
   "Tasya Permata": "Revi",
@@ -612,7 +612,7 @@ const marketingRoleMap: Record<string, string> = {
   Zarka: "Video Editor",
   Gusti: "Digital Marketing Strategy",
   Aurel: "Content Creator",
-  Edy: "Packaging Designer",
+  Luthfi: "Packaging Designer",
 };
 
 const renameMarketingText = (value: string) =>

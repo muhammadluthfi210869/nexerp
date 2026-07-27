@@ -17,6 +17,7 @@ export const DnaInput = React.forwardRef<HTMLInputElement, DnaInputProps>(
         )}
         <input
           ref={ref}
+          data-dna="input"
           required={required}
           aria-invalid={error ? true : undefined}
           className={cn(

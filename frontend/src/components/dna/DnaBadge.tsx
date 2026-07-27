@@ -22,6 +22,8 @@ const statusClasses: Record<BadgeStatus, string> = {
 export function DnaBadge({ status = "default", children, className, onClick }: DnaBadgeProps) {
   return (
     <span
+      data-dna="badge"
+      data-status={status}
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 text-[10px] font-black uppercase rounded-lg px-3 py-1 border shadow-sm",

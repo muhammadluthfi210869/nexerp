@@ -10,13 +10,11 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  UseGuards,
 } from '@nestjs/common';
+
 import { LeadCaptureService } from './lead-capture.service';
 import { KommoService } from './kommo.service';
 import { LeadStatus, WorkflowStatus } from '@prisma/client';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Public } from '../auth/public.decorator';
 
 // ── DTO (inline for simplicity) ──
 
@@ -68,6 +66,8 @@ class ListQueryDto {
   workflowStatus?: WorkflowStatus;
   source?: string;
   search?: string;
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -76,7 +76,6 @@ class ListQueryDto {
 
 // ── Controller ──
 
-@UseGuards(JwtAuthGuard)
 @Controller('lead-capture')
 export class LeadCaptureController {
   constructor(
@@ -89,14 +88,12 @@ export class LeadCaptureController {
   //  Used by dreamlab.id website widgets
   // ════════════════════════════════════════════
 
-  @Public()
   @Post('track')
   @HttpCode(HttpStatus.OK)
   async track(@Body() dto: TrackDto) {
     return this.service.track(dto);
   }
 
-  @Public()
   @Put('whatsapp/:trackingCode')
   @HttpCode(HttpStatus.OK)
   async updateFromWhatsApp(
@@ -120,9 +117,9 @@ export class LeadCaptureController {
     return this.service.getStats();
   }
 
-  @Get(':id')
-  async get(@Param('id') id: string) {
-    return this.service.getLead(id);
+  @Get('dashboard')
+  async dashboard(@Query() query: { dateFrom?: string; dateTo?: string }) {
+    return this.service.getDashboardAnalytics(query);
   }
 
   @Patch(':id')
@@ -133,11 +130,6 @@ export class LeadCaptureController {
   @Post('bulk-update')
   async bulkUpdate(@Body() dto: BulkUpdateDto) {
     return this.service.bulkUpdate(dto.ids, dto);
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.service.deleteLead(id);
   }
 
   // ════════════════════════════════════════════════
@@ -188,6 +180,37 @@ export class LeadCaptureController {
     return { scanned: leadsWithoutName.length, updated };
   }
 
+  @Get('kommo-status')
+  async kommoStatus() {
+    return this.kommo.getAccountStatus();
+  }
+
+  @Post('kommo-pull')
+  @HttpCode(HttpStatus.OK)
+  async kommoPull(@Body() body?: { dateFrom?: string; dateTo?: string }) {
+    try {
+      const result = await this.kommo.pullAllLeads(body?.dateFrom, body?.dateTo);
+      // Save pulled leads to database
+      const saved = await this.service.saveKommoLeads(result.leads, result.contacts, result);
+      return { pulled: result.leads.length, saved };
+    } catch (err: any) {
+      return {
+        error: err.message || 'Failed to pull from Kommo',
+        details: 'Pastikan KOMMO_API_TOKEN adalah access token aktif untuk subdomain Kommo yang benar'
+      };
+    }
+  }
+
+  @Post('import-csv')
+  @HttpCode(HttpStatus.OK)
+  async importCsv(@Body() body: { leads: any[] }) {
+    if (!body.leads || !Array.isArray(body.leads)) {
+      return { error: 'Format: { leads: [...] }' };
+    }
+    const saved = await this.service.bulkImportLeads(body.leads);
+    return { imported: saved };
+  }
+
   // ════════════════════════════════════════════════
   //  ROUND ROBIN ENDPOINTS
   // ════════════════════════════════════════════════
@@ -216,5 +239,15 @@ export class LeadCaptureController {
   @Delete('round-robin/agents/:id')
   async deleteAgent(@Param('id') id: string) {
     return this.service.deleteRoundRobinAgent(id);
+  }
+
+  @Get(':id')
+  async get(@Param('id') id: string) {
+    return this.service.getLead(id);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.service.deleteLead(id);
   }
 }

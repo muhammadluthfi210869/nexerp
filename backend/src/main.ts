@@ -79,7 +79,7 @@ async function bootstrap() {
   }
   // -----------------------------
 
-  const port = process.env.PORT ?? 3002;
+  const port = process.env.PORT ?? 3001;
   await app.listen(port, '0.0.0.0');
   console.log(`ERP Backend is running on port ${port} (0.0.0.0)`);
   if (process.env.NODE_ENV !== 'production') {

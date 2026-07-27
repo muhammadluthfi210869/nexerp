@@ -30,6 +30,7 @@ export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProp
 
   const iconEl = React.isValidElement(icon) ? (
     <div
+      data-dna="stat-icon"
       className={`p-3.5 rounded-xl shrink-0 ${
         isUnder
           ? "bg-rose-50 text-rose-400"
@@ -50,6 +51,7 @@ export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProp
 
   return (
     <div
+      data-dna="kpi-card"
       className={`bg-white border rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in ${borderClass}`}
       style={
         isUnder

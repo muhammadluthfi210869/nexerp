@@ -34,11 +34,15 @@ export default function LeadTracker({
   trackScroll = true,
   trackExitIntent = true,
 }: LeadTrackerConfig) {
-  const startTime = useRef(Date.now());
+  const startTime = useRef<number | null>(null);
   const maxScrollRef = useRef(0);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (startTime.current === null) {
+      startTime.current = Date.now();
+    }
+
     // ── Session ID ──
     let sessionId = localStorage.getItem('dl_session_id');
     if (!sessionId) {
@@ -87,9 +91,14 @@ export default function LeadTracker({
   // ── Heartbeat (keep session alive) ──
   useEffect(() => {
     if (heartbeatInterval > 0) {
+      if (startTime.current === null) {
+        startTime.current = Date.now();
+      }
+
       heartbeatRef.current = setInterval(() => {
         // Silent heartbeat - bisa dikirim ke API jika diperlukan
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
+        const start = startTime.current ?? Date.now();
+        const duration = Math.round((Date.now() - start) / 1000);
         localStorage.setItem('dl_session_duration', String(duration));
       }, heartbeatInterval);
 

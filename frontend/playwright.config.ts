@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001';
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1';
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -26,7 +29,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:3001',
+    baseURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -71,10 +74,12 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev -- -p 3001',
-    url: 'http://localhost:3001',
-    reuseExistingServer: true,
-    timeout: 120000, // Wait up to 2 mins for dev server
-  },
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: 'npm run dev -- -p 3001',
+        url: baseURL,
+        reuseExistingServer: true,
+        timeout: 120000, // Wait up to 2 mins for dev server
+      },
 });

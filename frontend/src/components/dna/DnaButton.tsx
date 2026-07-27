@@ -47,6 +47,9 @@ export function DnaButton({
   return (
     <button
       type={type}
+      data-dna="button"
+      data-variant={variant}
+      data-size={size}
       disabled={loading || props.disabled}
       className={cn(
         "inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all",

@@ -42,7 +42,7 @@ export function ToribioDashboardClient() {
         title="Toribio Digital Marketing"
         subtitle="Dashboard tidak tersedia"
       >
-        <div className="bg-[#FFF1F2] border border-[#FECDD3] rounded-[20px] p-6 text-center">
+        <div data-marketing-page="toribio" data-marketing-surface="error-state" className="bg-[#FFF1F2] border border-[#FECDD3] rounded-[20px] p-6 text-center">
           <p className="text-[#DC2626] font-black text-[11px] uppercase tracking-[0.14em]">Gagal memuat data dashboard</p>
           <p className="text-sm text-[#DC2626] mt-1 opacity-70">
             Pastikan backend menyala dan Google Sheet bisa diakses
@@ -65,7 +65,7 @@ export function ToribioDashboardClient() {
         title="Toribio Digital Marketing"
         subtitle="Belum ada data"
       >
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+        <div data-marketing-page="toribio" data-marketing-surface="empty-state" className="flex flex-col items-center justify-center py-16 text-gray-400">
           <p className="text-[11px] font-black uppercase tracking-[0.2em]">Belum ada data untuk ditampilkan</p>
           <p className="text-[9px] font-black uppercase tracking-[0.14em] mt-2 opacity-60">Isi Google Sheet terlebih dahulu</p>
         </div>
@@ -99,7 +99,8 @@ export function ToribioDashboardClient() {
       }
     >
       {/* ── Summary Cards — 3 atas + 2 bawah ── */}
-      <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+      <div data-marketing-page="toribio" className="contents">
+      <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-5">Ringkasan</p>
         <div className="space-y-5">
           <SummaryCards
@@ -113,18 +114,18 @@ export function ToribioDashboardClient() {
 
       {/* ── Paid Ads + CPA Chart ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+        <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-5">Paid Ads</p>
           <PaidAdsTable rows={paidAds?.rows || []} />
         </section>
-        <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+        <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-5">CPA per Bulan</p>
           <CpaChart rows={paidAds?.rows || []} />
         </section>
       </div>
 
       {/* ── Instagram ── */}
-      <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+      <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-3 mb-5">
           <span className="w-2 h-2 rounded-full bg-[#EC4899]" />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Instagram</p>
@@ -138,7 +139,7 @@ export function ToribioDashboardClient() {
       </section>
 
       {/* ── TikTok ── */}
-      <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+      <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-3 mb-5">
           <span className="w-2 h-2 rounded-full bg-[#111827]" />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">TikTok</p>
@@ -152,16 +153,18 @@ export function ToribioDashboardClient() {
       </section>
 
       {/* ── Best Content ── */}
-      <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+      <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-5">🔥 Best Performing Content</p>
         <BestContentTable rows={content?.rows || []} />
       </section>
 
       {/* ── Calendar View ── */}
-      <section className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+      <section data-marketing-surface="toribio-section" className="rounded-[24px] border border-gray-100 bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-5">📅 Content Calendar</p>
         <CalendarView rows={content?.rows || []} />
       </section>
+      </div>
     </DashboardShell>
   );
 }
+

@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { readFile, writeFile, mkdir, access } from 'fs/promises';
 import { constants as fsConstants } from 'fs';
 import { dirname, join } from 'path';
@@ -132,6 +132,10 @@ interface MarketingSettings {
   weights: { completion: number; discipline: number; quality: number; productivity: number };
   workingHours: { start: string; end: string; days: string[] };
   projectCategories: string[];
+  appearance: {
+    departmentDefaultTheme: 'professional' | 'marketing-aesthetic';
+    allowUserOverride: boolean;
+  };
 }
 
 interface MarketingProfile {
@@ -157,6 +161,7 @@ interface MarketingPrototypeState {
   performance: MarketingPerformance[];
   notifications: MarketingNotification[];
   settings: MarketingSettings;
+  uiPreferences?: Record<string, 'professional' | 'marketing-aesthetic' | 'follow-department'>;
   profiles: MarketingProfile[];
   insights: Array<{ title: string; summary: string; impact: 'Positive' | 'Negative' | 'Neutral' }>;
 }
@@ -182,7 +187,7 @@ const team = [
   { id: 'zarka', name: 'Zarka', role: 'Video Editor' },
   { id: 'gusti', name: 'Gusti', role: 'Digital Marketing Strategy' },
   { id: 'aurel', name: 'Aurel', role: 'Content Creator' },
-  { id: 'edy', name: 'Edy', role: 'Packaging Designer' },
+  { id: 'luthfi', name: 'Luthfi', role: 'Packaging Designer' },
 ];
 
 const managerRoleSet = new Set(['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING']);
@@ -191,7 +196,7 @@ const viewerAliases: Record<string, string[]> = {
   zarka: ['zarka', 'zarkasi'],
   gusti: ['gusti'],
   aurel: ['aurel'],
-  edy: ['edy'],
+  luthfi: ['luthfi'],
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -397,10 +402,10 @@ function buildSeedState(): MarketingPrototypeState {
     ['TSK-3107', 'Write PDP promo bullets for marketplace bundle', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Medium', '2026-07-07', 'Backlog', 'Healthy', 0, 0, 3, 'Reframe benefit-led bullets for promo bundle hero and above-the-fold PDP block.'],
     ['TSK-3108', 'Compile weekly paid pacing snapshot', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize spend, CPL, CTR, and lead trend by paid platform.'],
     ['TSK-3109', 'Fix schema gaps on high-intent product pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Urgent', '2026-07-03', 'In Progress', 'Watch', 0, 1, 5, 'Audit product FAQ, breadcrumb, and organization schema on money pages.'],
-    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Edy', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.'],
+    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Luthfi', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.'],
     ['TSK-3111', 'Map CTA placements on landing variant B', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-08', 'To Do', 'Healthy', 0, 0, 4, 'Reposition CTA and trust markers for long-scroll mobile flows.'],
     ['TSK-3112', 'Prepare winback WA automation copy set', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'Medium', '2026-07-06', 'In Progress', 'Healthy', 0, 2, 5, 'Write 3-sequence WhatsApp recovery flow for inactive lead clusters.'],
-    ['TSK-3113', 'Build story sequence for testimonial proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Edy', 'Low', '2026-07-05', 'Done', 'Healthy', 0, 4, 4, 'Create story stack with review proof, swipe CTA, and saved highlights plan.'],
+    ['TSK-3113', 'Build story sequence for testimonial proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Luthfi', 'Low', '2026-07-05', 'Done', 'Healthy', 0, 4, 4, 'Create story stack with review proof, swipe CTA, and saved highlights plan.'],
     ['TSK-3114', 'Sync promo banner claim with legal-safe wording', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Urgent', '2026-07-03', 'Revision', 'Late', 3, 1, 3, 'Revise claim-heavy copy into compliant, conversion-safe marketplace messaging.'],
     ['TSK-3115', 'Create lead-source dashboard summary card set', 'PRJ-2408', 'June Retrospective Pack', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize lead-source mix, deal share, and CPL movement for management recap.'],
     ['TSK-3116', 'Audit blog internal links to commercial pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-09', 'To Do', 'Healthy', 0, 0, 5, 'Improve internal intent flow from educational pages to high-conversion service pages.'],
@@ -451,7 +456,7 @@ function buildSeedState(): MarketingPrototypeState {
     ['zarka', 'Zarka', 'Video Editor', 'zarka@portoaureon.id', '+62 812-5555-0101', '2024-03-12', 'Handles paid acquisition pacing, creative testing, and spend discipline across Meta and TikTok.', 86, 13, 2, 2, 1, { completion: 81, discipline: 88, quality: 84, productivity: 92 }],
     ['gusti', 'Gusti', 'Digital Marketing Strategy', 'gusti@portoaureon.id', '+62 813-5555-0202', '2023-11-05', 'Owns technical SEO fixes, ranking visibility, and commercial page optimization.', 69, 9, 3, 3, 2, { completion: 64, discipline: 72, quality: 69, productivity: 78 }],
     ['aurel', 'Aurel', 'Content Creator', 'aurel@portoaureon.id', '+62 814-5555-0303', '2024-01-22', 'Produces brand, performance, and review assets for campaign execution.', 88, 15, 2, 2, 1, { completion: 83, discipline: 90, quality: 87, productivity: 94 }],
-    ['edy', 'Edy', 'Packaging Designer', 'edy@portoaureon.id', '+62 815-5555-0404', '2024-04-08', 'Manages content direction, social scripts, and narrative consistency.', 82, 12, 4, 1, 1, { completion: 79, discipline: 85, quality: 83, productivity: 80 }],
+    ['luthfi', 'Luthfi', 'Packaging Designer', 'luthfi@portoaureon.id', '+62 815-5555-0404', '2024-04-08', 'Creates visual packaging direction and adapts brand assets for campaign surfaces.', 83, 12, 2, 1, 1, { completion: 80, discipline: 85, quality: 82, productivity: 84 }],
     ['revi', headOfMarketing, 'Head of Marketing', 'revi@portoaureon.id', '+62 811-5555-0001', '2022-09-01', 'Owns assignment, approval, escalation control, and KPI governance for the division.', 91, 18, 0, 0, 0, { completion: 92, discipline: 95, quality: 89, productivity: 88 }],
   ].map(([id, name, role, email, phone, joinDate, bio, monthKpi, completed, inProgress, late, overdue, breakdown]) => ({
     id: id as string,
@@ -536,6 +541,10 @@ function buildSeedState(): MarketingPrototypeState {
       'commercial_activation',
       'analytics_reporting',
     ],
+    appearance: {
+      departmentDefaultTheme: 'professional',
+      allowUserOverride: true,
+    },
   };
 
   const insights = [
@@ -551,6 +560,7 @@ function buildSeedState(): MarketingPrototypeState {
     performance,
     notifications,
     settings,
+    uiPreferences: {},
     profiles,
     insights,
   };
@@ -558,11 +568,24 @@ function buildSeedState(): MarketingPrototypeState {
 
 @Injectable()
 export class MarketingPrototypeService {
+  private normalizeState(state: MarketingPrototypeState): MarketingPrototypeState {
+    state.settings = {
+      ...state.settings,
+      projectCategories: state.settings.projectCategories ?? [],
+      appearance: {
+        departmentDefaultTheme: state.settings.appearance?.departmentDefaultTheme ?? 'professional',
+        allowUserOverride: state.settings.appearance?.allowUserOverride ?? true,
+      },
+    };
+    state.uiPreferences = state.uiPreferences ?? {};
+    return state;
+  }
+
   private async readState(): Promise<MarketingPrototypeState> {
     try {
       await access(statePath, fsConstants.F_OK);
       const raw = await readFile(statePath, 'utf8');
-      return JSON.parse(raw) as MarketingPrototypeState;
+      return this.normalizeState(JSON.parse(raw) as MarketingPrototypeState);
     } catch {
       const seed = buildSeedState();
       await this.writeState(seed);
@@ -576,7 +599,7 @@ export class MarketingPrototypeService {
   }
 
   private async updateState(mutator: (state: MarketingPrototypeState) => MarketingPrototypeState | void) {
-    const state = await this.readState();
+    const state = this.normalizeState(await this.readState());
     const result = mutator(state);
     const next = (result ?? state) as MarketingPrototypeState;
     await this.writeState(next);
@@ -593,7 +616,7 @@ export class MarketingPrototypeService {
     else if (viewerAliases.zarka.includes(fullName) || email === 'zarkasi@dreamlab.com') prototypeName = 'Zarka';
     else if (viewerAliases.gusti.includes(fullName) || email === 'gusti@dreamlab.com') prototypeName = 'Gusti';
     else if (viewerAliases.aurel.includes(fullName)) prototypeName = 'Aurel';
-    else if (viewerAliases.edy.includes(fullName)) prototypeName = 'Edy';
+    else if (viewerAliases.luthfi.includes(fullName)) prototypeName = 'Luthfi';
     else if (roles.some((role) => managerRoleSet.has(role))) prototypeName = headOfMarketing;
 
     const isManager =
@@ -607,7 +630,7 @@ export class MarketingPrototypeService {
       Zarka: viewerAliases.zarka,
       Gusti: viewerAliases.gusti,
       Aurel: viewerAliases.aurel,
-      Edy: viewerAliases.edy,
+      Luthfi: viewerAliases.luthfi,
     };
     const aliases = prototypeName ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])] : [];
 
@@ -639,6 +662,15 @@ export class MarketingPrototypeService {
       throw new ForbiddenException('Only Head of Marketing can manage task registry changes');
     }
     return scope;
+  }
+
+  private viewerPreferenceKey(viewer?: ViewerContext) {
+    return (
+      viewer?.id ??
+      normalizeIdentity(viewer?.email) ??
+      normalizeIdentity(viewer?.fullName) ??
+      'anonymous'
+    );
   }
 
   private pushNotification(
@@ -879,9 +911,87 @@ export class MarketingPrototypeService {
           ...state.settings.workingHours,
           ...(input.workingHours ?? {}),
         },
+        appearance: {
+          ...state.settings.appearance,
+          ...(input.appearance ?? {}),
+        },
       };
     });
     return next.settings;
+  }
+
+  async getUiThemePreference(viewer: ViewerContext | undefined) {
+    const state = await this.readState();
+    const key = this.viewerPreferenceKey(viewer);
+    const scope = this.resolveViewer(viewer);
+    const preference = state.uiPreferences?.[key] ?? 'follow-department';
+
+    return {
+      preference,
+      departmentDefaultTheme: state.settings.appearance.departmentDefaultTheme,
+      allowUserOverride: state.settings.appearance.allowUserOverride,
+      canManageAppearance: scope.isManager,
+    };
+  }
+
+  async updateUiThemePreference(
+    viewer: ViewerContext | undefined,
+    input: { preference?: 'professional' | 'marketing-aesthetic' | 'follow-department' },
+  ) {
+    const allowed = new Set(['professional', 'marketing-aesthetic', 'follow-department']);
+    const preference = input.preference ?? 'follow-department';
+
+    if (!allowed.has(preference)) {
+      throw new BadRequestException('Unsupported UI theme preference');
+    }
+
+    const key = this.viewerPreferenceKey(viewer);
+    const next = await this.updateState((state) => {
+      state.uiPreferences = state.uiPreferences ?? {};
+      state.uiPreferences[key] = preference;
+    });
+
+    return {
+      preference: next.uiPreferences?.[key] ?? 'follow-department',
+      departmentDefaultTheme: next.settings.appearance.departmentDefaultTheme,
+      allowUserOverride: next.settings.appearance.allowUserOverride,
+      canManageAppearance: this.resolveViewer(viewer).isManager,
+    };
+  }
+
+  async updateUiThemeDefault(
+    viewer: ViewerContext | undefined,
+    input: {
+      departmentDefaultTheme?: 'professional' | 'marketing-aesthetic';
+      allowUserOverride?: boolean;
+    },
+  ) {
+    const scope = this.ensureManager(viewer);
+    const allowed = new Set(['professional', 'marketing-aesthetic']);
+    const departmentDefaultTheme = input.departmentDefaultTheme;
+
+    if (departmentDefaultTheme && !allowed.has(departmentDefaultTheme)) {
+      throw new BadRequestException('Unsupported department default UI theme');
+    }
+
+    const next = await this.updateState((state) => {
+      state.settings.appearance = {
+        ...state.settings.appearance,
+        ...(departmentDefaultTheme ? { departmentDefaultTheme } : {}),
+        ...(typeof input.allowUserOverride === 'boolean'
+          ? { allowUserOverride: input.allowUserOverride }
+          : {}),
+      };
+    });
+
+    const key = this.viewerPreferenceKey(viewer);
+
+    return {
+      preference: next.uiPreferences?.[key] ?? 'follow-department',
+      departmentDefaultTheme: next.settings.appearance.departmentDefaultTheme,
+      allowUserOverride: next.settings.appearance.allowUserOverride,
+      canManageAppearance: scope.isManager,
+    };
   }
 
   async getProfile(viewer: ViewerContext | undefined, id: string) {

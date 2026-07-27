@@ -15,6 +15,20 @@
         ]
       }
     },
+    "/health": {
+      "get": {
+        "operationId": "AppController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "operationId": "AuthController_login",
@@ -369,6 +383,46 @@
       },
       "patch": {
         "operationId": "MarketingPrototypeController_updateSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/ui-theme": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getUiTheme",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateUiTheme",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/ui-theme/default": {
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateUiThemeDefault",
         "parameters": [],
         "responses": {
           "200": {
@@ -1451,19 +1505,10 @@
         ]
       }
     },
-    "/lead-capture/{id}": {
+    "/lead-capture/dashboard": {
       "get": {
-        "operationId": "LeadCaptureController_get",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "LeadCaptureController_dashboard",
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -1472,7 +1517,9 @@
         "tags": [
           "LeadCapture"
         ]
-      },
+      }
+    },
+    "/lead-capture/{id}": {
       "patch": {
         "operationId": "LeadCaptureController_update",
         "parameters": [
@@ -1495,6 +1542,27 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      },
+      "get": {
+        "operationId": "LeadCaptureController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1542,6 +1610,76 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-webhook": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoWebhook",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-sync": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoSync",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-status": {
+      "get": {
+        "operationId": "LeadCaptureController_kommoStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-pull": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoPull",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/import-csv": {
+      "post": {
+        "operationId": "LeadCaptureController_importCsv",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         },

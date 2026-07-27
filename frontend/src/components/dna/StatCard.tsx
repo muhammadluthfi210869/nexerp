@@ -19,6 +19,7 @@ export function StatCard({ label, value, subValue, icon, className }: StatCardPr
 
   return (
     <div
+      data-dna="stat-card"
       className={cn(
         "bg-white border border-[var(--border-color)] rounded-[24px] p-8 shadow-sm transition-all group overflow-hidden relative flex items-center animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)]",
         className
@@ -45,7 +46,7 @@ export function StatCard({ label, value, subValue, icon, className }: StatCardPr
           )}
         </div>
         {iconEl && (
-          <div className="p-4 bg-slate-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg shrink-0">
+          <div data-dna="stat-icon" className="p-4 bg-slate-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg shrink-0">
             <span className="[&>svg]:w-[18px] [&>svg]:h-[18px]">
               {iconEl}
             </span>

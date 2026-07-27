@@ -12,6 +12,7 @@ interface DataCardProps {
 export function DataCard({ dotColor, title, titleColor, children, className, noShadow }: DataCardProps) {
   return (
     <div
+      data-dna="data-card"
       className={cn(
         "bg-white border border-[var(--border-color)] rounded-[24px] p-8 flex flex-col h-full transition-all animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)]",
         noShadow ? "" : "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]",
