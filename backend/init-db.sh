@@ -38,15 +38,22 @@ echo "Current user count: $USER_COUNT"
 if [ "$USER_COUNT" = "0" ]; then
   echo "No users found, running seed..."
 
+  SEED_PATH=""
   if [ -f dist/prisma/seed.js ]; then
-    echo "Found seed.js, executing..."
-    node dist/prisma/seed.js 2>&1 || {
-      echo "❌ Seed via dist/prisma/seed.js failed!"
+    SEED_PATH="dist/prisma/seed.js"
+  elif [ -f dist/seed.js ]; then
+    SEED_PATH="dist/seed.js"
+  fi
+
+  if [ -n "$SEED_PATH" ]; then
+    echo "Found seed at $SEED_PATH, executing..."
+    node "$SEED_PATH" 2>&1 || {
+      echo "❌ Seed via $SEED_PATH failed!"
       echo "Trying prisma db seed as fallback..."
       npx prisma db seed 2>&1 || echo "❌ prisma db seed also failed. Database has no users."
     }
   else
-    echo "⚠️ dist/prisma/seed.js not found. Trying prisma db seed..."
+    echo "⚠️ Seed file not found (tried dist/prisma/seed.js, dist/seed.js). Trying prisma db seed..."
     npx prisma db seed 2>&1 || echo "❌ prisma db seed failed. Database has no users."
   fi
 
