@@ -677,6 +677,16 @@
   ],
   "notifications": [
     {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "test was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-6132",
+      "time": "03:23"
+    },
+    {
       "id": "a0193ec6-1c80-4c59-bdcb-90f2a5439514",
       "type": "approval",
       "title": "Menunggu Approval",

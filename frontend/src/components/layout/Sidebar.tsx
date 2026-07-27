@@ -25,6 +25,8 @@ interface SubMenuItem {
   badge?: string;
   badgeVariant?: "default" | "warning" | "critical";
   children?: SubMenuItem[];
+  /** Slug marketing member (aurel, revi, zarka, gusti, edy) — untuk filtering per-member */
+  memberSlug?: string;
 }
 
 interface NavGroup {
@@ -52,12 +54,12 @@ const MODULE_STRUCTURE: NavGroup[] = [
         href: "/marketing/management-task/overview",
         type: "action",
         children: [
-          { name: "Overview", href: "/marketing/management-task/overview", type: "dashboard" },
-          { name: "Aurel", href: "/marketing/management-task/aurel", type: "action" },
-          { name: "Revita", href: "/marketing/management-task/revi", type: "action" },
-          { name: "Zarkasi", href: "/marketing/management-task/zarka", type: "action" },
-          { name: "Gusti", href: "/marketing/management-task/gusti", type: "action" },
-          { name: "Edy", href: "/marketing/management-task/edy", type: "action" },
+          { name: "Overview", href: "/marketing/management-task/overview", type: "dashboard", memberSlug: "overview" },
+          { name: "Aurel", href: "/marketing/management-task/aurel", type: "action", memberSlug: "aurel" },
+          { name: "Revita", href: "/marketing/management-task/revi", type: "action", memberSlug: "revi" },
+          { name: "Zarkasi", href: "/marketing/management-task/zarka", type: "action", memberSlug: "zarka" },
+          { name: "Gusti", href: "/marketing/management-task/gusti", type: "action", memberSlug: "gusti" },
+          { name: "Edy", href: "/marketing/management-task/edy", type: "action", memberSlug: "edy" },
         ],
       },
       { name: "Toribio Dashboard", href: "/marketing/toribio", type: "dashboard" },
@@ -101,6 +103,42 @@ const getBadgeStyle = (variant?: string) => {
   }
 };
 
+/* ─── MARKETING VIEWER ─────────────────────────────── */
+// Mirror backend resolveViewer logic agar sidebar bisa filter per-member.
+const managerRoleSet = new Set(['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING']);
+
+const marketingAliases: Record<string, string[]> = {
+  revi: ['revita', 'revi', 'fadhilah', 'nisa'],
+  zarka: ['zarkasi', 'zarka'],
+  gusti: ['gusti'],
+  aurel: ['aurel'],
+  edy: ['edy'],
+};
+
+function computeMarketingViewer(user: any): { slug: string | null; isManager: boolean } {
+  const email = ((user?.email ?? '') as string).toLowerCase().trim();
+  const fullName = ((user?.fullName ?? '') as string).toLowerCase().trim();
+  const roles: string[] = user?.roles ?? [];
+
+  // Determine member slug from email or fullName
+  let slug: string | null = null;
+  for (const [aliasSlug, aliases] of Object.entries(marketingAliases)) {
+    if (aliases.includes(fullName) || aliases.some((a) => email.startsWith(a + '@'))) {
+      slug = aliasSlug;
+      break;
+    }
+  }
+
+  const isManager =
+    email.startsWith('revita@') ||
+    email.startsWith('zaki@') ||
+    email.startsWith('admin@') ||
+    email.startsWith('nisa@') ||
+    roles.some((r) => managerRoleSet.has(r));
+
+  return { slug, isManager };
+}
+
 /* ─── COMPONENT ───────────────────────────────────────── */
 export function Sidebar() {
   const pathname = usePathname();
@@ -117,13 +155,51 @@ export function Sidebar() {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  /* ── Filter module by user role ── */
+  /* ── Filter module by user role + marketing member scope ── */
   const visibleModules = useMemo(() => {
     if (!user) return MODULE_STRUCTURE; // belum login, show all
     const userRoles: string[] = user.roles ?? [];
-    return MODULE_STRUCTURE.filter(g => {
-      if (!g.roles) return true; // no role restriction
+    const { slug, isManager } = computeMarketingViewer(user);
+
+    // Step 1: filter by module-level roles
+    const modules = MODULE_STRUCTURE.filter(g => {
+      if (!g.roles) return true;
       return g.roles.some(r => userRoles.includes(r));
+    });
+
+    // Step 2: within DIGITAL MARKETING, filter Management Task children
+    //         untuk non-manager -> hanya Overview + page dia sendiri
+    return modules.map(mod => {
+      if (mod.label !== 'DIGITAL MARKETING') return mod;
+      if (isManager) return mod; // manager sees all
+
+      const filteredItems = mod.items.map(item => {
+        // Hanya Management Task yang perlu filtering children-nya
+        if (item.name !== 'Management Task' || !item.children) return item;
+
+        const filteredChildren = item.children.filter((child) => {
+          // Overview selalu visible
+          if (child.memberSlug === 'overview') return true;
+          // Untuk non-manager: hanya page yang sesuai slug-nya
+          return child.memberSlug === slug;
+        });
+
+        // Kalau setelah filter cuma tersisa 1 anak (overview), kita sembunyikan
+        // Management Task parent karena dia ga punya page spesifik
+        if (filteredChildren.length <= 1 && slug) {
+          // Hanya overview — tidak worth ditampilkan sendirian
+          // Tapi tetap tampilkan karena masih bisa lihat overview
+          // Biarkan saja dengan 1 child (overview) & tanpa page dia
+        }
+
+        return { ...item, children: filteredChildren };
+      }).filter(item => {
+        // Management Task tanpa children yang relevan -> hidden
+        if (item.name === 'Management Task' && item.children && item.children.length === 0) return false;
+        return true;
+      });
+
+      return { ...mod, items: filteredItems };
     });
   }, [user]);
 

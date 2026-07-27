@@ -737,14 +737,19 @@ export class MarketingPrototypeService {
       performance,
       notifications,
       settings: state.settings,
-      profiles: state.profiles.map((profile) => ({
+      profiles: (scope.isManager
+        ? state.profiles
+        : state.profiles.filter((profile) =>
+            tasks.some((task) => task.pic === profile.name),
+          )
+      ).map((profile) => ({
         ...profile,
         monthKpi: performance.find((member) => member.name === profile.name)?.overallKpi ?? profile.monthKpi,
       })),
       insights: state.insights,
       reports: {
         averageKpi: summary.averageKpi,
-          teamSize: state.profiles.length,
+          teamSize: scope.isManager ? state.profiles.length : performance.length,
           kpiHistory: performance.map((member) => ({
             name: member.name,
             history: member.history,
@@ -935,32 +940,52 @@ export class MarketingPrototypeService {
   }
 
   async updateTask(viewer: ViewerContext | undefined, id: string, input: MarketingTaskInput) {
-    const scope = this.ensureManager(viewer);
+    const scope = this.resolveViewer(viewer);
     const next = await this.updateState((state) => {
       const task = state.tasks.find((item) => item.id === id);
-      if (!task) return;
+      if (!task || !this.isVisibleToViewer(task, scope)) return;
+      const actor = scope.prototypeName ?? headOfMarketing;
       const before = { ...task };
-      Object.assign(task, input);
+      const note: string[] = [];
+
+      if (scope.isManager) {
+        // Manager: full update (all fields allowed)
+        Object.assign(task, input);
+        if (input.pic && input.pic !== before.pic) {
+          this.pushNotification(state, {
+            type: 'task_assigned',
+            title: `New task assigned to ${task.pic}`,
+            detail: `${task.title} is now assigned under ${task.project}.`,
+            actor,
+            unread: true,
+            recipient: task.pic,
+          });
+        }
+        note.push('Task updated');
+      } else {
+        // Non-manager: hanya bisa update startDate dan status
+        // dueDate, pic, reviewer, priority dll TIDAK bisa diubah
+        if (input.startDate !== undefined) {
+          task.startDate = input.startDate;
+          note.push('startDate updated');
+        }
+        if (input.status !== undefined && input.status !== before.status) {
+          task.status = input.status;
+          note.push(`status: ${before.status} -> ${input.status}`);
+        }
+        if (note.length === 0) return; // nothing to update
+      }
+
       task.sla = deriveSla(task);
       task.history.push({
         at: new Date().toISOString(),
-        by: scope.prototypeName ?? headOfMarketing,
+        by: actor,
         from: before.status,
         to: task.status,
-        note: 'Task updated',
+        note: note.join('; ') || 'No changes',
       });
       if (task.status === 'Done') {
         task.checklistDone = task.checklistTotal;
-      }
-      if (input.pic && input.pic !== before.pic) {
-        this.pushNotification(state, {
-          type: 'task_assigned',
-          title: `New task assigned to ${task.pic}`,
-          detail: `${task.title} is now assigned under ${task.project}.`,
-          actor: scope.prototypeName ?? headOfMarketing,
-          unread: true,
-          recipient: task.pic,
-        });
       }
     });
     return next.tasks.find((task) => task.id === id) ?? null;

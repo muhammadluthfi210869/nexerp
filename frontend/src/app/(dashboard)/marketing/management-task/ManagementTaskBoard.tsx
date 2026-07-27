@@ -434,7 +434,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   const monthlyPerformance = useMemo(
     () =>
-      overviewMembers.map((member) => {
+      visibleMembers.map((member) => {
         const data = chartMonths.map((month) => {
           const rows = localTasks.filter((task) => matchMember(task, member.slug) && task.dueDate.slice(0, 7) === month);
           const done = rows.filter((task) => task.status === "Done").length;
@@ -459,9 +459,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     [chartMonths, localTasks, profiles],
   );
 
+  const visibleMembers = useMemo(
+    () => isManager ? overviewMembers : overviewMembers.filter((m) => m.slug === viewerSlug),
+    [isManager, viewerSlug],
+  );
+
   const snapshots = useMemo(
     () =>
-      overviewMembers.map((member) => {
+      visibleMembers.map((member) => {
         const rows = localTasks.filter((task) => matchMember(task, member.slug));
         const done = rows.filter((task) => task.status === "Done").length;
         const open = rows.filter((task) => task.status !== "Done").length;
@@ -532,8 +537,10 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       } else if (taskId.startsWith("local-")) {
         // Local-only tasks don't exist on backend yet, skip
         return Promise.resolve();
-      } else if (!isManager && field === "dueDate") {
-        // Non-managers cannot edit due date
+      } else if (!isManager && field !== "startDate" && field !== "status") {
+        // Non-managers only can edit startDate & status (per backend updateTask)
+        // Revert local state immediately to prevent UX confusion
+        setLocalTasks(prevTasks);
         return Promise.resolve();
       } else {
         return api.patch(`/marketing/prototype/tasks/${taskId}`, { [field]: value });
@@ -577,7 +584,8 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   function createGlobalQuickTask() {
     if (!globalQuickAdd.title.trim()) return;
-    if (quickAddSaving) return; // Prevent double-click
+    if (quickAddSaving) return;
+    if (!isManager) return; // Only managers can create tasks
     setQuickAddSaving(true);
 
     const pic = globalQuickAdd.pic.trim() || "Aurel";
@@ -616,8 +624,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   }
 
   function saveDrawer() {
-    if (drawerSaving) return; // Prevent double-click
+    if (drawerSaving) return;
     setDrawerSaving(true);
+
+    if (!isManager && drawerMode === "create") {
+      setDrawerSaving(false);
+      setDrawerOpen(false);
+      return;
+    }
 
     const isEdit = drawerMode === "edit" && selectedTask;
     const nextTask = isEdit
@@ -731,9 +745,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
             <DnaButton variant="outline" icon={<Folder />} onClick={() => setIsProjectManagerOpen(true)}>
               Projects
             </DnaButton>
-            <DnaButton variant="primary" icon={<Plus />} onClick={() => openCreateDrawer()}>
-              New Task
-            </DnaButton>
+            {isManager && (
+              <DnaButton variant="primary" icon={<Plus />} onClick={() => openCreateDrawer()}>
+                New Task
+              </DnaButton>
+            )}
           </div>
         </div>
 
@@ -746,7 +762,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 <Users2 className="h-4 w-4" />
-                {snapshots.length} Members
+                {isManager ? `${snapshots.length} Members` : "My Performance"}
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-5">
@@ -883,7 +899,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
         {!isOverview ? (
         <>
-        {/* Global Quick-Add Bar — satu baris input untuk semua status */}
+        {isManager && (
         <div className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)] overflow-hidden">
           <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Add Task</p>
@@ -963,6 +979,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
             </div>
           </div>
         </div>
+        )}
 
         <section className="space-y-4">
           {rowsByStatus.map((group) => {
