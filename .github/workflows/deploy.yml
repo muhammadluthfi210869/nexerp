@@ -65,12 +65,12 @@ jobs:
 
       - name: 🚀 Start Backend + Integration Test
         run: |
-          # Jalankan backend container dengan database CI (PostgreSQL service)
+          # Gunakan --network host agar bisa akses PostgreSQL service di localhost
           docker run -d --name nexerp-backend-test \
-            -p 3001:3001 \
+            --network host \
             -e PORT=3001 \
             -e NODE_ENV=production \
-            -e DATABASE_URL="postgresql://test_user:test_pass@host.docker.internal:5432/test_db?schema=public" \
+            -e DATABASE_URL="postgresql://test_user:test_pass@localhost:5432/test_db?schema=public" \
             -e JWT_SECRET="test-secret-do-not-use-in-production" \
             -e CORS_ORIGIN="http://localhost:3000,https://nexerp.id" \
             nexerp-backend:test
