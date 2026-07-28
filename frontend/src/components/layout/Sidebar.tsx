@@ -184,6 +184,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
         const filteredChildren = item.children.filter((child) => {
           // Untuk non-manager: hanya page yang sesuai slug-nya
+          if (!child.memberSlug) return false;
           return child.memberSlug === slug;
         });
 
@@ -408,7 +409,9 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               <div className="space-y-1">
                 {tier.groups.map((group) => {
                   const Icon = group.icon;
-                  const isGroupActive = group.items.some(i => i.href === pathname);
+                  const isGroupActive = group.items.some(i =>
+                    i.href === pathname || i.children?.some(child => child.href === pathname)
+                  );
                   const isOpen = openGroups.includes(group.label);
 
                   return (
@@ -455,8 +458,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                                     onClick={() => {
                                       if (isSearching) return;
                                       toggleItem(item.href);
-                                      // Navigate to href without full page reload
-                                      window.location.href = item.href;
                                     }}
                                     className={cn(
                                       "w-full flex items-center justify-between px-4 py-2.5 rounded-[12px] transition-all duration-150",

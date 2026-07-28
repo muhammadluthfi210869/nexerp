@@ -7,14 +7,14 @@ type ManagementTaskMemberPageProps = {
   }>;
 };
 
-const validMembers = new Set(["overview", "aurel", "revi", "zarka", "gusti", "luthfi"]);
+const validMembers = new Set(["aurel", "revi", "zarka", "gusti", "luthfi"]);
 
 export default async function ManagementTaskMemberPage({ params }: ManagementTaskMemberPageProps) {
   const resolvedParams = (await params) ?? {};
   const member = (resolvedParams.member ?? "overview").toLowerCase();
 
   if (!validMembers.has(member)) {
-    redirect("/marketing/management-task/overview");
+    redirect("/marketing/management-task");
   }
 
   return <ManagementTaskBoard activeMember={member} />;

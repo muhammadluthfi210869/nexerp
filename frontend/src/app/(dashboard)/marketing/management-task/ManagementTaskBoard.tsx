@@ -48,6 +48,15 @@ type TaskRow = {
   history?: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
 };
 
+type BrandKpiBreakdown = {
+  total: number;
+  done: number;
+  late: number;
+  inProgress: number;
+  onTime: number;
+  progress: number;
+};
+
 type ProfileRow = {
   id: string;
   name: string;
@@ -56,6 +65,10 @@ type ProfileRow = {
   completed?: number;
   inProgress?: number;
   late?: number;
+  brandKpi?: {
+    dreamlab: BrandKpiBreakdown;
+    toribio: BrandKpiBreakdown;
+  };
 };
 
 type MonthlyPerformancePoint = {
@@ -359,6 +372,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   }, [initialProjects, localProjects.length]);
 
   const [globalQuickAdd, setGlobalQuickAdd] = useState<QuickAddState>(defaultQuickAdd(activeMember, viewerName));
+  const [brandFilter, setBrandFilter] = useState<"all" | "Dreamlab" | "Toribio">("all");
 
   useEffect(() => {
     setLocalTasks((current) => {
@@ -371,6 +385,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   useEffect(() => {
     setGlobalQuickAdd(defaultQuickAdd(activeMember, viewerName));
+    setBrandFilter("all");
     if (!selectedTaskId) {
       setDraft(defaultDraft(activeMember, viewerName));
     }
@@ -455,8 +470,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const boardTasks = useMemo(() => {
     return visibleTasks
       .filter((task) => selectedMonth === "all" || task.dueDate.slice(0, 7) === selectedMonth)
-      .filter((task) => selectedCampaign === "all" || task.project === selectedCampaign);
-  }, [selectedCampaign, selectedMonth, visibleTasks]);
+      .filter((task) => selectedCampaign === "all" || task.project === selectedCampaign)
+      .filter((task) => brandFilter === "all" || task.brand === brandFilter);
+  }, [brandFilter, selectedCampaign, selectedMonth, visibleTasks]);
 
   const chartMonths = useMemo(() => getRecentMonthKeys(6, today), [today]);
 
@@ -515,6 +531,39 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     () => snapshots.find(s => s.slug === selectedMember.slug) ?? null,
     [snapshots, selectedMember.slug],
   );
+
+  // Brand-filtered snapshot for member detail page
+  const selectedMemberBrandSnapshot = useMemo(() => {
+    const base = selectedMemberSnapshot;
+    if (!base || brandFilter === "all") return base;
+
+    const brand = brandFilter as "Dreamlab" | "Toribio";
+    const profile = profiles.find((p) => normalize(p.id) === normalize(selectedMember.slug));
+    const brandData = profile?.brandKpi?.[brand === "Dreamlab" ? "dreamlab" : "toribio"];
+
+    if (brandData) {
+      return {
+        ...base,
+        total: brandData.total,
+        done: brandData.done,
+        late: brandData.late,
+        open: brandData.inProgress,
+        progress: brandData.progress,
+        onTime: brandData.onTime,
+      };
+    }
+
+    // Fallback: compute from local tasks
+    const memberTasks = localTasks.filter((task) => matchMember(task, selectedMember.slug) && task.brand === brand);
+    const total = memberTasks.length;
+    const done = memberTasks.filter((task) => task.status === "Done").length;
+    const open = memberTasks.filter((task) => task.status !== "Done").length;
+    const late = memberTasks.filter((task) => task.dueDate < today && task.status !== "Done").length;
+    const lateAll = memberTasks.filter((task) => (task.dueDate < today && task.status !== "Done") || task.sla === "Late").length;
+    const onTime = Math.max(done - lateAll, 0);
+    const progress = total ? Math.round((done / total) * 100) : 0;
+    return { ...base, total, done, open, late, progress, onTime };
+  }, [selectedMemberSnapshot, brandFilter, profiles, selectedMember.slug, localTasks, today]);
 
   const selectedMemberChart = useMemo(
     () => monthlyPerformance.find(m => m.slug === selectedMember.slug) ?? null,
@@ -857,48 +906,74 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               })}
             </div>
           </section>
-        ) : selectedMemberSnapshot ? (
+        ) : selectedMemberBrandSnapshot ? (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
             {/* ── Member Snapshot ── */}
             {(() => {
-              const kpiPct = selectedMemberTimeliness?.percentage ?? selectedMemberSnapshot.kpi;
+              const activeSnapshot = selectedMemberBrandSnapshot;
+              const kpiPct = selectedMemberTimeliness?.percentage ?? activeSnapshot.kpi;
               const kpiColor = kpiPct >= 80 ? 'emerald' : kpiPct >= 70 ? 'yellow' : kpiPct >= 60 ? 'orange' : 'red';
               const colorMap = { emerald: 'border-l-emerald-500 bg-emerald-50/40', yellow: 'border-l-yellow-500 bg-yellow-50/40', orange: 'border-l-orange-500 bg-orange-50/40', red: 'border-l-red-500 bg-red-50/40' };
               const badgeMap = { emerald: 'bg-emerald-100 text-emerald-800', yellow: 'bg-yellow-100 text-yellow-800', orange: 'bg-orange-100 text-orange-800', red: 'bg-red-100 text-red-800' };
+              const brandLabel = brandFilter === 'all' ? 'All' : brandFilter;
+              const brandColor = brandFilter === 'Dreamlab' ? 'border-blue-200 bg-blue-50 text-blue-700' : brandFilter === 'Toribio' ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white/80 text-slate-600';
+              const brandDot = brandFilter === 'Dreamlab' ? 'bg-blue-500' : brandFilter === 'Toribio' ? 'bg-purple-500' : 'bg-slate-400';
               return (
                 <section data-marketing-surface="member-summary" className={`rounded-[20px] border border-l-4 border-slate-200 ${colorMap[kpiColor]} shadow-[0_8px_24px_-18px_rgba(15,23,42,0.2)] p-4`}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-[15px] font-bold tracking-tight text-slate-900">{selectedMember.label}</h3>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400/80">{selectedMemberSnapshot.role}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400/80">{activeSnapshot.role}</p>
                     </div>
-                    <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* ── Brand Toggle ── */}
+                      <div className="flex items-center rounded-full border border-slate-200 bg-white/90 shadow-sm overflow-hidden">
+                        {(["all", "Dreamlab", "Toribio"] as const).map((b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => setBrandFilter(b)}
+                            className={`relative px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] transition ${
+                              brandFilter === b
+                                ? b === 'all'
+                                  ? 'bg-slate-800 text-white'
+                                  : b === 'Dreamlab'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-purple-600 text-white'
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                            }`}
+                          >
+                            {b === 'all' ? 'All' : b === 'Dreamlab' ? 'DL' : 'TB'}
+                          </button>
+                        ))}
+                      </div>
                       <span className={`rounded-full px-3 py-1 text-[11px] font-black tabular-nums ${badgeMap[kpiColor]}`}>
                         {kpiPct}%
                       </span>
                       <span className="rounded-full bg-white/80 border border-slate-200 px-2.5 py-1 text-[9px] font-bold text-slate-500">
-                        {selectedMemberSnapshot.total} tgs
+                        {activeSnapshot.total} tgs
                       </span>
                     </div>
                   </div>
                   {/* Progress bar */}
                   <div className="mt-3 flex items-center gap-2.5">
                     <div className="flex-1 h-2 rounded-full bg-white/70 border border-slate-100 overflow-hidden">
-                      <div className={`h-full rounded-full ${selectedMemberSnapshot.late > 0 ? "bg-rose-500" : "bg-blue-500"}`} style={{ width: `${selectedMemberSnapshot.progress}%` }} />
+                      <div className={`h-full rounded-full ${activeSnapshot.late > 0 ? "bg-rose-500" : "bg-blue-500"}`} style={{ width: `${activeSnapshot.progress}%` }} />
                     </div>
-                    <span className="text-[10px] font-bold tabular-nums text-slate-400">{selectedMemberSnapshot.progress}%</span>
+                    <span className="text-[10px] font-bold tabular-nums text-slate-400">{activeSnapshot.progress}%</span>
                   </div>
-                  {/* Metrics in a clear row */}
-                  <div className="mt-3 grid grid-cols-4 gap-2">
+                  {/* KPI Cards: All Task | Done | Progress | Late | Onetime */}
+                  <div className="mt-3 grid grid-cols-5 gap-2">
                     {[
-                      { label: 'Done', value: selectedMemberSnapshot.done, color: 'text-emerald-700' },
-                      { label: 'Late', value: selectedMemberSnapshot.late, color: selectedMemberSnapshot.late > 0 ? 'text-rose-600' : 'text-slate-400' },
-                      { label: 'Open', value: selectedMemberSnapshot.open, color: 'text-slate-700' },
-                      { label: 'On Time', value: selectedMemberTimeliness ? `${selectedMemberTimeliness.onTime}/${selectedMemberTimeliness.total}` : '-', color: 'text-emerald-700' },
+                      { label: 'All Task', value: activeSnapshot.total, color: 'text-slate-800' },
+                      { label: 'Done', value: activeSnapshot.done, color: 'text-emerald-700' },
+                      { label: 'Progress', value: `${activeSnapshot.progress}%`, color: activeSnapshot.progress >= 80 ? 'text-emerald-700' : activeSnapshot.progress >= 60 ? 'text-amber-700' : 'text-rose-700' },
+                      { label: 'Late', value: activeSnapshot.late, color: activeSnapshot.late > 0 ? 'text-rose-600' : 'text-slate-400' },
+                      { label: 'Onetime', value: (brandFilter !== 'all' && 'onTime' in activeSnapshot ? (activeSnapshot as any).onTime : selectedMemberTimeliness?.onTime ?? activeSnapshot.done), color: 'text-emerald-700' },
                     ].map(m => (
-                      <div key={m.label} data-marketing-surface="mini-metric" className="rounded-xl bg-white/70 border border-slate-100 px-2.5 py-2 text-center">
-                        <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{m.label}</p>
-                        <p className={`mt-0.5 text-[14px] font-black tabular-nums ${m.color}`}>{m.value}</p>
+                      <div key={m.label} data-marketing-surface="mini-metric" className="rounded-xl bg-white/70 border border-slate-100 px-2 py-2 text-center">
+                        <p className="text-[7px] font-bold uppercase tracking-wider text-slate-400">{m.label}</p>
+                        <p className={`mt-0.5 text-[13px] font-black tabular-nums ${m.color}`}>{m.value}</p>
                       </div>
                     ))}
                   </div>

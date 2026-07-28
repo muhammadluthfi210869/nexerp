@@ -54,6 +54,7 @@ interface MarketingTask {
   project: string;
   channel: string;
   category: string;
+  brand: 'Dreamlab' | 'Toribio';
   assignedBy: string;
   pic: string;
   reviewer: string;
@@ -82,6 +83,7 @@ type MarketingTaskInput = Partial<
     | 'project'
     | 'channel'
     | 'category'
+    | 'brand'
     | 'assignedBy'
     | 'pic'
     | 'reviewer'
@@ -392,29 +394,29 @@ function buildSeedState(): MarketingPrototypeState {
     },
   ];
 
-  const taskRows = [
-    ['TSK-3101', 'Refresh Meta lead gen headline set', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Meta Ads', 'Zarka', 'Urgent', '2026-07-02', 'Waiting Approval', 'Watch', 1, 4, 5, 'Deliver 5 primary headline variations with pain-point and proof angles.'],
-    ['TSK-3102', 'Draft TikTok hook bank for serum angle', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Aurel', 'High', '2026-07-03', 'In Progress', 'Healthy', 0, 3, 6, 'Prepare hook bank for top-funnel and promo content variants.'],
-    ['TSK-3103', 'QA landing form friction on mobile', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-04', 'To Do', 'Healthy', 0, 0, 4, 'Review mobile field spacing, CTA visibility, and sticky submit behavior.'],
-    ['TSK-3104', 'Build June non-brand ranking delta sheet', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-02', 'Revision', 'Late', 2, 2, 4, 'Compare priority query groups and identify highest-loss URLs.'],
-    ['TSK-3105', 'Prepare dormant-lead segment C offer', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'High', '2026-07-05', 'Waiting Approval', 'Healthy', 0, 5, 5, 'Finalize incentive copy and CTA path for inactive leads older than 60 days.'],
-    ['TSK-3106', 'Design carousel for manufacturing trust proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Gusti', 'Medium', '2026-07-06', 'Done', 'Healthy', 1, 6, 6, 'Create 6-slide proof carousel using production floor and QC visuals.'],
-    ['TSK-3107', 'Write PDP promo bullets for marketplace bundle', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Medium', '2026-07-07', 'Backlog', 'Healthy', 0, 0, 3, 'Reframe benefit-led bullets for promo bundle hero and above-the-fold PDP block.'],
-    ['TSK-3108', 'Compile weekly paid pacing snapshot', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize spend, CPL, CTR, and lead trend by paid platform.'],
-    ['TSK-3109', 'Fix schema gaps on high-intent product pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Urgent', '2026-07-03', 'In Progress', 'Watch', 0, 1, 5, 'Audit product FAQ, breadcrumb, and organization schema on money pages.'],
-    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Luthfi', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.'],
-    ['TSK-3111', 'Map CTA placements on landing variant B', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-08', 'To Do', 'Healthy', 0, 0, 4, 'Reposition CTA and trust markers for long-scroll mobile flows.'],
-    ['TSK-3112', 'Prepare winback WA automation copy set', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'Medium', '2026-07-06', 'In Progress', 'Healthy', 0, 2, 5, 'Write 3-sequence WhatsApp recovery flow for inactive lead clusters.'],
-    ['TSK-3113', 'Build story sequence for testimonial proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Luthfi', 'Low', '2026-07-05', 'Done', 'Healthy', 0, 4, 4, 'Create story stack with review proof, swipe CTA, and saved highlights plan.'],
-    ['TSK-3114', 'Sync promo banner claim with legal-safe wording', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Urgent', '2026-07-03', 'Revision', 'Late', 3, 1, 3, 'Revise claim-heavy copy into compliant, conversion-safe marketplace messaging.'],
-    ['TSK-3115', 'Create lead-source dashboard summary card set', 'PRJ-2408', 'June Retrospective Pack', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize lead-source mix, deal share, and CPL movement for management recap.'],
-    ['TSK-3116', 'Audit blog internal links to commercial pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-09', 'To Do', 'Healthy', 0, 0, 5, 'Improve internal intent flow from educational pages to high-conversion service pages.'],
-    ['TSK-3117', 'Design remarketing visual pack for angle B', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Creative', 'Gusti', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 5, 6, 'Produce static remarketing pack aligned to revised offer and social proof.'],
-    ['TSK-3118', 'Update landing FAQ with top sales objections', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Aurel', 'Medium', '2026-07-10', 'Backlog', 'Healthy', 0, 0, 4, 'Translate sales-call objections into FAQ blocks that reduce hesitation.'],
+  const taskRows: Array<[string, string, string, string, string, string, string, string, string, string, number, number, number, string, 'Dreamlab' | 'Toribio']> = [
+    ['TSK-3101', 'Refresh Meta lead gen headline set', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Meta Ads', 'Zarka', 'Urgent', '2026-07-02', 'Waiting Approval', 'Watch', 1, 4, 5, 'Deliver 5 primary headline variations with pain-point and proof angles.', 'Dreamlab'],
+    ['TSK-3102', 'Draft TikTok hook bank for serum angle', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Aurel', 'High', '2026-07-03', 'In Progress', 'Healthy', 0, 3, 6, 'Prepare hook bank for top-funnel and promo content variants.', 'Dreamlab'],
+    ['TSK-3103', 'QA landing form friction on mobile', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-04', 'To Do', 'Healthy', 0, 0, 4, 'Review mobile field spacing, CTA visibility, and sticky submit behavior.', 'Dreamlab'],
+    ['TSK-3104', 'Build June non-brand ranking delta sheet', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-02', 'Revision', 'Late', 2, 2, 4, 'Compare priority query groups and identify highest-loss URLs.', 'Dreamlab'],
+    ['TSK-3105', 'Prepare dormant-lead segment C offer', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'High', '2026-07-05', 'Waiting Approval', 'Healthy', 0, 5, 5, 'Finalize incentive copy and CTA path for inactive leads older than 60 days.', 'Toribio'],
+    ['TSK-3106', 'Design carousel for manufacturing trust proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Gusti', 'Medium', '2026-07-06', 'Done', 'Healthy', 1, 6, 6, 'Create 6-slide proof carousel using production floor and QC visuals.', 'Toribio'],
+    ['TSK-3107', 'Write PDP promo bullets for marketplace bundle', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Medium', '2026-07-07', 'Backlog', 'Healthy', 0, 0, 3, 'Reframe benefit-led bullets for promo bundle hero and above-the-fold PDP block.', 'Toribio'],
+    ['TSK-3108', 'Compile weekly paid pacing snapshot', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize spend, CPL, CTR, and lead trend by paid platform.', 'Dreamlab'],
+    ['TSK-3109', 'Fix schema gaps on high-intent product pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Urgent', '2026-07-03', 'In Progress', 'Watch', 0, 1, 5, 'Audit product FAQ, breadcrumb, and organization schema on money pages.', 'Dreamlab'],
+    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Luthfi', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.', 'Dreamlab'],
+    ['TSK-3111', 'Map CTA placements on landing variant B', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-08', 'To Do', 'Healthy', 0, 0, 4, 'Reposition CTA and trust markers for long-scroll mobile flows.', 'Toribio'],
+    ['TSK-3112', 'Prepare winback WA automation copy set', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'Medium', '2026-07-06', 'In Progress', 'Healthy', 0, 2, 5, 'Write 3-sequence WhatsApp recovery flow for inactive lead clusters.', 'Toribio'],
+    ['TSK-3113', 'Build story sequence for testimonial proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Luthfi', 'Low', '2026-07-05', 'Done', 'Healthy', 0, 4, 4, 'Create story stack with review proof, swipe CTA, and saved highlights plan.', 'Toribio'],
+    ['TSK-3114', 'Sync promo banner claim with legal-safe wording', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Urgent', '2026-07-03', 'Revision', 'Late', 3, 1, 3, 'Revise claim-heavy copy into compliant, conversion-safe marketplace messaging.', 'Toribio'],
+    ['TSK-3115', 'Create lead-source dashboard summary card set', 'PRJ-2408', 'June Retrospective Pack', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize lead-source mix, deal share, and CPL movement for management recap.', 'Dreamlab'],
+    ['TSK-3116', 'Audit blog internal links to commercial pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-09', 'To Do', 'Healthy', 0, 0, 5, 'Improve internal intent flow from educational pages to high-conversion service pages.', 'Dreamlab'],
+    ['TSK-3117', 'Design remarketing visual pack for angle B', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Creative', 'Gusti', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 5, 6, 'Produce static remarketing pack aligned to revised offer and social proof.', 'Toribio'],
+    ['TSK-3118', 'Update landing FAQ with top sales objections', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Aurel', 'Medium', '2026-07-10', 'Backlog', 'Healthy', 0, 0, 4, 'Translate sales-call objections into FAQ blocks that reduce hesitation.', 'Toribio'],
   ] as const;
 
   const tasks: MarketingTask[] = taskRows.map((row) => {
-    const [id, title, projectId, project, channel, pic, priority, dueDate, status, sla, revisionCount, done, total, brief] = row;
+    const [id, title, projectId, project, channel, pic, priority, dueDate, status, sla, revisionCount, done, total, brief, brand] = row;
     return {
       id,
       title,
@@ -422,6 +424,7 @@ function buildSeedState(): MarketingPrototypeState {
       project,
       channel,
       category: channel.toLowerCase().replaceAll(' ', '_'),
+      brand: brand as 'Dreamlab' | 'Toribio',
       assignedBy: headOfMarketing,
       pic,
       reviewer: headOfMarketing,
@@ -578,6 +581,11 @@ export class MarketingPrototypeService {
       },
     };
     state.uiPreferences = state.uiPreferences ?? {};
+    // Ensure every task has a brand field (default to Dreamlab for backward compat)
+    state.tasks = state.tasks.map((task) => ({
+      ...task,
+      brand: (task as any).brand ?? 'Dreamlab',
+    }));
     return state;
   }
 
@@ -751,6 +759,18 @@ export class MarketingPrototypeService {
       };
     });
 
+    // ── Brand-specific KPI helper ──
+    const calcBrandKpi = (profileName: string, brandFilter: 'Dreamlab' | 'Toribio') => {
+      const brandTasks = tasks.filter((task) => task.pic === profileName && task.brand === brandFilter);
+      const brandTotal = brandTasks.length;
+      const brandDone = brandTasks.filter((task) => task.status === 'Done').length;
+      const brandLate = brandTasks.filter((task) => task.sla === 'Late').length;
+      const brandInProgress = brandTasks.filter((task) => !['Done', 'Cancelled'].includes(task.status)).length;
+      const brandOnTime = Math.max(brandDone - brandLate, 0);
+      const brandProgress = brandTotal > 0 ? Math.round((brandDone / brandTotal) * 100) : 0;
+      return { total: brandTotal, done: brandDone, late: brandLate, inProgress: brandInProgress, onTime: brandOnTime, progress: brandProgress };
+    };
+
     const summary = {
       activeProjects: projects.filter((project) => project.status !== 'Completed').length,
       openTasks: tasks.filter((task) => !['Done', 'Cancelled'].includes(task.status)).length,
@@ -777,6 +797,10 @@ export class MarketingPrototypeService {
       ).map((profile) => ({
         ...profile,
         monthKpi: performance.find((member) => member.name === profile.name)?.overallKpi ?? profile.monthKpi,
+        brandKpi: {
+          dreamlab: calcBrandKpi(profile.name, 'Dreamlab'),
+          toribio: calcBrandKpi(profile.name, 'Toribio'),
+        },
       })),
       insights: state.insights,
       reports: {
@@ -1159,6 +1183,7 @@ export class MarketingPrototypeService {
         project: input.project ?? project.name,
         channel: input.channel ?? 'General',
         category: input.category ?? (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
+        brand: (input.brand ?? 'Dreamlab') as 'Dreamlab' | 'Toribio',
         assignedBy: input.assignedBy ?? actor,
         pic: assignee,
         reviewer: input.reviewer ?? headOfMarketing,
