@@ -34,6 +34,8 @@ class TrackDto {
   city?: string;
   country?: string;
   sessionId?: string;
+  assignedName?: string;   // Round-robin agent name
+  assignedPhone?: string;  // Round-robin agent phone number
 }
 
 class WhatsAppUpdateDto {

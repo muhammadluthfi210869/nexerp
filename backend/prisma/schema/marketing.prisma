@@ -40,6 +40,10 @@ model LeadCapture {
   assignedTo    String?  @db.Uuid
   assignedUser  User?    @relation(fields: [assignedTo], references: [id])
 
+  // ── Round Robin Tracking (captured before WA redirect) ──
+  assignedName  String?  @db.VarChar(100)  // Nama agent round-robin yang ditugaskan
+  assignedPhone String?  @db.VarChar(20)   // No. WA agent round-robin yang ditugaskan
+
   // ── Kommo CRM metadata (Kommo is the third-party system, not the marketing source) ──
   kommoLeadId              Int?
   kommoResponsibleUserId   Int?
