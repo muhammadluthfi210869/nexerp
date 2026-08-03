@@ -234,12 +234,14 @@ function calcDisciplinePoints(task: MarketingTask) {
   const due = new Date(task.dueDate);
   const delta = daysDiff(today, due);
   if (task.status === 'Done' || task.status === 'Waiting Approval') {
-    if (delta <= -1) return 100;
-    if (delta === 0) return 95;
-    if (delta === 1) return 80;
-    if (delta === 2) return 70;
-    if (delta === 3) return 60;
-    return 40;
+    // ──────────────────────────────────────────────────────────────
+    // Task yang SUDAH selesai tidak pernah dianggap "Late".
+    // Definisi late konsisten dengan KPI frontend:
+    //   late = task yang MASIH open (status !== 'Done') & melewati dueDate.
+    // Sebelumnya kode memakai `today` vs dueDate → task Done yang punya
+    // dueDate di masa lalu salah turun ke Late & menurunkan KPI member.
+    // ──────────────────────────────────────────────────────────────
+    return 100;
   }
   if (delta <= 0) return 100;
   if (delta === 1) return 80;
