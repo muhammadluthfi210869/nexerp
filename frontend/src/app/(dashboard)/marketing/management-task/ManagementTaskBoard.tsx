@@ -83,7 +83,7 @@ type ManagementTaskBoardProps = {
 };
 
 type MemberConfig = {
-  slug: "overview" | "aurel" | "revi" | "zarka" | "gusti" | "luthfi";
+  slug: "overview" | "aurel" | "revi" | "zarka" | "gusti" | "luthfi" | "rahmat";
   label: string;
   role: string;
   aliases: string[];
@@ -118,6 +118,7 @@ const memberConfigs: MemberConfig[] = [
   { slug: "zarka", label: "Zarkasi", role: "Full Stack Video Editor", aliases: ["zarka", "zarkasi"] },
   { slug: "gusti", label: "Gusti", role: "Full Stack Desain Graphic", aliases: ["gusti"] },
   { slug: "luthfi", label: "Luthfi", role: "Design Logo & Packaging", aliases: ["luthfi"] },
+  { slug: "rahmat", label: "Rahmat", role: "IS Manager", aliases: ["rahmat"] },
 ];
 
 const memberLookup = memberConfigs.reduce<Record<string, MemberConfig>>((acc, member) => {

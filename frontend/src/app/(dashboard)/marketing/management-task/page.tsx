@@ -11,6 +11,7 @@ const marketingAliases: Record<string, string[]> = {
   zarka: ["zarkasi", "zarka"],
   gusti: ["gusti"],
   luthfi: ["luthfi"],
+  rahmat: ["rahmat"],
 };
 
 function resolveManagementTaskPath(user: any) {

@@ -190,6 +190,7 @@ const team = [
   { id: 'gusti', name: 'Gusti', role: 'Digital Marketing Strategy' },
   { id: 'aurel', name: 'Aurel', role: 'Content Creator' },
   { id: 'luthfi', name: 'Luthfi', role: 'Packaging Designer' },
+  { id: 'rahmat', name: 'Rahmat', role: 'IS Manager' },
 ];
 
 const managerRoleSet = new Set(['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING']);
@@ -199,6 +200,7 @@ const viewerAliases: Record<string, string[]> = {
   gusti: ['gusti'],
   aurel: ['aurel'],
   luthfi: ['luthfi'],
+  rahmat: ['rahmat'],
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -460,6 +462,7 @@ function buildSeedState(): MarketingPrototypeState {
     ['gusti', 'Gusti', 'Digital Marketing Strategy', 'gusti@portoaureon.id', '+62 813-5555-0202', '2023-11-05', 'Owns technical SEO fixes, ranking visibility, and commercial page optimization.', 69, 9, 3, 3, 2, { completion: 64, discipline: 72, quality: 69, productivity: 78 }],
     ['aurel', 'Aurel', 'Content Creator', 'aurel@portoaureon.id', '+62 814-5555-0303', '2024-01-22', 'Produces brand, performance, and review assets for campaign execution.', 88, 15, 2, 2, 1, { completion: 83, discipline: 90, quality: 87, productivity: 94 }],
     ['luthfi', 'Luthfi', 'Packaging Designer', 'luthfi@portoaureon.id', '+62 815-5555-0404', '2024-04-08', 'Creates visual packaging direction and adapts brand assets for campaign surfaces.', 83, 12, 2, 1, 1, { completion: 80, discipline: 85, quality: 82, productivity: 84 }],
+    ['rahmat', 'Rahmat', 'IS Manager', 'rahmat@portoaureon.id', '+62 816-5555-0505', '2025-01-15', 'Menangani sistem informasi dan integrasi digital marketing.', 0, 0, 0, 0, 0, { completion: 0, discipline: 0, quality: 0, productivity: 0 }],
     ['revi', headOfMarketing, 'Head of Marketing', 'revi@portoaureon.id', '+62 811-5555-0001', '2022-09-01', 'Owns assignment, approval, escalation control, and KPI governance for the division.', 91, 18, 0, 0, 0, { completion: 92, discipline: 95, quality: 89, productivity: 88 }],
   ].map(([id, name, role, email, phone, joinDate, bio, monthKpi, completed, inProgress, late, overdue, breakdown]) => ({
     id: id as string,
@@ -586,6 +589,18 @@ export class MarketingPrototypeService {
       ...task,
       brand: (task as any).brand ?? 'Dreamlab',
     }));
+    // Merge seed profiles so new members (Rahmat, Luthfi) appear on existing
+    // runtime state (production) WITHOUT resetting the task data.
+    const seedProfiles = buildSeedState().profiles;
+    const existingIds = new Set(state.profiles.map((p) => p.id));
+    const existingNames = new Set(state.profiles.map((p) => normalizeIdentity(p.name)));
+    for (const seedProfile of seedProfiles) {
+      if (!existingIds.has(seedProfile.id) && !existingNames.has(normalizeIdentity(seedProfile.name))) {
+        state.profiles.push(seedProfile);
+        existingIds.add(seedProfile.id);
+        existingNames.add(normalizeIdentity(seedProfile.name));
+      }
+    }
     return state;
   }
 
@@ -625,6 +640,7 @@ export class MarketingPrototypeService {
     else if (viewerAliases.gusti.includes(fullName) || email === 'gusti@dreamlab.com') prototypeName = 'Gusti';
     else if (viewerAliases.aurel.includes(fullName)) prototypeName = 'Aurel';
     else if (viewerAliases.luthfi.includes(fullName)) prototypeName = 'Luthfi';
+    else if (viewerAliases.rahmat.includes(fullName)) prototypeName = 'Rahmat';
     else if (roles.some((role) => managerRoleSet.has(role))) prototypeName = headOfMarketing;
 
     const isManager =
@@ -639,6 +655,7 @@ export class MarketingPrototypeService {
       Gusti: viewerAliases.gusti,
       Aurel: viewerAliases.aurel,
       Luthfi: viewerAliases.luthfi,
+      Rahmat: viewerAliases.rahmat,
     };
     const aliases = prototypeName ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])] : [];
 

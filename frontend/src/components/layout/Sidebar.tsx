@@ -60,6 +60,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
           { name: "Zarkasi", href: "/marketing/management-task/zarka", type: "action", memberSlug: "zarka" },
           { name: "Gusti", href: "/marketing/management-task/gusti", type: "action", memberSlug: "gusti" },
           { name: "Luthfi", href: "/marketing/management-task/luthfi", type: "action", memberSlug: "luthfi" },
+          { name: "Rahmat", href: "/marketing/management-task/rahmat", type: "action", memberSlug: "rahmat" },
         ],
       },
       { name: "Toribio Dashboard", href: "/marketing/toribio", type: "dashboard" },
@@ -113,6 +114,8 @@ const marketingAliases: Record<string, string[]> = {
   gusti: ['gusti'],
   aurel: ['aurel'],
   edy: ['edy'],
+  luthfi: ['luthfi'],
+  rahmat: ['rahmat'],
 };
 
 function computeMarketingViewer(user: any): { slug: string | null; isManager: boolean } {
