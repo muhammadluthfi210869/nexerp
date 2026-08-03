@@ -230,18 +230,27 @@ function daysDiff(left: Date, right: Date) {
 
 function calcDisciplinePoints(task: MarketingTask) {
   if (task.status === 'Cancelled') return 0;
+  // ──────────────────────────────────────────────────────────────
+  // Pengecualian KHUSUS (satu task saja): "Add New Number" milik Luthfi
+  // (id: local-1785473923231). Pekerjaan selesai sesuai deadline (due 31/07),
+  // tapi status Done baru dicatat admin beberapa hari kemudian — sehingga SLA-nya
+  // dihitung Healthy, bukan Late. Berlaku HANYA untuk task ini; task lain
+  // (termasuk milik Revita) tetap dihitung dengan aturan normal di bawah.
+  // ──────────────────────────────────────────────────────────────
+  const ON_TIME_TASK_IDS = new Set(['local-1785473923231']);
+  if (ON_TIME_TASK_IDS.has(task.id) && (task.status === 'Done' || task.status === 'Waiting Approval')) {
+    return 100;
+  }
   const today = new Date();
   const due = new Date(task.dueDate);
   const delta = daysDiff(today, due);
   if (task.status === 'Done' || task.status === 'Waiting Approval') {
-    // ──────────────────────────────────────────────────────────────
-    // Task yang SUDAH selesai tidak pernah dianggap "Late".
-    // Definisi late konsisten dengan KPI frontend:
-    //   late = task yang MASIH open (status !== 'Done') & melewati dueDate.
-    // Sebelumnya kode memakai `today` vs dueDate → task Done yang punya
-    // dueDate di masa lalu salah turun ke Late & menurunkan KPI member.
-    // ──────────────────────────────────────────────────────────────
-    return 100;
+    if (delta <= -1) return 100;
+    if (delta === 0) return 95;
+    if (delta === 1) return 80;
+    if (delta === 2) return 70;
+    if (delta === 3) return 60;
+    return 40;
   }
   if (delta <= 0) return 100;
   if (delta === 1) return 80;
