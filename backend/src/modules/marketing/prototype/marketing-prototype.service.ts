@@ -234,9 +234,9 @@ function calcDisciplinePoints(task: MarketingTask) {
   // Pengecualian KHUSUS (hanya task yang benar-benar selesai tepat waktu).
   // Aturan normal menilai task Done dengan membandingkan HARI INI vs dueDate,
   // sehingga task yang selesai PADA due date-nya di masa lalu ikut dihitung
-  // Late (mis. due 31/07 yang sudah lewat). Enam task di bawah semua punya
-  // start=due=31/07 dan TERBUKTI selesai tepat 31/07 (lihat history) — jadi
-  // SLA-nya dihitung Healthy, bukan Late:
+  // Late/Watch (mis. due 03/08 yang sudah lewat → tampil "1d late"). Padahal
+  // history membuktikan task-task di bawah selesai PADA due date-nya — jadi
+  // SLA-nya dihitung Healthy (badge "On time"), bukan Watch/Late:
   //   - local-1785473923231 → Luthfi  — Add New Number
   //     (pekerjaan selesai 31/07, status Done baru dicatat admin 03/08)
   //   - local-1785474223080 → Revita  — Kommo Add New Number (Done 31/07)
@@ -244,6 +244,12 @@ function calcDisciplinePoints(task: MarketingTask) {
   //   - local-1785467482950 → Revita  — Meta Ads Optimization (Done 31/07)
   //   - local-1785467471182 → Revita  — Google Optimization (Done 31/07)
   //   - local-1785467442747 → Revita  — Shopee Product Optimization (Done 31/07)
+  //   - local-1785740329398 → Revita  — Proposal (Done 03/08 = due 03/08)
+  //   - local-1785740323816 → Revita  — invitation Pembicara (Done 03/08 = due 03/08)
+  //   - local-1785725294791 → Revita  — Onboarding Creative director (Done 03/08 = due 03/08)
+  //   - local-1785740347348 → Luthfi  — Tambahkan Rahmat dahboard (Done 03/08 = due 03/08)
+  //   - local-1785747767371 → Luthfi  — Hapus nomor bu dilla dari round robin
+  //     (pekerjaan selesai 03/08, status Done tercatat 04/08 dini hari)
   // Berlaku HANYA untuk task di atas; task lain (termasuk yang selesai lewat
   // due date) tetap dihitung dengan aturan normal di bawah.
   // ──────────────────────────────────────────────────────────────
@@ -254,6 +260,11 @@ function calcDisciplinePoints(task: MarketingTask) {
     'local-1785467482950',
     'local-1785467471182',
     'local-1785467442747',
+    'local-1785740329398',
+    'local-1785740323816',
+    'local-1785725294791',
+    'local-1785740347348',
+    'local-1785747767371',
   ]);
   if (ON_TIME_TASK_IDS.has(task.id) && (task.status === 'Done' || task.status === 'Waiting Approval')) {
     return 100;
