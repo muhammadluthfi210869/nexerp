@@ -377,10 +377,16 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   useEffect(() => {
     setLocalTasks((current) => {
-      const localIds = new Set(current.filter((t) => t.id.startsWith('local-')).map((t) => t.id));
-      const serverTasks = tasks.filter((t) => !localIds.has(t.id));
-      const localTasks = current.filter((t) => localIds.has(t.id));
-      return [...serverTasks, ...localTasks];
+      // Server adalah sumber kebenaran: task yang ada di server selalu dipakai
+      // versi server-nya (status/date terbaru). Sebelumnya task ber-ID "local-"
+      // SELALU dipertahankan versi lokal dan versi server dibuang — akibatnya
+      // kalau server berubah (tab lain / penyimpanan ulang), board menampilkan
+      // data basi (mis. status "Done" yang sebenarnya gagal tersimpan tetap
+      // tampil sampai reload). Hanya task yang BENAR-BENAR belum ada di server
+      // (baru dibuat / create gagal) yang dipertahankan dari state lokal.
+      const serverIds = new Set(tasks.map((t) => t.id));
+      const localOnly = current.filter((t) => !serverIds.has(t.id));
+      return [...tasks, ...localOnly];
     });
   }, [tasks]);
 
@@ -627,9 +633,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     const persistPromise = (() => {
       if (field === ("status" as typeof field)) {
         return api.patch(`/marketing/prototype/tasks/${taskId}/status`, { status: value, note: `Status changed to ${value}` });
-      } else if (taskId.startsWith("local-")) {
-        // Local-only tasks don't exist on backend yet, skip
-        return Promise.resolve();
       } else if (!isManager && field !== "startDate") {
         // Non-managers only can edit startDate & status (per backend updateTask)
         // Revert local state immediately to prevent UX confusion

@@ -649,12 +649,29 @@ export class MarketingPrototypeService {
     await writeFile(statePath, JSON.stringify(state, null, 2), 'utf8');
   }
 
+  /** Rantai serialisasi untuk updateState — mencegah kehilangan data.
+   * updateState = read → mutate → write. Tanpa serialisasi, dua request PATCH
+   * yang datang hampir bersamaan membaca snapshot yang SAMA, lalu write yang
+   * terakhir menimpa perubahan yang pertama → task bisa kembali ke status lama
+   * (mis. "Done" yang baru disimpan tiba-tiba balik "Not started"), termasuk
+   * history-nya ikut hilang. Queue ini memastikan hanya satu read-modify-write
+   * berjalan pada satu waktu. */
+  private stateWriteChain: Promise<unknown> = Promise.resolve();
+
   private async updateState(mutator: (state: MarketingPrototypeState) => MarketingPrototypeState | void) {
-    const state = this.normalizeState(await this.readState());
-    const result = mutator(state);
-    const next = (result ?? state) as MarketingPrototypeState;
-    await this.writeState(next);
-    return next;
+    const operation = this.stateWriteChain.then(async () => {
+      const state = this.normalizeState(await this.readState());
+      const result = mutator(state);
+      const next = (result ?? state) as MarketingPrototypeState;
+      await this.writeState(next);
+      return next;
+    });
+    // Jangan biarkan satu kegagalan memblokir operasi berikutnya.
+    this.stateWriteChain = operation.then(
+      () => undefined,
+      () => undefined,
+    );
+    return operation;
   }
 
   private resolveViewer(viewer?: ViewerContext): ViewerScope {
