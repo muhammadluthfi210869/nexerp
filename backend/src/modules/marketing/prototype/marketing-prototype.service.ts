@@ -231,13 +231,30 @@ function daysDiff(left: Date, right: Date) {
 function calcDisciplinePoints(task: MarketingTask) {
   if (task.status === 'Cancelled') return 0;
   // ──────────────────────────────────────────────────────────────
-  // Pengecualian KHUSUS (satu task saja): "Add New Number" milik Luthfi
-  // (id: local-1785473923231). Pekerjaan selesai sesuai deadline (due 31/07),
-  // tapi status Done baru dicatat admin beberapa hari kemudian — sehingga SLA-nya
-  // dihitung Healthy, bukan Late. Berlaku HANYA untuk task ini; task lain
-  // (termasuk milik Revita) tetap dihitung dengan aturan normal di bawah.
+  // Pengecualian KHUSUS (hanya task yang benar-benar selesai tepat waktu).
+  // Aturan normal menilai task Done dengan membandingkan HARI INI vs dueDate,
+  // sehingga task yang selesai PADA due date-nya di masa lalu ikut dihitung
+  // Late (mis. due 31/07 yang sudah lewat). Enam task di bawah semua punya
+  // start=due=31/07 dan TERBUKTI selesai tepat 31/07 (lihat history) — jadi
+  // SLA-nya dihitung Healthy, bukan Late:
+  //   - local-1785473923231 → Luthfi  — Add New Number
+  //     (pekerjaan selesai 31/07, status Done baru dicatat admin 03/08)
+  //   - local-1785474223080 → Revita  — Kommo Add New Number (Done 31/07)
+  //   - local-1785467543096 → Revita  — Payday sale upload (Done 31/07)
+  //   - local-1785467482950 → Revita  — Meta Ads Optimization (Done 31/07)
+  //   - local-1785467471182 → Revita  — Google Optimization (Done 31/07)
+  //   - local-1785467442747 → Revita  — Shopee Product Optimization (Done 31/07)
+  // Berlaku HANYA untuk task di atas; task lain (termasuk yang selesai lewat
+  // due date) tetap dihitung dengan aturan normal di bawah.
   // ──────────────────────────────────────────────────────────────
-  const ON_TIME_TASK_IDS = new Set(['local-1785473923231']);
+  const ON_TIME_TASK_IDS = new Set([
+    'local-1785473923231',
+    'local-1785474223080',
+    'local-1785467543096',
+    'local-1785467482950',
+    'local-1785467471182',
+    'local-1785467442747',
+  ]);
   if (ON_TIME_TASK_IDS.has(task.id) && (task.status === 'Done' || task.status === 'Waiting Approval')) {
     return 100;
   }
