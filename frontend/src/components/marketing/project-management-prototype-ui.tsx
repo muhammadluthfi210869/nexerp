@@ -8,18 +8,23 @@ import type {
 } from "./project-management-prototype-data";
 
 export function formatShortDate(value: string) {
+  // Parse sebagai tanggal LOKAL ("YYYY-MM-DD" + "T00:00:00"), bukan
+  // new Date("YYYY-MM-DD") yang = UTC tengah malam → off-by-one di timezone
+  // negatif/positif (BUG-U6/P5.5).
+  const date = value.includes("T") ? new Date(value) : new Date(`${value}T00:00:00`);
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function formatLongDate(value: string) {
+  const date = value.includes("T") ? new Date(value) : new Date(`${value}T00:00:00`);
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function initials(name: string) {

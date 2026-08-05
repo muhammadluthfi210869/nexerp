@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as Sentry from '@sentry/nestjs';
 
 // Load ENV from root or backend folder
 dotenv.config({ path: path.join(process.cwd(), '.env') });
@@ -16,6 +17,20 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 const compression = require('compression');
 
 async function bootstrap() {
+  // Sentry error tracking. No-op bila SENTRY_DSN belum diisi — aman untuk
+  // development/CI. Isi SENTRY_DSN di .env untuk mengaktifkan monitoring.
+  const sentryDsn = process.env.SENTRY_DSN;
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: process.env.NODE_ENV ?? 'development',
+      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    });
+    console.log('✅ Sentry initialized');
+  } else {
+    console.warn('⚠️ SENTRY_DSN belum diisi — error tracking non-aktif.');
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // Health check endpoint

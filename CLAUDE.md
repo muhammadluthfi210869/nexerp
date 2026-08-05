@@ -1,5 +1,15 @@
 # ERP FROM ZERO - Project Guide
 
+## ⛩️ QA GATE — ATURAN WAJIB (BACA SETIAP SESI)
+
+**Jangan pernah menyatakan fitur "selesai" / "siap dikirim" sebelum `docs/QA_GATE.md`
+dijalankan SELURUHNYA dan laporan gate (Fase 10) ditulis.** Ini berlaku untuk SEMUA
+perubahan, sekecil apa pun (termasuk ganti badge/status). Kalau ada satu item "belum jelas",
+jawab: "BELUM SIAP KIRIM" — jangan bilang selesai. Baca `docs/QA_GATE.md` dulu.
+
+**Aturan regresi (wajib):** setiap bug → tulis test reproduksi yang GAGAL dulu → baru fix →
+seluruh suite hijau. Tanpa itu, jangan claim bug sudah dibenerin.
+
 ## 🏗 System Overview
 - **Backend**: NestJS + Prisma (SQLite/PostgreSQL)
 - **Dashboard**: React (Vite) + Lucide Icons + Tailwind (if requested)

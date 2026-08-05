@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -27,6 +27,8 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { useMarketingPrototypeBundle } from "@/components/marketing/use-marketing-prototype";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { toLocalDateString, parseLocalDate, calendarDayDiff } from "@/lib/utils";
+import { canonicalMember, sameMember } from "@/lib/marketing-members";
 
 type TaskStatus = "Not started" | "Working on it" | "Revision" | "Done";
 
@@ -44,6 +46,7 @@ type TaskRow = {
   dueDate: string;
   status: TaskStatus;
   sla: "Healthy" | "Watch" | "Late";
+  completedAt?: string;
   notes: string;
   history?: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
 };
@@ -163,20 +166,24 @@ function getInitials(name: string) {
 function matchMember(task: TaskRow, memberSlug: string) {
   const member = memberLookup[memberSlug];
   if (!member || member.slug === "overview") return true;
-  const owner = normalize(task.pic);
-  return [member.label, ...member.aliases].some((alias) => owner.includes(normalize(alias)));
+  // Pencocokan alias kanonik (bukan substring-includes yang longgar).
+  // Task ber-pic "Revita" → member "Revita" (slug revi) tetap cocok; task
+  // ber-pic "Nisa" juga cocok (alias revi) — konsisten dengan backend.
+  const memberName = canonicalMember(member.label);
+  return canonicalMember(task.pic) === memberName || member.aliases.some((alias) => sameMember(task.pic, alias));
 }
 
 function defaultQuickAdd(memberSlug: string, viewerName?: string | null): QuickAddState {
   const member = memberLookup[memberSlug] ?? memberLookup.overview;
   const pic = member?.slug === "overview" ? (viewerName ?? "Aurel") : member.label;
+  const today = toLocalDateString();
   return {
     title: "",
     project: "",
     brand: "Dreamlab",
     pic,
-    startDate: new Date().toISOString().slice(0, 10),
-    dueDate: new Date().toISOString().slice(0, 10),
+    startDate: today,
+    dueDate: today,
     priority: "Medium",
   };
 }
@@ -184,6 +191,7 @@ function defaultQuickAdd(memberSlug: string, viewerName?: string | null): QuickA
 function defaultDraft(memberSlug: string, viewerName?: string | null): TaskDraft {
   const member = memberLookup[memberSlug] ?? memberLookup.overview;
   const pic = viewerName ?? (member?.slug === "overview" ? "Aurel" : member.label);
+  const today = toLocalDateString();
   return {
     title: "",
     project: "",
@@ -191,8 +199,8 @@ function defaultDraft(memberSlug: string, viewerName?: string | null): TaskDraft
     pic,
     status: "Not started",
     priority: "Medium",
-    startDate: new Date().toISOString().slice(0, 10),
-    dueDate: new Date().toISOString().slice(0, 10),
+    startDate: today,
+    dueDate: today,
     notes: "",
   };
 }
@@ -211,16 +219,19 @@ function taskToDraft(task: TaskRow): TaskDraft {
   };
 }
 
-function draftToTask(taskId: string, draft: TaskDraft): TaskRow {
+function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | null): TaskRow {
+  const viewer = viewerName?.trim() || "System";
   return {
     id: taskId,
     title: draft.title.trim(),
     projectId: "local",
     project: draft.project.trim() || "Marketing",
     brand: draft.brand,
-    assignedBy: "System",
+    // assignedBy/reviewer diisi viewer (manager) — bukan "System"/"" supaya
+    // task baru punya reviewer yang jelas & tidak hilang dari view reviewer.
+    assignedBy: viewer,
     pic: draft.pic.trim() || "Aurel",
-    reviewer: "",
+    reviewer: viewer === "System" ? "Revi" : viewer,
     priority: draft.priority,
     startDate: draft.startDate,
     dueDate: draft.dueDate,
@@ -250,22 +261,25 @@ function formatMonthShortLabel(value: string) {
 }
 
 function getRecentMonthKeys(monthCount: number, today: string) {
-  const current = new Date(`${today}T00:00:00`);
-  if (Number.isNaN(current.getTime())) return [];
+  if (!today) return [];
+  const [year, month] = today.split("-").map(Number);
+  if (Number.isNaN(year) || Number.isNaN(month)) return [];
+  // Susun key bulan secara LOKAL (new Date(y, m-1, 1)), bukan via
+  // toISOString() yang bisa salah bulan di perbatasan bulan (BUG-D4/P1.4).
   return Array.from({ length: monthCount }, (_, index) => {
-    const date = new Date(current);
-    date.setMonth(current.getMonth() - (monthCount - 1 - index));
-    return date.toISOString().slice(0, 7);
+    const base = new Date(year, month - 1 + index, 1);
+    const y = base.getFullYear();
+    const m = String(base.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
   });
 }
 
 function getDayLeftLabel(dueDate: string, today: string) {
   if (!dueDate) return "-";
-  const dayMs = 24 * 60 * 60 * 1000;
-  const due = new Date(`${dueDate}T00:00:00`);
-  const now = new Date(`${today}T00:00:00`);
-  if (Number.isNaN(due.getTime()) || Number.isNaN(now.getTime())) return "-";
-  const diff = Math.round((due.getTime() - now.getTime()) / dayMs);
+  // Selisih hari kalender lokal (mirror backend calendarDayDiff) — tanpa
+  // Math.round pecahan jam yang menggeser batas "late" ±12 jam (BUG-D3).
+  const diff = calendarDayDiff(parseLocalDate(dueDate), parseLocalDate(today));
+  if (Number.isNaN(diff)) return "-";
   if (diff === 0) return "Today";
   if (diff > 0) return `${diff} day${diff === 1 ? "" : "s"}`;
   return `${Math.abs(diff)} day${Math.abs(diff) === 1 ? "" : "s"} late`;
@@ -360,17 +374,20 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const [drawerSaving, setDrawerSaving] = useState(false);
   const [editingProjectIndex, setEditingProjectIndex] = useState<number | null>(null);
   const [editingProjectName, setEditingProjectName] = useState("");
+  // Timer debounce untuk edit inline (title/date) — mencegah request beruntun
+  // per keystroke (BUG-U1/P5.1).
+  const inlineEditTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const initialProjects = useMemo(() => {
     const fromProjects = projects.map((p) => p.name);
     return Array.from(new Set(fromProjects.filter(Boolean)));
   }, [projects]);
 
+  // Server adalah sumber kebenaran project (P3.3): semua tambah/ubah/hapus
+  // project lewat API, lalu mirror hasilnya ke localProjects.
   useEffect(() => {
-    if (initialProjects.length > 0 && localProjects.length === 0) {
-      setLocalProjects(initialProjects);
-    }
-  }, [initialProjects, localProjects.length]);
+    setLocalProjects(initialProjects);
+  }, [initialProjects]);
 
   const [globalQuickAdd, setGlobalQuickAdd] = useState<QuickAddState>(defaultQuickAdd(activeMember, viewerName));
   const [brandFilter, setBrandFilter] = useState<"all" | "Dreamlab" | "Toribio">("all");
@@ -413,7 +430,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   const selectedMember = memberLookup[activeMember] ?? memberLookup.overview;
   const isOverview = selectedMember?.slug === "overview";
-  const today = new Date().toISOString().slice(0, 10);
+  // Tanggal "hari ini" LOKAL (WIB) — jangan toISOString() yang bisa
+  // mengembalikan tanggal KEMARIN sebelum pukul 07:00 (BUG-D1/P1.1).
+  const today = toLocalDateString();
 
   // Viewer identity → slug mapping
   const viewerSlug = useMemo(() => {
@@ -486,9 +505,15 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const monthlyPerformance = useMemo(
     () =>
       visibleMembers.map((member) => {
+        const memberRows = localTasks.filter((task) => matchMember(task, member.slug));
         const data = chartMonths.map((month) => {
-          const rows = localTasks.filter((task) => matchMember(task, member.slug) && task.dueDate.slice(0, 7) === month);
-          const done = rows.filter((task) => task.status === "Done").length;
+          const rows = memberRows.filter((task) => task.dueDate.slice(0, 7) === month);
+          // Done dikelompokkan berdasarkan bulan SELESAI (completedAt), bukan
+          // bulan dueDate — supaya grafik "KPI per Bulan" mencerminkan kapan
+          // task benar-benar selesai (BUG-K3/P2.3).
+          const done = memberRows.filter(
+            (task) => task.status === "Done" && (task.completedAt?.slice(0, 7) ?? task.dueDate.slice(0, 7)) === month,
+          ).length;
           const score = rows.length ? Math.round((done / rows.length) * 100) : 0;
           return {
             month,
@@ -516,7 +541,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
         const rows = localTasks.filter((task) => matchMember(task, member.slug));
         const done = rows.filter((task) => task.status === "Done").length;
         const open = rows.filter((task) => task.status !== "Done").length;
-        const late = rows.filter((task) => task.dueDate < today && task.status !== "Done").length;
+        // "Overdue" = task aktif (belum Done) yang due-nya sudah lewat — dihitung
+        // dengan calendarDayDiff (hari kalender lokal), bukan perbandingan string
+        // (BUG-K1/P2.1). Open overdue TIDAK menggerus KPI on-time (lihat
+        // selectedMemberBrandSnapshot & backend getBundle).
+        const late = rows.filter((task) => task.status !== "Done" && calendarDayDiff(parseLocalDate(today), parseLocalDate(task.dueDate)) > 0).length;
         const progress = rows.length ? Math.round((done / rows.length) * 100) : 0;
         const profile = profiles.find((item) => normalize(item.name) === normalize(member.label) || normalize(item.id) === normalize(member.slug));
 
@@ -565,9 +594,13 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     const total = memberTasks.length;
     const done = memberTasks.filter((task) => task.status === "Done").length;
     const open = memberTasks.filter((task) => task.status !== "Done").length;
-    const late = memberTasks.filter((task) => task.dueDate < today && task.status !== "Done").length;
-    const lateAll = memberTasks.filter((task) => (task.dueDate < today && task.status !== "Done") || task.sla === "Late").length;
-    const onTime = Math.max(done - lateAll, 0);
+    // Overdue = open task yang lewat due (tidak menggerus KPI on-time).
+    const late = memberTasks.filter((task) => task.status !== "Done" && calendarDayDiff(parseLocalDate(today), parseLocalDate(task.dueDate)) > 0).length;
+    // Late completion (KPI) = HANYA task Done yang selesai lewat due.
+    const lateDone = memberTasks.filter(
+      (task) => task.status === "Done" && task.completedAt && calendarDayDiff(parseLocalDate(task.completedAt.slice(0, 10)), parseLocalDate(task.dueDate)) > 0,
+    ).length;
+    const onTime = Math.max(done - lateDone, 0);
     const progress = total ? Math.round((done / total) * 100) : 0;
     return { ...base, total, done, open, late, progress, onTime };
   }, [selectedMemberSnapshot, brandFilter, profiles, selectedMember.slug, localTasks, today]);
@@ -587,25 +620,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     [selectedMemberProfile],
   );
 
-  const stats = useMemo(() => {
-    const open = boardTasks.filter((task) => task.status !== "Done").length;
-    const done = boardTasks.filter((task) => task.status === "Done").length;
-    const late = boardTasks.filter((task) => task.dueDate < today && task.status !== "Done").length;
-    const dueSoon = boardTasks.filter((task) => {
-      const diff = new Date(task.dueDate).getTime() - new Date(today).getTime();
-      return diff >= 0 && diff <= 3 * 24 * 60 * 60 * 1000 && task.status !== "Done";
-    }).length;
-    const profile = profiles.find((item) => normalize(item.name) === normalize(selectedMember?.label ?? ""));
-
-    return [
-      { label: "Open Tasks", value: open },
-      { label: "Done", value: done },
-      { label: "Late", value: late },
-      { label: "Due Soon", value: dueSoon },
-      { label: "KPI", value: 0 },
-    ];
-  }, [boardTasks, profiles, selectedMember?.label, today]);
-
   const rowsByStatus = useMemo(
     () =>
       statusGroups.map((status) => ({
@@ -620,40 +634,48 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const selectedTask = selectedTaskId ? localTasks.find((task) => task.id === selectedTaskId) : undefined;
 
   function setTaskField(taskId: string, field: keyof TaskRow, value: string) {
-    // Save previous state for rollback
-    const prevTasks = localTasks;
-
+    // Optimistic update — tampilkan perubahan langsung.
     setLocalTasks((current) =>
       current.map((task) =>
         task.id === taskId ? { ...task, [field]: value } : task,
       ),
     );
 
-    // Persist field changes to backend (status uses dedicated endpoint, others use PATCH)
-    const persistPromise = (() => {
-      if (field === ("status" as typeof field)) {
-        return api.patch(`/marketing/prototype/tasks/${taskId}/status`, { status: value, note: `Status changed to ${value}` });
-      } else if (!isManager && field !== "startDate") {
-        // Non-managers only can edit startDate & status (per backend updateTask)
-        // Revert local state immediately to prevent UX confusion
-        setLocalTasks(prevTasks);
-        return Promise.resolve();
-      } else {
-        return api.patch(`/marketing/prototype/tasks/${taskId}`, { [field]: value });
-      }
-    })();
+    // Status memakai endpoint khusus & tidak perlu debounce (select fire sekali).
+    if (field === "status") {
+      api.patch(`/marketing/prototype/tasks/${taskId}/status`, { status: value, note: `Status changed to ${value}` })
+        .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
+        .catch((err) => {
+          console.error("[InlineEdit] Status update failed:", err?.response?.status);
+          // Rollback via refetch server (bukan snapshot closure yang stale).
+          queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+          alert(`Gagal mengubah status! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
+        });
+      return;
+    }
 
-    persistPromise
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-      })
-      .catch((err) => {
-        console.error("[InlineEdit] Update failed, rolling back:", field, err?.response?.status);
-        // Rollback to previous state on failure
-        setLocalTasks(prevTasks);
-        // Show user feedback
-        alert(`Gagal menyimpan perubahan! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
-      });
+    // Non-manager hanya boleh mengubah startDate (backend hanya menerima itu).
+    // Field lain dibuat read-only di JSX; kalau sempat berubah, refetch ulang.
+    if (!isManager && field !== "startDate") {
+      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+      return;
+    }
+
+    // Debounce persist (400 ms) untuk edit inline — satu request per jeda
+    // ketik, bukan per keystroke. Rollback gagal = refetch server (P5.1).
+    const timerKey = `${taskId}:${field}`;
+    const existing = inlineEditTimers.current[timerKey];
+    if (existing) clearTimeout(existing);
+    inlineEditTimers.current[timerKey] = setTimeout(() => {
+      delete inlineEditTimers.current[timerKey];
+      api.patch(`/marketing/prototype/tasks/${taskId}`, { [field]: value })
+        .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
+        .catch((err) => {
+          console.error("[InlineEdit] Update failed:", field, err?.response?.status);
+          queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+          alert(`Gagal menyimpan perubahan! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
+        });
+    }, 400);
   }
 
   function openCreateDrawer() {
@@ -681,10 +703,17 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   function createGlobalQuickTask() {
     if (!globalQuickAdd.title.trim()) return;
     if (quickAddSaving) return;
-    if (!isManager) return; // Only managers can create tasks
+    // Semua member bisa membuat task sendiri (Quick Add hanya tampil di halaman
+    // member sendiri / overview manager — pic = diri sendiri).
+    // Validasi tanggal (BUG-U3/P5.2): dueDate tidak boleh lebih awal dari startDate.
+    if (globalQuickAdd.dueDate < globalQuickAdd.startDate) {
+      alert("Due date tidak boleh lebih awal dari start date.");
+      return;
+    }
     setQuickAddSaving(true);
 
     const pic = globalQuickAdd.pic.trim() || "Aurel";
+    const viewer = viewerName?.trim() || "System";
 
     const newTask = {
       id: `local-${Date.now()}`,
@@ -692,9 +721,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       projectId: "local",
       project: globalQuickAdd.project.trim() || "Marketing",
       brand: globalQuickAdd.brand,
-      assignedBy: "System",
+      assignedBy: viewer,
       pic,
-      reviewer: "",
+      reviewer: viewer === "System" ? "Revi" : viewer,
       priority: globalQuickAdd.priority,
       startDate: globalQuickAdd.startDate,
       dueDate: globalQuickAdd.dueDate,
@@ -706,8 +735,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     setLocalTasks((current) => [newTask, ...current]);
     setGlobalQuickAdd(defaultQuickAdd(activeMember, viewerName));
 
-    // Persist to backend so other users see it
-    api.post("/marketing/prototype/tasks", newTask).then(() => {
+    // Persist to backend so other users see it. Setelah sukses, id lokal
+    // diganti id server dari respons (BUG-S3/P4.3) supaya status berikutnya
+    // (edit/delete) memakai id yang benar.
+    api.post("/marketing/prototype/tasks", newTask).then((res) => {
+      const savedId = res?.data?.id;
+      if (savedId && savedId !== newTask.id) {
+        setLocalTasks((current) => current.map((t) => (t.id === newTask.id ? { ...t, id: savedId } : t)));
+      }
       queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
       setQuickAddSaving(false);
     }).catch((err) => {
@@ -723,19 +758,19 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     if (drawerSaving) return;
     setDrawerSaving(true);
 
-    if (!isManager && drawerMode === "create") {
+    // Semua member boleh membuat task sendiri lewat drawer create (bukan
+    // hanya manager). Edit task tetap dibatasi untuk non-manager.
+    // Validasi tanggal (BUG-U3/P5.2).
+    if (draft.dueDate < draft.startDate) {
+      alert("Due date tidak boleh lebih awal dari start date.");
       setDrawerSaving(false);
-      setDrawerOpen(false);
       return;
     }
 
     const isEdit = drawerMode === "edit" && selectedTask;
     const nextTask = isEdit
-      ? { ...selectedTask, ...draftToTask(selectedTask!.id, draft) }
-      : draftToTask(`local-${Date.now()}`, draft);
-
-    // Save previous state for rollback
-    const prevTasks = localTasks;
+      ? { ...selectedTask, ...draftToTask(selectedTask!.id, draft, viewerName) }
+      : draftToTask(`local-${Date.now()}`, draft, viewerName);
 
     setLocalTasks((current) => {
       if (isEdit && selectedTask) {
@@ -746,34 +781,45 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
     setDrawerOpen(false);
 
-    // Persist to backend
+    // Persist to backend. Rollback gagal = invalidate/refetch dari server,
+    // BUKAN snapshot closure yang stale (BUG-U2/P5.1).
     const persistPromise = isEdit && selectedTask
       ? api.patch(`/marketing/prototype/tasks/${selectedTask.id}`, draft)
       : api.post("/marketing/prototype/tasks", nextTask);
 
     persistPromise
-      .then(() => {
+      .then((res) => {
+        // Untuk task baru: ganti id lokal dengan id server dari respons.
+        if (!isEdit) {
+          const savedId = res?.data?.id;
+          if (savedId && savedId !== nextTask.id) {
+            setLocalTasks((current) => current.map((t) => (t.id === nextTask.id ? { ...t, id: savedId } : t)));
+          }
+        }
         queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
         setDrawerSaving(false);
       })
       .catch((err) => {
         console.error("[SaveDrawer] Failed:", err?.response?.status, err?.response?.data);
-        // Rollback
-        setLocalTasks(prevTasks);
+        // Rollback via refetch server.
+        queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
         alert(`Gagal ${isEdit ? 'update' : 'menyimpan'} task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
         setDrawerSaving(false);
       });
   }
 
   function deleteTask(taskId: string) {
-    setLocalTasks((current) => current.filter((task) => task.id !== taskId));
-    setDrawerOpen(false);
-
-    api.delete(`/marketing/prototype/tasks/${taskId}`).catch((err) => {
+    // Hapus di server dulu; baru hapus lokal setelah sukses. Kalau gagal,
+    // refetch server sebagai rollback (task tetap ada) (BUG-U8/P5.7).
+    api.delete(`/marketing/prototype/tasks/${taskId}`).then(() => {
+      setLocalTasks((current) => current.filter((task) => task.id !== taskId));
+      setDrawerOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+    }).catch((err) => {
       console.error("[Delete] Failed:", err?.response?.status, err?.response?.data);
+      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
       alert(`Gagal hapus task! ${err?.response?.status}: ${err?.response?.data?.message ?? ''}`);
     });
-    queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
   }
 
   const title = selectedMember?.slug === "overview" ? "Management Task" : selectedMember?.label ?? "Management Task";
@@ -841,11 +887,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
             <DnaButton variant="outline" icon={<Folder />} onClick={() => setIsProjectManagerOpen(true)}>
               Projects
             </DnaButton>
-            {isManager && (
-              <DnaButton variant="primary" icon={<Plus />} onClick={() => openCreateDrawer()}>
-                New Task
-              </DnaButton>
-            )}
+            <DnaButton variant="primary" icon={<Plus />} onClick={() => openCreateDrawer()}>
+              New Task
+            </DnaButton>
           </div>
         </div>
 
@@ -1010,7 +1054,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
         {!isOverview ? (
         <>
-        {isManager && (
         <div data-marketing-surface="quick-add" className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)] overflow-hidden">
           <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Add Task</p>
@@ -1060,9 +1103,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               </div>
               <div className="text-center">
                 {(() => {
-                  const due = new Date(`${globalQuickAdd.dueDate}T00:00:00`);
-                  const now = new Date(`${today}T00:00:00`);
-                  const diff = Math.round((due.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+                  const diff = calendarDayDiff(parseLocalDate(globalQuickAdd.dueDate), parseLocalDate(today));
                   if (Number.isNaN(diff)) return <span className="text-slate-400 text-[10px]">—</span>;
                   if (diff === 0) return <span className="text-[10px] font-bold text-amber-600">Today</span>;
                   if (diff > 0) return <span className="text-[10px] font-semibold text-blue-600">{diff}d</span>;
@@ -1090,7 +1131,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
             </div>
           </div>
         </div>
-        )}
 
         <section className="space-y-4">
           {rowsByStatus.map((group) => {
@@ -1145,13 +1185,16 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   value={task.title}
                                   onChange={(event) => setTaskField(task.id, "title", event.target.value)}
                                   onClick={stopRowClick}
-                                  className="h-8 border-0 bg-transparent px-0 text-[13px] font-bold shadow-none focus:ring-0 text-slate-800"
+                                  readOnly={!isManager}
+                                  title={!isManager ? "Hanya manager yang dapat mengubah judul" : undefined}
+                                  className={`h-8 border-0 bg-transparent px-0 text-[13px] font-bold shadow-none focus:ring-0 text-slate-800 ${!isManager ? "cursor-default opacity-80" : ""}`}
                                 />
                                 <select
                                   value={task.project}
                                   onChange={(event) => setTaskField(task.id, "project", event.target.value)}
                                   onClick={stopRowClick}
-                                  className="mt-0.5 block w-fit border-0 bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400 outline-none focus:ring-0 focus:text-blue-500 cursor-pointer"
+                                  disabled={!isManager}
+                                  className="mt-0.5 block w-fit border-0 bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400 outline-none focus:ring-0 focus:text-blue-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                   {projectOptions.map((project) => (
                                     <option key={project} value={project}>
@@ -1185,18 +1228,23 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                               </div>
                               <div className="text-center">
                                 {(() => {
-                                  const due = new Date(`${task.dueDate}T00:00:00`);
-                                  const now = new Date(`${today}T00:00:00`);
-                                  const diff = Math.round((due.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+                                  // Badge disinkronkan dengan SLA backend (BUG-D2/D3/P2.1).
+                                  // diff = due - today (hari kalender lokal). Task DONE memakai
+                                  // SLA (tepat waktu vs terlambat selesai) — tidak ada lagi
+                                  // pengecualian hardcode "sla === Healthy".
+                                  const diff = calendarDayDiff(parseLocalDate(task.dueDate), parseLocalDate(today));
                                   if (Number.isNaN(diff)) return <span className="text-slate-400">-</span>;
+                                  if (task.status === "Done") {
+                                    if (task.sla === "Healthy") {
+                                      return <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 shadow-sm">On time</span>;
+                                    }
+                                    const lateDays = task.completedAt
+                                      ? Math.max(calendarDayDiff(parseLocalDate(task.completedAt.slice(0, 10)), parseLocalDate(task.dueDate)), 0)
+                                      : Math.abs(diff);
+                                    return <span className="inline-flex items-center rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-700 shadow-sm">{lateDays}d late</span>;
+                                  }
                                   if (diff === 0) return <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 shadow-sm">Today</span>;
                                   if (diff > 0) return <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[9px] font-semibold text-blue-700">{diff}d</span>;
-                                  // Task yang sudah selesai TEPAT waktu (sla=Healthy) tapi due-nya
-                                  // sudah lewat TIDAK boleh tampil "Xd late". Badge ini dihitung dari
-                                  // tanggal (today vs dueDate), jadi disinkronkan dengan SLA backend
-                                  // supaya task on-time (mis. yang selesai di due date 31/07) tampil
-                                  // hijau, bukan merah. Task Watch/Late tetap seperti sebelumnya.
-                                  if (task.sla === 'Healthy') return <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 shadow-sm">On time</span>;
                                   return <span className="inline-flex items-center rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-700 shadow-sm">{Math.abs(diff)}d late</span>;
                                 })()}
                               </div>
@@ -1323,21 +1371,25 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   value={draft.notes}
                   onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
                   rows={5}
-                  className="w-full rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-[13px] leading-6 text-slate-900 outline-none focus:border-blue-300 resize-none"
+                  disabled={!isManager && drawerMode !== "create"}
+                  className="w-full rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-[13px] leading-6 text-slate-900 outline-none focus:border-blue-300 resize-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   placeholder="Write task description or notes here..."
                 />
               </div>
 
-              {/* Fields grid */}
+              {/* Fields grid — field selain status/startDate bersifat read-only
+                  untuk non-manager (backend tidak menerimanya; mencegah perubahan
+                  yang diam-diam hilang — P5.1). */}
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Task">
-                  <DnaInput value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Task title" />
+                  <DnaInput value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Task title" disabled={!isManager && drawerMode !== "create"} />
                 </Field>
                 <Field label="Project">
                   <select
                     value={draft.project}
                     onChange={(event) => setDraft((current) => ({ ...current, project: event.target.value }))}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300"
+                    disabled={!isManager && drawerMode !== "create"}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="">Project</option>
                     {projectOptions.map((project) => (
@@ -1351,14 +1403,15 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <select
                     value={draft.brand}
                     onChange={(event) => setDraft((current) => ({ ...current, brand: event.target.value as "Dreamlab" | "Toribio" }))}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300"
+                    disabled={!isManager && drawerMode !== "create"}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="Dreamlab">Dreamlab</option>
                     <option value="Toribio">Toribio</option>
                   </select>
                 </Field>
                 <Field label="Assignee">
-                  <DnaInput value={draft.pic} onChange={(event) => setDraft((current) => ({ ...current, pic: event.target.value }))} placeholder="Aurel" />
+                  <DnaInput value={draft.pic} onChange={(event) => setDraft((current) => ({ ...current, pic: event.target.value }))} placeholder="Aurel" disabled={!isManager} />
                 </Field>
                 <Field label="Status">
                   <select
@@ -1377,7 +1430,8 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <select
                     value={draft.priority}
                     onChange={(event) => setDraft((current) => ({ ...current, priority: event.target.value as TaskRow["priority"] }))}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300"
+                    disabled={!isManager && drawerMode !== "create"}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     {["Low", "Medium", "High", "Urgent"].map((value) => (
                       <option key={value} value={value}>
@@ -1390,7 +1444,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <DnaInput type="date" value={draft.startDate} onChange={(event) => setDraft((current) => ({ ...current, startDate: event.target.value }))} />
                 </Field>
                 <Field label="Due Date">
-                  <DnaInput type="date" value={draft.dueDate} onChange={(event) => setDraft((current) => ({ ...current, dueDate: event.target.value }))} disabled={!isManager} />
+                  <DnaInput type="date" value={draft.dueDate} onChange={(event) => setDraft((current) => ({ ...current, dueDate: event.target.value }))} disabled={!isManager && drawerMode !== "create"} />
                 </Field>
               </div>
             </div>
@@ -1448,10 +1502,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                 type="button"
                 onClick={() => {
                   const trimmed = newProjectName.trim();
-                  if (trimmed && !localProjects.includes(trimmed)) {
-                    setLocalProjects((current) => [...current, trimmed]);
-                    setNewProjectName("");
-                  }
+                  if (!trimmed || localProjects.includes(trimmed)) return;
+                  // Tambah project via API backend (P3.3) supaya tetap ada
+                  // setelah refresh — bukan hanya state lokal.
+                  api.post("/marketing/prototype/projects", { name: trimmed })
+                    .then(() => {
+                      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+                      setNewProjectName("");
+                    })
+                    .catch((err) => {
+                      console.error("[ProjectManager] Add failed:", err?.response?.status, err?.response?.data);
+                      alert(`Gagal tambah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+                    });
                 }}
                 className="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-4 text-[11px] font-bold uppercase tracking-wider text-white hover:bg-blue-700 transition"
               >
@@ -1478,17 +1540,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                           type="button"
                           onClick={() => {
                             const trimmed = editingProjectName.trim();
-                            if (trimmed && trimmed !== projectName) {
-                              setLocalProjects((current) => {
-                                const next = [...current];
-                                next[index] = trimmed;
-                                return next;
-                              });
-                              setLocalTasks((current) =>
-                                current.map((t) => (t.project === projectName ? { ...t, project: trimmed } : t))
-                              );
-                            }
                             setEditingProjectIndex(null);
+                            if (!trimmed || trimmed === projectName) return;
+                            const project = projects.find((p) => p.name === projectName);
+                            if (!project) return;
+                            // Ubah project via API backend (P3.3); task yang
+                            // ber-project lama ikut di-reassign oleh backend.
+                            api.patch(`/marketing/prototype/projects/${project.id}`, { name: trimmed })
+                              .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
+                              .catch((err) => {
+                                console.error("[ProjectManager] Edit failed:", err?.response?.status, err?.response?.data);
+                                alert(`Gagal ubah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+                              });
                           }}
                           className="text-emerald-600 hover:text-emerald-700 font-bold text-[11px] px-2 py-1"
                         >
@@ -1519,7 +1582,17 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                           <button
                             type="button"
                             onClick={() => {
-                              setLocalProjects((current) => current.filter((_, i) => i !== index));
+                              const project = projects.find((p) => p.name === projectName);
+                              if (!project) return;
+                              if (!window.confirm(`Hapus project "${projectName}"? Task di dalamnya dipindah ke project lain.`)) return;
+                              // Hapus project via API backend (P3.3) — task di
+                              // dalamnya otomatis di-reassign oleh backend.
+                              api.delete(`/marketing/prototype/projects/${project.id}`)
+                                .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
+                                .catch((err) => {
+                                  console.error("[ProjectManager] Delete failed:", err?.response?.status, err?.response?.data);
+                                  alert(`Gagal hapus project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+                                });
                             }}
                             className="text-slate-400 hover:text-rose-600 p-1 hover:bg-slate-50 rounded"
                           >

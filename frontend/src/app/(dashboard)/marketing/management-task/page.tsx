@@ -39,8 +39,14 @@ export default function ManagementTaskRedirectPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = window.localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
+    let user: any = null;
+    try {
+      const storedUser = window.localStorage.getItem("user");
+      user = storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      // localStorage korup / bukan JSON → fallback null (BUG-U7/P5.6).
+      user = null;
+    }
     router.replace(resolveManagementTaskPath(user));
   }, [router]);
 

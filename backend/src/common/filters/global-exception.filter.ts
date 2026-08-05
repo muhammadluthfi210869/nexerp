@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { Request, Response } from 'express';
 
 const corsHeaders = (request: Request) => ({
@@ -26,6 +27,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    // Kirim error server (5xx) ke Sentry — error 4xx (kesalahan client) tidak
+    // perlu membanjiri dashboard monitoring.
+    if (status >= 500) {
+      Sentry.captureException(exception, {
+        extra: { path: request.url, method: request.method, statusCode: status },
+      });
+    }
 
     let body: Record<string, any>;
 

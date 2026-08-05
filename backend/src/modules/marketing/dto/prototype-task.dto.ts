@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsIn, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsDateString, IsNumber, IsArray } from 'class-validator';
 
 export class CreateTaskDto {
   @IsOptional()
@@ -16,6 +16,14 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   project?: string;
+
+  @IsOptional()
+  @IsString()
+  channel?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
 
   @IsOptional()
   @IsIn(['Dreamlab', 'Toribio'])
@@ -52,6 +60,38 @@ export class CreateTaskDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  estimatedHours?: number;
+
+  @IsOptional()
+  @IsNumber()
+  actualHours?: number;
+
+  @IsOptional()
+  @IsNumber()
+  revisionCount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  checklistDone?: number;
+
+  @IsOptional()
+  @IsNumber()
+  checklistTotal?: number;
+
+  @IsOptional()
+  @IsString()
+  brief?: string;
+
+  @IsOptional()
+  @IsArray()
+  tags?: string[];
+
+  @IsOptional()
+  @IsArray()
+  attachments?: Array<{ name: string; type: string; sizeKb: number }>;
 
   @IsOptional()
   @IsString()
@@ -147,18 +187,19 @@ export class CreateProjectDto {
   deadline?: string;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   progress?: number;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsIn(['On Track', 'At Risk', 'Review', 'Completed'])
+  status?: 'On Track' | 'At Risk' | 'Review' | 'Completed';
 
   @IsOptional()
   @IsString()
   summary?: string;
 
   @IsOptional()
+  @IsArray()
   blockers?: string[];
 }
 
@@ -188,17 +229,19 @@ export class UpdateProjectDto {
   deadline?: string;
 
   @IsOptional()
+  @IsNumber()
   progress?: number;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsIn(['On Track', 'At Risk', 'Review', 'Completed'])
+  status?: 'On Track' | 'At Risk' | 'Review' | 'Completed';
 
   @IsOptional()
   @IsString()
   summary?: string;
 
   @IsOptional()
+  @IsArray()
   blockers?: string[];
 }
 

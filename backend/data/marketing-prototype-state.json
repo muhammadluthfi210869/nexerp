@@ -1,5 +1,5 @@
 {
-  "summaryDate": "2026-07-25T08:03:46.254Z",
+  "summaryDate": "2026-08-05T04:28:11.768Z",
   "projects": [],
   "tasks": [],
   "performance": [
@@ -48,11 +48,331 @@
   ],
   "notifications": [
     {
+      "type": "task_completed",
+      "title": "Task completed by Revita",
+      "detail": "E2E Realtime Badge 1785903942742 has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-83fdf8ef-75b4-428a-b2e6-f42d37620856",
+      "time": "04:25"
+    },
+    {
+      "type": "task_completed",
+      "title": "Task completed by Revita",
+      "detail": "E2E Browser Task 1785903942759 has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-fc14c287-332b-453a-b287-e833294e131f",
+      "time": "04:25"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Revita",
+      "detail": "E2E Browser Task 1785903942759 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revita",
+      "id": "NTF-2c99bc9e-9768-491e-bba3-745989f10c90",
+      "time": "04:25"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Revita",
+      "detail": "E2E Realtime Badge 1785903942742 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revita",
+      "id": "NTF-2a7aaf0f-9818-4e46-98c9-3df6aacc3038",
+      "time": "04:25"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Member Task 1785903942631 was assigned under Marketing.",
+      "actor": "Aurel",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-787d5f0f-b7c9-489b-8728-e6f0f93d18c6",
+      "time": "04:25"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Done On Time was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-814e0776-fbf2-4e65-9750-88ecbab03e6a",
+      "time": "04:22"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Due Yesterday was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-840dfaa0-1cf6-49c7-94f2-7b78098eb0ef",
+      "time": "04:22"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Due Today was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-5f2e980f-23b8-47e0-983b-8daf16a6b9b1",
+      "time": "04:22"
+    },
+    {
+      "type": "task_completed",
+      "title": "Task completed by Revita",
+      "detail": "E2E Browser Task 1785902510605 has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-fc031a2f-062b-4cbf-97b4-a1a4c5bc80d1",
+      "time": "04:01"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Member Task 1785902510586 was assigned under Marketing.",
+      "actor": "Aurel",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-5cfdf4ad-5c0e-491e-a99e-f4e366b36970",
+      "time": "04:01"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Revita",
+      "detail": "E2E Browser Task 1785902510605 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revita",
+      "id": "NTF-52f0cbab-f921-4dff-b731-72c4dee7b28d",
+      "time": "04:01"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Due Yesterday was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-f11720d3-e730-4a5c-8c5c-d5ef107f7a97",
+      "time": "04:01"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Due Today was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-23b0aec6-3000-4a34-96ae-6a760d07d9fa",
+      "time": "04:01"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "Member create sendiri was assigned under Marketing.",
+      "actor": "Aurel",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-df03d526-37fd-4219-b6c1-bec7974f1483",
+      "time": "04:01"
+    },
+    {
+      "type": "task_completed",
+      "title": "Task completed by Revita",
+      "detail": "E2E Browser Task 1785901749281 has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-68a2e41a-7392-4b0b-b92a-f55dc72ca5eb",
+      "time": "03:49"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Revita",
+      "detail": "E2E Browser Task 1785901749281 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revita",
+      "id": "NTF-a3ec5d75-a0ab-4462-8f47-29e8eba31ef4",
+      "time": "03:49"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Revita",
+      "detail": "E2E Browser Task 1785901716802 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revita",
+      "id": "NTF-6cb100a2-089e-4551-a43c-79a10d0b66c9",
+      "time": "03:48"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Revita",
+      "detail": "E2E Browser Task 1785901649224 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revita",
+      "id": "NTF-bd1690fd-c317-4764-9498-2248d8af9d15",
+      "time": "03:47"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Due Yesterday was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-23fb8003-91c4-4fb0-91aa-fbd47e3b86f4",
+      "time": "03:46"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "E2E Due Today was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-ff4075bb-485d-4563-bf8d-057766140b31",
+      "time": "03:46"
+    },
+    {
+      "type": "task_completed",
+      "title": "Task completed by Aurel",
+      "detail": "[TEST] Due -3 has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-02d8fab7-e5dd-45aa-a005-cc59c42a0d8c",
+      "time": "03:44"
+    },
+    {
+      "type": "task_completed",
+      "title": "Task completed by Aurel",
+      "detail": "[TEST] Due hari ini has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-f274a37a-3bb2-4064-8516-c2ccb2ec90a8",
+      "time": "03:44"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "[TEST] Due -3 was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-21fd0abe-79e4-4b80-8cc8-a727e8087084",
+      "time": "03:44"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "[TEST] Due kemarin was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-cc6ab228-0b2a-4ed9-a3af-73cf095e5d99",
+      "time": "03:44"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "[TEST] Due besok was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-c8dbee34-8ae5-4e67-b0b9-19559d65b356",
+      "time": "03:44"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "[TEST] Due hari ini was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-190d0ece-b28b-48e2-ba7d-2b9169802e36",
+      "time": "03:44"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "Uji input task manager was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-56deee75-ec2b-4ac8-86ea-38856cbc660d",
+      "time": "03:43"
+    },
+    {
+      "type": "task_completed",
+      "title": "Task completed by Zarka",
+      "detail": "Selesai telat 3 hari has been marked Done and is waiting review closure.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Revi",
+      "id": "NTF-9f088f85-d071-4bdd-9fca-ce406204dd7e",
+      "time": "03:03"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Zarka",
+      "detail": "Selesai telat 3 hari was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Zarka",
+      "id": "NTF-fcdb8215-dee0-414b-a1e4-305b55c2888e",
+      "time": "03:03"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "Telat 3 hari - open was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-d8809ea5-44f9-4cb0-af9f-b8b3c26093b4",
+      "time": "03:03"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "Telat 1 hari - open was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-7aad7bbe-1938-4300-9ab1-d6bebf7ffd52",
+      "time": "03:03"
+    },
+    {
+      "type": "task_assigned",
+      "title": "New task assigned to Aurel",
+      "detail": "Due hari ini - open was assigned under Marketing.",
+      "actor": "Revi",
+      "unread": true,
+      "recipient": "Aurel",
+      "id": "NTF-946af83b-70e4-48aa-b2f0-b76eab480f8c",
+      "time": "03:03"
+    },
+    {
       "type": "task_assigned",
       "title": "New task assigned to Aurel",
       "detail": "test was assigned under Marketing.",
       "actor": "Revi",
-      "unread": true,
+      "unread": false,
       "recipient": "Aurel",
       "id": "NTF-6132",
       "time": "03:23"
@@ -64,7 +384,7 @@
       "detail": "Design guideline perlu review",
       "actor": "Aurel",
       "time": "2026-07-25",
-      "unread": true
+      "unread": false
     },
     {
       "id": "c45456ef-aa4b-4a8b-8b32-c8f98be51870",
@@ -73,7 +393,7 @@
       "detail": "Mobile mockup due today",
       "actor": "Zarka",
       "time": "2026-07-25",
-      "unread": true
+      "unread": false
     },
     {
       "id": "6e028c61-03b4-4675-b4b5-69c131879e91",
@@ -82,7 +402,7 @@
       "detail": "Script teaser assigned",
       "actor": "Revi",
       "time": "2026-07-24",
-      "unread": true
+      "unread": false
     },
     {
       "id": "5771c8dd-a7b8-4827-9d88-5cd1cefa0bee",
@@ -242,6 +562,46 @@
         "discipline": 80,
         "quality": 85,
         "productivity": 78
+      }
+    },
+    {
+      "id": "luthfi",
+      "name": "Luthfi",
+      "role": "Packaging Designer",
+      "email": "luthfi@portoaureon.id",
+      "phone": "+62 815-5555-0404",
+      "joinDate": "2024-04-08",
+      "bio": "Creates visual packaging direction and adapts brand assets for campaign surfaces.",
+      "monthKpi": 83,
+      "completed": 12,
+      "inProgress": 2,
+      "late": 1,
+      "overdue": 1,
+      "breakdown": {
+        "completion": 80,
+        "discipline": 85,
+        "quality": 82,
+        "productivity": 84
+      }
+    },
+    {
+      "id": "rahmat",
+      "name": "Rahmat",
+      "role": "IS Manager",
+      "email": "rahmat@portoaureon.id",
+      "phone": "+62 816-5555-0505",
+      "joinDate": "2025-01-15",
+      "bio": "Menangani sistem informasi dan integrasi digital marketing.",
+      "monthKpi": 0,
+      "completed": 0,
+      "inProgress": 0,
+      "late": 0,
+      "overdue": 0,
+      "breakdown": {
+        "completion": 0,
+        "discipline": 0,
+        "quality": 0,
+        "productivity": 0
       }
     }
   ],

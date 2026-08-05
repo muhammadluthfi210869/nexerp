@@ -1,11 +1,8 @@
-export type MarketingTaskStatus =
-  | "Backlog"
-  | "To Do"
-  | "In Progress"
-  | "Waiting Approval"
+﻿export type MarketingTaskStatus =
+  | "Not started"
+  | "Working on it"
   | "Revision"
-  | "Done"
-  | "Cancelled";
+  | "Done";
 
 export type MarketingTaskPriority = "Low" | "Medium" | "High" | "Urgent";
 
@@ -195,7 +192,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Urgent",
     dueDate: "2026-07-02",
-    status: "Waiting Approval",
+    status: "Revision",
     sla: "Watch",
     revisionCount: 1,
     checklistDone: 4,
@@ -213,7 +210,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-03",
-    status: "In Progress",
+    status: "Working on it",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 3,
@@ -231,7 +228,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-04",
-    status: "To Do",
+    status: "Not started",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 0,
@@ -267,7 +264,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-05",
-    status: "Waiting Approval",
+    status: "Revision",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 5,
@@ -303,7 +300,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Medium",
     dueDate: "2026-07-07",
-    status: "Backlog",
+    status: "Not started",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 0,
@@ -339,7 +336,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Urgent",
     dueDate: "2026-07-03",
-    status: "In Progress",
+    status: "Working on it",
     sla: "Watch",
     revisionCount: 0,
     checklistDone: 1,
@@ -357,7 +354,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-04",
-    status: "Waiting Approval",
+    status: "Revision",
     sla: "Healthy",
     revisionCount: 1,
     checklistDone: 4,
@@ -375,7 +372,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-08",
-    status: "To Do",
+    status: "Not started",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 0,
@@ -393,7 +390,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Medium",
     dueDate: "2026-07-06",
-    status: "In Progress",
+    status: "Working on it",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 2,
@@ -465,7 +462,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Medium",
     dueDate: "2026-07-09",
-    status: "To Do",
+    status: "Not started",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 0,
@@ -483,7 +480,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-04",
-    status: "Waiting Approval",
+    status: "Revision",
     sla: "Healthy",
     revisionCount: 1,
     checklistDone: 5,
@@ -501,7 +498,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Medium",
     dueDate: "2026-07-10",
-    status: "Backlog",
+    status: "Not started",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 0,
@@ -638,3 +635,4 @@ marketingPerformance.forEach((row) => {
   row.name = marketingNameMap[row.name] ?? row.name;
   row.role = marketingRoleMap[row.name] ?? row.role;
 });
+

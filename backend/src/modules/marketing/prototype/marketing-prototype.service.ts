@@ -2,15 +2,32 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { readFile, writeFile, mkdir, access } from 'fs/promises';
 import { constants as fsConstants } from 'fs';
 import { dirname, join } from 'path';
+import { randomUUID } from 'crypto';
+import {
+  calendarDayDiff,
+  calcDisciplinePoints,
+  deriveSla,
+  isCanonicalStatus,
+  parseLocalDate,
+  toLocalDateString,
+  type SlaStatus,
+} from './sla.util';
 
-type TaskStatus =
-  | 'Backlog'
-  | 'To Do'
-  | 'In Progress'
-  | 'Waiting Approval'
-  | 'Revision'
-  | 'Done'
-  | 'Cancelled';
+// Status kanonik = 4 status yang dipakai Board (single source of truth).
+// Status lama (Backlog/To Do/In Progress/Waiting Approval/Cancelled) di-mapping
+// ke 4 status ini di normalizeState() (lihat FASE 3, P3.1).
+type TaskStatus = 'Not started' | 'Working on it' | 'Revision' | 'Done';
+
+// Mapping status lama (data runtime/seed lama) → status kanonik.
+const LEGACY_STATUS_MAP: Record<string, TaskStatus> = {
+  Backlog: 'Not started',
+  'To Do': 'Not started',
+  'In Progress': 'Working on it',
+  'Waiting Approval': 'Revision',
+  Revision: 'Revision',
+  Done: 'Done',
+  Cancelled: 'Not started',
+};
 
 type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
@@ -62,7 +79,10 @@ interface MarketingTask {
   startDate: string;
   dueDate: string;
   status: TaskStatus;
-  sla: 'Healthy' | 'Watch' | 'Late';
+  /** ISO timestamp saat task ditandai Done (jika pernah) — dasar perhitungan
+   * SLA/KPI untuk task selesai. Diisi oleh updateTaskStatus/updateTask. */
+  completedAt?: string;
+  sla: SlaStatus;
   estimatedHours: number;
   actualHours: number;
   revisionCount: number;
@@ -223,71 +243,6 @@ function workingDaysInMonth(date = new Date()) {
   return count;
 }
 
-function daysDiff(left: Date, right: Date) {
-  const ms = left.getTime() - right.getTime();
-  return Math.round(ms / (1000 * 60 * 60 * 24));
-}
-
-function calcDisciplinePoints(task: MarketingTask) {
-  if (task.status === 'Cancelled') return 0;
-  // ──────────────────────────────────────────────────────────────
-  // Pengecualian KHUSUS (hanya task yang benar-benar selesai tepat waktu).
-  // Aturan normal menilai task Done dengan membandingkan HARI INI vs dueDate,
-  // sehingga task yang selesai PADA due date-nya di masa lalu ikut dihitung
-  // Late/Watch (mis. due 03/08 yang sudah lewat → tampil "1d late"). Padahal
-  // history membuktikan task-task di bawah selesai PADA due date-nya — jadi
-  // SLA-nya dihitung Healthy (badge "On time"), bukan Watch/Late:
-  //   - local-1785473923231 → Luthfi  — Add New Number
-  //     (pekerjaan selesai 31/07, status Done baru dicatat admin 03/08)
-  //   - local-1785474223080 → Revita  — Kommo Add New Number (Done 31/07)
-  //   - local-1785467543096 → Revita  — Payday sale upload (Done 31/07)
-  //   - local-1785467482950 → Revita  — Meta Ads Optimization (Done 31/07)
-  //   - local-1785467471182 → Revita  — Google Optimization (Done 31/07)
-  //   - local-1785467442747 → Revita  — Shopee Product Optimization (Done 31/07)
-  //   - local-1785740329398 → Revita  — Proposal (Done 03/08 = due 03/08)
-  //   - local-1785740323816 → Revita  — invitation Pembicara (Done 03/08 = due 03/08)
-  //   - local-1785725294791 → Revita  — Onboarding Creative director (Done 03/08 = due 03/08)
-  //   - local-1785740347348 → Luthfi  — Tambahkan Rahmat dahboard (Done 03/08 = due 03/08)
-  //   - local-1785747767371 → Luthfi  — Hapus nomor bu dilla dari round robin
-  //     (pekerjaan selesai 03/08, status Done tercatat 04/08 dini hari)
-  // Berlaku HANYA untuk task di atas; task lain (termasuk yang selesai lewat
-  // due date) tetap dihitung dengan aturan normal di bawah.
-  // ──────────────────────────────────────────────────────────────
-  const ON_TIME_TASK_IDS = new Set([
-    'local-1785473923231',
-    'local-1785474223080',
-    'local-1785467543096',
-    'local-1785467482950',
-    'local-1785467471182',
-    'local-1785467442747',
-    'local-1785740329398',
-    'local-1785740323816',
-    'local-1785725294791',
-    'local-1785740347348',
-    'local-1785747767371',
-  ]);
-  if (ON_TIME_TASK_IDS.has(task.id) && (task.status === 'Done' || task.status === 'Waiting Approval')) {
-    return 100;
-  }
-  const today = new Date();
-  const due = new Date(task.dueDate);
-  const delta = daysDiff(today, due);
-  if (task.status === 'Done' || task.status === 'Waiting Approval') {
-    if (delta <= -1) return 100;
-    if (delta === 0) return 95;
-    if (delta === 1) return 80;
-    if (delta === 2) return 70;
-    if (delta === 3) return 60;
-    return 40;
-  }
-  if (delta <= 0) return 100;
-  if (delta === 1) return 80;
-  if (delta === 2) return 70;
-  if (delta === 3) return 60;
-  if (delta > 3) return 40;
-  return 0;
-}
-
 function calcQualityScore(discipline: number, revisionCount: number) {
   const revisionRate = clamp(revisionCount / 3, 0, 1);
   return Math.round(clamp(discipline * 0.7 + (1 - revisionRate) * 30, 0, 100));
@@ -298,13 +253,21 @@ function calcProductivityScore(assigned: number) {
   return Math.round(clamp(((assigned / Math.max(days, 1)) / 3) * 100, 0, 100));
 }
 
-function deriveSla(task: MarketingTask) {
-  const discipline = calcDisciplinePoints(task);
-  return discipline >= 95 ? 'Healthy' : discipline >= 70 ? 'Watch' : 'Late';
-}
-
 function normalizeIdentity(value?: string | null) {
   return (value ?? '').trim().toLowerCase();
+}
+
+/** Nama member kanonik (mis. "Revita" → "Revi", "Zarkasi" → "Zarka").
+ * Dipakai seragam di semua perbandingan pic/owner supaya task ber-pic
+ * "Revita" ikut terhitung untuk profil "Revi" (BUG-C2/P3.2). */
+function canonicalMember(name: string): string {
+  const key = normalizeIdentity(name);
+  for (const [canonical, aliases] of Object.entries(viewerAliases)) {
+    if (canonical === key || aliases.includes(key)) {
+      return canonical.charAt(0).toUpperCase() + canonical.slice(1);
+    }
+  }
+  return (name ?? '').trim();
 }
 
 function timeStampLabel(date = new Date()) {
@@ -436,24 +399,24 @@ function buildSeedState(): MarketingPrototypeState {
   ];
 
   const taskRows: Array<[string, string, string, string, string, string, string, string, string, string, number, number, number, string, 'Dreamlab' | 'Toribio']> = [
-    ['TSK-3101', 'Refresh Meta lead gen headline set', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Meta Ads', 'Zarka', 'Urgent', '2026-07-02', 'Waiting Approval', 'Watch', 1, 4, 5, 'Deliver 5 primary headline variations with pain-point and proof angles.', 'Dreamlab'],
-    ['TSK-3102', 'Draft TikTok hook bank for serum angle', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Aurel', 'High', '2026-07-03', 'In Progress', 'Healthy', 0, 3, 6, 'Prepare hook bank for top-funnel and promo content variants.', 'Dreamlab'],
-    ['TSK-3103', 'QA landing form friction on mobile', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-04', 'To Do', 'Healthy', 0, 0, 4, 'Review mobile field spacing, CTA visibility, and sticky submit behavior.', 'Dreamlab'],
+    ['TSK-3101', 'Refresh Meta lead gen headline set', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Meta Ads', 'Zarka', 'Urgent', '2026-07-02', 'Revision', 'Watch', 1, 4, 5, 'Deliver 5 primary headline variations with pain-point and proof angles.', 'Dreamlab'],
+    ['TSK-3102', 'Draft TikTok hook bank for serum angle', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Aurel', 'High', '2026-07-03', 'Working on it', 'Healthy', 0, 3, 6, 'Prepare hook bank for top-funnel and promo content variants.', 'Dreamlab'],
+    ['TSK-3103', 'QA landing form friction on mobile', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-04', 'Not started', 'Healthy', 0, 0, 4, 'Review mobile field spacing, CTA visibility, and sticky submit behavior.', 'Dreamlab'],
     ['TSK-3104', 'Build June non-brand ranking delta sheet', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-02', 'Revision', 'Late', 2, 2, 4, 'Compare priority query groups and identify highest-loss URLs.', 'Dreamlab'],
-    ['TSK-3105', 'Prepare dormant-lead segment C offer', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'High', '2026-07-05', 'Waiting Approval', 'Healthy', 0, 5, 5, 'Finalize incentive copy and CTA path for inactive leads older than 60 days.', 'Toribio'],
+    ['TSK-3105', 'Prepare dormant-lead segment C offer', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'High', '2026-07-05', 'Revision', 'Healthy', 0, 5, 5, 'Finalize incentive copy and CTA path for inactive leads older than 60 days.', 'Toribio'],
     ['TSK-3106', 'Design carousel for manufacturing trust proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Gusti', 'Medium', '2026-07-06', 'Done', 'Healthy', 1, 6, 6, 'Create 6-slide proof carousel using production floor and QC visuals.', 'Toribio'],
-    ['TSK-3107', 'Write PDP promo bullets for marketplace bundle', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Medium', '2026-07-07', 'Backlog', 'Healthy', 0, 0, 3, 'Reframe benefit-led bullets for promo bundle hero and above-the-fold PDP block.', 'Toribio'],
+    ['TSK-3107', 'Write PDP promo bullets for marketplace bundle', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Medium', '2026-07-07', 'Not started', 'Healthy', 0, 0, 3, 'Reframe benefit-led bullets for promo bundle hero and above-the-fold PDP block.', 'Toribio'],
     ['TSK-3108', 'Compile weekly paid pacing snapshot', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize spend, CPL, CTR, and lead trend by paid platform.', 'Dreamlab'],
-    ['TSK-3109', 'Fix schema gaps on high-intent product pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Urgent', '2026-07-03', 'In Progress', 'Watch', 0, 1, 5, 'Audit product FAQ, breadcrumb, and organization schema on money pages.', 'Dreamlab'],
-    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Luthfi', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.', 'Dreamlab'],
-    ['TSK-3111', 'Map CTA placements on landing variant B', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-08', 'To Do', 'Healthy', 0, 0, 4, 'Reposition CTA and trust markers for long-scroll mobile flows.', 'Toribio'],
-    ['TSK-3112', 'Prepare winback WA automation copy set', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'Medium', '2026-07-06', 'In Progress', 'Healthy', 0, 2, 5, 'Write 3-sequence WhatsApp recovery flow for inactive lead clusters.', 'Toribio'],
+    ['TSK-3109', 'Fix schema gaps on high-intent product pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Urgent', '2026-07-03', 'Working on it', 'Watch', 0, 1, 5, 'Audit product FAQ, breadcrumb, and organization schema on money pages.', 'Dreamlab'],
+    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Luthfi', 'High', '2026-07-04', 'Revision', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.', 'Dreamlab'],
+    ['TSK-3111', 'Map CTA placements on landing variant B', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-08', 'Not started', 'Healthy', 0, 0, 4, 'Reposition CTA and trust markers for long-scroll mobile flows.', 'Toribio'],
+    ['TSK-3112', 'Prepare winback WA automation copy set', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'Medium', '2026-07-06', 'Working on it', 'Healthy', 0, 2, 5, 'Write 3-sequence WhatsApp recovery flow for inactive lead clusters.', 'Toribio'],
     ['TSK-3113', 'Build story sequence for testimonial proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Luthfi', 'Low', '2026-07-05', 'Done', 'Healthy', 0, 4, 4, 'Create story stack with review proof, swipe CTA, and saved highlights plan.', 'Toribio'],
     ['TSK-3114', 'Sync promo banner claim with legal-safe wording', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Urgent', '2026-07-03', 'Revision', 'Late', 3, 1, 3, 'Revise claim-heavy copy into compliant, conversion-safe marketplace messaging.', 'Toribio'],
     ['TSK-3115', 'Create lead-source dashboard summary card set', 'PRJ-2408', 'June Retrospective Pack', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize lead-source mix, deal share, and CPL movement for management recap.', 'Dreamlab'],
-    ['TSK-3116', 'Audit blog internal links to commercial pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-09', 'To Do', 'Healthy', 0, 0, 5, 'Improve internal intent flow from educational pages to high-conversion service pages.', 'Dreamlab'],
-    ['TSK-3117', 'Design remarketing visual pack for angle B', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Creative', 'Gusti', 'High', '2026-07-04', 'Waiting Approval', 'Healthy', 1, 5, 6, 'Produce static remarketing pack aligned to revised offer and social proof.', 'Toribio'],
-    ['TSK-3118', 'Update landing FAQ with top sales objections', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Aurel', 'Medium', '2026-07-10', 'Backlog', 'Healthy', 0, 0, 4, 'Translate sales-call objections into FAQ blocks that reduce hesitation.', 'Toribio'],
+    ['TSK-3116', 'Audit blog internal links to commercial pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-09', 'Not started', 'Healthy', 0, 0, 5, 'Improve internal intent flow from educational pages to high-conversion service pages.', 'Dreamlab'],
+    ['TSK-3117', 'Design remarketing visual pack for angle B', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Creative', 'Gusti', 'High', '2026-07-04', 'Revision', 'Healthy', 1, 5, 6, 'Produce static remarketing pack aligned to revised offer and social proof.', 'Toribio'],
+    ['TSK-3118', 'Update landing FAQ with top sales objections', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Aurel', 'Medium', '2026-07-10', 'Not started', 'Healthy', 0, 0, 4, 'Translate sales-call objections into FAQ blocks that reduce hesitation.', 'Toribio'],
   ] as const;
 
   const tasks: MarketingTask[] = taskRows.map((row) => {
@@ -473,6 +436,9 @@ function buildSeedState(): MarketingPrototypeState {
       startDate: dueDate,
       dueDate,
       status: status as TaskStatus,
+      // Task seed yang statusnya Done dianggap selesai PADA due date-nya
+      // (on-time), jadi SLA-nya dihitung dari completedAt = dueDate.
+      completedAt: status === 'Done' ? `${dueDate}T08:00:00.000Z` : undefined,
       sla: sla as MarketingTask['sla'],
       estimatedHours: total,
       actualHours: done,
@@ -486,8 +452,8 @@ function buildSeedState(): MarketingPrototypeState {
         { author: pic, body: 'Updated draft uploaded for review.', createdAt: '2026-07-01T10:30:00.000Z' },
       ],
       history: [
-        { at: '2026-07-01T07:45:00.000Z', by: headOfMarketing, to: 'To Do', note: 'Task assigned' },
-        { at: '2026-07-01T09:15:00.000Z', by: pic, from: 'To Do', to: status, note: 'Status updated' },
+        { at: '2026-07-01T07:45:00.000Z', by: headOfMarketing, to: 'Not started', note: 'Task assigned' },
+        { at: '2026-07-01T09:15:00.000Z', by: pic, from: 'Not started', to: status, note: 'Status updated' },
       ],
       attachments: [
         { name: 'brief.pdf', type: 'application/pdf', sizeKb: 244 },
@@ -528,7 +494,7 @@ function buildSeedState(): MarketingPrototypeState {
       const revision = tasks.filter((task) => task.pic === profile.name && task.status === 'Revision').length;
       const onTime = Math.max(completed - late, 0);
       const completionScore = Math.round(clamp((completed / Math.max(assigned, 1)) * 100, 0, 100));
-      const disciplineScore = avg(tasks.filter((task) => task.pic === profile.name).map(calcDisciplinePoints));
+      const disciplineScore = avg(tasks.filter((task) => task.pic === profile.name).map((task) => calcDisciplinePoints(task)));
       const qualityScore = calcQualityScore(disciplineScore, revision);
       const productivityScore = calcProductivityScore(assigned);
       const overallKpi = Math.round(
@@ -613,6 +579,23 @@ function buildSeedState(): MarketingPrototypeState {
 
 @Injectable()
 export class MarketingPrototypeService {
+  /** Path state untuk unit test (P6.1). TIDAK via konstruktor — Nest DI akan
+   * mencoba meng-inject param bertipe `string` dan gagal. Setelah instantiate
+   * oleh test, panggil `useStatePath(path)`. Produksi memakai file default. */
+  private stateFilePathOverride?: string;
+
+  /** Alihkan file state (hanya untuk unit test). */
+  useStatePath(path: string): this {
+    this.stateFilePathOverride = path;
+    return this;
+  }
+
+  /** Path file state. Bisa di-override lewat useStatePath (untuk unit test yang
+   * memakai temp file, bukan file produksi — lihat P6.1). */
+  private get resolvedStatePath(): string {
+    return this.stateFilePathOverride ?? statePath;
+  }
+
   private normalizeState(state: MarketingPrototypeState): MarketingPrototypeState {
     state.settings = {
       ...state.settings,
@@ -623,11 +606,28 @@ export class MarketingPrototypeService {
       },
     };
     state.uiPreferences = state.uiPreferences ?? {};
-    // Ensure every task has a brand field (default to Dreamlab for backward compat)
-    state.tasks = state.tasks.map((task) => ({
-      ...task,
-      brand: (task as any).brand ?? 'Dreamlab',
-    }));
+    // Ensure every task has a brand field (default to Dreamlab for backward compat),
+    // status dinormalisasi ke 4 kanonik, dan completedAt di-backfill untuk task Done.
+    state.tasks = state.tasks.map((task) => {
+      const next = {
+        ...task,
+        brand: (task as any).brand ?? 'Dreamlab',
+        status: (LEGACY_STATUS_MAP[task.status] ?? task.status) as TaskStatus,
+      };
+      if (next.status === 'Done' && !next.completedAt) {
+        // Migrasi sekali jalan: tarik tanggal selesai dari history (event terakhir
+        // ke 'Done'), fallback ke dueDate (perlu review manual oleh admin).
+        const doneEvent = [...(next.history ?? [])]
+          .reverse()
+          .find((h) => h.to === 'Done');
+        next.completedAt = doneEvent?.at ?? `${next.dueDate}T08:00:00.000Z`;
+      }
+      if (next.status !== 'Done') {
+        // Task yang tidak lagi Done tidak boleh menyimpan completedAt basi.
+        delete next.completedAt;
+      }
+      return next;
+    });
     // Merge seed profiles so new members (Rahmat, Luthfi) appear on existing
     // runtime state (production) WITHOUT resetting the task data.
     const seedProfiles = buildSeedState().profiles;
@@ -645,8 +645,8 @@ export class MarketingPrototypeService {
 
   private async readState(): Promise<MarketingPrototypeState> {
     try {
-      await access(statePath, fsConstants.F_OK);
-      const raw = await readFile(statePath, 'utf8');
+      await access(this.resolvedStatePath, fsConstants.F_OK);
+      const raw = await readFile(this.resolvedStatePath, 'utf8');
       return this.normalizeState(JSON.parse(raw) as MarketingPrototypeState);
     } catch {
       const seed = buildSeedState();
@@ -656,8 +656,8 @@ export class MarketingPrototypeService {
   }
 
   private async writeState(state: MarketingPrototypeState) {
-    await mkdir(dirname(statePath), { recursive: true });
-    await writeFile(statePath, JSON.stringify(state, null, 2), 'utf8');
+    await mkdir(dirname(this.resolvedStatePath), { recursive: true });
+    await writeFile(this.resolvedStatePath, JSON.stringify(state, null, 2), 'utf8');
   }
 
   /** Rantai serialisasi untuk updateState — mencegah kehilangan data.
@@ -760,7 +760,9 @@ export class MarketingPrototypeService {
   ) {
     state.notifications.unshift({
       ...notification,
-      id: `NTF-${Math.floor(Math.random() * 9000) + 1000}`,
+      // randomUUID() — id unik global, hindari collide (sebelumnya Math.random()
+      // 4 digit bisa bertabrakan dalam volume tinggi).
+      id: `NTF-${randomUUID()}`,
       time: timeStampLabel(),
     });
   }
@@ -798,18 +800,29 @@ export class MarketingPrototypeService {
       .filter((project) => scope.isManager || visibleProjectIds.has(project.id))
       .map((project) => ({
         ...project,
-        openTasks: tasks.filter((task) => task.projectId === project.id && !['Done', 'Cancelled'].includes(task.status)).length,
-        pendingApproval: tasks.filter((task) => task.projectId === project.id && task.status === 'Waiting Approval').length,
+        openTasks: tasks.filter((task) => task.projectId === project.id && task.status !== 'Done').length,
+        pendingApproval: tasks.filter((task) => task.projectId === project.id && task.status === 'Revision').length,
       }));
     const notifications = state.notifications.filter((notification) => this.isNotificationVisible(notification, scope));
     const performance = state.performance.map((member) => {
-      const taskCount = tasks.filter((task) => task.pic === member.name).length;
-      const completed = tasks.filter((task) => task.pic === member.name && task.status === 'Done').length;
-      const late = tasks.filter((task) => task.pic === member.name && task.sla === 'Late').length;
-      const revision = tasks.filter((task) => task.pic === member.name && task.status === 'Revision').length;
-      const discipline = avg(tasks.filter((task) => task.pic === member.name).map((task) => task.disciplinePoints));
-      const quality = avg(tasks.filter((task) => task.pic === member.name).map((task) => task.qualityScore));
-      const productivity = avg(tasks.filter((task) => task.pic === member.name).map((task) => task.productivityScore));
+      const memberTasks = tasks.filter((task) => canonicalMember(task.pic) === member.name);
+      const taskCount = memberTasks.length;
+      const completedTasks = memberTasks.filter((task) => task.status === 'Done');
+      const completed = completedTasks.length;
+      // late (KPI) = HANYA task Done yang selesai LEWAT due (completedAt > dueDate).
+      // Open task yang overdue TIDAK masuk ke sini (dipisah ke `overdue`).
+      const late = completedTasks.filter(
+        (task) =>
+          task.completedAt &&
+          calendarDayDiff(parseLocalDate(task.completedAt.slice(0, 10)), parseLocalDate(task.dueDate)) > 0,
+      ).length;
+      const overdue = memberTasks.filter(
+        (task) => task.status !== 'Done' && calendarDayDiff(new Date(), parseLocalDate(task.dueDate)) > 0,
+      ).length;
+      const revision = memberTasks.filter((task) => task.status === 'Revision').length;
+      const discipline = avg(memberTasks.map((task) => task.disciplinePoints));
+      const quality = avg(memberTasks.map((task) => task.qualityScore));
+      const productivity = avg(memberTasks.map((task) => task.productivityScore));
       const completion = taskCount > 0 ? Math.round((completed / taskCount) * 100) : 0;
       const overall = Math.round(
         completion * (state.settings.weights.completion / 100) +
@@ -822,6 +835,7 @@ export class MarketingPrototypeService {
         assigned: taskCount,
         completed,
         late,
+        overdue,
         revision,
         onTime: Math.max(completed - late, 0),
         completionScore: completion,
@@ -834,11 +848,18 @@ export class MarketingPrototypeService {
 
     // ── Brand-specific KPI helper ──
     const calcBrandKpi = (profileName: string, brandFilter: 'Dreamlab' | 'Toribio') => {
-      const brandTasks = tasks.filter((task) => task.pic === profileName && task.brand === brandFilter);
+      const brandTasks = tasks.filter((task) => canonicalMember(task.pic) === profileName && task.brand === brandFilter);
       const brandTotal = brandTasks.length;
       const brandDone = brandTasks.filter((task) => task.status === 'Done').length;
-      const brandLate = brandTasks.filter((task) => task.sla === 'Late').length;
-      const brandInProgress = brandTasks.filter((task) => !['Done', 'Cancelled'].includes(task.status)).length;
+      // brandLate = hanya task Done yang selesai lewat due (late completion),
+      // bukan open task yang overdue.
+      const brandLate = brandTasks.filter(
+        (task) =>
+          task.status === 'Done' &&
+          task.completedAt &&
+          calendarDayDiff(parseLocalDate(task.completedAt.slice(0, 10)), parseLocalDate(task.dueDate)) > 0,
+      ).length;
+      const brandInProgress = brandTasks.filter((task) => task.status !== 'Done').length;
       const brandOnTime = Math.max(brandDone - brandLate, 0);
       const brandProgress = brandTotal > 0 ? Math.round((brandDone / brandTotal) * 100) : 0;
       return { total: brandTotal, done: brandDone, late: brandLate, inProgress: brandInProgress, onTime: brandOnTime, progress: brandProgress };
@@ -846,8 +867,8 @@ export class MarketingPrototypeService {
 
     const summary = {
       activeProjects: projects.filter((project) => project.status !== 'Completed').length,
-      openTasks: tasks.filter((task) => !['Done', 'Cancelled'].includes(task.status)).length,
-      waitingApproval: tasks.filter((task) => task.status === 'Waiting Approval').length,
+      openTasks: tasks.filter((task) => task.status !== 'Done').length,
+      waitingApproval: tasks.filter((task) => task.status === 'Revision').length,
       averageKpi: avg(performance.map((member) => member.overallKpi)),
     };
 
@@ -865,7 +886,7 @@ export class MarketingPrototypeService {
       profiles: (scope.isManager
         ? state.profiles
         : state.profiles.filter((profile) =>
-            tasks.some((task) => task.pic === profile.name),
+            tasks.some((task) => canonicalMember(task.pic) === profile.name),
           )
       ).map((profile) => ({
         ...profile,
@@ -924,8 +945,8 @@ export class MarketingPrototypeService {
         channel: input.channel ?? 'General',
         category: input.category ?? 'general_operations',
         owner: input.owner ?? (scope.prototypeName ?? headOfMarketing),
-        start: input.start ?? new Date().toISOString().slice(0, 10),
-        deadline: input.deadline ?? new Date().toISOString().slice(0, 10),
+        start: input.start ?? toLocalDateString(),
+        deadline: input.deadline ?? toLocalDateString(),
         progress: clamp(Number(input.progress ?? 0), 0, 100),
         openTasks: 0,
         pendingApproval: 0,
@@ -1101,17 +1122,22 @@ export class MarketingPrototypeService {
     const next = await this.updateState((state) => {
       const task = state.tasks.find((item) => item.id === id);
       if (!task || !this.isVisibleToViewer(task, scope)) return;
+      // Normalisasi status (terima status lama 7-kanonik untuk kompatibilitas).
+      const canonicalStatus = (LEGACY_STATUS_MAP[status] ?? status) as TaskStatus;
+      if (!isCanonicalStatus(canonicalStatus) || canonicalStatus === task.status) return;
       const actor = scope.prototypeName ?? headOfMarketing;
       task.history.push({
         at: new Date().toISOString(),
         by: actor,
         from: task.status,
-        to: status,
+        to: canonicalStatus,
         note,
       });
-      task.status = status;
-      task.sla = deriveSla(task);
-      if (status === 'Done') {
+      task.status = canonicalStatus;
+      if (canonicalStatus === 'Done') {
+        // completedAt = saat task BENAR-BENAR selesai — dasar SLA/KPI on-time
+        // (task yang selesai tepat waktu di masa lalu tidak boleh dinilai Late).
+        task.completedAt = new Date().toISOString();
         task.checklistDone = task.checklistTotal;
         this.pushNotification(state, {
           type: 'task_completed',
@@ -1121,18 +1147,13 @@ export class MarketingPrototypeService {
           unread: true,
           recipient: task.reviewer,
         });
+      } else if (task.completedAt) {
+        // Pindah keluar dari Done → completedAt basi dihapus (tidak boleh
+        // dianggap selesai tepat waktu).
+        delete task.completedAt;
       }
-      if (status === 'Waiting Approval') {
-        this.pushNotification(state, {
-          type: 'task_reviewed',
-          title: `Approval requested for ${task.title}`,
-          detail: `${task.pic} submitted ${task.title} for review.`,
-          actor,
-          unread: true,
-          recipient: task.reviewer,
-        });
-      }
-      if (status === 'Revision') {
+      task.sla = deriveSla(task);
+      if (canonicalStatus === 'Revision') {
         this.pushNotification(state, {
           type: 'task_reviewed',
           title: `Revision requested on ${task.title}`,
@@ -1155,9 +1176,35 @@ export class MarketingPrototypeService {
       const before = { ...task };
       const note: string[] = [];
 
+      // Whitelist field yang boleh di-update manager. id/sla/history/comments/
+      // assignedBy TIDAK boleh ditimpa lewat input (BUG-S2/P4.2).
+      const ALLOWED: Array<keyof MarketingTaskInput> = [
+        'title',
+        'projectId',
+        'project',
+        'channel',
+        'category',
+        'brand',
+        'pic',
+        'reviewer',
+        'priority',
+        'startDate',
+        'dueDate',
+        'estimatedHours',
+        'actualHours',
+        'revisionCount',
+        'checklistDone',
+        'checklistTotal',
+        'brief',
+        'tags',
+        'attachments',
+      ];
+
       if (scope.isManager) {
-        // Manager: full update (all fields allowed)
-        Object.assign(task, input);
+        for (const key of ALLOWED) {
+          const value = input[key as keyof MarketingTaskInput];
+          if (value !== undefined) (task as any)[key] = value;
+        }
         if (input.pic && input.pic !== before.pic) {
           this.pushNotification(state, {
             type: 'task_assigned',
@@ -1177,10 +1224,22 @@ export class MarketingPrototypeService {
           note.push('startDate updated');
         }
         if (input.status !== undefined && input.status !== before.status) {
-          task.status = input.status;
-          note.push(`status: ${before.status} -> ${input.status}`);
+          const canonicalStatus = (LEGACY_STATUS_MAP[input.status] ?? input.status) as TaskStatus;
+          if (isCanonicalStatus(canonicalStatus)) {
+            task.status = canonicalStatus;
+            note.push(`status: ${before.status} -> ${canonicalStatus}`);
+          }
         }
         if (note.length === 0) return; // nothing to update
+      }
+
+      // Sinkronkan completedAt dengan status akhir (via status yang di-set lewat
+      // PATCH body maupun transisi Done di blok atas).
+      if (task.status === 'Done') {
+        if (!task.completedAt) task.completedAt = new Date().toISOString();
+        task.checklistDone = task.checklistTotal;
+      } else if (task.completedAt) {
+        delete task.completedAt;
       }
 
       task.sla = deriveSla(task);
@@ -1191,9 +1250,6 @@ export class MarketingPrototypeService {
         to: task.status,
         note: note.join('; ') || 'No changes',
       });
-      if (task.status === 'Done') {
-        task.checklistDone = task.checklistTotal;
-      }
     });
     return next.tasks.find((task) => task.id === id) ?? null;
   }
@@ -1243,27 +1299,52 @@ export class MarketingPrototypeService {
   }
 
   async createTask(viewer: ViewerContext | undefined, input: Partial<MarketingTask>) {
-    const scope = this.ensureManager(viewer);
+    // Semua member (termasuk DIGIMAR) boleh membuat task sendiri — asalkan
+    // pic/assignee = dirinya sendiri (di bawah). Manager bebas menugaskan ke
+    // siapa pun. Penerjemahan: "semua member bisa input task".
+    const scope = this.resolveViewer(viewer);
+    if (!scope.isManager && !scope.prototypeName) {
+      throw new ForbiddenException('Only team members can create tasks');
+    }
     const next = await this.updateState((state) => {
-      const id = input.id ?? `TSK-${Math.floor(Math.random() * 9000) + 1000}`;
+      // Id server adalah otoritas. Id `local-*` dari Board / id yang sudah ada
+      // di state DIBUANG, diganti id server (Board mengganti id lokal dengan id
+      // dari respons). Ini mencegah duplikat/penimpaan task (BUG-S3/P4.3).
+      let id = input.id;
+      if (!id || id.startsWith('local-') || state.tasks.some((t) => t.id === id)) {
+        do {
+          id = `TSK-${Math.floor(Math.random() * 9000) + 1000}`;
+        } while (state.tasks.some((t) => t.id === id));
+      }
       const actor = scope.prototypeName ?? headOfMarketing;
+      // Project bisa kosong (state produksi tanpa projects) — jangan sampai
+      // `project.id` melempar undefined (bug saat createTask dengan projects []).
       const project = state.projects.find((item) => item.id === input.projectId) ?? state.projects[0];
-      const assignee = input.pic ?? 'Aurel';
+      const projectId = input.projectId ?? project?.id ?? 'PRJ-LOCAL';
+      const projectName = input.project ?? project?.name ?? 'Marketing';
+      // Non-manager: assignee WAJIB dirinya sendiri (tidak bisa menugaskan ke
+      // orang lain); assignedBy = dirinya; reviewer dipaksa ke manager supaya
+      // task baru punya peninjau yang jelas & tidak hilang dari view manager.
+      let assignee = input.pic ?? actor;
+      if (!scope.isManager && !scope.aliases.includes(normalizeIdentity(assignee))) {
+        throw new ForbiddenException('Members can only create tasks assigned to themselves');
+      }
+      const status = (LEGACY_STATUS_MAP[input.status ?? 'Not started'] ?? 'Not started') as TaskStatus;
       state.tasks.unshift({
         id,
         title: input.title ?? 'Untitled task',
-        projectId: input.projectId ?? project.id,
-        project: input.project ?? project.name,
+        projectId,
+        project: projectName,
         channel: input.channel ?? 'General',
         category: input.category ?? (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
         brand: (input.brand ?? 'Dreamlab') as 'Dreamlab' | 'Toribio',
-        assignedBy: input.assignedBy ?? actor,
+        assignedBy: scope.isManager ? (input.assignedBy ?? actor) : actor,
         pic: assignee,
-        reviewer: input.reviewer ?? headOfMarketing,
+        reviewer: scope.isManager ? (input.reviewer ?? headOfMarketing) : headOfMarketing,
         priority: (input.priority ?? 'Medium') as TaskPriority,
-        startDate: input.startDate ?? new Date().toISOString().slice(0, 10),
-        dueDate: input.dueDate ?? new Date().toISOString().slice(0, 10),
-        status: (input.status ?? 'Backlog') as TaskStatus,
+        startDate: input.startDate ?? toLocalDateString(),
+        dueDate: input.dueDate ?? toLocalDateString(),
+        status,
         sla: (input.sla ?? 'Healthy') as MarketingTask['sla'],
         estimatedHours: input.estimatedHours ?? 4,
         actualHours: input.actualHours ?? 0,
@@ -1277,7 +1358,7 @@ export class MarketingPrototypeService {
           {
             at: new Date().toISOString(),
             by: actor,
-            to: (input.status ?? 'Backlog') as TaskStatus,
+            to: status,
             note: 'Task created',
           },
         ],
@@ -1286,7 +1367,7 @@ export class MarketingPrototypeService {
       this.pushNotification(state, {
         type: 'task_assigned',
         title: `New task assigned to ${assignee}`,
-        detail: `${input.title ?? 'Untitled task'} was assigned under ${input.project ?? project.name}.`,
+        detail: `${input.title ?? 'Untitled task'} was assigned under ${projectName}.`,
         actor,
         unread: true,
         recipient: assignee,

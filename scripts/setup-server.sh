@@ -74,6 +74,20 @@ if [ -n "${DOMAIN_NAME:-}" ]; then
     echo "  ⚠️  SSL setup gagal. Jalankan manual nanti."
 fi
 
+# ── 4b. Cron: reload nginx agar sertifikat hasil auto-renew langsung dipakai ──
+# CRITICAL: tanpa reload, nginx tetap menyajikan sertifikat LAMA dari memori
+# meski certbot sudah renew. (Pernah menyebabkan outage SSL Aug 2026.)
+echo ""
+echo "🔁 Pasang cron reload nginx (tiap 6 jam)..."
+cat > /etc/cron.d/nexerp-nginx-reload << EOF
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 */6 * * * root docker exec \$(docker ps -qf name=nginx) nginx -s reload >/dev/null 2>&1 || true
+EOF
+chmod 644 /etc/cron.d/nexerp-nginx-reload
+systemctl restart cron 2>/dev/null || service cron restart || true
+echo "  ✅ Cron reload nginx terpasang"
+
 # ── 5. Deploy ──
 echo ""
 echo "🚀 Deploy aplikasi..."

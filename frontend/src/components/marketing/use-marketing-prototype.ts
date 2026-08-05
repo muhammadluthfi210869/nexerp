@@ -20,8 +20,8 @@ function buildFallbackBundle() {
   return {
     summary: {
       activeProjects: marketingProjects.filter((item) => item.status !== "Completed").length,
-      openTasks: marketingTasks.filter((item) => !["Done", "Cancelled"].includes(item.status)).length,
-      waitingApproval: marketingTasks.filter((item) => item.status === "Waiting Approval").length,
+      openTasks: marketingTasks.filter((item) => item.status !== "Done").length,
+      waitingApproval: marketingTasks.filter((item) => item.status === "Revision").length,
       averageKpi: Math.round(
         marketingPerformance.reduce((sum, item) => sum + item.overallKpi, 0) / marketingPerformance.length,
       ),

@@ -1,4 +1,4 @@
-import {
+﻿import {
   headOfMarketing,
   marketingPerformance,
   marketingTasks,
@@ -373,8 +373,9 @@ export const marketingTeamSummary = {
   totalMembers: marketingTeam.length,
   totalTasks: marketingTasks.length,
   totalCompleted: marketingTasks.filter((task) => task.status === "Done").length,
-  totalWaitingApproval: marketingTasks.filter((task) => task.status === "Waiting Approval").length,
+  totalWaitingApproval: marketingTasks.filter((task) => task.status === "Revision").length,
   averageKpi: Math.round(
     marketingPerformance.reduce((sum, item) => sum + item.overallKpi, 0) / marketingPerformance.length,
   ),
 };
+

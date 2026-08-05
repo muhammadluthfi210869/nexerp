@@ -7,7 +7,10 @@ type ManagementTaskMemberPageProps = {
   }>;
 };
 
-const validMembers = new Set(["aurel", "revi", "zarka", "gusti", "luthfi", "rahmat"]);
+// "overview" sengaja valid: dropdown member menyediakan opsi Overview yang
+// menuju /marketing/management-task/overview (sebelumnya 404-bounce karena
+// tidak ada di daftar → Overview tidak pernah bisa dibuka).
+const validMembers = new Set(["overview", "aurel", "revi", "zarka", "gusti", "luthfi", "rahmat"]);
 
 export default async function ManagementTaskMemberPage({ params }: ManagementTaskMemberPageProps) {
   const resolvedParams = (await params) ?? {};

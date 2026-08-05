@@ -115,6 +115,33 @@ Pastikan semua container dari SATU compose project yang sama.
 docker network inspect production-light_default
 ```
 
+### Error: ERR_CERT_DATE_INVALID / sertifikat SSL kedaluwarsa
+**Penyebab umum #1 — auto-renew gagal (authenticator `standalone`)**:
+Kalau sertifikat pertama kali dibuat dengan metode `standalone` (bukan `webroot`),
+maka `certbot renew` akan SELALU gagal karena port 80 sudah dipegang nginx.
+Cek:
+```bash
+grep authenticator /opt/nexerp/certbot/conf/renewal/<domain>.conf   # harus "webroot"
+```
+Perbaiki dengan reissue memakai webroot:
+```bash
+docker run --rm \
+  -v "$PWD/certbot/conf:/etc/letsencrypt" \
+  -v "$PWD/certbot/www:/var/www/certbot" \
+  certbot/certbot certonly --webroot -w /var/www/certbot \
+    --email admin@<domain> --agree-tos --no-eff-email --force-renewal \
+    -d <domain> -d www.<domain>
+docker exec <nginx-container> nginx -s reload
+```
+
+**Penyebab umum #2 — nginx tidak pernah di-reload setelah renew**:
+Nginx membaca sertifikat saat start/reload. Meski `certbot renew` sukses,
+tanpa reload nginx tetap menyajikan sertifikat lama. Solusi: cron reload tiap
+6 jam (dipasang otomatis oleh `setup-server.sh`):
+```bash
+cat /etc/cron.d/nexerp-nginx-reload   # 0 */6 * * * ... nginx -s reload
+```
+
 ## 📋 Cheat Sheet
 
 ```bash
