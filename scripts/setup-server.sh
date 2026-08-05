@@ -1,105 +1,77 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-#  NexERP — Setup Server Baru (dijalankan SATU KALI)
-# ═══════════════════════════════════════════════════════════════
-#  Cara pakai:
-#    ssh root@<IP>
-#    curl -fsSL https://raw.githubusercontent.com/.../setup-server.sh | bash
-#    atau upload manual lalu: bash setup-server.sh
+#  NexERP — Setup Server Biznet Neo Lite (Ubuntu 26.04)
+#  Dijalankan SATU KALI di server Biznet, sebagai user `dreamlab`.
+#  Cara pakai (dari laptop):
+#    ssh dreamlab@<IP_BIZNET> 'bash -s' < scripts/setup-server.sh
+#  atau: upload file ini lalu:  bash scripts/setup-server.sh
 # ═══════════════════════════════════════════════════════════════
 set -euo pipefail
 
-echo ""
-echo "═══════════════════════════════════════════════════"
-echo "  🖥️  NEXERP — Setup Server"
-echo "═══════════════════════════════════════════════════"
+. /etc/os-release
+echo "═══════════════════════════════════════"
+echo "  NEXERP — SETUP BIZNET SERVER"
+echo "  OS: $PRETTY_NAME"
+echo "═══════════════════════════════════════"
 
-# ── 1. Install Prerequisites ──
-echo ""
-echo "📦 Install Docker + Git..."
-apt-get update -qq
-apt-get install -y -qq ca-certificates curl git
+# 1) Timezone = UTC (SAMAKAN dengan Hetzner — krusial untuk SLA "hari ini")
+sudo timedatectl set-timezone Etc/UTC
+echo "✅ Timezone: $(timedatectl | grep 'Time zone')"
 
-# Docker
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-chmod a+r /etc/apt/keyrings/docker.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update -qq
-apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
-systemctl enable --now docker
+# 2) Prerequisites
+echo "📦 Install prerequisite..."
+sudo apt-get update -qq
+sudo apt-get install -y -qq ca-certificates curl git
 
-echo "  ✅ Docker: $(docker --version)"
-echo "  ✅ Compose: $(docker compose version)"
-
-# ── 2. Clone Repository ──
-echo ""
-echo "📂 Clone repository..."
-cd /opt
-if [ -d nexerp ]; then
-  echo "  ⚠️  /opt/nexerp sudah ada, pull saja..."
-  cd nexerp && git pull
+# 3) Docker Engine + Compose Plugin (deteksi Ubuntu/Debian otomatis)
+if command -v docker >/dev/null 2>&1; then
+  echo "✅ Docker sudah ada: $(docker --version)"
 else
-  git clone https://github.com/muhammadluthfi210869/nexerp.git
-  cd nexerp
+  echo "📦 Install Docker..."
+  sudo install -m 0755 -d /etc/apt/keyrings
+  if [ "$ID" = "ubuntu" ]; then DOCKER_REPO="ubuntu"; else DOCKER_REPO="debian"; fi
+  curl -fsSL "https://download.docker.com/linux/$DOCKER_REPO/gpg" | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  sudo chmod a+r /etc/apt/keyrings/docker.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$DOCKER_REPO $VERSION_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  sudo systemctl enable --now docker
 fi
+echo "✅ Compose: $(docker compose version)"
 
-# ── 3. Setup .env ──
-echo ""
-echo "🔑 Setup .env..."
-if [ ! -f .env ]; then
-  cp .env.production.example .env
-  echo "  ⚠️  File .env telah dibuat dari template."
-  echo "  ⚠️  WAJIB diisi:"
-  echo "     - JWT_SECRET (generate dengan: openssl rand -hex 64)"
-  echo "     - DB_PASSWORD (ganti yang kuat)"
-  echo "     - DOMAIN_NAME (domain kamu)"
-  echo "     - NEXT_PUBLIC_API_URL (https://domainmu.com/api)"
-  echo "     - CORS_ORIGIN (https://domainmu.com)"
-  echo ""
-  echo "  Edit sekarang: nano .env"
+# 4) User saat ini ke group docker
+sudo usermod -aG docker "$(whoami)"
+echo "✅ User '$(whoami)' masuk group docker (re-login SSH dibutuhkan)."
+
+# 5) Swap 4 GB (jaring pengaman RAM 4GB)
+if ! sudo swapon --show | grep -q /swapfile; then
+  echo "📦 Buat swap 4GB..."
+  sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  grep -q /swapfile /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+fi
+echo "✅ Swap: $(sudo swapon --show | tail -1)"
+
+# 6) Folder project (milik user dreamlab — tanpa sudo untuk operasi file)
+mkdir -p "$HOME/nexerp" "$HOME/dreamlab-lead" "$HOME/transfer"
+echo "✅ Folder:"
+echo "   - $HOME/nexerp         (ERP production-light)"
+echo "   - $HOME/dreamlab-lead  (Sistem 2: lead DB dreamlab)"
+echo "   - $HOME/transfer       (staging transfer)"
+
+# 7) Clone repo ERP (production-light) — untuk build & versi kode
+if [ ! -d "$HOME/nexerp/.git" ]; then
+  echo "📦 Clone repo production-light..."
+  git clone -b production-light https://github.com/muhammadluthfi210869/nexerp.git "$HOME/nexerp"
 else
-  echo "  ✅ .env sudah ada"
+  echo "✅ Repo sudah ada di $HOME/nexerp"
 fi
-
-# ── 4. Setup SSL ──
-echo ""
-echo "🔒 Setup SSL (Let's Encrypt)..."
-if [ -n "${DOMAIN_NAME:-}" ]; then
-  mkdir -p certbot/conf certbot/www
-  docker compose --profile server run --rm certbot certonly \
-    --webroot --webroot-path=/var/www/certbot \
-    --email admin@${DOMAIN_NAME} --agree-tos --no-eff-email \
-    -d ${DOMAIN_NAME} -d www.${DOMAIN_NAME} || \
-    echo "  ⚠️  SSL setup gagal. Jalankan manual nanti."
-fi
-
-# ── 4b. Cron: reload nginx agar sertifikat hasil auto-renew langsung dipakai ──
-# CRITICAL: tanpa reload, nginx tetap menyajikan sertifikat LAMA dari memori
-# meski certbot sudah renew. (Pernah menyebabkan outage SSL Aug 2026.)
-echo ""
-echo "🔁 Pasang cron reload nginx (tiap 6 jam)..."
-cat > /etc/cron.d/nexerp-nginx-reload << EOF
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-0 */6 * * * root docker exec \$(docker ps -qf name=nginx) nginx -s reload >/dev/null 2>&1 || true
-EOF
-chmod 644 /etc/cron.d/nexerp-nginx-reload
-systemctl restart cron 2>/dev/null || service cron restart || true
-echo "  ✅ Cron reload nginx terpasang"
-
-# ── 5. Deploy ──
-echo ""
-echo "🚀 Deploy aplikasi..."
-bash scripts/deploy.sh
 
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo "  ✅ SETUP SELESAI!"
-echo "  📅 $(date)"
-echo ""
-echo "  📝 Perintah penting:"
-echo "     Deploy:    cd /opt/nexerp && git pull && bash scripts/deploy.sh"
-echo "     Logs:      docker compose logs -f"
-echo "     Restart:   docker compose restart"
+echo "  ⚠️  KELUAR & MASUK SSH DULU supaya group docker aktif,"
+echo "     lalu di LAPTOP jalankan:  bash scripts/migrate-to-biznet.sh"
 echo "═══════════════════════════════════════════════════"
