@@ -26,12 +26,22 @@ if [ $PUSH_EXIT -ne 0 ]; then
 fi
 
 echo "=== Step 2: Seed default users (only if empty) ==="
+# Prisma v7 WAJIB driver adapter (new PrismaClient() polos akan error & count selalu 0,
+# sehingga seed selalu jalan & men-truncate data produksi). Helper ini memakai
+# adapter yang sama dengan aplikasi/seed.ts → count akurat → seed di-skip saat ada users.
+COUNT_USERS() {
+  node << 'NODEEOF'
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+prisma.user.count().then(c => { console.log(c); return prisma.$disconnect(); }).catch(e => { console.error('COUNT_ERROR: ' + e.message); process.exit(1); });
+NODEEOF
+}
+
 # Only seed if no users exist (idempotent seed)
-USER_COUNT=$(node -e "
-  const { PrismaClient } = require('@prisma/client');
-  const prisma = new PrismaClient();
-  prisma.user.count().then(c => { console.log(c); prisma.\$disconnect(); });
-" 2>/dev/null || echo "0")
+USER_COUNT=$(COUNT_USERS 2>/dev/null || echo "0")
 
 echo "Current user count: $USER_COUNT"
 
@@ -58,11 +68,7 @@ if [ "$USER_COUNT" = "0" ]; then
   fi
 
   # Verify seed result
-  FINAL_COUNT=$(node -e "
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-    prisma.user.count().then(c => { console.log(c); prisma.\$disconnect(); });
-  " 2>/dev/null || echo "0")
+  FINAL_COUNT=$(COUNT_USERS 2>/dev/null || echo "0")
   echo "Users after seed: $FINAL_COUNT"
 else
   echo "✅ $USER_COUNT users already exist, skipping seed."
