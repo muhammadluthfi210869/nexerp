@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { readFile, writeFile, mkdir, access } from 'fs/promises';
+import { readFile, writeFile, mkdir, access, rename } from 'fs/promises';
 import { constants as fsConstants } from 'fs';
 import { dirname, join } from 'path';
 import { randomUUID } from 'crypto';
@@ -89,6 +89,8 @@ interface MarketingTask {
   checklistDone: number;
   checklistTotal: number;
   brief: string;
+  /** URL deliverable/link lampiran (kolom "Link" di drawer detail task). */
+  link?: string;
   tags: string[];
   comments: Array<{ author: string; body: string; createdAt: string }>;
   history: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
@@ -118,10 +120,14 @@ type MarketingTaskInput = Partial<
     | 'checklistDone'
     | 'checklistTotal'
     | 'brief'
+    | 'link'
     | 'tags'
     | 'attachments'
   >
->;
+> & {
+  /** Alias lama untuk `brief` (dipakai klien frontend lama). */
+  notes?: string;
+};
 
 interface MarketingPerformance {
   name: string;
@@ -612,6 +618,9 @@ export class MarketingPrototypeService {
       const next = {
         ...task,
         brand: (task as any).brand ?? 'Dreamlab',
+        // Backfill field `link` (URL deliverable) — task lama (produksi) belum
+        // punya field ini; default string kosong supaya UI aman (BUG-L7).
+        link: (task as any).link ?? '',
         status: (LEGACY_STATUS_MAP[task.status] ?? task.status) as TaskStatus,
       };
       if (next.status === 'Done' && !next.completedAt) {
@@ -657,7 +666,15 @@ export class MarketingPrototypeService {
 
   private async writeState(state: MarketingPrototypeState) {
     await mkdir(dirname(this.resolvedStatePath), { recursive: true });
-    await writeFile(this.resolvedStatePath, JSON.stringify(state, null, 2), 'utf8');
+    // ATOMIC WRITE: tulis ke file .tmp lalu rename. `writeFile` langsung ke path
+    // final membuat jendela kecil saat file terpotong (truncate) sebelum terisi —
+    // GET bundle yang membaca bersamaan bisa dapat JSON tidak utuh → `JSON.parse`
+    // gagal → `readState` catch → **re-seed buildSeedState()** → data produksi
+    // hilang. `rename` bersifat atomik: pembaca selalu melihat file lama ATAU
+    // file baru, tidak pernah versi setengah jadi.
+    const tmpPath = `${this.resolvedStatePath}.tmp`;
+    await writeFile(tmpPath, JSON.stringify(state, null, 2), 'utf8');
+    await rename(tmpPath, this.resolvedStatePath);
   }
 
   /** Rantai serialisasi untuk updateState — mencegah kehilangan data.
@@ -1178,6 +1195,9 @@ export class MarketingPrototypeService {
 
       // Whitelist field yang boleh di-update manager. id/sla/history/comments/
       // assignedBy TIDAK boleh ditimpa lewat input (BUG-S2/P4.2).
+      // `notes` = alias `brief` (klien lama); `link` = URL deliverable (BUG-L3);
+      // `status` dipakai select Status di drawer (BUG-L4) — sync completedAt
+      // ditangani di blok bawah.
       const ALLOWED: Array<keyof MarketingTaskInput> = [
         'title',
         'projectId',
@@ -1190,12 +1210,14 @@ export class MarketingPrototypeService {
         'priority',
         'startDate',
         'dueDate',
+        'status',
         'estimatedHours',
         'actualHours',
         'revisionCount',
         'checklistDone',
         'checklistTotal',
         'brief',
+        'link',
         'tags',
         'attachments',
       ];
@@ -1204,6 +1226,10 @@ export class MarketingPrototypeService {
         for (const key of ALLOWED) {
           const value = input[key as keyof MarketingTaskInput];
           if (value !== undefined) (task as any)[key] = value;
+        }
+        // Alias notes → brief: `notes` tidak ada di model task, simpan ke brief.
+        if (input.notes !== undefined && input.brief === undefined) {
+          task.brief = input.notes;
         }
         if (input.pic && input.pic !== before.pic) {
           this.pushNotification(state, {
@@ -1298,7 +1324,7 @@ export class MarketingPrototypeService {
     return next.notifications.filter((notification) => this.isNotificationVisible(notification, scope));
   }
 
-  async createTask(viewer: ViewerContext | undefined, input: Partial<MarketingTask>) {
+  async createTask(viewer: ViewerContext | undefined, input: MarketingTaskInput & { id?: string }) {
     // Semua member (termasuk DIGIMAR) boleh membuat task sendiri — asalkan
     // pic/assignee = dirinya sendiri (di bawah). Manager bebas menugaskan ke
     // siapa pun. Penerjemahan: "semua member bisa input task".
@@ -1351,7 +1377,9 @@ export class MarketingPrototypeService {
         revisionCount: input.revisionCount ?? 0,
         checklistDone: input.checklistDone ?? 0,
         checklistTotal: input.checklistTotal ?? 4,
-        brief: input.brief ?? '',
+        // `notes` diterima sebagai alias `brief` (klien lama masih kirim notes).
+        brief: input.brief ?? input.notes ?? '',
+        link: input.link ?? '',
         tags: input.tags ?? [],
         comments: [],
         history: [

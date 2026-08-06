@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import {
+  ExternalLink,
   Folder,
   Pencil,
   Plus,
@@ -47,7 +48,8 @@ type TaskRow = {
   status: TaskStatus;
   sla: "Healthy" | "Watch" | "Late";
   completedAt?: string;
-  notes: string;
+  brief: string;
+  link?: string;
   history?: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
 };
 
@@ -111,7 +113,8 @@ type TaskDraft = {
   priority: TaskRow["priority"];
   startDate: string;
   dueDate: string;
-  notes: string;
+  brief: string;
+  link: string;
 };
 
 const memberConfigs: MemberConfig[] = [
@@ -201,7 +204,8 @@ function defaultDraft(memberSlug: string, viewerName?: string | null): TaskDraft
     priority: "Medium",
     startDate: today,
     dueDate: today,
-    notes: "",
+    brief: "",
+    link: "",
   };
 }
 
@@ -215,7 +219,8 @@ function taskToDraft(task: TaskRow): TaskDraft {
     priority: task.priority,
     startDate: task.startDate ?? task.dueDate,
     dueDate: task.dueDate,
-    notes: task.notes ?? "",
+    brief: task.brief ?? "",
+    link: task.link ?? "",
   };
 }
 
@@ -237,7 +242,8 @@ function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | nul
     dueDate: draft.dueDate,
     status: draft.status,
     sla: "Healthy",
-    notes: draft.notes,
+    brief: draft.brief,
+    link: draft.link.trim(),
     history: [],
   };
 }
@@ -729,7 +735,8 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       dueDate: globalQuickAdd.dueDate,
       status: "Not started" as const,
       sla: "Healthy" as const,
-      notes: "",
+      brief: "",
+      link: "",
     };
 
     setLocalTasks((current) => [newTask, ...current]);
@@ -1181,14 +1188,28 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                               className="grid cursor-pointer grid-cols-[minmax(200px,2.2fr)_minmax(100px,1fr)_minmax(80px,0.8fr)_minmax(120px,1.1fr)_minmax(100px,0.9fr)_minmax(90px,0.8fr)_minmax(70px,0.7fr)] items-center gap-1.5 px-6 py-3 transition hover:bg-slate-50/80 focus-visible:bg-slate-50/80 focus-visible:outline-none"
                             >
                               <div className="min-w-0 flex flex-col">
-                                <DnaInput
-                                  value={task.title}
-                                  onChange={(event) => setTaskField(task.id, "title", event.target.value)}
-                                  onClick={stopRowClick}
-                                  readOnly={!isManager}
-                                  title={!isManager ? "Hanya manager yang dapat mengubah judul" : undefined}
-                                  className={`h-8 border-0 bg-transparent px-0 text-[13px] font-bold shadow-none focus:ring-0 text-slate-800 ${!isManager ? "cursor-default opacity-80" : ""}`}
-                                />
+                                <div className="flex items-center gap-1.5">
+                                  <DnaInput
+                                    value={task.title}
+                                    onChange={(event) => setTaskField(task.id, "title", event.target.value)}
+                                    onClick={stopRowClick}
+                                    readOnly={!isManager}
+                                    title={!isManager ? "Hanya manager yang dapat mengubah judul" : undefined}
+                                    className={`h-8 border-0 bg-transparent px-0 text-[13px] font-bold shadow-none focus:ring-0 text-slate-800 ${!isManager ? "cursor-default opacity-80" : ""}`}
+                                  />
+                                  {task.link ? (
+                                    <a
+                                      href={task.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title={task.link}
+                                      onClick={stopRowClick}
+                                      className="shrink-0 rounded-full p-1 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                                    >
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  ) : null}
+                                </div>
                                 <select
                                   value={task.project}
                                   onChange={(event) => setTaskField(task.id, "project", event.target.value)}
@@ -1364,16 +1385,32 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-5">
-              {/* Notes — di ATAS karena isi utama */}
+              {/* Notes — di ATAS karena isi utama. Field backend = `brief`; diubah
+                  dari `notes` agar tersimpan (BUG-L1/L2 — sebelumnya dibuang
+                  diam-diam oleh whitelist updateTask). */}
               <div className="mb-5">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Notes</p>
                 <textarea
-                  value={draft.notes}
-                  onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
+                  value={draft.brief}
+                  onChange={(event) => setDraft((current) => ({ ...current, brief: event.target.value }))}
                   rows={5}
                   disabled={!isManager && drawerMode !== "create"}
                   className="w-full rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-[13px] leading-6 text-slate-900 outline-none focus:border-blue-300 resize-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   placeholder="Write task description or notes here..."
+                />
+              </div>
+
+              {/* Link — URL deliverable/lampiran (BUG-L3). Disimpan ke field
+                  `link` di backend. */}
+              <div className="mb-5">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Link</p>
+                <DnaInput
+                  type="url"
+                  value={draft.link}
+                  onChange={(event) => setDraft((current) => ({ ...current, link: event.target.value }))}
+                  placeholder="https://drive.google.com/..."
+                  disabled={!isManager && drawerMode !== "create"}
+                  className="h-11 w-full rounded-[20px] border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                 />
               </div>
 

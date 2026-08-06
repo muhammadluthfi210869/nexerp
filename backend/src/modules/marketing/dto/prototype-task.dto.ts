@@ -86,6 +86,10 @@ export class CreateTaskDto {
   brief?: string;
 
   @IsOptional()
+  @IsString()
+  link?: string;
+
+  @IsOptional()
   @IsArray()
   tags?: string[];
 
@@ -134,6 +138,14 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsString()
+  brief?: string;
+
+  @IsOptional()
+  @IsString()
+  link?: string;
 
   @IsOptional()
   @IsString()

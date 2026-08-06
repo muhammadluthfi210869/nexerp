@@ -303,5 +303,85 @@ describe('MarketingPrototypeService (JSON store)', () => {
       expect(legacy!.completedAt).toBeUndefined(); // non-Done tidak simpan completedAt
     });
   });
+
+  describe('Link & Notes (BUG-L1/L2/L3/L7) → persistensi field deskripsi & URL', () => {
+    it('createTask: brief & link TERSIMPAN (bukan hanya tampilan lokal)', async () => {
+      const created = await service.createTask(MANAGER, {
+        title: 'Task dengan link',
+        pic: 'Aurel',
+        brief: 'Deskripsi task',
+        link: 'https://drive.google.com/deliverable',
+      });
+      const fromBundle = (await service.getBundle(MANAGER)).tasks.find((t) => t.id === created.id)!;
+      expect(fromBundle.brief).toBe('Deskripsi task');
+      expect(fromBundle.link).toBe('https://drive.google.com/deliverable');
+    });
+
+    it('createTask: `notes` (klien lama) diterima sebagai alias `brief`', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Notes alias', pic: 'Aurel', notes: 'Isi catatan lama' });
+      const fromBundle = (await service.getBundle(MANAGER)).tasks.find((t) => t.id === created.id)!;
+      expect(fromBundle.brief).toBe('Isi catatan lama');
+    });
+
+    it('updateTask: PATCH `link` tersimpan (sebelumnya tidak ada field ini)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Update link', pic: 'Aurel' });
+      await service.updateTask(MANAGER, created.id, { link: 'https://example.com/asset' });
+      const fromBundle = (await service.getBundle(MANAGER)).tasks.find((t) => t.id === created.id)!;
+      expect(fromBundle.link).toBe('https://example.com/asset');
+    });
+
+    it('updateTask: PATCH `notes` (alias) mengisi `brief` — BUG-L1 diperbaiki', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Notes ke brief', pic: 'Aurel' });
+      await service.updateTask(MANAGER, created.id, { notes: 'https://link-yang-ditempel-user' });
+      const fromBundle = (await service.getBundle(MANAGER)).tasks.find((t) => t.id === created.id)!;
+      expect(fromBundle.brief).toBe('https://link-yang-ditempel-user');
+    });
+
+    it('updateTask: PATCH `status` tersimpan untuk manager & completedAt terisi saat Done (BUG-L4)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Status via drawer', pic: 'Aurel', status: 'Working on it' });
+      const done = await service.updateTask(MANAGER, created.id, { status: 'Done' });
+      expect(done?.status).toBe('Done');
+      expect(done?.completedAt).toBeDefined(); // sync completedAt jalan
+      expect(done?.checklistDone).toBe(done?.checklistTotal);
+    });
+
+    it('normalizeState: task lama tanpa field `link` di-backfill menjadi "" (BUG-L7)', async () => {
+      const state = JSON.parse(await readFile(join(tempDir, 'state.json'), 'utf8'));
+      state.tasks.push({
+        id: 'OLD-NO-LINK',
+        title: 'Task produksi lama',
+        projectId: 'PRJ-2401',
+        project: 'Q3 Acquisition Sprint',
+        channel: 'General',
+        category: 'general_operations',
+        brand: 'Dreamlab',
+        assignedBy: 'Revi',
+        pic: 'Aurel',
+        reviewer: 'Revi',
+        priority: 'Medium',
+        startDate: daysFromNow(-1),
+        dueDate: daysFromNow(-1),
+        status: 'Done',
+        completedAt: `${daysFromNow(-1)}T08:00:00.000Z`,
+        sla: 'Healthy',
+        estimatedHours: 4,
+        actualHours: 4,
+        revisionCount: 0,
+        checklistDone: 4,
+        checklistTotal: 4,
+        brief: 'brief lama',
+        tags: [],
+        comments: [],
+        history: [{ at: new Date().toISOString(), by: 'Revi', to: 'Done', note: 'assigned' }],
+        attachments: [],
+      });
+      await writeFile(join(tempDir, 'state.json'), JSON.stringify(state, null, 2), 'utf8');
+
+      const bundle = await service.getBundle(MANAGER);
+      const oldTask = bundle.tasks.find((t) => t.id === 'OLD-NO-LINK')!;
+      expect(oldTask.link).toBe('');
+      expect(oldTask.brief).toBe('brief lama'); // data lama tetap utuh
+    });
+  });
 });
 
