@@ -118,7 +118,20 @@ const marketingAliases: Record<string, string[]> = {
   rahmat: ['rahmat'],
 };
 
-function computeMarketingViewer(user: any): { slug: string | null; isManager: boolean } {
+// Mirror backend DELEGATED_MANAGER_SCOPE (PLAN-RAHMAT): Rahmat (bukan global
+// manager) berhak mengelola Gusti & Zarkasi → sidebar menampilkan halaman itu.
+const delegatedManagerScope: Record<string, string[]> = {
+  rahmat: ['gusti', 'zarka'],
+};
+
+// Semua slug member yang punya halaman di Management Task (children sidebar).
+const ALL_MEMBER_SLUGS = ['aurel', 'revi', 'zarka', 'gusti', 'luthfi', 'rahmat'];
+
+function computeMarketingViewer(user: any): {
+  slug: string | null;
+  isManager: boolean;
+  managedMembers: string[];
+} {
   const email = ((user?.email ?? '') as string).toLowerCase().trim();
   const fullName = ((user?.fullName ?? '') as string).toLowerCase().trim();
   const roles: string[] = user?.roles ?? [];
@@ -139,7 +152,12 @@ function computeMarketingViewer(user: any): { slug: string | null; isManager: bo
     email.startsWith('nisa@') ||
     roles.some((r) => managerRoleSet.has(r));
 
-  return { slug, isManager };
+  // Delegated manager: manager lihat semua; member biasa lihat scope delegasinya.
+  const managedMembers = isManager
+    ? ALL_MEMBER_SLUGS
+    : (slug ? (delegatedManagerScope[slug] ?? []) : []);
+
+  return { slug, isManager, managedMembers };
 }
 
 /* ─── COMPONENT ───────────────────────────────────────── */
@@ -167,7 +185,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const visibleModules = useMemo(() => {
     if (!user) return MODULE_STRUCTURE; // belum login, show all
     const userRoles: string[] = user.roles ?? [];
-    const { slug, isManager } = computeMarketingViewer(user);
+    const { slug, isManager, managedMembers } = computeMarketingViewer(user);
 
     // Step 1: filter by module-level roles
     const modules = MODULE_STRUCTURE.filter(g => {
@@ -176,7 +194,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     });
 
     // Step 2: within DIGITAL MARKETING, filter Management Task children
-    //         untuk non-manager -> hanya page dia sendiri
+    //         untuk non-manager -> halaman sendiri + halaman yang ia kelola
+    //         (delegated manager: Rahmat → Gusti & Zarkasi)
     return modules.map(mod => {
       if (mod.label !== 'DIGITAL MARKETING') return mod;
       if (isManager) return mod; // manager sees all
@@ -186,9 +205,9 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         if (item.name !== 'Management Task' || !item.children) return item;
 
         const filteredChildren = item.children.filter((child) => {
-          // Untuk non-manager: hanya page yang sesuai slug-nya
           if (!child.memberSlug) return false;
-          return child.memberSlug === slug;
+          // halaman sendiri ATAU halaman dalam scope delegasi
+          return child.memberSlug === slug || managedMembers.includes(child.memberSlug);
         });
 
         return { ...item, children: filteredChildren };
