@@ -749,6 +749,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       const savedId = res?.data?.id;
       if (savedId && savedId !== newTask.id) {
         setLocalTasks((current) => current.map((t) => (t.id === newTask.id ? { ...t, id: savedId } : t)));
+        // Jika drawer sedang terbuka pada task yang baru dibuat ini (id lokal
+        // belum diganti server), sinkronkan selectedTaskId juga — kalau tidak,
+        // `selectedTask` jadi undefined dan Save drawer berikutnya diam-diam
+        // membuat DUPLIKAT task (terlihat di produksi: 2 task judul sama).
+        setSelectedTaskId((prev) => (prev === newTask.id ? savedId : prev));
       }
       queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
       setQuickAddSaving(false);
@@ -774,14 +779,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       return;
     }
 
-    const isEdit = drawerMode === "edit" && selectedTask;
-    const nextTask = isEdit
-      ? { ...selectedTask, ...draftToTask(selectedTask!.id, draft, viewerName) }
+    // Resolusi target EDIT difresh dari localTasks (bukan snapshot `selectedTask`
+    // yang bisa stale): jika id task lokal sudah diganti id server saat drawer
+    // terbuka, kita tetap menemukan task-nya dan PATCH (bukan POST duplikat).
+    const isEdit = drawerMode === "edit" && Boolean(selectedTaskId);
+    const editBase = isEdit ? localTasks.find((task) => task.id === selectedTaskId) : undefined;
+    const nextTask = editBase
+      ? { ...editBase, ...draftToTask(editBase.id, draft, viewerName) }
       : draftToTask(`local-${Date.now()}`, draft, viewerName);
 
     setLocalTasks((current) => {
-      if (isEdit && selectedTask) {
-        return current.map((task) => (task.id === selectedTask.id ? nextTask : task));
+      if (editBase) {
+        return current.map((task) => (task.id === editBase.id ? nextTask : task));
       }
       return [nextTask, ...current];
     });
@@ -790,14 +799,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
     // Persist to backend. Rollback gagal = invalidate/refetch dari server,
     // BUKAN snapshot closure yang stale (BUG-U2/P5.1).
-    const persistPromise = isEdit && selectedTask
-      ? api.patch(`/marketing/prototype/tasks/${selectedTask.id}`, draft)
+    const persistPromise = editBase
+      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, draft)
       : api.post("/marketing/prototype/tasks", nextTask);
 
     persistPromise
       .then((res) => {
-        // Untuk task baru: ganti id lokal dengan id server dari respons.
-        if (!isEdit) {
+        // Untuk task baru (bukan edit): ganti id lokal dengan id server.
+        if (!editBase) {
           const savedId = res?.data?.id;
           if (savedId && savedId !== nextTask.id) {
             setLocalTasks((current) => current.map((t) => (t.id === nextTask.id ? { ...t, id: savedId } : t)));
@@ -810,7 +819,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
         console.error("[SaveDrawer] Failed:", err?.response?.status, err?.response?.data);
         // Rollback via refetch server.
         queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-        alert(`Gagal ${isEdit ? 'update' : 'menyimpan'} task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+        alert(`Gagal ${editBase ? 'update' : 'menyimpan'} task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
         setDrawerSaving(false);
       });
   }
