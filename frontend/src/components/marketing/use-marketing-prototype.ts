@@ -39,7 +39,9 @@ function buildFallbackBundle() {
       },
       workingHours: { start: "08:00", end: "17:00", days: ["Mon", "Tue", "Wed", "Thu", "Fri"] },
       appearance: {
-        departmentDefaultTheme: "marketing-aesthetic",
+        // Fallback offline/dummy: default professional untuk semua akun
+        // (tanpa terkecuali — lihat migrasi theme professional).
+        departmentDefaultTheme: "professional",
         allowUserOverride: true,
       },
     },

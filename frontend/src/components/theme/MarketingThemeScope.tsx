@@ -54,8 +54,11 @@ export function MarketingThemeScope({
 }) {
   const [preference, setPreference] =
     React.useState<ThemePreference>("follow-department");
+  // Default = professional untuk SEMUA akun (tanpa terkecuali). Nilai awal
+  // sebelum fetch server harus sudah professional supaya tidak ada "flash"
+  // aesthetic di render pertama (PLAN-RAHMAT / migrasi theme professional).
   const [departmentDefaultTheme, setDepartmentDefaultTheme] =
-    React.useState<UiTheme>("marketing-aesthetic");
+    React.useState<UiTheme>("professional");
   const [allowUserOverride, setAllowUserOverride] = React.useState(true);
   const [canManageAppearance, setCanManageAppearance] = React.useState(false);
   const [navbarSlot, setNavbarSlot] = React.useState<HTMLElement | null>(null);
