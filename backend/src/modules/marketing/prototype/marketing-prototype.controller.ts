@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UploadedFile, UseFilters, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -12,6 +13,12 @@ import {
   UpdateTaskStatusDto,
 } from '../dto/prototype-task.dto';
 import { MarketingPrototypeService } from './marketing-prototype.service';
+import {
+  attachmentDiskStorage,
+  attachmentFileFilter,
+  MAX_FILE_SIZE_BYTES,
+  MulterErrorFilter,
+} from './prototype-upload.util';
 
 // Route tulis yang benar-benar manager-only (service juga enforce via
 // ensureManager): reset, project CRUD, delete task, settings.
@@ -102,6 +109,62 @@ export class MarketingPrototypeController {
   @Roles(...MEMBER_ROLES)
   comment(@Req() req: any, @Param('id') id: string, @Body() body: CreateTaskCommentDto) {
     return this.service.addTaskComment(req.user, id, body.author, body.body);
+  }
+
+  @Post('tasks/:id/attachments')
+  @Roles(...MEMBER_ROLES)
+  @UseFilters(MulterErrorFilter)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: attachmentDiskStorage,
+      limits: { fileSize: MAX_FILE_SIZE_BYTES },
+      fileFilter: attachmentFileFilter,
+    }),
+  )
+  addAttachment(
+    @Req() req: any,
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File wajib dikirim pada field "file"');
+    }
+    return this.service.addAttachment(req.user, id, {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: file.path,
+    });
+  }
+
+  @Delete('tasks/:id/attachments/:attachmentId')
+  @Roles(...MEMBER_ROLES)
+  deleteAttachment(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('attachmentId') attachmentId: string,
+  ) {
+    return this.service.deleteAttachment(req.user, id, attachmentId);
+  }
+
+  @Get('tasks/:id/attachments/:attachmentId/content')
+  @Roles(...MEMBER_ROLES)
+  async getAttachmentContent(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('attachmentId') attachmentId: string,
+    @Res() res: any,
+  ) {
+    const result = await this.service.getAttachmentContent(req.user, id, attachmentId);
+    const safeName = result.name.replace(/["\r\n]/g, '');
+    res.setHeader('Content-Type', result.type || 'application/octet-stream');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${safeName}"; filename*=UTF-8''${encodeURIComponent(safeName)}`,
+    );
+    res.status(200);
+    result.stream.pipe(res);
   }
 
   @Get('performance')

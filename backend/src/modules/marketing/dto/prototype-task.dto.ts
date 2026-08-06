@@ -95,7 +95,9 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsArray()
-  attachments?: Array<{ name: string; type: string; sizeKb: number }>;
+  // Diabaikan oleh service (createTask selalu `attachments: []`; updateTask tidak
+  // menerima `attachments` di whitelist — BUG-A-02). Tipe longgar agar kompatibel.
+  attachments?: any[];
 
   @IsOptional()
   @IsString()

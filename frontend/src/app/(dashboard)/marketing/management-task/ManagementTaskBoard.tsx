@@ -14,6 +14,11 @@ import {
 } from "recharts";
 import {
   ExternalLink,
+  File,
+  FileArchive,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
   Folder,
   Pencil,
   Plus,
@@ -33,6 +38,16 @@ import { canonicalMember, sameMember } from "@/lib/marketing-members";
 
 type TaskStatus = "Not started" | "Working on it" | "Revision" | "Done";
 
+type TaskAttachment = {
+  id: string;
+  name: string;
+  type: string;
+  sizeKb: number;
+  path: string;
+  uploadedBy: string;
+  createdAt: string;
+};
+
 type TaskRow = {
   id: string;
   title: string;
@@ -50,6 +65,7 @@ type TaskRow = {
   completedAt?: string;
   brief: string;
   link?: string;
+  attachments?: TaskAttachment[];
   history?: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
 };
 
@@ -295,6 +311,45 @@ function stopRowClick(event: React.SyntheticEvent) {
   event.stopPropagation();
 }
 
+// ── Attachment helpers ─────────────────────────────────
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB — samakan dengan backend
+
+/** URL stream file attachment (autentikasi via cookie `token` → `<img>` bisa
+ *  render inline). Origin mengikuti lib/api: prod `/api`, dev `localhost:3001`. */
+function attachmentContentUrl(taskId: string, attachmentId: string): string {
+  const apiUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== "undefined" && window.location.hostname === "localhost"
+      ? "http://localhost:3001"
+      : "/api");
+  return `${apiUrl}/marketing/prototype/tasks/${taskId}/attachments/${attachmentId}/content`;
+}
+
+function formatAttachmentSize(sizeKb: number): string {
+  if (!sizeKb) return "";
+  if (sizeKb < 1) return "<1 Kb";
+  if (sizeKb < 1024) return `${sizeKb} Kb`;
+  return `${(sizeKb / 1024).toFixed(1)} Mb`;
+}
+
+const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
+const TEXT_EXTS = ["pdf", "doc", "docx", "txt"];
+const SHEET_EXTS = ["xls", "xlsx", "csv"];
+const ARCHIVE_EXTS = ["zip"];
+
+function fileExtension(name: string): string {
+  return name.split(".").pop()?.toLowerCase() ?? "";
+}
+
+function AttachmentFileIcon({ name, className = "h-5 w-5" }: { name: string; className?: string }) {
+  const ext = fileExtension(name);
+  if (IMAGE_EXTS.includes(ext)) return <FileImage className={className} />;
+  if (TEXT_EXTS.includes(ext)) return <FileText className={className} />;
+  if (SHEET_EXTS.includes(ext)) return <FileSpreadsheet className={className} />;
+  if (ARCHIVE_EXTS.includes(ext)) return <FileArchive className={className} />;
+  return <File className={className} />;
+}
+
 // ── KPI Timeliness Helpers ──────────────────────────────
 function getTimelinessColor(percentage: number): string {
   if (percentage >= 80) return "🟢";
@@ -383,6 +438,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   // Timer debounce untuk edit inline (title/date) — mencegah request beruntun
   // per keystroke (BUG-U1/P5.1).
   const inlineEditTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Upload attachment (task) — guard klik ganda (BUG-B-05).
+  const [attachmentsUploading, setAttachmentsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialProjects = useMemo(() => {
     const fromProjects = projects.map((p) => p.name);
@@ -421,16 +479,37 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     }
   }, [activeMember, selectedTaskId, viewerName]);
 
+  // Signature field yang dicerminkan draft — dipakai untuk mencegah reset draft
+  // saat localTasks berubah karena hal yang TIDAK memengaruhi draft (mis.
+  // upload/hapus attachment). Tanpa ini, hasil upload langsung menimpa ketikan
+  // user di Notes/Link yang belum disimpan.
+  const draftSourceRef = useRef("");
+
   useEffect(() => {
     if (!drawerOpen) return;
     if (drawerMode === "edit" && selectedTaskId) {
       const selected = localTasks.find((task) => task.id === selectedTaskId);
       if (selected) {
+        const signature = JSON.stringify([
+          selected.title,
+          selected.project,
+          selected.brand,
+          selected.pic,
+          selected.status,
+          selected.priority,
+          selected.startDate ?? "",
+          selected.dueDate,
+          selected.brief ?? "",
+          selected.link ?? "",
+        ]);
+        if (draftSourceRef.current === signature) return;
+        draftSourceRef.current = signature;
         setDraft(taskToDraft(selected));
       }
       return;
     }
 
+    draftSourceRef.current = "";
     setDraft(defaultDraft(activeMember, viewerName));
   }, [activeMember, drawerMode, drawerOpen, localTasks, selectedTaskId, viewerName]);
 
@@ -639,6 +718,15 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   const selectedTask = selectedTaskId ? localTasks.find((task) => task.id === selectedTaskId) : undefined;
 
+  // Upload attachment aktif hanya untuk task yang SUDAH punya id server
+  // (BUG-A-04) & bukan mode create & bukan sedang upload (BUG-B-05).
+  const canUploadAttachment = Boolean(
+    selectedTask &&
+      !selectedTask.id.startsWith("local-") &&
+      !attachmentsUploading &&
+      (isManager || drawerMode === "edit"),
+  );
+
   function setTaskField(taskId: string, field: keyof TaskRow, value: string) {
     // Optimistic update — tampilkan perubahan langsung.
     setLocalTasks((current) =>
@@ -821,6 +909,75 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
         queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
         alert(`Gagal ${editBase ? 'update' : 'menyimpan'} task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
         setDrawerSaving(false);
+      });
+  }
+
+  // ── Attachment handlers (PLAN-TASK-ATTACHMENTS.md) ─────────────────
+  function uploadAttachment(file: File): Promise<void> {
+    // Guard BUG-A-04: task belum punya id server (masih `local-`) → jangan kirim.
+    if (!selectedTask || selectedTask.id.startsWith("local-")) return Promise.resolve();
+    // Guard BUG-B-05: cegah klik ganda / upload ganda.
+    if (attachmentsUploading) return Promise.resolve();
+    // Pre-check ukuran (BUG-B-01) — backend tetap enforcer final.
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      alert("File terlalu besar (maks 10 MB).");
+      return Promise.resolve();
+    }
+
+    setAttachmentsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    return api
+      .post(`/marketing/prototype/tasks/${selectedTask.id}/attachments`, formData, {
+        // BUG-C-08: override Content-Type agar axios memakai multipart (bukan JSON).
+        headers: { "Content-Type": "multipart/form-data" },
+        // BUG-D-07: timeout lebih panjang untuk file besar di koneksi lambat.
+        timeout: 60000,
+      })
+      .then((res) => {
+        const updated = res?.data;
+        if (updated?.id) {
+          // Server = sumber kebenaran; replace entry task dgn versi terbaru.
+          setLocalTasks((current) =>
+            current.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)),
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+        setAttachmentsUploading(false);
+      })
+      .catch((err) => {
+        console.error("[Attachment] Upload failed:", err?.response?.status, err?.response?.data);
+        setAttachmentsUploading(false);
+        alert(`Gagal upload file! ${err?.response?.data?.message ?? (err?.response?.status ? `Server: ${err?.response?.status}` : "Koneksi terputus")}`);
+      });
+  }
+
+  /** Upload banyak file BERURUTAN — mencegah respons yang tumpang tindih
+   *  menimpa tampilan (BUG-B-05). */
+  async function uploadFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      await uploadAttachment(file).catch(() => undefined);
+    }
+  }
+
+  function deleteAttachment(attachmentId: string) {
+    if (!selectedTask || selectedTask.id.startsWith("local-")) return;
+    if (!window.confirm("Hapus file ini?")) return;
+    api
+      .delete(`/marketing/prototype/tasks/${selectedTask.id}/attachments/${attachmentId}`)
+      .then((res) => {
+        const updated = res?.data;
+        if (updated?.id) {
+          setLocalTasks((current) =>
+            current.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)),
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+      })
+      .catch((err) => {
+        console.error("[Attachment] Delete failed:", err?.response?.status, err?.response?.data);
+        alert(`Gagal hapus file! ${err?.response?.data?.message ?? (err?.response?.status ? `Server: ${err?.response?.status}` : "Koneksi terputus")}`);
       });
   }
 
@@ -1421,6 +1578,125 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   disabled={!isManager && drawerMode !== "create"}
                   className="h-11 w-full rounded-[20px] border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                 />
+              </div>
+
+              {/* Attachment — upload gambar/dokumen ala Notion
+                  (PLAN-TASK-ATTACHMENTS.md). Upload LANGSUNG ke server saat
+                  file dipilih (bukan lewat tombol Save Task). */}
+              <div className="mb-5">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Attachment
+                    {(selectedTask?.attachments?.length ?? 0) > 0 ? (
+                      <span className="ml-1.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">
+                        {selectedTask!.attachments!.length}
+                      </span>
+                    ) : null}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!canUploadAttachment}
+                    title={
+                      selectedTask && selectedTask.id.startsWith("local-")
+                        ? "Simpan task terlebih dahulu sebelum menambah file"
+                        : "Tambah file"
+                    }
+                    className={`inline-flex h-7 items-center gap-1 rounded-full border px-3 text-[10px] font-bold uppercase tracking-wider transition ${
+                      canUploadAttachment
+                        ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        : "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300"
+                    }`}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {attachmentsUploading ? "Uploading..." : "Add file"}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+                    className="hidden"
+                    onChange={(event) => {
+                      uploadFiles(event.target.files);
+                      event.target.value = "";
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {(selectedTask?.attachments ?? []).length ? (
+                    selectedTask!.attachments!.map((att) => {
+                      const isImage = att.path && att.type.startsWith("image/");
+                      const contentUrl = att.path
+                        ? attachmentContentUrl(selectedTask!.id, att.id)
+                        : null;
+                      const canDelete =
+                        isManager || normalize(att.uploadedBy) === normalize(viewerName ?? "");
+                      return (
+                        <div
+                          key={att.id}
+                          className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 px-3 py-2"
+                          onClick={stopRowClick}
+                        >
+                          {isImage && contentUrl ? (
+                            <img
+                              src={contentUrl}
+                              alt={att.name}
+                              onClick={() => window.open(contentUrl, "_blank")}
+                              onError={(event) => {
+                                // BUG-C-02/D-08: file hilang/401 → jatuh ke ikon,
+                                // bukan menampilkan gambar rusak.
+                                event.currentTarget.style.display = "none";
+                              }}
+                              className="h-12 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-200 object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400">
+                              <AttachmentFileIcon name={att.name} />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[12px] font-semibold text-slate-800">{att.name}</p>
+                            <p className="text-[10px] font-medium text-slate-400">
+                              {formatAttachmentSize(att.sizeKb)}
+                              {att.uploadedBy ? ` · ${att.uploadedBy}` : ""}
+                            </p>
+                          </div>
+                          {contentUrl ? (
+                            <a
+                              href={contentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={stopRowClick}
+                              title="Buka file"
+                              className="shrink-0 rounded-full p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          ) : null}
+                          {canDelete ? (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                deleteAttachment(att.id);
+                              }}
+                              title="Hapus file"
+                              className="shrink-0 rounded-full p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          ) : null}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="rounded-2xl border border-dashed border-slate-200 py-4 text-center text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+                      Belum ada file
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Fields grid — field selain status/startDate bersifat read-only

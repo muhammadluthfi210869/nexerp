@@ -25,7 +25,20 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private usersService: UsersService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // Header Authorization (Bearer) tetap prioritas; fallback cookie `token`
+      // agar permintaan non-XHR (mis. `<img src="/api/.../content">`) bisa
+      // terautentikasi — login sudah men-set cookie token di klien
+      // (frontend LoginForm). Backward compatible (header tetap didukung).
+      jwtFromRequest: (req) => {
+        const fromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        if (fromHeader) return fromHeader;
+        const cookieHeader = (req?.headers?.cookie ?? '') as string;
+        const pair = cookieHeader
+          .split(';')
+          .map((part) => part.trim())
+          .find((part) => part.startsWith('token='));
+        return pair ? pair.slice('token='.length) : null;
+      },
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });

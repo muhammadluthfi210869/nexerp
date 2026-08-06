@@ -1,5 +1,5 @@
-import { ForbiddenException } from '@nestjs/common';
-import { mkdtempSync } from 'fs';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { existsSync, mkdtempSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { readFile, rm, writeFile } from 'fs/promises';
@@ -381,6 +381,173 @@ describe('MarketingPrototypeService (JSON store)', () => {
       const oldTask = bundle.tasks.find((t) => t.id === 'OLD-NO-LINK')!;
       expect(oldTask.link).toBe('');
       expect(oldTask.brief).toBe('brief lama'); // data lama tetap utuh
+    });
+  });
+
+  describe('Task Attachment (gambar & dokumen — PLAN-TASK-ATTACHMENTS.md)', () => {
+    it('addAttachment menyimpan metadata & history (path relatif uploads)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Task attachment', pic: 'Aurel' });
+      const filePath = join(tempDir, 'draft.pdf');
+      await writeFile(filePath, Buffer.from('%PDF-1.4 test body'));
+
+      const updated = await service.addAttachment(MANAGER, created.id, {
+        originalname: 'draft.pdf',
+        mimetype: 'application/pdf',
+        size: 2048,
+        path: filePath,
+      });
+
+      expect(updated?.attachments).toHaveLength(1);
+      const att = updated!.attachments[0];
+      expect(att.id).toMatch(/^ATT-/);
+      expect(att.name).toBe('draft.pdf');
+      expect(att.type).toBe('application/pdf');
+      expect(att.sizeKb).toBe(2);
+      expect(att.uploadedBy).toBe('Revi');
+      expect(att.createdAt).toBeTruthy();
+      // path disimpan relatif ke uploads root (bukan path absolut temp)
+      expect(att.path.length).toBeGreaterThan(0);
+      expect(att.path).not.toBe(filePath);
+      expect(updated?.history.some((h) => h.note.includes('Attachment added'))).toBe(true);
+    });
+
+    it('addAttachment menerima gambar PNG valid (magic-byte cocok)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'PNG valid', pic: 'Aurel' });
+      const filePath = join(tempDir, 'photo.png');
+      // Signature PNG: 89 50 4E 47 0D 0A 1A 0A
+      await writeFile(filePath, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]));
+
+      const updated = await service.addAttachment(MANAGER, created.id, {
+        originalname: 'photo.png',
+        mimetype: 'image/png',
+        size: 128,
+        path: filePath,
+      });
+
+      expect(updated?.attachments[0].type).toBe('image/png');
+      expect(updated?.attachments[0].sizeKb).toBe(0);
+    });
+
+    it('addAttachment MENOLAK gambar dengan isi tidak sesuai & file dihapus (BUG-B-03)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Gambar palsu', pic: 'Aurel' });
+      const filePath = join(tempDir, 'fake.png');
+      await writeFile(filePath, Buffer.from('ini bukan png sebenarnya'));
+
+      await expect(
+        service.addAttachment(MANAGER, created.id, {
+          originalname: 'fake.png',
+          mimetype: 'image/png',
+          size: 100,
+          path: filePath,
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(existsSync(filePath)).toBe(false); // file yang gagal dihapus
+      const task = await service.getBundle(MANAGER).then((b) => b.tasks.find((t) => t.id === created.id));
+      expect(task?.attachments).toHaveLength(0);
+    });
+
+    it('addAttachment untuk task tidak ada → NotFound & file dihapus (BUG-A-05)', async () => {
+      const filePath = join(tempDir, 'orphan.pdf');
+      await writeFile(filePath, Buffer.from('x'));
+
+      await expect(
+        service.addAttachment(MANAGER, 'TSK-NOPE', {
+          originalname: 'x.pdf',
+          mimetype: 'application/pdf',
+          size: 1,
+          path: filePath,
+        }),
+      ).rejects.toThrow(NotFoundException);
+      expect(existsSync(filePath)).toBe(false); // tidak ada orphan file
+    });
+
+    it('deleteAttachment menghapus metadata + idempotent (BUG-C-05)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Hapus att', pic: 'Aurel' });
+      const filePath = join(tempDir, 'doc.pdf');
+      await writeFile(filePath, Buffer.from('%PDF'));
+      const withAtt = await service.addAttachment(MANAGER, created.id, {
+        originalname: 'doc.pdf',
+        mimetype: 'application/pdf',
+        size: 512,
+        path: filePath,
+      });
+      const attId = withAtt!.attachments[0].id;
+
+      const removed = await service.deleteAttachment(MANAGER, created.id, attId);
+      expect(removed?.attachments).toHaveLength(0);
+      expect(removed?.history.some((h) => h.note.includes('Attachment removed'))).toBe(true);
+
+      // Idempotent: delete lagi tidak error
+      const again = await service.deleteAttachment(MANAGER, created.id, attId);
+      expect(again?.attachments).toHaveLength(0);
+    });
+
+    it('non-manager TIDAK bisa hapus attachment milik orang lain (Forbidden)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Punya manager', pic: 'Aurel' });
+      const filePath = join(tempDir, 'mgr.png');
+      await writeFile(filePath, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+      const withAtt = await service.addAttachment(MANAGER, created.id, {
+        originalname: 'mgr.png',
+        mimetype: 'image/png',
+        size: 64,
+        path: filePath,
+      });
+      const attId = withAtt!.attachments[0].id;
+
+      await expect(service.deleteAttachment(AUREL, created.id, attId)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('pengunggah (non-manager) BISA hapus upload-nya sendiri', async () => {
+      const created = await service.createTask(AUREL, { title: 'Punya Aurel', pic: 'Aurel' });
+      const filePath = join(tempDir, 'own.pdf');
+      await writeFile(filePath, Buffer.from('%PDF'));
+      const withAtt = await service.addAttachment(AUREL, created.id, {
+        originalname: 'own.pdf',
+        mimetype: 'application/pdf',
+        size: 64,
+        path: filePath,
+      });
+      const attId = withAtt!.attachments[0].id;
+
+      const removed = await service.deleteAttachment(AUREL, created.id, attId);
+      expect(removed?.attachments).toHaveLength(0);
+    });
+
+    it('updateTask PATCH `attachments` DIABAIKAN (BUG-A-02)', async () => {
+      const created = await service.createTask(MANAGER, { title: 'Jangan timpa', pic: 'Aurel' });
+      const updated = await service.updateTask(MANAGER, created.id, {
+        attachments: [
+          { id: 'ATT-X', name: 'fake.pdf', type: 'application/pdf', sizeKb: 1, path: 'tasks/x/y.pdf', uploadedBy: 'Hacker', createdAt: '' },
+        ] as any,
+      });
+      expect(updated?.attachments ?? []).toHaveLength(0);
+    });
+
+    it('createTask selalu attachments: [] walau klien mengirim (BUG-A-02)', async () => {
+      const created = await service.createTask(MANAGER, {
+        title: 'Injeksi att',
+        pic: 'Aurel',
+        attachments: [
+          { id: 'ATT-X', name: 'x', type: 'x', sizeKb: 1, path: 'x', uploadedBy: 'x', createdAt: '' },
+        ] as any,
+      });
+      expect(created.attachments).toEqual([]);
+    });
+
+    it('normalizeState: attachment legacy di-backfill id DETERMINISTIK & path "" (BUG-A-03)', async () => {
+      const state = JSON.parse(await readFile(join(tempDir, 'state.json'), 'utf8'));
+      state.tasks[0].attachments = [{ name: 'brief.pdf', type: 'application/pdf', sizeKb: 244 }];
+      await writeFile(join(tempDir, 'state.json'), JSON.stringify(state, null, 2), 'utf8');
+
+      const bundle1 = await service.getBundle(MANAGER);
+      const bundle2 = await service.getBundle(MANAGER);
+      const a1 = bundle1.tasks.find((t) => t.id === state.tasks[0].id)!.attachments[0];
+      const a2 = bundle2.tasks.find((t) => t.id === state.tasks[0].id)!.attachments[0];
+      expect(a1.id).toMatch(/^ATT-legacy-/);
+      expect(a1.id).toBe(a2.id); // deterministik antar-read (tidak berubah)
+      expect(a1.path).toBe('');
+      expect(a1.uploadedBy).toBe('System');
+      expect(a1.createdAt).toBe('');
     });
   });
 });

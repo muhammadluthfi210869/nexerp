@@ -1,7 +1,7 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { readFile, writeFile, mkdir, access, rename } from 'fs/promises';
-import { constants as fsConstants } from 'fs';
-import { dirname, join } from 'path';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { open, readFile, writeFile, mkdir, access, rename, rm } from 'fs/promises';
+import { constants as fsConstants, createReadStream } from 'fs';
+import { dirname, extname, join, relative, resolve, sep } from 'path';
 import { randomUUID } from 'crypto';
 import {
   calendarDayDiff,
@@ -12,6 +12,12 @@ import {
   toLocalDateString,
   type SlaStatus,
 } from './sla.util';
+import {
+  UPLOADS_ROOT,
+  EXT_TO_MIME,
+  IMAGE_EXTENSIONS,
+  hasValidImageMagic,
+} from './prototype-upload.util';
 
 // Status kanonik = 4 status yang dipakai Board (single source of truth).
 // Status lama (Backlog/To Do/In Progress/Waiting Approval/Cancelled) di-mapping
@@ -64,6 +70,26 @@ type MarketingProjectInput = Partial<
   >
 >;
 
+/** Metadata attachment task. `path` relatif terhadap UPLOADS_ROOT
+ * (mis. `tasks/TSK-123/<uuid>.png`) — dibuat server, bukan dari klien. */
+interface TaskAttachment {
+  id: string;
+  name: string;
+  type: string;
+  sizeKb: number;
+  path: string;
+  uploadedBy: string;
+  createdAt: string;
+}
+
+/** Bentuk file yang diterima service (dari Multer / unit test). */
+interface UploadedFileLike {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  path: string;
+}
+
 interface MarketingTask {
   id: string;
   title: string;
@@ -94,7 +120,7 @@ interface MarketingTask {
   tags: string[];
   comments: Array<{ author: string; body: string; createdAt: string }>;
   history: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
-  attachments: Array<{ name: string; type: string; sizeKb: number }>;
+  attachments: TaskAttachment[];
 }
 
 type MarketingTaskInput = Partial<
@@ -280,6 +306,17 @@ function timeStampLabel(date = new Date()) {
   return date.toISOString().slice(11, 16);
 }
 
+/** Hash deterministik 8-hex dari string — dipakai untuk id attachment legacy
+ * yang STABIL antar-read (tanpa menulis ke state), menghindari id acak yang
+ * berubah tiap reload (BUG-A-03). */
+function hash8(value: string): string {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
 function buildSeedState(): MarketingPrototypeState {
   const projects: MarketingProject[] = [
     {
@@ -461,9 +498,11 @@ function buildSeedState(): MarketingPrototypeState {
         { at: '2026-07-01T07:45:00.000Z', by: headOfMarketing, to: 'Not started', note: 'Task assigned' },
         { at: '2026-07-01T09:15:00.000Z', by: pic, from: 'Not started', to: status, note: 'Status updated' },
       ],
+      // Seed attachment HANYA metadata (path '' → tidak ada file asli).
+      // Id deterministik supaya stabil & konsisten dengan backfill normalizeState.
       attachments: [
-        { name: 'brief.pdf', type: 'application/pdf', sizeKb: 244 },
-        { name: 'proof.png', type: 'image/png', sizeKb: 812 },
+        { id: 'ATT-seed-brief', name: 'brief.pdf', type: 'application/pdf', sizeKb: 244, path: '', uploadedBy: 'System', createdAt: '' },
+        { id: 'ATT-seed-proof', name: 'proof.png', type: 'image/png', sizeKb: 812, path: '', uploadedBy: 'System', createdAt: '' },
       ],
     };
   });
@@ -621,6 +660,23 @@ export class MarketingPrototypeService {
         // Backfill field `link` (URL deliverable) — task lama (produksi) belum
         // punya field ini; default string kosong supaya UI aman (BUG-L7).
         link: (task as any).link ?? '',
+        // Backfill attachment legacy (seed `brief.pdf`/`proof.png` tanpa
+        // id/path): id DETERMINISTIK (BUG-A-03) agar stabil antar-read,
+        // path '' (tidak ada file asli → UI menampilkan ikon tanpa link).
+        attachments: ((task as any).attachments ?? []).map(
+          (att: any, idx: number) => ({
+            id:
+              typeof att.id === 'string' && att.id
+                ? att.id
+                : `ATT-legacy-${idx}-${hash8(String(att.name ?? 'file'))}`,
+            name: String(att.name ?? 'file'),
+            type: String(att.type ?? 'application/octet-stream'),
+            sizeKb: Number(att.sizeKb ?? 0),
+            path: String(att.path ?? ''),
+            uploadedBy: String(att.uploadedBy ?? 'System'),
+            createdAt: String(att.createdAt ?? ''),
+          }),
+        ),
         status: (LEGACY_STATUS_MAP[task.status] ?? task.status) as TaskStatus,
       };
       if (next.status === 'Done' && !next.completedAt) {
@@ -1219,7 +1275,6 @@ export class MarketingPrototypeService {
         'brief',
         'link',
         'tags',
-        'attachments',
       ];
 
       if (scope.isManager) {
@@ -1285,7 +1340,150 @@ export class MarketingPrototypeService {
     const next = await this.updateState((state) => {
       state.tasks = state.tasks.filter((task) => task.id !== id);
     });
+    // ATT-6/BUG-C-01: hapus file upload milik task agar disk tidak bocor.
+    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true }).catch(() => undefined);
     return !next.tasks.some((task) => task.id === id);
+  }
+
+  /** Verifikasi magic-byte gambar (BUG-B-03): isi file harus cocok dengan
+   * ekstensi. Membaca hanya 16 byte pertama (tidak membaca seluruh file). */
+  private async verifyImageMagic(filePath: string, ext: string): Promise<boolean> {
+    try {
+      const handle = await open(filePath, 'r');
+      try {
+        const buffer = Buffer.alloc(16);
+        const { bytesRead } = await handle.read(buffer, 0, 16, 0);
+        return hasValidImageMagic(buffer.subarray(0, bytesRead), ext);
+      } finally {
+        await handle.close();
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  /** Tambah attachment (file sudah ditulis lengkap oleh controller Multer).
+   * Urutan aman (BUG-A-05): metadata baru ditambah SETELAH file utuh; bila
+   * updateState gagal, file yang baru ditulis di-`rm` agar tidak orphan. */
+  async addAttachment(viewer: ViewerContext | undefined, taskId: string, file: UploadedFileLike) {
+    const scope = this.resolveViewer(viewer);
+    const actor = scope.prototypeName ?? headOfMarketing;
+    const ext = extname(file.originalname).toLowerCase().slice(1);
+
+    // Verifikasi magic-byte gambar sebelum metadata dibuat (BUG-B-03).
+    if (IMAGE_EXTENSIONS.has(ext) && !(await this.verifyImageMagic(file.path, ext))) {
+      await rm(file.path, { force: true }).catch(() => undefined);
+      throw new BadRequestException('Isi file tidak cocok dengan ekstensi gambar yang dikirim');
+    }
+
+    const attachment: TaskAttachment = {
+      id: `ATT-${randomUUID()}`,
+      name: file.originalname,
+      // Type server-derived dari ekstensi (bukan mimetype klien) — anti header
+      // injection & anti spoof (BUG-D-05).
+      type: EXT_TO_MIME[ext] ?? 'application/octet-stream',
+      sizeKb: Math.max(Math.round(file.size / 1024), 0),
+      // Path relatif ke UPLOADS_ROOT agar portabel antar environment.
+      // Normalisasi ke forward-slash — di Windows `path.relative` menghasilkan
+      // backslash yang membuat validasi `startsWith('tasks/')` gagal.
+      path: relative(resolve(UPLOADS_ROOT), resolve(file.path)).split(sep).join('/'),
+      uploadedBy: actor,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const next = await this.updateState((state) => {
+        const task = state.tasks.find((item) => item.id === taskId);
+        if (!task || !this.isVisibleToViewer(task, scope)) {
+          throw new NotFoundException('Task tidak ditemukan atau tidak dapat diakses');
+        }
+        task.attachments = task.attachments ?? [];
+        task.attachments.unshift(attachment);
+        task.history.push({
+          at: new Date().toISOString(),
+          by: actor,
+          to: task.status,
+          note: `Attachment added: ${attachment.name}`,
+        });
+        this.pushNotification(state, {
+          type: 'task_updated',
+          title: `File added to ${task.title}`,
+          detail: `${actor} added ${attachment.name} to ${task.title}.`,
+          actor,
+          unread: true,
+          recipient: task.pic,
+        });
+      });
+      return next.tasks.find((task) => task.id === taskId) ?? null;
+    } catch (err) {
+      // BUG-A-05: metadata gagal tersimpan → file baru dihapus.
+      await rm(file.path, { force: true }).catch(() => undefined);
+      throw err;
+    }
+  }
+
+  /** Hapus attachment (metadata + file disk). Hanya pengunggah atau manager;
+   * idempotent bila sudah tidak ada (BUG-C-05). */
+  async deleteAttachment(viewer: ViewerContext | undefined, taskId: string, attachmentId: string) {
+    const scope = this.resolveViewer(viewer);
+    const actor = scope.prototypeName ?? headOfMarketing;
+    const next = await this.updateState((state) => {
+      const task = state.tasks.find((item) => item.id === taskId);
+      if (!task || !this.isVisibleToViewer(task, scope)) {
+        throw new NotFoundException('Task tidak ditemukan atau tidak dapat diakses');
+      }
+      const att = (task.attachments ?? []).find((item) => item.id === attachmentId);
+      if (!att) return; // idempotent
+      const isUploader = normalizeIdentity(att.uploadedBy) === normalizeIdentity(actor);
+      if (!scope.isManager && !isUploader) {
+        throw new ForbiddenException('Hanya pengunggah atau manager yang dapat menghapus file ini');
+      }
+      task.attachments = (task.attachments ?? []).filter((item) => item.id !== attachmentId);
+      task.history.push({
+        at: new Date().toISOString(),
+        by: actor,
+        to: task.status,
+        note: `Attachment removed: ${att.name}`,
+      });
+      // Hapus file dari disk (best-effort, idempotent) — path divalidasi.
+      if (att.path) {
+        const full = resolve(UPLOADS_ROOT, att.path);
+        const root = resolve(UPLOADS_ROOT) + sep;
+        if (full.startsWith(root)) {
+          rm(full, { force: true }).catch(() => undefined);
+        }
+      }
+    });
+    return next.tasks.find((task) => task.id === taskId) ?? null;
+  }
+
+  /** Streaming file attachment (untuk `<img>`/preview/unduh). Visibility check
+   * + validasi path (anti traversal — BUG-C-04) + 404 bila file hilang. */
+  async getAttachmentContent(viewer: ViewerContext | undefined, taskId: string, attachmentId: string) {
+    const scope = this.resolveViewer(viewer);
+    const state = await this.readState();
+    const task = state.tasks.find((item) => item.id === taskId);
+    if (!task || !this.isVisibleToViewer(task, scope)) {
+      throw new NotFoundException('Task tidak ditemukan');
+    }
+    const att = (task.attachments ?? []).find((item) => item.id === attachmentId);
+    if (!att || !att.path) {
+      throw new NotFoundException('File tidak ditemukan');
+    }
+    if (!att.path.startsWith('tasks/') || att.path.includes('..')) {
+      throw new NotFoundException('File tidak ditemukan');
+    }
+    const full = resolve(UPLOADS_ROOT, att.path);
+    const root = resolve(UPLOADS_ROOT) + sep;
+    if (!full.startsWith(root)) {
+      throw new NotFoundException('File tidak ditemukan');
+    }
+    try {
+      await access(full, fsConstants.F_OK);
+    } catch {
+      throw new NotFoundException('File hilang di server');
+    }
+    return { stream: createReadStream(full), type: att.type, name: att.name };
   }
 
   async addTaskComment(viewer: ViewerContext | undefined, id: string, author: string, body: string) {
@@ -1381,6 +1579,9 @@ export class MarketingPrototypeService {
         brief: input.brief ?? input.notes ?? '',
         link: input.link ?? '',
         tags: input.tags ?? [],
+        // Attachment SELALU kosong saat create — file hanya bisa ditambahkan
+        // lewat endpoint dedicated (BUG-A-02). `input.attachments` diabaikan.
+        attachments: [],
         comments: [],
         history: [
           {
@@ -1390,7 +1591,6 @@ export class MarketingPrototypeService {
             note: 'Task created',
           },
         ],
-        attachments: input.attachments ?? [],
       });
       this.pushNotification(state, {
         type: 'task_assigned',
