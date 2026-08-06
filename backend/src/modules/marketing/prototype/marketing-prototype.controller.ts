@@ -94,7 +94,10 @@ export class MarketingPrototypeController {
   }
 
   @Delete('tasks/:id')
-  @Roles(...MANAGER_WRITE_ROLES)
+  // Dibuka ke semua member (coarse); service `deleteTask` tetap menolak yang
+  // tidak berhak via `canManageTask` (delegated manager hanya task kelolaannya,
+  // member biasa hanya task sendiri — PLAN-RAHMAT, B1/K10).
+  @Roles(...MEMBER_ROLES)
   deleteTask(@Req() req: any, @Param('id') id: string) {
     return this.service.deleteTask(req.user, id);
   }

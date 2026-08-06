@@ -231,6 +231,10 @@ interface ViewerScope {
   isManager: boolean;
   prototypeName: string | null;
   aliases: string[];
+  /** Delegated Manager (co-manager): daftar team id (slug) yang boleh dikelola
+   *  dengan privilese manajer — tetapi TERBATAS pada member itu saja. Kosong
+   *  untuk member biasa; semua team id untuk global manager. (PLAN-RAHMAT) */
+  managedMembers: string[];
 }
 
 const statePath = join(process.cwd(), 'data', 'marketing-prototype-state.json');
@@ -253,6 +257,14 @@ const viewerAliases: Record<string, string[]> = {
   aurel: ['aurel'],
   luthfi: ['luthfi'],
   rahmat: ['rahmat'],
+};
+
+/** Delegated Manager (co-manager) — PLAN-RAHMAT-DELEGATED-MANAGER.md.
+ * Kunci = prototypeName/nama kanonik viewer; nilai = daftar team id (slug)
+ * yang boleh dikelola penuh (view/create/edit/delete/attachment) seperti
+ * manajer, TAPI hanya untuk member itu. Rahmat → Gusti & Zarkasi saja. */
+const DELEGATED_MANAGER_SCOPE: Record<string, string[]> = {
+  Rahmat: ['gusti', 'zarka'],
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -300,6 +312,13 @@ function canonicalMember(name: string): string {
     }
   }
   return (name ?? '').trim();
+}
+
+/** Team id (slug) dari nama member — `memberIdForName('Zarkasi')` → `'zarka'`.
+ * Satu-satunya konvensi untuk membandingkan member di scope delegasi; slug =
+ * id `team[]` = slug halaman frontend (PLAN-RAHMAT, K4). */
+function memberIdForName(name: string): string {
+  return canonicalMember(name).toLowerCase();
 }
 
 function timeStampLabel(date = new Date()) {
@@ -769,7 +788,9 @@ export class MarketingPrototypeService {
     else if (viewerAliases.gusti.includes(fullName) || email === 'gusti@dreamlab.com') prototypeName = 'Gusti';
     else if (viewerAliases.aurel.includes(fullName)) prototypeName = 'Aurel';
     else if (viewerAliases.luthfi.includes(fullName)) prototypeName = 'Luthfi';
-    else if (viewerAliases.rahmat.includes(fullName)) prototypeName = 'Rahmat';
+    // Email Rahmat: `rahmat@portoaureon.id` (profil di state) — jangan hanya
+    // andalkan fullName (PLAN-RAHMAT, C-01: delegasi senyap mati bila salah).
+    else if (viewerAliases.rahmat.includes(fullName) || email.startsWith('rahmat@')) prototypeName = 'Rahmat';
     else if (roles.some((role) => managerRoleSet.has(role))) prototypeName = headOfMarketing;
 
     const isManager =
@@ -788,26 +809,45 @@ export class MarketingPrototypeService {
     };
     const aliases = prototypeName ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])] : [];
 
+    // Delegated Manager (co-manager): Rahmat boleh mengelola Gusti & Zarkasi.
+    // Global manager → kelola semua team; member biasa → kosong (PLAN-RAHMAT).
+    const delegated = prototypeName ? (DELEGATED_MANAGER_SCOPE[prototypeName] ?? []) : [];
+    const managedMembers = isManager ? team.map((member) => member.id) : delegated;
+
     return {
       isManager,
       prototypeName,
       aliases: Array.from(new Set(aliases.map((value) => normalizeIdentity(value)).filter(Boolean))),
+      managedMembers,
     };
+  }
+
+  /** Izin manajer pada task tertentu: global manager, task milik sendiri,
+   *  atau task yang pic-nya ada di scope delegasi (PLAN-RAHMAT, A3). */
+  private canManageTask(task: MarketingTask, scope: ViewerScope) {
+    if (scope.isManager) return true;
+    if (scope.aliases.includes(normalizeIdentity(task.pic))) return true;
+    return scope.managedMembers.includes(memberIdForName(task.pic));
   }
 
   private isVisibleToViewer(task: MarketingTask, scope: ViewerScope) {
     if (scope.isManager) return true;
-    if (!scope.aliases.length) return false;
-    return [task.pic, task.reviewer, task.assignedBy].some((value) =>
+    if (!scope.aliases.length && !scope.managedMembers.length) return false;
+    const visibleByAlias = [task.pic, task.reviewer, task.assignedBy].some((value) =>
       scope.aliases.includes(normalizeIdentity(value)),
     );
+    if (visibleByAlias) return true;
+    // Delegated manager melihat task yang pic-nya ia kelola (Gusti/Zarka).
+    return scope.managedMembers.includes(memberIdForName(task.pic));
   }
 
   private isNotificationVisible(notification: MarketingNotification, scope: ViewerScope) {
     if (scope.isManager) return true;
-    if (!scope.aliases.length) return false;
+    if (!scope.aliases.length && !scope.managedMembers.length) return false;
     if (!notification.recipient) return true;
-    return scope.aliases.includes(normalizeIdentity(notification.recipient));
+    if (scope.aliases.includes(normalizeIdentity(notification.recipient))) return true;
+    // Delegated manager ikut melihat notif member yang ia kelola (PLAN-RAHMAT, A9).
+    return scope.managedMembers.includes(memberIdForName(notification.recipient));
   }
 
   private ensureManager(viewer?: ViewerContext) {
@@ -949,6 +989,10 @@ export class MarketingPrototypeService {
       viewer: {
         name: scope.prototypeName,
         isManager: scope.isManager,
+        // Delegated manager scope — dipakai frontend untuk navigasi & izin
+        // (3 halaman Rahmat: rahmat + gusti + zarka). Opsional; kalau hilang,
+        // frontend fallback ke perilaku member biasa (PLAN-RAHMAT, A10).
+        managedMembers: scope.managedMembers,
       },
       summary,
       projects,
@@ -1277,7 +1321,24 @@ export class MarketingPrototypeService {
         'tags',
       ];
 
-      if (scope.isManager) {
+      // Delegated manager (Rahmat) dapat full-edit pada task member yang ia
+      // kelola (Gusti/Zarka) — sama seperti global manager (PLAN-RAHMAT, A6).
+      // Untuk task di luar scope (termasuk task sendiri) tetap cabang non-manager.
+      const canEditFull = scope.isManager || scope.managedMembers.includes(memberIdForName(task.pic));
+
+      // Scope leak guard (K7/B-06): non-manager tidak boleh memindahkan pic task
+      // ke luar scope (self/managed) — mencegah mengedit task milik member lain
+      // atau mengubah beban kerja di luar wewenangnya.
+      if (!scope.isManager && input.pic !== undefined) {
+        const newPicOk =
+          scope.aliases.includes(normalizeIdentity(input.pic)) ||
+          scope.managedMembers.includes(memberIdForName(input.pic));
+        if (!newPicOk) {
+          throw new ForbiddenException('Can only reassign tasks to yourself or your managed members');
+        }
+      }
+
+      if (canEditFull) {
         for (const key of ALLOWED) {
           const value = input[key as keyof MarketingTaskInput];
           if (value !== undefined) (task as any)[key] = value;
@@ -1298,7 +1359,7 @@ export class MarketingPrototypeService {
         }
         note.push('Task updated');
       } else {
-        // Non-manager: hanya bisa update startDate dan status
+        // Non-manager (di luar scope): hanya bisa update startDate dan status
         // dueDate, pic, reviewer, priority dll TIDAK bisa diubah
         if (input.startDate !== undefined) {
           task.startDate = input.startDate;
@@ -1336,9 +1397,16 @@ export class MarketingPrototypeService {
   }
 
   async deleteTask(viewer: ViewerContext | undefined, id: string) {
-    this.ensureManager(viewer);
+    // Delegated manager (Rahmat) boleh hapus task member yang ia kelola
+    // (Gusti/Zarka); global manager semua; lainnya 403 (PLAN-RAHMAT, A7).
+    const scope = this.resolveViewer(viewer);
     const next = await this.updateState((state) => {
-      state.tasks = state.tasks.filter((task) => task.id !== id);
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) throw new NotFoundException('Task tidak ditemukan');
+      if (!this.canManageTask(task, scope)) {
+        throw new ForbiddenException('Only the manager or delegated manager of this task can delete it');
+      }
+      state.tasks = state.tasks.filter((item) => item.id !== id);
     });
     // ATT-6/BUG-C-01: hapus file upload milik task agar disk tidak bocor.
     rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true }).catch(() => undefined);
@@ -1435,8 +1503,11 @@ export class MarketingPrototypeService {
       const att = (task.attachments ?? []).find((item) => item.id === attachmentId);
       if (!att) return; // idempotent
       const isUploader = normalizeIdentity(att.uploadedBy) === normalizeIdentity(actor);
-      if (!scope.isManager && !isUploader) {
-        throw new ForbiddenException('Hanya pengunggah atau manager yang dapat menghapus file ini');
+      // Delegated manager boleh hapus attachment pada task member yang ia
+      // kelola (PLAN-RAHMAT, A8/B-02).
+      const managedOk = scope.managedMembers.includes(memberIdForName(task.pic));
+      if (!scope.isManager && !isUploader && !managedOk) {
+        throw new ForbiddenException('Hanya pengunggah, manager, atau delegated manager task ini yang dapat menghapus file');
       }
       task.attachments = (task.attachments ?? []).filter((item) => item.id !== attachmentId);
       task.history.push({
@@ -1546,12 +1617,17 @@ export class MarketingPrototypeService {
       const project = state.projects.find((item) => item.id === input.projectId) ?? state.projects[0];
       const projectId = input.projectId ?? project?.id ?? 'PRJ-LOCAL';
       const projectName = input.project ?? project?.name ?? 'Marketing';
-      // Non-manager: assignee WAJIB dirinya sendiri (tidak bisa menugaskan ke
-      // orang lain); assignedBy = dirinya; reviewer dipaksa ke manager supaya
-      // task baru punya peninjau yang jelas & tidak hilang dari view manager.
+      // Non-manager: assignee WAJIB dirinya sendiri ATAU member yang ia kelola
+      // (delegated manager: Rahmat → Gusti/Zarka). assignedBy = dirinya;
+      // reviewer dipaksa ke manager supaya task baru punya peninjau yang jelas
+      // & tidak hilang dari view manager (PLAN-RAHMAT, A5).
       let assignee = input.pic ?? actor;
-      if (!scope.isManager && !scope.aliases.includes(normalizeIdentity(assignee))) {
-        throw new ForbiddenException('Members can only create tasks assigned to themselves');
+      const assigneeOk =
+        scope.isManager ||
+        scope.aliases.includes(normalizeIdentity(assignee)) ||
+        scope.managedMembers.includes(memberIdForName(assignee));
+      if (!assigneeOk) {
+        throw new ForbiddenException('Members can only create tasks assigned to themselves or their managed members');
       }
       const status = (LEGACY_STATUS_MAP[input.status ?? 'Not started'] ?? 'Not started') as TaskStatus;
       state.tasks.unshift({

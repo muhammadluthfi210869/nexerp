@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -417,7 +417,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const tasks = useMemo(() => (prototype?.tasks ?? []) as TaskRow[], [prototype?.tasks]);
   const projects = useMemo(() => (prototype?.projects ?? []) as Array<{ id: string; name: string; channel?: string }>, [prototype?.projects]);
   const profiles = useMemo(() => (prototype?.profiles ?? []) as ProfileRow[], [prototype?.profiles]);
-  const viewer = prototype?.viewer as { name: string | null; isManager: boolean } | undefined;
+  const viewer = prototype?.viewer as
+    | { name: string | null; isManager: boolean; managedMembers?: string[] }
+    | undefined;
   const isManager = viewer?.isManager ?? false;
   const viewerName = viewer?.name ?? null;
   const queryClient = useQueryClient();
@@ -529,14 +531,41 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     return found?.slug ?? null;
   }, [viewerName]);
 
-  // Redirect non-manager if they somehow land on another member's page
+  // Delegated Manager (co-manager): daftar member yang boleh dikelola penuh
+  // ala-manajer — Rahmat → gusti & zarka (3 halaman). Backend mengirim team id
+  // (slug). Defensif: kalau field belum ada → Set kosong → perilaku member biasa.
+  const managedSlugs = useMemo(
+    () => new Set((viewer?.managedMembers ?? []).map((id) => id.toLowerCase())),
+    [viewer?.managedMembers],
+  );
+
+  // Izin full-edit pada task = global manager ATAU pic task ada di scope
+  // delegasi. (Task sendiri tetap terbatas startDate/status — sesuai backend.)
+  const isFullEditTask = useCallback(
+    (task: TaskRow) => isManager || managedSlugs.has(canonicalMember(task.pic).toLowerCase()),
+    [isManager, managedSlugs],
+  );
+  // Izin kelola pada level member page (dropdown/navigasi).
+  const canEditMember = useCallback(
+    (slug: string) => isManager || managedSlugs.has(slug),
+    [isManager, managedSlugs],
+  );
+
+  // Redirect non-manager if they somehow land on another member's page.
+  // Rahmat boleh berada di halaman member yang ia kelola (gusti/zarka).
   useEffect(() => {
-    if (!isManager && viewerSlug && activeMember !== "overview" && activeMember !== viewerSlug) {
+    if (
+      !isManager &&
+      viewerSlug &&
+      activeMember !== "overview" &&
+      activeMember !== viewerSlug &&
+      !canEditMember(activeMember)
+    ) {
       router.push(`/marketing/management-task/${viewerSlug}`);
     }
-  }, [isManager, viewerSlug, activeMember, router]);
+  }, [isManager, viewerSlug, activeMember, canEditMember, router]);
 
-  // Restrict member dropdown for non-manager
+  // Restrict member dropdown for non-manager (tambah halaman kelola delegasi)
   const memberSelectOptions = useMemo(() => {
     const all = [
       { value: "overview", label: "Overview" },
@@ -544,10 +573,12 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     ];
     if (isManager) return all;
     if (viewerSlug) {
-      return all.filter((o) => o.value === "overview" || o.value === viewerSlug);
+      return all.filter(
+        (o) => o.value === "overview" || o.value === viewerSlug || canEditMember(o.value),
+      );
     }
-    return all.filter((o) => o.value === "overview");
-  }, [isManager, viewerSlug]);
+    return all.filter((o) => o.value === "overview" || canEditMember(o.value));
+  }, [isManager, viewerSlug, canEditMember]);
 
   const projectOptions = useMemo(() => {
     const fromTasks = localTasks.map((task) => task.project);
@@ -569,8 +600,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   }, [localTasks]);
 
   const visibleMembers = useMemo(
-    () => isManager ? overviewMembers : overviewMembers.filter((m) => m.slug === viewerSlug),
-    [isManager, viewerSlug],
+    () =>
+      isManager
+        ? overviewMembers
+        : overviewMembers.filter((m) => m.slug === viewerSlug || managedSlugs.has(m.slug)),
+    [isManager, viewerSlug, managedSlugs],
   );
 
   const visibleTasks = useMemo(
@@ -727,6 +761,15 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       (isManager || drawerMode === "edit"),
   );
 
+  // Izin field penuh di drawer (PLAN-RAHMAT, C7): create selalu boleh; edit
+  // hanya bila task dalam scope full-edit (global manager / delegated scope).
+  // startDate & status tetap editable untuk semua task visible (backend menerima).
+  const canEditDrawerFull =
+    drawerMode === "create" || (selectedTask ? isFullEditTask(selectedTask) : isManager);
+  // Assignee (pic): editable untuk global manager, atau edit task dalam scope.
+  const canEditDrawerPic =
+    isManager || (drawerMode === "edit" && selectedTask ? isFullEditTask(selectedTask) : false);
+
   function setTaskField(taskId: string, field: keyof TaskRow, value: string) {
     // Optimistic update — tampilkan perubahan langsung.
     setLocalTasks((current) =>
@@ -748,9 +791,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       return;
     }
 
-    // Non-manager hanya boleh mengubah startDate (backend hanya menerima itu).
-    // Field lain dibuat read-only di JSX; kalau sempat berubah, refetch ulang.
-    if (!isManager && field !== "startDate") {
+    // Hanya full-edit task (global manager / delegated scope Rahmat→Gusti/Zarka)
+    // yang boleh mengubah field selain startDate; di luar scope hanya startDate
+    // & status (backend hanya menerima itu — PLAN-RAHMAT, C10).
+    const targetTask = localTasks.find((task) => task.id === taskId);
+    const isFullEdit =
+      isManager ||
+      (targetTask ? managedSlugs.has(canonicalMember(targetTask.pic).toLowerCase()) : false);
+    if (!isFullEdit && field !== "startDate") {
       queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
       return;
     }
@@ -1075,7 +1123,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 <Users2 className="h-4 w-4" />
-                {isManager ? `${snapshots.length} Members` : "My Performance"}
+                {isManager || managedSlugs.size > 0 ? `${snapshots.length} Members` : "My Performance"}
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-5">
@@ -1359,9 +1407,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                     value={task.title}
                                     onChange={(event) => setTaskField(task.id, "title", event.target.value)}
                                     onClick={stopRowClick}
-                                    readOnly={!isManager}
-                                    title={!isManager ? "Hanya manager yang dapat mengubah judul" : undefined}
-                                    className={`h-8 border-0 bg-transparent px-0 text-[13px] font-bold shadow-none focus:ring-0 text-slate-800 ${!isManager ? "cursor-default opacity-80" : ""}`}
+                                    readOnly={!isFullEditTask(task)}
+                                    title={!isFullEditTask(task) ? "Hanya manager / delegated manager yang dapat mengubah judul" : undefined}
+                                    className={`h-8 border-0 bg-transparent px-0 text-[13px] font-bold shadow-none focus:ring-0 text-slate-800 ${!isFullEditTask(task) ? "cursor-default opacity-80" : ""}`}
                                   />
                                   {task.link ? (
                                     <a
@@ -1380,7 +1428,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   value={task.project}
                                   onChange={(event) => setTaskField(task.id, "project", event.target.value)}
                                   onClick={stopRowClick}
-                                  disabled={!isManager}
+                                  disabled={!isFullEditTask(task)}
                                   className="mt-0.5 block w-fit border-0 bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400 outline-none focus:ring-0 focus:text-blue-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                   {projectOptions.map((project) => (
@@ -1403,9 +1451,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   value={task.dueDate}
                                   onChange={(event) => setTaskField(task.id, "dueDate", event.target.value)}
                                   onClick={stopRowClick}
-                                  disabled={!isManager}
+                                  disabled={!isFullEditTask(task)}
                                   className={`h-8 w-full border rounded-lg px-2 text-[10px] font-semibold shadow-none focus:bg-white focus:ring-0 ${
-                                    !isManager
+                                    !isFullEditTask(task)
                                       ? "border-slate-100 bg-slate-100/50 text-slate-400 cursor-not-allowed"
                                       : task.dueDate < today && task.status !== "Done"
                                         ? "border-rose-200 bg-rose-50 text-rose-700 focus:border-rose-400"
@@ -1481,7 +1529,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </button>
-                                {isManager && (
+                                {isFullEditTask(task) && (
                                 <button
                                   type="button"
                                   onClick={(event) => {
@@ -1560,7 +1608,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   value={draft.brief}
                   onChange={(event) => setDraft((current) => ({ ...current, brief: event.target.value }))}
                   rows={5}
-                  disabled={!isManager && drawerMode !== "create"}
+                  disabled={!canEditDrawerFull}
                   className="w-full rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-[13px] leading-6 text-slate-900 outline-none focus:border-blue-300 resize-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   placeholder="Write task description or notes here..."
                 />
@@ -1575,7 +1623,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   value={draft.link}
                   onChange={(event) => setDraft((current) => ({ ...current, link: event.target.value }))}
                   placeholder="https://drive.google.com/..."
-                  disabled={!isManager && drawerMode !== "create"}
+                  disabled={!canEditDrawerFull}
                   className="h-11 w-full rounded-[20px] border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                 />
               </div>
@@ -1632,7 +1680,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                         ? attachmentContentUrl(selectedTask!.id, att.id)
                         : null;
                       const canDelete =
-                        isManager || normalize(att.uploadedBy) === normalize(viewerName ?? "");
+                        isManager ||
+                        normalize(att.uploadedBy) === normalize(viewerName ?? "") ||
+                        (selectedTask ? isFullEditTask(selectedTask) : false);
                       return (
                         <div
                           key={att.id}
@@ -1704,13 +1754,13 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   yang diam-diam hilang — P5.1). */}
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Task">
-                  <DnaInput value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Task title" disabled={!isManager && drawerMode !== "create"} />
+                  <DnaInput value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Task title" disabled={!canEditDrawerFull} />
                 </Field>
                 <Field label="Project">
                   <select
                     value={draft.project}
                     onChange={(event) => setDraft((current) => ({ ...current, project: event.target.value }))}
-                    disabled={!isManager && drawerMode !== "create"}
+                    disabled={!canEditDrawerFull}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="">Project</option>
@@ -1725,7 +1775,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <select
                     value={draft.brand}
                     onChange={(event) => setDraft((current) => ({ ...current, brand: event.target.value as "Dreamlab" | "Toribio" }))}
-                    disabled={!isManager && drawerMode !== "create"}
+                    disabled={!canEditDrawerFull}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="Dreamlab">Dreamlab</option>
@@ -1733,7 +1783,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   </select>
                 </Field>
                 <Field label="Assignee">
-                  <DnaInput value={draft.pic} onChange={(event) => setDraft((current) => ({ ...current, pic: event.target.value }))} placeholder="Aurel" disabled={!isManager} />
+                  <DnaInput value={draft.pic} onChange={(event) => setDraft((current) => ({ ...current, pic: event.target.value }))} placeholder="Aurel" disabled={!canEditDrawerPic} />
                 </Field>
                 <Field label="Status">
                   <select
@@ -1752,7 +1802,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <select
                     value={draft.priority}
                     onChange={(event) => setDraft((current) => ({ ...current, priority: event.target.value as TaskRow["priority"] }))}
-                    disabled={!isManager && drawerMode !== "create"}
+                    disabled={!canEditDrawerFull}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-900 outline-none focus:border-blue-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     {["Low", "Medium", "High", "Urgent"].map((value) => (
@@ -1766,7 +1816,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <DnaInput type="date" value={draft.startDate} onChange={(event) => setDraft((current) => ({ ...current, startDate: event.target.value }))} />
                 </Field>
                 <Field label="Due Date">
-                  <DnaInput type="date" value={draft.dueDate} onChange={(event) => setDraft((current) => ({ ...current, dueDate: event.target.value }))} disabled={!isManager && drawerMode !== "create"} />
+                  <DnaInput type="date" value={draft.dueDate} onChange={(event) => setDraft((current) => ({ ...current, dueDate: event.target.value }))} disabled={!canEditDrawerFull} />
                 </Field>
               </div>
             </div>

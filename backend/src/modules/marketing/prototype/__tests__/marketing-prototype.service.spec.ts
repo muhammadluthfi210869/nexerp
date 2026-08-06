@@ -24,6 +24,8 @@ function daysFromNow(days: number): string {
 
 const MANAGER = { email: 'admin@nexerp.id', roles: ['SUPER_ADMIN'] };
 const AUREL = { email: 'aurel@nexerp.id', fullName: 'Aurel', roles: ['DIGIMAR'] };
+// Rahmat = delegated manager (bukan global manager) — scope {gusti, zarka}.
+const RAHMAT = { email: 'rahmat@portoaureon.id', fullName: 'Rahmat', roles: [] };
 
 describe('MarketingPrototypeService (JSON store)', () => {
   let service: MarketingPrototypeService;
@@ -548,6 +550,123 @@ describe('MarketingPrototypeService (JSON store)', () => {
       expect(a1.path).toBe('');
       expect(a1.uploadedBy).toBe('System');
       expect(a1.createdAt).toBe('');
+    });
+  });
+
+  describe('Delegated Manager — Rahmat → Gusti & Zarkasi (PLAN-RAHMAT-DELEGATED-MANAGER.md)', () => {
+    it('bundle Rahmat: viewer.managedMembers = [gusti, zarka], isManager = false', async () => {
+      const bundle = await service.getBundle(RAHMAT);
+      expect(bundle.viewer.name).toBe('Rahmat');
+      expect(bundle.viewer.isManager).toBe(false);
+      expect(bundle.viewer.managedMembers).toEqual(['gusti', 'zarka']);
+    });
+
+    it('Rahmat dikenali lewat email rahmat@... walau fullName kosong (C-01)', async () => {
+      const bundle = await service.getBundle({ email: 'rahmat@portoaureon.id', roles: [] });
+      expect(bundle.viewer.name).toBe('Rahmat');
+      expect(bundle.viewer.managedMembers).toEqual(['gusti', 'zarka']);
+    });
+
+    it('Rahmat BISA membuat task untuk Gusti (delegated create)', async () => {
+      const created = await service.createTask(RAHMAT, { title: 'Task untuk Gusti', pic: 'Gusti' });
+      expect(created.pic).toBe('Gusti');
+      expect(created.assignedBy).toBe('Rahmat');
+      expect(created.reviewer).toBe('Revi'); // reviewer tetap head of marketing
+    });
+
+    it('Rahmat BISA membuat task untuk Zarkasi (alias → scope zarka)', async () => {
+      const created = await service.createTask(RAHMAT, { title: 'Task untuk Zarkasi', pic: 'Zarkasi' });
+      expect(created.pic).toBe('Zarkasi');
+    });
+
+    it('Rahmat TIDAK bisa membuat task untuk Aurel (di luar scope) → 403', async () => {
+      await expect(
+        service.createTask(RAHMAT, { title: 'Coba Aurel', pic: 'Aurel' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('Rahmat melihat task Gusti & Zarka, tetapi TIDAK melihat task Aurel', async () => {
+      await service.createTask(MANAGER, { title: 'Punya Gusti', pic: 'Gusti' });
+      await service.createTask(MANAGER, { title: 'Punya Zarka', pic: 'Zarka' });
+      await service.createTask(MANAGER, { title: 'Punya Aurel', pic: 'Aurel' });
+      const bundle = await service.getBundle(RAHMAT);
+      const titles = bundle.tasks.map((t) => t.title);
+      expect(titles).toContain('Punya Gusti');
+      expect(titles).toContain('Punya Zarka');
+      expect(titles).not.toContain('Punya Aurel');
+    });
+
+    it('Rahmat bisa FULL-EDIT task Gusti (title/dueDate/brief/link tersimpan)', async () => {
+      const gustiTask = await service.createTask(MANAGER, { title: 'Judul lama', pic: 'Gusti' });
+      const updated = await service.updateTask(RAHMAT, gustiTask.id, {
+        title: 'Judul baru oleh Rahmat',
+        dueDate: daysFromNow(5),
+        brief: 'Deskripsi baru',
+        link: 'https://drive.google.com/deliverable',
+      });
+      expect(updated?.title).toBe('Judul baru oleh Rahmat');
+      expect(updated?.dueDate).toBe(daysFromNow(5));
+      expect(updated?.brief).toBe('Deskripsi baru');
+      expect(updated?.link).toBe('https://drive.google.com/deliverable');
+    });
+
+    it('Rahmat TIDAK bisa full-edit task Aurel (title diabaikan — di luar scope)', async () => {
+      const aurelTask = await service.createTask(MANAGER, { title: 'Judul Aurel', pic: 'Aurel' });
+      const updated = await service.updateTask(RAHMAT, aurelTask.id, { title: 'Coba ganti' } as any);
+      expect(updated?.title).toBe('Judul Aurel');
+    });
+
+    it('Rahmat TIDAK bisa memindahkan pic task Gusti ke Aurel (scope leak guard) → 403', async () => {
+      const gustiTask = await service.createTask(MANAGER, { title: 'Task Gusti', pic: 'Gusti' });
+      await expect(service.updateTask(RAHMAT, gustiTask.id, { pic: 'Aurel' })).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('Rahmat tetap member biasa untuk task SENDIRI (title tidak bisa diubah)', async () => {
+      const own = await service.createTask(RAHMAT, { title: 'Task sendiri', pic: 'Rahmat' });
+      const updated = await service.updateTask(RAHMAT, own.id, { title: 'Ganti judul sendiri' } as any);
+      expect(updated?.title).toBe('Task sendiri');
+    });
+
+    it('Rahmat BISA hapus task Gusti (delegated delete)', async () => {
+      const gustiTask = await service.createTask(MANAGER, { title: 'Hapus oleh Rahmat', pic: 'Gusti' });
+      const result = await service.deleteTask(RAHMAT, gustiTask.id);
+      expect(result).toBe(true);
+    });
+
+    it('Rahmat TIDAK bisa hapus task Aurel → 403', async () => {
+      const aurelTask = await service.createTask(MANAGER, { title: 'Jangan hapus', pic: 'Aurel' });
+      await expect(service.deleteTask(RAHMAT, aurelTask.id)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('Rahmat BISA hapus attachment pada task Gusti (delegated attachment)', async () => {
+      const gustiTask = await service.createTask(MANAGER, { title: 'Att Gusti', pic: 'Gusti' });
+      const filePath = join(tempDir, 'gusti-doc.pdf');
+      await writeFile(filePath, Buffer.from('%PDF'));
+      const withAtt = await service.addAttachment(MANAGER, gustiTask.id, {
+        originalname: 'gusti-doc.pdf',
+        mimetype: 'application/pdf',
+        size: 64,
+        path: filePath,
+      });
+      const attId = withAtt!.attachments[0].id;
+      const removed = await service.deleteAttachment(RAHMAT, gustiTask.id, attId);
+      expect(removed?.attachments).toHaveLength(0);
+    });
+
+    it('Rahmat melihat notifikasi task Gusti yang ia buat (recipient dalam scope)', async () => {
+      await service.createTask(RAHMAT, { title: 'Notif gusti', pic: 'Gusti' });
+      const bundle = await service.getBundle(RAHMAT);
+      expect(bundle.notifications.some((n) => n.recipient === 'Gusti')).toBe(true);
+    });
+
+    it('REGRESI: Aurel tetap TIDAK bisa create/hapus task Gusti → 403', async () => {
+      await expect(
+        service.createTask(AUREL, { title: 'Coba Gusti', pic: 'Gusti' }),
+      ).rejects.toThrow(ForbiddenException);
+      const gustiTask = await service.createTask(MANAGER, { title: 'Gusti punya', pic: 'Gusti' });
+      await expect(service.deleteTask(AUREL, gustiTask.id)).rejects.toThrow(ForbiddenException);
     });
   });
 });
