@@ -44,6 +44,7 @@ export class WaWebhookService {
         if (msg.type === 'text') {
           const phone = msg.from;         // Nomor pengirim
           const text = msg.text.body;     // Isi pesan
+          const msgId = msg.id;           // WhatsApp message id (anti-duplikat webhook)
           const profileName = contacts?.[0]?.profile?.name || 'Unknown';
 
           this.logger.log(`📨 WA from ${phone}: "${text.slice(0, 50)}"`);
@@ -59,22 +60,15 @@ export class WaWebhookService {
               phone,
               waName: profileName,
               waMessage: text,
+              msgId,
             });
           } else {
-            // Tracking code gak ketemu — simpan sebagai orphan lead
+            // Tracking code gak ketemu — upsert orphan lead dengan dedup
             this.logger.warn(`⚠️ No tracking code in message from ${phone}`);
             try {
-              const lead = await this.leadCapture.track({
-                intent: 'WhatsApp Direct',
-                pageUrl: 'wa-direct',
-              });
-              await this.leadCapture.updateFromWhatsApp(lead.trackingCode, {
-                phone,
-                waName: profileName,
-                waMessage: text,
-              });
+              await this.leadCapture.upsertOrphanLead(phone, profileName, text, msgId);
             } catch (err) {
-              this.logger.error(`❌ Failed to create orphan lead for ${phone}:`, err);
+              this.logger.error(`❌ Failed to process orphan lead for ${phone}:`, err);
             }
           }
         }
@@ -83,16 +77,14 @@ export class WaWebhookService {
         if (msg.type === 'interactive' && msg.interactive?.button_reply) {
           const phone = msg.from;
           const text = msg.interactive.button_reply.title || '';
+          const msgId = msg.id;
           try {
-            const lead = await this.leadCapture.track({
-              intent: 'Interactive: ' + text,
-              pageUrl: 'wa-interactive',
-            });
-            await this.leadCapture.updateFromWhatsApp(lead.trackingCode, {
+            await this.leadCapture.upsertOrphanLead(
               phone,
-              waName: contacts?.[0]?.profile?.name || 'Unknown',
-              waMessage: text,
-            });
+              contacts?.[0]?.profile?.name || 'Unknown',
+              text,
+              msgId,
+            );
           } catch (err) {
             this.logger.error(`❌ Failed to process interactive message from ${phone}:`, err);
           }

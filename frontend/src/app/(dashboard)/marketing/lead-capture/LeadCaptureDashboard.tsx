@@ -27,6 +27,9 @@ import {
   UserCheck,
   BarChart3,
   CalendarDays,
+  Sparkles,
+  MessageSquare,
+  X,
 } from "lucide-react";
 
 interface Lead {
@@ -43,7 +46,26 @@ interface Lead {
   kommoFirstResponseSec: number | null;
   assignedUser: { id: string; fullName: string; email: string } | null;
   contactedAt: string | null; createdAt: string; updatedAt: string;
+  aiStatus?: string | null;
+  aiStage?: { stage: string | null; confidence: number; reason: string | null; source: string | null } | null;
+  attributes?: LeadAttr[];
+  messages?: LeadMsg[];
 }
+
+interface LeadAttr {
+  id: string; key: string; value: string | null; confidence: number;
+  source: string | null; confirmed: boolean; createdAt: string;
+}
+
+interface LeadMsg {
+  id: string; body: string; waName: string | null; direction: string;
+  phone: string | null; createdAt: string;
+}
+
+const ATTR_LABELS: Record<string, string> = {
+  fullName: "Nama", company: "Perusahaan", niche: "Niche produk", brand: "Brand",
+  domisili: "Domisili", moq: "MOQ", budget: "Budget",
+};
 
 interface StatsData {
   total: number; today: number; thisWeek: number; thisMonth: number;
@@ -170,15 +192,19 @@ export default function LeadCaptureDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [noPhoneFilter, setNoPhoneFilter] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState("");
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
+  const [detailLead, setDetailLead] = useState<Lead | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalLeads, setTotalLeads] = useState(0);
   const [dragLeadId, setDragLeadId] = useState<string | null>(null);
+  const [showAgents, setShowAgents] = useState(false);
 
   const fetchLeads = useCallback(async (p = 1) => {
     setLoading(true); setError(null);
@@ -192,6 +218,7 @@ export default function LeadCaptureDashboard() {
       }
       if (search) params.set("search", search);
       if (filterStatus) params.set("status", filterStatus);
+      if (noPhoneFilter) params.set("noPhone", "1");
       const resp = await api.get(`/lead-capture?${params}`);
       setLeads(resp.data.data);
       setTotalPages(resp.data.meta.totalPages);
@@ -199,7 +226,7 @@ export default function LeadCaptureDashboard() {
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || "Gagal");
     } finally { setLoading(false); }
-  }, [search, filterStatus, selectedMonth]);
+  }, [search, filterStatus, selectedMonth, noPhoneFilter]);
 
   const fetchStats = useCallback(async () => {
     try { const resp = await api.get("/lead-capture/stats"); setStats(resp.data); } catch {}
@@ -233,6 +260,24 @@ export default function LeadCaptureDashboard() {
     try { await api.patch(`/lead-capture/${id}`, data); fetchLeads(page); fetchStats(); fetchAnalytics(); }
     catch (err: any) { alert("Gagal: " + (err?.response?.data?.message || err.message)); }
   };
+
+  // Fase 3.2 — buka drawer dengan detail lengkap (termasuk attributes + messages)
+  const openDetail = useCallback(async (id: string) => {
+    setDetailLoading(true);
+    try {
+      const resp = await api.get(`/lead-capture/${id}`);
+      setDetailLead(resp.data);
+    } catch {
+      // fallback ke data list kalau gagal
+      setDetailLead(leads.find((l) => l.id === id) || null);
+    }
+    setDetailLoading(false);
+  }, [leads]);
+
+  const closeDetail = useCallback(() => {
+    setExpandedLead(null);
+    setDetailLead(null);
+  }, []);
 
   const toggleSelect = (id: string) => {
     const next = new Set(selectedLeads);
@@ -307,6 +352,7 @@ export default function LeadCaptureDashboard() {
           </div>
           <DnaButton variant={viewMode === "table" ? "primary" : "outline"} size="sm" onClick={() => setViewMode("table")}>Table</DnaButton>
           <DnaButton variant={viewMode === "kanban" ? "primary" : "outline"} size="sm" onClick={() => setViewMode("kanban")}>Kanban</DnaButton>
+          <DnaButton variant="outline" size="sm" onClick={() => setShowAgents(true)}>Agents</DnaButton>
         </div>
       </div>
 
@@ -354,6 +400,8 @@ export default function LeadCaptureDashboard() {
       {analytics && renderAnalytics()}
 
       {viewMode === "kanban" ? renderKanban() : renderTable()}
+
+      {showAgents && <RoundRobinManager onClose={() => setShowAgents(false)} />}
     </div>
   );
 
@@ -505,6 +553,12 @@ export default function LeadCaptureDashboard() {
               <option value="WA_CONTACTED">WA Contacted</option>
               <option value="QUALIFIED">Qualified</option>
             </select>
+            <button
+              onClick={() => { setNoPhoneFilter(!noPhoneFilter); fetchLeads(1); }}
+              className={`h-11 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${noPhoneFilter ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              title="Tampilkan lead yang belum punya nomor WA">
+              {noPhoneFilter ? "✓ Perlu Nomor" : "Perlu Nomor"}
+            </button>
             {selectedLeads.size > 0 && (
               <div className="flex items-center gap-2 ml-auto">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">{selectedLeads.size} selected</span>
@@ -542,7 +596,11 @@ export default function LeadCaptureDashboard() {
                 ) : leads.map((lead) => (
                   <tr key={lead.id}
                     className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer ${expandedLead === lead.id ? "bg-blue-50/30" : ""}`}
-                    onClick={() => setExpandedLead(expandedLead === lead.id ? null : lead.id)}
+                    onClick={() => {
+                      if (expandedLead === lead.id) { closeDetail(); return; }
+                      setExpandedLead(lead.id);
+                      openDetail(lead.id);
+                    }}
                   >
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={selectedLeads.has(lead.id)} onChange={() => toggleSelect(lead.id)} className="rounded" />
@@ -612,8 +670,10 @@ export default function LeadCaptureDashboard() {
         </TableWrapper>
 
         {expandedLead && (
-          <LeadDetailPanel lead={leads.find(l => l.id === expandedLead)!} onClose={() => setExpandedLead(null)}
-            onUpdate={(data) => quickUpdate(expandedLead, data)} />
+          <LeadDetailPanel lead={detailLead || leads.find(l => l.id === expandedLead)!} onClose={closeDetail}
+            loading={detailLoading}
+            onUpdate={(data) => quickUpdate(expandedLead, data)}
+            onRefreshDetail={() => openDetail(expandedLead)} />
         )}
       </>
     );
@@ -665,12 +725,56 @@ export default function LeadCaptureDashboard() {
   }
 }
 
-function LeadDetailPanel({ lead, onClose, onUpdate }: { lead: Lead; onClose: () => void; onUpdate: (data: any) => void }) {
+function LeadDetailPanel({ lead, onClose, onUpdate, onRefreshDetail, loading }: {
+  lead: Lead; onClose: () => void; onUpdate: (data: any) => void;
+  onRefreshDetail: () => void; loading?: boolean;
+}) {
   const [editData, setEditData] = useState({
     fullName: lead.fullName || "", company: lead.company || "",
     email: lead.email || "", phone: lead.phone || "",
     notes: lead.notes || "", status: lead.status, workflowStatus: lead.workflowStatus,
   });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  // Sinkronkan form saat lead prop berubah (setelah konfirmasi AI / refresh)
+  useEffect(() => {
+    setEditData({
+      fullName: lead.fullName || "", company: lead.company || "",
+      email: lead.email || "", phone: lead.phone || "",
+      notes: lead.notes || "", status: lead.status, workflowStatus: lead.workflowStatus,
+    });
+  }, [lead.id, lead.fullName, lead.company, lead.email, lead.phone, lead.notes, lead.status, lead.workflowStatus]);
+
+  const suggestions = (lead.attributes || []).filter(a => !a.confirmed && a.value);
+  const confirmedAttrs = (lead.attributes || []).filter(a => a.confirmed && a.value);
+
+  const handleAiExtract = async () => {
+    setAiLoading(true);
+    try { await api.post(`/lead-capture/${lead.id}/ai-extract`); await onRefreshDetail(); }
+    catch (err: any) { alert("Ekstraksi gagal: " + (err?.response?.data?.message || err.message)); }
+    setAiLoading(false);
+  };
+
+  const handleAttrAction = async (attr: LeadAttr, confirmed: boolean) => {
+    setConfirmingId(attr.id);
+    try {
+      await api.patch(`/lead-capture/${lead.id}/attributes/${attr.id}`, {
+        confirmed,
+        ...(confirmed ? {} : { value: null }),
+      });
+      await onRefreshDetail();
+    } catch (err: any) { alert("Gagal: " + (err?.response?.data?.message || err.message)); }
+    setConfirmingId(null);
+  };
+
+  const [stageLoading, setStageLoading] = useState(false);
+  const handleStageConfirm = async () => {
+    setStageLoading(true);
+    try { await api.post(`/lead-capture/${lead.id}/ai-stage-confirm`); await onRefreshDetail(); }
+    catch (err: any) { alert("Gagal: " + (err?.response?.data?.message || err.message)); }
+    setStageLoading(false);
+  };
 
   return (
     <DashboardCard label={`Lead Detail — ${lead.trackingCode}`}>
@@ -730,6 +834,125 @@ function LeadDetailPanel({ lead, onClose, onUpdate }: { lead: Lead; onClose: () 
         </div>
       )}
 
+      {/* 🤖 AI Suggestion (Fase 3.2) */}
+      <div className="bg-gradient-to-br from-indigo-50/60 to-blue-50/40 border border-indigo-100 rounded-2xl p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">AI Suggestion</span>
+          </div>
+          <DnaButton variant="outline" size="sm" onClick={handleAiExtract} disabled={aiLoading}>
+            {aiLoading ? "Memproses…" : "Ekstrak AI"}
+          </DnaButton>
+        </div>
+
+        {suggestions.length === 0 ? (
+          <p className="text-[11px] text-slate-400 italic">
+            {lead.messages && lead.messages.length >= 2
+              ? 'Tidak ada saran AI saat ini — klik "Ekstrak AI" untuk memproses percakapan.'
+              : "Perlu minimal 2 pesan dari customer sebelum AI bisa mengekstrak."}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {suggestions.map(attr => (
+              <div key={attr.id} className="bg-white rounded-xl border border-indigo-100 p-3 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      {ATTR_LABELS[attr.key] || attr.key}
+                    </span>
+                    <span className="text-[9px] font-bold text-indigo-400">
+                      {Math.round((attr.confidence || 0) * 100)}%
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-slate-800">{attr.value}</p>
+                  {attr.source && (
+                    <p className="text-[10px] text-slate-400 italic mt-0.5 truncate">"{attr.source}"</p>
+                  )}
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  <button onClick={() => handleAttrAction(attr, true)} disabled={confirmingId === attr.id}
+                    className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-all flex items-center justify-center disabled:opacity-50"
+                    title="Setuju">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleAttrAction(attr, false)} disabled={confirmingId === attr.id}
+                    className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-100 transition-all flex items-center justify-center disabled:opacity-50"
+                    title="Tolak">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {confirmedAttrs.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-indigo-100/60">
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Terkonfirmasi</p>
+            <div className="flex flex-wrap gap-1.5">
+              {confirmedAttrs.map(attr => (
+                <span key={attr.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700">
+                  {ATTR_LABELS[attr.key] || attr.key}: {attr.value}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 🏷️ Saran Pipeline Stage (Fase 3.3) */}
+      {lead.aiStage?.stage && (
+        <div className="bg-amber-50/60 border border-amber-200 rounded-2xl p-4 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-amber-500" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">Saran Pipeline</span>
+            </div>
+            <span className="text-[9px] font-bold text-amber-400">
+              {Math.round((lead.aiStage.confidence || 0) * 100)}%
+            </span>
+          </div>
+          <p className="text-sm font-bold text-slate-800">
+            Pindahkan ke <span className="text-amber-700">{(lead.aiStage.stage || "").replace(/_/g, " ")}</span>
+          </p>
+          {lead.aiStage.reason && (
+            <p className="text-[11px] text-slate-500 mt-0.5">{lead.aiStage.reason}</p>
+          )}
+          <div className="flex gap-2 mt-3">
+            <DnaButton variant="primary" size="sm" onClick={handleStageConfirm} disabled={stageLoading}>
+              {stageLoading ? "Memindahkan…" : `Pindahkan ke ${(lead.aiStage.stage || "").replace(/_/g, " ")}`}
+            </DnaButton>
+          </div>
+        </div>
+      )}
+
+      {/* 💬 Riwayat Percakapan (Fase 2.2) */}
+      {lead.messages && lead.messages.length > 0 && (
+        <div className="bg-slate-50 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Riwayat Chat</span>
+          </div>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {lead.messages.map(m => (
+              <div key={m.id} className="flex">
+                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-[12px] ${
+                  m.direction === "INBOUND"
+                    ? "bg-white border border-slate-200 text-slate-700 ml-auto"
+                    : "bg-blue-50 border border-blue-100 text-blue-800"
+                }`}>
+                  {m.body}
+                  <div className="text-[9px] text-slate-400 mt-0.5">
+                    {new Date(m.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-3">
         <DnaButton variant="primary" onClick={() => onUpdate(editData)}>Simpan</DnaButton>
         <DnaButton variant="outline" onClick={onClose}>Tutup</DnaButton>
@@ -741,5 +964,126 @@ function LeadDetailPanel({ lead, onClose, onUpdate }: { lead: Lead; onClose: () 
         )}
       </div>
     </DashboardCard>
+  );
+}
+
+// ──────────────────────────────────────────────
+//  FASE 4.3 — Kelola Round-Robin Agent
+// ──────────────────────────────────────────────
+
+interface RoundRobinAgent {
+  id: string; name: string; phoneNumber: string; orderIndex: number;
+  isActive: boolean; totalLeads: number;
+}
+
+function RoundRobinManager({ onClose }: { onClose: () => void }) {
+  const [agents, setAgents] = useState<RoundRobinAgent[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ name: "", phoneNumber: "", orderIndex: 0, isActive: true });
+
+  const load = useCallback(async () => {
+    try {
+      const resp = await api.get("/lead-capture/round-robin/status");
+      setAgents(resp.data.agents || []);
+      setCurrentIndex(resp.data.currentIndex || 0);
+    } catch {}
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const save = async () => {
+    if (!form.name.trim() || !form.phoneNumber.trim()) { alert("Nama & nomor wajib diisi"); return; }
+    try {
+      await api.post("/lead-capture/round-robin/agents", {
+        name: form.name.trim(),
+        phoneNumber: form.phoneNumber.trim().replace(/[^0-9]/g, ""),
+        orderIndex: Number(form.orderIndex) || agents.length,
+        isActive: form.isActive,
+      });
+      setForm({ name: "", phoneNumber: "", orderIndex: agents.length, isActive: true });
+      await load();
+    } catch (err: any) { alert("Gagal: " + (err?.response?.data?.message || err.message)); }
+  };
+
+  const toggleActive = async (agent: RoundRobinAgent) => {
+    try {
+      await api.post("/lead-capture/round-robin/agents", { ...agent, isActive: !agent.isActive });
+      await load();
+    } catch (err: any) { alert("Gagal: " + (err?.response?.data?.message || err.message)); }
+  };
+
+  const remove = async (id: string) => {
+    if (!window.confirm("Hapus agent ini?")) return;
+    try { await api.delete(`/lead-capture/round-robin/agents/${id}`); await load(); }
+    catch (err: any) { alert("Gagal: " + (err?.response?.data?.message || err.message)); }
+  };
+
+  // Fase 4.4 — link tracking per agent (atribusi offline: brosur/kartu nama/QR)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dreamlab.id";
+  const agentLink = (name: string) =>
+    `${baseUrl}/?agent=${encodeURIComponent(name)}&source=OFFLINE`;
+  const qrUrl = (link: string) =>
+    `https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(link)}`;
+  const copyLink = async (name: string) => {
+    const link = agentLink(name);
+    try { await navigator.clipboard.writeText(link); alert("Link disalin: " + link); }
+    catch { window.prompt("Salin link ini:", link); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-blue-500" />
+            <h3 className="text-sm font-black uppercase tracking-wider">Kelola Agent (Round-Robin)</h3>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <DnaInput placeholder="Nama agent" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <DnaInput placeholder="Nomor WA (6281..)" value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
+          <DnaInput placeholder="Urutan" type="number" value={String(form.orderIndex)} onChange={(e) => setForm({ ...form, orderIndex: Number(e.target.value) })} />
+          <div className="flex items-center gap-2 px-1">
+            <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            <span className="text-xs font-bold text-slate-600">Aktif</span>
+          </div>
+        </div>
+        <DnaButton variant="primary" size="sm" onClick={save} className="w-full mb-4">Tambah / Simpan</DnaButton>
+
+        {loading ? (
+          <p className="text-xs text-slate-400">Memuat…</p>
+        ) : (
+          <div className="space-y-2">
+            {agents.length === 0 && <p className="text-xs text-slate-400 italic">Belum ada agent.</p>}
+            {agents.map((a) => (
+              <div key={a.id} className="flex gap-3 rounded-xl border border-slate-100 p-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${a.isActive ? "bg-emerald-500" : "bg-slate-300"}`} />
+                    <p className="text-sm font-bold text-slate-800 truncate">{a.name}</p>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{a.phoneNumber} · urutan {a.orderIndex} · {a.totalLeads} leads</p>
+                  <p className="text-[9px] text-slate-400 truncate mt-1 font-mono">{agentLink(a.name)}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => copyLink(a.name)} className="text-[10px] font-bold text-blue-600 hover:text-blue-700">Salin Link</button>
+                    <button onClick={() => toggleActive(a)} className="text-[10px] font-bold text-blue-600 hover:text-blue-700">{a.isActive ? "Nonaktif" : "Aktifkan"}</button>
+                    <button onClick={() => remove(a.id)} className="text-[10px] font-bold text-rose-500 hover:text-rose-600">Hapus</button>
+                  </div>
+                </div>
+                <img src={qrUrl(agentLink(a.name))} alt={`QR ${a.name}`} className="w-20 h-20 rounded-lg border border-slate-100 shrink-0" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="text-[10px] text-slate-400 mt-4">
+          Next index: {currentIndex} · total {agents.reduce((s, a) => s + (a.totalLeads || 0), 0)} leads terbagi
+        </p>
+      </div>
+    </div>
   );
 }

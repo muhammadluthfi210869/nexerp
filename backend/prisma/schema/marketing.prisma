@@ -34,6 +34,14 @@ model LeadCapture {
   email         String?  @db.VarChar(255)
   notes         String?  @db.Text
 
+  // ── AI Extraction metadata (Fase 3.1) — saran atribut ada di tabel LeadAttribute ──
+  aiExtractedAt DateTime?
+  aiStatus      String? @db.VarChar(20)  // NONE / SUGGESTED / CONFIRMED / REJECTED / ERROR
+  aiStage       Json?   // saran pipeline stage (Fase 3.3): { stage, confidence, reason, source }
+
+  // ── Atribut lead extensible (Option B) — key-value, scalable ──
+  attributes    LeadAttribute[]
+
   status        LeadStatus @default(PENDING)
   source        LeadSource?  // Linktree, Instagram, Google, dll
 
@@ -66,10 +74,54 @@ model LeadCapture {
   lostAt         DateTime?
   wonAt          DateTime?
 
+  // ── Log percakapan (Fase 2.2) ──
+  messages    LeadMessage[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@map("lead_captures")
+}
+
+// ── Log percakapan WhatsApp — setiap pesan = 1 baris (Fase 2.2) ──
+// Bahan baku untuk LLM extraction (nama asli, perusahaan, niche, MOQ, dst).
+
+model LeadMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @db.Uuid
+  direction String   @default("INBOUND") @db.VarChar(10)  // INBOUND / OUTBOUND
+  phone     String?  @db.VarChar(20)   // nomor pengirim (INBOUND) / tujuan (OUTBOUND)
+  waName    String?  @db.VarChar(255)  // nama profil pengirim
+  body      String   @db.Text          // isi pesan
+  msgId     String?  @unique @db.VarChar(100)  // WhatsApp message id (anti-duplikat redelivery webhook)
+  createdAt DateTime @default(now())
+
+  lead      LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_messages")
+}
+
+// ── Atribut lead extensible (Option B) — satu field = satu baris ──
+// Scalable: nambah field (brand, domisili, dst.) tanpa migrasi.
+// `confirmed=false` = saran AI (belum disetujui sales); `true` = sudah masuk data lead.
+
+model LeadAttribute {
+  id         String   @id @default(uuid()) @db.Uuid
+  leadId     String   @db.Uuid
+  key        String   @db.VarChar(50)   // niche, brand, domisili, moq, budget, dst.
+  value      String?  @db.VarChar(255)
+  confidence Float    @default(0)        // 0-1 dari AI
+  source     String?  @db.Text           // kutipan asli dari percakapan
+  confirmed  Boolean  @default(false)    // sudah disetujui sales?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lead       LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, key])
+  @@index([leadId])
+  @@map("lead_attributes")
 }
 
 // ── Round Robin untuk distribusi lead ke 3 nomor WA ──

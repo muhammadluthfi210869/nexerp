@@ -4,8 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
-import { LeadSource, LeadStatus, WorkflowStatus } from '@prisma/client';
-import { v4 as uuid } from 'uuid';
+import { Prisma, LeadSource, LeadStatus, WorkflowStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -48,12 +47,28 @@ export class LeadCaptureService {
   }) {
     const trackingCode = this.generateTrackingCode();
 
+    // Fase 4.1 — kalau client tidak kasih assignedName/assignedPhone,
+    // assign agent via round-robin otomatis (ownership di CRM).
+    let assignedName = data.assignedName;
+    let assignedPhone = data.assignedPhone;
+    if (!assignedName && !assignedPhone) {
+      try {
+        const agent = await this.getNextRoundRobinAgent();
+        assignedName = agent.name;
+        assignedPhone = agent.phoneNumber;
+      } catch (err) {
+        this.logger.warn(`⚠️ Round-robin tidak tersedia saat track: ${(err as any)?.message || err}`);
+      }
+    }
+
     const lead = await this.prisma.leadCapture.create({
       data: {
         trackingCode,
         status: 'PENDING' as LeadStatus,
         workflowStatus: 'NEW_LEAD' as WorkflowStatus,
         ...data,
+        ...(assignedName ? { assignedName } : {}),
+        ...(assignedPhone ? { assignedPhone } : {}),
       },
     });
 
@@ -87,15 +102,17 @@ export class LeadCaptureService {
     phone: string;
     waName?: string;
     waMessage?: string;
+    msgId?: string;
   }) {
     const lead = await this.prisma.leadCapture.findUnique({
       where: { trackingCode },
     });
 
+    let updated: { id: string };
     if (!lead) {
       // If tracking code not found, create a new lead record
       this.logger.warn(`Tracking code ${trackingCode} not found, creating orphan lead`);
-      return this.prisma.leadCapture.create({
+      updated = await this.prisma.leadCapture.create({
         data: {
           trackingCode,
           phone: data.phone,
@@ -105,18 +122,461 @@ export class LeadCaptureService {
           contactedAt: new Date(),
         },
       });
+    } else {
+      updated = await this.prisma.leadCapture.update({
+        where: { trackingCode },
+        data: {
+          phone: data.phone,
+          waName: data.waName,
+          waMessage: data.waMessage,
+          status: 'WA_CONTACTED' as LeadStatus,
+          contactedAt: new Date(),
+        },
+      });
     }
 
-    return this.prisma.leadCapture.update({
-      where: { trackingCode },
+    // Simpan ke log percakapan (Fase 2.2)
+    await this.appendLeadMessage(updated.id, {
+      phone: data.phone,
+      waName: data.waName,
+      body: data.waMessage || '',
+      msgId: data.msgId,
+    });
+
+    return updated;
+  }
+
+  // ──────────────────────────────────────────────
+  //  UPSERT ORPHAN LEAD (dedup — Fase 2.1)
+  // ──────────────────────────────────────────────
+
+  /**
+   * Simpan pesan WhatsApp TANPA tracking code dengan DEDUP.
+   * Kalau nomor yang sama sudah pernah chat dalam jendela waktu
+   * `ORPHAN_DEDUP_WINDOW_MS` (default 7 hari) dan lead-nya masih aktif
+   * (belum CONVERTED/DISQUALIFIED/WON_DEAL/LOST/ABORTED), maka pesan baru
+   * diupdate ke lead yang sama — bukan bikin lead baru (anti doppelganger).
+   * `waMessage` = pesan TERAKHIR; riwayat lengkap ada di tabel LeadMessage.
+   */
+  async upsertOrphanLead(phone: string, waName: string, text: string, msgId?: string) {
+    const normalizedPhone = this.normalizePhone(phone);
+    const windowMs = Number(process.env.ORPHAN_DEDUP_WINDOW_MS) || 7 * 24 * 60 * 60 * 1000;
+
+    const existing = await this.prisma.leadCapture.findFirst({
+      where: {
+        phone: normalizedPhone,
+        status: { notIn: ['CONVERTED', 'DISQUALIFIED'] as LeadStatus[] },
+        workflowStatus: { notIn: ['WON_DEAL', 'LOST', 'ABORTED'] as WorkflowStatus[] },
+        createdAt: { gte: new Date(Date.now() - windowMs) },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existing) {
+      this.logger.log(`🔄 Dedup: ${normalizedPhone} → update lead ${existing.trackingCode}`);
+      const updated = await this.prisma.leadCapture.update({
+        where: { id: existing.id },
+        data: {
+          phone: normalizedPhone,
+          waName,
+          waMessage: text,
+          status: 'WA_CONTACTED' as LeadStatus,
+          contactedAt: new Date(),
+        },
+      });
+      await this.appendLeadMessage(updated.id, {
+        phone: normalizedPhone,
+        waName,
+        body: text,
+        msgId,
+      });
+      return updated;
+    }
+
+    this.logger.log(`✨ Orphan baru: ${normalizedPhone}`);
+    const lead = await this.track({
+      intent: 'WhatsApp Direct',
+      pageUrl: 'wa-direct',
+    });
+    return this.updateFromWhatsApp(lead.trackingCode, {
+      phone: normalizedPhone,
+      waName,
+      waMessage: text,
+      msgId,
+    });
+  }
+
+  // ──────────────────────────────────────────────
+  //  APPEND MESSAGE LOG (Fase 2.2)
+  // ──────────────────────────────────────────────
+
+  /**
+   * Simpan satu pesan masuk ke tabel LeadMessage, terhubung ke lead.
+   * Anti-duplikat: jika `msgId` sudah tercatat (webhook dikirim ulang oleh Meta),
+   * pesan dilewati — tidak membuat baris duplikat.
+   */
+  private async appendLeadMessage(
+    leadId: string,
+    data: { phone?: string; waName?: string; body: string; msgId?: string },
+  ) {
+    if (data.msgId) {
+      const existingMsg = await this.prisma.leadMessage.findUnique({
+        where: { msgId: data.msgId },
+      });
+      if (existingMsg) {
+        this.logger.log(`⏭️ Duplicate msgId ${data.msgId} — skip append`);
+        return;
+      }
+    }
+
+    await this.prisma.leadMessage.create({
       data: {
-        phone: data.phone,
-        waName: data.waName,
-        waMessage: data.waMessage,
-        status: 'WA_CONTACTED' as LeadStatus,
-        contactedAt: new Date(),
+        leadId,
+        direction: 'INBOUND',
+        phone: data.phone || null,
+        waName: data.waName || null,
+        body: data.body,
+        msgId: data.msgId || null,
       },
     });
+
+    // Fase 3.1: auto-extraction dengan throttle (tidak memblokir webhook)
+    void this.maybeAutoExtract(leadId);
+  }
+
+  /** Normalisasi nomor: buang karakter non-digit (+ / spasi / tanda hubung) */
+  private normalizePhone(phone: string): string {
+    return (phone || '').replace(/[^0-9]/g, '');
+  }
+
+  // ──────────────────────────────────────────────
+  //  AI EXTRACTION (Fase 3.1)
+  // ──────────────────────────────────────────────
+
+  /** Key yang diekstrak — scalable, bisa ditambah tanpa migrasi */
+  private readonly EXTRACTION_FIELDS = ['fullName', 'company', 'niche', 'brand', 'domisili', 'moq', 'budget'] as const;
+
+  /** Stage pipeline yang valid (sinkron dengan enum WorkflowStatus di Prisma) */
+  private readonly WORKFLOW_STAGES = [
+    'NEW_LEAD', 'CONTACTED', 'FOLLOW_UP_1', 'FOLLOW_UP_2', 'FOLLOW_UP_3',
+    'NEGOTIATION', 'SAMPLE_REQUESTED', 'SAMPLE_SENT', 'SAMPLE_APPROVED',
+    'SPK_SIGNED', 'WAITING_FINANCE_APPROVAL', 'DP_PAID', 'PRODUCTION_PLAN',
+    'READY_TO_SHIP', 'WON_DEAL', 'LOST', 'ABORTED',
+  ] as const;
+
+  /**
+   * Ekstrak data dari log percakapan via LLM → simpan sebagai "AI Suggestion"
+   * di tabel LeadAttribute (confirmed=false). Sales konfirmasi → confirmed=true,
+   * dan fullName/company ikut ter-petakan ke kolom first-class.
+   * Provider swappable via env: LLM_PROVIDER, LLM_BASE_URL, LLM_MODEL.
+   */
+  async extractAiForLead(leadId: string): Promise<any | null> {
+    const lead = await this.prisma.leadCapture.findUnique({
+      where: { id: leadId },
+      include: { messages: { orderBy: { createdAt: 'asc' } } },
+    });
+
+    if (!lead || !lead.messages || lead.messages.length === 0) {
+      this.logger.warn(`⚠️ extractAiForLead: tidak ada pesan untuk lead ${leadId}`);
+      return null;
+    }
+
+    const conversation = this.buildConversationText(lead.messages);
+    let rawContent: string;
+    try {
+      rawContent = await this.callExtractionLlm(conversation);
+    } catch (err: any) {
+      this.logger.error(`❌ LLM call gagal untuk lead ${leadId}:`, err?.message || err);
+      await this.prisma.leadCapture.update({
+        where: { id: leadId },
+        data: { aiStatus: 'ERROR', aiExtractedAt: new Date() },
+      });
+      return null;
+    }
+
+    const parsed = this.parseAndValidateExtraction(rawContent);
+    if (!parsed) {
+      this.logger.warn(`⚠️ Hasil LLM tidak valid untuk lead ${leadId}: ${rawContent.slice(0, 200)}`);
+      await this.prisma.leadCapture.update({
+        where: { id: leadId },
+        data: { aiStatus: 'ERROR', aiExtractedAt: new Date() },
+      });
+      return null;
+    }
+
+    // Simpan tiap field sebagai LeadAttribute (saran). Jangan timpa yang sudah dikonfirmasi.
+    const existingConfirmed = await this.prisma.leadAttribute.findMany({
+      where: { leadId, confirmed: true },
+      select: { key: true },
+    });
+    const confirmedKeys = new Set(existingConfirmed.map((e) => e.key));
+
+    const suggestions = this.EXTRACTION_FIELDS
+      .filter((key) => !confirmedKeys.has(key))
+      .map((key) => {
+        const f = parsed[key] || { value: null, confidence: 0, source: null };
+        return { key, value: f.value, confidence: f.confidence, source: f.source };
+      })
+      .filter((s) => s.value !== null); // hanya simpan yang benar-benar ada (anti-hallucination)
+
+    if (suggestions.length > 0) {
+      await this.prisma.$transaction(
+        suggestions.map((s) =>
+          this.prisma.leadAttribute.upsert({
+            where: { leadId_key: { leadId, key: s.key } },
+            create: { leadId, ...s, confirmed: false },
+            update: { value: s.value, confidence: s.confidence, source: s.source },
+          })
+        )
+      );
+    }
+
+    // Fase 3.3 — simpan saran pipeline stage (kalau ada)
+    const stageSuggestion =
+      parsed?.stage?.stage && parsed.stage.stage !== lead.workflowStatus
+        ? parsed.stage
+        : null;
+
+    await this.prisma.leadCapture.update({
+      where: { id: leadId },
+      data: {
+        aiExtractedAt: new Date(),
+        aiStatus: 'SUGGESTED',
+        aiStage: stageSuggestion || undefined,
+      },
+    });
+    this.logger.log(
+      `🤖 AI extraction OK untuk lead ${leadId} — ${suggestions.length} saran` +
+        (stageSuggestion ? ` + stage: ${stageSuggestion.stage}` : ''),
+    );
+    return parsed;
+  }
+
+  /** Fase 3.3 — terapkan saran stage → pindahkan workflowStatus lead */
+  async confirmAiStage(leadId: string) {
+    const lead = await this.prisma.leadCapture.findUnique({ where: { id: leadId } });
+    if (!lead) throw new NotFoundException('Lead tidak ditemukan');
+
+    const stage = (lead as any).aiStage as { stage?: string; confidence?: number; reason?: string } | null;
+    if (!stage?.stage) {
+      throw new NotFoundException('Tidak ada saran stage untuk lead ini');
+    }
+
+    const updated = await this.prisma.leadCapture.update({
+      where: { id: leadId },
+      data: {
+        workflowStatus: stage.stage as WorkflowStatus,
+        aiStage: Prisma.DbNull, // sudah dipakai, bersihkan
+        aiStatus: 'CONFIRMED',
+      },
+    });
+    this.logger.log(`🏷️ Stage lead ${leadId} → ${stage.stage}`);
+    return updated;
+  }
+
+  /** Konfirmasi / tolak / edit satu atribut hasil AI */
+  async confirmAttribute(leadId: string, attrId: string, dto: { confirmed?: boolean; value?: string }) {
+    const attr = await this.prisma.leadAttribute.findFirst({ where: { id: attrId, leadId } });
+    if (!attr) throw new NotFoundException('Atribut tidak ditemukan');
+
+    const value = dto.value !== undefined ? dto.value : attr.value;
+    const confirmed = dto.confirmed !== undefined ? dto.confirmed : attr.confirmed;
+
+    const updated = await this.prisma.leadAttribute.update({
+      where: { id: attrId },
+      data: { value, confirmed },
+    });
+
+    // Petakan atribut utama ke kolom first-class agar bisa difilter/ditampilkan di tabel
+    if (attr.key === 'fullName' && value) {
+      await this.prisma.leadCapture.update({ where: { id: leadId }, data: { fullName: value } });
+    } else if (attr.key === 'company' && value) {
+      await this.prisma.leadCapture.update({ where: { id: leadId }, data: { company: value } });
+    }
+
+    const remaining = await this.prisma.leadAttribute.count({ where: { leadId, confirmed: false } });
+    await this.prisma.leadCapture.update({
+      where: { id: leadId },
+      data: { aiStatus: remaining === 0 ? 'CONFIRMED' : 'SUGGESTED' },
+    });
+
+    return updated;
+  }
+
+  /** Ambil semua atribut satu lead */
+  async getLeadAttributes(leadId: string) {
+    return this.prisma.leadAttribute.findMany({
+      where: { leadId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /** Susun teks percakapan dari log pesan untuk dikirim ke LLM */
+  private buildConversationText(
+    messages: { body: string; waName?: string | null; createdAt: Date }[],
+  ): string {
+    return messages
+      .map((m, i) => {
+        const who = m.waName ? `[customer (${m.waName})]` : '[customer]';
+        return `${i + 1}. ${m.createdAt.toISOString()} ${who}: ${m.body}`;
+      })
+      .join('\n');
+  }
+
+  /** Panggil LLM (endpoint OpenAI-compatible) dengan prompt anti-hallucination */
+  private async callExtractionLlm(conversationText: string): Promise<string> {
+    const baseUrl = process.env.LLM_BASE_URL || 'https://api.openai.com/v1';
+    const apiKey = process.env.LLM_API_KEY || '';
+    const model = process.env.LLM_MODEL || 'gpt-4o-mini';
+
+    if (!apiKey) {
+      throw new Error('LLM_API_KEY belum diisi di .env');
+    }
+
+    const systemPrompt = `Kamu adalah asisten CRM untuk perusahaan manufaktur kosmetik. Dari percakapan WhatsApp berikut, ekstrak informasi lead ke dalam JSON.
+
+ATURAN KETAT:
+1. Ekstrak HANYA fakta yang benar-benar ADA di percakapan. JANGAN menebak, mengarang, atau menyimpulkan.
+2. Kalau suatu field tidak ada di percakapan → "value": null, "confidence": 0, "source": null.
+3. "source" = kutipan KALIMAT ASLI dari percakapan (persis, tanpa diubah) tempat informasi itu muncul. Kalau tidak ada → null.
+4. "confidence" = angka 0-1, seberapa yakin kamu. 0 = tidak ada di percakapan. 1 = sangat jelas.
+5. "moq" value harus Integer positif, atau null kalau tidak disebut.
+6. fullName = nama ORANG yang tertulis di percakapan (bukan nama toko/brand kalau tidak jelas).
+7. niche = kategori/niche produk yang ditanyakan (misal parfum, skincare, bahan baku).
+8. brand = nama merek yang disebut lead (kalau ada).
+9. domisili = kota/daerah tempat lead (kalau disebut).
+10. budget = angka/estimasi budget yang disebut, tulis sebagai teks aslinya.
+11. stage = tahapan pipeline yang paling mungkin BERDASARKAN BUKTI EKSPLISIT di percakapan. Pilih dari daftar ini saja:
+    NEW_LEAD, CONTACTED, FOLLOW_UP_1, FOLLOW_UP_2, FOLLOW_UP_3, NEGOTIATION, SAMPLE_REQUESTED, SAMPLE_SENT, SAMPLE_APPROVED, SPK_SIGNED, WAITING_FINANCE_APPROVAL, DP_PAID, PRODUCTION_PLAN, READY_TO_SHIP, WON_DEAL, LOST, ABORTED
+    Contoh: customer minta sampel → SAMPLE_REQUESTED; tawar harga → NEGOTIATION; setuju harga & mau kirim SPK → SPK_SIGNED; transfer DP → DP_PAID.
+    "reason" = alasan singkat kenapa kamu pilih stage itu (dari percakapan). Kalau TIDAK ADA bukti yang jelas → "stage": null, "confidence": 0, "reason": null, "source": null. JANGAN menebak.
+
+Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
+{
+  "fullName":  { "value": "string|null", "confidence": 0.0, "source": "string|null" },
+  "company":   { "value": "string|null", "confidence": 0.0, "source": "string|null" },
+  "niche":     { "value": "string|null", "confidence": 0.0, "source": "string|null" },
+  "brand":     { "value": "string|null", "confidence": 0.0, "source": "string|null" },
+  "domisili":  { "value": "string|null", "confidence": 0.0, "source": "string|null" },
+  "moq":       { "value": "number|null", "confidence": 0.0, "source": "string|null" },
+  "budget":    { "value": "string|null", "confidence": 0.0, "source": "string|null" },
+  "stage":     { "stage": "string|null", "confidence": 0.0, "reason": "string|null", "source": "string|null" }
+}`;
+
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: conversationText },
+        ],
+      }),
+    });
+
+    if (!resp.ok) {
+      const errBody = await resp.text();
+      this.logger.error(`❌ LLM API error ${resp.status}: ${errBody.slice(0, 300)}`);
+      throw new Error(`LLM API error ${resp.status}`);
+    }
+
+    const data: any = await resp.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) throw new Error('LLM returned empty content');
+    return content as string;
+  }
+
+  /** Parse + validasi output LLM → objek terstruktur; null kalau tidak valid */
+  private parseAndValidateExtraction(rawContent: string): any | null {
+    let content = rawContent.trim();
+    const fence = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fence) content = fence[1].trim();
+
+    let obj: any;
+    try {
+      obj = JSON.parse(content);
+    } catch {
+      const match = content.match(/\{[\s\S]*\}/);
+      if (!match) return null;
+      try {
+        obj = JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+
+    const result: any = {};
+    for (const key of this.EXTRACTION_FIELDS) {
+      const raw = obj?.[key];
+      if (!raw || typeof raw !== 'object') {
+        result[key] = { value: null, confidence: 0, source: null };
+        continue;
+      }
+      const value = raw.value ?? null;
+      const confidence = Math.min(Math.max(Number(raw.confidence) || 0, 0), 1);
+      const source = typeof raw.source === 'string' ? raw.source : null;
+
+      if (key === 'moq') {
+        const isNum = typeof value === 'number' && Number.isFinite(value) && value > 0;
+        result[key] = {
+          value: isNum ? Math.round(value) : null,
+          confidence: isNum ? confidence : 0,
+          source: isNum ? source : null,
+        };
+      } else {
+        const isStr = typeof value === 'string' && value.trim().length > 0;
+        result[key] = {
+          value: isStr ? value.trim() : null,
+          confidence: isStr ? confidence : 0,
+          source: isStr ? source : null,
+        };
+      }
+    }
+
+    // Fase 3.3 — saran pipeline stage (harus salah satu WorkflowStatus yang valid)
+    const stageRaw = obj?.stage;
+    if (stageRaw && typeof stageRaw === 'object') {
+      const knownStages = new Set<string>(this.WORKFLOW_STAGES);
+      const stageVal = typeof stageRaw.stage === 'string' ? stageRaw.stage : null;
+      const stage = stageVal && knownStages.has(stageVal) ? stageVal : null;
+      result.stage = {
+        stage,
+        confidence: stage
+          ? Math.min(Math.max(Number(stageRaw.confidence) || 0, 0), 1)
+          : 0,
+        reason: stage && typeof stageRaw.reason === 'string' ? stageRaw.reason : null,
+        source: stage && typeof stageRaw.source === 'string' ? stageRaw.source : null,
+      };
+    } else {
+      result.stage = { stage: null, confidence: 0, reason: null, source: null };
+    }
+
+    return result;
+  }
+
+  /** Auto-trigger extraction dengan throttle — dipanggil fire-and-forget dari appendLeadMessage */
+  private async maybeAutoExtract(leadId: string): Promise<void> {
+    try {
+      const [msgCount, lead] = await Promise.all([
+        this.prisma.leadMessage.count({ where: { leadId } }),
+        this.prisma.leadCapture.findUnique({
+          where: { id: leadId },
+          select: { aiExtractedAt: true, aiStatus: true },
+        }),
+      ]);
+      if (msgCount < 2) return; // butuh minimal 2 pesan biar ada konteks
+      if (lead?.aiStatus === 'REJECTED') return; // jangan ganggu yang sudah ditolak
+      const sixHours = 6 * 60 * 60 * 1000;
+      if (lead?.aiExtractedAt && Date.now() - lead.aiExtractedAt.getTime() < sixHours) return; // throttle
+      await this.extractAiForLead(leadId);
+    } catch (err) {
+      this.logger.error(`❌ maybeAutoExtract gagal untuk ${leadId}:`, err);
+    }
   }
 
   // ──────────────────────────────────────────────
@@ -171,6 +631,7 @@ export class LeadCaptureService {
     search?: string;
     dateFrom?: string;
     dateTo?: string;
+    noPhone?: string;   // "1"/"true" → hanya lead yang belum punya nomor WA
     page?: number;
     limit?: number;
     sortBy?: string;
@@ -185,6 +646,9 @@ export class LeadCaptureService {
     if (query.status) where.status = query.status;
     if (query.workflowStatus) where.workflowStatus = query.workflowStatus;
     if (query.source) where.source = query.source;
+    if (query.noPhone && ['1', 'true'].includes(String(query.noPhone).toLowerCase())) {
+      where.phone = null;
+    }
     if (query.dateFrom || query.dateTo) {
       where.createdAt = {};
       if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom);
@@ -235,6 +699,8 @@ export class LeadCaptureService {
       where: { id },
       include: {
         assignedUser: { select: { id: true, fullName: true, email: true } },
+        attributes: true, // Fase 3.2 — atribut AI + confirmed
+        messages: { orderBy: { createdAt: 'asc' }, take: 50 }, // Fase 2.2 — log percakapan
       },
     });
     if (!lead) throw new NotFoundException('Lead not found');
@@ -587,20 +1053,16 @@ export class LeadCaptureService {
   // ══════════════════════════════════════════════
 
   async getNextRoundRobinAgent() {
-    // Atomic transaction: read state, increment, return agent
+    // Atomic transaction: serialize counter increment + return agent.
+    //
+    // PERBAIKAN CONCURRENCY: versi lama memakai read-modify-write
+    // (findUnique -> update). Di READ COMMITTED, dua request paralel bisa
+    // membaca `currentIndex` yang SAMA lalu keduanya return agent yang sama
+    // (double-assign / counter loncat). Di sini counter dipajukan lewat
+    // UPDATE ... RETURNING yang serialized di level row — tidak ada dua
+    // request yang bisa membaca nilai yang sama.
     const result = await this.prisma.$transaction(async (tx) => {
-      // 1. Get or create state
-      let state = await tx.roundRobinState.findUnique({
-        where: { id: 'singleton' },
-      });
-
-      if (!state) {
-        state = await tx.roundRobinState.create({
-          data: { id: 'singleton', currentIndex: 0 },
-        });
-      }
-
-      // 2. Get all active agents ordered by orderIndex
+      // 1. Get all active agents ordered by orderIndex
       const agents = await tx.roundRobinAgent.findMany({
         where: { isActive: true },
         orderBy: { orderIndex: 'asc' },
@@ -610,17 +1072,30 @@ export class LeadCaptureService {
         throw new NotFoundException('No active round robin agents');
       }
 
-      // 3. Get current agent
-      const agent = agents[state.currentIndex];
-
-      // 4. Increment index (wrap around)
-      const nextIndex = (state.currentIndex + 1) % agents.length;
-      await tx.roundRobinState.update({
+      // 2. Get or create singleton state (upsert aman terhadap race create)
+      await tx.roundRobinState.upsert({
         where: { id: 'singleton' },
-        data: { currentIndex: nextIndex },
+        create: { id: 'singleton', currentIndex: 0 },
+        update: {},
       });
 
-      // 5. Increment agent's lead counter
+      // 3. Advance counter atomically, ambil index BARU.
+      //    Agent yang dipakai adalah index SEBELUMNYA agar perilaku sama
+      //    dengan versi lama (request pertama -> agents[0]).
+      const rows = await tx.$queryRawUnsafe<Array<{ currentIndex: number }>>(
+        `UPDATE round_robin_state
+            SET "currentIndex" = ("currentIndex" + 1) % $1,
+                "updatedAt"    = NOW()
+          WHERE id = 'singleton'
+        RETURNING "currentIndex"`,
+        agents.length
+      );
+
+      const newIndex = Number(rows[0]?.currentIndex ?? 0);
+      const prevIndex = (newIndex - 1 + agents.length) % agents.length;
+      const agent = agents[prevIndex];
+
+      // 4. Increment agent's lead counter
       await tx.roundRobinAgent.update({
         where: { id: agent.id },
         data: { totalLeads: { increment: 1 } },
@@ -982,7 +1457,7 @@ export class LeadCaptureService {
           trackingCode,
           fullName: item.name || null,
           phone: item.phone?.replace(/[^0-9]/g, '') || null,
-          source: item.source || null,
+          source: (item.source as LeadSource) || null,
           intent: item.intent || null,
           status: 'PENDING',
           workflowStatus: 'NEW_LEAD',

@@ -54,6 +54,16 @@ function getUtmParams() {
   };
 }
 
+// Fase 4.4 — atribusi offline/per-agent via URL query (?agent=Nama&source=OFFLINE)
+function getAgentParams() {
+  if (typeof window === 'undefined') return {};
+  const params = new URLSearchParams(window.location.search);
+  return {
+    assignedName: params.get('agent') || undefined,
+    source: params.get('source') || undefined,
+  };
+}
+
 export default function SmartWhatsAppButton({
   phoneNumber,
   message,
@@ -109,6 +119,7 @@ export default function SmartWhatsAppButton({
 
     const deviceInfo = getDeviceInfo();
     const utmParams = getUtmParams();
+    const agentParams = getAgentParams();
 
     const payload = {
       intent: intent || document.title,
@@ -118,6 +129,7 @@ export default function SmartWhatsAppButton({
       sessionId,
       ...deviceInfo,
       ...utmParams,
+      ...agentParams,
     };
 
     try {

@@ -42,6 +42,7 @@ class WhatsAppUpdateDto {
   phone!: string;
   waName?: string;
   waMessage?: string;
+  msgId?: string;
 }
 
 class UpdateLeadDto {
@@ -54,6 +55,12 @@ class UpdateLeadDto {
   workflowStatus?: WorkflowStatus;
   assignedTo?: string;
   lostReason?: string;
+  aiStatus?: string;
+}
+
+class UpdateAttributeDto {
+  confirmed?: boolean;
+  value?: string;
 }
 
 class BulkUpdateDto {
@@ -241,6 +248,42 @@ export class LeadCaptureController {
   @Delete('round-robin/agents/:id')
   async deleteAgent(@Param('id') id: string) {
     return this.service.deleteRoundRobinAgent(id);
+  }
+
+  // Fase 3.1 — jalankan AI extraction manual untuk satu lead
+  @Post(':id/ai-extract')
+  @HttpCode(HttpStatus.OK)
+  async aiExtract(@Param('id') id: string) {
+    const result = await this.service.extractAiForLead(id);
+    if (!result) {
+      return { status: 'no_result', message: 'Tidak ada pesan atau ekstraksi gagal' };
+    }
+    return { status: 'suggested', suggestion: result };
+  }
+
+  // Fase 3.3 — terapkan saran pipeline stage (workflowStatus)
+  @Post(':id/ai-stage-confirm')
+  @HttpCode(HttpStatus.OK)
+  async confirmAiStage(@Param('id') id: string) {
+    const updated = await this.service.confirmAiStage(id);
+    return { status: 'confirmed', workflowStatus: updated.workflowStatus };
+  }
+
+  // Fase 3.2 — ambil atribut lead (AI suggestion + confirmed)
+  @Get(':id/attributes')
+  async getAttributes(@Param('id') id: string) {
+    return this.service.getLeadAttributes(id);
+  }
+
+  // Fase 3.2 — konfirmasi / tolak / edit satu atribut AI
+  @Patch(':id/attributes/:attrId')
+  @HttpCode(HttpStatus.OK)
+  async confirmAttr(
+    @Param('id') id: string,
+    @Param('attrId') attrId: string,
+    @Body() dto: UpdateAttributeDto,
+  ) {
+    return this.service.confirmAttribute(id, attrId, dto);
   }
 
   @Get(':id')
