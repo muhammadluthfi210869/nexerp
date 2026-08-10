@@ -315,7 +315,9 @@ export class LeadCaptureService {
       .filter((key) => !confirmedKeys.has(key))
       .map((key) => {
         const f = parsed[key] || { value: null, confidence: 0, source: null };
-        return { key, value: f.value, confidence: f.confidence, source: f.source };
+        // value kolom = String — konversi semua (mis. moq yang berupa angka)
+        const strValue = f.value === null ? null : String(f.value);
+        return { key, value: strValue, confidence: f.confidence, source: f.source };
       })
       .filter((s) => s.value !== null); // hanya simpan yang benar-benar ada (anti-hallucination)
 
