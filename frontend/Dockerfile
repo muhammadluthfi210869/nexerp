@@ -6,6 +6,8 @@ WORKDIR /app
 # Add Build Arguments
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WA_PHONE
+ENV NEXT_PUBLIC_WA_PHONE=$NEXT_PUBLIC_WA_PHONE
 
 COPY package*.json ./
 RUN npm install && npm install lightningcss-linux-x64-gnu

@@ -50,6 +50,19 @@ services:
       KOMMO_API_TOKEN: ${KOMMO_API_TOKEN:-}
       KOMMO_AUTO_PULL_ENABLED: ${KOMMO_AUTO_PULL_ENABLED:-true}
       KOMMO_AUTO_PULL_INTERVAL_MS: ${KOMMO_AUTO_PULL_INTERVAL_MS:-300000}
+      # ── WhatsApp Cloud API (Meta) ──
+      WA_BUSINESS_PHONE: ${WA_BUSINESS_PHONE:-}
+      WA_WEBHOOK_VERIFY_TOKEN: ${WA_WEBHOOK_VERIFY_TOKEN:-}
+      WA_PHONE_NUMBER_ID: ${WA_PHONE_NUMBER_ID:-}
+      WA_WABA_ID: ${WA_WABA_ID:-}
+      WA_ACCESS_TOKEN: ${WA_ACCESS_TOKEN:-}
+      # ── Dedup lead orphan ──
+      ORPHAN_DEDUP_WINDOW_MS: ${ORPHAN_DEDUP_WINDOW_MS:-604800000}
+      # ── AI Extraction (LLM) ──
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/data:/app/data
@@ -73,9 +86,11 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
     restart: always
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
       NODE_ENV: production
     depends_on:
       - backend
