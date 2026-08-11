@@ -30,4 +30,14 @@ export class WaWebhookController {
   async incoming(@Body() body: any) {
     return this.service.handleIncoming(body);
   }
+
+  /**
+   * POST /wa-gateway/webhook — menerima webhook dari GATEWAY pihak ketiga
+   * (Wablas, Mesolitica, Fonnte, dll). Format payload fleksibel.
+   */
+  @Post('wa-gateway/webhook')
+  @HttpCode(HttpStatus.OK)
+  async gateway(@Body() body: any) {
+    return this.service.handleGateway(body);
+  }
 }

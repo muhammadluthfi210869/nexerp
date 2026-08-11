@@ -92,9 +92,86 @@ export class WaWebhookService {
       }
 
       return { status: 'ok' };
-    } catch (err) {
-      this.logger.error('❌ Webhook error:', err);
-      return { status: 'error', message: err.message };
+    } catch (err: any) {
+      this.logger.error('❌ Webhook error:', err?.message || err);
+      return { status: 'error', message: err?.message || 'unknown' };
     }
+  }
+
+  /**
+   * Handle webhook dari GATEWAY pihak ketiga (Wablas, Mesolitica, Fonnte, dll).
+   * Format payload fleksibel (dikenali dari beberapa nama field umum) supaya
+   * bisa dipakai lintas gateway tanpa harus tahu format persis masing-masing.
+   */
+  async handleGateway(body: any) {
+    try {
+      this.logger.log('📩 WA Gateway webhook received');
+
+      // Payload bisa dibungkus dalam objek `data` atau array `data[0]`
+      let data = body;
+      if (body?.data) {
+        data = Array.isArray(body.data) ? body.data[0] || body : body.data;
+      }
+
+      const phone = this.pick(data, [
+        'from', 'sender', 'phone', 'wa_id', 'msisdn',
+        'from_number', 'sender_number', 'source',
+      ]);
+      const text = this.pick(data, [
+        'text', 'message', 'body', 'content', 'message_body', 'message_text', 'pesan',
+      ]);
+      const name = this.pick(data, [
+        'name', 'profileName', 'sender_name', 'contact_name', 'pushname',
+      ]);
+      const msgId = this.pick(data, [
+        'id', 'message_id', 'msg_id', 'messageId', 'webhook_id', 'event_id',
+      ]);
+
+      if (!phone || !text) {
+        this.logger.warn(`⚠️ Gateway payload tidak lengkap: phone=${!!phone} text=${!!text}`);
+        return { status: 'incomplete', required: ['phone', 'text'] };
+      }
+
+      // Normalisasi nomor → format internasional 628xx
+      const digits = phone.replace(/\D/g, '');
+      const phone62 = digits.startsWith('0')
+        ? '62' + digits.slice(1)
+        : digits.startsWith('62') ? digits : '62' + digits;
+
+      this.logger.log(`📨 Gateway from ${phone62}: "${text.slice(0, 50)}"`);
+
+      // Jembatan tracking code kalau ada, sama seperti jalur Meta
+      const trackingMatch = text.match(/\[Kode:\s*(DL\w+)\]/);
+      const trackingCode = trackingMatch ? trackingMatch[1] : null;
+
+      if (trackingCode) {
+        await this.leadCapture.updateFromWhatsApp(trackingCode, {
+          phone: phone62,
+          waName: name || 'Unknown',
+          waMessage: text,
+          msgId: msgId || undefined,
+        });
+      } else {
+        await this.leadCapture.upsertOrphanLead(phone62, name || 'Unknown', text, msgId || undefined);
+      }
+
+      return { status: 'ok' };
+    } catch (err: any) {
+      this.logger.error('❌ Gateway webhook error:', err?.message || err);
+      return { status: 'error', message: err?.message };
+    }
+  }
+
+  /** Ambil nilai string pertama dari daftar nama field yang dikenal */
+  private pick(obj: any, keys: string[]): string | null {
+    if (!obj || typeof obj !== 'object') return null;
+    for (const key of keys) {
+      const v = obj[key];
+      if (v !== undefined && v !== null && typeof v !== 'object') {
+        const s = String(v).trim();
+        if (s) return s;
+      }
+    }
+    return null;
   }
 }
