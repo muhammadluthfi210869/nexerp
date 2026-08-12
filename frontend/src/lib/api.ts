@@ -1,4 +1,19 @@
 import axios from "axios";
+import { getMockData } from "@/lib/mock-data";
+
+/**
+ * ── PROTOTYPE MODE ─────────────────────────────────────────────
+ * Aktifkan dengan NEXT_PUBLIC_PROTOTYPE_MODE=true (lihat .env.local).
+ *
+ * Saat aktif, SEMUA panggilan API frontend di-short-circuit ke
+ * data contoh (mock-data.ts) — TANPA backend, TANPA database.
+ * Cocok untuk demo ke bos / calon klien: `cd frontend && npm run dev`.
+ *
+ * Login prototype: superadmin@dreamlab.id / password123
+ * (bukan untuk operasional — badge "PROTOTYPE MODE" tampil di dashboard).
+ */
+export const IS_PROTOTYPE_MODE =
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' &&
@@ -13,6 +28,37 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+if (IS_PROTOTYPE_MODE) {
+  // Custom adapter: gantikan request jaringan dengan data contoh.
+  api.defaults.adapter = async (config) => {
+    const url = config.url || "";
+    const method = (config.method || "get").toLowerCase();
+
+    if (method === "get") {
+      return {
+        data: getMockData(url),
+        status: 200,
+        statusText: "OK",
+        headers: {},
+        config,
+      };
+    }
+
+    // Mutasi (create/edit/delete) → no-op sukses (tidak dipersist).
+    return {
+      data: {
+        success: true,
+        message: "PROTOTYPE MODE — perubahan tidak disimpan (data contoh)",
+        data: null,
+      },
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config,
+    };
+  };
+}
 
 export function extractApiError(error: unknown): { status: number; message: string; code: string } {
   if (axios.isAxiosError(error)) {

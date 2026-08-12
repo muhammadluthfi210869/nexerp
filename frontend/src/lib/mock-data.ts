@@ -19,11 +19,19 @@ export const MOCK_DATA: any = {
       { name: "Budi Santoso", leads: 180, fu: 420, crSmpl: 12, crDeal: 8, clsSmpl: 22, clsNew: 14, clsRo: 5, rev: "0.85M", status: "BAWAH TARGET" },
     ],
     lostChurn: [
-      { brand: "Nature Glow", reason: "Price", bd: "Andi P.", val: "250Jt" },
-      { brand: "Zen Skin", reason: "Sample", bd: "Budi S.", val: "120Jt" },
-      { brand: "Aqua Pure", reason: "Ghosting", bd: "Andi P.", val: "450Jt" },
+      { brand: "Nature Glow", reason: "Price", bd: "Andi P.", val: "250Jt", lostValue: 250000000 },
+      { brand: "Zen Skin", reason: "Sample", bd: "Budi S.", val: "120Jt", lostValue: 120000000 },
+      { brand: "Aqua Pure", reason: "Ghosting", bd: "Andi P.", val: "450Jt", lostValue: 450000000 },
     ],
   }),
+
+  "/bussdev/analytics/staff-performance": () => [
+    { name: "Andi Pratama", leads: 450, followUp: 1240, crSample: 26, crDeal: 18, clsSample: 117, clsNewClient: 81000000, clsRO: 42000000, actualRevenue: 324000000, status: "MELAMPAUI TARGET" },
+    { name: "Citra Kirana", leads: 320, followUp: 980, crSample: 29, crDeal: 15, clsSample: 92, clsNewClient: 48000000, clsRO: 28000000, actualRevenue: 215000000, status: "SESUAI TARGET" },
+    { name: "Budi Santoso", leads: 180, followUp: 420, crSample: 12, crDeal: 8, clsSample: 22, clsNewClient: 14000000, clsRO: 5000000, actualRevenue: 85000000, status: "BAWAH TARGET" },
+    { name: "Dewi Lestari", leads: 210, followUp: 640, crSample: 22, crDeal: 11, clsSample: 46, clsNewClient: 26000000, clsRO: 12000000, actualRevenue: 118000000, status: "SESUAI TARGET" },
+    { name: "Eko Prasetyo", leads: 265, followUp: 730, crSample: 24, crDeal: 13, clsSample: 58, clsNewClient: 33000000, clsRO: 18000000, actualRevenue: 162000000, status: "MELAMPAUI TARGET" },
+  ],
 
   "/bussdev/analytics/pipeline": () => ({
     activeLeads: 24,
@@ -206,22 +214,59 @@ export const MOCK_DATA: any = {
   // ── SCM / WAREHOUSE ────────────────────────────────────────────
 
   "/scm/dashboard": () => ({
-    totalPO: 24,
-    pendingPR: 8,
-    overduePO: 3,
-    totalVendors: 15,
-    stockAlerts: 5,
-    monthlyProcurement: 890000000,
-    purchaseOrders: [
-      { id: "PO-001", poNumber: "PO-2026-0001", supplier: "PT Bahan Baku", status: "APPROVED", totalValue: 340000000, items: 5, eta: "2026-06-05" },
-      { id: "PO-002", poNumber: "PO-2026-0002", supplier: "CV Kemasan Indah", status: "PENDING", totalValue: 120000000, items: 3, eta: "2026-06-10" },
-      { id: "PO-003", poNumber: "PO-2026-0003", supplier: "PT Logistik Global", status: "RECEIVED", totalValue: 89000000, items: 2, eta: "2026-05-25" },
+    cards: {
+      inventory: { totalSku: 1248, criticalStock: 7, accuracy: 98.4 },
+      warehouse: { fulfillment: 94.2, returnRate: 1.8 },
+      procurement: { savingPercent: 12.6, leadTime: 4.2, supplierPerf: 96.1 },
+      logistics: { otd: 91.5, shippingPerUnit: "Rp 8.4k" },
+    },
+    tables: {
+      perfRaw: [
+        { supplier: "PT Bahan Baku Utama", material: "Niacinamide", volume: 12400, otd: 96, quality: 98, risk: "LOW" },
+        { supplier: "CV Kimia Jaya", material: "Glycerin", volume: 8600, otd: 92, quality: 95, risk: "LOW" },
+        { supplier: "PT Aromatik Nusantara", material: "Essence", volume: 3200, otd: 84, quality: 91, risk: "MEDIUM" },
+      ],
+      perfPack: [
+        { supplier: "CV Kemasan Indah", material: "Botol Kaca 30ml", volume: 24500, otd: 94, quality: 97, risk: "LOW" },
+        { supplier: "PT Plastik Prima", material: "Tube Aluminium", volume: 12800, otd: 88, quality: 93, risk: "MEDIUM" },
+        { supplier: "CV Labelindo", material: "Label & Sticker", volume: 32000, otd: 97, quality: 99, risk: "LOW" },
+      ],
+      perfBox: [
+        { supplier: "PT Karton Utama", material: "Kardus 50x30", volume: 8200, otd: 90, quality: 94, risk: "MEDIUM" },
+        { supplier: "CV Box Mulya", material: "Box Insert", volume: 6100, otd: 86, quality: 90, risk: "MEDIUM" },
+      ],
+      perfLabel: [
+        { supplier: "CV Labelindo", material: "Sticker Roll", volume: 42000, otd: 98, quality: 99, risk: "LOW" },
+        { supplier: "PT Cetak Digital", material: "Label NPF", volume: 15400, otd: 93, quality: 96, risk: "LOW" },
+      ],
+    },
+    procurementSuggestions: [
+      { priority: "URGENT", currentStock: 12, item: "Niacinamide", suggestedQty: 500, reason: "Stok kritis, pemakaian tinggi" },
+      { priority: "URGENT", currentStock: 8, item: "Botol Kaca 30ml", suggestedQty: 2000, reason: "Proyeksi pemakaian 2 minggu habis" },
+      { priority: "NORMAL", currentStock: 34, item: "Glycerin", suggestedQty: 800, reason: "Cycle stock normal" },
+      { priority: "NORMAL", currentStock: 25, item: "Essence Parfum", suggestedQty: 300, reason: "Menjelang produksi parfum" },
+      { priority: "LOW", currentStock: 120, item: "Kardus 50x30", suggestedQty: 0, reason: "Stok aman" },
     ],
-    purchaseRequests: [
-      { id: "PR-001", prNumber: "PR-2026-0001", requester: "Production", status: "PENDING_APPROVAL_SCM", items: 4, totalEstimate: 150000000, createdAt: "2026-05-20" },
-      { id: "PR-002", prNumber: "PR-2026-0002", requester: "Warehouse", status: "APPROVED", items: 2, totalEstimate: 85000000, createdAt: "2026-05-18" },
-    ],
+    highFrequency: {
+      raw: [
+        { name: "Niacinamide", freq: 42, consumption: "820 kg/bln", turnover: 6.4 },
+        { name: "Glycerin", freq: 38, consumption: "640 kg/bln", turnover: 5.8 },
+        { name: "Essence", freq: 24, consumption: "310 L/bln", turnover: 4.9 },
+      ],
+      pack: [
+        { name: "Botol Kaca 30ml", freq: 36, consumption: "2.4K pcs/bln", turnover: 7.2 },
+        { name: "Tube Aluminium", freq: 22, consumption: "1.1K pcs/bln", turnover: 5.1 },
+        { name: "Label Roll", freq: 31, consumption: "1.8K pcs/bln", turnover: 6.8 },
+      ],
+    },
   }),
+
+  "/scm/work-orders/active": () => [
+    { id: "WO-001", woNumber: "WO-2026-0101", product: "Brightening Serum", targetQty: 5000, gap: 0, poStatus: "CLOSED", estArrival: "2026-08-15", boStatus: "READY", supplierScore: 96 },
+    { id: "WO-002", woNumber: "WO-2026-0102", product: "Moisturizer Green", targetQty: 3000, gap: 800, poStatus: "OPEN", estArrival: "2026-08-20", boStatus: "GAP", supplierScore: 88 },
+    { id: "WO-003", woNumber: "WO-2026-0103", product: "Face Wash Clean", targetQty: 8000, gap: 0, poStatus: "CLOSED", estArrival: "2026-08-14", boStatus: "READY", supplierScore: 92 },
+    { id: "WO-004", woNumber: "WO-2026-0104", product: "Toner Glow", targetQty: 6000, gap: 1500, poStatus: "OPEN", estArrival: "2026-08-22", boStatus: "GAP", supplierScore: 84 },
+  ],
 
   "/scm/purchase-orders": () => [
     { id: "PO-001", poNumber: "PO-2026-0001", supplier: { name: "PT Bahan Baku Utama" }, status: "APPROVED", totalValue: 340000000, items: [{ material: { name: "Niacinamide" }, qty: 500, unit: "kg" }], createdAt: "2026-05-10", expectedDate: "2026-06-05" },
@@ -271,6 +316,11 @@ export const MOCK_DATA: any = {
     qualityPassRate: 95,
     totalOutput: 45000,
     efficiency: 82,
+    cards: {
+      achievement: { actual: 45000, completedOrders: 3, totalOrders: 12 },
+      quality: { defectRate: 5 },
+    },
+    workshops: { queue: 4, mixing: 3, filling: 3, packing: 2 },
     workOrders: [
       { id: "WO-001", woNumber: "WO-2026-0001", product: "Brightening Serum", qty: 5000, status: "IN_PROGRESS", progress: 60, dueDate: "2026-05-25" },
       { id: "WO-002", woNumber: "WO-2026-0002", product: "Moisturizer Green", qty: 3000, status: "MIXING", progress: 25, dueDate: "2026-05-28" },
@@ -395,10 +445,32 @@ export const MOCK_DATA: any = {
 
   "/production/qc/stats": () => ({
     totalInspections: 45,
-    passRate: "94.2%",
+    lastMonthInspections: 38,
+    passRate: 94.2,
     totalReject: 4,
+    lastMonthReject: 7,
+    activeQuarantine: 2,
     totalLoss: "Rp 14.5M",
   }),
+
+  "/qc/analytics/phase-breakdown": () => ({
+    phases: [
+      { phase: "INBOUND", totalAudits: 12, passCount: 11, rejectCount: 1, passRate: 91.7, topDefect: "Kemasan rusak" },
+      { phase: "MIXING", totalAudits: 14, passCount: 13, rejectCount: 1, passRate: 92.9, topDefect: "Viskositas off-spec" },
+      { phase: "FILLING", totalAudits: 16, passCount: 15, rejectCount: 1, passRate: 93.8, topDefect: "Berat isi tidak akurat" },
+      { phase: "PACKING", totalAudits: 13, passCount: 13, rejectCount: 0, passRate: 100, topDefect: "—" },
+    ],
+    overall: { totalPass: 52, totalReject: 3, overallPassRate: 94.5 },
+  }),
+
+  "/qc/report": () => [
+    { id: "QC-001", phase: "MIXING", material: "Brightening Serum", inspector: "Rina", status: "PASS", createdAt: "2026-08-12T09:30:00Z", notes: "pH & viskositas OK" },
+    { id: "QC-002", phase: "FILLING", material: "Moisturizer Green", inspector: "Bayu", status: "REJECT", createdAt: "2026-08-12T10:15:00Z", notes: "Berat isi 2g kurang" },
+    { id: "QC-003", phase: "PACKING", material: "Face Wash Clean", inspector: "Rina", status: "PASS", createdAt: "2026-08-11T14:00:00Z", notes: "Label & seal sesuai" },
+    { id: "QC-004", phase: "INBOUND", material: "Niacinamide", inspector: "Bayu", status: "PASS", createdAt: "2026-08-11T08:45:00Z", notes: "CoA diverifikasi" },
+    { id: "QC-005", phase: "MIXING", material: "Body Lotion SPF", inspector: "Rina", status: "PASS", createdAt: "2026-08-10T11:20:00Z", notes: "Homogenitas baik" },
+    { id: "QC-006", phase: "FILLING", material: "Serum Retinol", inspector: "Bayu", status: "PASS", createdAt: "2026-08-09T13:50:00Z", notes: "Crimping sempurna" },
+  ],
 
   "/production/qc/pending": () => [
     { id: "P-001", woNumber: "WO-2026-001", stage: "MIXING", material: "Brightening Serum", priority: "HIGH" },
@@ -447,6 +519,47 @@ export const MOCK_DATA: any = {
     ],
   }),
 
+  "/marketing/analytics": () => ({
+    acquisition: { revenue: 3185000000, clientsAcquired: 42, avgCpa: 84500 },
+    funnel: { leadsQualified: 1284, leadToSampleRate: 21.4, prospects: 276, closingRate: 15.2 },
+    budget: { totalAdSpend: 1248000000, budgetUsagePercent: 92, costPerLead: 97352, costPerSample: 315000 },
+    trends: [
+      { month: "Jan", leads: 74, cpl: 92, closing: 44, cpa: 98 },
+      { month: "Feb", leads: 81, cpl: 89, closing: 48, cpa: 101 },
+      { month: "Mar", leads: 88, cpl: 85, closing: 55, cpa: 97 },
+      { month: "Apr", leads: 95, cpl: 84, closing: 62, cpa: 103 },
+      { month: "May", leads: 102, cpl: 79, closing: 66, cpa: 100 },
+      { month: "Jun", leads: 108, cpl: 76, closing: 72, cpa: 96 },
+      { month: "Jul", leads: 116, cpl: 74, closing: 68, cpa: 105 },
+      { month: "Aug", leads: 123, cpl: 72, closing: 74, cpa: 102 },
+      { month: "Sep", leads: 129, cpl: 70, closing: 79, cpa: 106 },
+      { month: "Oct", leads: 134, cpl: 68, closing: 81, cpa: 110 },
+      { month: "Nov", leads: 141, cpl: 67, closing: 86, cpa: 108 },
+      { month: "Dec", leads: 148, cpl: 65, closing: 90, cpa: 111 },
+    ],
+    productPerformance: [
+      { cat: "Skincare Premium", leads: 384, sample: 124, deal: 39 },
+      { cat: "Bodycare Harian", leads: 297, sample: 101, deal: 31 },
+      { cat: "Haircare Repair", leads: 236, sample: 77, deal: 26 },
+      { cat: "Packaging Custom", leads: 182, sample: 58, deal: 19 },
+      { cat: "Maklon Trial Kit", leads: 144, sample: 43, deal: 14 },
+    ],
+    topContent: [
+      { title: "Retinol Reels Launch", engagement: 6.8 },
+      { title: "Behind The Brand Story", engagement: 6.1 },
+      { title: "Packaging Before After", engagement: 5.7 },
+      { title: "Founder FAQ Carousel", engagement: 5.3 },
+      { title: "UGC Testimonial Cut", engagement: 5.1 },
+    ],
+    leadSourceRanking: [
+      { name: "Meta Ads", leads: 428 },
+      { name: "TikTok Ads", leads: 311 },
+      { name: "Google Organic", leads: 222 },
+      { name: "Instagram Organic", leads: 176 },
+      { name: "Referral", leads: 89 },
+    ],
+  }),
+
   // ── EXECUTIVE ───────────────────────────────────────────────────
 
   "/executive/dashboard": () => ({
@@ -470,6 +583,21 @@ export const MOCK_DATA: any = {
     ],
   }),
 
+  "/executive/metrics": () => ({
+    revenue: { mtd: 3240000000, target: 4000000000, achievement: 81, projection: 3860000000, growth: 15.8 },
+    pipeline: { total: 48, deal: 12, prospect: 14, hot: 22 },
+    production: { activeOrders: 24, overdue: 3, onProd: 11, qcFlow: 7, ready: 6 },
+    cashflow: { totalAR: 680000000, aging: { "0-30": 310000000, "31-60": 240000000, "60+": 130000000 } },
+    lost: { totalVal: 520000000, churnRate: 12.4 },
+    repeatOrder: { rate: 48.2, revenue: 1560000000, readyToRepeat: 9 },
+  }),
+
+  "/executive/alerts": () => ({
+    production: { overdue: 3 },
+    cashflow: { overdueInvoices: 2 },
+    sales: { unfollowed: 14 },
+  }),
+
   // ── HR ──────────────────────────────────────────────────────────
 
   "/hr/dashboard": () => ({
@@ -491,6 +619,47 @@ export const MOCK_DATA: any = {
       { name: "Legal", count: 4, head: "Manager I" },
     ],
   }),
+
+  "/hr/executive-summary": () => ({
+    stabilityIndex: 86.4,
+    avgKpi: 84,
+    totalEmployees: 128,
+    presentToday: 112,
+    onLeave: 8,
+    hiringThisMonth: 3,
+    attritionRate: 4.2,
+  }),
+
+  "/hr/department-scores": () => [
+    { division: "PRODUCTION", employees: [
+      { id: "E-001", name: "Panca", position: "Formulator", joinedAt: "2021-03-15", kpi: 88, disiplin: 92, output: "Sesuai target", attitude: 90, contractEnd: "2027-03-15" },
+      { id: "E-002", name: "Yaya", position: "Lab R&D", joinedAt: "2022-06-01", kpi: 91, disiplin: 89, output: "Melampaui target", attitude: 93, contractEnd: "2026-12-01" },
+      { id: "E-003", name: "Amira", position: "Lead Formulator", joinedAt: "2019-08-20", kpi: 94, disiplin: 95, output: "Melampaui target", attitude: 96, contractEnd: "2028-08-20" },
+    ]},
+    { division: "QC", employees: [
+      { id: "E-101", name: "Rina", position: "QC Analyst", joinedAt: "2020-02-10", kpi: 89, disiplin: 93, output: "Sesuai target", attitude: 91, contractEnd: "2027-02-10" },
+      { id: "E-102", name: "Bayu", position: "QC Inspector", joinedAt: "2021-11-05", kpi: 85, disiplin: 88, output: "Sesuai target", attitude: 87, contractEnd: "2026-11-05" },
+    ]},
+    { division: "WAREHOUSE", employees: [
+      { id: "E-201", name: "Joko", position: "Warehouse Supervisor", joinedAt: "2018-04-01", kpi: 82, disiplin: 90, output: "Sesuai target", attitude: 88, contractEnd: "2026-09-01" },
+    ]},
+    { division: "BD", employees: [
+      { id: "E-301", name: "Andi Pratama", position: "BD Executive", joinedAt: "2019-05-12", kpi: 92, disiplin: 94, output: "Melampaui target", attitude: 90, contractEnd: "2027-05-12" },
+      { id: "E-302", name: "Citra Kirana", position: "BD Executive", joinedAt: "2020-09-23", kpi: 87, disiplin: 91, output: "Sesuai target", attitude: 92, contractEnd: "2026-10-23" },
+    ]},
+    { division: "RND", employees: [
+      { id: "E-401", name: "Amira", position: "R&D Manager", joinedAt: "2019-08-20", kpi: 94, disiplin: 95, output: "Melampaui target", attitude: 96, contractEnd: "2028-08-20" },
+    ]},
+    { division: "SCM", employees: [
+      { id: "E-501", name: "Bagus", position: "SCM Supervisor", joinedAt: "2020-03-16", kpi: 86, disiplin: 89, output: "Sesuai target", attitude: 85, contractEnd: "2026-07-16" },
+    ]},
+    { division: "FINANCE", employees: [
+      { id: "E-601", name: "Sari", position: "Finance Manager", joinedAt: "2017-01-09", kpi: 90, disiplin: 96, output: "Melampaui target", attitude: 89, contractEnd: "2027-01-09" },
+    ]},
+    { division: "MANAGEMENT", employees: [
+      { id: "E-701", name: "Luthfi", position: "General Manager", joinedAt: "2016-10-01", kpi: 95, disiplin: 97, output: "Melampaui target", attitude: 98, contractEnd: "2029-10-01" },
+    ]},
+  ],
 
   // ── MASTER DATA ────────────────────────────────────────────────
 
@@ -563,10 +732,16 @@ export const MOCK_DATA: any = {
 export function getMockData(url: string): any {
   const cleanUrl = url.split("?")[0].replace(/\/+$/, "");
 
-  for (const [pattern, handler] of Object.entries(MOCK_DATA)) {
-    if (pattern === "default") continue;
+  // Paling spesifik (path terpanjang) dicocokkan dulu, supaya
+  // mis. `/finance/dashboard/advanced` tidak ketuker data
+  // `/finance/dashboard`.
+  const patterns = Object.keys(MOCK_DATA)
+    .filter((pattern) => pattern !== "default")
+    .sort((a, b) => b.length - a.length);
+
+  for (const pattern of patterns) {
     if (cleanUrl === pattern || cleanUrl.startsWith(pattern)) {
-      return (handler as (url?: string) => any)(url);
+      return (MOCK_DATA[pattern] as (url?: string) => any)(url);
     }
   }
 

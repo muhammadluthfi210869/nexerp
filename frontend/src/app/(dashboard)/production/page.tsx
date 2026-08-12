@@ -3,8 +3,10 @@ import Link from "next/link";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { StatCard } from "@/components/dna";
 import { Calendar, Factory, ClipboardList } from "lucide-react";
+import { getMockData } from "@/lib/mock-data";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
 
 async function fetchFromApi(path: string) {
   try {
@@ -17,7 +19,9 @@ async function fetchFromApi(path: string) {
 }
 
 export default async function ProductionDashboardPage() {
-  const data = await fetchFromApi("/production/dashboard");
+  // PROTOTYPE MODE: kalau fetch ke backend gagal, pakai data contoh.
+  const live = await fetchFromApi("/production/dashboard");
+  const data = IS_PROTOTYPE_MODE ? (live ?? getMockData("/production/dashboard")) : live;
 
   const cards = data?.cards || {};
 

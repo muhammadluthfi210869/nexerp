@@ -5,6 +5,9 @@ import React from "react";
 import { SidebarWrapper } from "@/components/layout/SidebarWrapper";
 import { Search, Bell } from "lucide-react";
 
+// PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional.
+const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -34,12 +37,20 @@ export default function DashboardLayout({
 
           {/* Right section */}
           <div className="flex items-center gap-4">
-            <span className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-150 px-2.5 py-1 rounded-md tracking-wider">
-              STABIL v2.0
-            </span>
-            <span className="text-[9px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-150 px-2.5 py-1 rounded-md tracking-wider animate-pulse">
-              SINKRONISASI LANGSUNG
-            </span>
+            {IS_PROTOTYPE_MODE ? (
+              <span className="text-[9px] font-black uppercase text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md tracking-wider animate-pulse">
+                ⚡ PROTOTYPE MODE — DATA CONTOH
+              </span>
+            ) : (
+              <>
+                <span className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-150 px-2.5 py-1 rounded-md tracking-wider">
+                  STABIL v2.0
+                </span>
+                <span className="text-[9px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-150 px-2.5 py-1 rounded-md tracking-wider animate-pulse">
+                  SINKRONISASI LANGSUNG
+                </span>
+              </>
+            )}
             <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
               <Bell className="w-5 h-5" />
             </button>

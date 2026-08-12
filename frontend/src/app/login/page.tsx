@@ -25,6 +25,42 @@ const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+// ── PROTOTYPE MODE ─────────────────────────────────────────────
+// Aktif dengan NEXT_PUBLIC_PROTOTYPE_MODE=true (lihat .env.local).
+// Akun khusus demo: superadmin@dreamlab.id / password123
+// Login ini TIDAK hit backend — langsung masuk sebagai SUPER_ADMIN
+// dengan akses ke SEMUA modul, memakai data contoh (mock-data.ts).
+const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+const PROTOTYPE_EMAIL = "superadmin@dreamlab.id";
+const PROTOTYPE_PASSWORD = "password123";
+
+const PROTOTYPE_ROLES = [
+  "SUPER_ADMIN",
+  "HEAD_OPS",
+  "EXECUTIVE",
+  "MARKETING",
+  "BUSSDEV",
+  "FINANCE",
+  "RND",
+  "SCM",
+  "WAREHOUSE",
+  "PRODUCTION",
+  "QC",
+  "HR",
+  "LEGALITY",
+  "LOGISTICS",
+  "CREATIVE",
+  "MASTER",
+  "SYSTEM",
+];
+
+type LoginResponseUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  roles: string[];
+};
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,7 +75,29 @@ export default function LoginPage() {
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      const response = await api.post("/auth/login", data);
+      let response: { data: { access_token: string; user: LoginResponseUser } };
+
+      if (
+        IS_PROTOTYPE_MODE &&
+        data.email.toLowerCase() === PROTOTYPE_EMAIL &&
+        data.password === PROTOTYPE_PASSWORD
+      ) {
+        // Prototype login — tanpa backend.
+        response = {
+          data: {
+            access_token: `prototype.${Date.now()}.${Math.random().toString(36).slice(2)}`,
+            user: {
+              id: "prototype-superadmin",
+              email: PROTOTYPE_EMAIL,
+              fullName: "Super Admin (Prototype)",
+              roles: PROTOTYPE_ROLES,
+            },
+          },
+        };
+      } else {
+        response = await api.post("/auth/login", data);
+      }
+
       const { access_token, user } = response.data;
 
       // Store token securely for client-side usage
@@ -135,6 +193,21 @@ export default function LoginPage() {
             </CardFooter>
           </form>
         </Card>
+
+        {IS_PROTOTYPE_MODE && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-center shadow-sm">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600">
+              ⚡ Prototype Mode — Data Contoh
+            </p>
+            <p className="mt-1 text-[11px] font-bold text-amber-800">
+              Demo: <span className="font-mono">{PROTOTYPE_EMAIL}</span> ·{" "}
+              <span className="font-mono">{PROTOTYPE_PASSWORD}</span>
+            </p>
+            <p className="mt-0.5 text-[9px] font-medium text-amber-600">
+              Bukan data operasional — hanya untuk presentasi / demo
+            </p>
+          </div>
+        )}
 
         <p className="text-center text-[11px] font-medium text-slate-400 tracking-tight uppercase">
           Powered by Nex Systems • V9.0
