@@ -1,4 +1,64 @@
+import {
+  marketingProjects,
+  marketingTasks,
+  marketingPerformance,
+} from "@/components/marketing/project-management-prototype-data";
+import {
+  marketingNotifications,
+  marketingReportInsights,
+  marketingSettings,
+  marketingProfiles,
+  marketingTeamSummary,
+} from "@/components/marketing/project-management-prototype-extra-data";
+
 export const MOCK_DATA: any = {
+  // ── MARKETING PROTOTYPE BUNDLE ───────────────────────────────
+  // Dipakai halaman Management Task (tab team/leaderboard/kpi/dll).
+  // Tanpa mock ini, query bundle resolve jadi [] → tab kosong.
+
+  "/marketing/prototype/bundle": () => {
+    const activeProjects = marketingProjects.filter((item: any) => item.status !== "Completed").length;
+    const openTasks = marketingTasks.filter((item: any) => !["Done", "Cancelled"].includes(item.status)).length;
+    const waitingApproval = marketingTasks.filter((item: any) => item.status === "Waiting Approval").length;
+    const averageKpi = Math.round(
+      marketingPerformance.reduce((sum: number, item: any) => sum + item.overallKpi, 0) /
+        Math.max(marketingPerformance.length, 1),
+    );
+    return {
+      summary: { activeProjects, openTasks, waitingApproval, averageKpi },
+      projects: marketingProjects,
+      tasks: marketingTasks,
+      performance: marketingPerformance,
+      notifications: marketingNotifications,
+      settings: {
+        weights: {
+          completion: marketingSettings[0]?.value ?? 40,
+          discipline: marketingSettings[1]?.value ?? 30,
+          quality: marketingSettings[2]?.value ?? 15,
+          productivity: marketingSettings[3]?.value ?? 15,
+        },
+        workingHours: { start: "08:00", end: "17:00", days: ["Mon", "Tue", "Wed", "Thu", "Fri"] },
+      },
+      profiles: marketingProfiles,
+      insights: marketingReportInsights,
+      reports: {
+        averageKpi: marketingTeamSummary.averageKpi,
+        teamSize: marketingTeamSummary.totalMembers,
+        kpiHistory: marketingPerformance.map((member: any) => ({
+          name: member.name,
+          history: [
+            { period: "W1", kpi: Math.max(member.overallKpi - 8, 0), discipline: Math.max(member.disciplineScore - 6, 0) },
+            { period: "W2", kpi: Math.max(member.overallKpi - 4, 0), discipline: Math.max(member.disciplineScore - 3, 0) },
+            { period: "W3", kpi: Math.max(member.overallKpi - 1, 0), discipline: Math.max(member.disciplineScore - 1, 0) },
+            { period: "W4", kpi: Math.min(member.overallKpi + 2, 100), discipline: Math.min(member.disciplineScore + 2, 100) },
+            { period: "W5", kpi: Math.min(member.overallKpi + 4, 100), discipline: Math.min(member.disciplineScore + 4, 100) },
+            { period: "W6", kpi: member.overallKpi, discipline: member.disciplineScore },
+          ],
+        })),
+      },
+    };
+  },
+
   // ── BUSSDEV ──────────────────────────────────────────────────
 
   "/bussdev/dashboard": () => ({
@@ -155,11 +215,11 @@ export const MOCK_DATA: any = {
   }),
 
   "/finance/invoices": () => [
-    { id: "INV-001", invoiceNumber: "INV-2026-0001", category: "RECEIVABLE", clientName: "PT Natural Beauty", amountDue: 500000000, outstandingAmount: 0, status: "PAID", dueDate: "2026-06-15", createdAt: "2026-05-01" },
-    { id: "INV-002", invoiceNumber: "INV-2026-0002", category: "RECEIVABLE", clientName: "PT Sejahtera Abadi", amountDue: 150000000, outstandingAmount: 75000000, status: "PARTIAL", dueDate: "2026-06-20", createdAt: "2026-05-05" },
-    { id: "INV-003", invoiceNumber: "INV-2026-0003", category: "PAYABLE", supplierName: "PT Bahan Baku", amountDue: 340000000, outstandingAmount: 340000000, status: "UNPAID", dueDate: "2026-06-10", createdAt: "2026-05-10" },
-    { id: "INV-004", invoiceNumber: "INV-2026-0004", category: "RECEIVABLE", clientName: "PT Luxcare Indonesia", amountDue: 350000000, outstandingAmount: 350000000, status: "UNPAID", dueDate: "2026-07-01", createdAt: "2026-05-15" },
-    { id: "INV-005", invoiceNumber: "INV-2026-0005", category: "PAYABLE", supplierName: "CV Kemasan Indah", amountDue: 120000000, outstandingAmount: 120000000, status: "UNPAID", dueDate: "2026-06-25", createdAt: "2026-05-18" },
+    { id: "INV-001", invoiceNumber: "INV-2026-0001", kode: "INV-2026-0001", category: "RECEIVABLE", type: "RECEIVABLE", clientName: "PT Natural Beauty", customerName: "PT Natural Beauty", customer: "PT Natural Beauty", pelanggan: "PT Natural Beauty", amountDue: 500000000, totalAmount: 500000000, amount: 500000000, outstandingAmount: 0, remainingAmount: 0, paidAmount: 500000000, sisa: 0, status: "PAID", dueDate: "2026-06-15", tanggal: "2026-06-15", createdAt: "2026-05-01", produk: "Brightening Serum", source: "PENJUALAN" },
+    { id: "INV-002", invoiceNumber: "INV-2026-0002", kode: "INV-2026-0002", category: "RECEIVABLE", type: "RECEIVABLE", clientName: "PT Sejahtera Abadi", customerName: "PT Sejahtera Abadi", customer: "PT Sejahtera Abadi", pelanggan: "PT Sejahtera Abadi", amountDue: 150000000, totalAmount: 150000000, amount: 150000000, outstandingAmount: 75000000, remainingAmount: 75000000, paidAmount: 75000000, sisa: 75000000, status: "PARTIAL", dueDate: "2026-06-20", tanggal: "2026-06-20", createdAt: "2026-05-05", produk: "Moisturizer Green", source: "PENJUALAN" },
+    { id: "INV-003", invoiceNumber: "INV-2026-0003", kode: "INV-2026-0003", category: "PAYABLE", type: "PAYABLE", clientName: "PT Bahan Baku", customerName: "PT Bahan Baku", customer: "PT Bahan Baku", pelanggan: "PT Bahan Baku", amountDue: 340000000, totalAmount: 340000000, amount: 340000000, outstandingAmount: 340000000, remainingAmount: 340000000, paidAmount: 0, sisa: 340000000, status: "UNPAID", dueDate: "2026-06-10", tanggal: "2026-06-10", createdAt: "2026-05-10", produk: "Niacinamide", source: "PEMBELIAN" },
+    { id: "INV-004", invoiceNumber: "INV-2026-0004", kode: "INV-2026-0004", category: "RECEIVABLE", type: "RECEIVABLE", clientName: "PT Luxcare Indonesia", customerName: "PT Luxcare Indonesia", customer: "PT Luxcare Indonesia", pelanggan: "PT Luxcare Indonesia", amountDue: 350000000, totalAmount: 350000000, amount: 350000000, outstandingAmount: 350000000, remainingAmount: 350000000, paidAmount: 0, sisa: 350000000, status: "UNPAID", dueDate: "2026-07-01", tanggal: "2026-07-01", createdAt: "2026-05-15", produk: "Body Lotion SPF", source: "PENJUALAN" },
+    { id: "INV-005", invoiceNumber: "INV-2026-0005", kode: "INV-2026-0005", category: "PAYABLE", type: "PAYABLE", clientName: "CV Kemasan Indah", customerName: "CV Kemasan Indah", customer: "CV Kemasan Indah", pelanggan: "CV Kemasan Indah", amountDue: 120000000, totalAmount: 120000000, amount: 120000000, outstandingAmount: 120000000, remainingAmount: 120000000, paidAmount: 0, sisa: 120000000, status: "UNPAID", dueDate: "2026-06-25", tanggal: "2026-06-25", createdAt: "2026-05-18", produk: "Botol Kaca 30ml", source: "PEMBELIAN" },
   ],
 
 
@@ -275,13 +335,6 @@ export const MOCK_DATA: any = {
   ],
 
 
-  "/scm/purchase-requests": () => [
-    { id: "PR-001", prNumber: "PR-2026-0001", priority: "HIGH", status: "PENDING_APPROVAL_SCM", items: [{ material: { name: "Niacinamide" }, qtyRequired: 200, estimatedPrice: 250000 }], createdAt: "2026-05-20", notes: "Auto-PR: Stock shortage detected" },
-    { id: "PR-002", prNumber: "PR-2026-0002", priority: "MEDIUM", status: "APPROVED", items: [{ material: { name: "Glycerin" }, qtyRequired: 500, estimatedPrice: 45000 }], createdAt: "2026-05-18", notes: "Routine restock" },
-    { id: "PR-003", prNumber: "PR-2026-0003", priority: "HIGH", status: "PENDING_APPROVAL_DIRECTOR", items: [{ material: { name: "Botol Kaca 30ml" }, qtyRequired: 5000, estimatedPrice: 3200 }], createdAt: "2026-05-22", notes: "New product line" },
-  ],
-
-
   "/scm/materials": () => [
     { id: "M-001", name: "Niacinamide", unit: "kg", currentStock: 150, minStock: 100, unitPrice: 250000, category: "BAHAN BAKU" },
     { id: "M-002", name: "Glycerin", unit: "kg", currentStock: 320, minStock: 200, unitPrice: 45000, category: "BAHAN BAKU" },
@@ -302,10 +355,6 @@ export const MOCK_DATA: any = {
     { id: "WO-002", outboundNumber: "DO-2026-0002", status: "PACKING", shippedAt: null, items: [{ material: { name: "Moisturizer Green" }, qty: 500 }], destination: "CV Bumi Kosmetik" },
   ],
 
-
-  "/warehouse/adjustments": () => [
-    { id: "WA-001", type: "OPNAME", status: "APPROVED", createdAt: "2026-05-20", items: [{ material: { name: "Glycerin" }, qtySystem: 320, qtyActual: 315 }] },
-  ],
 
   // ── PRODUCTION ─────────────────────────────────────────────────
 
@@ -330,10 +379,10 @@ export const MOCK_DATA: any = {
   }),
 
   "/production/work-orders": () => [
-    { id: "WO-001", woNumber: "WO-2026-0001", product: "Brightening Serum", qty: 5000, status: "IN_PROGRESS", progress: 60, dueDate: "2026-05-25", picName: "Production A", lead: { brandName: "GlowNat" } },
-    { id: "WO-002", woNumber: "WO-2026-0002", product: "Moisturizer Green", qty: 3000, status: "MIXING", progress: 25, dueDate: "2026-05-28", picName: "Production B", lead: { brandName: "EarthGlow" } },
-    { id: "WO-003", woNumber: "WO-2026-0003", product: "Face Wash Clean", qty: 10000, status: "PACKING", progress: 85, dueDate: "2026-05-24", picName: "Production A", lead: { brandName: "LuxGlow" } },
-    { id: "WO-004", woNumber: "WO-2026-0004", product: "Toner Glow", qty: 8000, status: "PLANNED", progress: 0, dueDate: "2026-06-01", picName: "Production C", lead: { brandName: "BioEssence" } },
+    { id: "WO-001", woNumber: "WO-2026-0001", batchNo: "BATCH-2026-0001", product: "Brightening Serum", qty: 5000, targetQty: 5000, status: "IN_PROGRESS", stage: "MIXING", progress: 60, dueDate: "2026-05-25", picName: "Production A", createdAt: "2026-05-10", lead: { brandName: "GlowNat", productInterest: "Serum" } },
+    { id: "WO-002", woNumber: "WO-2026-0002", batchNo: "BATCH-2026-0002", product: "Moisturizer Green", qty: 3000, targetQty: 3000, status: "MIXING", stage: "MIXING", progress: 25, dueDate: "2026-05-28", picName: "Production B", createdAt: "2026-05-12", lead: { brandName: "EarthGlow", productInterest: "Moisturizer" } },
+    { id: "WO-003", woNumber: "WO-2026-0003", batchNo: "BATCH-2026-0003", product: "Face Wash Clean", qty: 10000, targetQty: 10000, status: "PACKING", stage: "PACKING", progress: 85, dueDate: "2026-05-24", picName: "Production A", createdAt: "2026-05-08", lead: { brandName: "LuxGlow", productInterest: "Face Wash" } },
+    { id: "WO-004", woNumber: "WO-2026-0004", batchNo: "BATCH-2026-0004", product: "Toner Glow", qty: 8000, targetQty: 8000, status: "PLANNED", stage: "PLANNED", progress: 0, dueDate: "2026-06-01", picName: "Production C", createdAt: "2026-05-15", lead: { brandName: "BioEssence", productInterest: "Toner" } },
   ],
 
 
@@ -664,9 +713,22 @@ export const MOCK_DATA: any = {
   // ── MASTER DATA ────────────────────────────────────────────────
 
   "/master/customers": () => [
-    { id: "C-001", name: "PT Sejahtera Abadi", email: "info@sejahtera.com", phone: "021-5551001", city: "Jakarta", type: "CORPORATE", status: "ACTIVE" },
-    { id: "C-002", name: "CV Bumi Kosmetik", email: "info@bumi.com", phone: "022-5552002", city: "Bandung", type: "CORPORATE", status: "ACTIVE" },
-    { id: "C-003", name: "PT Natural Beauty", email: "info@naturalbeauty.com", phone: "031-5553003", city: "Surabaya", type: "CORPORATE", status: "ACTIVE" },
+    { id: "C-001", name: "PT Sejahtera Abadi", clientName: "PT Sejahtera Abadi", email: "info@sejahtera.com", phone: "021-5551001", city: "Jakarta", type: "CORPORATE", status: "ACTIVE" },
+    { id: "C-002", name: "CV Bumi Kosmetik", clientName: "CV Bumi Kosmetik", email: "info@bumi.com", phone: "022-5552002", city: "Bandung", type: "CORPORATE", status: "ACTIVE" },
+    { id: "C-003", name: "PT Natural Beauty", clientName: "PT Natural Beauty", email: "info@naturalbeauty.com", phone: "031-5553003", city: "Surabaya", type: "CORPORATE", status: "ACTIVE" },
+    { id: "C-004", name: "PT Luxcare Indonesia", clientName: "PT Luxcare Indonesia", email: "info@luxcare.com", phone: "021-5554004", city: "Tangerang", type: "CORPORATE", status: "ACTIVE" },
+    { id: "C-005", name: "PT Indo Beauty", clientName: "PT Indo Beauty", email: "info@indobeauty.com", phone: "031-5555005", city: "Surabaya", type: "CORPORATE", status: "INACTIVE" },
+  ],
+
+  "/master/categories": () => [
+    { id: "CAT-001", name: "CORPORATE", type: "CUSTOMER", status: "ACTIVE" },
+    { id: "CAT-002", name: "RETAIL", type: "CUSTOMER", status: "ACTIVE" },
+    { id: "CAT-003", name: "DISTRIBUTOR", type: "CUSTOMER", status: "ACTIVE" },
+    { id: "CAT-004", name: "BAHAN BAKU", type: "GOODS", status: "ACTIVE" },
+    { id: "CAT-005", name: "KEMASAN", type: "GOODS", status: "ACTIVE" },
+    { id: "CAT-006", name: "BAHAN PENUNJANG", type: "GOODS", status: "ACTIVE" },
+    { id: "CAT-007", name: "RAW_MATERIAL", type: "SUPPLIER", status: "ACTIVE" },
+    { id: "CAT-008", name: "PACKAGING", type: "SUPPLIER", status: "ACTIVE" },
   ],
 
   "/master/suppliers": () => [
@@ -706,10 +768,44 @@ export const MOCK_DATA: any = {
   // ── SALES ORDERS ─────────────────────────────────────────────────
 
   "/commercial/sales-orders": () => [
-    { id: "SO-001", orderNumber: "SO-2026-0001", brandName: "GlowNat", totalAmount: 150000000, quantity: 5000, status: "LOCKED_ACTIVE", clientName: "PT Sejahtera Abadi", createdAt: "2026-05-10" },
-    { id: "SO-002", orderNumber: "SO-2026-0002", brandName: "BioEssence", totalAmount: 500000000, quantity: 20000, status: "PENDING_DP", clientName: "PT Natural Beauty", createdAt: "2026-05-15" },
-    { id: "SO-003", orderNumber: "SO-2026-0003", brandName: "LuxGlow", totalAmount: 350000000, quantity: 15000, status: "COMPLETED", clientName: "PT Luxcare Indonesia", createdAt: "2026-05-05" },
+    { id: "SO-001", orderNumber: "SO-2026-0001", brandName: "GlowNat", totalAmount: 150000000, quantity: 5000, status: "LOCKED_ACTIVE", clientName: "PT Sejahtera Abadi", createdAt: "2026-05-10", invoices: [{ id: "INV-001", invoiceNumber: "INV-2026-0001", status: "PAID", amount: 150000000 }] },
+    { id: "SO-002", orderNumber: "SO-2026-0002", brandName: "BioEssence", totalAmount: 500000000, quantity: 20000, status: "PENDING_DP", clientName: "PT Natural Beauty", createdAt: "2026-05-15", invoices: [{ id: "INV-004", invoiceNumber: "INV-2026-0004", status: "UNPAID", amount: 500000000 }] },
+    { id: "SO-003", orderNumber: "SO-2026-0003", brandName: "LuxGlow", totalAmount: 350000000, quantity: 15000, status: "COMPLETED", clientName: "PT Luxcare Indonesia", createdAt: "2026-05-05", invoices: [] },
   ],
+
+  "/analytics/executive": () => ({
+    acquisition: { revenue_mtd: 3240000000, target: 4000000000, revenue: 3240000000, deal: 12, avg: 78000000 },
+    funnel: { leads: 1284, samples: 276, closing: 15.2, closing_rate: 15.2 },
+    budget: { total: 1248000000, budget: 1500000000, cost: 97352, cpl: 97352, total_spend: 1248000000, budget_limit: 1500000000, cost_per_sample: 315000 },
+    trends: [
+      { month: "Jan", leads: 74, cpl: 92, closing: 44 },
+      { month: "Feb", leads: 81, cpl: 89, closing: 48 },
+      { month: "Mar", leads: 88, cpl: 85, closing: 55 },
+      { month: "Apr", leads: 95, cpl: 84, closing: 62 },
+      { month: "May", leads: 102, cpl: 79, closing: 66 },
+      { month: "Jun", leads: 108, cpl: 76, closing: 72 },
+    ],
+    content: [
+      { id: "CT-1", title: "Retinol Reels Launch", category: "REELS", engagement: 6.8, engagement_rate: 6.8, views: 24000 },
+      { id: "CT-2", title: "Behind The Brand Story", category: "REELS", engagement: 6.1, engagement_rate: 6.1, views: 18500 },
+      { id: "CT-3", title: "Packaging Before After", category: "CAROUSEL", engagement: 5.7, engagement_rate: 5.7, views: 15200 },
+    ],
+    lead_ranking: [
+      { source: "Meta Ads", count: 428 },
+      { source: "TikTok Ads", count: 311 },
+      { source: "Google Organic", count: 222 },
+      { source: "Instagram Organic", count: 176 },
+      { source: "Referral", count: 89 },
+    ],
+    vitality: { followers: 184200, growth: 4.8, total: 18, total_likes: 24800, total_comments: 2140, total_shares: 3890, total_saves: 4620 },
+    platform: { name: "INSTAGRAM", followers: "98.4K", growth: "+4.8%" },
+    platform_audit: [
+      { platform: "Instagram", spend: 4800000, leads: 428, cpl: 11215, cpc: 890 },
+      { platform: "TikTok", spend: 2900000, leads: 311, cpl: 9325, cpc: 760 },
+      { platform: "Google", spend: 3200000, leads: 222, cpl: 14414, cpc: 1050 },
+      { platform: "Meta", spend: 1580000, leads: 176, cpl: 8977, cpc: 640 },
+    ],
+  }),
 
   // ── SYSTEM ──────────────────────────────────────────────────────
 
@@ -719,15 +815,635 @@ export const MOCK_DATA: any = {
     { id: "AL-003", action: "PAYMENT_VERIFIED", userId: "finance", timestamp: "2026-05-22T09:15:00Z", details: "DP verified for L-003" },
   ],
 
-  // ── CATCH-ALL ──────────────────────────────────────────────────
+  // ── FINANCE REPORTS ───────────────────────────────────────────
 
-  default: () => ({
-    message: "Mock data active",
-    data: [],
-    total: 0,
-    success: true,
+  "/finance/reports/balance-sheet": () => ({
+    assets: {
+      total: 4280000000,
+      currentAssets: 2350000000,
+      fixedAssets: 1930000000,
+      isBalanced: true,
+      items: [
+        { id: "A-1", parentId: null, code: "1101", name: "Kas & Bank", reportGroup: "AKTIVA_LANCAR", amount: 850000000 },
+        { id: "A-2", parentId: null, code: "1102", name: "Piutang Usaha", reportGroup: "AKTIVA_LANCAR", amount: 680000000 },
+        { id: "A-3", parentId: null, code: "1103", name: "Persediaan", reportGroup: "AKTIVA_LANCAR", amount: 820000000 },
+        { id: "A-4", parentId: null, code: "1201", name: "Aset Tetap", reportGroup: "AKTIVA_TETAP", amount: 1930000000 },
+      ],
+    },
+    liabilities: {
+      total: 1740000000,
+      isBalanced: true,
+      items: [
+        { id: "L-1", parentId: null, code: "2101", name: "Hutang Usaha", reportGroup: "KEWAJIBAN_JANGKA_PENDEK", amount: 940000000 },
+        { id: "L-2", parentId: null, code: "2102", name: "Hutang Bank", reportGroup: "KEWAJIBAN_JANGKA_PANJANG", amount: 800000000 },
+      ],
+    },
+    equity: { total: 2540000000, isBalanced: true, items: [{ id: "E-1", parentId: null, code: "3101", name: "Modal", reportGroup: "MODAL", amount: 2540000000 }] },
+    totalLiabilitiesAndEquity: 4280000000,
+    isBalanced: true,
   }),
+
+  "/finance/reports/trial-balance/detailed": () => ({
+    data: [
+      { accountCode: "1101", accountName: "Kas Utama", akhirDebit: 850000000, akhirCredit: 0, debit: 850000000, credit: 0 },
+      { accountCode: "1102", accountName: "Bank BCA", akhirDebit: 420000000, akhirCredit: 0, debit: 420000000, credit: 0 },
+      { accountCode: "1201", accountName: "Piutang Usaha", akhirDebit: 680000000, akhirCredit: 0, debit: 680000000, credit: 0 },
+      { accountCode: "1301", accountName: "Persediaan", akhirDebit: 820000000, akhirCredit: 0, debit: 820000000, credit: 0 },
+      { accountCode: "2101", accountName: "Hutang Usaha", akhirDebit: 0, akhirCredit: 940000000, debit: 0, credit: 940000000 },
+      { accountCode: "3101", accountName: "Modal", akhirDebit: 0, akhirCredit: 2540000000, debit: 0, credit: 2540000000 },
+    ],
+    totals: { akhirDebit: 2770000000, akhirCredit: 3480000000 },
+    isBalanced: false,
+  }),
+
+  "/finance/reports/general-ledger": () => ({
+    account: { id: "ACC-001", code: "1101", name: "Kas Utama", normalBalance: "DEBIT", type: "AKTIVA" },
+    beginningBalance: 50000000,
+    endingBalance: 850000000,
+    transactions: [
+      { id: "GL-1", date: "2026-05-01", description: "Setoran modal awal", debit: 50000000, credit: 0 },
+      { id: "GL-2", date: "2026-05-10", description: "Penerimaan DP PT Natural Beauty", debit: 250000000, credit: 0 },
+      { id: "GL-3", date: "2026-05-15", description: "Pembelian bahan baku", debit: 0, credit: 120000000 },
+      { id: "GL-4", date: "2026-05-20", description: "Pelunasan piutang PT Sejahtera", debit: 75000000, credit: 0 },
+    ],
+  }),
+
+  "/finance/reports/project-budgeting": () => ({
+    totalBudget: 1500000000,
+    totalSpent: 980000000,
+    remaining: 520000000,
+    projects: [
+      { id: "PJ-1", name: "Launch GlowNat Serum", budget: 500000000, spent: 320000000, status: "ON_TRACK" },
+      { id: "PJ-2", name: "Rebranding EarthGlow", budget: 400000000, spent: 410000000, status: "OVER_BUDGET" },
+      { id: "PJ-3", name: "Marketing Q3", budget: 600000000, spent: 250000000, status: "ON_TRACK" },
+    ],
+  }),
+
+  "/finance/reports/profit-loss": () => ({
+    operatingRevenue: { total: 3240000000, items: [{ id: "R-1", name: "Penjualan Maklon", amount: 1850000000 }, { id: "R-2", name: "Penjualan Branded", amount: 950000000 }, { id: "R-3", name: "Repeat Order", amount: 440000000 }] },
+    otherIncome: { total: 50000000, items: [{ id: "OI-1", name: "Pendapatan Lain-lain", amount: 50000000 }] },
+    cogs: { total: 1750000000, items: [{ id: "C-1", name: "Bahan Baku", amount: 1250000000 }, { id: "C-2", name: "Kemasan", amount: 350000000 }, { id: "C-3", name: "Tenaga Kerja Produksi", amount: 150000000 }] },
+    operatingExpenses: { total: 550000000, items: [{ id: "E-1", name: "Gaji & Tunjangan", amount: 350000000 }, { id: "E-2", name: "Operasional Kantor", amount: 120000000 }, { id: "E-3", name: "Marketing", amount: 80000000 }] },
+    otherExpenses: { total: 30000000, items: [{ id: "OE-1", name: "Beban Lain-lain", amount: 30000000 }] },
+    grossProfit: 1490000000,
+    operatingIncome: 940000000,
+    netProfit: 940000000,
+  }),
+
+  // ── FINANCE LANGSUNG ──────────────────────────────────────────
+
+  "/finance/accounts": () => [
+    { id: "ACC-001", accountCode: "1101", accountName: "Kas Utama", type: "ASSET", balance: 850000000, category: "CURRENT_ASSET" },
+    { id: "ACC-002", accountCode: "1102", accountName: "Bank BCA", type: "ASSET", balance: 420000000, category: "CURRENT_ASSET" },
+    { id: "ACC-003", accountCode: "2101", accountName: "Hutang Usaha", type: "LIABILITY", balance: 940000000, category: "CURRENT_LIABILITY" },
+    { id: "ACC-004", accountCode: "4101", accountName: "Pendapatan Penjualan", type: "REVENUE", balance: 3240000000, category: "REVENUE" },
+  ],
+
+  "/finance/coa": () => [
+    { id: "COA-001", code: "1101", name: "Kas Utama", type: "AKTIVA", parent: null },
+    { id: "COA-002", code: "1102", name: "Bank BCA", type: "AKTIVA", parent: null },
+    { id: "COA-003", code: "2101", name: "Hutang Usaha", type: "KEWAJIBAN", parent: null },
+    { id: "COA-004", code: "4101", name: "Pendapatan Penjualan", type: "PENDAPATAN", parent: null },
+  ],
+
+  "/finance/bills": () => [
+    { id: "BILL-001", billNumber: "BL-2026-0001", supplier: "PT Bahan Baku", amount: 340000000, status: "UNPAID", dueDate: "2026-06-10", category: "PAYABLE" },
+    { id: "BILL-002", billNumber: "BL-2026-0002", supplier: "CV Kemasan Indah", amount: 120000000, status: "PARTIAL", dueDate: "2026-06-25", category: "PAYABLE" },
+  ],
+
+  "/finance/fund-requests": () => [
+    { id: "FR-001", requestNumber: "FR-2026-0001", requester: "Rina", department: "QC", purpose: "Pembelian reagen lab", amount: 25000000, status: "PENDING", createdAt: "2026-05-20" },
+    { id: "FR-002", requestNumber: "FR-2026-0002", requester: "Bagus", department: "SCM", purpose: "DP supplier kemasan", amount: 48000000, status: "APPROVED", createdAt: "2026-05-18" },
+  ],
+
+  "/finance/journal": () => [
+    { id: "JRN-001", journalNumber: "JR-2026-0001", date: "2026-05-22", description: "Penerimaan DP PT Natural Beauty", accountCode: "1101", debit: 250000000, credit: 0, lines: [{ account: { code: "1101", name: "Kas Utama" }, debit: 250000000, credit: 0 }, { account: { code: "4101", name: "Pendapatan" }, debit: 0, credit: 250000000 }] },
+    { id: "JRN-002", journalNumber: "JR-2026-0002", date: "2026-05-21", description: "Pembelian bahan baku", accountCode: "5101", debit: 120000000, credit: 0, lines: [{ account: { code: "5101", name: "Biaya Bahan Baku" }, debit: 120000000, credit: 0 }, { account: { code: "1101", name: "Kas Utama" }, debit: 0, credit: 120000000 }] },
+    { id: "JRN-003", journalNumber: "JR-2026-0003", date: "2026-05-20", description: "Penerimaan pelunasan PT Sejahtera", accountCode: "1101", debit: 75000000, credit: 0, lines: [{ account: { code: "1101", name: "Kas Utama" }, debit: 75000000, credit: 0 }, { account: { code: "1201", name: "Piutang Usaha" }, debit: 0, credit: 75000000 }] },
+    { id: "JRN-004", journalNumber: "JR-2026-0004", date: "2026-05-18", description: "Pembayaran gaji karyawan", accountCode: "5102", debit: 85000000, credit: 0, lines: [{ account: { code: "5102", name: "Biaya Gaji" }, debit: 85000000, credit: 0 }, { account: { code: "1101", name: "Kas Utama" }, debit: 0, credit: 85000000 }] },
+  ],
+
+  "/finance/journals": () => [
+    { id: "JRN-001", journalNumber: "JR-2026-0001", date: "2026-05-22", description: "Penerimaan DP PT Natural Beauty", entries: [{ accountCode: "1101", debit: 250000000, credit: 0 }] },
+    { id: "JRN-002", journalNumber: "JR-2026-0002", date: "2026-05-21", description: "Pembelian bahan baku", entries: [{ accountCode: "5101", debit: 120000000, credit: 0 }] },
+  ],
+
+  "/finance/cogs-requests": () => [
+    { id: "COGS-001", requestNumber: "COGS-2026-0001", product: "Brightening Serum", qty: 5000, unitCost: 18000, totalCost: 90000000, status: "PENDING" },
+    { id: "COGS-002", requestNumber: "COGS-2026-0002", product: "Moisturizer Green", qty: 3000, unitCost: 21000, totalCost: 63000000, status: "APPROVED" },
+  ],
+
+  // ── BUSSDEV LANJUTAN ──────────────────────────────────────────
+
+  "/bussdev/sales-returns": () => [
+    { id: "SR-001", returnNumber: "SR-2026-0001", client: "PT Sejahtera Abadi", brand: "GlowNat", qty: 120, reason: "Produk rusak", status: "PENDING", total: 5400000 },
+  ],
+
+  "/bussdev/sales-targets": () => [
+    { id: "ST-001", period: "2026-05", target: 3500000000, achieved: 3240000000, achievement: 92.6 },
+    { id: "ST-002", period: "2026-06", target: 4000000000, achieved: 0, achievement: 0 },
+  ],
+
+  "/bussdev/samples": () => [
+    { id: "SMP-001", noSample: "SS-202606-0001", client: "PT Sejahtera Abadi", brand: "GlowNat", product: "Serum Brightening", status: "APPROVED", date: "2026-06-01" },
+    { id: "SMP-002", noSample: "SS-202606-0002", client: "CV Bumi Kosmetik", brand: "EarthGlow", product: "Moisturizer", status: "QUEUE", date: "2026-06-03" },
+  ],
+
+  "/bussdev/lead": () => [
+    { id: "L-001", clientName: "PT Sejahtera Abadi", brandName: "GlowNat", productInterest: "Serum", estimatedValue: 150000000, status: "SAMPLE_APPROVED", stage: "SAMPLE_APPROVED", picName: "Andi Pratama", moq: 5000, unitPrice: 45000, notes: "" },
+    { id: "L-002", clientName: "CV Bumi Kosmetik", brandName: "EarthGlow", productInterest: "Moisturizer", estimatedValue: 250000000, status: "NEGOTIATION", stage: "NEGOTIATION", picName: "Citra Kirana", moq: 10000, unitPrice: 35000, notes: "" },
+  ],
+
+  // ── LEGALITY ──────────────────────────────────────────────────
+
+  "/legality/inbox/tasks": () => [
+    { id: "LK-001", taskType: "FORMULA_VALIDATION", pipelineId: "PPL-2026-0001", brand: "GlowNat", product: "Serum Brightening", status: "PENDING", priority: "HIGH", category: "BPOM", requester: "R&D", createdAt: "2026-05-20T09:00:00Z", updatedAt: "2026-05-20T09:00:00Z" },
+    { id: "LK-002", taskType: "ARTWORK_REVIEW", pipelineId: "PPL-2026-0002", brand: "EarthGlow", product: "Moisturizer", status: "PENDING", priority: "MEDIUM", category: "HALAL", requester: "Creative", createdAt: "2026-05-19T14:30:00Z", updatedAt: "2026-05-19T14:30:00Z" },
+    { id: "LK-003", taskType: "HKI_CHECK", pipelineId: "PPL-2026-0003", brand: "BioEssence", product: "Toner", status: "PENDING", priority: "LOW", category: "HKI", requester: "R&D", createdAt: "2026-05-18T10:15:00Z", updatedAt: "2026-05-18T10:15:00Z" },
+  ],
+
+  "/legality/apj-releases": () => [
+    { id: "APJ-001", apjNumber: "APJ-2026-0001", brand: "GlowNat", product: "Serum Brightening", status: "RELEASED", date: "2026-05-15", pic: "Amira" },
+    { id: "APJ-002", apjNumber: "APJ-2026-0002", brand: "EarthGlow", product: "Moisturizer", status: "DRAFT", date: "", pic: "Amira" },
+  ],
+
+  "/legality/ckpb-audits": () => [
+    { id: "CK-001", auditNumber: "CKPB-2026-0001", brand: "GlowNat", status: "PASS", date: "2026-05-10", inspector: "Legal" },
+  ],
+
+  "/legality/permits": () => [
+    { id: "PRM-001", permitNumber: "PRM-2026-0001", type: "BPOM", brand: "GlowNat", status: "ACTIVE", expiry: "2028-05-01" },
+    { id: "PRM-002", permitNumber: "PRM-2026-0002", type: "HALAL", brand: "GlowNat", status: "PENDING", expiry: "" },
+  ],
+
+  "/legality/hki": () => [
+    { id: "HKI-001", hkiNumber: "HKI-2026-0001", brand: "GlowNat", type: "MEREK", status: "PUBLISHED", date: "2026-04-20", pic: { name: "Legal", role: "Legal Officer" } },
+    { id: "HKI-002", hkiNumber: "HKI-2026-0002", brand: "EarthGlow", type: "MEREK", status: "EVALUATION", date: "2026-05-01", pic: { name: "Legal", role: "Legal Officer" } },
+  ],
+
+  "/legality/bpom": () => [
+    { id: "BP-001", bpomNumber: "BPOM-2026-0001", product: "Serum Brightening", brand: "GlowNat", status: "PUBLISHED", date: "2026-03-15", pic: { name: "Legal", role: "Legal Officer" } },
+  ],
+
+  "/legality/halal": () => [
+    { id: "HL-001", halalNumber: "HL-2026-0001", product: "Serum Brightening", brand: "GlowNat", status: "PENDING", date: "2026-05-01", pic: { name: "Legal", role: "Legal Officer" } },
+  ],
+
+  "/legality/master-inci": () => [
+    { id: "INCI-001", inciName: "Niacinamide", function: "Skin Conditioning", casNo: "59-67-6", status: "APPROVED" },
+    { id: "INCI-002", inciName: "Glycerin", function: "Humectant", casNo: "56-81-5", status: "APPROVED" },
+  ],
+
+  "/legality/records": () => [
+    { id: "REC-001", recordNumber: "REC-2026-0001", type: "BPOM", brand: "GlowNat", status: "ACTIVE", date: "2026-03-15" },
+    { id: "REC-002", recordNumber: "REC-2026-0002", type: "HALAL", brand: "EarthGlow", status: "EXPIRED", date: "2026-01-01" },
+  ],
+
+  // ── RND ───────────────────────────────────────────────────────
+
+  "/rnd/inbox": () => [
+    { id: "RB-001", noNpf: "SS-202606-0001", projectSample: "Serum Brightening", pic: "Panca", status: "PENDING", date: "2026-06-01" },
+    { id: "RB-002", noNpf: "SS-202606-0002", projectSample: "Moisturizer Plumpy", pic: "Yaya", status: "IN_PROGRESS", date: "2026-06-02" },
+  ],
+
+  "/rnd/lab-test-results": () => [
+    { id: "LT-001", formulaId: "F-001", sampleName: "Serum Brightening", testType: "pH", result: "5.5", status: "PASS", date: "2026-05-20" },
+    { id: "LT-002", formulaId: "F-002", sampleName: "Moisturizer", testType: "Viskositas", result: "12.400 cps", status: "PASS", date: "2026-05-19" },
+  ],
+
+  "/rnd/revisions": () => [
+    { id: "RV-001", revisionNumber: "RV-2026-0001", formulaId: "F-001", sampleCode: "SMP-001", productName: "Serum Brightening", reason: "Viskositas berubah", status: "IN_PROGRESS", revisionStatus: "IN_PROGRESS", formulas: [{ id: "F-001", version: 2 }], createdBy: "Panca", date: "2026-05-18", latestRevisionDate: "2026-05-18", completedAt: null },
+    { id: "RV-002", revisionNumber: "RV-2026-0002", formulaId: "F-003", sampleCode: "SMP-002", productName: "Moisturizer Green", reason: "Peningkatan aroma", status: "DONE", revisionStatus: "DONE", formulas: [{ id: "F-003", version: 1 }], createdBy: "Yaya", date: "2026-05-15", latestRevisionDate: "2026-05-15", completedAt: "2026-05-16" },
+    { id: "RV-003", revisionNumber: "RV-2026-0003", formulaId: "F-005", sampleCode: "SMP-003", productName: "Face Wash Clean", reason: "Penyesuaian pH", status: "NOT_STARTED", revisionStatus: "NOT_STARTED", formulas: [{ id: "F-005", version: 1 }], createdBy: "Amira", date: "2026-05-20", latestRevisionDate: "2026-05-20", completedAt: null },
+  ],
+
+  "/rnd/revisions/history": () => [
+    { id: "RV-001", revisionNumber: "RV-2026-0001", formulaId: "F-001", sampleCode: "SMP-001", productName: "Serum Brightening", reason: "Viskositas berubah", status: "DONE", revisionStatus: "DONE", formulas: [{ id: "F-001", version: 2 }], createdBy: "Panca", date: "2026-05-18", latestRevisionDate: "2026-05-18", completedAt: "2026-05-19", version: 2 },
+  ],
+
+  // ── SCM LANJUTAN ──────────────────────────────────────────────
+
+  "/scm/purchase-requests": () => [
+    { id: "PR-001", prNumber: "PR-2026-0001", requester: "Production", priority: "HIGH", warehouse: { id: "W-001", name: "Gudang Utama" }, items: [{ materialId: "M-001", materialName: "Niacinamide", material: { name: "Niacinamide" }, qty: 500, qtyRequired: 500, uom: "kg", estimatedPrice: 250000 }], status: "PENDING_APPROVAL_SCM", totalEstimate: 150000000, createdAt: "2026-05-20", notes: "Auto-PR: Stock shortage detected" },
+    { id: "PR-002", prNumber: "PR-2026-0002", requester: "Warehouse", priority: "MEDIUM", warehouse: { id: "W-001", name: "Gudang Utama" }, items: [{ materialId: "M-003", materialName: "Botol Kaca 30ml", material: { name: "Botol Kaca 30ml" }, qty: 2000, qtyRequired: 2000, uom: "pcs", estimatedPrice: 3200 }], status: "APPROVED", totalEstimate: 85000000, createdAt: "2026-05-18", notes: "Routine restock" },
+    { id: "PR-003", prNumber: "PR-2026-0003", requester: "Production", priority: "HIGH", warehouse: { id: "W-002", name: "Gudang Bahan Baku" }, items: [{ materialId: "M-002", materialName: "Glycerin", material: { name: "Glycerin" }, qty: 300, qtyRequired: 300, uom: "kg", estimatedPrice: 45000 }], status: "PENDING_APPROVAL_DIRECTOR", totalEstimate: 42000000, createdAt: "2026-05-22", notes: "New product line" },
+  ],
+
+  "/scm/goods-requirements": () => [
+    { id: "GR-001", material: "Niacinamide", required: 500, available: 120, shortage: 380, priority: "URGENT", date: "2026-05-20" },
+    { id: "GR-002", material: "Botol Kaca 30ml", required: 2000, available: 1500, shortage: 500, priority: "URGENT", date: "2026-05-20" },
+  ],
+
+  "/scm/purchase-returns": () => [
+    { id: "RTN-001", returnNumber: "RTN-2026-0001", supplier: "PT Bahan Baku", material: "Niacinamide", qty: 50, reason: "Kualitas tidak sesuai", status: "PENDING", date: "2026-05-19" },
+  ],
+
+  "/scm/inbounds": () => [
+    { id: "INB-001", receivingNumber: "RCV-2026-0001", poNumber: "PO-2026-0001", supplier: "PT Bahan Baku", status: "RECEIVED", date: "2026-05-18" },
+  ],
+
+  "/scm/vendors": () => [
+    { id: "V-001", name: "PT Bahan Baku Utama", category: "RAW_MATERIAL", rating: 4.5, onTimePct: 92, status: "ACTIVE" },
+    { id: "V-002", name: "CV Kemasan Indah", category: "PACKAGING", rating: 4.2, onTimePct: 88, status: "ACTIVE" },
+  ],
+
+  "/scm/requirements/summary": () => ({
+    totalItems: 12,
+    urgentItems: 4,
+    totalValue: 480000000,
+    rows: [
+      { material: "Niacinamide", qty: 380, uom: "kg", estValue: 190000000, priority: "URGENT" },
+      { material: "Botol Kaca 30ml", qty: 500, uom: "pcs", estValue: 12500000, priority: "URGENT" },
+    ],
+  }),
+
+  // ── WAREHOUSE LANJUTAN ────────────────────────────────────────
+
+  "/warehouse/adjustments": () => [
+    { id: "ADJ-001", adjustmentNumber: "ADJ-2026-0001", type: "OPNAME", material: "Niacinamide", materialName: "Niacinamide", qtyChange: -15, reason: "Penyusutan timbangan", status: "PENDING", createdAt: "2026-05-20", items: [{ material: { name: "Niacinamide" }, qtySystem: 120, qtyActual: 105 }] },
+    { id: "ADJ-002", adjustmentNumber: "ADJ-2026-0002", type: "KOREKSI", material: "Botol Kaca 30ml", materialName: "Botol Kaca 30ml", qtyChange: 200, reason: "Koreksi stok masuk", status: "APPROVED", createdAt: "2026-05-18", items: [{ material: { name: "Botol Kaca 30ml" }, qtySystem: 1300, qtyActual: 1500 }] },
+  ],
+
+  "/warehouse/catalog": () => [
+    { id: "M-001", code: "M-001", name: "Niacinamide", category: "BAHAN BAKU", unit: "kg", stock: 120, minStock: 100, location: "A1-01" },
+    { id: "M-003", code: "M-003", name: "Botol Kaca 30ml", category: "KEMASAN", unit: "pcs", stock: 1500, minStock: 1000, location: "B2-03" },
+  ],
+
+  "/warehouse/locations": () => [
+    { id: "LOC-001", code: "A1-01", zone: "A", shelf: "1", bin: "01", type: "RAW_MATERIAL", capacity: 1000, used: 680 },
+    { id: "LOC-002", code: "B2-03", zone: "B", shelf: "2", bin: "03", type: "PACKAGING", capacity: 2000, used: 1500 },
+  ],
+
+  "/warehouse/warehouses": () => [
+    { id: "W-001", name: "Gudang Utama", location: "Jl. Raya Industri 1", manager: "Joko", capacity: 5000, used: 3200, status: "ACTIVE" },
+    { id: "W-002", name: "Gudang Bahan Baku", location: "Jl. Raya Industri 2", manager: "Joko", capacity: 2000, used: 1400, status: "ACTIVE" },
+  ],
+
+  "/warehouse/transfers": () => [
+    { id: "TRF-001", transferNumber: "TRF-2026-0001", material: "Niacinamide", fromWarehouse: "Gudang Utama", toWarehouse: "Gudang Bahan Baku", qty: 200, status: "PENDING", date: "2026-05-20" },
+  ],
+
+  "/warehouse/opname": () => [
+    { id: "OP-001", opnameNumber: "OP-2026-0001", material: "Niacinamide", systemQty: 120, actualQty: 118, difference: -2, status: "PENDING", date: "2026-05-21" },
+  ],
+
+  "/warehouse/release-requests": () => [
+    { id: "RL-001", releaseNumber: "RL-2026-0001", woNumber: "WO-2026-0001", material: "Niacinamide", qty: 500, status: "PENDING", date: "2026-05-20" },
+  ],
+
+  "/warehouse/inbounds": () => [
+    { id: "INB-001", receivingNumber: "RCV-2026-0001", poNumber: "PO-2026-0001", supplier: "PT Bahan Baku", status: "RECEIVED", date: "2026-05-18" },
+  ],
+
+  "/warehouse/stats": () => ({
+    totalSku: 1248,
+    totalStock: 48200,
+    lowStock: 7,
+    expiredSoon: 3,
+    accuracy: 98.4,
+    warehouseCount: 2,
+  }),
+
+  // ── PRODUCTION LANJUTAN ───────────────────────────────────────
+
+  "/production-plans": () => [
+    { id: "PP-001", batch_no: "BATCH-2026-0001", status: "READY", wo_id: "WO-2026-0001", so: { lead: { client_name: "PT Sejahtera Abadi", brand_name: "GlowNat" } }, stepLogs: [{ id: "SL-001", stage: "BATCHING", qty_result: 100, qcAudits: [{ status: "PASS" }] }] },
+    { id: "PP-002", batch_no: "BATCH-2026-0002", status: "ON_PROGRESS", wo_id: "WO-2026-0002", so: { lead: { client_name: "PT Natural Beauty", brand_name: "BioEssence" } }, stepLogs: [{ id: "SL-002", stage: "MIXING", qty_result: 250, qcAudits: [{ status: "PASS" }] }] },
+    { id: "PP-003", batch_no: "BATCH-2026-0003", status: "READY", wo_id: "WO-2026-0003", so: { lead: { client_name: "PT Luxcare", brand_name: "LuxGlow" } }, stepLogs: [{ id: "SL-003", stage: "BATCHING", qty_result: 0, qcAudits: [] }] },
+  ],
+
+  "/production/batch-records": () => [
+    { id: "BR-001", batchNo: "BATCH-2026-0001", product: "Serum Brightening", qty: 5000, targetQty: 5000, status: "COMPLETED", stage: "PACKING", date: "2026-05-15", pic: "Panca", lead: { brandName: "GlowNat", productInterest: "Serum" } },
+    { id: "BR-002", batchNo: "BATCH-2026-0002", product: "Moisturizer Green", qty: 3000, targetQty: 3000, status: "IN_PROGRESS", stage: "MIXING", date: "2026-05-20", pic: "Yaya", lead: { brandName: "EarthGlow", productInterest: "Moisturizer" } },
+    { id: "BR-003", batchNo: "BATCH-2026-0003", product: "Face Wash Clean", qty: 10000, targetQty: 10000, status: "COMPLETED", stage: "PACKING", date: "2026-05-12", pic: "Panca", lead: { brandName: "LuxGlow", productInterest: "Face Wash" } },
+  ],
+
+  "/production/audit": () => [
+    { id: "PRDA-001", auditNumber: "PRD-2026-0001", batchNo: "BATCH-2026-0001", action: "FORMULA_CHECK", status: "PASS", date: "2026-05-15" },
+  ],
+
+  "/production/formula-adjustments": () => [
+    { id: "FA-001", formulaId: "F-001", product: "Serum Brightening", adjustment: "+2% Niacinamide", reason: "Efektivitas", status: "PENDING", date: "2026-05-18" },
+  ],
+
+  "/production/machines": () => [
+    { id: "MC-001", name: "Mixing Tank 500L", status: "OPERATIONAL", utilization: 82, lastMaintenance: "2026-04-20" },
+    { id: "MC-002", name: "Filling Line A", status: "OPERATIONAL", utilization: 91, lastMaintenance: "2026-05-01" },
+  ],
+
+  "/production/requisitions": () => [
+    { id: "PRQ-001", requisitionNumber: "REQ-2026-0001", material: "Niacinamide", qty: 500, warehouse: "Gudang Utama", status: "PENDING", date: "2026-05-20" },
+  ],
+
+  "/production/step-logs": () => [
+    { id: "SL-001", batchNo: "BATCH-2026-0001", stage: "MIXING", qtyResult: 250, qcStatus: "PASS", date: "2026-05-16" },
+  ],
+
+  // ── MASTER LANJUTAN ───────────────────────────────────────────
+
+  "/master/warehouses": () => [
+    { id: "W-001", name: "Gudang Utama", location: "Jl. Raya Industri 1", manager: "Joko", status: "ACTIVE" },
+    { id: "W-002", name: "Gudang Bahan Baku", location: "Jl. Raya Industri 2", manager: "Joko", status: "ACTIVE" },
+  ],
+
+  "/master/warehouses/active": () => [
+    { id: "W-001", name: "Gudang Utama" },
+    { id: "W-002", name: "Gudang Bahan Baku" },
+  ],
+
+  "/master/departments": () => [
+    { id: "D-001", name: "Production", head: "Manager A", employeeCount: 45 },
+    { id: "D-002", name: "QC", head: "Manager G", employeeCount: 10 },
+  ],
+
+  "/master/goods": () => [
+    { id: "G-001", name: "Niacinamide", sku: "M-001", category: "BAHAN BAKU", unit: "kg", stock: 120, price: 450000 },
+    { id: "G-002", name: "Botol Kaca 30ml", sku: "M-003", category: "KEMASAN", unit: "pcs", stock: 1500, price: 2500 },
+  ],
+
+  // ── HR LANJUTAN ───────────────────────────────────────────────
+
+  "/hr/tickets": () => [
+    { id: "TKT-001", type: "LEAVE", status: "PENDING", reason: "Cuti Tahunan 2026", startDate: "2026-06-01", endDate: "2026-06-05", amount: null, employeeName: "Budi Santoso", createdAt: "2026-05-25T08:00:00Z" },
+    { id: "TKT-002", type: "OVERTIME", status: "APPROVED", reason: "Lembur Project Akhir Bulan", startDate: "2026-05-24", endDate: null, amount: null, employeeName: "Siti Rahayu", createdAt: "2026-05-24T16:30:00Z" },
+    { id: "TKT-003", type: "REIMBURSE", status: "PENDING", reason: "Biaya Transportasi Meeting Client", startDate: "2026-05-23", endDate: null, amount: 250000, employeeName: "Ahmad Fauzi", createdAt: "2026-05-23T09:15:00Z" },
+    { id: "TKT-004", type: "LEAVE", status: "REJECTED", reason: "Izin tidak mendesak", startDate: "2026-05-20", endDate: "2026-05-21", amount: null, employeeName: "Dewi Lestari", createdAt: "2026-05-19T10:00:00Z" },
+  ],
+
+  "/hr/employees": () => [
+    { id: "E-001", name: "Panca", position: "Formulator", department: "RND", status: "ACTIVE", joinedAt: "2021-03-15" },
+    { id: "E-002", name: "Yaya", position: "Lab R&D", department: "RND", status: "ACTIVE", joinedAt: "2022-06-01" },
+  ],
+
+  // ── MARKETING LANJUTAN ────────────────────────────────────────
+
+  "/marketing/metrics": () => ({
+    totalLeads: 1284,
+    conversion: 15.2,
+    totalSpend: 1248000000,
+    costPerLead: 97352,
+    roas: 3.2,
+  }),
+
+  "/marketing/targets": () => [
+    { id: "MT-001", period: "2026-05", target: 4500000000, achieved: 3185000000, achievement: 70.8 },
+  ],
+
+  "/marketing/landing-tracker/stats": () => ({
+    totalVisits: 48200,
+    totalConversions: 1284,
+    conversionRate: 2.66,
+    totalSales: 3185000000,
+  }),
+
+  "/marketing/landing-tracker/conversions": () => [
+    { id: "CV-001", name: "Andi Pratama", phone: "0812-3456-7890", source: "IG Ads", product: "Serum", status: "NEW", date: "2026-05-20" },
+    { id: "CV-002", name: "Citra Kirana", phone: "0821-9876-5432", source: "TikTok", product: "Moisturizer", status: "CONTACTED", date: "2026-05-20" },
+  ],
+
+  "/marketing/landing-tracker/visits": () => [
+    { id: "VS-001", page: "/landing/serum", visits: 1240, date: "2026-05-20" },
+    { id: "VS-002", page: "/landing/moisturizer", visits: 890, date: "2026-05-20" },
+  ],
+
+  "/marketing/landing-tracker/sales": () => [
+    { id: "SL-001", client: "PT Sejahtera Abadi", value: 150000000, status: "PAID", date: "2026-05-18" },
+  ],
+
+  "/marketing/landing-tracker/recent": () => [
+    { id: "RC-001", name: "Dewi", phone: "0812-1111-2222", status: "NEW", date: "2026-05-20" },
+  ],
+
+  "/marketing/logs/organic": () => [
+    { id: "ML-001", platform: "Instagram", action: "POST", content: "Reels Launch", date: "2026-05-20", by: "Aurel" },
+  ],
+
+  "/marketing/logs/ads": () => [
+    { id: "ADL-001", platform: "Meta", campaign: "IG Ads Q2", action: "SPEND", amount: 2500000, date: "2026-05-20" },
+  ],
+
+  // ── SYSTEM & NOTIFIKASI ───────────────────────────────────────
+
+  "/system/change-requests": () => [
+    { id: "CR-001", requestNumber: "CR-2026-0001", title: "Ubah format label", requestedBy: "Rina", department: "QC", status: "PENDING", date: "2026-05-20" },
+    { id: "CR-002", requestNumber: "CR-2026-0002", title: "Tambah mesin filling", requestedBy: "Panca", department: "Production", status: "APPROVED", date: "2026-05-18" },
+  ],
+
+  "/system/errors/summary": () => ({
+    totalErrors: 12,
+    critical: 2,
+    warning: 8,
+    info: 2,
+    byRoute: [
+      { hour: "2026-05-20T08:00", route: "/api/wa-webhook", errors: 4 },
+      { hour: "2026-05-20T09:00", route: "/api/toribio", errors: 2 },
+      { hour: "2026-05-20T10:00", route: "/api/lead-capture", errors: 3 },
+      { hour: "2026-05-20T11:00", route: "/api/marketing", errors: 1 },
+    ],
+  }),
+
+  "/system/errors/timeline": () => [
+    { id: "ERR-001", level: "ERROR", message: "Webhook WA timeout", timestamp: "2026-05-20T08:30:00Z", source: "wa-webhook" },
+    { id: "ERR-002", level: "WARNING", message: "Rate limit Google Sheets", timestamp: "2026-05-20T09:00:00Z", source: "toribio" },
+  ],
+
+  "/system/change-request": () => [
+    { id: "CR-001", requestNumber: "CR-2026-0001", title: "Ubah format label", requestedBy: "Rina", department: "QC", status: "PENDING", date: "2026-05-20" },
+  ],
+
+  "/notifications": () => [
+    { id: "NTF-001", title: "PR-2026-0001 butuh approval", message: "Purchase request dari Production menunggu approval", type: "APPROVAL", isRead: false, createdAt: "2026-05-20T08:00:00Z" },
+    { id: "NTF-002", title: "Invoice jatuh tempo", message: "INV-2026-0002 jatuh tempo 20 Juni", type: "FINANCE", isRead: false, createdAt: "2026-05-20T07:00:00Z" },
+  ],
+
+  "/my-dashboard/stats": () => ({
+    totalTasks: 12,
+    completed: 5,
+    pendingApproval: 3,
+    overdue: 2,
+    myScore: 88,
+  }),
+
+  // ── CREATIVE, DOKUMEN, LOGISTIK, FULFILLMENT ─────────────────
+
+  "/creative/board": () => [
+    { id: "CR-001", title: "Desain Kemasan GlowNat", status: "INBOX", brand: "GlowNat", lead: { clientName: "PT Sejahtera Abadi" }, dueDate: "2026-06-01", assignee: "Aurel" },
+    { id: "CR-002", title: "Mockup Label BioEssence", status: "IN_PROGRESS", brand: "BioEssence", lead: { clientName: "PT Natural Beauty" }, dueDate: "2026-05-28", assignee: "Aurel" },
+  ],
+
+  "/creative/task": () => [
+    { id: "CR-001", title: "Desain Kemasan GlowNat", status: "INBOX", brand: "GlowNat", lead: { clientName: "PT Sejahtera Abadi" }, dueDate: "2026-06-01", versions: [{ id: "V-1", status: "INBOX" }] },
+  ],
+
+  "/document-automation/drafts": () => [
+    { id: "DR-001", draftNumber: "DR-2026-0001", title: "Draft PO Bahan Baku", type: "PURCHASE_ORDER", status: "DRAFT", createdBy: "Bagus", date: "2026-05-20" },
+    { id: "DR-002", draftNumber: "DR-2026-0002", title: "Draft Invoice", type: "INVOICE", status: "PENDING_APPROVAL", createdBy: "Sari", date: "2026-05-19" },
+  ],
+
+  "/document-automation/drafts/stats": () => ({
+    drafts: 8,
+    total: 8,
+    pending: 3,
+    approved: 4,
+    rejected: 1,
+  }),
+
+  "/commercial/invoices": () => [
+    { id: "INV-001", invoiceNumber: "INV-2026-0001", client: "PT Natural Beauty", amount: 500000000, status: "PAID", date: "2026-05-01" },
+  ],
+
+  "/commercial/payments": () => [
+    { id: "PM-001", paymentNumber: "PM-2026-0001", client: "PT Natural Beauty", amount: 250000000, status: "CONFIRMED", date: "2026-05-10" },
+  ],
+
+  "/commercial/retention/radar": () => [
+    { id: "RT-001", client_name: "PT Sejahtera Abadi", lead: { client_name: "PT Sejahtera Abadi", brand_name: "GlowNat" }, est_depletion_date: "2026-06-15", risk_level: "HIGH", lastOrderDate: "2026-03-10", repeatCount: 2, revenue: 150000000 },
+    { id: "RT-002", client_name: "CV Bumi Kosmetik", lead: { client_name: "CV Bumi Kosmetik", brand_name: "EarthGlow" }, est_depletion_date: "2026-07-01", risk_level: "MEDIUM", lastOrderDate: "2026-04-01", repeatCount: 1, revenue: 95000000 },
+    { id: "RT-003", client_name: "PT Natural Beauty", lead: { client_name: "PT Natural Beauty", brand_name: "BioEssence" }, est_depletion_date: "2026-08-01", risk_level: "LOW", lastOrderDate: "2026-05-01", repeatCount: 3, revenue: 500000000 },
+  ],
+
+  "/executive/audit-logs": () => [
+    { id: "AUD-001", action: "LEAD_CREATED", user: { name: "Budi Santoso", email: "budi@dreamlab.id" }, entityId: "L-004", timestamp: "2026-05-20T08:00:00Z", details: "Lead L-004 dibuat" },
+    { id: "AUD-002", action: "PAYMENT_VERIFIED", user: { name: "Sari", email: "sari@dreamlab.id" }, entityId: "L-003", timestamp: "2026-05-20T09:00:00Z", details: "DP diverifikasi L-003" },
+    { id: "AUD-003", action: "USER_LOGIN", user: { name: "Luthfi", email: "luthfi@dreamlab.id" }, entityId: "USR-001", timestamp: "2026-05-20T10:00:00Z", details: "Login dari IP 192.168.1.1" },
+  ],
+
+  // ── CATCH-ALL ──────────────────────────────────────────────────
+  // Fallback pintar: array kosong yang JUGA punya properti
+  // data/total/items/rows/list — jadi kompatibel dengan halaman yang
+  // membaca `res.data.map()` (array) maupun `res.data.data` (paginated),
+  // sehingga halaman tidak crash walau endpoint belum di-mock spesifik.
+
+  default: () => smartEmptyList(),
 };
+
+function smartEmptyList(): any[] {
+  const arr: any[] = [];
+  const list = arr as any;
+  list.data = list;      // paginated: res.data.data → []
+  list.items = list;     // res.data.items → []
+  list.rows = list;      // res.data.rows → []
+  list.list = list;      // res.data.list → []
+  list.total = 0;        // res.data.total → 0
+  list.count = 0;        // res.data.count → 0
+  list.success = true;   // res.data.success → true
+  return list as any[];
+}
+
+/**
+ * Enrich item dengan field umum yang sering diakses halaman.
+ * Additive-only (field asli tidak ditimpa) dan DETERMINISTIK
+ * (tanpa Math.random) supaya tidak memicu hydration mismatch.
+ * Ini mencegah crash `undefined.toLowerCase/startsWith/charAt/dll`
+ * saat mock belum punya field yang diharapkan halaman.
+ */
+function enrichRow(item: any, index: number): any {
+  if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+  const base: Record<string, any> = {
+    id: item.id ?? `ID-${String(index + 1).padStart(3, "0")}`,
+    name: item.name ?? item.accountName ?? item.clientName ?? item.customerName ?? item.client ?? item.customer ?? item.supplier ?? item.materialName ?? item.productName ?? item.title ?? item.employeeName ?? `Item ${index + 1}`,
+    code: item.code ?? item.accountCode ?? item.kode ?? item.number ?? item.invoiceNumber ?? item.prNumber ?? item.doNumber ?? item.poNumber ?? item.batchNo ?? `CODE-${String(index + 1).padStart(3, "0")}`,
+    accountName: item.accountName ?? item.name ?? item.clientName ?? "",
+    accountCode: item.accountCode ?? item.code ?? "",
+    status: item.status ?? "ACTIVE",
+    type: item.type ?? item.category ?? "GENERAL",
+    category: item.category ?? item.type ?? "GENERAL",
+    date: item.date ?? item.createdAt ?? item.tanggal ?? "2026-05-20",
+    createdAt: item.createdAt ?? item.date ?? item.tanggal ?? "2026-05-20T08:00:00Z",
+    updatedAt: item.updatedAt ?? item.date ?? item.tanggal ?? "2026-05-20T08:00:00Z",
+    amount: item.amount ?? item.totalAmount ?? item.total ?? item.value ?? 0,
+    totalAmount: item.totalAmount ?? item.total ?? item.amount ?? 0,
+    total: item.total ?? item.totalAmount ?? item.amount ?? 0,
+    qty: item.qty ?? item.quantity ?? item.targetQty ?? item.qtyRequired ?? 0,
+    quantity: item.quantity ?? item.qty ?? item.targetQty ?? 0,
+    note: item.note ?? item.notes ?? "",
+    notes: item.notes ?? item.note ?? item.reason ?? "",
+    description: item.description ?? item.notes ?? item.reason ?? item.purpose ?? "",
+    client: item.client ?? item.clientName ?? item.customer ?? item.customerName ?? "",
+    clientName: item.clientName ?? item.client ?? item.customer ?? item.customerName ?? "",
+    customer: item.customer ?? item.customerName ?? item.clientName ?? item.client ?? "",
+    customerName: item.customerName ?? item.customer ?? item.clientName ?? item.client ?? "",
+    supplier: item.supplier ?? item.supplierName ?? "",
+    supplierName: item.supplierName ?? item.supplier ?? "",
+    material: item.material ?? item.materialName ?? item.product ?? "",
+    materialName: item.materialName ?? item.material ?? item.product ?? "",
+    product: item.product ?? item.productName ?? item.material ?? "",
+    productName: item.productName ?? item.product ?? item.material ?? item.projectSample ?? "",
+    projectSample: item.projectSample ?? item.productName ?? item.product ?? "",
+    brand: item.brand ?? item.brandName ?? "",
+    brandName: item.brandName ?? item.brand ?? "",
+    unit: item.unit ?? item.uom ?? "",
+    uom: item.uom ?? item.unit ?? "",
+    priority: item.priority ?? "NORMAL",
+    pic: item.pic ?? item.picName ?? item.by ?? item.assignee ?? "",
+    picName: item.picName ?? item.pic ?? item.by ?? "",
+    assignee: item.assignee ?? item.pic ?? item.picName ?? "",
+    department: item.department ?? item.division ?? "",
+    division: item.division ?? item.department ?? "",
+    items: item.items ?? [],
+    rows: item.rows ?? item.items ?? [],
+    payload: item.payload ?? { items: [] },
+    details: item.details ?? item.items ?? [],
+    reason: item.reason ?? item.notes ?? item.note ?? "",
+    batch: item.batch ?? item.batchNo ?? item.batch_no ?? item.code ?? "",
+    batchNo: item.batchNo ?? item.batch ?? item.batch_no ?? "",
+    pelanggan: item.pelanggan ?? item.customerName ?? item.clientName ?? item.client ?? "",
+    produk: item.produk ?? item.productName ?? item.product ?? "",
+    formulas: item.formulas ?? [],
+    revisionStatus: item.revisionStatus ?? item.status ?? "IN_PROGRESS",
+    lead: item.lead ?? {},
+    entityId: item.entityId ?? item.id ?? "",
+    risk_level: item.risk_level ?? "LOW",
+    hour: item.hour ?? item.createdAt ?? item.timestamp ?? "2026-05-20T08:00:00Z",
+    phone: item.phone ?? item.phoneNo ?? item.telp ?? "",
+    phoneNo: item.phoneNo ?? item.phone ?? "",
+    materials: item.materials ?? [],
+    inventories: item.inventories ?? [],
+    stockQty: item.stockQty ?? item.qty ?? item.stock ?? 0,
+    minLevel: item.minLevel ?? item.minStock ?? 0,
+    parentId: item.parentId ?? null,
+    email: item.email ?? "",
+    address: item.address ?? item.city ?? "",
+    city: item.city ?? item.address ?? "",
+    active: item.active ?? true,
+    createdBy: item.createdBy ?? item.requestedBy ?? item.requester ?? item.user?.name ?? "System",
+    requestedBy: item.requestedBy ?? item.createdBy ?? item.requester ?? "System",
+    requester: item.requester ?? item.createdBy ?? item.requestedBy ?? "System",
+    sampleCode: item.sampleCode ?? item.code ?? item.id ?? "",
+    stage: item.stage ?? item.status ?? "ACTIVE",
+    reportGroup: item.reportGroup ?? "GENERAL",
+    hash: item.hash ?? `HASH-${item.id ?? String(index + 1)}`,
+    moq: item.moq ?? item.qty ?? 0,
+    views: item.views ?? 0,
+    closing_rate: item.closing_rate ?? item.closing ?? 0,
+    total_spend: item.total_spend ?? item.total ?? 0,
+    budget_limit: item.budget_limit ?? item.budget ?? 0,
+    total_likes: item.total_likes ?? 0,
+    awalDebit: item.awalDebit ?? 0,
+    awalCredit: item.awalCredit ?? 0,
+    perubahanDebit: item.perubahanDebit ?? item.debit ?? 0,
+    perubahanCredit: item.perubahanCredit ?? item.credit ?? 0,
+    qcStatus: item.qcStatus ?? "PASS",
+  };
+  return { ...base, ...item };
+}
+
+function enrichResult(result: any): any {
+  if (Array.isArray(result)) {
+    return result.map((item, i) => enrichRow(item, i));
+  }
+  if (result && typeof result === "object") {
+    const out: Record<string, any> = { ...result };
+    if (Array.isArray(out.data)) out.data = out.data.map((item: any, i: number) => enrichRow(item, i));
+    if (Array.isArray(out.items)) out.items = out.items.map((item: any, i: number) => enrichRow(item, i));
+    if (Array.isArray(out.rows)) out.rows = out.rows.map((item: any, i: number) => enrichRow(item, i));
+    if (Array.isArray(out.list)) out.list = out.list.map((item: any, i: number) => enrichRow(item, i));
+    if (Array.isArray(out.departments)) out.departments = out.departments.map((item: any, i: number) => enrichRow(item, i));
+    if (Array.isArray(out.employees)) out.employees = out.employees.map((item: any, i: number) => enrichRow(item, i));
+    return out;
+  }
+  return result;
+}
 
 export function getMockData(url: string): any {
   const cleanUrl = url.split("?")[0].replace(/\/+$/, "");
@@ -741,9 +1457,9 @@ export function getMockData(url: string): any {
 
   for (const pattern of patterns) {
     if (cleanUrl === pattern || cleanUrl.startsWith(pattern)) {
-      return (MOCK_DATA[pattern] as (url?: string) => any)(url);
+      return enrichResult((MOCK_DATA[pattern] as (url?: string) => any)(url));
     }
   }
 
-  return MOCK_DATA.default();
+  return enrichResult(MOCK_DATA.default());
 }

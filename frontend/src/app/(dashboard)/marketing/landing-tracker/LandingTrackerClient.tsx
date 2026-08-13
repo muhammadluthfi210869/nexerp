@@ -64,7 +64,8 @@ export default function LandingTrackerClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSource, setFilterSource] = useState("");
   const [isPolling, setIsPolling] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  // null di awal → hindari hydration mismatch (server vs client Date).
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [activeView, setActiveView] = useState<"overview" | "pages" | "traffic" | "conversions">("overview");
   const [vercelProjectId, setVercelProjectId] = useState("");
   const [vercelProjectName, setVercelProjectName] = useState("");
@@ -132,6 +133,7 @@ export default function LandingTrackerClient() {
   };
 
   useEffect(() => {
+    setLastUpdate(new Date());
     if (!isPolling) return;
     const interval = setInterval(() => {
       setLastUpdate(new Date());
@@ -239,7 +241,9 @@ export default function LandingTrackerClient() {
             <div className="bg-white border border-slate-200 shadow-sm rounded-2xl px-4 py-2.5 flex items-center gap-3">
               <Clock className="w-4 h-4 text-slate-400" />
               <span className="text-[11px] font-bold text-slate-600">
-                {lastUpdate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                {lastUpdate
+                  ? lastUpdate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+                  : "--:--"}
               </span>
             </div>
 

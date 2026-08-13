@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +53,11 @@ export default function ProductionFloor() {
   const [goodQty, setGoodQty] = useState<number>(0);
   const [rejectQty, setRejectQty] = useState<number>(0);
   const [quarantineQty, setQuarantineQty] = useState<number>(0);
+  // Hindari hydration mismatch: set waktu via effect (bukan saat render).
+  const [systemTime, setSystemTime] = useState<string | null>(null);
+  useEffect(() => {
+    setSystemTime(new Date().toLocaleTimeString());
+  }, []);
 
   const totalOutput = goodQty + rejectQty + quarantineQty;
   const difference = inputQty - totalOutput;
@@ -116,7 +121,7 @@ export default function ProductionFloor() {
         <div className="bg-gray-50 p-4 border border-gray-200 rounded-xl flex items-center gap-6">
           <div className="text-right">
             <p className="text-[10px] text-zinc-500 font-bold uppercase">System Time</p>
-            <p className="text-xl font-sans text-gray-900">{new Date().toLocaleTimeString()}</p>
+            <p className="text-xl font-sans text-gray-900">{systemTime ?? "--:--:--"}</p>
           </div>
         </div>
       }
