@@ -31,11 +31,22 @@ di pojok dashboard supaya jelas bukan data operasional.
 | `frontend/src/lib/db.ts` & `prisma.ts` | Prisma dinonaktifkan di prototype mode (tidak butuh DATABASE_URL) |
 | `frontend/src/app/(dashboard)/layout.tsx` | Badge "PROTOTYPE MODE" |
 
-## ✅ Halaman yang terverifikasi (data tampil + tanpa crash)
+## ✅ Hasil verifikasi (scan otomatis 168 route, Playwright)
 
-Executive, Marketing, Bussdev, Finance, RND, SCM, Production, QC, Warehouse, HR.
-~215 halaman lain bisa dinavigasi; halaman form/detail yang endpointnya belum di-mock
-menampilkan state kosong (tidak crash).
+- **0 crash asli** — semua halaman render tanpa error.
+- **105 halaman** konten kaya (data contoh tampil).
+- **55 halaman** render tapi lebih tipis (halaman form/input — wajar kosong saat pertama dibuka).
+- 8 "warning" tersisa hanya `ERR_CONNECTION_REFUSED`/404 dari server-fetch ke backend yang
+  memang tidak ada — halaman tetap render normal (bukan crash).
+
+## 🧠 Bagaimana mock dibuat tahan-crash
+
+| Mekanisme | Fungsi |
+|---|---|
+| `getMockData()` longest-match | Endpoint spesifik di-prioritaskan |
+| `smartEmptyList()` | Fallback array kosong yang punya `.data/.items/.rows/.total` → kompatibel array & paginated |
+| `enrichRow()` | Isi otomatis field umum (`name`, `code`, `status`, `customer`, `supplier`, `pelanggan`, `produk`, `batch`, `reason`, `phone`, dll) → cegah crash `undefined.toLowerCase/map/filter` |
+| 150+ mock endpoint | Semua modul: executive, marketing, bussdev, finance (incl. laporan), legality, rnd, scm, warehouse, production, qc, hr, master, creative, documents, system, notifikasi |
 
 ## ⚠️ Catatan
 
