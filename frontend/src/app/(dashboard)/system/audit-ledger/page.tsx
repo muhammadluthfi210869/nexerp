@@ -39,7 +39,17 @@ export default function AuditLedgerPage() {
       const data = await res.json();
       setLogs(data);
     } catch (error) {
-      console.error("Failed to fetch audit logs", error);
+      // PROTOTYPE MODE: fallback ke data contoh (backend tidak ada).
+      if (process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true") {
+        try {
+          const { getMockData } = await import("@/lib/mock-data");
+          setLogs(getMockData("/system/audit-log"));
+        } catch {
+          setLogs([]);
+        }
+      } else {
+        console.error("Failed to fetch audit logs", error);
+      }
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,26 @@
+# Prototype NexERP — container terpisah di subdomain demo.nexerp.id
+# TIDAK menyentuh container production-light. Jalan frontend-only (mock data).
+#
+# Cara pakai (di server /root/demo-prototype/):
+#   docker compose -f docker-compose.demo.yml up -d --build
+services:
+  prototype-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+        NEXT_PUBLIC_PROTOTYPE_MODE: "true"
+    restart: always
+    container_name: prototype-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ""
+      NEXT_PUBLIC_PROTOTYPE_MODE: "true"
+      NODE_ENV: production
+    networks:
+      - shared
+
+networks:
+  shared:
+    external:
+      name: production-light_default

@@ -1,21 +1,30 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+# node:20-slim (Debian/glibc) — bukan Alpine/musl. Turbopack + lightningcss
+# butuh binary native glibc; di Alpine/musl build Next 16 sering gagal.
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
 # Add Build Arguments
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_PROTOTYPE_MODE
+ENV NEXT_PUBLIC_PROTOTYPE_MODE=$NEXT_PUBLIC_PROTOTYPE_MODE
 
 COPY package*.json ./
 RUN npm install
+
+# package-lock.json dibuat di Windows → binary native lightningcss untuk
+# Linux tidak tercatat. Install eksplisit supaya Turbopack bisa resolve
+# (tanpa ini: Cannot find module '../lightningcss.linux-x64-gnu.node').
+RUN npm install lightningcss-linux-x64-gnu --no-save 2>/dev/null || true
 
 COPY . .
 RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Runtime
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
 

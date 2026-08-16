@@ -27,11 +27,11 @@ const loginSchema = z.object({
 
 // ── PROTOTYPE MODE ─────────────────────────────────────────────
 // Aktif dengan NEXT_PUBLIC_PROTOTYPE_MODE=true (lihat .env.local).
-// Akun khusus demo: superadmin@dreamlab.id / password123
+// Akun khusus demo: superadmin@nexerp.id / password123
 // Login ini TIDAK hit backend — langsung masuk sebagai SUPER_ADMIN
 // dengan akses ke SEMUA modul, memakai data contoh (mock-data.ts).
 const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
-const PROTOTYPE_EMAIL = "superadmin@dreamlab.id";
+const PROTOTYPE_EMAIL = "superadmin@nexerp.id";
 const PROTOTYPE_PASSWORD = "password123";
 
 const PROTOTYPE_ROLES = [

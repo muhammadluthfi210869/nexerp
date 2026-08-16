@@ -13,7 +13,7 @@ npm run dev        # atau: npm run build && npm start
 Buka **http://localhost:3000** → login:
 
 ```
-Email    : superadmin@dreamlab.id
+Email    : superadmin@nexerp.id
 Password : password123
 ```
 
@@ -27,7 +27,7 @@ di pojok dashboard supaya jelas bukan data operasional.
 | `frontend/.env.local` | `NEXT_PUBLIC_PROTOTYPE_MODE=true` → menyalakan mode ini |
 | `frontend/src/lib/api.ts` | Custom axios adapter: SEMUA panggilan API di-short-circuit ke `getMockData()` — tanpa jaringan, tanpa backend |
 | `frontend/src/lib/mock-data.ts` | Data contoh untuk semua modul: executive, marketing, bussdev, finance, rnd, scm, produksi, qc, warehouse, hr, dll |
-| `frontend/src/app/login/page.tsx` | Login `superadmin@dreamlab.id`/`password123` bypass backend (dapat role SUPER_ADMIN + semua modul) |
+| `frontend/src/app/login/page.tsx` | Login `superadmin@nexerp.id`/`password123` bypass backend (dapat role SUPER_ADMIN + semua modul) |
 | `frontend/src/lib/db.ts` & `prisma.ts` | Prisma dinonaktifkan di prototype mode (tidak butuh DATABASE_URL) |
 | `frontend/src/app/(dashboard)/layout.tsx` | Badge "PROTOTYPE MODE" |
 

@@ -9,7 +9,7 @@ import { getMockData } from "@/lib/mock-data";
  * data contoh (mock-data.ts) — TANPA backend, TANPA database.
  * Cocok untuk demo ke bos / calon klien: `cd frontend && npm run dev`.
  *
- * Login prototype: superadmin@dreamlab.id / password123
+ * Login prototype: superadmin@nexerp.id / password123
  * (bukan untuk operasional — badge "PROTOTYPE MODE" tampil di dashboard).
  */
 export const IS_PROTOTYPE_MODE =

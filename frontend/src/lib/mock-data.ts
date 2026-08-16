@@ -810,9 +810,10 @@ export const MOCK_DATA: any = {
   // ── SYSTEM ──────────────────────────────────────────────────────
 
   "/system/audit-log": () => [
-    { id: "AL-001", action: "USER_LOGIN", userId: "admin", timestamp: "2026-05-22T08:00:00Z", details: "Login from IP 192.168.1.1" },
-    { id: "AL-002", action: "LEAD_CREATED", userId: "budi", timestamp: "2026-05-21T16:45:00Z", details: "Lead L-004 created" },
-    { id: "AL-003", action: "PAYMENT_VERIFIED", userId: "finance", timestamp: "2026-05-22T09:15:00Z", details: "DP verified for L-003" },
+    { id: "AL-001", action: "USER_LOGIN", entityId: "USR-001", entityType: "USER", reason: "Login sukses", userId: "admin", timestamp: "2026-05-22T08:00:00Z", details: "Login from IP 192.168.1.1" },
+    { id: "AL-002", action: "LEAD_CREATED", entityId: "L-004", entityType: "LEAD", reason: "Lead baru dari website", userId: "budi", timestamp: "2026-05-21T16:45:00Z", details: "Lead L-004 created" },
+    { id: "AL-003", action: "PAYMENT_VERIFIED", entityId: "INV-001", entityType: "INVOICE", reason: "DP diverifikasi finance", userId: "finance", timestamp: "2026-05-22T09:15:00Z", details: "DP verified for L-003" },
+    { id: "AL-004", action: "WORK_ORDER_UPDATED", entityId: "WO-001", entityType: "WORK_ORDER", reason: "Update progress produksi", userId: "panca", timestamp: "2026-05-22T10:00:00Z", details: "WO-2026-0001 progress 60%" },
   ],
 
   // ── FINANCE REPORTS ───────────────────────────────────────────
