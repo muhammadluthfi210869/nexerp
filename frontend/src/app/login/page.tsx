@@ -32,8 +32,8 @@ const loginSchema = z.object({
 // dengan akses ke SEMUA modul, memakai data contoh (mock-data.ts).
 const IS_PROTOTYPE_MODE =
   process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  (typeof window !== "undefined" &&
-    window.location.hostname === "demo.nexerp.id");
+  (globalThis as typeof globalThis & { location?: Location }).location?.hostname ===
+    "demo.nexerp.id";
 const PROTOTYPE_EMAIL = "superadmin@nexerp.id";
 const PROTOTYPE_PASSWORD = "password123";
 
