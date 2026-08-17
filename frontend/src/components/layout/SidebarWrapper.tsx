@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 const Sidebar = dynamic(() => import("@/components/layout/Sidebar").then(m => ({ default: m.Sidebar })), {
   ssr: false,
   loading: () => (
-    <aside className="w-72 h-screen fixed left-0 top-0 z-50 bg-white border-r border-slate-200 animate-pulse">
+    <aside className="erp-sidebar h-screen fixed left-0 top-0 z-50 bg-white border-r border-slate-200 animate-pulse">
       <div className="p-7 pb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-slate-100" />

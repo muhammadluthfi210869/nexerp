@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -23,8 +23,6 @@ export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 

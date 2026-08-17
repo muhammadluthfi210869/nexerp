@@ -290,7 +290,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-72 border-r border-slate-200 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 font-sans shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+    <aside className="erp-sidebar border-r border-slate-200 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 font-sans">
       {/* Brand Section */}
       <div className="p-7 pb-4">
         <div className="flex items-center gap-3">
@@ -313,6 +313,7 @@ export function Sidebar() {
             <FileSearch className="w-4 h-4 text-slate-300 group-focus-within:text-brand-black transition-colors" />
           </div>
           <input
+            aria-label="Search navigation"
             type="text"
             placeholder="Command + K..."
             className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
@@ -542,6 +543,7 @@ export function Sidebar() {
             </div>
           </div>
           <Button
+            aria-label="Sign out"
             variant="ghost"
             size="icon"
             className="rounded-xl hover:bg-rose-50 text-slate-300 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-none"

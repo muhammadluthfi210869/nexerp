@@ -8,8 +8,9 @@ import { Search, Bell } from "lucide-react";
 // PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional.
 const IS_PROTOTYPE_MODE =
   process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  (globalThis as typeof globalThis & { location?: Location }).location?.hostname ===
-    "demo.nexerp.id";
+  ["demo.nexerp.id", "compact.nexerp.id"].includes(
+    (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
+  );
 
 export default function DashboardLayout({
   children,
@@ -17,23 +18,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex bg-base min-h-screen">
+    <div className="erp-app flex bg-base min-h-screen">
       <SidebarWrapper />
       
       <main 
-        className="flex-1 min-h-screen bg-base overflow-x-hidden flex flex-col"
+        className="erp-app-main flex-1 min-h-screen bg-base overflow-x-hidden flex flex-col"
         style={{ 
           marginLeft: 'var(--sidebar-width)',
         }}
       >
         {/* TOP HEADER */}
-        <div className="h-[72px] bg-white border-b border-slate-100 px-12 flex items-center justify-between shrink-0">
+        <div className="erp-topbar bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
           {/* Search bar */}
-          <div className="relative w-[380px]">
-            <input 
+          <div className="erp-global-search-wrap relative w-[380px]">
+            <input
+              aria-label="Global search"
+              className="erp-global-search w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary/40 transition-all placeholder:text-slate-400"
               type="text" 
               placeholder="Can parameter, node, atau log audit..."
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-150 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-400"
             />
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
           </div>
@@ -41,7 +43,7 @@ export default function DashboardLayout({
           {/* Right section */}
           <div className="flex items-center gap-4">
             {IS_PROTOTYPE_MODE ? (
-              <span className="text-[9px] font-black uppercase text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md tracking-wider animate-pulse">
+              <span className="erp-prototype-badge text-[9px] font-black uppercase text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md tracking-wider animate-pulse">
                 ⚡ PROTOTYPE MODE — DATA CONTOH
               </span>
             ) : (
@@ -54,7 +56,7 @@ export default function DashboardLayout({
                 </span>
               </>
             )}
-            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
+            <button aria-label="Open notifications" className="min-w-11 min-h-11 p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
               <Bell className="w-5 h-5" />
             </button>
           </div>
@@ -62,7 +64,7 @@ export default function DashboardLayout({
 
         {/* PAGE CONTENT */}
         <div 
-          className="max-w-[1600px] mx-auto w-full flex-1 bg-[var(--app-bg)]"
+          className="erp-page-shell mx-auto w-full flex-1 bg-[var(--app-bg)]"
           style={{ 
             padding: 'var(--page-py) var(--page-px) var(--page-pb)',
             borderRadius: '24px 0 0 0',

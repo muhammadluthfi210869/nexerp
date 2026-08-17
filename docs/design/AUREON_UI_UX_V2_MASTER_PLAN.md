@@ -1260,3 +1260,9 @@ Phase 1 is complete on branch `codex/ui-ux-v2-prototype`. The compact environmen
 Both subdomains were verified independently with the documented demo credentials. Each reaches `/executive/dashboard`, displays the Prototype Mode badge, and reports zero post-login browser console errors. Phase 1 evidence is stored in `docs/design/phase1-compact/`.
 
 Phase 2 is the first phase allowed to alter the compact visual system. `demo.nexerp.id`, the V1 tag, and `docs/design/baseline-v1/` remain unchanged comparison references.
+
+### 30.9 Phase 2 verification result — completed 17 August 2026
+
+Phase 2 establishes the compact visual foundation on `codex/ui-ux-v2-prototype`. Centralized tokens now reduce the shell and card/table chrome while preserving the existing Visual DNA. Typography was limited to the intended Inter weights, mobile zoom is no longer disabled, and shell controls have accessible labels and minimum touch targets. Responsive rules cover desktop, tablet, and the 375px mobile viewport; mobile navigation remains a Phase 5 deliverable.
+
+The implementation is documented in `docs/design/phase2-foundation/README.md`. No business flow, API contract, role, dataset, or V1 deployment was changed.
