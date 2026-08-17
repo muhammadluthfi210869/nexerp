@@ -1274,3 +1274,7 @@ Phase 3 applies the compact table foundation to Master Goods at `/master/goods`.
 ### 30.11 Phase 4 implementation — pilot page polish
 
 Phase 4 standardizes the Goods, Purchase/SCM, and Executive Dashboard pilots using the Phase 2 tokens and Phase 3 table foundation. Shared stat cards are now compact, SCM tabs are responsive and keyboard-visible, and Executive Dashboard card chrome follows the compact shell. The comparison task script and evidence are documented in `docs/design/phase4-pilot-polish/README.md`.
+
+### 30.12 Baseline correction — legacy familiarity source
+
+The user-familiarity baseline is `old_erp/` at Git commit `f6e0f703049db3e7d0f135738ff53536033f9fb5`, not `demo.nexerp.id`. `demo.nexerp.id` remains the untouched current-prototype control. The legacy baseline evidence and corrected comparison rule are documented in `docs/design/old-erp-baseline/README.md`.
