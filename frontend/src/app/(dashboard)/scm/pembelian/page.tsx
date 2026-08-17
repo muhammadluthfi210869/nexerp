@@ -575,10 +575,11 @@ export default function PembelianPage() {
       titleAccent="SCM"
       subtitle="Manajemen Pembelian — Purchase Requests, Orders, Receiving, Returns & Payments"
     >
+      <div className="phase4-pilot-page">
       <Tabs defaultValue="pr">
-        <TabsList className="mb-6">
+        <TabsList className="phase4-tabs-list mb-4">
           {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
+            <TabsTrigger key={tab.value} value={tab.value} className="phase4-tabs-trigger">
               <tab.icon className="h-3.5 w-3.5 mr-1.5" />
               {tab.label}
             </TabsTrigger>
@@ -590,6 +591,7 @@ export default function PembelianPage() {
           </TabsContent>
         ))}
       </Tabs>
+      </div>
     </DashboardShell>
   );
 }

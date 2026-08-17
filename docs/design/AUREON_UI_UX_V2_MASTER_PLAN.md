@@ -1270,3 +1270,7 @@ The implementation is documented in `docs/design/phase2-foundation/README.md`. N
 ### 30.10 Phase 3 implementation — DataTable V2 pilot
 
 Phase 3 applies the compact table foundation to Master Goods at `/master/goods`. The reusable `DataTableV2` component provides compact rows, sticky headers, contained horizontal overflow, a keyboard-focusable scroll region, and record context without changing the underlying API or row detail flow. Evidence and acceptance notes are tracked in `docs/design/phase3-datatable/README.md`.
+
+### 30.11 Phase 4 implementation — pilot page polish
+
+Phase 4 standardizes the Goods, Purchase/SCM, and Executive Dashboard pilots using the Phase 2 tokens and Phase 3 table foundation. Shared stat cards are now compact, SCM tabs are responsive and keyboard-visible, and Executive Dashboard card chrome follows the compact shell. The comparison task script and evidence are documented in `docs/design/phase4-pilot-polish/README.md`.
