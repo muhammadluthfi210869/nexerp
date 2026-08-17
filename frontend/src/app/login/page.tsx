@@ -57,6 +57,11 @@ const PROTOTYPE_ROLES = [
   "SYSTEM",
 ];
 
+// Runtime guard deliberately evaluated inside the browser event/render path.
+// This remains reliable even when Next.js tree-shakes build-time env branches.
+const isDemoHost = () =>
+  typeof window !== "undefined" && window.location.hostname === "demo.nexerp.id";
+
 type LoginResponseUser = {
   id: string;
   email: string;
@@ -81,7 +86,7 @@ export default function LoginPage() {
       let response: { data: { access_token: string; user: LoginResponseUser } };
 
       if (
-        IS_PROTOTYPE_MODE &&
+        (IS_PROTOTYPE_MODE || isDemoHost()) &&
         data.email.toLowerCase() === PROTOTYPE_EMAIL &&
         data.password === PROTOTYPE_PASSWORD
       ) {
@@ -197,7 +202,7 @@ export default function LoginPage() {
           </form>
         </Card>
 
-        {IS_PROTOTYPE_MODE && (
+        {(IS_PROTOTYPE_MODE || isDemoHost()) && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-center shadow-sm">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600">
               ⚡ Prototype Mode — Data Contoh
@@ -213,7 +218,7 @@ export default function LoginPage() {
         )}
 
         <p className="text-center text-[11px] font-medium text-slate-400 tracking-tight uppercase">
-          Powered by Nex Systems • V9.0
+          Powered by Nex Systems • V9.0 Prototype Baseline
         </p>
       </div>
     </div>
