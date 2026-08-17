@@ -567,6 +567,89 @@
 }
 
 /* ═══ COMPACT V2 SHELL FOUNDATION ═══ */
+.data-table-v2 {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-radius);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+.data-table-v2-toolbar {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px var(--card-px);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.data-table-v2-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.data-table-v2-scroll:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: -2px;
+}
+
+.data-table-v2-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.data-table-v2-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+}
+
+.data-table-v2-header-cell {
+  height: var(--table-header-h);
+  padding: 0 var(--table-cell-px);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.data-table-v2-row {
+  min-height: var(--table-row-h);
+  background: #fff;
+  transition: background-color 150ms ease;
+}
+
+.data-table-v2-row:hover {
+  background: #f8fafc;
+}
+
+.data-table-v2-row:not(:last-child) .data-table-v2-cell {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.data-table-v2-cell {
+  height: var(--table-row-h);
+  padding: 6px var(--table-cell-px);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .erp-sidebar {
   width: var(--sidebar-width) !important;
   box-shadow: 2px 0 12px rgba(15, 23, 42, 0.04) !important;
@@ -661,6 +744,15 @@
   .executive-dashboard-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
+  }
+
+  .data-table-v2-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .data-table-v2-table {
+    min-width: 680px;
   }
 }
 

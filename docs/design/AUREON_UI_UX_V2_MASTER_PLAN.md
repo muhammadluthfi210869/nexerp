@@ -1266,3 +1266,7 @@ Phase 2 is the first phase allowed to alter the compact visual system. `demo.nex
 Phase 2 establishes the compact visual foundation on `codex/ui-ux-v2-prototype`. Centralized tokens now reduce the shell and card/table chrome while preserving the existing Visual DNA. Typography was limited to the intended Inter weights, mobile zoom is no longer disabled, and shell controls have accessible labels and minimum touch targets. Responsive rules cover desktop, tablet, and the 375px mobile viewport; mobile navigation remains a Phase 5 deliverable.
 
 The implementation is documented in `docs/design/phase2-foundation/README.md`. No business flow, API contract, role, dataset, or V1 deployment was changed.
+
+### 30.10 Phase 3 implementation — DataTable V2 pilot
+
+Phase 3 applies the compact table foundation to Master Goods at `/master/goods`. The reusable `DataTableV2` component provides compact rows, sticky headers, contained horizontal overflow, a keyboard-focusable scroll region, and record context without changing the underlying API or row detail flow. Evidence and acceptance notes are tracked in `docs/design/phase3-datatable/README.md`.

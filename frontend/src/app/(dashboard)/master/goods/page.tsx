@@ -17,13 +17,14 @@ import {
 } from "lucide-react";
 import { DnaInput } from "@/components/dna/DnaInput";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTableV2,
+  DataTableV2Body,
+  DataTableV2Cell,
+  DataTableV2Head,
+  DataTableV2HeaderCell,
+  DataTableV2Row,
+  DataTableV2Toolbar,
+} from "@/components/layout/DataTableV2";
 import {
   Sheet,
   SheetContent,
@@ -53,7 +54,6 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DnaButton } from "@/components/dna/DnaButton";
-import { TableWrapper } from "@/components/dna/TableWrapper";
 import { StatCard } from "@/components/dna/StatCard";
 import { TableShell } from "@/components/layout/TableShell";
 import { SectionDivider } from "@/components/layout/SectionDivider";
@@ -289,36 +289,38 @@ export default function MasterGoodsPage() {
         <StatCard label="System Sync" value="100%" subValue="Ecosystem Integrity" icon={<Activity />} />
       </div>
 
-      <TableWrapper>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Product Specification</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Category</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Logistics</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right tabular-nums">Valuation</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">Stock Status</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <div>
+        <DataTableV2Toolbar>
+          <span>{filteredGoods.length} records · {goods.length} total SKUs</span>
+          <span className="text-[10px] font-semibold text-slate-400">Click a row to inspect material detail</span>
+        </DataTableV2Toolbar>
+        <DataTableV2 minWidth="840px">
+            <DataTableV2Head>
+              <DataTableV2Row>
+                <DataTableV2HeaderCell>Product Specification</DataTableV2HeaderCell>
+                <DataTableV2HeaderCell>Category</DataTableV2HeaderCell>
+                <DataTableV2HeaderCell>Logistics</DataTableV2HeaderCell>
+                <DataTableV2HeaderCell align="right">Valuation</DataTableV2HeaderCell>
+                <DataTableV2HeaderCell align="center">Stock Status</DataTableV2HeaderCell>
+                <DataTableV2HeaderCell align="right">Action</DataTableV2HeaderCell>
+              </DataTableV2Row>
+            </DataTableV2Head>
+            <DataTableV2Body>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                <DataTableV2Row>
+                  <DataTableV2Cell colSpan={6} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
                     Syncing Global Ledger...
-                  </TableCell>
-                </TableRow>
+                  </DataTableV2Cell>
+                </DataTableV2Row>
               ) : filteredGoods.map((good) => (
-                <TableRow
+                <DataTableV2Row
                   key={good.id}
-                  className="group hover:bg-slate-50/30 border-b border-slate-50 cursor-pointer"
                   onClick={() => {
                     fetchGoodDetail(good.id);
                     setIsPanelOpen(true);
                   }}
                 >
-                  <TableCell className="px-6 py-4">
+                  <DataTableV2Cell>
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
@@ -332,13 +334,13 @@ export default function MasterGoodsPage() {
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{good.code || "PENDING_SKU"}</span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
+                  </DataTableV2Cell>
+                  <DataTableV2Cell>
                     <DnaBadge>
                       {good.category?.name || "UNCATEGORIZED"}
                     </DnaBadge>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
+                  </DataTableV2Cell>
+                  <DataTableV2Cell>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
                         <ArrowRightLeft className="w-3 h-3 text-slate-400" />
@@ -349,30 +351,29 @@ export default function MasterGoodsPage() {
                         <span className="text-[9px] font-bold text-slate-500 uppercase">{good.leadTime} Days</span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right tabular-nums">
+                  </DataTableV2Cell>
+                  <DataTableV2Cell align="right" className="tabular-nums">
                     <span className="font-black text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString('id-ID')}</span>
                     <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-tighter">Moving Avg</span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-center">
+                  </DataTableV2Cell>
+                  <DataTableV2Cell align="center">
                     <div className="flex flex-col items-center gap-1">
                       <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
                         {good.stockQty} {good.unit}
                       </DnaBadge>
                       {good.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
                     </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
+                  </DataTableV2Cell>
+                  <DataTableV2Cell align="right">
+                    <div aria-label={`Inspect ${good.name}`} className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
                       <Info className="h-4 w-4" />
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DataTableV2Cell>
+                </DataTableV2Row>
               ))}
-            </TableBody>
-          </Table>
-        </div>
-      </TableWrapper>
+            </DataTableV2Body>
+        </DataTableV2>
+      </div>
 
       <Sheet open={isPanelOpen} onOpenChange={setIsPanelOpen}>
         <SheetContent side="right" className="sm:max-w-[700px] p-0 border-l border-slate-200 shadow-2xl bg-white flex flex-col h-full">
