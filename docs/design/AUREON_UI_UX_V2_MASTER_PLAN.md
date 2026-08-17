@@ -1252,3 +1252,11 @@ Live verification now passes:
 - golden screenshots are stored in `docs/design/baseline-v1/screenshots/`.
 
 The evidence index and rollback references are documented in `docs/design/baseline-v1/README.md`. The baseline is now safe for A/B comparison; V2 work should start from a separate branch and evidence directory.
+
+### 30.8 Phase 1 verification result — completed 17 August 2026
+
+Phase 1 is complete on branch `codex/ui-ux-v2-prototype`. The compact environment is live at `https://compact.nexerp.id` with a dedicated `compact-frontend` container, separate nginx virtual host, Cloudflare DNS record, and Let’s Encrypt certificate. It uses the same frontend mock dataset and role set as V1 so comparisons are not confounded by data or access differences.
+
+Both subdomains were verified independently with the documented demo credentials. Each reaches `/executive/dashboard`, displays the Prototype Mode badge, and reports zero post-login browser console errors. Phase 1 evidence is stored in `docs/design/phase1-compact/`.
+
+Phase 2 is the first phase allowed to alter the compact visual system. `demo.nexerp.id`, the V1 tag, and `docs/design/baseline-v1/` remain unchanged comparison references.
