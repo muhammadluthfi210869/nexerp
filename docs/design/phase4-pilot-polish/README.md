@@ -30,4 +30,12 @@ Record completion time, wrong clicks, confidence (1–5), and any readability is
 ## Verification
 
 - `npm run build` passes with all 169 routes generated.
-- Live screenshots and browser checks are added after compact deployment for 1440px and 375px pilot views.
+- Live screenshots and browser checks are stored in `screenshots/` for all three pilots at 1440px and the two responsive pages at 375px. Browser console reported 0 messages. At 375px the Purchase tab strip is intentionally contained (`pageScrollWidth=375`, tabs content `894px` inside a `351px` viewport region) and Executive Dashboard remained `pageScrollWidth=375`.
+
+Evidence files:
+
+- `screenshots/goods-1440.png`
+- `screenshots/purchase-1440.png`
+- `screenshots/purchase-375.png`
+- `screenshots/executive-1440.png`
+- `screenshots/executive-375.png`
