@@ -174,7 +174,8 @@
   --table-cell-px: 12px;
   --module-title-size: 24px;
   --module-subtitle-size: 12px;
-  --sidebar-width: 248px;
+  /* Sidebar density pilot: slightly narrower than old ERP while preserving label room. */
+  --sidebar-width: 236px;
   --header-height: 56px;
 
   /* ═══ VISUAL_DNA COMPONENT TOKENS (§3) ═══ */
@@ -701,13 +702,14 @@
 
 .erp-sidebar nav button,
 .erp-sidebar nav a {
-  min-height: 40px;
+  min-height: 36px;
 }
 
 .erp-sidebar nav button {
   border-radius: 10px !important;
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
+  min-height: 40px;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }
 
 .erp-sidebar nav a {

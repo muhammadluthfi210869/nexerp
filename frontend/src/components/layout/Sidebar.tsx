@@ -292,7 +292,7 @@ export function Sidebar() {
   return (
     <aside className="erp-sidebar border-r border-slate-200 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 font-sans">
       {/* Brand Section */}
-      <div className="p-7 pb-4">
+      <div className="p-5 pb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-slate-200 ring-4 ring-slate-50 flex items-center justify-center bg-white">
             <img src="/nexerp-logo.jpeg" alt="NEX ERP Logo" className="w-full h-full object-cover" />
@@ -307,7 +307,7 @@ export function Sidebar() {
       </div>
 
       {/* Command Search */}
-      <div className="px-6 py-4">
+      <div className="px-4 py-3">
         <div className="relative group">
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <FileSearch className="w-4 h-4 text-slate-300 group-focus-within:text-brand-black transition-colors" />
@@ -316,7 +316,7 @@ export function Sidebar() {
             aria-label="Search navigation"
             type="text"
             placeholder="Command + K..."
-            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
+            className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 pl-10 pr-3 text-[12px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -324,7 +324,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation Space */}
-      <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
+      <nav className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
         {TIER_STRUCTURE.map((tier) => {
           const tierGroups = MODULE_STRUCTURE.filter(group => 
             tier.groups.includes(group.label) && 
@@ -335,7 +335,7 @@ export function Sidebar() {
           if (tierGroups.length === 0) return null;
 
           return (
-            <div key={tier.tier} className="space-y-4">
+            <div key={tier.tier} className="space-y-2.5">
               <div className="flex items-center gap-3 px-3">
                 <div className="h-[1px] flex-1 bg-slate-100"></div>
                 <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase whitespace-nowrap">
@@ -344,7 +344,7 @@ export function Sidebar() {
                 <div className="h-[1px] flex-1 bg-slate-100"></div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {tierGroups.map((group) => {
                   const dashItems = group.items.filter(i => i.type === "dashboard");
                   const isGroupActive = group.items.some(i => i.href === pathname);
@@ -362,7 +362,7 @@ export function Sidebar() {
                           href={primaryHref}
                           onMouseEnter={() => router.prefetch(primaryHref)}
                           className={cn(
-                            "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                            "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
                             isPrimaryActive
                               ? "bg-brand-black text-white shadow-md shadow-slate-200"
                               : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
@@ -379,7 +379,7 @@ export function Sidebar() {
                               )} />
                             </div>
                             <span className={cn(
-                              "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
+                              "text-[13px] font-semibold tracking-tight whitespace-nowrap truncate",
                               isPrimaryActive ? "text-white" : "text-inherit"
                             )}>
                               {group.label}
@@ -397,7 +397,7 @@ export function Sidebar() {
                                   href={item.href}
                                   onMouseEnter={() => router.prefetch(item.href)}
                                   className={cn(
-                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                    "flex items-center justify-between p-2 rounded-lg transition-all duration-200 group relative",
                                     isExtraActive
                                       ? "bg-slate-50 text-brand-black font-bold"
                                       : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
@@ -408,7 +408,7 @@ export function Sidebar() {
                                       "w-3.5 h-3.5 transition-colors",
                                       isExtraActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
                                     )} />
-                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                    <span className="text-[12px] font-medium tracking-tight whitespace-nowrap truncate">
                                       {item.name}
                                     </span>
                                   </div>
@@ -441,7 +441,7 @@ export function Sidebar() {
                       <button
                         onClick={() => toggleGroup(group.label)}
                         className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                          "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
                           isGroupActive
                             ? "bg-brand-black text-white shadow-md shadow-slate-200"
                             : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
@@ -458,7 +458,7 @@ export function Sidebar() {
                             )} />
                           </div>
                           <span className={cn(
-                            "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
+                            "text-[13px] font-semibold tracking-tight whitespace-nowrap truncate",
                             isGroupActive ? "text-white" : "text-inherit"
                           )}>
                             {group.label}
@@ -480,7 +480,7 @@ export function Sidebar() {
                                   href={item.href}
                                   onMouseEnter={() => router.prefetch(item.href)}
                                   className={cn(
-                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                    "flex items-center justify-between p-2 rounded-lg transition-all duration-200 group relative",
                                     isActive
                                       ? "bg-slate-50 text-brand-black font-bold"
                                       : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
@@ -491,7 +491,7 @@ export function Sidebar() {
                                       "w-3.5 h-3.5 transition-colors",
                                       isActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
                                     )} />
-                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                    <span className="text-[12px] font-medium tracking-tight whitespace-nowrap truncate">
                                       {item.name}
                                     </span>
                                   </div>
@@ -523,7 +523,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer Profile */}
-      <div className="p-6 bg-slate-50/50 border-t border-slate-100 mt-auto">
+      <div className="p-4 bg-slate-50/50 border-t border-slate-100 mt-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden group">
