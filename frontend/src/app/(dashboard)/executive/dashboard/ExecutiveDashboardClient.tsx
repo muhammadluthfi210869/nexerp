@@ -114,7 +114,6 @@ export default function ExecutiveDashboardClient() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* I. SYSTEM ALERT BANNER */}
       <div
-        className="executive-dashboard-grid"
         style={{
           display: "flex",
           alignItems: "center",
@@ -153,6 +152,7 @@ export default function ExecutiveDashboardClient() {
 
       {/* II. 2x3 DASHBOARD GRID */}
       <div
+        className="executive-dashboard-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
