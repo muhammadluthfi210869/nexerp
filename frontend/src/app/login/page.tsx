@@ -60,7 +60,8 @@ const PROTOTYPE_ROLES = [
 // Runtime guard deliberately evaluated inside the browser event/render path.
 // This remains reliable even when Next.js tree-shakes build-time env branches.
 const isDemoHost = () =>
-  typeof window !== "undefined" && window.location.hostname === "demo.nexerp.id";
+  typeof window !== "undefined" &&
+  ["demo.nexerp.id", "compact.nexerp.id"].includes(window.location.hostname);
 
 type LoginResponseUser = {
   id: string;

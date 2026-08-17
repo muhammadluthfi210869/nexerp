@@ -14,8 +14,9 @@ import { getMockData } from "@/lib/mock-data";
  */
 export const IS_PROTOTYPE_MODE =
   process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  (globalThis as typeof globalThis & { location?: Location }).location?.hostname ===
-    "demo.nexerp.id";
+  ["demo.nexerp.id", "compact.nexerp.id"].includes(
+    (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
+  );
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' &&

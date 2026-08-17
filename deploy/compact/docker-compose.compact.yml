@@ -1,0 +1,23 @@
+# Compact V2 environment — isolated frontend-only prototype.
+# Deliberately shares no container name or filesystem with demo.nexerp.id.
+services:
+  compact-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+        NEXT_PUBLIC_PROTOTYPE_MODE: "true"
+    restart: always
+    container_name: compact-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ""
+      NEXT_PUBLIC_PROTOTYPE_MODE: "true"
+      NODE_ENV: production
+    networks:
+      - shared
+
+networks:
+  shared:
+    external:
+      name: production-light_default
