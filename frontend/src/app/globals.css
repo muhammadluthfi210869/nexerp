@@ -174,8 +174,8 @@
   --table-cell-px: 12px;
   --module-title-size: 24px;
   --module-subtitle-size: 12px;
-  /* Sidebar density pilot: slightly narrower than old ERP while preserving label room. */
-  --sidebar-width: 236px;
+  /* Migration-friendly shell: preserve the old ERP's familiar working width. */
+  --sidebar-width: 248px;
   --header-height: 56px;
 
   /* ═══ VISUAL_DNA COMPONENT TOKENS (§3) ═══ */

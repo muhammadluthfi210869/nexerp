@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
   ChevronDown,
@@ -44,6 +44,7 @@ import {
   Briefcase,
   Barcode
 } from "lucide-react";
+import { Search, X, Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -65,49 +66,49 @@ interface NavGroup {
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
-    label: "EXECUTIVE",
+    label: "EKSEKUTIF",
     icon: ShieldAlert,
     roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
     items: [
-      { name: "Dashboard Eksekutif", href: "/executive/dashboard", type: "dashboard" },
-      { name: "Dashboard Notifikasi", href: "/executive/dashboard?tab=notifications", type: "action", badge: "12" },
+      { name: "Dasbor Eksekutif", href: "/executive/dashboard", type: "dashboard" },
+      { name: "Notifikasi", href: "/executive/dashboard?tab=notifications", type: "action", badge: "12" },
     ]
   },
   {
-    label: "DIGITAL MARKETING",
+    label: "MARKETING DIGITAL",
     icon: BarChart3,
     roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
-      { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
-      { name: "Campaign Input", href: "/marketing/input", type: "input" },
-      { name: "Management Task", href: "/marketing/management-task", type: "action" },
-      { name: "Lead Logs", href: "/marketing/logs", type: "history" },
+      { name: "Dasbor Marketing", href: "/marketing/dashboard", type: "dashboard" },
+      { name: "Input Kampanye", href: "/marketing/input", type: "input" },
+      { name: "Tugas Marketing", href: "/marketing/management-task", type: "action" },
+      { name: "Riwayat Lead", href: "/marketing/logs", type: "history" },
     ]
   },
   {
-    label: "BUSSDEV",
+    label: "BUSINESS DEVELOPMENT",
     icon: Activity,
     roles: ["SUPER_ADMIN", "COMMERCIAL", "MARKETING", "DIRECTOR"],
     items: [
-      { name: "Command Center", href: "/bussdev/dashboard", type: "dashboard" },
-      { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
-      { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
+      { name: "Dasbor Business Development", href: "/bussdev/dashboard", type: "dashboard" },
+      { name: "Pipeline Penjualan", href: "/bussdev/pipeline", type: "action" },
+      { name: "Form Intake Lead", href: "/bussdev/intake", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
     ]
   },
   {
-    label: "FINANCE",
+    label: "KEUANGAN",
     icon: Landmark,
     roles: ["SUPER_ADMIN", "FINANCE", "DIRECTOR"],
     items: [
-      { name: "Pusat Komando", href: "/finance/dashboard", type: "dashboard" },
+      { name: "Dasbor Keuangan", href: "/finance/dashboard", type: "dashboard" },
       { name: "Kas & Bank", href: "/finance/kas", type: "input" },
       { name: "Jurnal & COA", href: "/finance/jurnal", type: "history" },
       { name: "Uang Muka (DP)", href: "/finance/dp", type: "input" },
       { name: "Pembayaran", href: "/finance/bayar", type: "input" },
       { name: "Piutang & Hutang", href: "/finance/piutang", type: "action", badge: "3" },
-      { name: "Fund & Approval", href: "/finance/fund", type: "action" },
-      { name: "Laporan", href: "/finance/reports", type: "history" },
+      { name: "Dana & Persetujuan", href: "/finance/fund", type: "action" },
+      { name: "Laporan Keuangan", href: "/finance/reports", type: "history" },
     ]
   },
   {
@@ -115,20 +116,20 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Scale,
     roles: ["SUPER_ADMIN", "COMPLIANCE", "DIRECTOR"],
     items: [
-      { name: "Watchdog Hub", href: "/legality/dashboard", type: "dashboard" },
-      { name: "Regulatory Pipeline", href: "/legality/pipeline", type: "action" },
-      { name: "Compliance Inbox", href: "/legality/inbox", type: "input" },
+      { name: "Dasbor Legalitas", href: "/legality/dashboard", type: "dashboard" },
+      { name: "Pipeline Legalitas", href: "/legality/pipeline", type: "action" },
+      { name: "Inbox Compliance", href: "/legality/inbox", type: "input" },
     ]
   },
   {
-    label: "RESEARCH & DEV",
+    label: "RISET & PENGEMBANGAN",
     icon: Beaker,
     roles: ["SUPER_ADMIN", "RND", "DIRECTOR"],
     items: [
-      { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
-      { name: "Formula Repository", href: "/rnd/repository", type: "history" },
-      { name: "Sample Inbox", href: "/rnd/inbox", type: "input", badge: "New" },
-      { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
+      { name: "Pipeline Aktif", href: "/rnd/pipeline", type: "action" },
+      { name: "Repository Formula", href: "/rnd/repository", type: "history" },
+      { name: "Inbox Sampel", href: "/rnd/inbox", type: "input", badge: "Baru" },
+      { name: "Analitik Formula", href: "/rnd/dashboard", type: "dashboard" },
     ]
   },
   {
@@ -136,7 +137,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Truck,
     roles: ["SUPER_ADMIN", "SCM", "PURCHASING", "DIRECTOR"],
     items: [
-      { name: "Dashboard", href: "/scm/dashboard", type: "dashboard" },
+      { name: "Dasbor Supply Chain", href: "/scm/dashboard", type: "dashboard" },
       { name: "Pembelian", href: "/scm/pembelian", type: "action", badge: "5", badgeVariant: "warning" },
       { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", type: "action" },
       { name: "Barang", href: "/master/goods", type: "input" },
@@ -144,11 +145,11 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "PRODUCTION",
+    label: "PRODUKSI",
     icon: Factory,
     roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
     items: [
-      { name: "Dashboard", href: "/production", type: "dashboard" },
+      { name: "Dasbor Produksi", href: "/production", type: "dashboard" },
       { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
       { name: "Operasional", href: "/production/operations", type: "dashboard" },
       { name: "Pipeline", href: "/production/operations?tab=pipeline", type: "history" },
@@ -160,10 +161,10 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: FlaskConical,
     roles: ["SUPER_ADMIN", "QC_LAB", "DIRECTOR"],
     items: [
-      { name: "Quality Analytics", href: "/qc/dashboard", type: "dashboard" },
-      { name: "Lab Inspections", href: "/qc/inspections", type: "action" },
-      { name: "Stability Tests", href: "/qc/stability", type: "action" },
-      { name: "CoA Center", href: "/qc/coa", type: "history" },
+      { name: "Dasbor Quality Control", href: "/qc/dashboard", type: "dashboard" },
+      { name: "Inspeksi Lab", href: "/qc/inspections", type: "action" },
+      { name: "Uji Stabilitas", href: "/qc/stability", type: "action" },
+      { name: "Pusat CoA", href: "/qc/coa", type: "history" },
       { name: "Audit Trail", href: "/executive/audit", type: "history" },
     ]
   },
@@ -172,14 +173,14 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Warehouse,
     roles: ["SUPER_ADMIN", "WAREHOUSE", "SCM", "DIRECTOR"],
     items: [
-      { name: "Dashboard", href: "/warehouse", type: "dashboard" },
+      { name: "Dasbor Gudang", href: "/warehouse", type: "dashboard" },
       { name: "Gudang", href: "/warehouse/gudang", type: "action" },
       { name: "Stok", href: "/warehouse/stok", type: "history" },
       { name: "Data Gudang", href: "/master/warehouses", type: "input" },
     ]
   },
   {
-    label: "CREATIVE HUB",
+    label: "CREATIVE",
     icon: Palette,
     roles: ["SUPER_ADMIN", "CREATIVE", "DIRECTOR"],
     items: [
@@ -187,18 +188,18 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "HUMAN RESOURCES",
+    label: "SUMBER DAYA MANUSIA",
     icon: Users,
     roles: ["SUPER_ADMIN", "HR", "DIRECTOR"],
     items: [
-      { name: "Dashboard", href: "/hr/dashboard", type: "dashboard" },
-      { name: "Personnel", href: "/master/personnel", type: "input" },
-      { name: "Attendance", href: "/hr/attendance", type: "action" },
-      { name: "Payroll", href: "/hr/payroll", type: "history" },
+      { name: "Dasbor HR", href: "/hr/dashboard", type: "dashboard" },
+      { name: "Personalia", href: "/master/personnel", type: "input" },
+      { name: "Kehadiran", href: "/hr/attendance", type: "action" },
+      { name: "Penggajian", href: "/hr/payroll", type: "history" },
     ]
   },
   {
-    label: "SYSTEM CONTROL",
+    label: "SISTEM",
     icon: Zap,
     roles: ["SUPER_ADMIN", "MANAGEMENT", "DIRECTOR"],
     items: [
@@ -209,41 +210,41 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "AUTOMATION ENGINE",
+    label: "AUTOMASI",
     icon: Cog,
     items: [
-      { name: "Document Center", href: "/documents/drafts", type: "action", badge: "NEW" },
-      { name: "Overview", href: "/automation", type: "dashboard" },
+      { name: "Pusat Dokumen", href: "/documents/drafts", type: "action", badge: "Baru" },
+      { name: "Ringkasan", href: "/automation", type: "dashboard" },
       { name: "Foundation", href: "/automation", type: "action" },
-      { name: "BussDev", href: "/automation", type: "action" },
-      { name: "Finance", href: "/automation", type: "action" },
-      { name: "Warehouse", href: "/automation", type: "action" },
-      { name: "Production", href: "/automation", type: "action" },
-      { name: "SCM", href: "/automation", type: "action" },
-      { name: "HR & All Divisions", href: "/automation", type: "action" },
-      { name: "Executive", href: "/automation", type: "action" },
-      { name: "System", href: "/automation", type: "action" },
-      { name: "Legality", href: "/automation", type: "action" },
+      { name: "Business Development", href: "/automation", type: "action" },
+      { name: "Keuangan", href: "/automation", type: "action" },
+      { name: "Gudang", href: "/automation", type: "action" },
+      { name: "Produksi", href: "/automation", type: "action" },
+      { name: "Supply Chain", href: "/automation", type: "action" },
+      { name: "HR & Semua Divisi", href: "/automation", type: "action" },
+      { name: "Eksekutif", href: "/automation", type: "action" },
+      { name: "Sistem", href: "/automation", type: "action" },
+      { name: "Legalitas", href: "/automation", type: "action" },
     ]
   }
 ];
 
 const TIER_STRUCTURE = [
   {
-    tier: "CORE INTELLIGENCE",
-    groups: ["EXECUTIVE", "DIGITAL MARKETING", "BUSSDEV"]
+    tier: "DASHBOARD & KOMERSIAL",
+    groups: ["EKSEKUTIF", "MARKETING DIGITAL", "BUSINESS DEVELOPMENT"]
   },
   {
-    tier: "OPERATIONAL EXCELLENCE",
-    groups: ["FINANCE", "SUPPLY CHAIN", "PRODUCTION", "QUALITY CONTROL", "GUDANG", "RESEARCH & DEV"]
+    tier: "OPERASIONAL",
+    groups: ["KEUANGAN", "SUPPLY CHAIN", "PRODUKSI", "QUALITY CONTROL", "GUDANG", "RISET & PENGEMBANGAN"]
   },
   {
-    tier: "STRATEGIC SUPPORT",
-    groups: ["LEGALITAS / APJ", "HUMAN RESOURCES", "CREATIVE HUB", "SYSTEM CONTROL"]
+    tier: "PENDUKUNG",
+    groups: ["LEGALITAS / APJ", "SUMBER DAYA MANUSIA", "CREATIVE", "SISTEM"]
   },
   {
-    tier: "AUTOMATION ENGINE",
-    groups: ["AUTOMATION ENGINE"]
+    tier: "AUTOMASI",
+    groups: ["AUTOMASI"]
   }
 ];
 
@@ -259,35 +260,96 @@ const getIconByType = (type: string) => {
   }
 };
 
+const isItemActive = (href: string, pathname: string, queryString: string) => {
+  const [itemPath, itemQuery] = href.split("?");
+  if (itemQuery) return pathname === itemPath && queryString === itemQuery;
+  return (pathname === itemPath && !queryString) || pathname.startsWith(`${itemPath}/`);
+};
+
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [favoriteHrefs, setFavoriteHrefs] = useState<string[]>([]);
+  const [recentHrefs, setRecentHrefs] = useState<string[]>([]);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
+    try {
+      setFavoriteHrefs(JSON.parse(localStorage.getItem("nexerp.sidebar.favorites") || "[]"));
+      setRecentHrefs(JSON.parse(localStorage.getItem("nexerp.sidebar.recent") || "[]"));
+    } catch {
+      setFavoriteHrefs([]);
+      setRecentHrefs([]);
+    }
   }, []);
 
   useEffect(() => {
     const activeGroup = MODULE_STRUCTURE.find(group =>
-      group.items.some(item => item.href === pathname)
+      group.items.some(item => isItemActive(item.href, pathname, searchParams.toString()))
     );
-    if (activeGroup) {
+    if (activeGroup && !searchQuery) {
       setOpenGroups([activeGroup.label]);
     }
-  }, [pathname]);
+  }, [pathname, searchParams, searchQuery]);
 
-  const isExecutive = user?.roles?.includes("DIRECTOR");
+  // Director tetap dapat melihat seluruh menu yang diizinkan agar tidak kehilangan akses transaksi.
+  const isExecutive = false;
   const isRevitaMarketingOnly = user?.email?.toLowerCase?.() === "revita@nexerp.id";
 
   const toggleGroup = (label: string) => {
-    setOpenGroups(prev =>
-      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
-    );
+    setOpenGroups(prev => prev.includes(label) ? [] : [label]);
   };
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, []);
+
+  const toggleFavorite = (href: string) => {
+    setFavoriteHrefs(prev => {
+      const next = prev.includes(href) ? prev.filter(item => item !== href) : [href, ...prev];
+      localStorage.setItem("nexerp.sidebar.favorites", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const rememberRecent = (href: string) => {
+    setRecentHrefs(prev => {
+      const next = [href, ...prev.filter(item => item !== href)].slice(0, 5);
+      localStorage.setItem("nexerp.sidebar.recent", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const visibleItemsForGroup = (group: NavGroup) => group.items.filter(item => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.trim().toLowerCase();
+    return item.name.toLowerCase().includes(query) || group.label.toLowerCase().includes(query);
+  });
+
+  const favoriteItems = useMemo(() => MODULE_STRUCTURE.flatMap(group =>
+    group.items.filter(item => favoriteHrefs.includes(item.href)).map(item => ({ ...item, group: group.label }))
+  ), [favoriteHrefs]);
+
+  const recentItems = useMemo(() => recentHrefs.map(href => {
+    for (const group of MODULE_STRUCTURE) {
+      const item = group.items.find(candidate => candidate.href === href);
+      if (item) return { ...item, group: group.label };
+    }
+    return null;
+  }).filter(Boolean) as Array<SubMenuItem & { group: string }>, [recentHrefs]);
 
   return (
     <aside className="erp-sidebar border-r border-slate-200 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 font-sans">
@@ -310,26 +372,78 @@ export function Sidebar() {
       <div className="px-4 py-3">
         <div className="relative group">
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <FileSearch className="w-4 h-4 text-slate-300 group-focus-within:text-brand-black transition-colors" />
+            <Search className="w-4 h-4 text-slate-300 group-focus-within:text-brand-black transition-colors" />
           </div>
           <input
+            ref={searchRef}
             aria-label="Search navigation"
             type="text"
-            placeholder="Command + K..."
-            className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 pl-10 pr-3 text-[12px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
+            placeholder="Cari menu... (Ctrl + K)"
+            onKeyDown={(event) => event.key === "Escape" && setSearchQuery("")}
+            className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2 pl-10 pr-9 text-[12px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              aria-label="Hapus pencarian menu"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-white hover:text-slate-700"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Navigation Space */}
       <nav className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
+        {!searchQuery && (favoriteItems.length > 0 || recentItems.length > 0) && (
+          <div className="space-y-3">
+            {favoriteItems.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                  <Star className="h-3 w-3 text-amber-500" fill="currentColor" /> Favorit
+                </div>
+                {favoriteItems.map(item => (
+                  <Link
+                    key={`favorite-${item.href}`}
+                    href={item.href}
+                    onClick={() => rememberRecent(item.href)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    <Star className="h-3.5 w-3.5 shrink-0 text-amber-500" fill="currentColor" />
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {recentItems.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                  <Clock3 className="h-3 w-3" /> Terakhir dibuka
+                </div>
+                {recentItems.slice(0, 3).map(item => (
+                  <Link
+                    key={`recent-${item.href}`}
+                    href={item.href}
+                    onClick={() => rememberRecent(item.href)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    <Clock3 className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {TIER_STRUCTURE.map((tier) => {
           const tierGroups = MODULE_STRUCTURE.filter(group => 
             tier.groups.includes(group.label) && 
             (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
-            (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
+            (!isRevitaMarketingOnly || group.label === "MARKETING DIGITAL")
           );
 
           if (tierGroups.length === 0) return null;
@@ -346,8 +460,10 @@ export function Sidebar() {
 
               <div className="space-y-1">
                 {tierGroups.map((group) => {
+                  const visibleItems = visibleItemsForGroup(group);
+                  if (visibleItems.length === 0) return null;
                   const dashItems = group.items.filter(i => i.type === "dashboard");
-                  const isGroupActive = group.items.some(i => i.href === pathname);
+                  const isGroupActive = group.items.some(i => isItemActive(i.href, pathname, searchParams.toString()));
 
                   // --- EXECUTIVE MODE (DIRECTOR role) ---
                   if (isExecutive) {
@@ -435,7 +551,7 @@ export function Sidebar() {
                   }
 
                   // --- NORMAL MODE (non-DIRECTOR) ---
-                  const isOpen = openGroups.includes(group.label);
+                  const isOpen = searchQuery.trim().length > 0 || openGroups.includes(group.label);
                   return (
                     <div key={group.label} className="space-y-1">
                       <button
@@ -471,21 +587,22 @@ export function Sidebar() {
                       </button>
                         {isOpen && (
                           <div className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
-                            {group.items.map((item) => {
-                              const isActive = pathname === item.href;
+                            {visibleItems.map((item) => {
+                              const isActive = isItemActive(item.href, pathname, searchParams.toString());
                               const IconType = getIconByType(item.type);
                               return (
-                                <Link
-                                  key={item.name}
-                                  href={item.href}
-                                  onMouseEnter={() => router.prefetch(item.href)}
-                                  className={cn(
-                                    "flex items-center justify-between p-2 rounded-lg transition-all duration-200 group relative",
-                                    isActive
-                                      ? "bg-slate-50 text-brand-black font-bold"
-                                      : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
-                                  )}
-                                >
+                                <div key={item.name} className="flex items-center gap-1">
+                                  <Link
+                                    href={item.href}
+                                    onClick={() => rememberRecent(item.href)}
+                                    onMouseEnter={() => router.prefetch(item.href)}
+                                    className={cn(
+                                      "min-w-0 flex-1 flex items-center justify-between p-2 rounded-lg transition-all duration-200 group relative",
+                                      isActive
+                                        ? "bg-slate-50 text-brand-black font-bold"
+                                        : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
+                                    )}
+                                  >
                                   <div className="flex items-center gap-3">
                                     <IconType className={cn(
                                       "w-3.5 h-3.5 transition-colors",
@@ -508,7 +625,21 @@ export function Sidebar() {
                                   {isActive && (
                                     <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
                                   )}
-                                </Link>
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    aria-label={`${favoriteHrefs.includes(item.href) ? "Hapus dari" : "Tambahkan ke"} favorit: ${item.name}`}
+                                    onClick={() => toggleFavorite(item.href)}
+                                    className={cn(
+                                      "shrink-0 rounded-md p-1 transition-colors",
+                                      favoriteHrefs.includes(item.href)
+                                        ? "text-amber-500"
+                                        : "text-slate-200 hover:bg-slate-50 hover:text-amber-500"
+                                    )}
+                                  >
+                                    <Star className="h-3.5 w-3.5" fill={favoriteHrefs.includes(item.href) ? "currentColor" : "none"} />
+                                  </button>
+                                </div>
                               );
                             })}
                           </div>
