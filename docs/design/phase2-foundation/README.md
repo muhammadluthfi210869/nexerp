@@ -25,7 +25,7 @@ Phase 2 establishes the compact shell and accessibility foundation for the V2 pr
 ## Verification
 
 - `npm run build` passes: Next.js compile, TypeScript, and all 169 routes generated.
-- Live checks are recorded after deployment below (login, dashboard route, console, desktop 1440/1280, mobile 375).
+- Live checks are recorded in `screenshots/` (login, dashboard route, console, desktop 1440/1280, mobile 375). The final 375px check reports `scrollWidth=375`, `clientWidth=375`, and a single 351px dashboard grid column.
 - V1 remains available at `https://demo.nexerp.id`; V2 remains isolated at `https://compact.nexerp.id`.
 
 ## Next phase
