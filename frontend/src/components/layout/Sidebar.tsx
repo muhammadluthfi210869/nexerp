@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -44,7 +44,7 @@ import {
   Briefcase,
   Barcode
 } from "lucide-react";
-import { Search, X, Clock3 } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -66,7 +66,7 @@ interface NavGroup {
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
-    label: "EKSEKUTIF",
+    label: "Executive",
     icon: ShieldAlert,
     roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
     items: [
@@ -75,7 +75,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "MARKETING DIGITAL",
+    label: "Digital Marketing",
     icon: BarChart3,
     roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
@@ -86,18 +86,18 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "BUSINESS DEVELOPMENT",
+    label: "BusDev",
     icon: Activity,
     roles: ["SUPER_ADMIN", "COMMERCIAL", "MARKETING", "DIRECTOR"],
     items: [
-      { name: "Dasbor Business Development", href: "/bussdev/dashboard", type: "dashboard" },
+      { name: "Dasbor BusDev", href: "/bussdev/dashboard", type: "dashboard" },
       { name: "Pipeline Penjualan", href: "/bussdev/pipeline", type: "action" },
       { name: "Form Intake Lead", href: "/bussdev/intake", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
     ]
   },
   {
-    label: "KEUANGAN",
+    label: "Finance",
     icon: Landmark,
     roles: ["SUPER_ADMIN", "FINANCE", "DIRECTOR"],
     items: [
@@ -112,17 +112,17 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "LEGALITAS / APJ",
+    label: "Legal / APJ",
     icon: Scale,
     roles: ["SUPER_ADMIN", "COMPLIANCE", "DIRECTOR"],
     items: [
-      { name: "Dasbor Legalitas", href: "/legality/dashboard", type: "dashboard" },
+      { name: "Dasbor Legal / APJ", href: "/legality/dashboard", type: "dashboard" },
       { name: "Pipeline Legalitas", href: "/legality/pipeline", type: "action" },
       { name: "Inbox Compliance", href: "/legality/inbox", type: "input" },
     ]
   },
   {
-    label: "RISET & PENGEMBANGAN",
+    label: "RnD",
     icon: Beaker,
     roles: ["SUPER_ADMIN", "RND", "DIRECTOR"],
     items: [
@@ -133,7 +133,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "SUPPLY CHAIN",
+    label: "Supply Chain",
     icon: Truck,
     roles: ["SUPER_ADMIN", "SCM", "PURCHASING", "DIRECTOR"],
     items: [
@@ -145,7 +145,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "PRODUKSI",
+    label: "Production",
     icon: Factory,
     roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
     items: [
@@ -157,7 +157,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "QUALITY CONTROL",
+    label: "Quality Control",
     icon: FlaskConical,
     roles: ["SUPER_ADMIN", "QC_LAB", "DIRECTOR"],
     items: [
@@ -169,7 +169,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "GUDANG",
+    label: "Warehouse",
     icon: Warehouse,
     roles: ["SUPER_ADMIN", "WAREHOUSE", "SCM", "DIRECTOR"],
     items: [
@@ -180,7 +180,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "CREATIVE",
+    label: "Creative",
     icon: Palette,
     roles: ["SUPER_ADMIN", "CREATIVE", "DIRECTOR"],
     items: [
@@ -188,7 +188,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "SUMBER DAYA MANUSIA",
+    label: "HR",
     icon: Users,
     roles: ["SUPER_ADMIN", "HR", "DIRECTOR"],
     items: [
@@ -199,7 +199,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "SISTEM",
+    label: "System",
     icon: Zap,
     roles: ["SUPER_ADMIN", "MANAGEMENT", "DIRECTOR"],
     items: [
@@ -210,7 +210,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     ]
   },
   {
-    label: "AUTOMASI",
+    label: "Automation",
     icon: Cog,
     items: [
       { name: "Pusat Dokumen", href: "/documents/drafts", type: "action", badge: "Baru" },
@@ -231,20 +231,20 @@ const MODULE_STRUCTURE: NavGroup[] = [
 
 const TIER_STRUCTURE = [
   {
-    tier: "DASHBOARD & KOMERSIAL",
-    groups: ["EKSEKUTIF", "MARKETING DIGITAL", "BUSINESS DEVELOPMENT"]
+    tier: "DASHBOARDS & COMMERCIAL",
+    groups: ["Executive", "Digital Marketing", "BusDev"]
   },
   {
-    tier: "OPERASIONAL",
-    groups: ["KEUANGAN", "SUPPLY CHAIN", "PRODUKSI", "QUALITY CONTROL", "GUDANG", "RISET & PENGEMBANGAN"]
+    tier: "OPERATIONS",
+    groups: ["Finance", "Supply Chain", "Production", "Quality Control", "Warehouse", "RnD"]
   },
   {
-    tier: "PENDUKUNG",
-    groups: ["LEGALITAS / APJ", "SUMBER DAYA MANUSIA", "CREATIVE", "SISTEM"]
+    tier: "SUPPORT",
+    groups: ["Legal / APJ", "HR", "Creative", "System"]
   },
   {
-    tier: "AUTOMASI",
-    groups: ["AUTOMASI"]
+    tier: "AUTOMATION",
+    groups: ["Automation"]
   }
 ];
 
@@ -273,20 +273,14 @@ export function Sidebar() {
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [favoriteHrefs, setFavoriteHrefs] = useState<string[]>([]);
-  const [recentHrefs, setRecentHrefs] = useState<string[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
-    try {
-      setFavoriteHrefs(JSON.parse(localStorage.getItem("nexerp.sidebar.favorites") || "[]"));
-      setRecentHrefs(JSON.parse(localStorage.getItem("nexerp.sidebar.recent") || "[]"));
-    } catch {
-      setFavoriteHrefs([]);
-      setRecentHrefs([]);
-    }
+    // Navigation is role-scoped; remove legacy global personalization state.
+    localStorage.removeItem("nexerp.sidebar.favorites");
+    localStorage.removeItem("nexerp.sidebar.recent");
   }, []);
 
   useEffect(() => {
@@ -317,39 +311,11 @@ export function Sidebar() {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
-  const toggleFavorite = (href: string) => {
-    setFavoriteHrefs(prev => {
-      const next = prev.includes(href) ? prev.filter(item => item !== href) : [href, ...prev];
-      localStorage.setItem("nexerp.sidebar.favorites", JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const rememberRecent = (href: string) => {
-    setRecentHrefs(prev => {
-      const next = [href, ...prev.filter(item => item !== href)].slice(0, 5);
-      localStorage.setItem("nexerp.sidebar.recent", JSON.stringify(next));
-      return next;
-    });
-  };
-
   const visibleItemsForGroup = (group: NavGroup) => group.items.filter(item => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.trim().toLowerCase();
     return item.name.toLowerCase().includes(query) || group.label.toLowerCase().includes(query);
   });
-
-  const favoriteItems = useMemo(() => MODULE_STRUCTURE.flatMap(group =>
-    group.items.filter(item => favoriteHrefs.includes(item.href)).map(item => ({ ...item, group: group.label }))
-  ), [favoriteHrefs]);
-
-  const recentItems = useMemo(() => recentHrefs.map(href => {
-    for (const group of MODULE_STRUCTURE) {
-      const item = group.items.find(candidate => candidate.href === href);
-      if (item) return { ...item, group: group.label };
-    }
-    return null;
-  }).filter(Boolean) as Array<SubMenuItem & { group: string }>, [recentHrefs]);
 
   return (
     <aside className="erp-sidebar border-r border-slate-200 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 font-sans">
@@ -399,63 +365,21 @@ export function Sidebar() {
 
       {/* Navigation Space */}
       <nav className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
-        {!searchQuery && (favoriteItems.length > 0 || recentItems.length > 0) && (
-          <div className="space-y-3">
-            {favoriteItems.length > 0 && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  <Star className="h-3 w-3 text-amber-500" fill="currentColor" /> Favorit
-                </div>
-                {favoriteItems.map(item => (
-                  <Link
-                    key={`favorite-${item.href}`}
-                    href={item.href}
-                    onClick={() => rememberRecent(item.href)}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    <Star className="h-3.5 w-3.5 shrink-0 text-amber-500" fill="currentColor" />
-                    <span className="truncate">{item.name}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-            {recentItems.length > 0 && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  <Clock3 className="h-3 w-3" /> Terakhir dibuka
-                </div>
-                {recentItems.slice(0, 3).map(item => (
-                  <Link
-                    key={`recent-${item.href}`}
-                    href={item.href}
-                    onClick={() => rememberRecent(item.href)}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    <Clock3 className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-                    <span className="truncate">{item.name}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
         {TIER_STRUCTURE.map((tier) => {
           const tierGroups = MODULE_STRUCTURE.filter(group => 
             tier.groups.includes(group.label) && 
             (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
-            (!isRevitaMarketingOnly || group.label === "MARKETING DIGITAL")
+            (!isRevitaMarketingOnly || group.label === "Digital Marketing")
           );
 
           if (tierGroups.length === 0) return null;
 
           return (
             <div key={tier.tier} className="space-y-2.5">
-              <div className="flex items-center gap-3 px-3">
-                <div className="h-[1px] flex-1 bg-slate-100"></div>
-                <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase whitespace-nowrap">
+              <div className="px-3 text-left">
+                <span className="text-[9px] font-black text-slate-400 tracking-[0.16em] uppercase whitespace-nowrap">
                   {tier.tier}
                 </span>
-                <div className="h-[1px] flex-1 bg-slate-100"></div>
               </div>
 
               <div className="space-y-1">
@@ -478,13 +402,13 @@ export function Sidebar() {
                           href={primaryHref}
                           onMouseEnter={() => router.prefetch(primaryHref)}
                           className={cn(
-                            "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                            "w-full min-w-0 flex items-center justify-between gap-2 overflow-hidden px-3 py-2.5 rounded-xl text-left transition-colors duration-200 group",
                             isPrimaryActive
                               ? "bg-brand-black text-white shadow-md shadow-slate-200"
                               : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                           )}
                         >
-                          <div className="flex items-center gap-3.5">
+                          <div className="min-w-0 flex flex-1 items-center gap-3">
                             <div className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
                               isPrimaryActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
@@ -495,7 +419,7 @@ export function Sidebar() {
                               )} />
                             </div>
                             <span className={cn(
-                              "text-[13px] font-semibold tracking-tight whitespace-nowrap truncate",
+                              "min-w-0 flex-1 truncate text-[13px] font-semibold tracking-tight",
                               isPrimaryActive ? "text-white" : "text-inherit"
                             )}>
                               {group.label}
@@ -557,13 +481,13 @@ export function Sidebar() {
                       <button
                         onClick={() => toggleGroup(group.label)}
                         className={cn(
-                          "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                            "w-full min-w-0 flex items-center justify-between gap-2 overflow-hidden px-3 py-2.5 rounded-xl text-left transition-colors duration-200 group",
                           isGroupActive
                             ? "bg-brand-black text-white shadow-md shadow-slate-200"
                             : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                         )}
                       >
-                        <div className="flex items-center gap-3.5">
+                        <div className="min-w-0 flex flex-1 items-center gap-3">
                           <div className={cn(
                             "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
                             isGroupActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
@@ -574,14 +498,14 @@ export function Sidebar() {
                             )} />
                           </div>
                           <span className={cn(
-                            "text-[13px] font-semibold tracking-tight whitespace-nowrap truncate",
+                            "min-w-0 flex-1 truncate text-[13px] font-semibold tracking-tight",
                             isGroupActive ? "text-white" : "text-inherit"
                           )}>
                             {group.label}
                           </span>
                         </div>
                         <ChevronDown className={cn(
-                          "w-3.5 h-3.5 transition-transform duration-500",
+                          "w-3.5 h-3.5 shrink-0 transition-transform duration-300",
                           isOpen ? "rotate-180" : "text-slate-300"
                         )} />
                       </button>
@@ -594,21 +518,20 @@ export function Sidebar() {
                                 <div key={item.name} className="flex items-center gap-1">
                                   <Link
                                     href={item.href}
-                                    onClick={() => rememberRecent(item.href)}
                                     onMouseEnter={() => router.prefetch(item.href)}
                                     className={cn(
-                                      "min-w-0 flex-1 flex items-center justify-between p-2 rounded-lg transition-all duration-200 group relative",
+                                      "min-w-0 flex-1 flex items-center justify-between overflow-hidden p-2 rounded-lg transition-colors duration-200 group relative",
                                       isActive
                                         ? "bg-slate-50 text-brand-black font-bold"
-                                        : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
+                                        : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50"
                                     )}
                                   >
-                                  <div className="flex items-center gap-3">
+                                  <div className="min-w-0 flex flex-1 items-center gap-3">
                                     <IconType className={cn(
                                       "w-3.5 h-3.5 transition-colors",
                                       isActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
                                     )} />
-                                    <span className="text-[12px] font-medium tracking-tight whitespace-nowrap truncate">
+                                    <span className="min-w-0 flex-1 truncate text-[12px] font-medium tracking-tight">
                                       {item.name}
                                     </span>
                                   </div>
@@ -626,19 +549,6 @@ export function Sidebar() {
                                     <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
                                   )}
                                   </Link>
-                                  <button
-                                    type="button"
-                                    aria-label={`${favoriteHrefs.includes(item.href) ? "Hapus dari" : "Tambahkan ke"} favorit: ${item.name}`}
-                                    onClick={() => toggleFavorite(item.href)}
-                                    className={cn(
-                                      "shrink-0 rounded-md p-1 transition-colors",
-                                      favoriteHrefs.includes(item.href)
-                                        ? "text-amber-500"
-                                        : "text-slate-200 hover:bg-slate-50 hover:text-amber-500"
-                                    )}
-                                  >
-                                    <Star className="h-3.5 w-3.5" fill={favoriteHrefs.includes(item.href) ? "currentColor" : "none"} />
-                                  </button>
                                 </div>
                               );
                             })}
