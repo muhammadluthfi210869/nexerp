@@ -19,7 +19,7 @@ Phase 3 applies the compact data-heavy table foundation to the Master Goods pilo
 ## Verification
 
 - `npm run build` passes: Next.js compile, TypeScript, and all 169 routes generated.
-- Live compact verification is recorded after deployment: `/master/goods` loads, record toolbar renders, no browser console errors, and desktop/mobile table overflow stays contained within the table region.
+- Live compact verification is recorded in `screenshots/`: `/master/goods` loads after prototype login, the `5 records · 5 total SKUs` toolbar renders, the browser console reports 0 messages, and at 375px the page remains `375px` wide while the table scroll region contains its `840px` content width (`clientWidth=351px`).
 
 ## Next phase
 
