@@ -657,6 +657,11 @@
   .macro-grid {
     grid-template-columns: 1fr;
   }
+
+  .executive-dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
