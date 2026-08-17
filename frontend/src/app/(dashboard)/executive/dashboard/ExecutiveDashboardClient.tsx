@@ -152,7 +152,6 @@ export default function ExecutiveDashboardClient() {
 
       {/* II. 2x3 DASHBOARD GRID */}
       <div
-        className="executive-dashboard-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",

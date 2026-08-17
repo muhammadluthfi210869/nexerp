@@ -18,7 +18,7 @@ interface DashboardShellProps {
 export function DashboardShell({ title, titleAccent, subtitle, actions, children }: DashboardShellProps) {
   return (
     <PageTransition>
-      <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
+      <div className="erp-dashboard-legacy min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
         <ModuleHeader
           title={title}
           titleAccent={titleAccent}

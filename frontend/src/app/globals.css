@@ -652,12 +652,6 @@
 }
 
 /* PHASE 4 PILOT POLISH */
-.executive-dashboard-grid > div {
-  padding: var(--card-py) var(--card-px) !important;
-  border-radius: var(--card-radius) !important;
-  gap: 12px !important;
-}
-
 .phase4-tabs-list {
   width: 100%;
   height: auto !important;
@@ -731,6 +725,18 @@
   margin-left: var(--sidebar-width) !important;
 }
 
+/* Restore the pre-compact dashboard composition without changing the new shell/sidebar. */
+.erp-dashboard-legacy {
+  --section-gap: 40px;
+  padding: 24px;
+}
+
+.erp-dashboard-legacy .text-dashboard-title {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
 @media (max-width: 1023px) {
   .erp-sidebar {
     display: none !important;
@@ -761,6 +767,10 @@
 
   .erp-topbar .erp-global-search-wrap {
     display: none;
+  }
+
+  .erp-dashboard-legacy {
+    padding: 12px 0;
   }
 
   .erp-topbar {
