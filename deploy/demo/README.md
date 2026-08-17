@@ -9,11 +9,11 @@
 2. Upload `docker-compose.demo.yml` ke `/root/demo-prototype/`
 3. Jalankan di server:
    `cd /root/demo-prototype && docker compose -f docker-compose.demo.yml up -d --build`
-4. Tambahkan blok port-80 ke `/root/nginx.conf` (dari `nginx-demo-80.conf`), lalu test & reload:
+4. Tambahkan blok port-80 ke `/root/production-light/nginx.conf` (dari `nginx-demo-80.conf`), lalu test & reload:
    `docker exec production-light-nginx-1 nginx -t && docker exec production-light-nginx-1 nginx -s reload`
 5. Terbitkan cert SSL (setelah DNS aktif):
    `docker run --rm -v /root/certbot/conf:/etc/letsencrypt -v /root/certbot/www:/var/www/certbot certbot/certbot certonly --webroot -w /var/www/certbot -d demo.nexerp.id --email admin@nexerp.id --agree-tos --no-eff-email`
-6. Tambahkan blok port-443 ke `/root/nginx.conf` (dari `nginx-demo-443.conf`), reload nginx.
+6. Tambahkan blok port-443 ke `/root/production-light/nginx.conf` (dari `nginx-demo-443.conf`), reload nginx.
 7. Buka https://demo.nexerp.id → login `superadmin@nexerp.id` / `password123`.
 
 ## Verifikasi

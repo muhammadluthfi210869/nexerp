@@ -30,7 +30,10 @@ const loginSchema = z.object({
 // Akun khusus demo: superadmin@nexerp.id / password123
 // Login ini TIDAK hit backend — langsung masuk sebagai SUPER_ADMIN
 // dengan akses ke SEMUA modul, memakai data contoh (mock-data.ts).
-const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+const IS_PROTOTYPE_MODE =
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
+  (typeof window !== "undefined" &&
+    window.location.hostname === "demo.nexerp.id");
 const PROTOTYPE_EMAIL = "superadmin@nexerp.id";
 const PROTOTYPE_PASSWORD = "password123";
 

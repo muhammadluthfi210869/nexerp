@@ -6,7 +6,10 @@ import { SidebarWrapper } from "@/components/layout/SidebarWrapper";
 import { Search, Bell } from "lucide-react";
 
 // PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional.
-const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+const IS_PROTOTYPE_MODE =
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
+  (typeof window !== "undefined" &&
+    window.location.hostname === "demo.nexerp.id");
 
 export default function DashboardLayout({
   children,

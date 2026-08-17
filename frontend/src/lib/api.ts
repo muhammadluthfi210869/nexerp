@@ -13,7 +13,9 @@ import { getMockData } from "@/lib/mock-data";
  * (bukan untuk operasional — badge "PROTOTYPE MODE" tampil di dashboard).
  */
 export const IS_PROTOTYPE_MODE =
-  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
+  (typeof window !== "undefined" &&
+    window.location.hostname === "demo.nexerp.id");
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' &&
