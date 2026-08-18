@@ -94,3 +94,129 @@ model AccountHealthLog {
   @@unique([year, weekNumber, platform])
   @@map("account_health_logs")
 }
+
+// ─────────────────────────────────────────────────────────────
+//  LEAD CAPTURE — DreamLab.id WA lead tracking (Fase 1)
+// ─────────────────────────────────────────────────────────────
+
+model LeadCapture {
+  id           String @id @default(uuid()) @db.Uuid
+  trackingCode String @unique @db.VarChar(20)
+
+  // ── Website Tracking (invisible, captured before WA redirect) ──
+  sessionId   String? @db.VarChar(100)
+  intent      String? @db.Text
+  pageUrl     String? @db.Text
+  pageTitle   String? @db.VarChar(255)
+  referrer    String? @db.Text
+  utmSource   String? @db.VarChar(100)
+  utmMedium   String? @db.VarChar(100)
+  utmCampaign String? @db.VarChar(100)
+  utmContent  String? @db.VarChar(100)
+  utmTerm     String? @db.VarChar(100)
+  deviceType  String? @db.VarChar(50)
+  browser     String? @db.VarChar(100)
+  ipAddress   String? @db.VarChar(45)
+  city        String? @db.VarChar(100)
+  country     String? @db.VarChar(100)
+
+  // ── WhatsApp Data (captured when user messages) ──
+  phone       String?   @db.VarChar(20)
+  waName      String?   @db.VarChar(255)
+  waMessage   String?   @db.Text
+  contactedAt DateTime?
+
+  // ── CRM Fields ──
+  fullName String? @db.VarChar(255)
+  company  String? @db.VarChar(255)
+  email    String? @db.VarChar(255)
+  notes    String? @db.Text
+
+  // ── AI Extraction metadata (Fase 3.1) ──
+  aiExtractedAt DateTime?
+  aiStatus      String?   @db.VarChar(20)
+  aiStage       Json?
+
+  // ── Relations ──
+  attributes LeadAttribute[]
+  messages   LeadMessage[]
+
+  status LeadStatus  @default(PENDING)
+  source LeadSource?
+
+  assignedTo   String? @db.Uuid
+  assignedUser User?   @relation(fields: [assignedTo], references: [id])
+
+  // ── Round Robin Tracking ──
+  assignedName  String? @db.VarChar(100)
+  assignedPhone String? @db.VarChar(20)
+
+  // ── Sales Pipeline ──
+  workflowStatus WorkflowStatus @default(NEW_LEAD)
+  lostReason     LostReason?
+  lostAt         DateTime?
+  wonAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lead_captures")
+}
+
+// Log percakapan WhatsApp — setiap pesan = 1 baris (Fase 2.2)
+model LeadMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @db.Uuid
+  direction String   @default("INBOUND") @db.VarChar(10)
+  phone     String?  @db.VarChar(20)
+  waName    String?  @db.VarChar(255)
+  body      String   @db.Text
+  msgId     String?  @unique @db.VarChar(100)
+  createdAt DateTime @default(now())
+
+  lead LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_messages")
+}
+
+// Atribut lead extensible (Option B) — key-value, scalable
+model LeadAttribute {
+  id         String   @id @default(uuid()) @db.Uuid
+  leadId     String   @db.Uuid
+  key        String   @db.VarChar(50)
+  value      String?  @db.VarChar(255)
+  confidence Float    @default(0)
+  source     String?  @db.Text
+  confirmed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lead LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, key])
+  @@index([leadId])
+  @@map("lead_attributes")
+}
+
+// Round Robin untuk distribusi lead ke nomor WA sales
+model RoundRobinAgent {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(100)
+  phoneNumber String   @db.VarChar(20)
+  orderIndex  Int
+  isActive    Boolean  @default(true)
+  totalLeads  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("round_robin_agents")
+}
+
+model RoundRobinState {
+  id           String   @id @default("singleton")
+  currentIndex Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@map("round_robin_state")
+}

@@ -5,6 +5,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
+import { LeadCaptureModule } from './modules/lead-capture/lead-capture.module';
+import { WaWebhookModule } from './modules/wa-webhook/wa-webhook.module';
 import { GuestsModule } from './modules/guests/guests.module';
 import { RndModule } from './modules/rnd/rnd.module';
 import { CrmModule } from './modules/crm/crm.module';
@@ -48,6 +50,8 @@ import { join } from 'path';
     UsersModule,
     AuthModule,
     MarketingModule,
+    LeadCaptureModule,
+    WaWebhookModule,
     GuestsModule,
     RndModule,
     CrmModule,

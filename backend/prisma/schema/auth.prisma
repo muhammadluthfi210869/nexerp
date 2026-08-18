@@ -24,6 +24,7 @@ model User {
   scmPO               PurchaseOrder[]             @relation("SCMProcessor")
   registrations       RegulatoryPipeline[]        @relation("LegalPIC")
   leadsManaged        SalesLead[]                 @relation("BDLeads")
+  assignedLeads       LeadCapture[]
   salesTargets        SalesTarget[]
   rndSamples          SampleRequest[]             @relation("RNDFormulator")
   logistics           Shipment[]                  @relation("LogisticsOfficer")
@@ -40,7 +41,7 @@ model User {
   leadValidations     LeadActivity[]              @relation("LeadActivityValidator")
   notifications       Notification[]
   purchaseReturns     PurchaseReturn[]            @relation("PurchaseReturnCreator")
-  purchaseRequests    PurchaseRequest[]            @relation("PurchaseRequestCreator")
+  purchaseRequests    PurchaseRequest[]           @relation("PurchaseRequestCreator")
   requisitions        MaterialRequisitionHeader[] @relation("RequisitionRequester")
   qcChecklists        QCChecklist[]               @relation("QCChecklistCreator")
   createdDrafts       DocumentDraft[]             @relation("DraftCreator")
