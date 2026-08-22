@@ -1,0 +1,19 @@
+# Artifact 06 — SO Committed
+
+**Proof:** Commit sets `committedAt`; second commit is idempotent.
+
+**Verified via test D1:**
+```ts
+const first = await so.commit(committedSoId, testUserId);
+expect(first.idempotent).toBe(false);
+expect(first.so.committedAt).not.toBeNull();
+
+const second = await so.commit(committedSoId, testUserId);
+expect(second.idempotent).toBe(true);
+```
+
+**Commit boundary semantics:**
+- Before commit: free edits via legacy PATCH.
+- After commit: only `amend()` can change material fields; old truth preserved in `sales_order_amendments` table.
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 480-493.

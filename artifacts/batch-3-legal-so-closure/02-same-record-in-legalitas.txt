@@ -1,0 +1,16 @@
+# Artifact 02 — Same Record Visible in Legalitas
+
+**Proof:** `RegulatoryPipeline` row created with the same `leadId`, `sampleRequestId`, and `formulaId` as the R&D-side lineage.
+
+**Verified via tests A2-A3:**
+```ts
+expect(pipeline.leadId).toBe(testLeadId);
+expect(pipeline.sampleRequestId).toBe(testSampleId);
+expect(pipeline.formulaId).toBe(testFormulaV3Id);  // V3 is the current non-superseded
+expect(pipeline.currentStage).toBe(RegStage.DRAFT);
+expect(pipeline.type).toBe('BPOM');
+```
+
+The intake is keyed on the same SampleRequest that R&D marked APPROVED — no duplicate lineage, no parallel project.
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 274-293.

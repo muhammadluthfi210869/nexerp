@@ -1,0 +1,22 @@
+# Artifact 03 — Legalitas Active / In-Process State
+
+**Proof:** Pipeline advances through SUBMITTED → EVALUATION. Each transition appends to `logHistory` preserving the prior stage (INV-11).
+
+**Verified via tests B1-B2:**
+```ts
+// DRAFT → SUBMITTED
+const { pipeline: next } = await legality.advancePipelineStage(
+  pipeline!.id, RegStage.SUBMITTED, testUserId, 'Submitted to BPOM',
+);
+expect(next.currentStage).toBe(RegStage.SUBMITTED);
+
+// SUBMITTED → EVALUATION
+const { pipeline: next2 } = await legality.advancePipelineStage(
+  pipeline!.id, RegStage.EVALUATION, testUserId,
+);
+expect(next2.currentStage).toBe(RegStage.EVALUATION);
+```
+
+**logHistory preservation** (verified in advancePipelineStage — `logHistory: [...logHistory, { at, action, fromStage, toStage, ... }]`).
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 296-330.

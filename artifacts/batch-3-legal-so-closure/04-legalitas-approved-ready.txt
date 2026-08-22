@@ -1,0 +1,21 @@
+# Artifact 04 — Legalitas Approved / Ready State
+
+**Proof:** Pipeline reaches PUBLISHED, SO eligibility check returns `eligible=true, reason='LEGAL_READY'`.
+
+**Verified via test B4:**
+```ts
+await legality.advancePipelineStage(
+  pipeline!.id, RegStage.PUBLISHED, testUserId, 'BPOM published',
+);
+const readiness = await legality.getReadinessForLead(testLeadId, testSampleId);
+expect(readiness.eligible).toBe(true);
+expect(readiness.reason).toBe('LEGAL_READY');
+```
+
+**Readiness rule (deterministic, backend-enforced):**
+- `NOT_APPLICABLE` — no pipeline exists → eligible.
+- `LEGAL_READY` — all pipelines PUBLISHED → eligible.
+- `LEGAL_PENDING` — pipeline in progress → blocked.
+- `LEGAL_REVISION` — pipeline in REVISION → blocked.
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 332-345.

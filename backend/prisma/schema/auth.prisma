@@ -27,6 +27,7 @@ model User {
   assignedLeads       LeadCapture[]
   salesTargets        SalesTarget[]
   rndSamples          SampleRequest[]             @relation("RNDFormulator")
+  soAmendments        SalesOrderAmendment[]       @relation("SOAmender")
   logistics           Shipment[]                  @relation("LogisticsOfficer")
   laborGrade          LaborGrade?
   escalationsApproved AuditEscalation[]           @relation("EscalationApprover")

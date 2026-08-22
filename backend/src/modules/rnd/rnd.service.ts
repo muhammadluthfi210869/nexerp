@@ -92,62 +92,84 @@ export class RndService {
       select: { leadId: true },
     });
 
-    const sampleCode = await this.idGenerator.generateId('SMP');
-
-    return this.prisma.sampleRequest.create({
-      data: {
-        sampleCode: sampleCode,
-        npfId: dto.npfId,
-        rndId: dto.rndId,
-        version: dto.version || 1,
     if (!npf || !npf.leadId) {
       throw new BadRequestException(
         `NPF ${dto.npfId} not found or has no associated lead. Cannot create sample without a valid lead.`,
       );
     }
-        leadId: npf.leadId,
-        productName: 'Sample from NPF',
-        targetFunction: 'General',
-        textureReq: 'Standard',
-        colorReq: 'Natural',
-        aromaReq: 'Fresh',
-      },
-    });
-  }
 
-  async createNPF(dto: CreateNPFDto) {
-    const npf = await this.prisma.newProductForm.create({
-      data: {
-        productName: dto.productName,
-        targetPrice: dto.targetPrice,
-        conceptNotes: dto.conceptNotes,
-        leadId: dto.leadId,
-      },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      // INV-12 / INV-05: Idempotent on (npfId, version) — return existing if found
+      const existing = await tx.sampleRequest.findFirst({
+        where: { npfId: dto.npfId, version: dto.version || 1 },
+      });
+      if (existing) return existing;
 
-    const rndUser = await this.prisma.user.findFirst({
-      where: { roles: { has: UserRole.RND }, status: 'ACTIVE' },
-    });
-
-    if (rndUser) {
       const sampleCode = await this.idGenerator.generateId('SMP');
-      await this.prisma.sampleRequest.create({
+
+      return tx.sampleRequest.create({
         data: {
-          sampleCode: sampleCode,
-          npfId: npf.id,
-          rndId: rndUser.id,
-          version: 1,
-          leadId: dto.leadId,
-          productName: dto.productName,
+          sampleCode,
+          npfId: dto.npfId,
+          rndId: dto.rndId,
+          version: dto.version || 1,
+          leadId: npf.leadId,
+          productName: 'Sample from NPF',
           targetFunction: 'General',
           textureReq: 'Standard',
           colorReq: 'Natural',
           aromaReq: 'Fresh',
         },
       });
-    }
+    });
+  }
 
-    return npf;
+  async createNPF(dto: CreateNPFDto) {
+    return this.prisma.$transaction(async (tx) => {
+      // INV-05 / INV-12: One intended handoff creates at most one NPF lineage.
+      // Idempotency: same (leadId, productName) re-call returns existing NPF + its sample.
+      const existing = await tx.newProductForm.findFirst({
+        where: {
+          leadId: dto.leadId,
+          productName: dto.productName,
+        },
+        include: { samples: { take: 1, orderBy: { createdAt: 'asc' } } },
+      });
+      if (existing) return existing;
+
+      const npf = await tx.newProductForm.create({
+        data: {
+          productName: dto.productName,
+          targetPrice: dto.targetPrice,
+          conceptNotes: dto.conceptNotes,
+          leadId: dto.leadId,
+        },
+      });
+
+      const rndUser = await tx.user.findFirst({
+        where: { roles: { has: UserRole.RND }, status: 'ACTIVE' },
+      });
+
+      if (rndUser) {
+        const sampleCode = await this.idGenerator.generateId('SMP');
+        await tx.sampleRequest.create({
+          data: {
+            sampleCode,
+            npfId: npf.id,
+            rndId: rndUser.id,
+            version: 1,
+            leadId: dto.leadId,
+            productName: dto.productName,
+            targetFunction: 'General',
+            textureReq: 'Standard',
+            colorReq: 'Natural',
+            aromaReq: 'Fresh',
+          },
+        });
+      }
+
+      return npf;
+    });
   }
 
   async getNPFs() {
@@ -164,13 +186,28 @@ export class RndService {
     });
   }
 
-  async acceptSample(sampleId: string) {
+  async acceptSample(sampleId: string, actorId?: string) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({
         where: { id: sampleId },
+        include: {
+          formulas: { orderBy: { version: 'asc' } },
+        },
       });
 
       if (!sample) throw new NotFoundException('Sample request not found');
+
+      // INV-05 / INV-12: Idempotent Accept.
+      // If already accepted (stage past QUEUE) and Formula V1 exists, return it.
+      const existingV1 = sample.formulas.find((f) => f.version === 1);
+      const isAlreadyAccepted =
+        existingV1 &&
+        sample.stage !== SampleStage.QUEUE &&
+        sample.stage !== SampleStage.WAITING_FINANCE &&
+        sample.stage !== SampleStage.CANCELLED;
+      if (isAlreadyAccepted && existingV1) {
+        return { sample, formula: existingV1, idempotent: true };
+      }
 
       if (!sample.paymentApprovedAt) {
         // Auto-approve payment on acceptance (dev mode)
@@ -188,44 +225,48 @@ export class RndService {
         },
       });
 
-      // 2. Generate Formula Code
+      // 2. Generate Formula Code (uniqueness enforced by formulaCode @unique).
       const formulaCode = await this.idGenerator.generateId('FRM');
 
-      // 3. Create Blank Formula V1
-      const formula = await tx.formula.create({
-        data: {
-          formulaCode: formulaCode,
-          sampleRequestId: sampleId,
-          targetYieldGram: 1000.0, // Default 1kg
-          status: 'DRAFT',
-          version: 1,
-          phases: {
-            create: [
-              {
-                prefix: 'A',
-                customName: 'Phase A',
-                order: 1,
-              },
-            ],
+      // 3. Create Blank Formula V1 (skip if V1 already exists for sample)
+      let formula = existingV1;
+      if (!formula) {
+        formula = await tx.formula.create({
+          data: {
+            formulaCode: formulaCode,
+            sampleRequestId: sampleId,
+            targetYieldGram: 1000.0, // Default 1kg
+            status: 'DRAFT',
+            version: 1,
+            phases: {
+              create: [
+                {
+                  prefix: 'A',
+                  customName: 'Phase A',
+                  order: 1,
+                },
+              ],
+            },
+            qcparameter: {
+              create: {},
+            },
           },
-          qcparameter: {
-            create: {},
-          },
-        },
-      });
+        });
+      }
 
-      // 4. Log Activity
+      // 4. Log Activity (INV-08: actor captured for KPI attribution)
       this.eventEmitter.emit(ACTIVITY_EVENT, {
         leadId: sample.leadId,
         senderDivision: Division.RND,
         eventType: StreamEventType.STATE_CHANGE,
-        notes: `R&D Menerima Task: Formula V1 (${formulaCode}) diinisialisasi.`,
-        loggedBy: 'SYSTEM_RND',
+        notes: `R&D Menerima Task: Formula V1 (${formula.formulaCode}) diinisialisasi.`,
+        loggedBy: actorId ?? 'SYSTEM_RND',
       });
 
       return {
         sample: updatedSample,
-        formula: formula,
+        formula,
+        idempotent: false,
       };
     });
   }
@@ -315,6 +356,13 @@ export class RndService {
           eventType: StreamEventType.HANDOVER,
           notes: 'AUTO-TRIGGER: Formula Approved. Siapkan SPK Negosiasi.',
           loggedBy: 'SYSTEM_RND',
+        });
+
+        // BATCH 3 — fire R&D → Legalitas intake event. Listener creates
+        // RegulatoryPipeline idempotently. Does NOT block the R&D txn.
+        this.eventEmitter.emit('rnd.sample.approved', {
+          sampleRequestId: sampleId,
+          actorId: current.rndId ?? current.picId ?? 'SYSTEM_RND',
         });
       }
 
@@ -568,13 +616,20 @@ export class RndService {
   }
 
   async getInboxSamples() {
+    // R&D inbox MUST include samples at WAITING_FINANCE — these are
+    // freshly handed-off from BusDev via advanceLeadStage to SAMPLE_REQUESTED,
+    // which creates samples at stage WAITING_FINANCE (per bussdev.service.ts:405).
+    // Excluding them broke the entire BusDev → R&D handoff visibility (Batch 2 bug fix).
     return this.prisma.sampleRequest.findMany({
       where: {
-        stage: SampleStage.QUEUE,
+        stage: {
+          in: [SampleStage.WAITING_FINANCE, SampleStage.QUEUE],
+        },
       },
       include: {
         lead: { include: { pic: true } },
         pic: true,
+        npf: true,
       },
       orderBy: { updatedAt: 'desc' },
     });

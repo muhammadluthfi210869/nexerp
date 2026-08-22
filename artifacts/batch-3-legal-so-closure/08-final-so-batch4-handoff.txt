@@ -1,0 +1,33 @@
+# Artifact 08 — Final Effective SO Ready for Batch 4
+
+**Proof:** `getHandoffContract` returns the stable, committed truth Batch 4 can consume.
+
+**Verified via test D7:**
+```ts
+const contract = await so.getHandoffContract(committedSoId);
+expect(contract.salesOrderId).toBe(committedSoId);
+expect(contract.committedAt).not.toBeNull();
+expect(contract.formula).not.toBeNull();
+expect(contract.formula.id).toBe(testFormulaId); // most recent effective amendment
+expect(contract.customer.id).toBe(testLeadId);
+expect(contract.sample.id).toBe(testSampleId);
+expect(contract.amendmentCount).toBe(2); // qty + formula amends, not counting v1
+```
+
+**Persistence (L5) verified via test E1:**
+- Killed harness, restarted.
+- Fresh Prisma read of `sales_orders` shows `committedAt` set, `formulaId = testFormulaId`, `version = 3`, 3 amendments preserved.
+- Fresh Prisma read of `regulatory_pipelines` shows `currentStage = PUBLISHED`.
+
+**Restart log evidence:**
+```
+[Nest] Restarted harness pid=42010
+[RoutesResolver] LegalityBatch3Controller {/legality/batch3}
+[RoutesResolver] SalesOrdersBatch3Controller {/commercial/sales-orders/batch3}
+Mapped {/commercial/sales-orders/batch3/:id/commit, POST}
+Mapped {/commercial/sales-orders/batch3/:id/amend, POST}
+Mapped {/commercial/sales-orders/batch3/:id/handoff, GET}
+... (all 9 Batch 3 routes re-registered)
+```
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 569-606.

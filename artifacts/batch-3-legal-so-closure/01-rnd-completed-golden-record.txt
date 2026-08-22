@@ -1,0 +1,21 @@
+# Artifact 01 — R&D Completed Golden Record
+
+**Source:** `backend/test/batch3-legal-so.e2e-spec.ts` describe block "D. SO commit + post-commit amendment"
+**Proof:** Sample.advance → APPROVED, Formula V1/V2(SUPERSEDED)/V3 seeded, RndService emits `rnd.sample.approved` event.
+
+**Verified via test A1:**
+```ts
+const afterCount = await prisma.regulatoryPipeline.count({
+  where: { sampleRequestId: testSampleId },
+});
+expect(afterCount - beforeCount).toBe(1); // listener created exactly one pipeline
+```
+
+**Console output during test run:**
+```
+[DEBUG-A1] listenerCount after on: 2
+[DEBUG-A1] handler called: 1
+[INTAKE] created pipeline <uuid> for sample <uuid>
+```
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 248-272 for full assertion.

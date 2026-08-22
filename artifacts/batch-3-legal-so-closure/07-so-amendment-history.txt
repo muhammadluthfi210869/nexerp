@@ -1,0 +1,35 @@
+# Artifact 07 — SO Amendment / Revision History
+
+**Proof:** Post-commit amend creates a new `SalesOrderAmendment` row capturing the previous + new values. SO header bumps `version` to current effective truth. Old truth remains reconstructable.
+
+**Verified via tests D3-D6:**
+```ts
+// Material amend without reason → rejected (INV-08)
+await expect(so.amend(committedSoId, { quantity: 200 }, testUserId))
+  .rejects.toThrow(/AMEND_REASON_REQUIRED/);
+
+// With reason → snapshot preserved
+const result = await so.amend(committedSoId, {
+  quantity: 250, reason: 'Customer requested larger batch',
+}, testUserId);
+expect(result.so.quantity).toBe(250);
+expect(result.so.version).toBe(2);
+expect(result.amendment.previousQuantity).toBe(originalQty);  // OLD TRUTH
+expect(result.amendment.newQuantity).toBe(250);
+
+// Formula amend → V3 → V1 with explicit reason
+const result2 = await so.amend(committedSoId, {
+  formulaId: testFormulaId, reason: 'Customer agreed to revert',
+}, testUserId);
+expect(result2.so.formulaId).toBe(testFormulaId);
+expect(result2.amendment.previousFormulaId).toBe(testFormulaV3Id);  // OLD TRUTH
+expect(result2.amendment.newFormulaId).toBe(testFormulaId);
+```
+
+**Read path via getHistory:**
+```ts
+const history = await so.getHistory(committedSoId);
+expect(history.amendments.length).toBe(3); // v1 initial + qty amend + formula amend
+```
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 495-567.

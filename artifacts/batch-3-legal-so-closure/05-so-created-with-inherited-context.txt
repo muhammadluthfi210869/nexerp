@@ -1,0 +1,29 @@
+# Artifact 05 — SO Created with Inherited Context
+
+**Proof:** SO created with `formulaId` pinned (INV-09). Customer/product/formula lineage inherited from lead/sample/formula relations.
+
+**Verified via test C1:**
+```ts
+const first = await so.createWithFormulaPinning({
+  leadId: testLeadId,
+  sampleId: testSampleId,
+  formulaId: testFormulaV3Id,
+  quantity: 100,
+  totalAmount: 5000,
+  items: [{ productName: 'B3 Product', quantity: 100, unitPrice: 50 }],
+}, testUserId);
+
+expect(first.idempotent).toBe(false);
+expect(first.so.formulaId).toBe(testFormulaV3Id);  // PINNED
+expect(first.so.status).toBe(SOStatus.PENDING_DP);
+expect(first.so.version).toBe(1);
+```
+
+**Backend fields created (no re-entry):**
+- `leadId` — derived from input (already known upstream).
+- `sampleId` — derived from input.
+- `formulaId` — required, pinned.
+- `customer` (clientName, brandName) — inherited via SalesLead relation (UI reads).
+- `sample` lineage (NPF) — inherited via SampleRequest relation.
+
+See test file `backend/test/batch3-legal-so.e2e-spec.ts` lines 348-379.
