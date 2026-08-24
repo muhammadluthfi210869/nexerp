@@ -7,10 +7,7 @@ import { Search, Bell } from "lucide-react";
 
 // PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional.
 const IS_PROTOTYPE_MODE =
-  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  ["demo.nexerp.id", "compact.nexerp.id"].includes(
-    (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
-  );
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
 
 export default function DashboardLayout({
   children,

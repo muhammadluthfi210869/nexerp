@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -30,10 +29,10 @@ const loginSchema = z.object({
 // Akun khusus demo: superadmin@nexerp.id / password123
 // Login ini TIDAK hit backend — langsung masuk sebagai SUPER_ADMIN
 // dengan akses ke SEMUA modul, memakai data contoh (mock-data.ts).
+// NOTE: Hostname check (demo.nexerp.id) dihapus pada Fase 5 decommission.
+// Pakai env var eksplisit untuk enable demo mode.
 const IS_PROTOTYPE_MODE =
-  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  (globalThis as typeof globalThis & { location?: Location }).location?.hostname ===
-    "demo.nexerp.id";
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
 const PROTOTYPE_EMAIL = "superadmin@nexerp.id";
 const PROTOTYPE_PASSWORD = "password123";
 
@@ -57,11 +56,7 @@ const PROTOTYPE_ROLES = [
   "SYSTEM",
 ];
 
-// Runtime guard deliberately evaluated inside the browser event/render path.
-// This remains reliable even when Next.js tree-shakes build-time env branches.
-const isDemoHost = () =>
-  typeof window !== "undefined" &&
-  ["demo.nexerp.id", "compact.nexerp.id"].includes(window.location.hostname);
+// Demo hostname check removed (Fase 5 decommission). Use the env var only.
 
 type LoginResponseUser = {
   id: string;
@@ -87,7 +82,7 @@ export default function LoginPage() {
       let response: { data: { access_token: string; user: LoginResponseUser } };
 
       if (
-        (IS_PROTOTYPE_MODE || isDemoHost()) &&
+        (IS_PROTOTYPE_MODE) &&
         data.email.toLowerCase() === PROTOTYPE_EMAIL &&
         data.password === PROTOTYPE_PASSWORD
       ) {
@@ -203,7 +198,7 @@ export default function LoginPage() {
           </form>
         </Card>
 
-        {(IS_PROTOTYPE_MODE || isDemoHost()) && (
+        {(IS_PROTOTYPE_MODE) && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-center shadow-sm">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600">
               ⚡ Prototype Mode — Data Contoh
