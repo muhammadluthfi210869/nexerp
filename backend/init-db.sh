@@ -1,13 +1,19 @@
 #!/bin/sh
 set -e
 
-echo "=== INIT-DB STARTING ==="
+echo "=== 🟢 PRODUCTION-LIGHT INIT-DB ==="
 echo "DATABASE_URL is: ${DATABASE_URL:-(NOT SET!)}"
+
+# ── Create persistent data directories ──
+echo "=== Step 0: Creating data directories ==="
+mkdir -p /app/data
+chmod 755 /app/data
+echo "✅ /app/data/ ready"
 
 echo "Waiting 8 seconds for database to be ready..."
 sleep 8
 
-echo "=== Step 1: prisma db push ==="
+echo "=== Step 1: prisma db push (sync schema without dropping data) ==="
 npx prisma db push --accept-data-loss 2>&1
 PUSH_EXIT=$?
 echo "prisma db push exit code: $PUSH_EXIT"
@@ -19,39 +25,54 @@ if [ $PUSH_EXIT -ne 0 ]; then
   echo "Retry exit code: $?"
 fi
 
-echo "=== Step 2: Master Seed ==="
-echo "Running master seed (seed-master.js)..."
-if [ -f "dist/prisma/seed-master.js" ]; then
-  node dist/prisma/seed-master.js 2>&1 || echo "Master seed failed"
-else
-  echo "WARNING: seed-master.js not found. Running prisma db seed as fallback..."
-  npx prisma db seed 2>&1 || echo "Seed failed"
-fi
+echo "=== Step 2: Seed default users (only if empty) ==="
+# Prisma v7 WAJIB driver adapter (new PrismaClient() polos akan error & count selalu 0,
+# sehingga seed selalu jalan & men-truncate data produksi). Helper ini memakai
+# adapter yang sama dengan aplikasi/seed.ts → count akurat → seed di-skip saat ada users.
+COUNT_USERS() {
+  node << 'NODEEOF'
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+prisma.user.count().then(c => { console.log(c); return prisma.$disconnect(); }).catch(e => { console.error('COUNT_ERROR: ' + e.message); process.exit(1); });
+NODEEOF
+}
 
-echo "=== Step 3: Seed RND Data (if JSON files exist) ==="
-if [ -f "docs/RND/clean-daily-tracking.json" ] && [ -f "dist/prisma/seed-rnd-data.js" ]; then
-  RND_COUNT=$(node -e "
-  const { PrismaClient } = require('@prisma/client');
-  async function check() {
-    const prisma = new PrismaClient();
-    try {
-      const count = await prisma.rndDailyTask.count();
-      console.log(count);
-    } catch { console.log('0'); }
-    finally { await prisma.\$disconnect(); }
-  }
-  check();
-  " 2>/dev/null || echo "0")
+# Only seed if no users exist (idempotent seed)
+USER_COUNT=$(COUNT_USERS 2>/dev/null || echo "0")
 
-  if [ "$RND_COUNT" -eq 0 ]; then
-    echo "RND tables empty. Seeding RND data..."
-    node dist/prisma/seed-rnd-data.js 2>&1 || echo "RND seed failed"
-  else
-    echo "RND data already exists ($RND_COUNT tasks), skipping RND seed."
+echo "Current user count: $USER_COUNT"
+
+if [ "$USER_COUNT" = "0" ]; then
+  echo "No users found, running seed..."
+
+  SEED_PATH=""
+  if [ -f dist/prisma/seed.js ]; then
+    SEED_PATH="dist/prisma/seed.js"
+  elif [ -f dist/seed.js ]; then
+    SEED_PATH="dist/seed.js"
   fi
+
+  if [ -n "$SEED_PATH" ]; then
+    echo "Found seed at $SEED_PATH, executing..."
+    node "$SEED_PATH" 2>&1 || {
+      echo "❌ Seed via $SEED_PATH failed!"
+      echo "Trying prisma db seed as fallback..."
+      npx prisma db seed 2>&1 || echo "❌ prisma db seed also failed. Database has no users."
+    }
+  else
+    echo "⚠️ Seed file not found (tried dist/prisma/seed.js, dist/seed.js). Trying prisma db seed..."
+    npx prisma db seed 2>&1 || echo "❌ prisma db seed failed. Database has no users."
+  fi
+
+  # Verify seed result
+  FINAL_COUNT=$(COUNT_USERS 2>/dev/null || echo "0")
+  echo "Users after seed: $FINAL_COUNT"
 else
-  echo "RND seed files not found. Skipping RND seed."
+  echo "✅ $USER_COUNT users already exist, skipping seed."
 fi
 
-echo "=== Step 4: Starting NestJS ==="
+echo "=== Step 3: Starting NestJS ==="
 exec node dist/main
