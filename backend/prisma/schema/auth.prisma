@@ -48,6 +48,7 @@ model User {
   createdDrafts       DocumentDraft[]             @relation("DraftCreator")
   approvedDrafts      DocumentDraft[]             @relation("DocumentDraftApprover")
   rejectedDrafts      DocumentDraft[]             @relation("DocumentDraftRejecter")
+  qrCodes             QrCode[]                    @relation("QrCodeSales")
 
   @@map("users")
 }

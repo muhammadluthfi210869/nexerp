@@ -148,8 +148,37 @@ model LeadCapture {
   assignedUser User?   @relation(fields: [assignedTo], references: [id])
 
   // ── Round Robin Tracking ──
-  assignedName  String? @db.VarChar(100)
-  assignedPhone String? @db.VarChar(20)
+  assignedName    String?   @db.VarChar(100)
+  assignedPhone   String?   @db.VarChar(20)
+  // Stable Sales identity from the VPS / ERP round-robin (e.g. cs1, cs2,
+  // cs3, irma). Persisted against the tracking code so reloading the
+  // thank-you page does NOT silently reassign the same lead to a
+  // different Sales.
+  assignedSalesId String?   @db.VarChar(50)
+  assignedAt      DateTime?
+
+  // ── Lead Attribution Journey (Website → ERP bridge) ──
+  // The source page URL where the CTA was originally clicked (e.g.
+  // /jasa-maklon-kosmetik/). Passed through thank-you → bridge as `from`.
+  sourcePage         String?   @db.VarChar(500)
+  // Type of CTA that triggered the journey (smart-wa-button, floating-wa,
+  // hero-cta, etc.). Set at CTA click; carries forward to thank-you → bridge.
+  ctaType            String?   @db.VarChar(50)
+  ctaClickedAt       DateTime?
+  // The thank-you page URL where round-robin assignment + bridge call ran.
+  thankYouPage       String?   @db.VarChar(500)
+  thankYouViewedAt   DateTime?
+  // The moment the user clicked the WhatsApp button (thank-you CTA).
+  // Recorded by the website via fire-and-forget PUT to
+  // /lead-capture/whatsapp-click/:trackingCode.
+  whatsappClickedAt  DateTime?
+  // ── Self QR verification placeholders (Batch 4). Never inferred from
+  // browser/IP/device. NULL until an actual inbound WhatsApp conversation
+  // is matched against [Kode: <trackingCode>] by the Self QR pipeline.
+  whatsappVerifiedAt DateTime?
+  // ── Verification status. UNVERIFIED at create time. Becomes VERIFIED only
+  // after Self QR matches an inbound chat to this tracking code.
+  verificationStatus String    @default("UNVERIFIED") @db.VarChar(20)
 
   // ── Sales Pipeline ──
   workflowStatus WorkflowStatus @default(NEW_LEAD)
@@ -160,6 +189,9 @@ model LeadCapture {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([verificationStatus])
+  @@index([assignedSalesId])
+  @@index([sourcePage])
   @@map("lead_captures")
 }
 
@@ -219,4 +251,35 @@ model RoundRobinState {
   updatedAt    DateTime @updatedAt
 
   @@map("round_robin_state")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  QR CODES — Sales attribution via physical/digital QR scan
+// ─────────────────────────────────────────────────────────────
+// Each QR has a unique public `token` (URL-safe) and an internal
+// `trackingCode` (matches LeadCapture.trackingCode shape). When a
+// customer scans the QR, the public /q/:token route resolves to a
+// thank-you page that fires the existing LeadCapture /track pipeline
+// with via=qr. LeadCapture then notifies QR via /attributed/:code to
+// increment leadCount.
+model QrCode {
+  id              String        @id @default(uuid()) @db.Uuid
+  token           String        @unique @db.VarChar(16)
+  trackingCode    String        @unique @db.VarChar(20)
+  channel         String        @db.VarChar(20) // WHATSAPP|INSTAGRAM|TIKTOK|OFFLINE|EMAIL|OTHER
+  campaign        String?       @db.VarChar(100)
+  assignedSalesId String?       @db.Uuid
+  assignedSales   User?         @relation("QrCodeSales", fields: [assignedSalesId], references: [id], onDelete: SetNull)
+  metadata        Json?
+  isActive        Boolean       @default(true)
+  expiresAt       DateTime?
+  scanCount       Int           @default(0)
+  leadCount       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([assignedSalesId])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("qr_codes")
 }
