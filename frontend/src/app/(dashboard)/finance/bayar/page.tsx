@@ -28,13 +28,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import { QueryLoading, QueryError } from "@/components/query-states";
 
 const statusMap: Record<string, { label: string; badge: "success" | "warning" | "critical" }> = {
-  PAID: { label: "LUNAS", badge: "success" },
-  PARTIAL: { label: "SEBAGIAN", badge: "warning" },
-  UNPAID: { label: "TERUTANG", badge: "critical" },
+  PAID: { label: "Lunas", badge: "success" },
+  PARTIAL: { label: "Sebagian", badge: "warning" },
+  UNPAID: { label: "Terutang", badge: "critical" },
 };
 
 export default function BayarConsolidatedPage() {
@@ -115,10 +117,9 @@ export default function BayarConsolidatedPage() {
   const overdueCount = (invoices || []).filter((inv: any) => inv.status === "OVERDUE").length;
 
   return (
-    <DashboardShell
-      title="BAYAR"
-      titleAccent="HUB"
-      subtitle="Pembayaran Pembelian, Penjualan & Sample — Payment Hub"
+    <OperationalMigrationShell
+      title="Hub Pembayaran"
+      subtitle="Pembayaran pembelian, penjualan, dan sample"
     >
       <Tabs defaultValue="pembelian" className="space-y-6">
         <div className="relative">
@@ -151,8 +152,8 @@ export default function BayarConsolidatedPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatCard label="Total Faktur" value={(bills || []).length} icon={<Receipt className="text-blue-600" />} />
-                <StatCard label="Total Terutang" value={`Rp ${totalBillOutstanding.toLocaleString("id-ID")}`} icon={<AlertTriangle className="text-rose-500" />} />
-                <StatCard label="Supplier" value={`${new Set((bills || []).map((b: any) => b.vendorName)).size} Vendor`} icon={<Building2 className="text-slate-500" />} />
+                <StatCard label="Total Terutang" value={formatOperationalCurrency(totalBillOutstanding)} icon={<AlertTriangle className="text-rose-500" />} />
+                <StatCard label="Pemasok" value={`${new Set((bills || []).map((b: any) => b.vendorName)).size} Vendor`} icon={<Building2 className="text-slate-500" />} />
               </div>
               <TableWrapper
                 filters={
@@ -170,10 +171,10 @@ export default function BayarConsolidatedPage() {
                   <TableHeader className="bg-slate-50/70">
                     <TableRow className="hover:bg-transparent border-slate-100">
                       <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice</TableHead>
-                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</TableHead>
+                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pemasok</TableHead>
+                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Jumlah</TableHead>
+                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Dibayar</TableHead>
+                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</TableHead>
                       <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
                       <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
                     </TableRow>
@@ -195,11 +196,11 @@ export default function BayarConsolidatedPage() {
                             <span className="font-black text-slate-700 text-xs uppercase">{bill.vendorName}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {bill.totalAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {bill.paidAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {bill.remaining.toLocaleString("id-ID")}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(bill.totalAmount)}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">{formatOperationalCurrency(bill.paidAmount)}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(bill.remaining)}</TableCell>
                         <TableCell className="text-center py-4">
-                          <DnaBadge status={statusMap[bill.status]?.badge || "default"}>{statusMap[bill.status]?.label || bill.status}</DnaBadge>
+                          <DnaBadge status={statusMap[bill.status]?.badge || "default"}>{statusMap[bill.status]?.label || getOperationalStatusLabel(bill.status)}</DnaBadge>
                         </TableCell>
                         <TableCell className="pr-6 text-right py-4">
                           <DnaButton variant="primary" size="sm" icon={<Wallet className="h-3.5 w-3.5" />} onClick={() => window.location.href = "/finance/bayar-pembelian"}>Bayar</DnaButton>
@@ -224,9 +225,9 @@ export default function BayarConsolidatedPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard label="Total Piutang" value={`Rp ${totalReceivable.toLocaleString("id-ID")}`} icon={<Wallet className="text-emerald-600" />} />
-                <StatCard label="Overdue" value={overdueCount.toString()} subValue="Faktur jatuh tempo" icon={<Clock className="text-rose-500" />} />
-                <StatCard label="Outstanding" value={`${filteredInvoices.length} Faktur`} icon={<FileCheck2 className="text-amber-500" />} />
+                <StatCard label="Total Piutang" value={formatOperationalCurrency(totalReceivable)} icon={<Wallet className="text-emerald-600" />} />
+                <StatCard label="Jatuh Tempo" value={overdueCount.toString()} subValue="Faktur jatuh tempo" icon={<Clock className="text-rose-500" />} />
+                <StatCard label="Belum Tertagih" value={`${filteredInvoices.length} Faktur`} icon={<FileCheck2 className="text-amber-500" />} />
               </div>
               <TableWrapper
                 filters={
@@ -244,10 +245,10 @@ export default function BayarConsolidatedPage() {
                   <TableHeader className="bg-slate-50/70">
                     <TableRow className="hover:bg-transparent border-slate-100">
                       <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice</TableHead>
-                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</TableHead>
+                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pelanggan</TableHead>
+                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Jumlah</TableHead>
+                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Dibayar</TableHead>
+                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</TableHead>
                       <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
                       <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
                     </TableRow>
@@ -262,19 +263,19 @@ export default function BayarConsolidatedPage() {
                             </div>
                             <div>
                               <span className="font-black text-slate-900 text-xs uppercase italic">{inv.invoiceNumber}</span>
-                              <p className="text-[9px] font-medium text-slate-400">Due: {inv.dueDate}</p>
+                              <p className="text-[9px] font-medium text-slate-400">Jatuh tempo: {inv.dueDate}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <span className="font-black text-slate-900 text-xs uppercase">{inv.customerName}</span>
                         </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {inv.totalAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {inv.paidAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {inv.remainingAmount.toLocaleString("id-ID")}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(inv.totalAmount)}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">{formatOperationalCurrency(inv.paidAmount)}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">{formatOperationalCurrency(inv.remainingAmount)}</TableCell>
                         <TableCell className="text-center py-4">
                           <DnaBadge status={inv.status === "PAID" ? "success" : inv.status === "OVERDUE" ? "critical" : "warning"}>
-                            {inv.status === "PAID" ? "Lunas" : inv.status === "OVERDUE" ? "Overdue" : "Belum Lunas"}
+                            {inv.status === "PAID" ? "Lunas" : inv.status === "OVERDUE" ? "Jatuh Tempo" : "Belum Lunas"}
                           </DnaBadge>
                         </TableCell>
                         <TableCell className="pr-6 text-right py-4">
@@ -302,8 +303,8 @@ export default function BayarConsolidatedPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard label="Total Outstanding" value={`Rp ${totalSampleOutstanding.toLocaleString("id-ID")}`} icon={<Wallet className="text-rose-500" />} />
-                <StatCard label="Menunggu Bayar" value={(samples || []).filter((s: any) => s.remainingAmount > 0).length} subValue="Sample pending" icon={<Clock className="text-amber-500" />} />
+                <StatCard label="Total Terutang" value={formatOperationalCurrency(totalSampleOutstanding)} icon={<Wallet className="text-rose-500" />} />
+                <StatCard label="Menunggu Bayar" value={(samples || []).filter((s: any) => s.remainingAmount > 0).length} subValue="Sample menunggu pembayaran" icon={<Clock className="text-amber-500" />} />
                 <StatCard label="Total Sample" value={`${filteredSamples.length} Order`} icon={<FileCheck2 className="text-blue-600" />} />
               </div>
               <TableWrapper
@@ -322,7 +323,7 @@ export default function BayarConsolidatedPage() {
                   <TableHeader className="bg-slate-50/70">
                     <TableRow className="hover:bg-transparent border-slate-100">
                       <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Kode Sample</TableHead>
-                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</TableHead>
+                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pelanggan</TableHead>
                       <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</TableHead>
                       <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Bayar</TableHead>
                       <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</TableHead>
@@ -344,12 +345,12 @@ export default function BayarConsolidatedPage() {
                         <TableCell className="py-4">
                           <span className="font-black text-slate-900 text-xs uppercase">{sample.customerName}</span>
                         </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {sample.totalAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {sample.paidAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sample.remainingAmount.toLocaleString("id-ID")}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(sample.totalAmount)}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">{formatOperationalCurrency(sample.paidAmount)}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">{formatOperationalCurrency(sample.remainingAmount)}</TableCell>
                         <TableCell className="text-center py-4">
                           <DnaBadge status={sample.paymentStatus === "PAID" ? "success" : sample.paymentStatus === "PARTIAL" ? "warning" : "critical"}>
-                            {sample.paymentStatus === "PAID" ? "Lunas" : sample.paymentStatus === "PARTIAL" ? "Partial" : "Belum Bayar"}
+                            {sample.paymentStatus === "PAID" ? "Lunas" : sample.paymentStatus === "PARTIAL" ? "Sebagian" : "Belum Bayar"}
                           </DnaBadge>
                         </TableCell>
                         <TableCell className="pr-6 text-right py-4">
@@ -369,6 +370,6 @@ export default function BayarConsolidatedPage() {
           )}
         </TabsContent>
       </Tabs>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

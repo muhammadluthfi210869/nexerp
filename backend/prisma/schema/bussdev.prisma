@@ -158,39 +158,45 @@ model NewProductForm {
 }
 
 model SalesOrder {
-  id              String           @id @default(uuid()) @db.Uuid
-  orderNumber     String           @unique
-  transactionDate DateTime         @default(now())
+  id              String                @id @default(uuid()) @db.Uuid
+  orderNumber     String                @unique
+  transactionDate DateTime              @default(now())
   dueDate         DateTime?
-  leadId          String           @db.Uuid
-  sampleId        String           @db.Uuid
+  leadId          String                @db.Uuid
+  sampleId        String                @db.Uuid
   // BATCH 3: pin the exact R&D Formula version (not just sample). INV-09 / INV-10.
-  formulaId       String?          @db.Uuid
-  totalAmount     Decimal          @db.Decimal(15, 2)
-  quantity        Int              @default(1)
-  status          SOStatus         @default(PENDING_DP)
+  formulaId       String?               @db.Uuid
+  // BATCH 3: optional client-supplied idempotency token. If provided, the
+  // (leadId, sampleId, formulaId, idempotencyKey) tuple is unique and a
+  // retry/double-click returns the existing SO. If OMITTED, each create
+  // produces a NEW SO — so legitimate repeat orders with the same formula
+  // remain possible (INV-07). Defaults to a UUID per request.
+  idempotencyKey  String?
+  totalAmount     Decimal               @db.Decimal(15, 2)
+  quantity        Int                   @default(1)
+  status          SOStatus              @default(PENDING_DP)
   // BATCH 3: pre-commit editable / post-commit locked. set on commit() call.
   committedAt     DateTime?
   // BATCH 3: current effective revision counter (1 = original). increments per amendment.
-  version         Int              @default(1)
+  version         Int                   @default(1)
   salesCategory   String?
   brandName       String?
-  taxId           String?          @db.Uuid
-  currencyId      String?          @db.Uuid
-  netto           Decimal?         @db.Decimal(10, 2)
+  taxId           String?               @db.Uuid
+  currencyId      String?               @db.Uuid
+  netto           Decimal?              @db.Decimal(10, 2)
   deletedAt       DateTime?
-  createdAt       DateTime         @default(now())
-  stockStatus     StockStatus      @default(PENDING_CHECK)
+  createdAt       DateTime              @default(now())
+  stockStatus     StockStatus           @default(PENDING_CHECK)
   designTasks     DesignTask[]
   invoices        Invoice[]
   workOrders      ProductionPlan[]
   items           SalesOrderItem[]
   amendments      SalesOrderAmendment[]
-  formula         Formula?         @relation(fields: [formulaId], references: [id])
-  currency        Currency?        @relation(fields: [currencyId], references: [id])
-  lead            SalesLead        @relation(fields: [leadId], references: [id])
-  sample          SampleRequest    @relation(fields: [sampleId], references: [id])
-  tax             TaxRate?         @relation(fields: [taxId], references: [id])
+  formula         Formula?              @relation(fields: [formulaId], references: [id])
+  currency        Currency?             @relation(fields: [currencyId], references: [id])
+  lead            SalesLead             @relation(fields: [leadId], references: [id])
+  sample          SampleRequest         @relation(fields: [sampleId], references: [id])
+  tax             TaxRate?              @relation(fields: [taxId], references: [id])
   returns         SalesReturn[]
   shipments       Shipment[]
   journalEntries  JournalEntry[]
@@ -202,25 +208,25 @@ model SalesOrder {
 
 model SalesOrderAmendment {
   // BATCH 3: post-commit change history. Pre-commit edits never write here.
-  id                 String      @id @default(uuid()) @db.Uuid
-  salesOrderId       String      @db.Uuid
+  id                  String     @id @default(uuid()) @db.Uuid
+  salesOrderId        String     @db.Uuid
   // monotonic 1, 2, 3 — 1 is the original SO snapshot, 2 = first amend, etc.
-  version            Int
+  version             Int
   // snapshot of the header BEFORE the change. nullable for version 1 (initial snapshot).
-  previousQuantity   Int?
+  previousQuantity    Int?
   previousTotalAmount Decimal?   @db.Decimal(15, 2)
-  previousFormulaId  String?     @db.Uuid
+  previousFormulaId   String?    @db.Uuid
   // snapshot AFTER the change. for version 1 = original values, nullable.
-  newQuantity        Int?
-  newTotalAmount     Decimal?    @db.Decimal(15, 2)
-  newFormulaId       String?     @db.Uuid
+  newQuantity         Int?
+  newTotalAmount      Decimal?   @db.Decimal(15, 2)
+  newFormulaId        String?    @db.Uuid
   // EXCEPTION INPUT: required when the amendment is material (qty, total, formula).
   // Optional for minor pre-commit-style metadata tweaks.
-  reason             String?
-  changedById        String      @db.Uuid
-  changedAt          DateTime    @default(now())
-  salesOrder         SalesOrder  @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
-  changedBy          User        @relation("SOAmender", fields: [changedById], references: [id])
+  reason              String?
+  changedById         String     @db.Uuid
+  changedAt           DateTime   @default(now())
+  salesOrder          SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  changedBy           User       @relation("SOAmender", fields: [changedById], references: [id])
 
   @@unique([salesOrderId, version])
   @@index([salesOrderId])

@@ -13,7 +13,6 @@ import {
   StreamEventType,
   AccountType,
   NormalBalance,
-  PaymentStatus,
   PeriodStatus,
   ReportGroup,
   RegStage,
@@ -619,49 +618,221 @@ export class FinanceService {
       },
       include: {
         salesOrders: { include: { invoices: true } },
-        purchaseOrders: { include: { items: true } },
+        purchaseOrders: {
+          include: {
+            items: { include: { material: true } },
+            invoices: { where: { category: 'PAYABLE', deletedAt: null } },
+          },
+        },
         workOrders: { include: { logs: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return leads.map((lead) => {
-      // 1. Budget: Use estimatedValue from Lead or totalAmount from first SO
-      const budget = Number(lead.estimatedValue);
-
-      // 2. Actual Material Spend: Sum of all Purchase Orders linked to this lead
-      const materialSpend = lead.purchaseOrders.reduce((sum, po) => {
-        return (
-          sum +
-          po.items.reduce((iSum, item) => iSum + Number(item.totalPrice), 0)
+    // -------- Helper: authoritative latest approved PO unit price per material.
+    // A material with NO authoritative purchase history has no defensible
+    // planning value; its contribution is explicitly zero and the line is
+    // flagged ESTIMATE_INCOMPLETE in the response.
+    const latestApprovedPriceByMaterial = new Map<string, number>();
+    const allApprovedPos = await this.prisma.purchaseOrderItem.findMany({
+      where: {
+        po: { status: { in: ['APPROVED', 'ORDERED', 'SHIPPED', 'RECEIVED'] } },
+      },
+      select: {
+        materialId: true,
+        unitPrice: true,
+        po: { select: { createdAt: true } },
+      },
+      orderBy: { po: { createdAt: 'desc' } },
+    });
+    for (const poi of allApprovedPos) {
+      if (!latestApprovedPriceByMaterial.has(poi.materialId)) {
+        latestApprovedPriceByMaterial.set(
+          poi.materialId,
+          Number(poi.unitPrice || 0),
         );
-      }, 0);
+      }
+    }
 
-      // 3. Operational Spend (Mocked from Production Logs / Direct Journals)
-      // In a full implementation, we'd link Journal Lines to LeadId
-      const operationalSpend = lead.workOrders.reduce((sum, wo) => {
-        return (
-          sum +
-          wo.logs.reduce(
-            (lSum, log) => lSum + (log.downtimeMinutes || 0) * 1000,
-            0,
-          )
-        ); // Example cost: 1000 per downtime minute
-      }, 0);
+    // -------- Helper: per-PO authoritative PAID value.
+    // PAID = the portion of the PO actually settled through Finance Lite.
+    // Sources of truth, in priority order:
+    //   1. PAYABLE Invoices linked to the PO, status PAID or PARTIAL, summed by
+    //      (amountDue − outstandingAmount) → settled vendor invoices.
+    //   2. Cash-out JournalEntries tagged with `sourceEntityType='PurchaseOrder'`
+    //      and `sourceEntityId=po.id` (CashService.disburse writes these).
+    //
+    // R2 deliberately rejects `PO.status === 'RECEIVED'` as a payment proxy.
+    // Receiving goods != cash out.
+    const payablePaidByPo = new Map<string, number>();
+    const payableInvoices = await this.prisma.invoice.findMany({
+      where: {
+        category: 'PAYABLE',
+        poId: { not: null },
+        deletedAt: null,
+        status: { in: ['PAID', 'PARTIAL'] },
+      },
+      select: {
+        poId: true,
+        amountDue: true,
+        outstandingAmount: true,
+      },
+    });
+    for (const inv of payableInvoices) {
+      if (!inv.poId) continue;
+      const settled = Number(inv.amountDue || 0) - Number(inv.outstandingAmount || 0);
+      if (settled <= 0) continue;
+      payablePaidByPo.set(
+        inv.poId,
+        (payablePaidByPo.get(inv.poId) ?? 0) + settled,
+      );
+    }
 
-      const totalSpent = materialSpend + operationalSpend;
-      const margin = budget - totalSpent;
+    const cashPaidByPo = new Map<string, number>();
+    const poCashJournals = await this.prisma.journalEntry.findMany({
+      where: {
+        sourceEntityType: 'PurchaseOrder',
+        category: 'HPP',
+        poId: { not: null },
+      },
+      select: { poId: true, lines: { select: { debit: true, credit: true } } },
+    });
+    for (const j of poCashJournals) {
+      if (!j.poId) continue;
+      const cashOut = j.lines.reduce(
+        (s, l) => s + Number(l.credit || 0) - Number(l.debit || 0),
+        0,
+      );
+      if (cashOut <= 0) continue;
+      // Whichever is higher between the invoice-settled amount and the cash-
+      // journal-linked amount is the authoritative paid figure. They overlap;
+      // taking max() avoids double counting the same disbursement when both
+      // an AP Invoice and a CashOut journal trace back to the same PO.
+      cashPaidByPo.set(j.poId, (cashPaidByPo.get(j.poId) ?? 0) + cashOut);
+    }
+
+    const authoritativePaidForPo = (poId: string): number => {
+      const viaInvoice = payablePaidByPo.get(poId) ?? 0;
+      const viaCash = cashPaidByPo.get(poId) ?? 0;
+      // If both exist for the same PO, take the higher — it represents the
+      // strongest settled value. Choosing max() prevents double counting
+      // because CashService.disburse and Invoice-billing share overlap.
+      if (viaInvoice > 0 && viaCash > 0) return Math.max(viaInvoice, viaCash);
+      return viaInvoice + viaCash;
+    };
+
+    // -------- Helper: open requirement qty × best-known price (planned).
+    // Schema's MaterialItem doesn't list a back-relation to GoodsRequirementItem,
+    // so we avoid `include` and load items + materials separately then index.
+    const openRequirements = await this.prisma.goodsRequirement.findMany({
+      where: { status: { in: ['GENERATED', 'PROCESSING'] } },
+      select: { id: true, salesOrderId: true },
+    });
+    const openReqIds = openRequirements.map((r) => r.id);
+    const openReqItems = openReqIds.length
+      ? await this.prisma.goodsRequirementItem.findMany({
+          where: { requirementId: { in: openReqIds } },
+          select: { requirementId: true, materialId: true, qty: true },
+        })
+      : [];
+    const reqItemByReq = new Map<string, typeof openReqItems>();
+    for (const it of openReqItems) {
+      const arr = reqItemByReq.get(it.requirementId) ?? [];
+      arr.push(it);
+      reqItemByReq.set(it.requirementId, arr);
+    }
+    // SalesLead id keyed by salesOrderId for fast lead routing.
+    const soLeadPairs = await this.prisma.salesOrder.findMany({
+      where: { id: { in: Array.from(new Set(openRequirements.map((r) => r.salesOrderId))) } },
+      select: { id: true, leadId: true },
+    });
+    const leadIdBySoId = new Map(soLeadPairs.map((s) => [s.id, s.leadId]));
+    // Fallback prices for requirement materials.
+    const fallbackMaterialIds = Array.from(
+      new Set(
+        openReqItems
+          .filter((it) => !latestApprovedPriceByMaterial.has(it.materialId))
+          .map((it) => it.materialId),
+      ),
+    );
+    const fallbackMaterials = fallbackMaterialIds.length
+      ? await this.prisma.materialItem.findMany({
+          where: { id: { in: fallbackMaterialIds } },
+          select: { id: true, unitPrice: true },
+        })
+      : [];
+    const fallbackPriceByMaterial = new Map(
+      fallbackMaterials.map((m) => [m.id, Number(m.unitPrice || 0)]),
+    );
+
+    return leads.map((lead) => {
+      // ---- COMMITTED: real procurement commitment, PO-backed.
+      const committedStatuses = ['APPROVED', 'ORDERED', 'SHIPPED', 'RECEIVED'];
+      const committed = lead.purchaseOrders
+        .filter((po) => committedStatuses.includes(po.status))
+        .reduce((sum, po) => sum + Number(po.totalValue || 0), 0);
+
+      // ---- PAID: actual Finance settlement, not PO status.
+      let paid = 0;
+      for (const po of lead.purchaseOrders) {
+        paid += authoritativePaidForPo(po.id);
+      }
+
+      // ---- PLANNED: requirement qty × best-known price + manual PO items.
+      let planned = 0;
+      let leadEstimateIncomplete = false;
+      for (const req of openRequirements) {
+        if (leadIdBySoId.get(req.salesOrderId) !== lead.id) continue;
+        const items = reqItemByReq.get(req.id) ?? [];
+        for (const it of items) {
+          const authoritative = latestApprovedPriceByMaterial.get(it.materialId);
+          const fallback = fallbackPriceByMaterial.get(it.materialId) ?? 0;
+          const price =
+            authoritative !== undefined && authoritative > 0
+              ? authoritative
+              : fallback;
+          if (price <= 0) {
+            leadEstimateIncomplete = true;
+            continue;
+          }
+          planned += Number(it.qty) * price;
+        }
+      }
+      // Manual POs (no requirement link) still represent planning coverage.
+      for (const po of lead.purchaseOrders) {
+        if (po.requestId) continue;
+        planned += po.items.reduce(
+          (s, it) => s + Number(it.totalPrice || 0),
+          0,
+        );
+      }
+
+      const remainingUncommitted = Math.max(0, planned - committed);
+      const remainingUnpaid = Math.max(0, committed - paid);
+
+      const budget = Number(lead.estimatedValue);
+      const margin = budget - paid;
 
       return {
         id: lead.id,
         project: lead.brandName || lead.clientName,
         product: lead.productInterest,
         budget,
-        spent: totalSpent,
-        materialSpend,
-        operationalSpend,
+        // R2 FINAL funding visibility:
+        plannedRequirementValue: planned,
+        committedValue: committed,
+        paidValue: paid,
+        remainingUncommitted,
+        remainingUnpaid,
         margin,
         marginPercent: budget > 0 ? (margin / budget) * 100 : 0,
+        // ESTIMATE_INCOMPLETE is true if any open requirement line for THIS
+        // lead had no authoritative purchase history AND no MaterialItem
+        // fallback unit price. Consumers must surface it explicitly.
+        estimateIncomplete: leadEstimateIncomplete,
+        // Back-compat fields retained for current consumers:
+        spent: paid,
+        materialSpend: committed,
         status: lead.status,
         progress: lead.workOrders.length > 0 ? 'IN_PRODUCTION' : 'PLANNING',
       };
@@ -981,6 +1152,50 @@ export class FinanceService {
     });
   }
 
+  /**
+   * Pre-R4 hardening: canonical entry point for any cross-domain caller
+   * that needs to create an Invoice row. Earlier, commercial, scm, and
+   * document-automation each called `prisma.invoice.create` directly,
+   * producing four independent write paths to the same authoritative
+   * entity. All callers MUST now route through this method.
+   */
+  async createInvoice(
+    category: 'RECEIVABLE' | 'PAYABLE',
+    payload: {
+      type?: string;
+      amountDue: number;
+      outstandingAmount?: number;
+      dueDate?: Date;
+      soId?: string;
+      poId?: string;
+      supplierId?: string;
+      workOrderId?: string;
+      deliveryOrderId?: string;
+      notes?: string;
+      description?: string;
+      status?: string;
+    },
+  ) {
+    const prefix = category === 'PAYABLE' ? 'BILL' : 'INV';
+    const data: any = {
+      invoiceNumber: await this.idGenerator.generateId(prefix),
+      category,
+      type: payload.type,
+      amountDue: payload.amountDue,
+      outstandingAmount: payload.outstandingAmount ?? payload.amountDue,
+      status: payload.status ?? 'UNPAID',
+      dueDate: payload.dueDate ?? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      soId: payload.soId,
+      poId: payload.poId,
+      supplierId: payload.supplierId,
+      workOrderId: payload.workOrderId,
+      deliveryOrderId: payload.deliveryOrderId,
+      notes: payload.notes,
+      description: payload.description,
+    };
+    return this.prisma.invoice.create({ data });
+  }
+
   async getAllFinalInvoices() {
     return this.prisma.invoice.findMany({
       where: { deliveryOrderId: { not: null } },
@@ -993,22 +1208,27 @@ export class FinanceService {
   }
 
   async validatePayment(invoiceId: string) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id: invoiceId },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findUnique({
+        where: { id: invoiceId },
+      });
 
-    if (!invoice) throw new NotFoundException('Invoice not found');
-    if (invoice.status === 'PAID' || Number(invoice.outstandingAmount) <= 0) {
-      throw new BadRequestException('Invoice already validated');
-    }
+      if (!invoice) throw new NotFoundException('Invoice not found');
+      if (invoice.status === 'PAID' || Number(invoice.outstandingAmount) <= 0) {
+        throw new BadRequestException('Invoice already validated');
+      }
 
-    return this.prisma.invoice.update({
-      where: { id: invoiceId },
-      data: {
-        status: 'PAID',
-        paidAt: new Date(),
-        outstandingAmount: 0,
-      },
+      // Settlement truth: validatePayment is the canonical settle path
+      // for invoices that were pre-recorded against cash. Mark PAID in
+      // the same transaction so the journal/invoice pair stays consistent.
+      return tx.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          status: 'PAID',
+          paidAt: new Date(),
+          outstandingAmount: 0,
+        },
+      });
     });
   }
   async validateBussdevPayment(activityId: string, validatedBy: string) {
@@ -1116,13 +1336,25 @@ export class FinanceService {
   }
 
   async approveFundRequest(id: string, dto: ApproveFundRequestDto) {
-    return this.prisma.fundRequest.update({
-      where: { id },
-      data: {
-        status: FundRequestStatus.APPROVED_BY_MGR,
-        approvedById: dto.approvedById,
-      },
+    const request = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (!request) throw new NotFoundException('Fund Request not found');
+
+    const claimed = await this.prisma.fundRequest.updateMany({
+      where: { id, status: FundRequestStatus.PENDING_APPROVAL_MGR },
+      data: { status: FundRequestStatus.APPROVED_BY_MGR, approvedById: dto.approvedById },
     });
+    if (claimed.count === 1) {
+      return this.prisma.fundRequest.findUnique({ where: { id } });
+    }
+
+    const current = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (current?.status === FundRequestStatus.APPROVED_BY_MGR) {
+      return { ...current, idempotent: true };
+    }
+    if (current?.status === FundRequestStatus.PAID) {
+      throw new BadRequestException('Paid Fund Request cannot be approved again');
+    }
+    throw new BadRequestException(`Fund Request is not awaiting manager approval: ${current?.status}`);
   }
 
   async directorApproveFundRequest(
@@ -1139,12 +1371,14 @@ export class FinanceService {
   }
 
   async rejectFundRequest(id: string, dto: RejectFundRequestDto) {
+    const request = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (!request) throw new NotFoundException('Fund Request not found');
+    if (request.status === FundRequestStatus.PAID) {
+      throw new BadRequestException('Paid Fund Request cannot be rejected');
+    }
     return this.prisma.fundRequest.update({
       where: { id },
-      data: {
-        status: FundRequestStatus.REJECTED,
-        rejectReason: dto.reason,
-      },
+      data: { status: FundRequestStatus.REJECTED, rejectReason: dto.reason },
     });
   }
 
@@ -1157,10 +1391,42 @@ export class FinanceService {
 
       if (!req) throw new NotFoundException('Fund Request not found');
 
-      // Create Journal Entry automatically
-      const cashAcc = await tx.account.findUnique({
-        where: { id: dto.accountId },
+      const existing = await tx.journalEntry.findUnique({
+        where: { fundRequestId: id },
+        include: { lines: true },
       });
+      if (existing) {
+        return { ...req, financialTransaction: existing, idempotent: true };
+      }
+      if (
+        req.status !== FundRequestStatus.APPROVED_BY_MGR &&
+        req.status !== FundRequestStatus.APPROVED_BY_DIR &&
+        req.status !== FundRequestStatus.WAITING_FINANCE_DISBURSEMENT
+      ) {
+        throw new BadRequestException(`Only an approved Fund Request can be paid: ${req.status}`);
+      }
+
+      // Claim the request before creating its journal. This makes concurrent
+      // retries mutually exclusive while the unique fundRequestId is the DB guard.
+      const claimed = await tx.fundRequest.updateMany({
+        where: {
+          id,
+          status: { in: [FundRequestStatus.APPROVED_BY_MGR, FundRequestStatus.APPROVED_BY_DIR,
+            FundRequestStatus.WAITING_FINANCE_DISBURSEMENT] },
+        },
+        data: { status: FundRequestStatus.PAID, disbursedById: dto.disbursedById },
+      });
+      if (claimed.count !== 1) {
+        const retry = await tx.fundRequest.findUnique({ where: { id }, include: { financialTransaction: true } });
+        if (retry?.financialTransaction) return { ...retry, idempotent: true };
+        throw new BadRequestException('Fund Request payment was already claimed');
+      }
+
+      const cashAcc = dto.accountId
+        ? await tx.account.findUnique({ where: { id: dto.accountId } })
+        : await tx.account.findFirst({ where: { type: AccountType.ASSET, OR: [
+            { name: { contains: 'Kas' } }, { name: { contains: 'Bank' } },
+          ] }, orderBy: { code: 'asc' } });
       if (!cashAcc)
         throw new BadRequestException('Source Bank/Cash account not found');
 
@@ -1168,10 +1434,14 @@ export class FinanceService {
       // e.g., department "MARKETING" maps to account code starting with "6" and name containing "MARKETING"
       const expenseAcc = await tx.account.findFirst({
         where: {
-          code: { startsWith: '6' },
-          OR: [
-            { name: { contains: req.departmentId } },
-            { code: { contains: req.departmentId } },
+          AND: [
+            { OR: [{ code: { startsWith: '5' } }, { code: { startsWith: '6' } }] },
+            {
+              OR: [
+                { name: { contains: req.departmentId } },
+                { code: { contains: req.departmentId } },
+              ],
+            },
           ],
         },
       });
@@ -1179,21 +1449,19 @@ export class FinanceService {
       // Fallback: if no specific expense account found, use general expense account
       if (!expenseAcc) {
         const generalExpense = await tx.account.findFirst({
-          where: { code: { startsWith: '6' }, name: { contains: 'General' } },
+          where: { type: AccountType.EXPENSE },
         });
         if (generalExpense) {
           // Create journal with general expense + note
-          const updated = await tx.fundRequest.update({
-            where: { id },
-            data: {
-              status: FundRequestStatus.PAID,
-              disbursedById: dto.disbursedById,
-            },
-          });
-          await tx.journalEntry.create({
+          const transaction = await tx.journalEntry.create({
             data: {
               date: new Date(),
               reference: `FUND-DISB-${req.id.substring(0, 8)}`,
+              fundRequestId: req.id,
+              sourceEntityType: 'FundRequest',
+              sourceEntityId: req.id,
+              category: req.departmentId,
+              direction: 'EXPENSE',
               description: `Disbursement for Fund Request: ${req.reason} [Dept: ${req.departmentId}] — No specific expense account found, used General`,
               lines: {
                 create: [
@@ -1207,7 +1475,7 @@ export class FinanceService {
               },
             },
           });
-          return updated;
+          return { ...req, status: FundRequestStatus.PAID, disbursedById: dto.disbursedById, financialTransaction: transaction };
         }
         throw new BadRequestException(
           `Akun beban untuk departemen ${req.departmentId} tidak ditemukan. Buat akun beban dengan kode diawali '6' dan nama mengandung '${req.departmentId}'.`,
@@ -1215,10 +1483,15 @@ export class FinanceService {
       }
 
       // Create Journal
-      await tx.journalEntry.create({
+      const transaction = await tx.journalEntry.create({
         data: {
           date: new Date(),
           reference: `FUND-DISB-${req.id.substring(0, 8)}`,
+          fundRequestId: req.id,
+          sourceEntityType: 'FundRequest',
+          sourceEntityId: req.id,
+          category: req.departmentId,
+          direction: 'EXPENSE',
           description: `Disbursement for Fund Request: ${req.reason} [ID: ${req.id}]`,
           lines: {
             create: [
@@ -1228,17 +1501,7 @@ export class FinanceService {
           },
         },
       });
-
-      // Update Fund Request status
-      const updated = await tx.fundRequest.update({
-        where: { id },
-        data: {
-          status: FundRequestStatus.PAID,
-          disbursedById: dto.disbursedById,
-        },
-      });
-
-      return updated;
+      return { ...req, status: FundRequestStatus.PAID, disbursedById: dto.disbursedById, financialTransaction: transaction };
     });
   }
 

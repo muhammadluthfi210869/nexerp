@@ -36,9 +36,14 @@ export class Batch3CreateSODto {
   @IsUUID()
   sampleId!: string;
 
-  // BATCH 3 — required. Pin exact formula version. INV-09.
+  // BATCH 3 (corrected): formulaId is OPTIONAL. If omitted, the backend
+  // auto-resolves the currently eligible Formula from the sample's lineage
+  // (the same one the Legalitas pipeline was pinned to). If provided,
+  // it must belong to the sample, not be SUPERSEDED, and not conflict
+  // with the pipeline's pin.
   @IsUUID()
-  formulaId!: string;
+  @IsOptional()
+  formulaId?: string;
 
   @IsNumber()
   quantity!: number;
@@ -61,6 +66,15 @@ export class Batch3CreateSODto {
   @IsUUID()
   @IsOptional()
   currencyId?: string;
+
+  // BATCH 3 (corrected): idempotency token. If supplied, the SO is
+  // unique on (leadId, sampleId, formulaId, idempotencyKey) — a retry
+  // returns the existing row. If OMITTED, every create produces a new
+  // SO row, so legitimate repeat orders with the same formula are
+  // preserved (INV-07). The UI should send a fresh token per submission.
+  @IsString()
+  @IsOptional()
+  idempotencyKey?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

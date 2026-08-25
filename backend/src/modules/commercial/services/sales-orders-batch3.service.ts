@@ -6,39 +6,39 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SOStatus } from '@prisma/client';
+import { LegalApplicability, SOStatus } from '@prisma/client';
 import { LegalityBatch3Service } from '../../legality/legality-batch3.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { randomUUID } from 'crypto';
+import {
+  eligibleDownstreamFormulaOrder,
+  eligibleDownstreamFormulaWhere,
+  isEligibleDownstreamFormula,
+} from '../../rnd/formula-eligibility';
 
 /**
- * BATCH 3 — Sales Order operational service.
+ * BATCH 3 — Sales Order operational service (corrected).
  *
- * Owns the four flows Batch 3 introduces on top of the legacy
- * SalesOrdersService (which handles generic CRUD + DP→ACTIVE interlock):
+ * Operator input semantics:
  *
- *   1. createWithFormulaPinning(input, actorId)
- *      Creates an SO with formulaId pinned (INV-09). Validates legal
- *      readiness (INV-03). Idempotent on (leadId, sampleId, formulaId)
- *      so retry/double-click does NOT spawn duplicate orders (INV-06),
- *      but a *legitimate* repeat order for the same sample with a
- *      DIFFERENT formula version is still allowed (INV-07).
+ *   formulaId is OPTIONAL on create. If omitted, the backend auto-resolves
+ *   the currently eligible Formula from the sample's lineage — the same
+ *   formula the Legalitas pipeline (if any) was pinned to. If formulaId IS
+ *   provided, it must (a) exist, (b) not be SUPERSEDED, (c) belong to the
+ *   given sample, and (d) match the pipeline's pinned formula when one
+ *   exists. INV-09 / INV-10.
  *
- *   2. commit(id, actorId)
- *      Locks the SO for downstream consumption. Sets committedAt.
- *      After commit, only amendment() can change material fields.
+ * Idempotency vs legitimate repeats:
  *
- *   3. amend(id, dto, actorId)
- *      Captures a snapshot of the previous values, increments version,
- *      requires reason for material changes (qty, total, formulaId).
- *      Pre-commit edits use the legacy PATCH endpoint, NOT this one.
- *      Preserves history (INV-08, INV-11).
+ *   - If the caller provides `idempotencyKey`, the SO is unique on
+ *     (leadId, sampleId, formulaId, idempotencyKey). A retry/double-click
+ *     using the same key returns the existing SO.
+ *   - If the caller OMITS `idempotencyKey`, every create produces a NEW SO
+ *     row. This is how a legitimate repeat order with the same formula is
+ *     distinguished from a retry (INV-07). The UI generates a key per
+ *     button-press so a retry on the same press is idempotent.
  *
- *   4. getHistory(id)
- *      Returns the amendment audit chain for SO.
- *
- * Formula version pinning (INV-09 / INV-10): SO.formulaId is immutable
- * after commit. If R&D later creates Formula V3, the committed V2-SO
- * is unaffected.
+ * Change-control (post-commit) is unchanged from the prior Batch 3 work.
  */
 @Injectable()
 export class SalesOrdersBatch3Service {
@@ -51,22 +51,18 @@ export class SalesOrdersBatch3Service {
     private idGenerator: IdGeneratorService,
   ) {}
 
-  /**
-   * INV-06: idempotent on business intent (leadId + sampleId + formulaId).
-   * INV-07: legitimate repeat order for the same sample but a different
-   *         formula version is allowed (and returns a NEW SO row).
-   */
   async createWithFormulaPinning(
     input: {
       leadId: string;
       sampleId: string;
-      formulaId: string;
+      formulaId?: string;
       quantity: number;
       totalAmount: number;
       salesCategory?: string;
       brandName?: string;
       taxId?: string;
       currencyId?: string;
+      idempotencyKey?: string;
       items: Array<{
         productName: string;
         quantity: number;
@@ -77,16 +73,85 @@ export class SalesOrdersBatch3Service {
     },
     actorId: string,
   ) {
-    // 1. Validate formula exists and is not SUPERSEDED (INV-09: pin a live version).
+    // 0. Validate the sample exists and resolve auto-formula if needed.
+    const sample = await this.prisma.sampleRequest.findUnique({
+      where: { id: input.sampleId },
+      include: {
+        lead: { select: { id: true, clientName: true, brandName: true } },
+        formulas: {
+          where: eligibleDownstreamFormulaWhere(input.sampleId),
+          orderBy: eligibleDownstreamFormulaOrder,
+          take: 1,
+        },
+      },
+    });
+    if (!sample)
+      throw new NotFoundException(`Sample ${input.sampleId} not found`);
+    if (sample.leadId !== input.leadId) {
+      throw new BadRequestException(
+        'SO_SAMPLE_LEAD_MISMATCH: Sample does not belong to the given lead.',
+      );
+    }
+
+    // 1. Resolve formulaId with the shared eligibility rule first so absence
+    //    of any approved/locked Formula always fails closed with its domain
+    //    error before checking downstream readiness.
+    let resolvedFormulaId = input.formulaId;
+    if (!resolvedFormulaId) {
+      const current = sample.formulas[0];
+      if (!current) {
+        throw new BadRequestException(
+          'FORMULA_INHERIT_FAILED: No eligible downstream Formula exists on this sample to inherit (must be PRODUCTION_LOCKED / SAMPLE_LOCKED / MINOR_COMPLIANCE_FIX / BPOM_REGISTRATION_PROCESS, non-SUPERSEDED).',
+        );
+      }
+      resolvedFormulaId = current.id;
+      this.logger.log(
+        `[SO-CREATE] formula auto-inherited: sample=${sample.id} formula=${current.formulaCode}@v${current.version} status=${current.status}`,
+      );
+    }
+
+    // 2. Legal gate. REQUIRED + PUBLISHED has a legally authoritative
+    // Formula. Only the normal omitted-formula flow is overridden by it;
+    // explicit existing change-control/repeat-order behavior is preserved.
+    const readiness = await this.legalityBatch3.assertEligible(
+      input.leadId,
+      input.sampleId,
+    );
+    if (
+      !input.formulaId &&
+      sample.legalApplicability === LegalApplicability.REQUIRED
+    ) {
+      const legalFormulaIds = [
+        ...new Set(readiness.pipelines.map((pipeline) => pipeline.formulaId)),
+      ];
+      if (legalFormulaIds.length > 1) {
+        throw new BadRequestException(
+          'LEGAL_FORMULA_CONSISTENCY_BLOCKED: Published legal pipelines for this sample reference different Formula versions. Resolve the legal decision before creating an SO.',
+        );
+      }
+      if (legalFormulaIds[0]) {
+        resolvedFormulaId = legalFormulaIds[0];
+        this.logger.log(
+          `[SO-CREATE] formula inherited from published Legalitas pipeline: sample=${sample.id} formula=${resolvedFormulaId}`,
+        );
+      }
+    }
+
+    // 3. Validate formula and lineage consistency.
     const formula = await this.prisma.formula.findUnique({
-      where: { id: input.formulaId },
+      where: { id: resolvedFormulaId },
     });
     if (!formula) {
-      throw new NotFoundException(`Formula ${input.formulaId} not found`);
+      throw new NotFoundException(`Formula ${resolvedFormulaId} not found`);
     }
     if (formula.status === 'SUPERSEDED') {
       throw new BadRequestException(
         'FORMULA_PIN_BLOCKED: Cannot pin a SUPERSEDED formula. Use the current version.',
+      );
+    }
+    if (!isEligibleDownstreamFormula(formula.status)) {
+      throw new BadRequestException(
+        `FORMULA_PIN_BLOCKED: Cannot pin a formula with status=${formula.status}. The SO may only pin a downstream-eligible formula (PRODUCTION_LOCKED / SAMPLE_LOCKED / MINOR_COMPLIANCE_FIX / BPOM_REGISTRATION_PROCESS).`,
       );
     }
     if (formula.sampleRequestId !== input.sampleId) {
@@ -95,22 +160,25 @@ export class SalesOrdersBatch3Service {
       );
     }
 
-    // 2. INV-03: legal gate. Throws if not eligible.
-    await this.legalityBatch3.assertEligible(input.leadId, input.sampleId);
-
-    // 3. INV-06: idempotency check. Return existing SO if same intent.
-    const existing = await this.prisma.salesOrder.findFirst({
-      where: {
-        leadId: input.leadId,
-        sampleId: input.sampleId,
-        formulaId: input.formulaId,
-      },
-    });
-    if (existing) {
-      this.logger.log(
-        `[SO-CREATE] idempotent — returning existing ${existing.orderNumber}`,
-      );
-      return { so: existing, idempotent: true };
+    // 3. INV-06 / INV-07: idempotency vs legitimate repeat.
+    //    If the caller supplied an idempotencyKey, dedupe on the full
+    //    4-tuple. Otherwise each create is a new SO.
+    const idemKey = input.idempotencyKey ?? null;
+    if (idemKey) {
+      const existing = await this.prisma.salesOrder.findFirst({
+        where: {
+          leadId: input.leadId,
+          sampleId: input.sampleId,
+          formulaId: resolvedFormulaId,
+          idempotencyKey: idemKey,
+        },
+      });
+      if (existing) {
+        this.logger.log(
+          `[SO-CREATE] idempotent (key=${idemKey}) — returning existing ${existing.orderNumber}`,
+        );
+        return { so: existing, idempotent: true };
+      }
     }
 
     // 4. Create with formula pinned.
@@ -121,7 +189,7 @@ export class SalesOrdersBatch3Service {
           orderNumber,
           leadId: input.leadId,
           sampleId: input.sampleId,
-          formulaId: input.formulaId,
+          formulaId: resolvedFormulaId,
           quantity: input.quantity,
           totalAmount: input.totalAmount,
           status: SOStatus.PENDING_DP,
@@ -129,7 +197,7 @@ export class SalesOrdersBatch3Service {
           brandName: input.brandName,
           taxId: input.taxId,
           currencyId: input.currencyId,
-          // v1 snapshot — first amendment row captures initial truth.
+          idempotencyKey: idemKey,
           amendments: {
             create: {
               version: 1,
@@ -138,7 +206,7 @@ export class SalesOrdersBatch3Service {
               previousFormulaId: null,
               newQuantity: input.quantity,
               newTotalAmount: input.totalAmount,
-              newFormulaId: input.formulaId,
+              newFormulaId: resolvedFormulaId,
               reason: 'INITIAL_SO_CREATION',
               changedById: actorId,
             },
@@ -162,17 +230,14 @@ export class SalesOrdersBatch3Service {
     this.eventEmitter.emit('sales_order.created', { salesOrderId: created.id });
     this.eventEmitter.emit('sales_order.batch3.created', {
       salesOrderId: created.id,
-      formulaId: input.formulaId,
+      formulaId: resolvedFormulaId,
       leadId: input.leadId,
+      idempotencyKey: idemKey,
     });
 
     return { so: created, idempotent: false };
   }
 
-  /**
-   * INV-08 boundary. Before commit → use legacy PATCH (any field freely).
-   * After commit → only amendment() can change material fields.
-   */
   async commit(id: string, actorId: string) {
     const so = await this.prisma.salesOrder.findUnique({ where: { id } });
     if (!so) throw new NotFoundException(`Sales Order ${id} not found`);
@@ -183,7 +248,9 @@ export class SalesOrdersBatch3Service {
       where: { id },
       data: { committedAt: new Date() },
     });
-    this.logger.log(`[SO-COMMIT] ${updated.orderNumber} committed by ${actorId}`);
+    this.logger.log(
+      `[SO-COMMIT] ${updated.orderNumber} committed by ${actorId}`,
+    );
     this.eventEmitter.emit('sales_order.batch3.committed', {
       salesOrderId: id,
       actorId,
@@ -191,15 +258,6 @@ export class SalesOrdersBatch3Service {
     return { so: updated, idempotent: false };
   }
 
-  /**
-   * INV-08, INV-11. Post-commit material change. Captures full snapshot of
-   * pre-change values, increments version, requires reason.
-   *
-   * Material fields: quantity, totalAmount, formulaId. Status transitions
-   * (ACTIVE/CANCELLED) go through the legacy PATCH endpoint instead.
-   *
-   * If SO is NOT committed yet → reject. Caller should use PATCH instead.
-   */
   async amend(
     id: string,
     dto: {
@@ -266,15 +324,14 @@ export class SalesOrdersBatch3Service {
           changedById: actorId,
         },
       });
-
-      // Bump the SO header to current effective truth.
-      // INV-10: old truth is preserved in the amendments table above.
       const header = await tx.salesOrder.update({
         where: { id },
         data: {
           version: newVersion,
           ...(dto.quantity !== undefined ? { quantity: dto.quantity } : {}),
-          ...(dto.totalAmount !== undefined ? { totalAmount: dto.totalAmount } : {}),
+          ...(dto.totalAmount !== undefined
+            ? { totalAmount: dto.totalAmount }
+            : {}),
           ...(dto.formulaId !== undefined ? { formulaId: dto.formulaId } : {}),
         },
       });
@@ -290,9 +347,6 @@ export class SalesOrdersBatch3Service {
     return { so: updated.header, amendment: updated.amendment };
   }
 
-  /**
-   * INV-08 / INV-11 read path. Audit chain for downstream.
-   */
   async getHistory(id: string) {
     const so = await this.prisma.salesOrder.findUnique({
       where: { id },
@@ -305,10 +359,6 @@ export class SalesOrdersBatch3Service {
     return so;
   }
 
-  /**
-   * Batch 4 handoff contract. Returns the stable committed truth a
-   * downstream Requirement/SCM system can consume.
-   */
   async getHandoffContract(id: string) {
     const so = await this.prisma.salesOrder.findUnique({
       where: { id },
@@ -327,15 +377,27 @@ export class SalesOrdersBatch3Service {
       currentVersion: so.version,
       committedAt: so.committedAt,
       status: so.status,
-      customer: { id: so.lead.id, clientName: so.lead.clientName, brandName: so.lead.brandName },
+      customer: {
+        id: so.lead.id,
+        clientName: so.lead.clientName,
+        brandName: so.lead.brandName,
+      },
       sample: { id: so.sample.id, sampleCode: so.sample.sampleCode },
       formula: so.formula
-        ? { id: so.formula.id, code: so.formula.formulaCode, version: so.formula.version }
+        ? {
+            id: so.formula.id,
+            code: so.formula.formulaCode,
+            version: so.formula.version,
+          }
         : null,
       quantity: so.quantity,
       totalAmount: so.totalAmount,
       items: so.items,
-      amendmentCount: so.amendments.length - 1, // subtract v1 initial snapshot
+      amendmentCount: so.amendments.length - 1,
+      // batch3 (corrected): include applicability decision that authorized this SO
+      legal: {
+        applicability: (so.sample as any)?.legalApplicability ?? null,
+      },
     };
   }
 }

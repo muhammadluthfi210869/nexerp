@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 import React from "react";
 import { SidebarWrapper } from "@/components/layout/SidebarWrapper";
 import { Search, Bell } from "lucide-react";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ThemeToggle } from "@/components/providers/ThemeToggle";
 
 // PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional.
 const IS_PROTOTYPE_MODE =
@@ -18,12 +20,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
+    <ThemeProvider>
     <div className="erp-app flex bg-base min-h-screen">
       <SidebarWrapper />
-      
-      <main 
+
+      <main
         className="erp-app-main flex-1 min-h-screen bg-base overflow-x-hidden flex flex-col"
-        style={{ 
+        style={{
           marginLeft: 'var(--sidebar-width)',
         }}
       >
@@ -56,6 +59,7 @@ export default function DashboardLayout({
                 </span>
               </>
             )}
+            <ThemeToggle />
             <button aria-label="Open notifications" className="min-w-11 min-h-11 p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
               <Bell className="w-5 h-5" />
             </button>
@@ -75,6 +79,7 @@ export default function DashboardLayout({
         </div>
       </main>
     </div>
+    </ThemeProvider>
   );
 }
 

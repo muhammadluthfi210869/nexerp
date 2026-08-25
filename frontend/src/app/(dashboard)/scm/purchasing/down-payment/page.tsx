@@ -32,17 +32,10 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import { toast } from "sonner";
-
-const statusLabel = (status: string) => {
-  switch (status) {
-    case "UNPAID": return "Belum Lunas";
-    case "PAID": return "Lunas";
-    case "PARTIAL": return "Sebagian";
-    default: return status;
-  }
-};
 
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
@@ -80,12 +73,12 @@ export default function DownPaymentPrototype() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
-      toast.success("Down payment created successfully");
+      toast.success("Uang muka berhasil dibuat");
       setView("list");
       setSelectedPO(null);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create down payment");
+      toast.error(err?.response?.data?.message || "Gagal membuat uang muka");
     },
   });
 
@@ -100,13 +93,12 @@ export default function DownPaymentPrototype() {
   };
 
   return (
-    <DashboardShell
-      title={view === "list" ? "UANG" : "BUAT DP"}
-      titleAccent="MUKA"
+    <OperationalMigrationShell
+      title={view === "list" ? "Uang Muka" : "Buat Uang Muka"}
       subtitle={
         view === "list"
-          ? "(Kelola uang muka pemasok dan komitmen komersial)"
-          : "(SCM Procurement Protocol \u2022 Drafting Phase)"
+          ? "Kelola uang muka pemasok dan komitmen komersial"
+          : "Siapkan transaksi uang muka pembelian"
       }
       actions={
         view === "list" ? (
@@ -151,8 +143,8 @@ export default function DownPaymentPrototype() {
           >
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard label="Total DP" value="Rp 750,000" subValue="2 Records MTD" icon={<CreditCard className="text-blue-600" />} />
-              <StatCard label="Saldo Outstanding" value="Rp 150,000" subValue="Menunggu Rekonsiliasi Faktur" icon={<AlertCircle className="text-amber-500" />} />
+              <StatCard label="Total DP" value="Rp 750.000" subValue="2 catatan MTD" icon={<CreditCard className="text-blue-600" />} />
+              <StatCard label="Saldo Terutang" value="Rp 150.000" subValue="Menunggu rekonsiliasi invoice" icon={<AlertCircle className="text-amber-500" />} />
               <KpiCard label="Tingkat Rekonsiliasi" value="80%" targetPct={80} icon={<CheckCircle2 className="text-emerald-500" />} />
             </div>
 
@@ -163,7 +155,7 @@ export default function DownPaymentPrototype() {
                   <div className="relative w-72">
                     <DnaInput
                       icon={<Search className="h-3.5 w-3.5 text-slate-400" />}
-                      placeholder="Cari Kode atau Pemasok..."
+                      placeholder="Cari kode atau pemasok..."
                     />
                   </div>
                   <div className="flex items-center gap-3">
@@ -224,7 +216,7 @@ export default function DownPaymentPrototype() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{dp.invoiceNumber}</span>
-                              <span className="text-[9px] font-black text-slate-400 uppercase">{formatDate(dp.issuedAt)}</span>
+                        <span className="text-[9px] font-black text-slate-400">{formatDate(dp.issuedAt)}</span>
                             </div>
                           </div>
                         </TableCell>
@@ -237,18 +229,18 @@ export default function DownPaymentPrototype() {
                         <TableCell className="py-2.5 px-3">
                           <div className="flex items-center gap-1.5">
                             <CreditCard className="h-3 w-3 text-slate-400" />
-                            <span className="text-[10px] font-black text-slate-600 uppercase">Invoice</span>
+                            <span className="text-[10px] font-black text-slate-600">Invoice</span>
                           </div>
                         </TableCell>
                         <TableCell className="py-2.5 px-3 text-right">
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-xs tabular-nums">Rp {totalDp.toLocaleString()}</span>
-                            <span className="text-[9px] font-black text-emerald-500 uppercase mt-0.5">Used: Rp {paidAmount.toLocaleString()}</span>
+                            <span className="font-black text-slate-900 text-xs tabular-nums">{formatOperationalCurrency(totalDp)}</span>
+                            <span className="text-[9px] font-black text-emerald-500 mt-0.5">Terpakai: {formatOperationalCurrency(paidAmount)}</span>
                           </div>
                         </TableCell>
                         <TableCell className="py-2.5 px-3 text-center">
                           <DnaBadge status={dp.status === "PAID" ? "success" : "warning"}>
-                            {statusLabel(dp.status)}
+                            {getOperationalStatusLabel(dp.status)}
                           </DnaBadge>
                         </TableCell>
                         <TableCell className="py-2.5 px-3 pr-8 text-right">
@@ -271,10 +263,10 @@ export default function DownPaymentPrototype() {
                 <AlertCircle className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 italic">Owner Insight: Liquidity Protocol</p>
-                <p className="text-xs font-medium text-slate-600 leading-relaxed uppercase">
-                  Total outstanding down payments are currently within the safe threshold (15% of monthly procurement).
-                  Ensure all <span className="text-blue-600 font-black">Lunas</span> status DPs have their original physical receipts scanned and attached to the digital archive.
+                <p className="text-xs font-semibold text-blue-600">Catatan operasional: likuiditas</p>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  Total uang muka saat ini berada dalam batas aman (15% dari pengadaan bulanan).
+                  Pastikan DP berstatus <span className="text-blue-600 font-semibold">Lunas</span> memiliki bukti fisik yang dipindai dan dilampirkan ke arsip digital.
                 </p>
               </div>
             </div>
@@ -302,7 +294,7 @@ export default function DownPaymentPrototype() {
                         className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none px-4 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                       >
                         <option value="">\u2014 SELECT ACTIVE PURCHASE ORDER \u2014</option>
-                        {poLoading && <option disabled>Loading...</option>}
+                        {poLoading && <option disabled>Memuat...</option>}
                         {poList.map((po: any) => (
                           <option key={po.id} value={po.id}>{po.poNumber} | {po.supplier?.name || "-"}</option>
                         ))}
@@ -327,16 +319,16 @@ export default function DownPaymentPrototype() {
                             <p className="font-black text-slate-900 text-xs italic uppercase">{selectedPOData.poNumber}</p>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-[8px] font-black text-slate-400 uppercase">Date</p>
+                            <p className="text-[8px] font-black text-slate-400 uppercase">Tanggal</p>
                             <p className="font-black text-slate-900 text-xs uppercase">{formatDate(selectedPOData.createdAt)}</p>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-[8px] font-black text-slate-400 uppercase">Supplier</p>
+                            <p className="text-[8px] font-black text-slate-400 uppercase">Pemasok</p>
                             <p className="font-black text-blue-600 text-xs uppercase italic">{selectedPOData.supplier?.name || "-"}</p>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-[8px] font-black text-slate-400 uppercase">Total Value</p>
-                            <p className="font-black text-slate-900 text-xs uppercase">Rp {Number(selectedPOData.totalValue).toLocaleString()}</p>
+                            <p className="text-[8px] font-black text-slate-400 uppercase">Nilai Total</p>
+                            <p className="font-black text-slate-900 text-xs">{formatOperationalCurrency(selectedPOData.totalValue)}</p>
                           </div>
                         </div>
 
@@ -354,11 +346,11 @@ export default function DownPaymentPrototype() {
                                 <TableRow key={i} className="hover:bg-transparent border-slate-100">
                                   <TableCell className="font-black text-slate-900 text-xs pl-6 uppercase py-2">{item.material?.name || item.name || "-"}</TableCell>
                                   <TableCell className="text-center font-black text-slate-900 text-xs tabular-nums py-2">{item.qty || item.quantity || 0}</TableCell>
-                                  <TableCell className="text-right pr-6 font-black text-slate-900 text-xs tabular-nums py-2">Rp {Number(item.totalPrice || item.price || 0).toLocaleString()}</TableCell>
+                                  <TableCell className="text-right pr-6 font-black text-slate-900 text-xs tabular-nums py-2">{formatOperationalCurrency(item.totalPrice || item.price || 0)}</TableCell>
                                 </TableRow>
                               )) : (
                                 <TableRow>
-                                  <TableCell colSpan={3} className="text-center py-6 text-[10px] font-black text-slate-300 uppercase">No items data</TableCell>
+                                  <TableCell colSpan={3} className="text-center py-6 text-[10px] font-black text-slate-300 uppercase">Belum ada data item</TableCell>
                                 </TableRow>
                               )}
                             </TableBody>
@@ -373,19 +365,19 @@ export default function DownPaymentPrototype() {
                 <div className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
-                      <h2 className="text-lg font-black uppercase tracking-tighter italic">Payment <span className="text-blue-600">Configuration</span></h2>
+                      <h2 className="text-lg font-semibold">Konfigurasi Pembayaran</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase">Transaction Date</label>
+                        <label className="text-[9px] font-black text-slate-400 uppercase">Tanggal Transaksi</label>
                         <div className="relative">
                           <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                           <DnaInput type="date" className="pl-10" value={dpDate} onChange={(e) => setDpDate(e.target.value)} />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase">Funding Source</label>
+                        <label className="text-[9px] font-black text-slate-400 uppercase">Sumber Dana</label>
                         <div className="relative">
                           <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                           <select className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none pl-10 outline-none focus:ring-2 focus:ring-blue-500">
@@ -398,7 +390,7 @@ export default function DownPaymentPrototype() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase">Down Payment Amount (IDR)</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase">Jumlah Uang Muka (IDR)</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs z-10">Rp</span>
                         <DnaInput
@@ -412,12 +404,12 @@ export default function DownPaymentPrototype() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase">Administrative Note</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase">Catatan Administrasi</label>
                       <textarea
                         rows={3}
                         value={dpNotes}
                         onChange={(e) => setDpNotes(e.target.value)}
-                        placeholder="Add commercial notes or reconciliation context..."
+                        placeholder="Tambahkan catatan komersial atau rekonsiliasi..."
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
                       />
                     </div>
@@ -429,7 +421,7 @@ export default function DownPaymentPrototype() {
                       icon={dpMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       className="w-full h-12 hover:scale-[1.02]"
                     >
-                      {dpMutation.isPending ? "Processing..." : "Commit Down Payment"}
+                      {dpMutation.isPending ? "Memproses..." : "Simpan Uang Muka"}
                     </DnaButton>
                   </div>
                 )}
@@ -441,22 +433,22 @@ export default function DownPaymentPrototype() {
                   <div className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white text-slate-900 overflow-hidden relative">
                     <div className="relative z-10 space-y-6">
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">Commercial Summary</p>
-                        <h2 className="text-2xl font-black italic tracking-tighter uppercase mt-2">Valuation <span className="text-blue-500">Gate</span></h2>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">Ringkasan Komersial</p>
+                        <h2 className="text-2xl font-black italic tracking-tighter uppercase mt-2">Gerbang <span className="text-blue-500">Valuasi</span></h2>
                       </div>
 
                       <div className="space-y-3 pt-6 border-t border-slate-200">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-[9px] font-black uppercase text-slate-500">Net Value</span>
-                          <span className="font-black tabular-nums">Rp {selectedPOData ? Number(selectedPOData.totalValue).toLocaleString() : "0"}</span>
+                          <span className="text-[9px] font-black uppercase text-slate-500">Nilai Bersih</span>
+                          <span className="font-black tabular-nums">{formatOperationalCurrency(selectedPOData?.totalValue)}</span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-[9px] font-black uppercase text-slate-500">Tax Protocol (11%)</span>
-                          <span className="font-black tabular-nums">Rp {selectedPOData ? Math.round(Number(selectedPOData.totalValue) * 0.11).toLocaleString() : "0"}</span>
+                          <span className="text-[9px] font-black text-slate-500">Pajak (11%)</span>
+                          <span className="font-black tabular-nums">{formatOperationalCurrency(selectedPOData ? Math.round(Number(selectedPOData.totalValue) * 0.11) : undefined)}</span>
                         </div>
                         <div className="flex justify-between items-center pt-4 border-t border-slate-200">
                           <span className="text-[9px] font-black uppercase text-blue-600 tracking-widest">Grand Total</span>
-                          <span className="text-lg font-black tabular-nums text-slate-900">Rp {selectedPOData ? (Number(selectedPOData.totalValue) * 1.11).toLocaleString() : "0"}</span>
+                          <span className="text-lg font-black tabular-nums text-slate-900">{formatOperationalCurrency(selectedPOData ? Number(selectedPOData.totalValue) * 1.11 : undefined)}</span>
                         </div>
                       </div>
                     </div>
@@ -467,10 +459,10 @@ export default function DownPaymentPrototype() {
                   <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-white/50 space-y-3 shadow-sm">
                     <div className="flex items-center gap-2 text-amber-500">
                       <AlertCircle className="h-4 w-4" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Compliance Audit</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest">Audit Kepatuhan</span>
                     </div>
                     <p className="text-[9px] font-black text-slate-400 leading-relaxed uppercase">
-                      All down payment commitments must be verified by the Finance Department before commercial release. Ensure the PO is in "APPROVED" state.
+                      Semua uang muka harus diverifikasi Finance sebelum dirilis secara komersial. Pastikan PO telah disetujui.
                     </p>
                   </div>
                 </div>
@@ -479,6 +471,6 @@ export default function DownPaymentPrototype() {
           </motion.div>
         )}
       </AnimatePresence>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

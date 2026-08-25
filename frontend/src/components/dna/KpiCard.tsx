@@ -44,23 +44,18 @@ export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProp
 
   const bgIcon = React.isValidElement(icon)
     ? React.cloneElement(icon as React.ReactElement<SVGElement>, {
-        className: "w-[110px] h-[110px] stroke-[0.75px] text-slate-300/25 transition-all duration-700",
+        className: "w-[72px] h-[72px] stroke-[0.75px] text-slate-300/20 transition-opacity duration-200",
       })
     : null;
 
   return (
     <div
-      className={`bg-white border rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in ${borderClass}`}
-      style={
-        isUnder
-          ? { animation: "kpi-pulse-border 2s cubic-bezier(0.22, 1, 0.36, 1) infinite" }
-          : undefined
-      }
+        className={`erp-metric-card bg-white border rounded-[12px] p-5 shadow-sm transition-colors group overflow-hidden relative min-h-[136px] w-full max-w-[320px] min-w-0 justify-self-start flex items-center justify-between animate-fade-slide-in ${borderClass}`}
     >
       <div className="flex justify-between items-center relative z-10 w-full">
         <div className="space-y-1.5 flex-1 min-w-0 pr-4">
-          <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.1em]">{label}</p>
-          <h3 className={`text-[32px] font-black tracking-[-0.02em] tabular leading-tight ${valueClass}`}>
+          <p className="text-xs font-semibold text-slate-500 tracking-normal leading-4">{label}</p>
+          <h3 className={`text-[28px] font-black tracking-[-0.02em] tabular leading-tight ${valueClass}`}>
             {value}
           </h3>
           <div className="flex items-center gap-2">

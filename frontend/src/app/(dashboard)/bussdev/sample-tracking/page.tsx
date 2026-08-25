@@ -12,16 +12,17 @@ import {
   Wallet,
   Eye,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  OperationalInput,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
 
 interface SampleTracking {
@@ -53,12 +53,12 @@ const stageColors: Record<string, string> = {
   CANCELLED: "bg-slate-300",
 };
 
-const statusBadgeMap: Record<string, { badge: "warning" | "info" | "purple" | "success" | "critical" | "default" }> = {
-  PENDING: { badge: "warning" },
-  PROCESS: { badge: "info" },
-  SHIPPED: { badge: "purple" },
-  COMPLETED: { badge: "success" },
-  CANCELLED: { badge: "critical" },
+const statusBadgeMap: Record<string, "pending" | "process" | "purple" | "success" | "danger" | "neutral"> = {
+  PENDING: "pending",
+  PROCESS: "process",
+  SHIPPED: "purple",
+  COMPLETED: "success",
+  CANCELLED: "danger",
 };
 
 export default function SampleTrackingPage() {
@@ -102,9 +102,8 @@ export default function SampleTrackingPage() {
   }
 
   return (
-    <DashboardShell
-      title="SAMPLE"
-      titleAccent="TRACKING"
+    <OperationalPageShell
+      title="Sample Tracking"
       subtitle="Pipeline Monitoring — Sample Order Lifecycle"
     >
       {isLoading ? (
@@ -115,214 +114,214 @@ export default function SampleTrackingPage() {
           onRetry={() => queryClient.invalidateQueries({ queryKey: ["bussdev-samples-tracking"] })}
         />
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <StatCard
+        <div className="operational-stack">
+          <OperationalMetricGrid>
+            <OperationalMetricCard
               label="Total Samples"
-              value={totalSamples.toString()}
-              icon={<Package className="text-blue-600" />}
+              value={totalSamples}
+              icon={<Package className="h-4 w-4" />}
+              tone="blue"
             />
-            <StatCard
+            <OperationalMetricCard
               label="In Progress"
-              value={inProgressCount.toString()}
-              subValue="Sedang diproses"
-              icon={<Clock className="text-amber-500" />}
+              value={inProgressCount}
+              helper="Sedang diproses"
+              icon={<Clock className="h-4 w-4" />}
+              tone="amber"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Shipped"
-              value={shippedCount.toString()}
-              subValue="Dalam pengiriman"
-              icon={<Truck className="text-purple-600" />}
+              value={shippedCount}
+              helper="Dalam pengiriman"
+              icon={<Truck className="h-4 w-4" />}
+              tone="purple"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Completed"
-              value={completedCount.toString()}
-              subValue="Selesai"
-              icon={<CheckCircle2 className="text-emerald-600" />}
+              value={completedCount}
+              helper="Selesai"
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              tone="green"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Awaiting Payment"
-              value={awaitingPayment.toString()}
-              subValue="Belum lunas"
-              icon={<Wallet className="text-rose-500" />}
+              value={awaitingPayment}
+              helper="Belum lunas"
+              icon={<Wallet className="h-4 w-4" />}
+              tone="red"
             />
-          </div>
+          </OperationalMetricGrid>
 
-          <TableWrapper
-            filters={
-              <div className="relative w-full max-w-md">
-                <DnaInput
-                  icon={<Search className="h-4 w-4" />}
-                  placeholder="Cari kode, customer, atau produk..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+          <OperationalPanel>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 rounded-full bg-blue-600" />
+                <h3 className="text-[14px] font-semibold text-slate-900">Sample Tracking</h3>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                  {filteredSamples.length}
+                </span>
               </div>
-            }
-          >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Kode
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Tanggal
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Produk
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px] w-[220px]">
-                    Pipeline Stage
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Status
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Detail
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSamples.map((sample) => (
-                  <TableRow
-                    key={sample.id}
-                    className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50"
-                  >
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                          <Package className="h-4 w-4" />
+              <OperationalInput
+                icon={<Search className="h-4 w-4" />}
+                placeholder="Cari kode, customer, atau produk..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="md:w-80"
+              />
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col className="w-[12%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[15%]" />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Kode</th>
+                    <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Tanggal</th>
+                    <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Customer</th>
+                    <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Produk</th>
+                    <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Pipeline Stage</th>
+                    <th className="px-3 py-2 text-center text-[11px] font-medium uppercase tracking-wider text-slate-500">Status</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wider text-slate-500">Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSamples.map((sample) => (
+                    <tr key={sample.id} className="border-b border-slate-100 transition hover:bg-blue-50/30">
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-600 text-white">
+                            <Package className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[12px] font-semibold text-slate-900">{sample.code}</span>
                         </div>
-                        <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">
-                          {sample.code}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="text-[11px] font-medium text-slate-500 tabular-nums">
-                        {sample.createdAt}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <p className="font-black text-slate-900 text-xs uppercase italic">
-                        {sample.customerName}
-                      </p>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="text-[11px] font-medium text-slate-600">
-                        {sample.productName}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      {sample.status === "CANCELLED" ? (
-                        <DnaBadge status="critical">CANCELLED</DnaBadge>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          {stages.map((stage, idx) => {
-                            const currentIdx = getStageIndex(sample.status);
-                            const isCompleted = idx <= currentIdx;
-                            const isCurrent = idx === currentIdx;
-                            return (
-                              <React.Fragment key={stage}>
-                                <div
-                                  className={cn(
-                                    "flex items-center justify-center w-6 h-6 rounded-full text-[8px] font-black uppercase transition-all",
-                                    isCompleted
-                                      ? `${stageColors[stage]} text-white shadow-sm`
-                                      : "bg-slate-100 text-slate-400",
-                                    isCurrent && "ring-2 ring-offset-1 ring-blue-400"
-                                  )}
-                                >
-                                  {idx + 1}
-                                </div>
-                                {idx < stages.length - 1 && (
-                                  <ArrowRight
+                      </td>
+                      <td className="px-3 py-2.5 text-[11px] tabular-nums text-slate-600">{sample.createdAt}</td>
+                      <td className="px-3 py-2.5 text-[12px] font-semibold text-slate-900">{sample.customerName}</td>
+                      <td className="px-3 py-2.5 text-[11px] text-slate-600">{sample.productName}</td>
+                      <td className="px-3 py-2.5">
+                        {sample.status === "CANCELLED" ? (
+                          <OperationalStatusBadge status="danger">CANCELLED</OperationalStatusBadge>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            {stages.map((stage, idx) => {
+                              const currentIdx = getStageIndex(sample.status);
+                              const isCompleted = idx <= currentIdx;
+                              const isCurrent = idx === currentIdx;
+                              return (
+                                <React.Fragment key={stage}>
+                                  <div
                                     className={cn(
-                                      "h-3 w-3 shrink-0",
-                                      idx < currentIdx ? "text-blue-400" : "text-slate-200"
+                                      "grid h-6 w-6 place-items-center rounded-full text-[8px] font-semibold transition",
+                                      isCompleted
+                                        ? `${stageColors[stage]} text-white`
+                                        : "bg-slate-100 text-slate-400",
+                                      isCurrent && "ring-2 ring-offset-1 ring-blue-400",
                                     )}
-                                  />
-                                )}
-                              </React.Fragment>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge status={statusBadgeMap[sample.status]?.badge || "default"}>
-                        {sample.status}
-                      </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
-                      <DnaButton
-                        variant="outline"
-                        size="sm"
-                        icon={<Eye className="h-3.5 w-3.5" />}
-                        onClick={() => setDetailOrder(sample)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredSamples.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-10 text-slate-400 italic"
-                    >
-                      Tidak ada sample tracking ditemukan.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
-        </>
+                                  >
+                                    {idx + 1}
+                                  </div>
+                                  {idx < stages.length - 1 && (
+                                    <ArrowRight
+                                      className={cn(
+                                        "h-3 w-3 shrink-0",
+                                        idx < currentIdx ? "text-blue-400" : "text-slate-200",
+                                      )}
+                                    />
+                                  )}
+                                </React.Fragment>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <OperationalStatusBadge status={statusBadgeMap[sample.status] || "neutral"}>
+                          {getOperationalStatusLabel(sample.status)}
+                        </OperationalStatusBadge>
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <button
+                          type="button"
+                          className="operational-button is-secondary h-8 px-3 text-[11px]"
+                          onClick={() => setDetailOrder(sample)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Detail</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredSamples.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-3 py-10 text-center text-[12px] text-slate-400">
+                        Tidak ada sample tracking ditemukan.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </OperationalPanel>
+        </div>
       )}
 
       <Dialog open={!!detailOrder} onOpenChange={() => setDetailOrder(null)}>
-        <DialogContent className="sm:max-w-lg bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-          <div className="p-8 bg-blue-600 text-white relative overflow-hidden">
+        <DialogContent className="sm:max-w-lg border-none p-0">
+          <div className="relative overflow-hidden rounded-t-md bg-blue-600 p-6 text-white">
             <div className="relative z-10">
-              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">
+              <DialogTitle className="text-[20px] font-semibold uppercase tracking-tight text-white">
                 Sample Tracking
               </DialogTitle>
-              <DialogDescription className="text-blue-100 text-[10px] font-medium uppercase tracking-[0.2em] mt-2">
-                Detail Pipeline — {detailOrder?.code}
+              <DialogDescription className="mt-1 text-[10px] font-medium uppercase tracking-wider text-blue-100">
+                Detail Pipeline — {detailOrder?.code ?? "—"}
               </DialogDescription>
             </div>
-            <Package className="absolute right-8 top-1/2 -translate-y-1/2 h-12 w-12 text-white/20" />
+            <Package className="absolute right-6 top-1/2 h-10 w-10 -translate-y-1/2 text-white/20" />
           </div>
-          <div className="p-8 space-y-6">
-            <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-5 p-6">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase">Kode</p>
-                <p className="font-black text-xs uppercase text-slate-900 mt-1">{detailOrder?.code}</p>
+                <p className="text-[10px] font-medium text-slate-500 uppercase">Kode</p>
+                <p className="mt-1 text-[12px] font-semibold text-slate-900">{detailOrder?.code ?? "—"}</p>
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase">Tanggal</p>
-                <p className="font-black text-xs uppercase text-slate-900 mt-1">{detailOrder?.createdAt}</p>
+                <p className="text-[10px] font-medium text-slate-500 uppercase">Tanggal</p>
+                <p className="mt-1 text-[12px] font-semibold text-slate-900">{detailOrder?.createdAt ?? "—"}</p>
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase">Customer</p>
-                <p className="font-black text-xs uppercase text-slate-900 mt-1">{detailOrder?.customerName}</p>
+                <p className="text-[10px] font-medium text-slate-500 uppercase">Customer</p>
+                <p className="mt-1 text-[12px] font-semibold text-slate-900">{detailOrder?.customerName ?? "—"}</p>
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase">Produk</p>
-                <p className="font-black text-xs uppercase text-slate-900 mt-1">{detailOrder?.productName}</p>
+                <p className="text-[10px] font-medium text-slate-500 uppercase">Produk</p>
+                <p className="mt-1 text-[12px] font-semibold text-slate-900">{detailOrder?.productName ?? "—"}</p>
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase">Qty</p>
-                <p className="font-black text-sm text-slate-900 mt-1 tabular-nums">{detailOrder?.qty.toLocaleString("id-ID")}</p>
+                <p className="text-[10px] font-medium text-slate-500 uppercase">Qty</p>
+                <p className="mt-1 text-[13px] font-semibold tabular-nums text-slate-900">
+                  {detailOrder?.qty.toLocaleString("id-ID") ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium text-slate-500 uppercase">Status</p>
+                <p className="mt-1">
+                  <OperationalStatusBadge status={statusBadgeMap[detailOrder?.status ?? ""] || "neutral"}>
+                    {getOperationalStatusLabel(detailOrder?.status)}
+                  </OperationalStatusBadge>
+                </p>
               </div>
             </div>
 
             <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase mb-3">Pipeline Progress</p>
+              <p className="mb-3 text-[10px] font-medium text-slate-500 uppercase">Pipeline Progress</p>
               <div className="flex items-center gap-2">
                 {stages.map((stage, idx) => {
                   const currentIdx = detailOrder ? getStageIndex(detailOrder.status) : -1;
@@ -333,19 +332,19 @@ export default function SampleTrackingPage() {
                       <div className="flex flex-col items-center gap-1.5">
                         <div
                           className={cn(
-                            "flex items-center justify-center w-10 h-10 rounded-full text-[10px] font-black uppercase transition-all",
+                            "grid h-9 w-9 place-items-center rounded-full text-[10px] font-semibold transition",
                             isCompleted
-                              ? `${stageColors[stage]} text-white shadow-md`
+                              ? `${stageColors[stage]} text-white`
                               : "bg-slate-100 text-slate-400",
-                            isCurrent && "ring-2 ring-offset-2 ring-blue-400 scale-110"
+                            isCurrent && "ring-2 ring-offset-2 ring-blue-400 scale-110",
                           )}
                         >
                           {idx + 1}
                         </div>
                         <span
                           className={cn(
-                            "text-[8px] font-black uppercase tracking-wider",
-                            isCompleted ? "text-slate-900" : "text-slate-400"
+                            "text-[9px] font-medium uppercase tracking-wider",
+                            isCompleted ? "text-slate-900" : "text-slate-400",
                           )}
                         >
                           {stage}
@@ -354,8 +353,8 @@ export default function SampleTrackingPage() {
                       {idx < stages.length - 1 && (
                         <ArrowRight
                           className={cn(
-                            "h-4 w-4 mb-5 shrink-0",
-                            idx < currentIdx ? "text-blue-400" : "text-slate-200"
+                            "mb-5 h-4 w-4 shrink-0",
+                            idx < currentIdx ? "text-blue-400" : "text-slate-200",
                           )}
                         />
                       )}
@@ -367,6 +366,6 @@ export default function SampleTrackingPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

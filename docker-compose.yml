@@ -37,7 +37,7 @@ services:
     ports:
       - "3002:3002"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:3002/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget --spider http://localhost:3002/system/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

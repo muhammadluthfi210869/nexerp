@@ -116,6 +116,11 @@ model JournalEntry {
   planId           String? @db.Uuid
   requisitionId    String? @db.Uuid
   invoiceId        String? @db.Uuid
+  fundRequestId    String? @unique @db.Uuid
+  sourceEntityType String?
+  sourceEntityId   String?
+  category         String?
+  direction        String?
 
   salesOrder      SalesOrder?          @relation(fields: [soId], references: [id])
   purchaseOrder   PurchaseOrder?       @relation(fields: [poId], references: [id])
@@ -126,6 +131,7 @@ model JournalEntry {
   productionPlan  ProductionPlan?      @relation(fields: [planId], references: [id])
   requisition     MaterialRequisition? @relation(fields: [requisitionId], references: [id])
   invoice         Invoice?             @relation(fields: [invoiceId], references: [id])
+  fundRequest     FundRequest?         @relation(fields: [fundRequestId], references: [id])
   stockOpnames    StockOpname[]
   copqRecords     COPQRecord[]
   lines           JournalLine[]
@@ -172,21 +178,22 @@ model Payment {
 }
 
 model FundRequest {
-  id             String            @id @default(uuid()) @db.Uuid
-  requesterId    String            @db.Uuid
-  departmentId   String
-  amount         Decimal           @db.Decimal(15, 2)
-  reason         String
-  status         FundRequestStatus @default(PENDING_APPROVAL_MGR)
-  attachmentUrls String[]
-  approvedById   String?           @db.Uuid
-  disbursedById  String?           @db.Uuid
-  rejectReason   String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  approver       User?             @relation("FundApprover", fields: [approvedById], references: [id])
-  disburser      User?             @relation("FundDisburser", fields: [disbursedById], references: [id])
-  requester      User              @relation("FundRequester", fields: [requesterId], references: [id])
+  id                   String            @id @default(uuid()) @db.Uuid
+  requesterId          String            @db.Uuid
+  departmentId         String
+  amount               Decimal           @db.Decimal(15, 2)
+  reason               String
+  status               FundRequestStatus @default(PENDING_APPROVAL_MGR)
+  attachmentUrls       String[]
+  approvedById         String?           @db.Uuid
+  disbursedById        String?           @db.Uuid
+  rejectReason         String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  approver             User?             @relation("FundApprover", fields: [approvedById], references: [id])
+  disburser            User?             @relation("FundDisburser", fields: [disbursedById], references: [id])
+  requester            User              @relation("FundRequester", fields: [requesterId], references: [id])
+  financialTransaction JournalEntry?
 
   @@map("fund_requests")
 }
@@ -219,12 +226,12 @@ model Currency {
 }
 
 model AutoJournalConfig {
-  transactionType String    @id
-  coaDebetId      String    @db.Uuid
-  coaCreditId     String    @db.Uuid
+  transactionType String   @id
+  coaDebetId      String   @db.Uuid
+  coaCreditId     String   @db.Uuid
   description     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("auto_journal_configs")
 }

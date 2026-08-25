@@ -14,12 +14,16 @@ import { LegalityService } from './legality.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole, RegStage, LegalApplicability, RegType } from '@prisma/client';
+import { LegalityBatch3Service } from './legality-batch3.service';
 
 @Controller('legality')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LegalityController {
-  constructor(private readonly legalityService: LegalityService) {}
+  constructor(
+    private readonly legalityService: LegalityService,
+    private readonly batch3: LegalityBatch3Service,
+  ) {}
 
   @Get('dashboard')
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
@@ -251,5 +255,65 @@ export class LegalityController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
   async bulkImportMasterInci(@Body('data') data: any[]) {
     return this.legalityService.bulkImportMasterInci(data);
+  }
+
+  // ─── CANONICAL BATCH-3 LEGALITAS ENDPOINTS ────────────────────────
+  // These are the production contract for Batch 4 SCM / procurement
+  // handoffs. The legacy `/legality/batch3/...` prefix remains as a
+  // thin alias for backwards compatibility and existing test coverage.
+
+  @Get('readiness/:leadId/:sampleId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.COMPLIANCE, UserRole.RND)
+  async readiness(
+    @Param('leadId') leadId: string,
+    @Param('sampleId') sampleId: string,
+  ) {
+    return this.batch3.getReadinessForLead(leadId, sampleId);
+  }
+
+  @Post('intake/:sampleId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE, UserRole.RND)
+  async intake(
+    @Param('sampleId') sampleId: string,
+    @Req() req: { user: { id: string } },
+  ) {
+    return this.batch3.intakeForCompletedSample(sampleId, req.user.id);
+  }
+
+  @Post('pipeline/:id/advance')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async advancePipeline(
+    @Param('id') id: string,
+    @Body() body: { targetStage: RegStage; reason?: string },
+    @Req() req: { user: { id: string } },
+  ) {
+    return this.batch3.advancePipelineStage(
+      id,
+      body.targetStage,
+      req.user.id,
+      body.reason,
+    );
+  }
+
+  @Patch('sample/:sampleId/applicability')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async setSampleApplicability(
+    @Param('sampleId') sampleId: string,
+    @Body() body: { applicability: LegalApplicability; legalType?: RegType },
+    @Req() req: { user: { id: string } },
+  ) {
+    const updated = await this.batch3.setApplicability(
+      sampleId,
+      body.applicability,
+      body.legalType,
+      req.user.id,
+    );
+    if (body.applicability === 'REQUIRED') {
+      await this.batch3.intakeForCompletedSample(sampleId, req.user.id, {
+        applicability: body.applicability,
+        legalType: body.legalType,
+      });
+    }
+    return updated;
   }
 }

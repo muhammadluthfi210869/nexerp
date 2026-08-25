@@ -15,16 +15,19 @@ import {
   Clock,
   History,
 } from "lucide-react";
-import { DnaInput } from "@/components/dna/DnaInput";
+import type { ColumnDef } from "@tanstack/react-table";
+import { OperationalInput } from "@/components/operational/OperationalUI";
 import {
-  DataTableV2,
-  DataTableV2Body,
-  DataTableV2Cell,
-  DataTableV2Head,
-  DataTableV2HeaderCell,
-  DataTableV2Row,
-  DataTableV2Toolbar,
-} from "@/components/layout/DataTableV2";
+  OperationalDataTable,
+  OperationalMetricGrid,
+  OperationalMetricCard,
+  OperationalButton,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational/OperationalUI";
+import {
+  OperationalMigrationShell,
+} from "@/components/operational/OperationalMigrationShell";
 import {
   Sheet,
   SheetContent,
@@ -47,16 +50,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableShell } from "@/components/layout/TableShell";
-import { SectionDivider } from "@/components/layout/SectionDivider";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 type Category = { id: string; name: string };
 type Account = { id: string; name: string; code: string };
@@ -229,17 +228,109 @@ export default function MasterGoodsPage() {
   const criticalStock = goods.filter(g => g.stockQty <= g.minLevel).length;
   const dummyCount = goods.filter(g => g.isDummy).length;
 
+  const columns: ColumnDef<Good>[] = [
+    {
+      id: "specification",
+      header: "Spesifikasi Produk",
+      accessorFn: (row) => row.name,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-black text-slate-900 text-xs uppercase">{row.original.name}</span>
+              {row.original.isDummy && (
+                <OperationalStatusBadge status="pending">DUMMY</OperationalStatusBadge>
+              )}
+            </div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+              {row.original.code || "PENDING_SKU"}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "category",
+      header: "Kategori",
+      accessorFn: (row) => row.category?.name || "TANPA KATEGORI",
+      cell: ({ row }) => (
+        <OperationalStatusBadge status="neutral">
+          {row.original.category?.name || "TANPA KATEGORI"}
+        </OperationalStatusBadge>
+      ),
+    },
+    {
+      id: "logistics",
+      header: "Logistik",
+      accessorFn: (row) => row.outMethod,
+      cell: ({ row }) => (
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-1.5">
+            <ArrowRightLeft className="w-3 h-3 text-slate-400" />
+            <span className="text-[9px] font-bold text-slate-500 uppercase">{row.original.outMethod}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Truck className="w-3 h-3 text-slate-400" />
+            <span className="text-[9px] font-bold text-slate-500 uppercase">{row.original.leadTime} Hari</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "value",
+      header: "Nilai",
+      accessorFn: (row) => row.unitPrice,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <span className="font-black text-slate-900 text-xs">{formatOperationalCurrency(row.original.unitPrice)}</span>
+          <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-tighter">Rata-rata Bergerak</span>
+        </div>
+      ),
+    },
+    {
+      id: "stockStatus",
+      header: "Status Stok",
+      accessorFn: (row) => row.stockQty,
+      cell: ({ row }) => (
+        <div className="flex flex-col items-center gap-1">
+          <OperationalStatusBadge status={row.original.stockQty <= row.original.minLevel ? "danger" : "neutral"}>
+            {row.original.stockQty} {row.original.unit}
+          </OperationalStatusBadge>
+          {row.original.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Aksi",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <OperationalButton
+          variant="ghost"
+          aria-label={`Inspect ${row.original.name}`}
+          onClick={() => {
+            fetchGoodDetail(row.original.id);
+            setIsPanelOpen(true);
+          }}
+        >
+          <Info className="h-4 w-4" />
+        </OperationalButton>
+      ),
+    },
+  ];
+
   return (
-    <TableShell
-      title="Goods"
-      titleAccent="Catalog"
-      subtitle="Master Data Repository & Logistical Intelligence"
+    <OperationalMigrationShell
+      title="Master Barang"
+      subtitle="Katalog SKU, klasifikasi, dan informasi logistik"
       actions={
         <>
-          <DnaButton variant="outline" icon={<History />}>Log Audit</DnaButton>
-          <DnaButton
+          <OperationalButton variant="secondary">
+            <History className="h-4 w-4" />
+            <span>Log Audit</span>
+          </OperationalButton>
+          <OperationalButton
             variant="primary"
-            icon={<Plus />}
             onClick={() => {
               setEditingGood(null);
               setFormData({
@@ -252,141 +343,81 @@ export default function MasterGoodsPage() {
               setIsPanelOpen(true);
             }}
           >
-            Initialize Good
-          </DnaButton>
+            <Plus className="h-4 w-4" />
+            <span>Tambah Barang</span>
+          </OperationalButton>
         </>
       }
       filters={
-        <div className="flex-1 flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <DnaInput
-              icon={<Search />}
-              placeholder="Search by name or SKU..."
-              className="bg-white text-[11px] font-bold uppercase"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-          </div>
-        </div>
+        <OperationalInput
+          icon={<Search className="h-4 w-4" />}
+          placeholder="Cari nama atau SKU..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="bg-white max-w-sm flex-1"
+          autoFocus
+        />
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[var(--card-gap)]">
-        <StatCard label="Total SKU" value={goods.length} subValue="Registered SKUs" icon={<Package />} />
-        <div className="bg-white border border-rose-200 rounded-2xl p-7 shadow-card transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in">
-          <div className="relative z-10 w-full">
-            <div className="space-y-2">
-              <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.25em]">Critical Stock</p>
-              <h3 className="text-[26px] font-black text-slate-900 tracking-tight tabular leading-tight">{criticalStock}</h3>
-              <p className="text-[11px] font-bold text-rose-400 uppercase tracking-wider leading-tight">Requires Attention</p>
-            </div>
-          </div>
-          <div className="absolute -bottom-5 -right-5 pointer-events-none select-none z-0">
-            <AlertTriangle className="w-[110px] h-[110px] stroke-[0.75px] text-rose-200/40" />
-          </div>
-        </div>
-        <StatCard label="Dummy Materials" value={dummyCount} subValue="Simulation Data" icon={<FlaskConical />} />
-        <StatCard label="System Sync" value="100%" subValue="Ecosystem Integrity" icon={<Activity />} />
-      </div>
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Total SKU"
+            value={goods.length}
+            helper="SKU terdaftar"
+            icon={<Package className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="Stok Kritis"
+            value={criticalStock}
+            helper="Perlu Perhatian"
+            icon={<AlertTriangle className="h-4 w-4" />}
+            tone="red"
+          />
+          <OperationalMetricCard
+            label="Material Contoh"
+            value={dummyCount}
+            helper="Data simulasi"
+            icon={<FlaskConical className="h-4 w-4" />}
+            tone="purple"
+          />
+          <OperationalMetricCard
+            label="Sinkronisasi Sistem"
+            value="100%"
+            helper="Integritas data"
+            icon={<Activity className="h-4 w-4" />}
+            tone="green"
+          />
+        </OperationalMetricGrid>
 
-      <div>
-        <DataTableV2Toolbar>
-          <span>{filteredGoods.length} records · {goods.length} total SKUs</span>
-          <span className="text-[10px] font-semibold text-slate-400">Click a row to inspect material detail</span>
-        </DataTableV2Toolbar>
-        <DataTableV2 minWidth="840px">
-            <DataTableV2Head>
-              <DataTableV2Row>
-                <DataTableV2HeaderCell>Product Specification</DataTableV2HeaderCell>
-                <DataTableV2HeaderCell>Category</DataTableV2HeaderCell>
-                <DataTableV2HeaderCell>Logistics</DataTableV2HeaderCell>
-                <DataTableV2HeaderCell align="right">Valuation</DataTableV2HeaderCell>
-                <DataTableV2HeaderCell align="center">Stock Status</DataTableV2HeaderCell>
-                <DataTableV2HeaderCell align="right">Action</DataTableV2HeaderCell>
-              </DataTableV2Row>
-            </DataTableV2Head>
-            <DataTableV2Body>
-              {loading ? (
-                <DataTableV2Row>
-                  <DataTableV2Cell colSpan={6} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                    Syncing Global Ledger...
-                  </DataTableV2Cell>
-                </DataTableV2Row>
-              ) : filteredGoods.map((good) => (
-                <DataTableV2Row
-                  key={good.id}
-                  onClick={() => {
-                    fetchGoodDetail(good.id);
-                    setIsPanelOpen(true);
-                  }}
-                >
-                  <DataTableV2Cell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-slate-900 text-xs uppercase">{good.name}</span>
-                          {good.isDummy && (
-                            <DnaBadge status="warning">
-                              DUMMY
-                            </DnaBadge>
-                          )}
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{good.code || "PENDING_SKU"}</span>
-                      </div>
-                    </div>
-                  </DataTableV2Cell>
-                  <DataTableV2Cell>
-                    <DnaBadge>
-                      {good.category?.name || "UNCATEGORIZED"}
-                    </DnaBadge>
-                  </DataTableV2Cell>
-                  <DataTableV2Cell>
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <ArrowRightLeft className="w-3 h-3 text-slate-400" />
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">{good.outMethod}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Truck className="w-3 h-3 text-slate-400" />
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">{good.leadTime} Days</span>
-                      </div>
-                    </div>
-                  </DataTableV2Cell>
-                  <DataTableV2Cell align="right" className="tabular-nums">
-                    <span className="font-black text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString('id-ID')}</span>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-tighter">Moving Avg</span>
-                  </DataTableV2Cell>
-                  <DataTableV2Cell align="center">
-                    <div className="flex flex-col items-center gap-1">
-                      <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
-                        {good.stockQty} {good.unit}
-                      </DnaBadge>
-                      {good.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
-                    </div>
-                  </DataTableV2Cell>
-                  <DataTableV2Cell align="right">
-                    <div aria-label={`Inspect ${good.name}`} className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
-                      <Info className="h-4 w-4" />
-                    </div>
-                  </DataTableV2Cell>
-                </DataTableV2Row>
-              ))}
-            </DataTableV2Body>
-        </DataTableV2>
+        <OperationalDataTable
+          data={filteredGoods}
+          columns={columns as any}
+          getRowId={(row: Good) => row.id}
+          toolbar={
+            <span className="text-[10px] font-semibold text-slate-400">
+              {filteredGoods.length} data · {goods.length} total SKU · Klik baris untuk detail
+            </span>
+          }
+          searchPlaceholder=""
+          enableSearch={false}
+          enableColumnVisibility={false}
+          loading={loading}
+          emptyMessage="Syncing Global Ledger..."
+        />
       </div>
 
       <Sheet open={isPanelOpen} onOpenChange={setIsPanelOpen}>
-        <SheetContent side="right" className="sm:max-w-[700px] p-0 border-l border-slate-200 shadow-2xl bg-white flex flex-col h-full">
-          <SheetHeader className="p-8 bg-slate-800 text-white shrink-0">
+        <SheetContent side="right" className="sm:max-w-[700px] p-0 flex flex-col h-full">
+          <SheetHeader className="p-8 shrink-0">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-600/20 rounded-xl">
-                <Package className="w-5 h-5 text-blue-400" />
-              </div>
+              <Package className="w-5 h-5" />
               <div>
-                <SheetTitle className="text-sm font-black uppercase tracking-tight text-white leading-none">
+                <SheetTitle>
                   {editingGood ? "Material Detail" : "Initialize Material"}
                 </SheetTitle>
-                <SheetDescription className="text-[9px] font-bold text-white/40 uppercase tracking-wider mt-1">
+                <SheetDescription>
                   Ecosystem Entry Protocol
                 </SheetDescription>
               </div>
@@ -394,92 +425,116 @@ export default function MasterGoodsPage() {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <form onSubmit={handleSubmit} className="p-8 space-y-8">
-              <div className="space-y-6">
-                <SectionDivider number={1} title="Essential Architecture" />
+            <form onSubmit={handleSubmit} className="p-8 operational-stack">
+              {/* Essential Architecture */}
+              <div className="operational-stack">
+                <div className="operational-section-title">
+                  <span>1</span>
+                  <span>Essential Architecture</span>
+                </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Product Name</Label>
-                    <DnaInput value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="border-none font-bold uppercase" />
+                  <div className="operational-field">
+                    <span>Product Name</span>
+                    <input
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">SKU / Code</Label>
-                    <DnaInput value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="border-none font-bold uppercase" />
+                  <div className="operational-field">
+                    <span>SKU / Code</span>
+                    <input
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Category</Label>
+                  <div className="operational-field">
+                    <span>Category</span>
                     <Select value={formData.categoryId || ""} onValueChange={(v) => setFormData({ ...formData, categoryId: v || "" })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue placeholder="SELECT" /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">{categories.map(c => <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>)}</SelectContent>
+                      <SelectTrigger><SelectValue placeholder="SELECT" /></SelectTrigger>
+                      <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Type</Label>
+                  <div className="operational-field">
+                    <span>Type</span>
                     <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as any })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">
-                        <SelectItem value="RAW_MATERIAL" className="text-xs font-bold uppercase">Raw Material</SelectItem>
-                        <SelectItem value="FINISHED_GOODS" className="text-xs font-bold uppercase">Finished Goods</SelectItem>
-                        <SelectItem value="PACKAGING" className="text-xs font-bold uppercase">Packaging</SelectItem>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="RAW_MATERIAL">Raw Material</SelectItem>
+                        <SelectItem value="FINISHED_GOODS">Finished Goods</SelectItem>
+                        <SelectItem value="PACKAGING">Packaging</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Unit</Label>
+                  <div className="operational-field">
+                    <span>Unit</span>
                     <Select value={formData.unit} onValueChange={(v) => setFormData({ ...formData, unit: v as any })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">
-                        <SelectItem value="KG" className="text-xs font-bold uppercase">KG</SelectItem>
-                        <SelectItem value="LITER" className="text-xs font-bold uppercase">Liter</SelectItem>
-                        <SelectItem value="PCS" className="text-xs font-bold uppercase">PCS</SelectItem>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="KG">KG</SelectItem>
+                        <SelectItem value="LITER">Liter</SelectItem>
+                        <SelectItem value="PCS">PCS</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <SectionDivider number={2} title="Logistics Intelligence" />
-                <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="space-y-4">
+              {/* Logistics Intelligence */}
+              <div className="operational-stack">
+                <div className="operational-section-title">
+                  <span>2</span>
+                  <span>Logistics Intelligence</span>
+                </div>
+                <div className="grid grid-cols-2 gap-6 operational-panel p-6">
+                  <div className="operational-stack">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Dummy Material</Label>
+                      <Label>Dummy Material</Label>
                       <Switch checked={formData.isDummy} onCheckedChange={(v) => setFormData({ ...formData, isDummy: v })} />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-bold text-slate-400 uppercase">Lead Time (Days)</Label>
-                      <DnaInput type="number" value={formData.leadTime} onChange={(e) => setFormData({ ...formData, leadTime: Number(e.target.value) })} className="h-10 bg-white border-slate-200 font-bold" />
+                    <div className="operational-field">
+                      <span>Lead Time (Days)</span>
+                      <input
+                        type="number"
+                        value={formData.leadTime}
+                        onChange={(e) => setFormData({ ...formData, leadTime: Number(e.target.value) })}
+                      />
                     </div>
                   </div>
-                  <div className="space-y-4 border-l border-slate-200 pl-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Outbound Engine</Label>
+                  <div className="operational-stack border-l border-slate-200 pl-6">
+                    <div className="operational-field">
+                      <span>Outbound Engine</span>
                       <Select value={formData.outMethod} onValueChange={(v) => setFormData({ ...formData, outMethod: v as any })}>
-                        <SelectTrigger className="h-10 bg-white border-slate-200 font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent className="border-none shadow-xl rounded-xl">
-                          <SelectItem value="FIFO" className="text-xs font-bold uppercase">FIFO</SelectItem>
-                          <SelectItem value="FEFO" className="text-xs font-bold uppercase">FEFO</SelectItem>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FIFO">FIFO</SelectItem>
+                          <SelectItem value="FEFO">FEFO</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-bold text-slate-400 uppercase">Usage Unit</Label>
-                      <DnaInput value={formData.usageUnit || ""} onChange={(e) => setFormData({ ...formData, usageUnit: e.target.value })} className="h-10 bg-white border-slate-200 font-bold uppercase" />
+                    <div className="operational-field">
+                      <span>Usage Unit</span>
+                      <input
+                        value={formData.usageUnit || ""}
+                        onChange={(e) => setFormData({ ...formData, usageUnit: e.target.value })}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
               {editingGood && (
-                <div className="space-y-6">
-                  <SectionDivider number={3} title="Batch Integrity & QC Release" />
-                  <div className="space-y-4">
+                <div className="operational-stack">
+                  <div className="operational-section-title">
+                    <span>3</span>
+                    <span>Batch Integrity & QC Release</span>
+                  </div>
+                  <div className="operational-stack">
                     {editingGood.inventories && editingGood.inventories.length > 0 ? (
                       editingGood.inventories.map((batch) => (
-                        <div key={batch.id} className="p-5 border border-slate-100 rounded-2xl flex items-center justify-between hover:shadow-sm transition-all">
+                        <div key={batch.id} className="operational-panel p-5 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className={cn(
                               "h-10 w-10 rounded-xl flex items-center justify-center",
@@ -499,34 +554,34 @@ export default function MasterGoodsPage() {
                           <div className="flex items-center gap-2">
                             {batch.qcStatus === 'QUARANTINE' && (
                               <>
-                                <DnaButton
+                                <OperationalButton
                                   variant="primary"
-                                  size="sm"
                                   onClick={() => handleUpdateStatus(batch.id, 'GOOD')}
                                 >
                                   Release
-                                </DnaButton>
-                                <DnaButton
+                                </OperationalButton>
+                                <OperationalButton
                                   variant="danger"
-                                  size="sm"
                                   onClick={() => handleUpdateStatus(batch.id, 'REJECT')}
                                 >
                                   Reject
-                                </DnaButton>
+                                </OperationalButton>
                               </>
                             )}
-                            <DnaBadge status={
-                              batch.qcStatus === 'GOOD' ? "success" :
-                              batch.qcStatus === 'QUARANTINE' ? "warning" :
-                              "critical"
-                            }>
-                              {batch.qcStatus}
-                            </DnaBadge>
+                            <OperationalStatusBadge
+                              status={
+                                batch.qcStatus === 'GOOD' ? "success" :
+                                batch.qcStatus === 'QUARANTINE' ? "pending" :
+                                "danger"
+                              }
+                            >
+                              {getOperationalStatusLabel(batch.qcStatus)}
+                            </OperationalStatusBadge>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <div className="py-10 text-center operational-panel">
                         <p className="text-[10px] font-bold text-slate-400 uppercase">No Active Batches in Inventory</p>
                       </div>
                     )}
@@ -536,11 +591,11 @@ export default function MasterGoodsPage() {
             </form>
           </div>
 
-          <SheetFooter className="p-8 bg-slate-50 border-t border-slate-200 shrink-0">
-            <DnaButton variant="outline" onClick={() => setIsPanelOpen(false)}>Discard</DnaButton>
-            <DnaButton variant="primary" type="button" onClick={handleSubmit} className="mb-0">
+          <SheetFooter className="p-8 shrink-0">
+            <OperationalButton variant="secondary" onClick={() => setIsPanelOpen(false)}>Discard</OperationalButton>
+            <OperationalButton variant="primary" type="button" onClick={handleSubmit}>
               {editingGood ? "Commit" : "Deploy"}
-            </DnaButton>
+            </OperationalButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -551,11 +606,11 @@ export default function MasterGoodsPage() {
           </DialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+            <OperationalButton variant="secondary" onClick={() => setShowConfirm(false)}>Batal</OperationalButton>
+            <OperationalButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</OperationalButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+    </OperationalMigrationShell>
   );
 }

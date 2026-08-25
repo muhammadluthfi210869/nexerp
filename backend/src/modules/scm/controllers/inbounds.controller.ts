@@ -51,4 +51,10 @@ export class InboundsController {
   reject(@Param('id') id: string, @Body() dto: { reason: string }) {
     return this.inboundsService.reject(id, dto);
   }
+
+  @Post(':id/reverse')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  reverse(@Param('id') id: string, @Body() dto: { reason: string }) {
+    return this.inboundsService.reverse(id, dto.reason);
+  }
 }

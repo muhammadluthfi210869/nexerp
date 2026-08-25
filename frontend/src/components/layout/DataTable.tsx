@@ -9,8 +9,8 @@ interface DataTableProps {
 export function DataTable({ children, className }: DataTableProps) {
   return (
     <div 
-      className={cn("bg-white border border-border shadow-sm overflow-hidden", className)}
-      style={{ borderRadius: 'var(--card-radius)' }}
+      className={cn("erp-table-shell bg-white border border-border shadow-[var(--table-shadow)] overflow-hidden", className)}
+      style={{ borderRadius: 'var(--table-radius)' }}
     >
       <table className="w-full border-collapse text-sm">
         {children}

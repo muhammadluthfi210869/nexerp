@@ -732,17 +732,26 @@ export class ScmService {
   }
 
   async approvePurchaseRequest(prId: string, userId: string) {
-    return this.prisma.$transaction(async (tx) => {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
       const pr = await tx.purchaseRequest.findUnique({
         where: { id: prId },
-        include: { items: true, warehouse: true, supplier: true },
+        include: { items: true, warehouse: true, supplier: true, requirement: true, purchaseOrder: true },
       });
 
       if (!pr) throw new NotFoundException('Purchase Request not found');
+      // Retry/concurrent approval always returns the same supplier commitment.
+      if (pr.purchaseOrder) return pr.purchaseOrder;
       if (pr.status !== PRStatus.SUBMITTED) {
         throw new BadRequestException(
           `PR status ${pr.status} — hanya SUBMITTED yang bisa di-approve`,
         );
+      }
+      if (!pr.supplierId) {
+        throw new BadRequestException('PR_SUPPLIER_REQUIRED: supplier is a procurement fact and must be chosen before issuing PO.');
+      }
+      if (pr.items.some((item) => !item.estimatedPrice || Number(item.estimatedPrice) < 0)) {
+        throw new BadRequestException('PR_PRICE_REQUIRED: record an agreed non-negative unit price before issuing PO.');
       }
 
       const poNumber = await this.idGenerator.generateId('PO');
@@ -752,6 +761,7 @@ export class ScmService {
           poNumber,
           supplierId: pr.supplierId,
           scmId: userId,
+          requestId: pr.id,
           status: 'ORDERED',
           totalValue: pr.items.reduce(
             (sum, item) =>
@@ -759,7 +769,7 @@ export class ScmService {
             0,
           ),
           notes: `AUTO-PO FROM PR: ${pr.notes || ''}`.trim(),
-          leadId: pr.notes?.includes('Lead') ? undefined : undefined,
+          leadId: pr.requirement ? undefined : undefined,
           items: {
             create: pr.items.map((item) => ({
               materialId: item.materialId,
@@ -778,8 +788,17 @@ export class ScmService {
         data: { status: PRStatus.APPROVED },
       });
 
-      return po;
-    });
+        return po;
+      });
+    } catch (error: any) {
+      // Unique requestId is the concurrency backstop.  A losing issuer retry
+      // receives the already-created PO instead of a duplicate commitment.
+      if (error?.code === 'P2002') {
+        const existing = await this.prisma.purchaseOrder.findUnique({ where: { requestId: prId }, include: { items: true } });
+        if (existing) return existing;
+      }
+      throw error;
+    }
   }
 
   async rejectPurchaseRequest(prId: string, reason?: string) {
@@ -809,6 +828,7 @@ export class ScmService {
         items: { include: { material: true } },
         warehouse: true,
         supplier: true,
+        requirement: { include: { items: true } },
         creator: { select: { id: true, fullName: true } },
       },
       orderBy: { createdAt: 'desc' },

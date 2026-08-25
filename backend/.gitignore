@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# ── NEX ERP Batch 1: Self QR Collector auth state (NEVER commit) ──
+storage/self-qr-auth/
+self_qr_auth/

@@ -3,18 +3,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,46 +19,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { 
-  Loader2, 
-  Plus, 
-  Search, 
-  LogIn, 
-  Truck, 
+import {
+  Loader2,
+  Plus,
+  LogIn,
+  Truck,
   ShieldCheck,
   CheckCircle2,
-  Calendar,
-  ArrowRight,
   Trash2,
   Package,
   MapPin,
   ClipboardList,
   Activity,
-  History,
-  Boxes
+  Boxes,
 } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard } from "@/components/dna/StatCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
+import {
+  OperationalButton,
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
 
 interface InboundItem {
   materialId: string;
   materialName: string;
-  quantity: number;
-  batchNumber: string;
-  expiryDate?: string;
+  qtyActual: number;
+  lotNumber?: string;
+  expDate?: string;
 }
 
 export default function GoodsReceivingPage() {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
+
   const [selectedPO, setSelectedPO] = useState("");
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
   const [receivedDate, setReceivedDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<InboundItem[]>([]);
-  
+
   const [newItemMaterialId, setNewItemMaterialId] = useState("");
   const [newItemQty, setNewItemQty] = useState("");
   const [newItemBatch, setNewItemBatch] = useState("");
@@ -71,7 +70,8 @@ export default function GoodsReceivingPage() {
   const { data: inbounds, isLoading } = useQuery<any[]>({
     queryKey: ["warehouse-inbounds"],
     queryFn: async () => {
-      const res = await api.get("/warehouse/inbounds");
+      // Canonical SCM receiving endpoint (Day-1 source of truth).
+      const res = await api.get("/scm/inbounds");
       return res.data.map((grn: any) => ({
         id: grn.inboundNumber || grn.id,
         date: grn.receivedAt?.split('T')[0] || '',
@@ -82,17 +82,24 @@ export default function GoodsReceivingPage() {
     },
   });
 
-  const { data: activePOs } = useQuery({
+  const { data: activePOs = [] } = useQuery<any[]>({
     queryKey: ["purchase-orders-active"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-orders");
+      // Canonical backend uses po.id (UUID). Keep poNumber for display only.
       return res.data
         .filter((po: any) => po.status === 'ORDERED' || po.status === 'PARTIAL')
         .map((po: any) => ({
-          id: po.poNumber || po.id,
+          id: po.id, // canonical: UUID
+          poNumber: po.poNumber || po.id,
           supplier: { name: po.supplier?.name || 'Unknown' },
         }));
     }
+  });
+
+  const { data: warehouses = [] } = useQuery<any[]>({
+    queryKey: ["warehouses"],
+    queryFn: () => api.get("/master/warehouses").then(r => r.data),
   });
 
   const { data: materials } = useQuery<any[]>({
@@ -100,14 +107,21 @@ export default function GoodsReceivingPage() {
     queryFn: () => api.get("/master/materials").then(r => r.data),
   });
 
+  // Deterministic warehouse fallback if the operator has not chosen one.
+  const derivedWarehouseId = selectedWarehouseId || warehouses?.[0]?.id || "";
+
   const createInboundMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await api.post("/warehouse/inbounds", data);
+      // Canonical SCM inbound endpoint. Backend DTO requires
+      //   { poId: UUID, warehouseId: UUID, items: [{ materialId, qtyActual, lotNumber?, expDate? }] }
+      const res = await api.post("/scm/inbounds", data);
       return res.data;
     },
     onSuccess: () => {
       toast.success("Goods successfully received and entered into system inventory.");
       queryClient.invalidateQueries({ queryKey: ["warehouse-inbounds"] });
+      queryClient.invalidateQueries({ queryKey: ["scm-inbounds"] });
+      queryClient.invalidateQueries({ queryKey: ["scm-purchase-orders"] });
       setIsAddModalOpen(false);
       resetForm();
     },
@@ -118,6 +132,7 @@ export default function GoodsReceivingPage() {
 
   const resetForm = () => {
     setSelectedPO("");
+    setSelectedWarehouseId("");
     setNotes("");
     setItems([]);
   };
@@ -130,9 +145,9 @@ export default function GoodsReceivingPage() {
     setItems([...items, {
       materialId: newItemMaterialId,
       materialName: material.name,
-      quantity: Number(newItemQty),
-      batchNumber: newItemBatch,
-      expiryDate: newItemExp
+      qtyActual: Number(newItemQty),
+      lotNumber: newItemBatch,
+      expDate: newItemExp || undefined,
     }]);
     setNewItemMaterialId("");
     setNewItemQty("");
@@ -144,198 +159,232 @@ export default function GoodsReceivingPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const columns = [
+    {
+      id: "grn",
+      header: "GRN Protocol",
+      cell: ({ row }: any) => {
+        const grn = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="grid h-8 w-8 place-items-center rounded-md bg-slate-100 text-slate-600">
+              <ClipboardList className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-slate-900 truncate">{grn.id || "—"}</p>
+              <p className="text-[11px] text-slate-500">{grn.date || "—"}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      id: "vendor",
+      header: "Vendor / Source",
+      cell: ({ row }: any) => {
+        const grn = row.original;
+        return (
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Truck className="h-3 w-3 text-blue-500" />
+              <p className="text-[12px] font-medium text-slate-900">{grn.supplier || "—"}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-3 w-3 text-slate-400" />
+              <span className="text-[10px] text-slate-500">Central Dock</span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "po",
+      header: () => <span className="block text-center">Contract Ref</span>,
+      cell: ({ getValue }: any) => (
+        <div className="text-center">
+          <p className="text-[12px] font-medium tabular-nums">{getValue() || "—"}</p>
+          <p className="text-[10px] text-blue-500">Verified contract</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: () => <span className="block text-center">Status</span>,
+      cell: ({ getValue }: any) => {
+        const value = String(getValue());
+        const tone = value === "COMPLETED" ? "success" : "pending";
+        return <div className="flex justify-center"><OperationalStatusBadge status={tone}>{getOperationalStatusLabel(value)}</OperationalStatusBadge></div>;
+      },
+    },
+    {
+      id: "actions",
+      header: () => <span className="block text-right">Action</span>,
+      cell: () => (
+        <div className="flex justify-end">
+          <button type="button" className="operational-button is-secondary">
+            <ClipboardList className="h-3 w-3" />
+            <span>Review GRN</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <DashboardShell
-      title="GOODS"
-      titleAccent="RECEIVING"
-      subtitle="MATERIAL INTAKE & BATCH INTEGRITY TERMINAL"
+    <OperationalPageShell
+      title="Goods Receiving"
+      subtitle="Material intake & batch integrity terminal"
       actions={
-        <Button onClick={() => setIsAddModalOpen(true)} className="h-14 px-8 bg-brand-black text-white hover:bg-slate-800 rounded-2xl shadow-xl shadow-slate-100 font-black uppercase tracking-tighter text-sm border-none">
-          <Plus className="mr-2 h-5 w-5 stroke-[3px]" /> RECEIVE SHIPMENT
-        </Button>
+        <OperationalButton variant="primary" onClick={() => setIsAddModalOpen(true)}>
+          <Plus className="h-4 w-4" />
+          <span>Receive Shipment</span>
+        </OperationalButton>
       }
     >
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard label="Today's Intake" value={String(inbounds?.length || 0).padStart(2, '0')} icon={<LogIn />} tone="blue" />
+          <OperationalMetricCard label="QC Passed" value={inbounds?.length ? `${Math.round(inbounds.filter((g: any) => g.status === 'COMPLETED').length / inbounds.length * 100)}%` : '0%'} icon={<ShieldCheck />} tone="green" />
+          <OperationalMetricCard label="Avg. Cycle Time" value="45M" icon={<Activity />} tone="amber" />
+          <OperationalMetricCard label="SKUs Added" value={String(inbounds?.reduce((s: number, g: any) => s + (g.itemsCount || 0), 0) || 0)} icon={<Boxes />} />
+        </OperationalMetricGrid>
 
-      {/* 📊 II. INTAKE ANALYTICS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <StatCard label="TODAY'S INTAKE" value={String(inbounds?.length || 0).padStart(2, '0')} icon={<LogIn />} />
-         <StatCard label="QC PASSED" value={inbounds?.length ? `${Math.round(inbounds.filter((g: any) => g.status === 'COMPLETED').length / inbounds.length * 100)}%` : '0%'} icon={<ShieldCheck />} />
-         <StatCard label="AVG. CYCLE TIME" value="45M" icon={<Activity />} />
-         <StatCard label="SKUS ADDED" value={String(inbounds?.reduce((s: number, g: any) => s + (g.itemsCount || 0), 0) || 0)} icon={<Boxes />} />
-      </div>
-
-      {/* 📑 III. GRN PROTOCOL REGISTRY */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-           <div className="w-1 h-4 bg-brand-black rounded-full" />
-           <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">📑 III. GRN PROTOCOL REGISTRY</h3>
-        </div>
-         <TableWrapper>
-           <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                 <thead>
-                    <tr className="bg-slate-50/50 border-b border-slate-100">
-                       <th className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-widest">GRN PROTOCOL</th>
-                       <th className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-widest">VENDOR / SOURCE</th>
-                       <th className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-widest text-center">CONTRACT REF</th>
-                       <th className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-widest text-center">STATUS</th>
-                       <th className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-widest text-right">ACTION</th>
-                    </tr>
-                 </thead>
-                 <tbody className="divide-y divide-slate-100">
-                    {inbounds?.map((grn: any) => (
-                       <tr key={grn.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                          <td className="px-6 py-6">
-                             <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-xl bg-white text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-slate-200">
-                                   <History className="h-4 w-4 text-blue-400" />
-                                </div>
-                                <div>
-                                   <p className="text-[11px] font-black text-brand-black uppercase italic group-hover:text-primary transition-colors">{grn.id}</p>
-                                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{grn.date}</p>
-                                </div>
-                             </div>
-                          </td>
-                          <td className="px-6 py-6">
-                             <div className="flex items-center gap-2 mb-1">
-                                <Truck className="h-3 w-3 text-blue-600" />
-                                <p className="text-[11px] font-black text-brand-black uppercase italic">{grn.supplier}</p>
-                             </div>
-                             <div className="flex items-center gap-2">
-                                <MapPin className="h-3 w-3 text-slate-300" />
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter italic">CENTRAL DOCK</span>
-                             </div>
-                          </td>
-                          <td className="px-6 py-6 text-center">
-                             <p className="text-[11px] font-black text-brand-black uppercase tabular italic">{grn.po}</p>
-                             <p className="text-[8px] font-black text-blue-500 uppercase tracking-tighter">VERIFIED CONTRACT</p>
-                          </td>
-                          <td className="px-6 py-6 text-center">
-                     <DnaBadge status={grn.status === 'COMPLETED' ? 'success' : 'default'}>
-                        {grn.status}
-                     </DnaBadge>
-                          </td>
-                          <td className="px-6 py-6 text-right">
-                             <Button className="h-9 px-6 font-black uppercase text-[9px] rounded-xl bg-white text-slate-900 border border-slate-100 hover:bg-slate-50 transition-all italic shadow-sm">
-                                REVIEW GRN <ClipboardList className="ml-2 h-3 w-3" />
-                             </Button>
-                          </td>
-                       </tr>
-                    ))}
-                 </tbody>
-               </table>
-            </div>
-         </TableWrapper>
+        <OperationalDataTable
+          data={(inbounds || []) as any[]}
+          columns={columns as any}
+          getRowId={(item: any) => item.id}
+          loading={isLoading}
+          searchPlaceholder="Cari GRN..."
+        />
       </div>
 
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[850px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
-           <div className="bg-brand-black p-10 text-white relative">
-              <h2 className="text-3xl font-black italic uppercase tracking-tighter">INBOUND <span className="text-slate-500">ENTRY PORTAL</span></h2>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">VERIFYING PHYSICAL ARRIVAL VS PURCHASE ORDER RECORD</p>
-              <LogIn className="absolute right-10 top-1/2 -translate-y-1/2 h-16 w-16 text-white/5" />
-           </div>
-           <div className="p-10 space-y-8 max-h-[75vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">PO REFERENCE (CONTRACT)</label>
-                     <Select value={selectedPO} onValueChange={(v) => setSelectedPO(v ?? '')}>
-                       <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                          <SelectValue placeholder="SELECT PURCHASE ORDER..." />
-                       </SelectTrigger>
-                       <SelectContent>
-                          {activePOs?.map((po: any) => (
-                             <SelectItem key={po.id} value={po.id} className="font-black uppercase text-[10px]">{po.id} - {po.supplier.name}</SelectItem>
-                          ))}
-                       </SelectContent>
-                    </Select>
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">RECEIVED DATE</label>
-                    <Input type="date" className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)} />
-                 </div>
+        <DialogContent className="sm:max-w-[850px] bg-white rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
+          <div className="bg-slate-900 p-8 text-white relative">
+            <h2 className="text-2xl font-semibold tracking-tight">Inbound <span className="text-slate-400">Entry Portal</span></h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">Verifying physical arrival vs purchase order record</p>
+            <LogIn className="absolute right-8 top-1/2 -translate-y-1/2 h-12 w-12 text-white/10" />
+          </div>
+          <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="operational-field">
+                <span>PO Reference (Contract)</span>
+                <Select value={selectedPO} onValueChange={(v) => setSelectedPO(v ?? '')}>
+                  <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-xs">
+                    <SelectValue placeholder="Select purchase order..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activePOs?.map((po: any) => (
+                      <SelectItem key={po.id} value={po.id} className="font-semibold text-[10px]">{po.poNumber ?? po.id} - {po.supplier.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="operational-field">
+                <span>Gudang (Warehouse)</span>
+                <Select value={selectedWarehouseId} onValueChange={(v) => setSelectedWarehouseId(v ?? '')}>
+                  <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-xs">
+                    <SelectValue placeholder={warehouses?.[0]?.name ?? "Pilih gudang..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses?.map((w: any) => (
+                      <SelectItem key={w.id} value={w.id} className="font-semibold text-[10px]">{w.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="operational-field">
+              <span>Received Date</span>
+              <Input type="date" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-xs" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)} />
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <label className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">Material Inspection & Batch Entry</label>
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-4">
+                  <Select value={newItemMaterialId} onValueChange={(v) => setNewItemMaterialId(v ?? '')}>
+                    <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-[10px]">
+                      <SelectValue placeholder="Material..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {materials?.map((m: any) => (
+                        <SelectItem key={m.id} value={m.id} className="font-semibold text-[10px]">{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Input placeholder="QTY" type="number" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-[10px] col-span-2" value={newItemQty} onChange={(e) => setNewItemQty(e.target.value)} />
+                <Input placeholder="BATCH #" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-[10px] col-span-3" value={newItemBatch} onChange={(e) => setNewItemBatch(e.target.value)} />
+                <Input type="date" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-semibold text-[10px] col-span-2" value={newItemExp} onChange={(e) => setNewItemExp(e.target.value)} />
+                <OperationalButton variant="primary" onClick={addItem} className="col-span-1">
+                  <Plus className="h-4 w-4" />
+                </OperationalButton>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                 <label className="text-[10px] font-black uppercase text-brand-black tracking-widest">MATERIAL INSPECTION & BATCH ENTRY</label>
-                 <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-4">
-                        <Select value={newItemMaterialId} onValueChange={(v) => setNewItemMaterialId(v ?? '')}>
-                          <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-[10px]">
-                             <SelectValue placeholder="MATERIAL..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                             {materials?.map((m: any) => (
-                                <SelectItem key={m.id} value={m.id} className="font-black uppercase text-[10px]">{m.name}</SelectItem>
-                             ))}
-                          </SelectContent>
-                       </Select>
-                    </div>
-                    <Input placeholder="QTY" type="number" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-[10px] col-span-2" value={newItemQty} onChange={(e) => setNewItemQty(e.target.value)} />
-                    <Input placeholder="BATCH #" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-[10px] col-span-3" value={newItemBatch} onChange={(e) => setNewItemBatch(e.target.value)} />
-                    <Input type="date" className="h-12 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-[10px] col-span-2" value={newItemExp} onChange={(e) => setNewItemExp(e.target.value)} />
-                    <Button onClick={addItem} className="h-12 bg-brand-black text-white rounded-xl col-span-1">
-                       <Plus className="h-5 w-5 stroke-[3px]" />
-                    </Button>
-                 </div>
+              <OperationalPanel className="p-0 overflow-hidden">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200">
+                      <th className="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Material</th>
+                      <th className="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 text-center">Qty</th>
+                      <th className="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Batch</th>
+                      <th className="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {items.map((item, idx) => (
+                      <tr key={idx} className="bg-white">
+                        <td className="px-4 py-3 text-[12px] font-medium">{item.materialName}</td>
+                        <td className="px-4 py-3 text-[12px] font-medium tabular text-center text-blue-600">{item.qtyActual}</td>
+                        <td className="px-4 py-3 text-[12px] text-slate-500">{item.lotNumber ?? "—"}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => removeItem(idx)}
+                            className="operational-button is-danger p-2"
+                            aria-label="Remove"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {items.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="h-20 text-center text-[10px] font-bold text-slate-400 uppercase">Awaiting material entry</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </OperationalPanel>
+            </div>
 
-                 <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
-                    <table className="w-full text-left">
-                       <thead>
-                          <tr className="bg-slate-100/50 border-b border-slate-200">
-                             <th className="px-4 py-3 text-[8px] font-black uppercase text-slate-400">MATERIAL</th>
-                             <th className="px-4 py-3 text-[8px] font-black uppercase text-slate-400 text-center">QTY</th>
-                             <th className="px-4 py-3 text-[8px] font-black uppercase text-slate-400">BATCH</th>
-                             <th className="px-4 py-3 text-[8px] font-black uppercase text-slate-400 text-right">ACTION</th>
-                          </tr>
-                       </thead>
-                       <tbody className="divide-y divide-slate-200">
-                          {items.map((item, idx) => (
-                             <tr key={idx} className="bg-white">
-                                <td className="px-4 py-3 text-[10px] font-black uppercase italic">{item.materialName}</td>
-                                <td className="px-4 py-3 text-[10px] font-black tabular text-center text-blue-600">{item.quantity}</td>
-                                <td className="px-4 py-3 text-[10px] font-black uppercase text-slate-500">{item.batchNumber}</td>
-                                <td className="px-4 py-3 text-right">
-                                   <Button variant="ghost" size="sm" onClick={() => removeItem(idx)} className="text-rose-500 hover:bg-rose-50 h-8 w-8 p-0">
-                                      <Trash2 className="h-4 w-4" />
-                                   </Button>
-                                </td>
-                             </tr>
-                          ))}
-                          {items.length === 0 && (
-                             <tr>
-                                <td colSpan={4} className="h-20 text-center text-[9px] font-black text-slate-300 uppercase italic">AWAITING MATERIAL ENTRY</td>
-                             </tr>
-                          )}
-                       </tbody>
-                    </table>
-                 </div>
-              </div>
-
-              <Button 
-                 onClick={() => {
-                   if (items.length === 0) return toast.error("Add at least one material item.");
-                   createInboundMutation.mutate({
-                     poId: selectedPO || undefined,
-                     receivedAt: receivedDate,
-                     items: items.map(i => ({
-                       materialId: i.materialId,
-                       quantity: i.quantity,
-                       batchNumber: i.batchNumber,
-                       expiryDate: i.expiryDate,
-                     })),
-                   });
-                 }}
-                 className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-blue-100 transition-all italic"
-                 disabled={createInboundMutation.isPending}
-              >
-                 {createInboundMutation.isPending ? <Loader2 className="animate-spin" /> : "VERIFY & COMMIT TO INVENTORY"}
-              </Button>
-           </div>
+            <OperationalButton
+              variant="primary"
+              onClick={() => {
+                if (items.length === 0) return toast.error("Add at least one material item.");
+                if (!derivedWarehouseId) return toast.error("Pilih gudang terlebih dahulu (tidak ada gudang default).");
+                // Canonical backend DTO: poId is UUID, warehouseId is UUID, items use qtyActual/lotNumber/expDate.
+                createInboundMutation.mutate({
+                  poId: selectedPO || undefined,
+                  warehouseId: derivedWarehouseId,
+                  items: items.map(i => ({
+                    materialId: i.materialId,
+                    qtyActual: i.qtyActual,
+                    lotNumber: i.lotNumber,
+                    expDate: i.expDate,
+                  })),
+                });
+              }}
+              className="w-full"
+              disabled={createInboundMutation.isPending}
+            >
+              {createInboundMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify & Commit to Inventory"}
+            </OperationalButton>
+          </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }
-
-

@@ -11,14 +11,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   Dialog,
   DialogContent,
@@ -27,19 +20,26 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+  OperationalMigrationShell,
+} from "@/components/operational/OperationalMigrationShell";
+import {
+  OperationalMetricGrid,
+  OperationalMetricCard,
+  OperationalPanel,
+  OperationalTabs,
+  OperationalTabsList,
+  OperationalTabsTrigger,
+  OperationalTabsContent,
+  OperationalInput,
+  OperationalField,
+  OperationalButton,
+  OperationalDataTable,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational/OperationalUI";
+import { formatOperationalDate } from "@/lib/operational-formatters";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { TableShell } from "@/components/layout/TableShell";
-import { StatCard } from "@/components/dna/StatCard";
 
 type Category = {
   id: string;
@@ -128,161 +128,172 @@ export default function MasterCategoriesPage() {
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const columns: ColumnDef<Category>[] = [
+    {
+      id: "name",
+      header: "Nama Klasifikasi",
+      accessorFn: (row) => row.name,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+            <Zap className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="font-black text-slate-900 text-xs uppercase">{row.original.name}</div>
+            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+              Updated: {formatOperationalDate(row.original.updatedAt)}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      header: "Deskripsi",
+      accessorFn: (row) => row.description || "",
+      cell: ({ row }) => (
+        <span className="text-[11px] font-bold text-slate-400 uppercase leading-relaxed max-w-md">
+          {row.original.description || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorFn: (row) => row.isActive,
+      cell: ({ row }) => (
+        <OperationalStatusBadge status={row.original.isActive ? "success" : "neutral"}>
+          {getOperationalStatusLabel(row.original.isActive ? "ACTIVE" : "INACTIVE")}
+        </OperationalStatusBadge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Aksi",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <OperationalButton variant="ghost" onClick={() => handleEdit(row.original)}>
+            <Edit2 className="w-3.5 h-3.5" />
+          </OperationalButton>
+          <OperationalButton variant="ghost" onClick={() => toggleStatus(row.original)}>
+            <Trash2 className="w-3.5 h-3.5" />
+          </OperationalButton>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <TableShell
-      title="Master"
-      titleAccent="Categories"
-      subtitle="Foundational Taxonomy Protocol"
+    <OperationalMigrationShell
+      title="Kategori Master"
+      subtitle="Klasifikasi dasar barang, pemasok, dan pelanggan"
       actions={
-        <DnaButton
+        <OperationalButton
           variant="primary"
-          icon={<Plus />}
           onClick={() => {
             setEditingCategory(null);
             setFormData({ name: "", description: "", type: activeTab });
             setIsModalOpen(true);
           }}
         >
-          Add Category
-        </DnaButton>
+          <Plus className="h-4 w-4" />
+          <span>Tambah Kategori</span>
+        </OperationalButton>
       }
     >
-      <div className="grid grid-cols-3 gap-6">
-        <StatCard label="Total Categories" value={categories.length} subValue={activeTab === "GOODS" ? "Goods Categories" : activeTab === "SUPPLIER" ? "Supplier Categories" : "Customer Categories"} icon={<Layers />} />
-        <StatCard label="Active" value={categories.filter(c => c.isActive).length} subValue="Live Classifications" icon={<CheckCircle2 />} />
-        <StatCard label="Inactive" value={categories.filter(c => !c.isActive).length} subValue="Archived Taxonomies" icon={<XCircle />} />
-      </div>
-      <Tabs defaultValue="GOODS" onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-        <TableWrapper
-          filters={
-            <div className="flex items-center justify-between gap-4 w-full">
-              <TabsList className="bg-slate-100 p-1 rounded-xl h-auto">
-                <TabsTrigger value="GOODS" className="rounded-lg px-5 py-2 text-[10px] font-black uppercase data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  GOODS
-                </TabsTrigger>
-                <TabsTrigger value="SUPPLIER" className="rounded-lg px-5 py-2 text-[10px] font-black uppercase data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  SUPPLIERS
-                </TabsTrigger>
-                <TabsTrigger value="CUSTOMER" className="rounded-lg px-5 py-2 text-[10px] font-black uppercase data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  CUSTOMERS
-                </TabsTrigger>
-              </TabsList>
-              <div className="flex items-center gap-3">
-                <DnaInput
-                  icon={<Search />}
-                  placeholder="Search taxonomy..."
-                  className="md:w-56"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-          }
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Total Kategori"
+            value={categories.length}
+            helper={activeTab === "GOODS" ? "Kategori Barang" : activeTab === "SUPPLIER" ? "Kategori Pemasok" : "Kategori Pelanggan"}
+            icon={<Layers className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="Aktif"
+            value={categories.filter(c => c.isActive).length}
+            helper="Klasifikasi aktif"
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            tone="green"
+          />
+          <OperationalMetricCard
+            label="Tidak Aktif"
+            value={categories.filter(c => !c.isActive).length}
+            helper="Klasifikasi diarsipkan"
+            icon={<XCircle className="h-4 w-4" />}
+            tone="red"
+          />
+        </OperationalMetricGrid>
+
+        <OperationalTabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="w-full"
         >
-          <TabsContent value={activeTab} className="m-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="text-table-header text-slate-400 px-6 py-4">Classification Name</TableHead>
-                    <TableHead className="text-table-header text-slate-400 px-6 py-4">Audit Description</TableHead>
-                    <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">Lifecycle Status</TableHead>
-                    <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-20 text-center">
-                        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Synchronizing Registry...</p>
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredCategories.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                        No categories found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredCategories.map((category) => (
-                      <TableRow key={category.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                              <Zap className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <span className="font-black text-slate-900 text-xs uppercase block">{category.name}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Updated: {new Date(category.updatedAt).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase leading-relaxed max-w-md">
-                          {category.description || "No description"}
-                        </TableCell>
-                        <TableCell className="px-6 py-4 text-center">
-                          <DnaBadge
-                            status={category.isActive ? "success" : "default"}
-                            onClick={() => toggleStatus(category)}
-                          >
-                            {category.isActive ? "Active" : "Inactive"}
-                          </DnaBadge>
-                        </TableCell>
-                        <TableCell className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <DnaButton variant="ghost" onClick={() => handleEdit(category)}>
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </DnaButton>
-                            <DnaButton variant="ghost" onClick={() => toggleStatus(category)}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </DnaButton>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+          <OperationalPanel className="flex items-center justify-between gap-4 w-full">
+            <OperationalTabsList>
+              <OperationalTabsTrigger value="GOODS">Barang</OperationalTabsTrigger>
+              <OperationalTabsTrigger value="SUPPLIER">Pemasok</OperationalTabsTrigger>
+              <OperationalTabsTrigger value="CUSTOMER">Pelanggan</OperationalTabsTrigger>
+            </OperationalTabsList>
+            <div className="flex items-center gap-3">
+              <OperationalInput
+                icon={<Search className="h-4 w-4" />}
+                placeholder="Cari kategori..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="md:w-72"
+              />
             </div>
-          </TabsContent>
-        </TableWrapper>
-      </Tabs>
+          </OperationalPanel>
+
+          <OperationalTabsContent value={activeTab} className="m-0">
+            <OperationalDataTable
+              data={filteredCategories}
+              columns={columns as any}
+              getRowId={(row: Category) => row.id}
+              searchPlaceholder=""
+              enableSearch={false}
+              enableColumnVisibility={false}
+              loading={loading}
+              emptyMessage="No categories found"
+            />
+          </OperationalTabsContent>
+        </OperationalTabs>
+      </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white">
-          <DialogHeader className="p-6 bg-slate-800 text-white">
-            <DialogTitle className="text-sm font-black uppercase tracking-tight">
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
               {editingCategory ? "Update Category" : "New Category"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Category Name</label>
+          <form onSubmit={handleSubmit} className="operational-stack">
+            <OperationalField label="Category Name">
               <input
                 placeholder="e.g. RAW MATERIAL HIGH-VELOCITY"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase"
                 autoFocus
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Description (Optional)</label>
+            </OperationalField>
+            <OperationalField label="Description (Optional)">
               <input
                 placeholder="Define category purpose..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
               />
-            </div>
-            <DialogFooter className="pt-4 gap-3">
-              <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>
+            </OperationalField>
+            <DialogFooter className="gap-3">
+              <OperationalButton variant="secondary" onClick={() => setIsModalOpen(false)}>
                 Discard
-              </DnaButton>
-              <DnaButton variant="primary" type="submit">
+              </OperationalButton>
+              <OperationalButton variant="primary" type="submit">
                 {editingCategory ? "Update" : "Create"}
-              </DnaButton>
+              </OperationalButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -295,11 +306,11 @@ export default function MasterCategoriesPage() {
           </DialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+            <OperationalButton variant="secondary" onClick={() => setShowConfirm(false)}>Batal</OperationalButton>
+            <OperationalButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</OperationalButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+    </OperationalMigrationShell>
   );
 }

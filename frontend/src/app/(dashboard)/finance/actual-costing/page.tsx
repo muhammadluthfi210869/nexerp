@@ -1,13 +1,12 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Calculator, 
-  CheckCircle2, 
-  Zap, 
+import {
+  Calculator,
+  CheckCircle2,
+  Zap,
   Box,
   ArrowRight,
   ShieldCheck,
@@ -16,7 +15,11 @@ import {
 } from "lucide-react";
 import { DnaButton, DnaBadge } from "@/components/dna";
 import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+} from "@/components/operational";
 
 interface Batch {
   id: string;
@@ -65,19 +68,17 @@ export default function ActualCostingGate() {
   };
 
   return (
-    <DashboardShell
-      title="Actual"
-      titleAccent="Costing Gate"
+    <OperationalPageShell
+      title="Actual Costing Gate"
       subtitle="Automated HPP Reconciliation & Utility Propagation"
       actions={
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-black/[0.03] flex items-center gap-6">
-          <div className="text-right">
-             <p className="text-[10px] font-black uppercase text-slate-400 tracking-tight leading-none">Pending Batches</p>
-             <p className="text-2xl font-black mt-1 text-blue-600">{batches?.length || 0}</p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-tight leading-none">Pending Batches</p>
+            <p className="text-2xl font-black text-blue-600">{batches?.length ?? 0}</p>
           </div>
-          <div className="h-10 w-[1px] bg-slate-100" />
           <DnaButton variant="outline" className="h-12 w-12 p-0 rounded-2xl flex items-center justify-center hover:rotate-180 transition-all duration-700 bg-slate-50 border-none text-slate-400">
-             <RefreshCcw className="h-5 w-5" />
+            <RefreshCcw className="h-5 w-5" />
           </DnaButton>
         </div>
       }
@@ -94,7 +95,7 @@ export default function ActualCostingGate() {
                         <DnaBadge status="info">{batch.id}</DnaBadge>
                         <h3 className="text-2xl font-black text-slate-900 leading-tight uppercase italic">{batch.product}</h3>
                      </div>
-                     
+
                      <div className="space-y-4">
                         <div className="flex items-center justify-between">
                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-tight">Yield Output</span>
@@ -158,7 +159,7 @@ export default function ActualCostingGate() {
                      <div className="absolute top-0 right-0 p-8 opacity-10">
                         <Calculator size={120} />
                      </div>
-                     
+
                      <div className="relative z-10 space-y-4">
                         <h4 className="text-lg font-black uppercase italic leading-none">Authorization Required</h4>
                         <p className="text-[10px] font-medium text-blue-100 uppercase tracking-tight leading-relaxed">
@@ -166,7 +167,7 @@ export default function ActualCostingGate() {
                         </p>
                      </div>
 
-                     <DnaButton 
+                     <DnaButton
                        variant="primary"
                        onClick={() => handleFinalize(batch.id)}
                        disabled={finalizeMutation.isPending}
@@ -211,6 +212,6 @@ export default function ActualCostingGate() {
             <div className="h-1 w-4 bg-gray-200 rounded-full"></div>
          </div>
       </footer>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

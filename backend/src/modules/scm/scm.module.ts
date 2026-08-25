@@ -15,11 +15,17 @@ import { PurchaseInvoicesController } from './controllers/purchase-invoices.cont
 import { PurchasePaymentsService } from './services/purchase-payments.service';
 import { SupplierScoreService } from './services/supplier-score.service';
 import { PurchasePaymentsController } from './controllers/purchase-payments.controller';
+import { GoodsRequirementService } from './services/goods-requirement.service';
+import { GoodsRequirementController } from './controllers/goods-requirement.controller';
+import { SalesOrderProcurementChangeListener } from './services/sales-order-procurement-change.listener';
+import { ScmPlanningService } from './services/scm-planning.service';
+import { ScmPlanningController } from './controllers/scm-planning.controller';
 
 import { LegalityModule } from '../legality/legality.module';
+import { FinanceModule } from '../finance/finance.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => LegalityModule)],
+  imports: [PrismaModule, forwardRef(() => LegalityModule), forwardRef(() => FinanceModule)],
   providers: [
     PurchaseOrdersService,
     InboundsService,
@@ -29,6 +35,9 @@ import { LegalityModule } from '../legality/legality.module';
     PurchaseInvoicesService,
     PurchasePaymentsService,
     SupplierScoreService,
+    GoodsRequirementService,
+    SalesOrderProcurementChangeListener,
+    ScmPlanningService,
   ],
   controllers: [
     PurchaseOrdersController,
@@ -38,6 +47,8 @@ import { LegalityModule } from '../legality/legality.module';
     PurchaseReturnsController,
     PurchaseInvoicesController,
     PurchasePaymentsController,
+    GoodsRequirementController,
+    ScmPlanningController,
   ],
   exports: [ScmService, SupplierScoreService],
 })

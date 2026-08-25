@@ -8,20 +8,13 @@ import {
   Search,
   Calendar,
   FileText,
-  Plus,
-  Trash2,
   ChevronLeft,
   Save,
   ShoppingCart,
-  Info,
   ArrowRightLeft,
-  ArrowRight,
-  ClipboardList,
   CheckCircle2,
   Clock,
-  ArrowDownToLine,
   Layers,
-  MoreVertical,
   PackageX,
   ShieldAlert,
   Coins,
@@ -29,7 +22,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -40,8 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
+import { DnaInput, DnaButton } from "@/components/dna";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -51,6 +42,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalMigrationShell,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalCurrency, formatOperationalDate } from "@/lib/operational-formatters";
 
 type SalesReturn = {
   id: string;
@@ -205,11 +205,81 @@ export default function SalesReturnPage() {
     setReturnItems([]);
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        id: "return",
+        header: "Return Identity",
+        cell: ({ row }: any) => {
+          const ret = row.original;
+          return (
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-sm">
+                <RotateCcw className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{ret.so?.orderNumber || "—"}</span>
+                <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">{formatOperationalDate(ret.returnDate)}</span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "soNumber",
+        header: "Source SO",
+        cell: ({ row }: any) => (
+          <div className="flex flex-col">
+            <span className="font-black text-slate-900 text-xs uppercase">{row.original.so?.orderNumber || "—"}</span>
+            <span className="text-[9px] font-medium text-rose-600 uppercase italic mt-0.5">Linked SO</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "clientName",
+        header: "Client",
+        cell: ({ row }: any) => (
+          <span className="font-black text-slate-900 text-xs uppercase">{row.original.so?.lead?.clientName || "—"}</span>
+        ),
+      },
+      {
+        id: "value",
+        header: () => <div className="text-right">Value Recovery</div>,
+        cell: () => <div className="text-right font-black text-slate-900 text-xs tabular-nums">—</div>,
+      },
+      {
+        accessorKey: "returnStatus",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ getValue }: any) => {
+          const status = getValue() as string;
+          const tone = status === "SELESAI" ? "success" : status === "PROSES" ? "pending" : "neutral";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={tone}>{getOperationalStatusLabel(status)}</OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "action",
+        header: () => <div className="text-right">Action</div>,
+        cell: () => (
+          <div className="flex justify-end">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="RETUR"
       titleAccent="PENJUALAN"
-      subtitle="(Sales Return Management & Inventory Recalibration Protocol)"
+      subtitle="Sales Return Management & Inventory Recalibration Protocol"
       actions={
         <div className="flex gap-4">
           <DnaButton variant="outline" size="md">
@@ -234,104 +304,44 @@ export default function SalesReturnPage() {
             exit={{ opacity: 0, x: 20 }}
             className="space-y-10"
           >
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard label="Pending Returns" value={returns.filter(r => r.returnStatus === "PROSES").length} icon={<Clock className="text-amber-500" />} />
-              <StatCard label="Total Returns" value={returns.length} icon={<Coins className="text-emerald-500" />} />
-              <StatCard label="Return Frequency" value="—" icon={<ArrowRightLeft className="text-blue-500" />} />
-              <StatCard label="Completed" value={returns.filter(r => r.returnStatus === "SELESAI").length} icon={<ShieldAlert className="text-rose-500" />} />
-            </div>
+            <OperationalMetricGrid>
+              <OperationalMetricCard
+                label="Pending Returns"
+                value={returns.filter(r => r.returnStatus === "PROSES").length}
+                icon={<Clock className="h-4 w-4" />}
+                tone="amber"
+              />
+              <OperationalMetricCard
+                label="Total Returns"
+                value={returns.length}
+                icon={<Coins className="h-4 w-4" />}
+                tone="green"
+              />
+              <OperationalMetricCard
+                label="Return Frequency"
+                value="—"
+                icon={<ArrowRightLeft className="h-4 w-4" />}
+                tone="blue"
+              />
+              <OperationalMetricCard
+                label="Completed"
+                value={returns.filter(r => r.returnStatus === "SELESAI").length}
+                icon={<ShieldAlert className="h-4 w-4" />}
+                tone="red"
+              />
+            </OperationalMetricGrid>
 
-            {/* List Table */}
-            <TableWrapper
-              filters={
-                <div className="flex justify-between items-center bg-white w-full">
-                  <div className="relative w-72">
-                    <DnaInput placeholder="Search Return ID..." icon={<Search className="h-4 w-4" />} className="bg-slate-50 border-none rounded-xl text-xs font-medium" />
-                  </div>
-                  <div className="flex gap-4">
-                    <Button variant="ghost" className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-tight text-slate-500">
-                      Sort: Newest First
-                    </Button>
-                  </div>
-                </div>
-              }
-            >
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Return Identity</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Source SO</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Client</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Value Recovery</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 pr-6 text-table-header text-slate-400 text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-20 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                          <p className="text-[9px] font-black uppercase text-slate-300">Loading returns...</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : returns.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-20 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <RotateCcw className="h-10 w-10 text-slate-200" />
-                          <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">Belum ada data retur</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    returns.map((ret) => (
-                      <TableRow key={ret.id} className="group hover:bg-rose-50/30 transition-all duration-300 border-b border-slate-50">
-                        <TableCell className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                              <RotateCcw className="h-4.5 w-4.5" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{ret.so?.orderNumber || "—"}</span>
-                              <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">{new Date(ret.returnDate).toLocaleDateString("id-ID")}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-xs uppercase">{ret.so?.orderNumber || "—"}</span>
-                            <span className="text-[9px] font-medium text-rose-600 uppercase italic mt-0.5">Linked SO</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          <span className="font-black text-slate-900 text-xs uppercase">{ret.so?.lead?.clientName || "—"}</span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs tabular-nums">
-                          —
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <span className={cn(
-                            "rounded-lg px-3 py-1 font-black uppercase text-[8px] shadow-sm",
-                            ret.returnStatus === "SELESAI" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700 animate-pulse"
-                          )}>
-                            {ret.returnStatus}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 pr-6 text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+            <DnaInput
+              placeholder="Search Return ID..."
+              icon={<Search className="h-4 w-4" />}
+              className="bg-slate-50 border-none rounded-xl text-xs font-medium"
+            />
+            <OperationalDataTable
+              data={returns}
+              columns={columns as any}
+              getRowId={(row: any) => row.id}
+              searchPlaceholder="Cari retur..."
+            />
           </motion.div>
         ) : (
           <motion.div
@@ -341,7 +351,6 @@ export default function SalesReturnPage() {
             exit={{ opacity: 0, x: -20 }}
             className="max-w-7xl mx-auto space-y-10 pb-20"
           >
-            {/* Form Header */}
             <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
               <Button
                 variant="ghost"
@@ -371,7 +380,6 @@ export default function SalesReturnPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left: Configuration */}
               <div className="lg:col-span-8 space-y-8">
                 <Card className="rounded-2xl border border-slate-100 shadow-sm p-8 bg-white space-y-8">
                   <div className="flex items-center gap-3">
@@ -459,7 +467,6 @@ export default function SalesReturnPage() {
                   </AnimatePresence>
                 </Card>
 
-                {/* Return Table */}
                 <Card className="rounded-2xl border border-slate-100 shadow-sm p-6 bg-white overflow-hidden">
                   <div className="flex items-center gap-3 mb-6">
                     <PackageX className="h-5 w-5 text-rose-600" />
@@ -520,7 +527,7 @@ export default function SalesReturnPage() {
                                 </select>
                               </TableCell>
                               <TableCell className="pr-4 py-2.5 text-right font-black text-slate-900 text-xs tabular-nums">
-                                Rp {(item.qtyReturned * (item.unitPrice || 0)).toLocaleString()}
+                                {formatOperationalCurrency(item.qtyReturned * (item.unitPrice || 0))}
                               </TableCell>
                             </TableRow>
                           ))
@@ -531,7 +538,6 @@ export default function SalesReturnPage() {
                 </Card>
               </div>
 
-              {/* Right: Financial Summary */}
               <div className="lg:col-span-4 space-y-8">
                 <div className="sticky top-10 space-y-8">
                   <Card className="rounded-2xl border border-slate-100 shadow-sm p-8 bg-rose-600 text-white overflow-hidden relative">
@@ -544,15 +550,15 @@ export default function SalesReturnPage() {
                       <div className="pt-6 border-t border-white/10 space-y-4 font-black uppercase text-[9px] tracking-wider">
                         <div className="flex justify-between items-center text-slate-400">
                           <span>Net Return Value</span>
-                          <span className="tabular-nums text-white">Rp {financials.subtotal.toLocaleString()}</span>
+                          <span className="tabular-nums text-white">{formatOperationalCurrency(financials.subtotal)}</span>
                         </div>
                         <div className="flex justify-between items-center text-slate-400">
                           <span>P.P.N Reversal (11%)</span>
-                          <span className="tabular-nums text-white">Rp {financials.tax.toLocaleString()}</span>
+                          <span className="tabular-nums text-white">{formatOperationalCurrency(financials.tax)}</span>
                         </div>
                         <div className="flex justify-between items-center pt-4 border-t border-white/20 text-rose-400">
                           <span className="tracking-widest">Grand Total Recovery</span>
-                          <span className="text-xl text-white tabular-nums">Rp {financials.total.toLocaleString()}</span>
+                          <span className="text-xl text-white tabular-nums">{formatOperationalCurrency(financials.total)}</span>
                         </div>
                       </div>
 
@@ -572,11 +578,11 @@ export default function SalesReturnPage() {
 
                   <div className="p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 space-y-3">
                     <div className="flex items-center gap-3 text-rose-600">
-                      <ShieldAlert className="h-4.5 w-4.5" />
+                      <ShieldAlert className="h-4 w-4" />
                       <span className="text-[9px] font-black uppercase tracking-widest">Accounting Protocol</span>
                     </div>
                     <p className="text-[10px] font-medium text-slate-400 leading-relaxed uppercase italic">
-                      &quot;All returns trigger an automatic debit to Sales Returns and credit to Accounts Receivable. Stock will be quarantined upon arrival.&quot;
+                      "All returns trigger an automatic debit to Sales Returns and credit to Accounts Receivable. Stock will be quarantined upon arrival."
                     </p>
                   </div>
                 </div>
@@ -597,6 +603,6 @@ export default function SalesReturnPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

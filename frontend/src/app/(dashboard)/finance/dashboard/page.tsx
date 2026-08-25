@@ -15,46 +15,8 @@ import {
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
-const FALLBACK_TRANSACTIONS = [
-  { id: 'TX-5001', date: '2024-04-02', type: 'IN', cat: 'REVENUE', ref: 'SALES (INV-2041)', amount: '125,000,000', method: 'BANK TRANSFER', status: 'PAID' },
-  { id: 'TX-5002', date: '2024-04-02', type: 'OUT', cat: 'COGS', ref: 'PURCHASE (PO-882)', amount: '45,000,000', method: 'BANK TRANSFER', status: 'PAID' },
-  { id: 'TX-5003', date: '2024-04-01', type: 'OUT', cat: 'EXPENSE', ref: 'PAYROLL (APRIL)', amount: '180,000,000', method: 'VIRTUAL ACCOUNT', status: 'PENDING' },
-  { id: 'TX-5004', date: '2024-04-01', type: 'IN', cat: 'OTHER', ref: 'MANUAL (INVESTMENT)', amount: '500,000,000', method: 'DIRECT DEP', status: 'PAID' },
-];
-
-const FALLBACK_AR = [
-  { id: 'INV-2045', name: 'Brand Aesthetic X', total: '150M', out: '50M', due: '2024-04-10', status: 'PARTIAL' },
-  { id: 'INV-2041', name: 'Glow Up Clinic', total: '125M', out: '125M', due: '2024-03-25', status: 'OVERDUE' },
-  { id: 'INV-2050', name: 'Sun & Skin Co.', total: '80M', out: '80M', due: '2024-04-15', status: 'PARTIAL' },
-];
-
-const FALLBACK_AP = [
-  { id: 'BILL-401', name: 'PT Surya Kimia', total: '250M', out: '250M', due: '2024-04-05', status: 'PENDING' },
-  { id: 'BILL-405', name: 'Global Kemasindo', total: '100M', out: '40M', due: '2024-04-12', status: 'PARTIAL' },
-  { id: 'BILL-398', name: 'PLN Persero', total: '45M', out: '45M', due: '2024-03-28', status: 'OVERDUE' },
-];
-
-const FALLBACK_EXPENSE = [
-  { cat: 'Raw Material', sub: 'SCM | PO-882', amount: 'Rp 2.4 M' },
-  { cat: 'Machine Parts', sub: 'PRODUKSI | REQ-M-01', amount: 'Rp 120 Jt' },
-  { cat: 'Ads Spend', sub: 'BD | FB-ADS-MAR', amount: 'Rp 450 Jt' },
-];
-
-const FALLBACK_REVENUE = [
-  { name: 'Glow Up Clinic', prod: 'Serum Glow 30ml', type: 'REPEAT ORDER', amount: 'Rp 450 Jt', color: 'bg-blue-500' },
-  { name: 'Brand Aesthetic X', prod: 'Service R&D', type: 'NEW DEAL', amount: 'Rp 150 Jt', color: 'bg-indigo-500' },
-  { name: 'Indo Care', prod: 'Moisturizer Gel', type: 'REPEAT ORDER', amount: 'Rp 1.2 M', color: 'bg-blue-500' },
-];
-
-const FALLBACK_CASH = [
-  { date: '2026-04-02', in: '+Rp 10.2M', out: '-Rp 8.4M', closing: 'Rp 4.5 M' },
-  { date: '2026-04-01', in: '+Rp 2.4M', out: '-Rp 1.2M', closing: 'Rp 2.7 M' },
-];
-
-const FALLBACK_KPI = [
-  { period: 'Q1 2026', status: 'STABLE', margin: '34.3%', coll: '82.5%', score: '94.2', color: 'text-emerald-500' },
-  { period: 'Q4 2025', status: 'ALERT', margin: '28.1%', coll: '75.2%', score: '88.5', color: 'text-yellow-500' },
-];
+// R3 Gate 2: removed all FALLBACK_* arrays. Empty data → NO DATA rendering.
+// Do not reintroduce fabricated business rows.
 
 function formatMilyarJuta(val: any, defaultStr: string): string {
   if (val === undefined || val === null) return defaultStr;
@@ -115,15 +77,15 @@ export default function FinanceDashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>COLLECTION RATE</span>
-              <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{metrics?.collectionRate ?? 82.5}%</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{metrics?.collectionRate != null ? `${metrics.collectionRate}%` : "—"}</span>
             </div>
             <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
-              <div style={{ width: `${metrics?.collectionRate ?? 82.5}%`, height: "100%", background: "#3B82F6" }} />
+              <div style={{ width: `${metrics?.collectionRate ?? 0}%`, height: "100%", background: "#3B82F6" }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>UNCOLLECTED</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#EF4444" }}>
-                {formatMilyarJuta(metrics?.uncollected, "Rp 2.2 M")}
+                {formatMilyarJuta(metrics?.uncollected, "—")}
               </span>
             </div>
           </div>
@@ -145,18 +107,18 @@ export default function FinanceDashboardPage() {
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>COGS</span>
               <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.cogs, "Rp 5.2 M")}
+                {formatMilyarJuta(metrics?.cogs, "—")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>OPERATIONAL</span>
               <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.operational, "Rp 3.2 M")}
+                {formatMilyarJuta(metrics?.operational, "—")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", background: "#F8FAFC", borderRadius: "8px", marginTop: "4px" }}>
               <span style={{ fontSize: "9px", fontWeight: 900, color: "#64748B" }}>EXPENSE RATIO</span>
-              <span style={{ fontSize: "11px", fontWeight: 950, color: "#EAB308" }}>{metrics?.expenseRatio ?? 65.6}%</span>
+              <span style={{ fontSize: "11px", fontWeight: 950, color: "#EAB308" }}>{metrics?.expenseRatio != null ? `${metrics.expenseRatio}%` : "—"}</span>
             </div>
           </div>
         </div>
@@ -169,7 +131,7 @@ export default function FinanceDashboardPage() {
           </div>
           <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
             <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
-              {formatMilyarJuta(metrics?.netCashFlow, "Rp 1.8 M")}
+              {formatMilyarJuta(metrics?.netCashFlow, "—")}
             </p>
             <p style={{ fontSize: "9px", fontWeight: 850, color: "#166534", margin: 0 }}>NET CASH FLOW (MTD)</p>
           </div>
@@ -177,19 +139,19 @@ export default function FinanceDashboardPage() {
             <div style={{ background: "white", padding: "10px", borderRadius: "12px", border: "1px solid #DCFCE7" }}>
               <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>CASH IN</p>
               <p style={{ fontSize: "12px", fontWeight: 950, color: "#10B981", margin: 0 }}>
-                {formatMilyarJuta(metrics?.cashIn, "Rp 10.2M")}
+                {formatMilyarJuta(metrics?.cashIn, "—")}
               </p>
             </div>
             <div style={{ background: "white", padding: "10px", borderRadius: "12px", border: "1px solid #DCFCE7" }}>
               <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>CASH OUT</p>
               <p style={{ fontSize: "12px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
-                {formatMilyarJuta(metrics?.cashOut, "Rp 8.4M")}
+                {formatMilyarJuta(metrics?.cashOut, "—")}
               </p>
             </div>
           </div>
           <div style={{ textAlign: "center", marginTop: "12px" }}>
             <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>
-              CURRENT BALANCE: <span style={{ color: "#1E293B", fontWeight: 950 }}>{formatMilyarJuta(metrics?.currentBalance, "Rp 4.5 M")}</span>
+              CURRENT BALANCE: <span style={{ color: "#1E293B", fontWeight: 950 }}>{formatMilyarJuta(metrics?.currentBalance, "—")}</span>
             </p>
           </div>
         </div>
@@ -204,24 +166,24 @@ export default function FinanceDashboardPage() {
             <div>
               <p style={{ fontSize: "9px", fontWeight: 800, color: "#64748B", margin: 0 }}>NET PROFIT</p>
               <p style={{ fontSize: "18px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
-                {formatMilyarJuta(metrics?.netProfit, "Rp 4.4 M")}
+                {formatMilyarJuta(metrics?.netProfit, "—")}
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
               <p style={{ fontSize: "9px", fontWeight: 800, color: "#64748B", margin: 0 }}>MARGIN</p>
-              <p style={{ fontSize: "18px", fontWeight: 950, color: "#8B5CF6", margin: 0 }}>{metrics?.margin ?? 34.3}%</p>
+              <p style={{ fontSize: "18px", fontWeight: 950, color: "#8B5CF6", margin: 0 }}>{metrics?.margin != null ? `${metrics.margin}%` : "—"}</p>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>GROSS PROFIT</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.grossProfit, "Rp 7.6 M")}
+                {formatMilyarJuta(metrics?.grossProfit, "—")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>GP MARGIN</span>
-              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{metrics?.gpMargin ?? 59.4}%</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{metrics?.gpMargin != null ? `${metrics.gpMargin}%` : "—"}</span>
             </div>
           </div>
         </div>
@@ -236,19 +198,19 @@ export default function FinanceDashboardPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", padding: "8px 12px", borderRadius: "10px" }}>
               <span style={{ fontSize: "9px", fontWeight: 900, color: "#EF4444" }}>OVERDUE A/R</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.overdueAr, "Rp 850 Jt")}
+                {formatMilyarJuta(metrics?.overdueAr, "—")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", padding: "8px 12px", borderRadius: "10px" }}>
               <span style={{ fontSize: "9px", fontWeight: 900, color: "#EA580C" }}>OVERDUE A/P</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.overdueAp, "Rp 420 Jt")}
+                {formatMilyarJuta(metrics?.overdueAp, "—")}
               </span>
             </div>
             <div style={{ background: "#9F1239", padding: "10px", borderRadius: "12px", marginTop: "2px" }}>
               <p style={{ fontSize: "9px", fontWeight: 950, color: "#ffffff", margin: 0, opacity: 0.9 }}>RISK ALERT</p>
               <p style={{ fontSize: "11px", fontWeight: 950, color: "#ffffff", margin: 0 }}>
-                {metrics?.cashRunwayAlert || "CASH RUNWAY < 3 MONTHS"}
+                {metrics?.cashRunwayAlert || "NO DATA — cash runway not computed."}
               </p>
             </div>
           </div>
@@ -273,7 +235,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.transactions?.length ? metrics.transactions : FALLBACK_TRANSACTIONS).map((row: any, i: number) => {
+                {(metrics?.transactions ?? []).map((row: any, i: number) => {
                   const isIn = row.type === 'IN';
                   return (
                     <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
@@ -330,7 +292,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.receivables?.length ? metrics.receivables : FALLBACK_AR).map((row: any, i: number) => {
+                {(metrics?.receivables ?? []).map((row: any, i: number) => {
                   const isOverdue = row.status === 'OVERDUE';
                   return (
                     <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
@@ -375,7 +337,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.payables?.length ? metrics.payables : FALLBACK_AP).map((row: any, i: number) => {
+                {(metrics?.payables ?? []).map((row: any, i: number) => {
                   const isOverdue = row.status === 'OVERDUE';
                   return (
                     <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
@@ -424,7 +386,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.expenseBreakdown?.length ? metrics.expenseBreakdown : FALLBACK_EXPENSE).map((row: any, i: number) => (
+                {(metrics?.expenseBreakdown ?? []).map((row: any, i: number) => (
                   <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                     <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                       <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.cat}</div>
@@ -453,7 +415,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.revenueBreakdown?.length ? metrics.revenueBreakdown : FALLBACK_REVENUE).map((row: any, i: number) => (
+                {(metrics?.revenueBreakdown ?? []).map((row: any, i: number) => (
                   <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                     <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                       <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.name}</div>
@@ -492,7 +454,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.cashPosition?.length ? metrics.cashPosition : FALLBACK_CASH).map((row: any, i: number) => (
+                {(metrics?.cashPosition ?? []).map((row: any, i: number) => (
                   <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
                     <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                       <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.date}</div>
@@ -524,7 +486,7 @@ export default function FinanceDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(metrics?.kpiPerformance?.length ? metrics.kpiPerformance : FALLBACK_KPI).map((row: any, i: number) => {
+                {(metrics?.kpiPerformance ?? []).map((row: any, i: number) => {
                   const isStable = row.status === 'STABLE';
                   return (
                     <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>

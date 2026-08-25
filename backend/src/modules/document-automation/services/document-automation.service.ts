@@ -3,6 +3,8 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -17,6 +19,7 @@ import {
 } from '@prisma/client';
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { ApproveDraftDto, RejectDraftDto, UpdateDraftDto } from '../dto/draft.dto';
+import { FinanceService } from '../../finance/finance.service';
 
 @Injectable()
 export class DocumentAutomationService {
@@ -26,6 +29,9 @@ export class DocumentAutomationService {
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
+    // Pre-R4 hardening: cross-domain Invoice writes must route through Finance.
+    @Inject(forwardRef(() => FinanceService))
+    private finance: FinanceService,
   ) {}
 
   // ──────────────────────────────────────────────
@@ -498,6 +504,375 @@ export class DocumentAutomationService {
     return draft;
   }
 
+  // ── R4-DOC-COMPLETENESS: new generation methods for PO, GR, SO, Batch Record ──
+
+  async generatePurchaseOrderDraft(purchaseOrderId: string) {
+    const po = await this.prisma.purchaseOrder.findFirst({
+      where: { id: purchaseOrderId },
+      include: {
+        items: { include: { material: true } },
+        supplier: true,
+        purchaseRequest: true,
+      },
+    });
+    if (!po) return;
+
+    const existing = await this.prisma.documentDraft.findFirst({
+      where: {
+        sourceType: SourceDocumentType.PURCHASE_ORDER,
+        sourceId: purchaseOrderId,
+        documentType: DocumentType.PURCHASE_ORDER,
+        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        payload: { path: ['kind'], equals: 'PURCHASE_ORDER' },
+      },
+    });
+    if (existing) return;
+
+    const draftNumber = await this.idGenerator.generateId('PO');
+    const taxPercent = po.taxPercent ? Number(po.taxPercent) : 0;
+    const items = (po.items || []).map((it: any) => ({
+      productName: it.material?.name || 'Material',
+      materialName: it.material?.name || 'Material',
+      materialId: it.materialId,
+      quantity: Number(it.quantity || 0),
+      uom: it.material?.unit || 'PCS',
+      unitPrice: Number(it.unitPrice || 0),
+      subtotal: Number(it.totalPrice || (Number(it.quantity || 0) * Number(it.unitPrice || 0))),
+    }));
+
+    const draft = await this.prisma.documentDraft.create({
+      data: {
+        draftNumber,
+        documentType: DocumentType.PURCHASE_ORDER,
+        sourceType: SourceDocumentType.PURCHASE_ORDER,
+        sourceId: purchaseOrderId,
+        status: DocumentDraftStatus.DRAFT,
+        autoApproveAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        payload: {
+          kind: 'PURCHASE_ORDER',
+          poNumber: po.poNumber,
+          orderDate: po.createdAt,
+          estArrival: po.estArrival,
+          supplierName: po.supplier?.name || '-',
+          supplierAddress: po.supplier?.address || '-',
+          referencePr: po.requestId || '-',
+          taxPercent,
+          items,
+          notes: po.notes || `PO auto-generated for ${po.supplier?.name || 'supplier'}`,
+        },
+      },
+    });
+    this.logger.log(`[DOC_AUTO] Purchase Order draft created: ${draft.draftNumber}`);
+    return draft;
+  }
+
+  async generateGoodsReceiptDraft(inboundId: string) {
+    const inbound = await this.prisma.warehouseInbound.findFirst({
+      where: { id: inboundId },
+      include: {
+        items: { include: { material: true } },
+        po: { include: { supplier: true } },
+      },
+    });
+    if (!inbound) return;
+
+    const existing = await this.prisma.documentDraft.findFirst({
+      where: {
+        sourceType: SourceDocumentType.PURCHASE_ORDER,
+        sourceId: inboundId,
+        documentType: DocumentType.PURCHASE_ORDER,
+        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        payload: { path: ['kind'], equals: 'GOODS_RECEIPT' },
+      },
+    });
+    if (existing) return;
+
+    const draftNumber = await this.idGenerator.generateId('GR');
+    const items = (inbound.items || []).map((it: any) => ({
+      materialName: it.material?.name || 'Material',
+      materialId: it.materialId,
+      qtyActual: Number(it.qtyActual || 0),
+      uom: it.material?.unit || 'PCS',
+      lotNumber: it.lotNumber || '-',
+      expDate: it.expDate,
+      qcStatus: it.qcStatus || 'PENDING',
+      isQuarantine: !!it.isQuarantine,
+    }));
+
+    const draft = await this.prisma.documentDraft.create({
+      data: {
+        draftNumber,
+        documentType: DocumentType.PURCHASE_ORDER,
+        sourceType: SourceDocumentType.PURCHASE_ORDER,
+        sourceId: inboundId,
+        status: DocumentDraftStatus.DRAFT,
+        autoApproveAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        payload: {
+          kind: 'GOODS_RECEIPT',
+          inboundNumber: inbound.inboundNumber,
+          receivedAt: inbound.receivedAt,
+          supplierName: inbound.po?.supplier?.name || '-',
+          supplierReference: inbound.supplierReference || '-',
+          referencePo: inbound.po?.poNumber || '-',
+          status: inbound.status,
+          items,
+          notes: `Goods receipt ${inbound.inboundNumber} untuk PO ${inbound.po?.poNumber || '-'}`,
+        },
+      },
+    });
+    this.logger.log(`[DOC_AUTO] Goods Receipt draft created: ${draft.draftNumber}`);
+    return draft;
+  }
+
+  async generateSalesOrderDraft(salesOrderId: string) {
+    const so = await this.prisma.salesOrder.findFirst({
+      where: { id: salesOrderId },
+      include: { lead: true, items: { include: { materialItem: true } } },
+    });
+    if (!so) return;
+
+    const existing = await this.prisma.documentDraft.findFirst({
+      where: {
+        sourceType: SourceDocumentType.SALES_ORDER,
+        sourceId: salesOrderId,
+        documentType: DocumentType.SALES_ORDER,
+        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+      },
+    });
+    if (existing) return;
+
+    const draftNumber = await this.idGenerator.generateId('SO');
+    const items = (so.items || []).map((it: any) => ({
+      productName: it.productName,
+      name: it.productName,
+      quantity: Number(it.quantity || 0),
+      unitPrice: Number(it.unitPrice || 0),
+      subtotal: Number(it.subtotal || (Number(it.quantity || 0) * Number(it.unitPrice || 0))),
+    }));
+
+    const draft = await this.prisma.documentDraft.create({
+      data: {
+        draftNumber,
+        documentType: DocumentType.SALES_ORDER,
+        sourceType: SourceDocumentType.SALES_ORDER,
+        sourceId: salesOrderId,
+        status: DocumentDraftStatus.DRAFT,
+        autoApproveAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        payload: {
+          kind: 'SALES_ORDER',
+          orderNumber: so.orderNumber,
+          orderDate: so.transactionDate,
+          dueDate: so.dueDate,
+          clientName: so.lead?.clientName || '-',
+          brandName: so.brandName,
+          status: so.status,
+          taxPercent: 0,
+          items,
+          notes: `Sales Order auto-generated for ${so.lead?.clientName || 'customer'}`,
+        },
+      },
+    });
+    this.logger.log(`[DOC_AUTO] Sales Order draft created: ${draft.draftNumber}`);
+    return draft;
+  }
+
+  async generateBatchRecordDraft(workOrderId: string) {
+    const wo = await this.prisma.workOrder.findFirst({
+      where: { id: workOrderId },
+      include: { plan: { include: { formula: true } } },
+    });
+    if (!wo) return;
+
+    // Material usage and step logs are NOT direct relations on WorkOrder.
+    // Resolve them via planId (PMU) and via plan.id (PSL.woId actually points to plan).
+    const planId = wo.planId;
+    const materialUsages = planId
+      ? await this.prisma.productionMaterialUsage.findMany({
+          where: { planId },
+          include: { material: true },
+        })
+      : [];
+    const stepLogs = planId
+      ? await this.prisma.productionStepLog.findMany({
+          where: { woId: planId },
+        })
+      : [];
+
+    const existing = await this.prisma.documentDraft.findFirst({
+      where: {
+        sourceType: SourceDocumentType.WORK_ORDER,
+        sourceId: workOrderId,
+        documentType: DocumentType.WORK_ORDER,
+        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        payload: { path: ['kind'], equals: 'BATCH_RECORD' },
+      },
+    });
+    if (existing) return;
+
+    const draftNumber = await this.idGenerator.generateId('BR');
+    const materials = materialUsages.map((m: any) => ({
+      materialName: m.material?.name || '-',
+      qtySent: Number(m.qtySent || 0),
+      qtyUsed: Number(m.qtyUsed || 0),
+      qtyReturned: Number(m.qtyReturned || 0),
+      variance: Number(m.variance || 0),
+      uom: m.uom || m.material?.unit || '-',
+      reason: m.reason || '-',
+    }));
+    const stages = stepLogs.map((s: any) => ({
+      stageName: s.stage || '-',
+      startedAt: s.createdAt,
+      completedAt: s.createdAt,
+      operator: '-',
+      notes: `input=${Number(s.inputQty || 0)} / result=${Number(s.qtyResult || 0)} / reject=${Number(s.qtyReject || 0)} / quarantine=${Number(s.qtyQuarantine || 0)}`,
+    }));
+
+    const draft = await this.prisma.documentDraft.create({
+      data: {
+        draftNumber,
+        documentType: DocumentType.WORK_ORDER,
+        sourceType: SourceDocumentType.WORK_ORDER,
+        sourceId: workOrderId,
+        status: DocumentDraftStatus.DRAFT,
+        autoApproveAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        payload: {
+          kind: 'BATCH_RECORD',
+          batchNo: wo.plan?.batchNo || '-',
+          workOrderNumber: wo.woNumber,
+          productName: '-',
+          formulaCode: wo.plan?.formula?.formulaCode || wo.plan?.formulaId?.slice(0, 8)?.toUpperCase() || '-',
+          formulaVersionSnapshot: wo.plan?.formula?.version ?? wo.plan?.formulaVersionSnapshot ?? null,
+          targetQty: wo.targetQty,
+          actualQty: wo.targetQty,
+          materials,
+          stages,
+          qcResult: '-',
+          notes: `Batch record auto-generated for WO ${wo.woNumber}`,
+        },
+      },
+    });
+    this.logger.log(`[DOC_AUTO] Batch Record draft created: ${draft.draftNumber}`);
+    return draft;
+  }
+
+  // ── QC Report (Path C: minimal dedicated renderer from canonical QCAudit) ──
+  async generateQcReportDraft(qcAuditId: string) {
+    const qc = await this.prisma.qCAudit.findFirst({
+      where: { id: qcAuditId },
+    });
+    if (!qc) return;
+
+    const existing = await this.prisma.documentDraft.findFirst({
+      where: {
+        sourceType: SourceDocumentType.PRODUCTION_PLAN, // QC belongs to plan step log
+        sourceId: qcAuditId,
+        documentType: DocumentType.WORK_ORDER,
+        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        payload: { path: ['kind'], equals: 'QC_REPORT' },
+      },
+    });
+    if (existing) return;
+
+    const draftNumber = await this.idGenerator.generateId('QCR');
+    const draft = await this.prisma.documentDraft.create({
+      data: {
+        draftNumber,
+        documentType: DocumentType.WORK_ORDER,
+        sourceType: SourceDocumentType.PRODUCTION_PLAN,
+        sourceId: qcAuditId,
+        status: DocumentDraftStatus.DRAFT,
+        autoApproveAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        payload: {
+          kind: 'QC_REPORT',
+          auditId: qc.id,
+          phase: qc.phase,
+          status: qc.status,
+          materialBatchNo: qc.materialBatchNo || '-',
+          supplierName: qc.supplierId ? `Supplier#${qc.supplierId.slice(0, 8)}` : '-',
+          // Spec / measurement block
+          phValue: qc.phValue != null ? Number(qc.phValue) : null,
+          viscosityValue: qc.viscosityValue,
+          organoleptic: qc.organoleptic,
+          samplingVolume: qc.samplingVolume != null ? Number(qc.samplingVolume) : null,
+          inkjetCheck: qc.inkjetCheck,
+          sealingCheck: qc.sealingCheck,
+          labelingCheck: qc.labelingCheck,
+          expDateCheck: qc.expDateCheck,
+          halalStatus: qc.halalStatus,
+          densityValue: qc.densityValue != null ? Number(qc.densityValue) : null,
+          homogenityPass: qc.homogenityPass,
+          torqueValue: qc.torqueValue,
+          leakTestPass: qc.leakTestPass,
+          dimensionCheck: qc.dimensionCheck,
+          coaVerified: qc.coaVerified,
+          // Defect / disposition
+          defectCategory: qc.defectCategory,
+          defectType: qc.defectType,
+          defectLocation: qc.defectLocation,
+          defectCause: qc.defectCause,
+          severity: qc.severity,
+          disposition: qc.disposition,
+          rootCause: qc.rootCause,
+          correctiveAction: qc.correctiveAction,
+          notes: qc.notes,
+          inspectorName: qc.notes?.match(/inspector:\s*([^\n,]+)/i)?.[1]?.trim() || '-',
+          createdAt: qc.createdAt,
+        },
+      },
+    });
+    this.logger.log(`[DOC_AUTO] QC Report draft created: ${draft.draftNumber}`);
+    return draft;
+  }
+
+  // ── Fund Request (Path C: minimal dedicated renderer from canonical FundRequest) ──
+  async generateFundRequestDraft(fundRequestId: string) {
+    const fr = await this.prisma.fundRequest.findFirst({
+      where: { id: fundRequestId },
+      include: { requester: true, approver: true, disburser: true },
+    });
+    if (!fr) return;
+
+    const existing = await this.prisma.documentDraft.findFirst({
+      where: {
+        sourceType: SourceDocumentType.PAYMENT, // closest match; fund request drives a payment
+        sourceId: fundRequestId,
+        documentType: DocumentType.INVOICE_DP, // closest available; FR is a request, not an invoice, but we need a DocumentType
+        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        payload: { path: ['kind'], equals: 'FUND_REQUEST' },
+      },
+    });
+    if (existing) return;
+
+    const draftNumber = await this.idGenerator.generateId('FR');
+    const draft = await this.prisma.documentDraft.create({
+      data: {
+        draftNumber,
+        documentType: DocumentType.INVOICE_DP,
+        sourceType: SourceDocumentType.PAYMENT,
+        sourceId: fundRequestId,
+        status: DocumentDraftStatus.DRAFT,
+        autoApproveAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        payload: {
+          kind: 'FUND_REQUEST',
+          requestNumber: fr.id.slice(0, 8).toUpperCase(),
+          requestDate: fr.createdAt,
+          requester: fr.requester?.email || '-',
+          departmentId: fr.departmentId,
+          amount: Number(fr.amount || 0),
+          reason: fr.reason,
+          status: fr.status,
+          approver: fr.approver?.email || '-',
+          disbursedBy: fr.disburser?.email || '-',
+          rejectReason: fr.rejectReason,
+          attachmentCount: Array.isArray(fr.attachmentUrls) ? fr.attachmentUrls.length : 0,
+          notes: `Fund request Rp ${Number(fr.amount || 0).toLocaleString('id-ID')} — ${fr.reason || '-'}`,
+        },
+      },
+    });
+    this.logger.log(`[DOC_AUTO] Fund Request draft created: ${draft.draftNumber}`);
+    return draft;
+  }
+
   // ──────────────────────────────────────────────
   // DRAFT MANAGEMENT (CRUD + Approval Flow)
   // ──────────────────────────────────────────────
@@ -675,22 +1050,21 @@ export class DocumentAutomationService {
   }
 
   private async createInvoiceFromDraft(draft: any, payload: any) {
-    const invoiceNumber = await this.idGenerator.generateId('INV');
-
-    const invoice = await this.prisma.invoice.create({
-      data: {
-        invoiceNumber,
-        category: payload.category || 'RECEIVABLE',
+    // Pre-R4 hardening: route through Finance canonical createInvoice.
+    // Pre-R4 this wrote to prisma.invoice.create directly, producing one
+    // of four independent write paths to the Invoice table.
+    const invoice = await this.finance.createInvoice(
+      payload.category || 'RECEIVABLE',
+      {
         type: payload.type || InvoiceType.DP,
-        status: 'UNPAID',
         amountDue: payload.amountDue,
-        outstandingAmount: payload.outstandingAmount || payload.amountDue,
+        outstandingAmount: payload.outstandingAmount,
+        dueDate: payload.dueDate ? new Date(payload.dueDate) : undefined,
         soId: payload.soId,
         workOrderId: payload.workOrderId,
-        dueDate: new Date(payload.dueDate),
         notes: payload.notes || `Auto-approved from draft ${draft.draftNumber}`,
       },
-    });
+    );
 
     await this.prisma.documentDraft.update({
       where: { id: draft.id },
@@ -702,12 +1076,38 @@ export class DocumentAutomationService {
   }
 
   private async createGoodsRequirementFromDraft(draft: any, payload: any) {
+    // R1: resolve authoritative upstream lineage BEFORE creating the Requirement.
+    // A Goods Requirement is a snapshot of one committed SO revision pinned to one
+    // Formula revision. We must NOT invent salesOrderVersion or formulaVersion,
+    // and must NOT pick "latest" Formula — the draft's source SO already carries
+    // the exact pinned version we must inherit.
+    const so = await this.prisma.salesOrder.findUnique({
+      where: { id: draft.sourceId },
+      select: { id: true, version: true, formulaId: true },
+    });
+    if (!so) {
+      throw new BadRequestException('DOC_AUTO_LINEAGE_SO_NOT_FOUND: source Sales Order for Goods Requirement draft no longer exists.');
+    }
+    if (!so.formulaId) {
+      throw new BadRequestException('DOC_AUTO_LINEAGE_FORMULA_NOT_PINNED: source Sales Order has no pinned Formula — refuse to create an unpinned Goods Requirement.');
+    }
+    const formula = await this.prisma.formula.findUnique({
+      where: { id: so.formulaId },
+      select: { version: true },
+    });
+    if (!formula) {
+      throw new BadRequestException('DOC_AUTO_LINEAGE_FORMULA_MISSING: pinned Formula referenced by source Sales Order no longer exists.');
+    }
+
     const code = await this.idGenerator.generateId('GR');
 
     const gr = await this.prisma.goodsRequirement.create({
       data: {
         code,
-        salesOrderId: draft.sourceId,
+        salesOrderId: so.id,
+        salesOrderVersion: so.version,
+        formulaId: so.formulaId,
+        formulaVersion: formula.version,
         date: new Date(),
         status: 'DRAFT',
         notes: payload.notes || `Auto-approved from draft ${draft.draftNumber}`,
@@ -715,6 +1115,7 @@ export class DocumentAutomationService {
           create: (payload.items || []).map((item: any) => ({
             materialId: item.materialId,
             qty: item.quantityRequired,
+            uom: item.unit || 'PCS',
             notes: item.productName,
           })),
         },

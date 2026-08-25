@@ -4,32 +4,49 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DashboardCard } from "@/components/dna/DashboardCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { 
-  Plus, 
-  Wallet, 
-  Clock, 
+import {
+  Plus,
+  Wallet,
+  Clock,
   AlertCircle,
   FileText,
   Building2,
-  DollarSign
+  DollarSign,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogDescription 
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormShell } from "@/components/layout/FormShell";
 import { formatCurrency } from "@/lib/utils";
+import {
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+
+const STATUS_TONE: Record<string, "pending" | "process" | "success" | "danger" | "neutral"> = {
+  PENDING_APPROVAL_MGR: "pending",
+  APPROVED_BY_MGR: "process",
+  PAID: "success",
+  REJECTED: "danger",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  PENDING_APPROVAL_MGR: "Waiting Manager",
+  APPROVED_BY_MGR: "Approved - Queueing Finance",
+  PAID: "Disbursed / Paid",
+  REJECTED: "Rejected",
+};
 
 export default function MyFundRequestsPage() {
   const queryClient = useQueryClient();
@@ -45,7 +62,7 @@ export default function MyFundRequestsPage() {
     queryFn: async () => {
       const resp = await api.get("/finance/fund-requests/me");
       return resp.data;
-    }
+    },
   });
 
   const createMutation = useMutation({
@@ -55,42 +72,41 @@ export default function MyFundRequestsPage() {
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["my-fund-requests"] });
     },
-    onError: () => toast.error("Submission failed.")
+    onError: () => toast.error("Submission failed."),
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "PENDING_APPROVAL_MGR": return <DnaBadge status="warning">Waiting Manager</DnaBadge>;
-      case "APPROVED_BY_MGR": return <DnaBadge status="info">Approved - Queueing Finance</DnaBadge>;
-      case "PAID": return <DnaBadge status="success">Disbursed / Paid</DnaBadge>;
-      case "REJECTED": return <DnaBadge status="critical">Rejected</DnaBadge>;
-      default: return <DnaBadge>{status}</DnaBadge>;
-    }
-  };
-
   return (
-    <FormShell
-      title="MY"
-      titleAccent="REQUESTS"
+    <OperationalPageShell
+      title="My Requests"
       subtitle="Internal Fund Requisition & Tracking"
       actions={
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <DnaButton variant="primary" icon={<Plus />}>
-              New Fund Request
-            </DnaButton>
+            <button type="button" className="operational-button is-primary">
+              <Plus className="h-4 w-4" />
+              <span>New Fund Request</span>
+            </button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] bg-white rounded-[24px] border-none shadow-2xl p-0 overflow-hidden font-inter">
-            <div className="bg-brand-blue p-10 text-white relative">
-              <DialogTitle className="text-4xl font-black uppercase tracking-tighter leading-none italic">Requisition Form</DialogTitle>
-              <DialogDescription className="text-white/60 font-medium uppercase text-[10px] tracking-tight mt-3">Internal Fund Disbursement Request</DialogDescription>
-              <Wallet className="absolute right-10 top-1/2 -translate-y-1/2 h-16 w-16 text-white/10" />
+          <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
+            <div className="bg-blue-600 p-6 text-white relative">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none italic text-white">
+                Requisition Form
+              </DialogTitle>
+              <DialogDescription className="text-white/60 font-medium uppercase text-[10px] tracking-tight mt-3">
+                Internal Fund Disbursement Request
+              </DialogDescription>
+              <Wallet className="absolute right-6 top-1/2 -translate-y-1/2 h-12 w-12 text-white/10" />
             </div>
-            <div className="p-10 space-y-6">
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400">Divisi Pengaju</label>
-                <Select value={formData.departmentId} onValueChange={(val) => val && setFormData({...formData, departmentId: val})}>
-                  <SelectTrigger className="h-14 bg-slate-50 border-none font-bold rounded-2xl">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Divisi Pengaju
+                </label>
+                <Select
+                  value={formData.departmentId}
+                  onValueChange={(val) => val && setFormData({ ...formData, departmentId: val })}
+                >
+                  <SelectTrigger className="h-12 bg-slate-50 border-none font-bold rounded-xl text-xs">
                     <SelectValue placeholder="Pilih Divisi" />
                   </SelectTrigger>
                   <SelectContent>
@@ -103,82 +119,130 @@ export default function MyFundRequestsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400">Nominal Dana (IDR)</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Nominal Dana (IDR)
+                </label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
-                  <DnaInput 
-                    type="number" 
-                    placeholder="0" 
-                    className="pl-12"
+                  <input
+                    type="number"
+                    placeholder="0"
+                    className="h-12 w-full pl-12 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm focus:outline-none focus:border-blue-500"
                     value={formData.amount || ""}
-                    onChange={(e) => setFormData({...formData, amount: Number(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400">Keperluan / Justifikasi</label>
-                <DnaInput 
-                  placeholder="Misal: Biaya Langganan Software R&D" 
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Keperluan / Justifikasi
+                </label>
+                <input
+                  type="text"
+                  placeholder="Misal: Biaya Langganan Software R&D"
+                  className="h-12 w-full bg-slate-50 border border-slate-200 rounded-xl px-4 font-bold text-sm focus:outline-none focus:border-blue-500"
                   value={formData.reason}
-                  onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 />
               </div>
-              <DnaButton 
-                variant="primary"
+              <button
+                type="button"
+                className="operational-button is-primary w-full"
                 onClick={() => createMutation.mutate(formData)}
                 disabled={createMutation.isPending}
               >
                 {createMutation.isPending ? "Submitting..." : "Submit Requisition"}
-              </DnaButton>
+              </button>
             </div>
           </DialogContent>
         </Dialog>
       }
     >
-      <div className="grid grid-cols-1 gap-6">
-        <AnimatePresence>
-            {requests.map((req: any, idx: number) => (
-                <motion.div 
-                    key={req.id} 
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    transition={{ delay: idx * 0.1 }}
-                >
-                    <DashboardCard className="!p-0 overflow-hidden">
-                        <div className="flex flex-col md:flex-row items-center p-8 gap-8">
-                            <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
-                                <FileText className="w-7 h-7 text-brand-blue" />
-                            </div>
-                            <div className="flex-1 space-y-1 text-center md:text-left">
-                                <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
-                                    <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase italic">{req.reason}</h3>
-                                    {getStatusBadge(req.status)}
-                                </div>
-                                <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 text-[10px] font-black text-slate-400 uppercase tracking-tight mt-2">
-                                    <span className="flex items-center gap-1.5"><Building2 className="w-3 h-3" /> {req.departmentId}</span>
-                                    <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {new Date(req.createdAt).toLocaleDateString()}</span>
-                                    <span className="text-slate-200">|</span>
-                                    <span className="text-brand-blue">REQ-ID: {req.id.slice(0, 8)}</span>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-tight mb-1">Requested Amount</p>
-                                <p className="text-3xl font-black tracking-tighter text-slate-900 tabular-nums">{formatCurrency(req.amount)}</p>
-                            </div>
-                        </div>
-                    </DashboardCard>
-                </motion.div>
-            ))}
-        </AnimatePresence>
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Total Requests"
+            value={requests.length}
+            icon={<FileText className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="Pending Approval"
+            value={
+              requests.filter(
+                (r: any) => r.status === "PENDING_APPROVAL_MGR" || r.status === "PENDING_APPROVAL_DIR"
+              ).length
+            }
+            icon={<Clock className="h-4 w-4" />}
+            tone="amber"
+          />
+          <OperationalMetricCard
+            label="Disbursed"
+            value={requests.filter((r: any) => r.status === "PAID").length}
+            icon={<Wallet className="h-4 w-4" />}
+            tone="green"
+          />
+        </OperationalMetricGrid>
 
-        {requests.length === 0 && (
-            <div className="text-center py-20 bg-slate-50/50 rounded-[24px] border-2 border-dashed border-slate-200">
-                <AlertCircle className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                <p className="text-slate-400 font-black uppercase tracking-tight text-xs">No fund requests found</p>
+        <div className="space-y-3">
+          <AnimatePresence>
+            {requests.map((req: any, idx: number) => {
+              const tone = STATUS_TONE[req.status] || "neutral";
+              const label = STATUS_LABEL[req.status] || getOperationalStatusLabel(req.status);
+              return (
+                <motion.div
+                  key={req.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <OperationalPanel className="!flex-row items-center gap-4">
+                    <div className="h-14 w-14 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                      <FileText className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-black text-slate-900 tracking-tight uppercase italic">
+                          {req.reason || "—"}
+                        </h3>
+                        <OperationalStatusBadge status={tone}>{label}</OperationalStatusBadge>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                        <span className="flex items-center gap-1.5">
+                          <Building2 className="w-3 h-3" /> {req.departmentId || "—"}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3 h-3" />
+                          {req.createdAt ? new Date(req.createdAt).toLocaleDateString() : "—"}
+                        </span>
+                        <span className="text-slate-300">|</span>
+                        <span className="text-blue-600">REQ-ID: {req.id ? req.id.slice(0, 8) : "—"}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mb-1">
+                        Requested Amount
+                      </p>
+                      <p className="text-2xl font-black tracking-tight text-slate-900 tabular-nums">
+                        {formatCurrency(req.amount ?? 0)}
+                      </p>
+                    </div>
+                  </OperationalPanel>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+
+          {requests.length === 0 && (
+            <div className="text-center py-16 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+              <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-400 font-bold uppercase tracking-tight text-xs">
+                Tidak ada pengajuan dana ditemukan
+              </p>
             </div>
-        )}
+          )}
+        </div>
       </div>
-    </FormShell>
+    </OperationalPageShell>
   );
 }
-

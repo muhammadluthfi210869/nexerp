@@ -13,12 +13,14 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
-function formatRupiah(value: number): string {
-  if (!value) return "—";
-  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)} M`;
-  if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(0)} Jt`;
-  if (value >= 1_000) return `Rp ${(value / 1_000).toFixed(0)}k`;
-  return `Rp ${value.toLocaleString()}`;
+function formatRupiah(value: unknown): string {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return "—";
+  if (n === 0) return "Rp 0";
+  if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(2)} M`;
+  if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(0)} Jt`;
+  if (n >= 1_000) return `Rp ${(n / 1_000).toFixed(0)}k`;
+  return `Rp ${n.toLocaleString("id-ID")}`;
 }
 
 export default function ExecutiveDashboardClient() {
@@ -67,47 +69,40 @@ export default function ExecutiveDashboardClient() {
   const overdueInvoices = alerts?.cashflow?.overdueInvoices ?? 0;
   const unfollowedLeads = alerts?.sales?.unfollowed ?? 0;
 
-  // Owner Insight helpers
+  // R3 Gate 2: removed FRONTEND_CALCULATED threshold insights (80/50/10%).
+  // Thresholds had no contract — they could mislabel performance. Insights
+  // now describe raw facts; status colors come from the backend registry.
   const revenueInsight = (() => {
-    const shortfall = target - mtd;
-    if (achievement < 80 && shortfall > 0) {
-      return `Kita tertinggal ${formatRupiah(shortfall)} dari target bulanan. Perlu push deal di minggu terakhir.`;
-    }
-    return `Progress omset ${achievement.toFixed(1)}% menuju target ${formatRupiah(target)}.`;
+    if (metrics == null) return "—";
+    if (target === 0) return "NO DATA — target not set.";
+    return `Omset MTD ${formatRupiah(mtd)} dari target ${formatRupiah(target)}.`;
   })();
 
   const pipelineInsight = (() => {
-    const rate = pipeTotal > 0 ? ((pipeDeal / pipeTotal) * 100).toFixed(1) : "0";
-    return `Conversion rate ${rate}% dari total pipeline. Fokus pada ${pipeProspect} lead di tahap negosiasi.`;
+    if (metrics == null) return "—";
+    if (pipeTotal === 0) return "NO DATA — pipeline kosong.";
+    return `${pipeDeal} deal dari ${pipeTotal} lead aktif. ${pipeProspect} di negosiasi.`;
   })();
 
   const productionInsight = (() => {
-    if (prodOverdue > 0) {
-      return `Ada ${prodOverdue} order overdue. Perlu manajemen shift tambahan untuk kejar deadline.`;
-    }
-    return `${prodActive} order aktif dalam proses produksi.`;
+    if (metrics == null) return "—";
+    return `${prodActive} order aktif; ${prodOverdue} overdue; ${prodReady} ready.`;
   })();
 
   const cashflowInsight = (() => {
+    if (metrics == null) return "—";
     const overdue60 = aging["60+"] ?? 0;
-    if (overdue60 > 0) {
-      return `Uang nyangkut di Piutang >60 hari sebesar ${formatRupiah(overdue60)}. Tim Finance harus prioritaskan penagihan.`;
-    }
-    return `Total piutang ${formatRupiah(totalAR)}. Pantau aging secara berkala.`;
+    return `Total piutang ${formatRupiah(totalAR)}; ${formatRupiah(overdue60)} di aging >60 hari.`;
   })();
 
   const lostInsight = (() => {
-    if (lostVal > (pipeTotal > 0 ? mtd * 0.1 : 0)) {
-      return `Lost deal signifikan sebesar ${formatRupiah(lostVal)}. Evaluasi pricing dan kualitas sample.`;
-    }
-    return `Lost deal sebesar ${formatRupiah(lostVal)}. Churn rate ${churnRate.toFixed(1)}%.`;
+    if (metrics == null) return "—";
+    return `Lost deal ${formatRupiah(lostVal)}; churn rate ${churnRate.toFixed(1)}%.`;
   })();
 
   const roInsight = (() => {
-    if (roRate < 50) {
-      return "Repeat rate perlu perhatian — tingkatkan follow-up ke klien existing.";
-    }
-    return `Mesin RO sehat. ${roRate.toFixed(1)}% revenue berasal dari repeat order. ${roReadyToRepeat} klien siap repeat.`;
+    if (metrics == null) return "—";
+    return `${roRate.toFixed(1)}% revenue dari repeat order; ${roReadyToRepeat} klien siap repeat.`;
   })();
 
   return (
@@ -164,7 +159,7 @@ export default function ExecutiveDashboardClient() {
           style={{
             background: "white",
             padding: "2rem",
-            borderRadius: "32px",
+            borderRadius: "20px",
             border: "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
@@ -186,7 +181,7 @@ export default function ExecutiveDashboardClient() {
             <p style={{ margin: 0, fontSize: "9px", fontWeight: 900, color: "#94A3B8", letterSpacing: "0.05em" }}>
               OMSET BULAN INI (MTD)
             </p>
-            <p style={{ margin: "4px 0 0 0", fontSize: "32px", fontWeight: 950, color: "#0F172A", letterSpacing: "-0.03em" }}>
+            <p style={{ margin: "4px 0 0 0", fontSize: "32px", fontWeight: 950, color: "#0F172A", letterSpacing: "-0.03em", whiteSpace: "nowrap" }}>
               {metrics ? formatRupiah(mtd) : "—"}
             </p>
             <p style={{ margin: "4px 0 0 0", fontSize: "11px", fontWeight: 900, color: "#10B981" }}>
@@ -217,17 +212,17 @@ export default function ExecutiveDashboardClient() {
 
           <div
             style={{
-              background: "#F0FDF4",
-              border: "1px solid #DCFCE7",
-              padding: "1rem",
-              borderRadius: "16px",
-              fontSize: "11px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              padding: "0.75rem 0.875rem",
+              borderRadius: "12px",
+              fontSize: "10px",
               fontWeight: 800,
-              color: "#166534",
-              lineHeight: "1.4"
+              color: "#475569",
+              lineHeight: "1.5"
             }}
           >
-            💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {revenueInsight}
+            💡 <span style={{ fontWeight: 950, color: "#1E293B" }}>OWNER INSIGHT:</span> {revenueInsight}
           </div>
         </div>
 
@@ -236,7 +231,7 @@ export default function ExecutiveDashboardClient() {
           style={{
             background: "white",
             padding: "2rem",
-            borderRadius: "32px",
+            borderRadius: "20px",
             border: "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
@@ -257,11 +252,11 @@ export default function ExecutiveDashboardClient() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div style={{ background: "#EFF6FF", padding: "12px 16px", borderRadius: "16px" }}>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#2563EB" }}>TOTAL LEADS</p>
-              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B" }}>{metrics ? pipeTotal : "—"}</p>
+              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B", whiteSpace: "nowrap" }}>{metrics ? pipeTotal : "—"}</p>
             </div>
             <div style={{ background: "#EFF6FF", padding: "12px 16px", borderRadius: "16px" }}>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#2563EB" }}>PIPELINE VALUE</p>
-              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B" }}>—</p>
+              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B", whiteSpace: "nowrap" }}>—</p>
             </div>
           </div>
 
@@ -284,17 +279,17 @@ export default function ExecutiveDashboardClient() {
 
           <div
             style={{
-              background: "#EFF6FF",
-              border: "1px solid #DBEAFE",
-              padding: "1rem",
-              borderRadius: "16px",
-              fontSize: "11px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              padding: "0.75rem 0.875rem",
+              borderRadius: "12px",
+              fontSize: "10px",
               fontWeight: 800,
-              color: "#1E40AF",
-              lineHeight: "1.4"
+              color: "#475569",
+              lineHeight: "1.5"
             }}
           >
-            💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {pipelineInsight}
+            💡 <span style={{ fontWeight: 950, color: "#1E293B" }}>OWNER INSIGHT:</span> {pipelineInsight}
           </div>
         </div>
 
@@ -303,7 +298,7 @@ export default function ExecutiveDashboardClient() {
           style={{
             background: "white",
             padding: "2rem",
-            borderRadius: "32px",
+            borderRadius: "20px",
             border: "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
@@ -324,11 +319,11 @@ export default function ExecutiveDashboardClient() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>TOTAL ORDER AKTIF</p>
-              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>{metrics ? prodActive : "—"}</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#1E293B", whiteSpace: "nowrap" }}>{metrics ? prodActive : "—"}</p>
             </div>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>TELAT PRODUKSI (OVERDUE)</p>
-              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#EF4444" }}>{metrics ? prodOverdue : "—"}</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#EF4444", whiteSpace: "nowrap" }}>{metrics ? prodOverdue : "—"}</p>
             </div>
           </div>
 
@@ -352,17 +347,17 @@ export default function ExecutiveDashboardClient() {
 
           <div
             style={{
-              background: "#FEF9C3",
-              border: "1px solid #FEF08A",
-              padding: "1rem",
-              borderRadius: "16px",
-              fontSize: "11px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              padding: "0.75rem 0.875rem",
+              borderRadius: "12px",
+              fontSize: "10px",
               fontWeight: 800,
-              color: "#854D0E",
-              lineHeight: "1.4"
+              color: "#475569",
+              lineHeight: "1.5"
             }}
           >
-            💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {productionInsight}
+            💡 <span style={{ fontWeight: 950, color: "#1E293B" }}>OWNER INSIGHT:</span> {productionInsight}
           </div>
         </div>
 
@@ -371,7 +366,7 @@ export default function ExecutiveDashboardClient() {
           style={{
             background: "white",
             padding: "2rem",
-            borderRadius: "32px",
+            borderRadius: "20px",
             border: "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
@@ -392,11 +387,11 @@ export default function ExecutiveDashboardClient() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div style={{ background: "#F5F3FF", padding: "12px 16px", borderRadius: "16px" }}>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#8B5CF6" }}>CASH IN (MTD)</p>
-              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B" }}>{metrics ? formatRupiah(mtd) : "—"}</p>
+              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B", whiteSpace: "nowrap" }}>{metrics ? formatRupiah(mtd) : "—"}</p>
             </div>
             <div style={{ background: "#FFF1F2", padding: "12px 16px", borderRadius: "16px" }}>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#EF4444" }}>PIUTANG (AR)</p>
-              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#EF4444" }}>{metrics ? formatRupiah(totalAR) : "—"}</p>
+              <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#EF4444", whiteSpace: "nowrap" }}>{metrics ? formatRupiah(totalAR) : "—"}</p>
             </div>
           </div>
 
@@ -418,17 +413,17 @@ export default function ExecutiveDashboardClient() {
 
           <div
             style={{
-              background: "#F5F3FF",
-              border: "1px solid #EDE9FE",
-              padding: "1rem",
-              borderRadius: "16px",
-              fontSize: "11px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              padding: "0.75rem 0.875rem",
+              borderRadius: "12px",
+              fontSize: "10px",
               fontWeight: 800,
-              color: "#5B21B6",
-              lineHeight: "1.4"
+              color: "#475569",
+              lineHeight: "1.5"
             }}
           >
-            💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {cashflowInsight}
+            💡 <span style={{ fontWeight: 950, color: "#1E293B" }}>OWNER INSIGHT:</span> {cashflowInsight}
           </div>
         </div>
 
@@ -437,7 +432,7 @@ export default function ExecutiveDashboardClient() {
           style={{
             background: "white",
             padding: "2rem",
-            borderRadius: "32px",
+            borderRadius: "20px",
             border: "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
@@ -458,11 +453,11 @@ export default function ExecutiveDashboardClient() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>LOST DEAL (VAL)</p>
-              <p style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: 950, color: "#EF4444" }}>{metrics ? formatRupiah(lostVal) : "—"}</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: 950, color: "#EF4444", whiteSpace: "nowrap" }}>{metrics ? formatRupiah(lostVal) : "—"}</p>
             </div>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>CHURN RATE</p>
-              <p style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: 950, color: "#0F172A" }}>{metrics ? `${churnRate.toFixed(1)}%` : "—"}</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: 950, color: "#0F172A", whiteSpace: "nowrap" }}>{metrics ? `${churnRate.toFixed(1)}%` : "—"}</p>
             </div>
           </div>
 
@@ -487,17 +482,17 @@ export default function ExecutiveDashboardClient() {
 
           <div
             style={{
-              background: "#FFF1F2",
-              border: "1px solid #FECDD3",
-              padding: "1rem",
-              borderRadius: "16px",
-              fontSize: "11px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              padding: "0.75rem 0.875rem",
+              borderRadius: "12px",
+              fontSize: "10px",
               fontWeight: 800,
-              color: "#9F1239",
-              lineHeight: "1.4"
+              color: "#475569",
+              lineHeight: "1.5"
             }}
           >
-            💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {lostInsight}
+            💡 <span style={{ fontWeight: 950, color: "#1E293B" }}>OWNER INSIGHT:</span> {lostInsight}
           </div>
         </div>
 
@@ -506,7 +501,7 @@ export default function ExecutiveDashboardClient() {
           style={{
             background: "white",
             padding: "2rem",
-            borderRadius: "32px",
+            borderRadius: "20px",
             border: "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
@@ -527,11 +522,11 @@ export default function ExecutiveDashboardClient() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>REPEAT RATE</p>
-              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#10B981" }}>{metrics ? `${roRate.toFixed(1)}%` : "—"}</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#10B981", whiteSpace: "nowrap" }}>{metrics ? `${roRate.toFixed(1)}%` : "—"}</p>
             </div>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>RO REVENUE</p>
-              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#0F172A" }}>{metrics ? formatRupiah(roRevenue) : "—"}</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#0F172A", whiteSpace: "nowrap" }}>{metrics ? formatRupiah(roRevenue) : "—"}</p>
             </div>
           </div>
 
@@ -548,17 +543,17 @@ export default function ExecutiveDashboardClient() {
 
           <div
             style={{
-              background: "#F0FDF4",
-              border: "1px solid #DCFCE7",
-              padding: "1rem",
-              borderRadius: "16px",
-              fontSize: "11px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              padding: "0.75rem 0.875rem",
+              borderRadius: "12px",
+              fontSize: "10px",
               fontWeight: 800,
-              color: "#166534",
-              lineHeight: "1.4"
+              color: "#475569",
+              lineHeight: "1.5"
             }}
           >
-            💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {roInsight}
+            💡 <span style={{ fontWeight: 950, color: "#1E293B" }}>OWNER INSIGHT:</span> {roInsight}
           </div>
         </div>
       </div>

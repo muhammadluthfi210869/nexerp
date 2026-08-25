@@ -15,8 +15,9 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { StatCard, DnaBadge, DnaInput } from "@/components/dna";
-import { SectionDivider } from "@/components/layout/SectionDivider";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalDate } from "@/lib/operational-formatters";
 import { DataTable, DataTableHead, DataTableTh, DataTableBody, DataTableRow, DataTableCell } from "@/components/layout/DataTable";
 
 export default function ProductionAuditPage() {
@@ -32,21 +33,21 @@ export default function ProductionAuditPage() {
       <div className="h-[80vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Clock className="w-12 h-12 text-amber-500 animate-spin" />
-          <p className="text-xs font-black text-slate-400 uppercase tracking-tight italic">Analyzing Audit Trails...</p>
+          <p className="text-xs font-black text-slate-400 uppercase tracking-tight italic">Memuat jejak audit...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <DashboardShell
-      title="Production Execution Audit"
-      subtitle="Operational Integrity / Cost Attribution / Machine Performance"
+    <OperationalMigrationShell
+      title="Audit Eksekusi Produksi"
+      subtitle="Integritas operasional, atribusi biaya, dan kinerja mesin"
       actions={
         <div className="flex gap-4">
           <DnaInput
             icon={<Search className="w-4 h-4" />}
-            placeholder="Search Work Order..."
+            placeholder="Cari work order..."
             className="w-64"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -61,56 +62,66 @@ export default function ProductionAuditPage() {
       {/* COST ATTRIBUTION ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          label="Total Labor Cost"
+          label="Total Biaya Tenaga Kerja"
           value="Rp 12,450,000"
-          subValue="Current Month Attribution"
+          subValue="Atribusi bulan berjalan"
           icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
         />
         <StatCard
-          label="Machine Overhead"
+          label="Overhead Mesin"
           value="Rp 28,120,000"
-          subValue="Active Asset Utilization"
+          subValue="Pemanfaatan aset aktif"
           icon={<Cpu className="w-6 h-6 text-blue-600" />}
         />
         <StatCard
-          label="Avg. Reject Rate"
+          label="Rata-rata Tingkat Penolakan"
           value="0.84%"
-          subValue="Quality Performance Metric"
+          subValue="Metrik kinerja kualitas"
           icon={<TrendingDown className="w-6 h-6 text-rose-600" />}
         />
       </div>
 
       {/* AUDIT LOG TABLE */}
       <div>
-        <SectionDivider number={1} title="DETAILED EXECUTION LOGS" accentColor="primary" />
+        <div className="flex items-center gap-3 mb-3" style={{ marginTop: "var(--section-gap)" }}>
+          <div className="w-1 h-5 rounded-full bg-primary" />
+          <h2 className="text-[10px] font-black text-slate-500 tracking-tight">1. Log Eksekusi Terperinci</h2>
+        </div>
         <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
           <DataTable>
             <DataTableHead>
-              <DataTableTh>WORK ORDER</DataTableTh>
-              <DataTableTh>STAGE</DataTableTh>
-              <DataTableTh>OPERATOR</DataTableTh>
-              <DataTableTh align="center">MASS BALANCE</DataTableTh>
-              <DataTableTh align="center">REJECT %</DataTableTh>
-              <DataTableTh align="right">LABOR COST</DataTableTh>
-              <DataTableTh align="right">OVERHEAD</DataTableTh>
-              <DataTableTh align="center">QC STATUS</DataTableTh>
+              <DataTableRow>
+                <DataTableTh>WORK ORDER</DataTableTh>
+                <DataTableTh>Tahap</DataTableTh>
+                <DataTableTh>Operator</DataTableTh>
+                <DataTableTh align="center">Neraca Massa</DataTableTh>
+                <DataTableTh align="center">Penolakan %</DataTableTh>
+                <DataTableTh align="right">Biaya Tenaga Kerja</DataTableTh>
+                <DataTableTh align="right">Overhead</DataTableTh>
+                <DataTableTh align="center">Status QC</DataTableTh>
+              </DataTableRow>
             </DataTableHead>
             <DataTableBody>
-              {auditLogs?.filter((log: any) => (log.workOrderId ?? '').toLowerCase().includes(searchTerm.toLowerCase())).map((log: any) => (
+              {auditLogs?.filter((log: any) => (log.workOrderId ?? '').toLowerCase().includes(searchTerm.toLowerCase())).map((log: any) => {
+                const inputQty = Number(log.inputQty);
+                const rejectRate = Number.isFinite(inputQty) && inputQty > 0
+                  ? (Number(log.rejectQty || 0) / inputQty) * 100
+                  : null;
+                return (
                 <DataTableRow key={log.id}>
                   <DataTableCell>
                     <div className="flex flex-col">
                       <span className="font-black text-slate-900 text-[11px] uppercase italic">WO-{(log.workOrderId ?? '').slice(-6)}</span>
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{new Date(log.loggedAt).toLocaleDateString()}</span>
+                      <span className="text-[8px] font-black text-slate-400 tracking-widest">{formatOperationalDate(log.loggedAt)}</span>
                     </div>
                   </DataTableCell>
                   <DataTableCell>
                     <DnaBadge status="info">
-                      {log.stage}
+                      {getOperationalStatusLabel(log.stage)}
                     </DnaBadge>
                   </DataTableCell>
                   <DataTableCell>
-                    <span className="text-[11px] font-bold text-slate-600 uppercase">{log.operatorId || "N/A"}</span>
+                    <span className="text-[11px] font-bold text-slate-600">{log.operatorId || "—"}</span>
                   </DataTableCell>
                   <DataTableCell align="center">
                     <span className={cn(
@@ -123,9 +134,9 @@ export default function ProductionAuditPage() {
                   <DataTableCell align="center">
                     <span className={cn(
                       "text-[10px] font-black",
-                      (log.rejectQty / log.inputQty) > 0.05 ? "text-rose-600" : "text-slate-400"
+                      rejectRate !== null && rejectRate > 5 ? "text-rose-600" : "text-slate-400"
                     )}>
-                      {((log.rejectQty / log.inputQty) * 100).toFixed(2)}%
+                      {rejectRate === null ? "—" : `${rejectRate.toFixed(2)}%`}
                     </span>
                   </DataTableCell>
                   <DataTableCell align="right">
@@ -146,12 +157,13 @@ export default function ProductionAuditPage() {
                     )}
                   </DataTableCell>
                 </DataTableRow>
-              ))}
+                );
+              })}
             </DataTableBody>
           </DataTable>
         </Card>
       </div>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }
 

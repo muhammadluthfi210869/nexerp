@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { Prisma, LeadSource, LeadStatus, WorkflowStatus } from '@prisma/client';
@@ -78,6 +79,152 @@ export class LeadCaptureService {
       trackingCode,
       waUrl: this.buildWaUrl(trackingCode, data.intent),
     };
+  }
+
+  // ──────────────────────────────────────────────
+  //  WEBSITE → ERP BRIDGE (idempotent upsert)
+  // ──────────────────────────────────────────────
+
+  /**
+   * Idempotent upsert keyed on `websiteIntentId` (which IS the tracking
+   * code the customer sees in [Kode: …]). The website runs the VPS
+   * round-robin, then hands the journey off here so the lead record is
+   * the single source of truth across website and CRM.
+   *
+   * Behaviour:
+   *  - First call: creates a new LeadCapture with the assigned Sales,
+   *    journey timestamps, and source/CTA/thank-you URLs.
+   *  - Subsequent calls with the same websiteIntentId: returns the existing
+   *    lead untouched — round-robin assignment is NOT re-rolled. Sales
+   *    identity is stable per tracking code.
+   *  - `phone` (customer WhatsApp) is NEVER set here. Only `assignedPhone`
+   *    (Sales WhatsApp destination) is captured. Customer phone is reserved
+   *    for the Self QR verification pipeline (Batch 4).
+   */
+  async bridgeTrack(data: {
+    websiteIntentId: string;
+    assignedSalesId?: string;
+    assignedName?: string;
+    assignedPhone?: string;
+    pageUrl?: string;          // thank-you page URL
+    sourcePage?: string;       // original source page URL
+    ctaType?: string;
+    ctaClickedAt?: string;     // ISO string
+    thankYouViewedAt?: string; // ISO string
+    intent?: string;
+    source?: string;
+    referrer?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmContent?: string;
+    utmTerm?: string;
+    deviceType?: string;
+    browser?: string;
+    ipAddress?: string;
+    sessionId?: string;
+  }) {
+    const trackingCode = data.websiteIntentId;
+
+    const existing = await this.prisma.leadCapture.findUnique({
+      where: { trackingCode },
+      select: { id: true, assignedSalesId: true, assignedName: true, assignedPhone: true, assignedAt: true },
+    });
+    if (existing) {
+      this.logger.log(`🔁 Bridge idempotent hit: ${trackingCode} (assignedSalesId=${existing.assignedSalesId || 'n/a'})`);
+      return {
+        trackingCode,
+        leadId: existing.id,
+        created: false,
+        waDestinationPhone: existing.assignedPhone || null,
+        assignedSalesId: existing.assignedSalesId || null,
+        assignedName: existing.assignedName || null,
+      };
+    }
+
+    const assignedAt = new Date();
+    const lead = await this.prisma.leadCapture.create({
+      data: {
+        trackingCode,
+        status: 'PENDING' as LeadStatus,
+        workflowStatus: 'NEW_LEAD' as WorkflowStatus,
+        verificationStatus: 'UNVERIFIED',
+        intent: data.intent ?? null,
+        pageUrl: data.pageUrl ?? null,
+        pageTitle: null,
+        referrer: data.referrer ?? null,
+        utmSource: data.utmSource ?? null,
+        utmMedium: data.utmMedium ?? null,
+        utmCampaign: data.utmCampaign ?? null,
+        utmContent: data.utmContent ?? null,
+        utmTerm: data.utmTerm ?? null,
+        deviceType: data.deviceType ?? null,
+        browser: data.browser ?? null,
+        ipAddress: data.ipAddress ?? null,
+        sessionId: data.sessionId ?? null,
+        // Journey fields (new in 2026-08-22 migration):
+        sourcePage: data.sourcePage ?? null,
+        ctaType: data.ctaType ?? null,
+        ctaClickedAt: data.ctaClickedAt ? new Date(data.ctaClickedAt) : null,
+        thankYouPage: data.pageUrl ?? null,
+        thankYouViewedAt: data.thankYouViewedAt ? new Date(data.thankYouViewedAt) : assignedAt,
+        // Round-robin assignment (stable per tracking code):
+        assignedName: data.assignedName ?? null,
+        assignedPhone: data.assignedPhone ?? null,
+        assignedSalesId: data.assignedSalesId ?? null,
+        assignedAt,
+      },
+      select: {
+        id: true,
+        trackingCode: true,
+        assignedSalesId: true,
+        assignedName: true,
+        assignedPhone: true,
+      },
+    });
+
+    this.logger.log(
+      `🌉 Bridge NEW: ${lead.trackingCode} | source=${data.sourcePage || 'n/a'} | thank=${data.pageUrl || 'n/a'} | sales=${data.assignedSalesId || data.assignedName || 'n/a'}`,
+    );
+
+    return {
+      trackingCode: lead.trackingCode,
+      leadId: lead.id,
+      created: true,
+      waDestinationPhone: lead.assignedPhone || null,
+      assignedSalesId: lead.assignedSalesId || null,
+      assignedName: lead.assignedName || null,
+    };
+  }
+
+  /**
+   * Fire-and-forget click tracking from the website thank-you page.
+   * Records `whatsappClickedAt = NOW()` if not yet set. Re-clicks do not
+   * overwrite the original timestamp — that is the customer's first
+   * committed click on the journey.
+   */
+  async recordWhatsAppClick(trackingCode: string) {
+    if (!trackingCode || typeof trackingCode !== 'string') {
+      throw new BadRequestException('trackingCode required');
+    }
+    const existing = await this.prisma.leadCapture.findUnique({
+      where: { trackingCode },
+      select: { id: true, whatsappClickedAt: true },
+    });
+    if (!existing) {
+      // Bridge may not have flushed yet; that's fine — fire-and-forget.
+      return { recorded: false, reason: 'not_found' };
+    }
+    if (existing.whatsappClickedAt) {
+      return { recorded: false, reason: 'already_recorded', at: existing.whatsappClickedAt };
+    }
+    const at = new Date();
+    await this.prisma.leadCapture.update({
+      where: { id: existing.id },
+      data: { whatsappClickedAt: at },
+    });
+    this.logger.log(`👆 WA click: ${trackingCode} @ ${at.toISOString()}`);
+    return { recorded: true, at };
   }
 
   // ──────────────────────────────────────────────
@@ -620,6 +767,82 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       where: { id },
       data: updateData,
     });
+  }
+
+  // ──────────────────────────────────────────────
+  //  LIST TRACKED LEADS (self-QR validation read model)
+  // ──────────────────────────────────────────────
+
+  /**
+   * Minimal read model exposed at GET /lead-capture/tracked. Returns
+   * the exact columns the website-attribution + Self QR validation
+   * pipeline needs to render a row:
+   *
+   *   trackingCode, name, product, customerPhone (whatsapp phone),
+   *   sourcePage, thankYouPage, ctaType, ctaClickedAt,
+   *   assignedSalesId, assignedName, assignedPhone,
+   *   whatsappClickedAt, whatsappVerifiedAt, verificationStatus
+   *
+   * `name` prefers the human-confirmed LeadAttribute (`confirmed=true`)
+   * over AI suggestions. `product` is the same — first confirmed
+   * LeadAttribute with key in EXTRACTION_FIELDS or "product".
+   *
+   * Intentionally NO charts / KPI dashboard — see NEX spec.
+   */
+  async listTrackedLeads(query: { verificationStatus?: string; limit?: number }) {
+    const limit = Math.min(query.limit ?? 100, 200);
+    const where: any = {};
+    if (query.verificationStatus) where.verificationStatus = query.verificationStatus;
+
+    const rows = await this.prisma.leadCapture.findMany({
+      where,
+      orderBy: [{ whatsappVerifiedAt: 'desc' }, { createdAt: 'desc' }],
+      take: limit,
+      select: {
+        id: true,
+        trackingCode: true,
+        fullName: true,
+        company: true,
+        phone: true,
+        sourcePage: true,
+        thankYouPage: true,
+        ctaType: true,
+        ctaClickedAt: true,
+        assignedSalesId: true,
+        assignedName: true,
+        assignedPhone: true,
+        whatsappClickedAt: true,
+        whatsappVerifiedAt: true,
+        verificationStatus: true,
+        attributes: {
+          where: { key: { in: ['product', 'niche', 'brand'] }, confirmed: true },
+          orderBy: { updatedAt: 'desc' },
+          take: 1,
+          select: { key: true, value: true },
+        },
+      },
+    });
+
+    return {
+      count: rows.length,
+      rows: rows.map((r) => ({
+        trackingCode: r.trackingCode,
+        name: r.fullName || null,
+        product: r.attributes[0]?.value || null,
+        phone: r.phone || null,
+        sourcePage: r.sourcePage || null,
+        thankYouPage: r.thankYouPage || null,
+        ctaType: r.ctaType || null,
+        ctaClickedAt: r.ctaClickedAt || null,
+        assignedSalesId: r.assignedSalesId || null,
+        assignedSales: r.assignedName || null,
+        assignedPhone: r.assignedPhone || null,
+        whatsappClickedAt: r.whatsappClickedAt || null,
+        whatsappVerifiedAt: r.whatsappVerifiedAt || null,
+        verificationStatus: r.verificationStatus,
+        company: r.company || null,
+      })),
+    };
   }
 
   // ──────────────────────────────────────────────

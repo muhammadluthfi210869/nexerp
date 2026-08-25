@@ -37,7 +37,7 @@ export class PurchaseOrdersController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE)
   @ApiOperation({ summary: 'Get all Purchase Orders' })
   findAll() {
     return this.poService.findAll();
@@ -48,6 +48,13 @@ export class PurchaseOrdersController {
   @ApiOperation({ summary: 'Get a single Purchase Order by ID' })
   findOne(@Param('id') id: string) {
     return this.poService.findOne(id);
+  }
+
+  @Get(':id/batch5-handoff')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM, UserRole.WAREHOUSE)
+  @ApiOperation({ summary: 'Read-only Purchase Order contract for Batch 5 receiving' })
+  batch5Handoff(@Param('id') id: string) {
+    return this.poService.getBatch5Handoff(id);
   }
 
   @Patch(':id/status')

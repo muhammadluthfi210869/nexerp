@@ -13,16 +13,16 @@ export function DataCard({ dotColor, title, titleColor, children, className, noS
   return (
     <div
       className={cn(
-        "bg-white border border-[var(--border-color)] rounded-[24px] p-8 flex flex-col h-full transition-all animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)]",
+        "erp-data-card bg-white border border-[var(--border-color)] rounded-[16px] p-6 flex flex-col h-full transition-shadow animate-fade-slide-in",
         noShadow ? "" : "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]",
         className
       )}
     >
       {(dotColor || title) && (
-        <div className="flex items-center gap-3 mb-7">
+        <div className="flex items-center gap-3 mb-5">
           {dotColor && <span className={cn("status-dot", dotColor)} />}
           {title && (
-            <h3 className={cn("text-[10px] font-black uppercase tracking-[0.25em]", titleColor || "text-slate-400")}>
+            <h3 className={cn("text-xs font-bold tracking-wide", titleColor || "text-slate-400")}>
               {title}
             </h3>
           )}

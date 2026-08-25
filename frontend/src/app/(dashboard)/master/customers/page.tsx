@@ -13,23 +13,16 @@ import {
   CreditCard,
   UserCircle,
   MapPin,
-  User,
   Trash2,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -40,12 +33,18 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableShell } from "@/components/layout/TableShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import {
+  OperationalMetricGrid,
+  OperationalMetricCard,
+  OperationalPanel,
+  OperationalInput,
+  OperationalField,
+  OperationalButton,
+  OperationalDataTable,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational/OperationalUI";
 import { CascadingAddress } from "@/components/ui/cascading-address";
 
 type Customer = {
@@ -204,189 +203,217 @@ export default function MasterCustomersPage() {
     setIsModalOpen(true);
   };
 
-  return (
-    <TableShell
-      title="Global"
-      titleAccent="Client Hub"
-      subtitle="Commercial Partner Registry — B2B Commercial Ledger"
-      actions={
-        <DnaButton variant="primary" icon={<Plus />} onClick={openCreateModal}>
-          Onboard Partner
-        </DnaButton>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[var(--card-gap)]">
-        <StatCard label="Partner Registry" value={customers.length} subValue="Total Clients" icon={<Building2 />} />
-        <StatCard label="Active Revenue" value={activeCount} subValue="Active Partners" icon={<Activity />} />
-        <StatCard label="Strategic Segments" value={categories.length} subValue="Categories" icon={<CreditCard />} />
-        <StatCard label="Tax Compliance" value="100%" subValue="NPWP Coverage" icon={<ShieldCheck />} />
-      </div>
-
-      <TableWrapper
-        filters={
-          <div className="flex items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-3">
-              <span className="status-dot bg-blue-500" />
-              <div>
-                <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
-                  Partner Directory
-                </h3>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                  {filteredCustomers.length} Records
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <DnaInput
-                icon={<Search />}
-                placeholder="Search partner..."
-                className="md:w-56"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+  const columns: ColumnDef<Customer>[] = [
+    {
+      id: "identity",
+      header: "Identitas Pelanggan",
+      accessorFn: (row) => row.clientName,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-black text-slate-900 text-xs uppercase">{row.original.clientName}</div>
+            <div className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">
+              {row.original.taxId || "NPWP BELUM DIISI"}
             </div>
           </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Partner Identity</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Classification</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Contact Protocol</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">Status</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Initializing Matrix...</p>
-                  </TableCell>
-                </TableRow>
-              ) : filteredCustomers.map((customer) => (
-                <TableRow key={customer.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
-                  <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                        <Building2 className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs uppercase block">{customer.clientName}</span>
-                        <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{customer.taxId || "NO TAX ID"}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-[10px] font-black text-slate-400 uppercase">{customer.category?.name || "Tier 1 Partner"}</span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                        <Mail className="w-3 h-3" /> {customer.email || "---"}
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                        <Phone className="w-3 h-3" /> {customer.phone || "---"}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-center">
-                    <DnaBadge status={customer.status === "ACTIVE" ? "success" : "default"}>
-                      {customer.status}
-                    </DnaBadge>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <DnaButton variant="ghost" onClick={() => openEditModal(customer)}>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </DnaButton>
-                      <DnaButton variant="ghost" onClick={() => handleDelete(customer)}>
-                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                      </DnaButton>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         </div>
-      </TableWrapper>
+      ),
+    },
+    {
+      id: "category",
+      header: "Klasifikasi",
+      accessorFn: (row) => row.category?.name || "Tier 1 Partner",
+      cell: ({ row }) => (
+        <span className="text-[10px] font-black text-slate-400 uppercase">
+          {row.original.category?.name || "Tier 1 Partner"}
+        </span>
+      ),
+    },
+    {
+      id: "contact",
+      header: "Kontak",
+      accessorFn: (row) => row.email || "",
+      cell: ({ row }) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+            <Mail className="w-3 h-3" /> {row.original.email || "—"}
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+            <Phone className="w-3 h-3" /> {row.original.phone || "—"}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorFn: (row) => row.status,
+      cell: ({ row }) => (
+        <OperationalStatusBadge status={row.original.status === "ACTIVE" ? "success" : "neutral"}>
+          {getOperationalStatusLabel(row.original.status)}
+        </OperationalStatusBadge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Aksi",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-1">
+          <OperationalButton variant="ghost" onClick={() => openEditModal(row.original)}>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </OperationalButton>
+          <OperationalButton variant="ghost" onClick={() => handleDelete(row.original)}>
+            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+          </OperationalButton>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <OperationalMigrationShell
+      title="Pelanggan"
+      subtitle="Registri pelanggan dan mitra komersial B2B"
+      actions={
+        <OperationalButton variant="primary" onClick={openCreateModal}>
+          <Plus className="h-4 w-4" />
+          <span>Tambah Pelanggan</span>
+        </OperationalButton>
+      }
+    >
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Total Pelanggan"
+            value={customers.length}
+            helper="Registri pelanggan"
+            icon={<Building2 className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="Pelanggan Aktif"
+            value={activeCount}
+            helper="Mitra aktif"
+            icon={<Activity className="h-4 w-4" />}
+            tone="green"
+          />
+          <OperationalMetricCard
+            label="Segmen"
+            value={categories.length}
+            helper="Kategori pelanggan"
+            icon={<CreditCard className="h-4 w-4" />}
+            tone="purple"
+          />
+          <OperationalMetricCard
+            label="Kelengkapan Pajak"
+            value="100%"
+            helper="Cakupan NPWP"
+            icon={<ShieldCheck className="h-4 w-4" />}
+            tone="amber"
+          />
+        </OperationalMetricGrid>
+
+        <OperationalPanel className="flex items-center justify-between gap-4 w-full">
+          <div className="flex items-center gap-3">
+            <span className="status-dot bg-blue-500" />
+            <div>
+              <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
+                Partner Directory
+              </h3>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                {filteredCustomers.length} Records
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <OperationalInput
+              icon={<Search className="h-4 w-4" />}
+              placeholder="Cari pelanggan..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="md:w-72"
+            />
+          </div>
+        </OperationalPanel>
+
+        <OperationalDataTable
+          data={filteredCustomers}
+          columns={columns as any}
+          getRowId={(row: Customer) => row.id}
+          searchPlaceholder=""
+          enableSearch={false}
+          enableColumnVisibility={false}
+          loading={loading}
+          emptyMessage="Initializing Matrix..."
+        />
+      </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[700px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="p-6 bg-slate-800 text-white sticky top-0 z-10">
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-600/20 rounded-xl">
-                <UserCircle className="w-6 h-6 text-blue-400" />
-              </div>
+              <UserCircle className="w-6 h-6 text-blue-400" />
               <div>
-                <DialogTitle className="text-sm font-black uppercase tracking-tight">
+                <DialogTitle>
                   {editingCustomer ? "Edit Partner" : "Register Partner"}
                 </DialogTitle>
-                <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mt-1">B2B Commercial Ledger</p>
+                <DialogDescription>B2B Commercial Ledger</DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="operational-stack">
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Company Name <span className="text-red-500">*</span></label>
+              <OperationalField label="Company Name *">
                 <input
                   placeholder="e.g. PT GLOBAL SYNERGY"
                   value={formData.clientName}
                   onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                  className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase"
                   autoFocus
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Instansi / Brand</label>
+              </OperationalField>
+              <OperationalField label="Instansi / Brand">
                 <input
                   placeholder="e.g. Brand Cosmetics"
                   value={formData.instansi}
                   onChange={(e) => setFormData({ ...formData, instansi: e.target.value })}
-                  className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
                 />
-              </div>
+              </OperationalField>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Category</label>
+              <OperationalField label="Category">
                 <Select value={formData.categoryId} onValueChange={(v) => setFormData({ ...formData, categoryId: v ?? "" })}>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                    {categories.map(c => <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>)}
+                  <SelectContent>
+                    {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tax ID (NPWP)</label>
-                <input value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase" />
-              </div>
+              </OperationalField>
+              <OperationalField label="Tax ID (NPWP)">
+                <input value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} />
+              </OperationalField>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Email</label>
-                <input value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">No. Telepon / WA</label>
-                <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
+              <OperationalField label="Email">
+                <input value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+              </OperationalField>
+              <OperationalField label="No. Telepon / WA">
+                <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+              </OperationalField>
             </div>
 
             {/* Address Section */}
-            <div className="p-5 bg-emerald-600/5 border border-emerald-100 rounded-2xl space-y-4">
-              <h3 className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-2">
+            <div className="operational-panel p-5 space-y-4">
+              <h3 className="operational-section-title">
                 <MapPin className="w-3.5 h-3.5" />
                 Alamat & Wilayah
               </h3>
@@ -398,71 +425,65 @@ export default function MasterCustomersPage() {
                 onKotaChange={(v) => setFormData({ ...formData, kota: v })}
                 onKecamatanChange={(v) => setFormData({ ...formData, kecamatan: v })}
               />
-              <div className="space-y-2">
-                <label className="text-[9px] font-bold text-slate-400 uppercase">Alamat Detail</label>
+              <OperationalField label="Alamat Detail">
                 <textarea
                   placeholder="Jalan, RT/RW, Patokan gedung..."
                   value={formData.alamatDetail}
                   onChange={(e) => setFormData({ ...formData, alamatDetail: e.target.value })}
                   rows={2}
-                  className="w-full bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
                 />
-              </div>
+              </OperationalField>
             </div>
 
             {/* Sales Assignee */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Sales Assignee</label>
+            <OperationalField label="Sales Assignee">
               <Select value={formData.salesAssignee} onValueChange={(v) => setFormData({ ...formData, salesAssignee: v ?? "" })}>
-                <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                <SelectTrigger>
                   <SelectValue placeholder="Select BD/Sales Staff" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-60 overflow-y-auto">
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {users.map((u: any) => (
-                    <SelectItem key={u.id} value={u.fullName || u.name || u.id} className="text-xs font-bold uppercase">
+                    <SelectItem key={u.id} value={u.fullName || u.name || u.id}>
                       {u.fullName || u.name || u.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </OperationalField>
 
             {/* Financial */}
-            <div className="p-5 bg-blue-600/5 border border-blue-100 rounded-2xl space-y-4">
-              <h3 className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2">
+            <div className="operational-panel p-5 space-y-4">
+              <h3 className="operational-section-title">
                 <CreditCard className="w-3.5 h-3.5" />
                 Financial Liability
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Credit Limit</label>
+                <OperationalField label="Credit Limit">
                   <input
                     type="number"
                     value={formData.creditLimit}
                     onChange={(e) => setFormData({ ...formData, creditLimit: Number(e.target.value) })}
-                    className="w-full h-11 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Status</label>
+                </OperationalField>
+                <OperationalField label="Status">
                   <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v ?? "ACTIVE" })}>
-                    <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-xl text-xs font-bold">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                      <SelectItem value="ACTIVE" className="text-xs font-bold uppercase">Active</SelectItem>
-                      <SelectItem value="INACTIVE" className="text-xs font-bold uppercase">Inactive</SelectItem>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="INACTIVE">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </OperationalField>
               </div>
             </div>
 
-            <DialogFooter className="pt-4 gap-3">
-              <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>Discard</DnaButton>
-              <DnaButton variant="primary" type="submit">
+            <DialogFooter className="gap-3">
+              <OperationalButton variant="secondary" onClick={() => setIsModalOpen(false)}>Discard</OperationalButton>
+              <OperationalButton variant="primary" type="submit">
                 {editingCustomer ? "Update Partner" : "Register Partner"}
-              </DnaButton>
+              </OperationalButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -474,11 +495,11 @@ export default function MasterCustomersPage() {
           </DialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+            <OperationalButton variant="secondary" onClick={() => setShowConfirm(false)}>Batal</OperationalButton>
+            <OperationalButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</OperationalButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+    </OperationalMigrationShell>
   );
 }

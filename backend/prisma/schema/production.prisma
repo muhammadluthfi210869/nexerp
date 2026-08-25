@@ -1,29 +1,31 @@
 model ProductionPlan {
-  id               String                @id @default(uuid()) @db.Uuid
-  soId             String                @db.Uuid
-  adminId          String                @db.Uuid
-  batchNo          String                @unique
-  status           LifecycleStatus       @default(PLANNING)
-  apjStatus        ApprovalStatus        @default(WAITING)
-  apjNotes         String?
-  apjReleasedAt    DateTime?
-  apjSignatureUrl  String?
-  finishedGoods    FinishedGood?
-  isFirstPass      Boolean               @default(true)
-  formulaId        String?               @db.Uuid
-  formula          Formula?              @relation(fields: [formulaId], references: [id])
-  requisitions     MaterialRequisition[]
-  logs             ProductionLog[]       @relation("PlanLogs")
-  deletedAt        DateTime?
-  admin            User                  @relation("ProdAdmin", fields: [adminId], references: [id])
-  so               SalesOrder            @relation(fields: [soId], references: [id], onDelete: Cascade)
-  stepLogs         ProductionStepLog[]
-  workOrders       WorkOrder[]
-  journalEntries   JournalEntry[]
-  kpiLogs          KpiPointLog[]
-  rejectExecutions RejectExecution[]
-  copqrecords      COPQRecord[]
-  auditEscalations AuditEscalation[]
+  id                     String                    @id @default(uuid()) @db.Uuid
+  soId                   String                    @db.Uuid
+  adminId                String                    @db.Uuid
+  batchNo                String                    @unique
+  status                 LifecycleStatus           @default(PLANNING)
+  apjStatus              ApprovalStatus            @default(WAITING)
+  apjNotes               String?
+  apjReleasedAt          DateTime?
+  apjSignatureUrl        String?
+  finishedGoods          FinishedGood?
+  isFirstPass            Boolean                   @default(true)
+  formulaId              String?                   @db.Uuid
+  formulaVersionSnapshot Int?
+  formula                Formula?                  @relation(fields: [formulaId], references: [id])
+  requisitions           MaterialRequisition[]
+  logs                   ProductionLog[]           @relation("PlanLogs")
+  deletedAt              DateTime?
+  admin                  User                      @relation("ProdAdmin", fields: [adminId], references: [id])
+  so                     SalesOrder                @relation(fields: [soId], references: [id], onDelete: Cascade)
+  stepLogs               ProductionStepLog[]
+  workOrders             WorkOrder[]
+  journalEntries         JournalEntry[]
+  kpiLogs                KpiPointLog[]
+  rejectExecutions       RejectExecution[]
+  copqrecords            COPQRecord[]
+  auditEscalations       AuditEscalation[]
+  materialUsages         ProductionMaterialUsage[]
 
   @@index([soId, status])
   @@map("production_plans")
@@ -76,12 +78,42 @@ model ProductionStepLog {
   @@map("production_step_logs")
 }
 
+model ProductionMaterialUsage {
+  id          String             @id @default(uuid()) @db.Uuid
+  planId      String             @db.Uuid
+  workOrderId String?            @db.Uuid
+  materialId  String             @db.Uuid
+  inventoryId String?            @db.Uuid
+  qtySent     Decimal            @default(0) @db.Decimal(15, 3)
+  qtyUsed     Decimal            @default(0) @db.Decimal(15, 3)
+  qtyReturned Decimal            @default(0) @db.Decimal(15, 3)
+  variance    Decimal            @default(0) @db.Decimal(15, 3)
+  uom         String?
+  reason      String?
+  commandKey  String?            @unique
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  plan        ProductionPlan     @relation(fields: [planId], references: [id])
+  material    MaterialItem       @relation(fields: [materialId], references: [id])
+  inventory   MaterialInventory? @relation(fields: [inventoryId], references: [id])
+
+  @@index([planId, materialId])
+  @@map("production_material_usages")
+}
+
 model FinishedGood {
-  id        String          @id @default(uuid()) @db.Uuid
-  woId      String?         @unique @db.Uuid
-  stockQty  Decimal         @default(0) @db.Decimal(15, 3)
-  updatedAt DateTime        @updatedAt
-  wo        ProductionPlan? @relation(fields: [woId], references: [id])
+  id                     String          @id @default(uuid()) @db.Uuid
+  woId                   String?         @unique @db.Uuid
+  stockQty               Decimal         @default(0) @db.Decimal(15, 3)
+  lotNumber              String?         @unique
+  formulaId              String?         @db.Uuid
+  formulaVersionSnapshot Int?
+  qcStatus               String          @default("HOLD")
+  availability           String          @default("UNAVAILABLE")
+  postedCommandKey       String?         @unique
+  updatedAt              DateTime        @updatedAt
+  wo                     ProductionPlan? @relation(fields: [woId], references: [id])
+  formula                Formula?        @relation(fields: [formulaId], references: [id])
 
   @@map("finished_goods")
 }
@@ -207,6 +239,7 @@ model ProductionLog {
   operator               User?              @relation("ProductionOperator", fields: [operatorId], references: [id])
   downtimeMinutes        Int                @default(0)
   notes                  String?
+  executionCommandKey    String?            @unique
   laborCost              Decimal?           @db.Decimal(15, 2)
   overheadCost           Decimal?           @db.Decimal(15, 2)
   actualLaborRate        Decimal?           @db.Decimal(10, 2)
@@ -268,37 +301,61 @@ model ShipmentItem {
   qtyShipped Decimal      @db.Decimal(15, 2)
   material   MaterialItem @relation(fields: [materialId], references: [id])
   shipment   Shipment     @relation(fields: [shipmentId], references: [id])
+  consumedLots ShipmentConsumedLot[]
 
   @@map("shipment_items")
 }
 
+/// R2 FINAL: durable FinishedGood lot lineage for each SHIPPED decrement.
+/// Created via additive migration `20260824200000_r2_shipment_lot_lineage`.
+model ShipmentConsumedLot {
+  id             String       @id @default(uuid()) @db.Uuid
+  shipmentId     String       @db.Uuid
+  shipmentItemId String       @db.Uuid
+  finishedGoodId String       @db.Uuid
+  qtyRemoved     Decimal      @default(0) @db.Decimal(15, 3)
+  createdAt      DateTime     @default(now())
+  shipmentItem   ShipmentItem @relation(fields: [shipmentItemId], references: [id])
+
+  @@index([shipmentId])
+  @@index([finishedGoodId])
+  @@index([shipmentItemId])
+  @@map("shipment_consumed_lots")
+}
+
 model MaterialRequisitionHeader {
-  id            String                    @id @default(uuid()) @db.Uuid
-  reqNumber     String                    @unique
-  requestDate   DateTime                  @default(now())
-  fromWarehouse String                    @db.Uuid
-  toWarehouse   String                    @db.Uuid
-  notes         String?
-  status        RequisitionHeaderStatus   @default(PENDING)
-  createdById   String                    @db.Uuid
-  createdAt     DateTime                  @default(now())
-  updatedAt     DateTime                  @updatedAt
-  items         MaterialRequisitionItem[]
-  requester     User                      @relation("RequisitionRequester", fields: [createdById], references: [id])
-  fromWh        Warehouse                 @relation("FromWarehouse", fields: [fromWarehouse], references: [id])
-  toWh          Warehouse                 @relation("ToWarehouse", fields: [toWarehouse], references: [id])
+  id               String                    @id @default(uuid()) @db.Uuid
+  reqNumber        String                    @unique
+  requestDate      DateTime                  @default(now())
+  fromWarehouse    String                    @db.Uuid
+  toWarehouse      String                    @db.Uuid
+  notes            String?
+  status           RequisitionHeaderStatus   @default(PENDING)
+  createdById      String                    @db.Uuid
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  /// Command keys make the real warehouse send/return actions retry-safe.
+  /// A requisition remains the request document; stock changes only on send.
+  issueCommandKey  String?                   @unique
+  returnCommandKey String?                   @unique
+  items            MaterialRequisitionItem[]
+  requester        User                      @relation("RequisitionRequester", fields: [createdById], references: [id])
+  fromWh           Warehouse                 @relation("FromWarehouse", fields: [fromWarehouse], references: [id])
+  toWh             Warehouse                 @relation("ToWarehouse", fields: [toWarehouse], references: [id])
 
   @@map("material_requisition_headers")
 }
 
 model MaterialRequisitionItem {
-  id         String                    @id @default(uuid()) @db.Uuid
-  headerId   String                    @db.Uuid
-  materialId String                    @db.Uuid
-  qty        Decimal                   @db.Decimal(15, 3)
-  notes      String?
-  header     MaterialRequisitionHeader @relation(fields: [headerId], references: [id], onDelete: Cascade)
-  material   MaterialItem              @relation(fields: [materialId], references: [id])
+  id          String                    @id @default(uuid()) @db.Uuid
+  headerId    String                    @db.Uuid
+  materialId  String                    @db.Uuid
+  qty         Decimal                   @db.Decimal(15, 3)
+  qtyIssued   Decimal                   @default(0) @db.Decimal(15, 3)
+  qtyReturned Decimal                   @default(0) @db.Decimal(15, 3)
+  notes       String?
+  header      MaterialRequisitionHeader @relation(fields: [headerId], references: [id], onDelete: Cascade)
+  material    MaterialItem              @relation(fields: [materialId], references: [id])
 
   @@map("material_requisition_items")
 }

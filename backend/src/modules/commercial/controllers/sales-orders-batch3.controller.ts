@@ -16,13 +16,13 @@ import { Batch3CreateSODto, Batch3AmendSODto } from '../dto/batch3-sales-order.d
 import { LegalityBatch3Service } from '../../legality/legality-batch3.service';
 
 /**
- * BATCH 3 — Sales Order operational endpoints.
+ * BATCH 3 — Sales Order operational endpoints (corrected).
  *
  * Mounted at /commercial/sales-orders/batch3.
  *
  * Authorization:
  *   - create / commit: COMMERCIAL + SUPER_ADMIN
- *   - amend: COMMERCIAL + SUPER_ADMIN (FINANCE can read history only)
+ *   - amend: COMMERCIAL + SUPER_ADMIN
  *   - getHistory / getHandoffContract: COMMERCIAL + FINANCE + SUPER_ADMIN
  *   - readiness probe: open to COMMERCIAL so the UI can decide before submit
  */
@@ -69,7 +69,7 @@ export class SalesOrdersBatch3Controller {
   }
 
   @Get(':id/handoff')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.FINANCE, UserRole.PURCHASING, UserRole.SCM)
   handoff(@Param('id') id: string) {
     return this.so.getHandoffContract(id);
   }

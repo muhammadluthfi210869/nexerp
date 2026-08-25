@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import AdjustmentClient from "./AdjustmentClient";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational";
 import { Zap, Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -19,7 +19,7 @@ export default function AdjustmentPage() {
         </div>
       </div>
     }>
-      <DashboardShell
+      <OperationalMigrationShell
         title="Stock"
         titleAccent="Adjustment"
         subtitle="Warehouse stock correction and adjustment portal."
@@ -30,7 +30,7 @@ export default function AdjustmentPage() {
         }
       >
         <AdjustmentClient />
-      </DashboardShell>
+      </OperationalMigrationShell>
     </Suspense>
   );
 }

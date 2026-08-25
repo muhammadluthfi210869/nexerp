@@ -45,7 +45,7 @@ import { IdGeneratorService } from '../src/modules/system/id-generator.service';
 import { CacheService } from '../src/shared/cache.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { PrismaModule } from '../src/prisma/prisma.module';
-import { RegStage, SOStatus } from '@prisma/client';
+import { RegStage, SOStatus, LegalApplicability, RegType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
 describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
@@ -199,6 +199,8 @@ describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
         aromaReq: 'test',
         stage: 'FORMULATING',
         rndId: testUserId,
+        legalApplicability: LegalApplicability.REQUIRED,
+        legalType: RegType.BPOM,
       },
     });
     // Three formulas — V1, V2 (superseded), V3 (current) — for INV-09/INV-10 tests
@@ -367,6 +369,8 @@ describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
   // ──────────────────────────────────────────────────────────────────
   describe('C. Sales Order with formula pinning', () => {
     it('C1. SO create pins formulaId and is idempotent (INV-06, INV-09)', async () => {
+      // Use the same idempotencyKey for both calls to prove retry-safety.
+      const idemKey = `c1-retry-${randomUUID()}`;
       const first = await so.createWithFormulaPinning(
         {
           leadId: testLeadId,
@@ -374,6 +378,7 @@ describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
           formulaId: testFormulaV3Id,
           quantity: 100,
           totalAmount: 5000,
+          idempotencyKey: idemKey,
           items: [{ productName: 'B3 Product', quantity: 100, unitPrice: 50 }],
         },
         testUserId,
@@ -390,6 +395,7 @@ describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
           formulaId: testFormulaV3Id,
           quantity: 100,
           totalAmount: 5000,
+          idempotencyKey: idemKey,
           items: [{ productName: 'B3 Product', quantity: 100, unitPrice: 50 }],
         },
         testUserId,
@@ -416,6 +422,9 @@ describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
 
     it('C3. legitimate repeat order with V1 is allowed (INV-07)', async () => {
       // Different formulaId (V1 vs V3) for the same sample — legitimate repeat order.
+      // NOTE: under the corrected idempotency model, omit the idempotencyKey so the
+      // repeat creates a NEW SO row (relying on different formulaId was the old
+      // discriminator — both are now valid).
       const repeat = await so.createWithFormulaPinning(
         {
           leadId: testLeadId,
@@ -462,6 +471,7 @@ describe('Batch 3 — Legalitas + SO + Change Control Golden Record', () => {
           aromaReq: 't',
           stage: 'APPROVED',
           rndId: testUserId,
+          legalApplicability: LegalApplicability.NOT_APPLICABLE,
         },
       });
       const altFormulaId = randomUUID();

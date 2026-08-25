@@ -24,8 +24,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, TableWrapper, StatCard, DnaBadge } from "@/components/dna";
+import {
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+} from "@/components/operational";
+import { OperationalInput } from "@/components/operational/OperationalUI";
 import {
   ClipboardList,
   FlaskConical,
@@ -37,6 +42,8 @@ import {
   Send,
   Loader2,
   Factory,
+  Search,
+  ArrowUpDown,
 } from "lucide-react";
 import Link from "next/link";
 import { WoDetailDrawer } from "@/components/production/WoDetailDrawer";
@@ -65,6 +72,9 @@ function OperationsContent() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [targetStage, setTargetStage] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [woSearch, setWoSearch] = useState("");
+  const [woSort, setWoSort] = useState<"woNumber" | "product" | "stage" | "progress" | "target">("woNumber");
+  const [woSortDir, setWoSortDir] = useState<"asc" | "desc">("asc");
 
   const { data: workOrders } = useQuery({
     queryKey: ["ops-work-orders"],
@@ -116,6 +126,30 @@ function OperationsContent() {
   const fillingList = Array.isArray(fillingSchedules) ? fillingSchedules : [];
   const packingList = Array.isArray(packingSchedules) ? packingSchedules : [];
 
+  const filteredWoList = React.useMemo(() => {
+    const q = woSearch.trim().toLowerCase();
+    const base = q
+      ? woList.filter((wo: any) =>
+          String(wo.woNumber || "").toLowerCase().includes(q) ||
+          String(wo.productName || wo.lead?.clientName || "").toLowerCase().includes(q)
+        )
+      : woList;
+    const progressRank = (s: string) => (s === "DONE" || s === "COMPLETED" ? 2 : s === "IN_PROGRESS" ? 1 : 0);
+    const sorted = [...base].sort((a: any, b: any) => {
+      let av: any = "";
+      let bv: any = "";
+      if (woSort === "woNumber") { av = a.woNumber || ""; bv = b.woNumber || ""; }
+      else if (woSort === "product") { av = a.productName || a.lead?.clientName || ""; bv = b.productName || b.lead?.clientName || ""; }
+      else if (woSort === "stage") { av = a.stage || a.status || ""; bv = b.stage || b.status || ""; }
+      else if (woSort === "progress") { av = progressRank(a.status); bv = progressRank(b.status); }
+      else if (woSort === "target") { av = Number(a.targetQty || 0); bv = Number(b.targetQty || 0); }
+      if (av < bv) return woSortDir === "asc" ? -1 : 1;
+      if (av > bv) return woSortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [woList, woSearch, woSort, woSortDir]);
+
   const handleProgressClick = (item: any, stage: string) => {
     setSelectedItem(item);
     setTargetStage(stage);
@@ -150,20 +184,35 @@ function OperationsContent() {
 
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          <StatCard label={`Total ${stageName}`} value={items.length} />
-          <StatCard label="In Progress" value={items.filter((i: any) => i.status === "IN_PROGRESS").length} />
-          <StatCard label="Done" value={items.filter((i: any) => i.status === "DONE" || i.status === "COMPLETED").length} />
-        </div>
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label={`Total ${stageName}`}
+            value={items.length}
+            icon={<ClipboardList className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="In Progress"
+            value={items.filter((i: any) => i.status === "IN_PROGRESS").length}
+            icon={<Clock className="h-4 w-4" />}
+            tone="amber"
+          />
+          <OperationalMetricCard
+            label="Done"
+            value={items.filter((i: any) => i.status === "DONE" || i.status === "COMPLETED").length}
+            icon={<ClipboardList className="h-4 w-4" />}
+            tone="green"
+          />
+        </OperationalMetricGrid>
 
-        <DataCard>
+        <OperationalPanel>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Icon className="h-4 w-4 text-slate-400" />
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{stageName} Schedule</h3>
             </div>
           </div>
-          <TableWrapper>
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100">
@@ -197,7 +246,7 @@ function OperationsContent() {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-xs text-slate-600">
-                          {item.workOrder?.woNumber || item.woNumber || "-"}
+                          {item.workOrder?.woNumber || item.woNumber || "—"}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <DropdownMenu>
@@ -242,7 +291,7 @@ function OperationsContent() {
                           {status !== "DONE" && (
                             <button
                               onClick={() => handleProgressClick(item, status === "NOT_STARTED" ? "IN_PROGRESS" : "DONE")}
-                              className="h-8 px-4 rounded-xl font-black uppercase text-[9px] bg-blue-600 hover:bg-blue-700 text-white"
+                              className="operational-button is-primary h-8 px-4 text-[9px]"
                             >
                               {status === "NOT_STARTED" ? "Start" : "Complete"}
                             </button>
@@ -254,56 +303,101 @@ function OperationsContent() {
                 )}
               </tbody>
             </table>
-          </TableWrapper>
-        </DataCard>
+          </div>
+        </OperationalPanel>
       </div>
     );
   };
 
   return (
-    <DashboardShell
-      title="Operasional"
-      titleAccent="Produksi"
+    <OperationalPageShell
+      title="Operasional Produksi"
       subtitle="Work orders & progress tracking"
     >
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-14 w-full bg-slate-100 rounded-2xl p-1 border border-slate-200">
-          <TabsTrigger value="work-orders" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
+          <TabsTrigger value="work-orders" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
             <ClipboardList className="mr-2 h-4 w-4" />
             Work Orders
           </TabsTrigger>
-          <TabsTrigger value="mixing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
+          <TabsTrigger value="mixing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
             <FlaskConical className="mr-2 h-4 w-4" />
             Mixing
           </TabsTrigger>
-          <TabsTrigger value="filling" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
+          <TabsTrigger value="filling" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
             <Droplets className="mr-2 h-4 w-4" />
             Filling
           </TabsTrigger>
-          <TabsTrigger value="packing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
+          <TabsTrigger value="packing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
             <Package className="mr-2 h-4 w-4" />
             Packing
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="work-orders" className="mt-6 space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <StatCard label="Total WO" value={woList.length} />
-            <StatCard label="Active" value={woList.filter((w: any) => w.status === "IN_PROGRESS").length} />
-            <StatCard label="Finished" value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length} />
-          </div>
-          <DataCard>
-            <div className="flex justify-between items-center mb-4">
+          <OperationalMetricGrid>
+            <OperationalMetricCard
+              label="Total WO"
+              value={woList.length}
+              icon={<ClipboardList className="h-4 w-4" />}
+              tone="blue"
+            />
+            <OperationalMetricCard
+              label="Active"
+              value={woList.filter((w: any) => w.status === "IN_PROGRESS").length}
+              icon={<Clock className="h-4 w-4" />}
+              tone="amber"
+            />
+            <OperationalMetricCard
+              label="Finished"
+              value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length}
+              icon={<ClipboardList className="h-4 w-4" />}
+              tone="green"
+            />
+          </OperationalMetricGrid>
+          <OperationalPanel>
+            <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Daftar Work Orders</h3>
-              <Link href="/production/work-orders" className="flex items-center gap-1 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800">
-                Kelola WO <ArrowRight className="h-3 w-3" />
-              </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="w-56">
+                  <OperationalInput
+                    placeholder="Cari WO / produk..."
+                    icon={<Search className="h-4 w-4" />}
+                    value={woSearch}
+                    onChange={(e) => setWoSearch(e.target.value)}
+                  />
+                </div>
+                <select
+                  value={woSort}
+                  onChange={(e) => setWoSort(e.target.value as typeof woSort)}
+                  className="h-9 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-black uppercase text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Sort Work Orders"
+                >
+                  <option value="woNumber">Sort: WO</option>
+                  <option value="product">Sort: Produk</option>
+                  <option value="stage">Sort: Stage</option>
+                  <option value="progress">Sort: Progress</option>
+                  <option value="target">Sort: Target</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setWoSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+                  className="h-9 w-9 grid place-items-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                  aria-label="Toggle sort direction"
+                  title={`Sort ${woSortDir === "asc" ? "ascending" : "descending"} — click to toggle`}
+                >
+                  <ArrowUpDown className="h-3.5 w-3.5" />
+                </button>
+                <Link href="/production/work-orders" className="flex items-center gap-1 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800">
+                  Kelola WO <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             </div>
-            <TableWrapper>
+            <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">WO</th>
+                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">WO</th>
                     <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Produk</th>
                     <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Stage</th>
                     <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Progress</th>
@@ -311,9 +405,9 @@ function OperationsContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {woList.slice(0, 15).map((wo: any) => (
+                  {filteredWoList.slice(0, 15).map((wo: any) => (
                     <tr key={wo.id} className="border-b border-slate-50 hover:bg-slate-50">
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center">
                             <Factory className="h-4 w-4 text-slate-500" />
@@ -321,22 +415,22 @@ function OperationsContent() {
                           <span className="text-xs font-black text-slate-900">{wo.woNumber || wo.id?.slice(0, 8)}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-xs text-slate-600">{wo.productName || wo.lead?.clientName || "-"}</td>
+                      <td className="py-3 px-4 text-xs text-slate-600">{wo.productName || wo.lead?.clientName || "—"}</td>
                       <td className="py-3 px-4">
-                        <DnaBadge status={wo.stage === "FINISHED_GOODS" ? "success" : wo.status === "IN_PROGRESS" ? "warning" : "default"}>
+                        <span className={`operational-status-badge is-${wo.stage === "FINISHED_GOODS" ? "success" : wo.status === "IN_PROGRESS" ? "pending" : "neutral"}`}>
                           {wo.stage || wo.status || "PLANNING"}
-                        </DnaBadge>
+                        </span>
                       </td>
                       <td className="py-3 px-4 text-center">
                         {wo.stage === "FINISHED_GOODS" || wo.status === "DONE" ? (
-                          <DnaBadge status="success">Done</DnaBadge>
+                          <span className="operational-status-badge is-success">Done</span>
                         ) : wo.status === "IN_PROGRESS" ? (
-                          <DnaBadge status="warning">In Progress</DnaBadge>
+                          <span className="operational-status-badge is-pending">In Progress</span>
                         ) : (
-                          <DnaBadge status="default">Not Started</DnaBadge>
+                          <span className="operational-status-badge is-neutral">Not Started</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right text-xs text-slate-600">{wo.targetQty || "-"}</td>
+                      <td className="py-3 px-4 text-right text-xs text-slate-600">{wo.targetQty || "—"}</td>
                     </tr>
                   ))}
                   {woList.length === 0 && (
@@ -344,10 +438,20 @@ function OperationsContent() {
                       <td colSpan={5} className="py-8 text-center text-xs text-slate-400">Belum ada work orders</td>
                     </tr>
                   )}
+                  {woList.length > 0 && filteredWoList.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-xs text-slate-400">Tidak ada WO yang cocok dengan "{woSearch}"</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
-            </TableWrapper>
-          </DataCard>
+            </div>
+            {woList.length > 15 && (
+              <div className="mt-3 text-center text-[10px] font-bold uppercase text-slate-400">
+                Menampilkan 15 dari {filteredWoList.length} WO · kelola lengkap di halaman WO
+              </div>
+            )}
+          </OperationalPanel>
         </TabsContent>
 
         <TabsContent value="mixing" className="mt-6">
@@ -411,14 +515,14 @@ function OperationsContent() {
                 setSelectedItem(null);
                 setTargetStage("");
               }}
-              className="h-10 px-5 rounded-xl font-black uppercase text-[10px] text-slate-500 hover:bg-slate-100"
+              className="operational-button is-secondary h-10 px-5 text-[10px]"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmUpdate}
               disabled={updateStageMutation.isPending}
-              className="h-10 px-5 rounded-xl font-black uppercase text-[10px] bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              className="operational-button is-primary h-10 px-5 text-[10px] flex items-center gap-2"
             >
               {updateStageMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <Send className="h-3.5 w-3.5" />
@@ -427,7 +531,7 @@ function OperationsContent() {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }
 

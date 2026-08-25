@@ -48,6 +48,8 @@ export class ProductionPlansService {
           batchNo,
           status: dto.status || 'PLANNING',
           adminId: userId,
+          formulaId: formula.id,
+          formulaVersionSnapshot: formula.version,
         },
       });
 
@@ -84,6 +86,7 @@ export class ProductionPlansService {
         admin: { select: { fullName: true } },
         requisitions: { include: { material: true } },
         logs: true,
+        finishedGoods: true,
       },
       orderBy: { batchNo: 'asc' },
     });
@@ -109,6 +112,15 @@ export class ProductionPlansService {
 
       // [INVENTORY TRIGGER: INCREASE Finished Goods]
       if (dto.status === LifecycleStatus.DONE) {
+        const audits = await tx.qCAudit.findMany({
+          where: { stepLog: { woId: id }, phase: { in: ['MIXING', 'FILLING', 'PACKING', 'FINAL'] } },
+        });
+        for (const phase of ['MIXING', 'FILLING', 'PACKING', 'FINAL']) {
+          const audit = audits.find((a: any) => a.phase === phase);
+          if (!audit || audit.status !== 'GOOD') {
+            throw new Error(`QC_GATE_BLOCKED: ${phase} QC must pass before completion.`);
+          }
+        }
         // Calculate total yield from final logs (PACKING stage)
         const packingLogs = (plan as any).logs.filter(
           (log: any) => log.stage === 'PACKING',
@@ -121,10 +133,20 @@ export class ProductionPlansService {
         // Upsert Finished Good entry
         await tx.finishedGood.upsert({
           where: { woId: id },
-          update: { stockQty: totalYield },
+          update: {
+            stockQty: totalYield,
+            formulaId: plan.formulaId,
+            formulaVersionSnapshot: plan.formulaVersionSnapshot,
+            qcStatus: 'RELEASED',
+            availability: 'AVAILABLE',
+          },
           create: {
             woId: id,
             stockQty: totalYield,
+            formulaId: plan.formulaId,
+            formulaVersionSnapshot: plan.formulaVersionSnapshot,
+            qcStatus: 'RELEASED',
+            availability: 'AVAILABLE',
           },
         });
       }

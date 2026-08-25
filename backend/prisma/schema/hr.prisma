@@ -1,51 +1,51 @@
 model Employee {
-  id              String       @id @default(uuid()) @db.Uuid
-  userId          String?      @unique @db.Uuid
-  name            String
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String?      @unique @db.Uuid
+  name                String
   // Identity & Demographics
-  nik             String?      @unique
-  birthDate       DateTime?
-  gender          String?      // L / P
-  religion        String?
-  maritalStatus   String?      // SINGLE / MARRIED / DIVORCED / WIDOWED
+  nik                 String?      @unique
+  birthDate           DateTime?
+  gender              String? // L / P
+  religion            String?
+  maritalStatus       String? // SINGLE / MARRIED / DIVORCED / WIDOWED
   // Contact
-  phone           String?
-  address         String?
-  emergencyContact  String?
-  emergencyPhone    String?
+  phone               String?
+  address             String?
+  emergencyContact    String?
+  emergencyPhone      String?
   // Legal & Finance
-  npwp            String?
-  bpjsKesehatan   String?
+  npwp                String?
+  bpjsKesehatan       String?
   bpjsKetenagakerjaan String?
-  bankName        String?
-  bankAccount     String?
-  bankHolder      String?
+  bankName            String?
+  bankAccount         String?
+  bankHolder          String?
   // Education
-  education       String?      // SD / SMP / SMA / D3 / S1 / S2
-  major           String?
+  education           String? // SD / SMP / SMA / D3 / S1 / S2
+  major               String?
   // Salary & Contract
-  baseSalary      String?      // Encrypted (AES-256-GCM)
-  joinedAt        DateTime
-  contractEnd     DateTime?
-  contractType    ContractType @default(CONTRACT)
-  resignDate      DateTime?
-  resignReason    String?
-  isActive        Boolean      @default(true)
+  baseSalary          String? // Encrypted (AES-256-GCM)
+  joinedAt            DateTime
+  contractEnd         DateTime?
+  contractType        ContractType @default(CONTRACT)
+  resignDate          DateTime?
+  resignReason        String?
+  isActive            Boolean      @default(true)
   // Reporting structure
-  managerId       String?      @db.Uuid
+  managerId           String?      @db.Uuid
   // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
-  user            User?                 @relation(fields: [userId], references: [id])
-  manager         Employee?             @relation("EmployeeManagerRelation", fields: [managerId], references: [id])
-  subordinates    Employee[]            @relation("EmployeeManagerRelation")
-  roles           EmployeeRoleMapping[]
-  kpiScores       KpiScore[]
-  kpiPointLogs    KpiPointLog[]
-  attendances     Attendance[]
-  tickets         Ticket[]
-  payrollItems    PayrollItem[]
+  user         User?                 @relation(fields: [userId], references: [id])
+  manager      Employee?             @relation("EmployeeManagerRelation", fields: [managerId], references: [id])
+  subordinates Employee[]            @relation("EmployeeManagerRelation")
+  roles        EmployeeRoleMapping[]
+  kpiScores    KpiScore[]
+  kpiPointLogs KpiPointLog[]
+  attendances  Attendance[]
+  tickets      Ticket[]
+  payrollItems PayrollItem[]
 
   @@map("employees")
 }
@@ -107,8 +107,8 @@ model KpiScore {
   periodId        String          @db.Uuid
   period          FinancialPeriod @relation(fields: [periodId], references: [id])
   finalScore      Float
-  subjectiveScore Float?          // The 30% part
-  objectiveScore  Float?          // The 70% part
+  subjectiveScore Float? // The 30% part
+  objectiveScore  Float? // The 70% part
   metricsData     Json
   createdAt       DateTime        @default(now())
 

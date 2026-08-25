@@ -281,6 +281,20 @@ export class BussdevController {
     return this.bussdevService.updateLead(id, dto);
   }
 
+  // Day-1 follow-up: minimal canonical mutation. Frontend BusDev
+  // workspace calls PATCH /bussdev/lead/:id/follow-up to mark the next
+  // follow-up state. We persist on the lead itself (followUp field)
+  // and emit an activity-stream event for audit visibility.
+  @Patch('lead/:id/follow-up')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update follow-up status for a lead' })
+  updateFollowUp(
+    @Param('id') id: string,
+    @Body() body: { fuStatus: string; note?: string; nextAt?: string },
+  ) {
+    return this.bussdevService.updateFollowUp(id, body);
+  }
+
   @Delete('lead/:id')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete a lead' })

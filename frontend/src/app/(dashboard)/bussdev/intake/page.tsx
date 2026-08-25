@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DnaInput, DnaButton, SectionLabel, DnaBadge } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,17 +24,21 @@ import {
   Loader2,
   Phone,
   DollarSign,
-  CheckCircle2,
-  Shield,
+  ShieldCheck,
   Calculator,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 
-import { FormShell } from "@/components/layout/FormShell";
-import { SectionDivider } from "@/components/layout/SectionDivider";
+import {
+  OperationalButton,
+  OperationalField,
+  OperationalInput,
+  OperationalPageShell,
+  OperationalPanel,
+} from "@/components/operational";
 import { useAuth } from "@/hooks/useAuth";
 
 const SOURCES = ["Instagram", "TikTok", "TikTok Ads", "Referral", "Website", "Offline Event", "WhatsApp"];
+const CATEGORIES = ["SKINCARE", "BODYCARE", "BABYCARE", "HAIRCARE", "DECORATIVE", "PARFUM"];
 
 export default function LeadIntakePage() {
   const queryClient = useQueryClient();
@@ -70,12 +74,12 @@ export default function LeadIntakePage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Lead registered successfully!");
+      toast.success("Lead berhasil didaftarkan.");
       queryClient.invalidateQueries({ queryKey: ["bussdev-leads"] });
       window.location.href = "/bussdev/pipeline";
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Registration failed.");
+      toast.error(error.response?.data?.message || "Pendaftaran gagal.");
     },
   });
 
@@ -111,132 +115,163 @@ export default function LeadIntakePage() {
   };
 
   return (
-    <FormShell
-      title="Client"
-      titleAccent="Intake"
-      subtitle="Prospect Registration & Workload Assignment Protocol"
+    <OperationalPageShell
+      title="Intake Klien"
+      subtitle="Pendaftaran prospek & penugasan workload BusDev"
       actions={
         <DnaBadge status="default" className="bg-white border-slate-200 text-slate-500">
-          Lead Registration
+          Pendaftaran Lead
         </DnaBadge>
       }
-      sidebar={
-        <div className="animate-fade-slide-in space-y-6">
-          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-6">
-            <SectionLabel as="h3" className="flex items-center gap-2 text-slate-400">
-              <Shield size={12} className="text-blue-500" /> Internal Logistics
-            </SectionLabel>
-
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black text-slate-400 uppercase">Assignment</Label>
-              <Select
-                name="picId"
-                value={selectedPic || ""}
-                onValueChange={(val) => val && setSelectedPic(val)}
-              >
-                <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase">
-                  <SelectValue placeholder="Detecting..." />
-                </SelectTrigger>
-                <SelectContent className="font-black text-[11px] uppercase">
-                  <SelectItem value="AUTO">AUTO-BALANCE</SelectItem>
-                  {staffs?.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <DnaButton
-              onClick={() => (document.getElementById('intake-form') as HTMLFormElement)?.requestSubmit()}
-              variant="secondary"
-              size="lg"
-              className="w-full"
-              disabled={createLeadMutation.isPending}
-            >
-              {createLeadMutation.isPending ? <Loader2 className="animate-spin" /> : "Commit Lead Registry"}
-            </DnaButton>
-          </div>
-
-          <Card className="rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-10">
-              <CheckCircle2 size={100} className="text-blue-500" />
-            </div>
-            <div className="relative z-10 space-y-3">
-              <h4 className="text-xs font-black uppercase italic text-slate-800">SLA Protocol</h4>
-              <p className="text-[9px] font-medium text-slate-400 uppercase leading-relaxed">
-                Response must be initiated within 24 hours of submission.
-              </p>
-            </div>
-          </Card>
-        </div>
-      }
     >
-      <form id="intake-form" onSubmit={handleSubmit} className="animate-fade-slide-in space-y-6">
-        {/* Section 1: Client Identity */}
-        <div>
-          <SectionDivider number={1} title="CLIENT IDENTITY" accentColor="primary" />
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FormItem label="Legal Entity / Client Name" id="clientName" required>
-                <DnaInput id="clientName" name="clientName" required placeholder="PT. NAME" className="font-black uppercase text-xs" />
-              </FormItem>
-              <FormItem label="Brand Identity" id="brandName">
-                <DnaInput id="brandName" name="brandName" placeholder="BRAND NAME" className="font-black uppercase text-xs" />
-              </FormItem>
-              <FormItem label="Contact Channel" id="contactInfo" required>
-                <DnaInput id="contactInfo" name="contactInfo" required placeholder="+62" icon={<Phone className="h-4 w-4" />} className="font-black uppercase text-xs" />
-              </FormItem>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <form
+          id="intake-form"
+          onSubmit={handleSubmit}
+          className="lg:col-span-2 flex flex-col gap-4"
+        >
+          <OperationalPanel>
+            <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <h3 className="text-[13px] font-semibold text-slate-900">Identitas Klien</h3>
             </div>
-          </div>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <OperationalField label="Nama Klien / Entitas">
+                <DnaInput id="clientName" name="clientName" required placeholder="PT. Nama Klien" className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+              </OperationalField>
+              <OperationalField label="Identitas Brand">
+                <DnaInput id="brandName" name="brandName" placeholder="Nama Brand" className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+              </OperationalField>
+              <OperationalField label="Kontak">
+                <DnaInput id="contactInfo" name="contactInfo" required placeholder="+62" icon={<Phone className="h-4 w-4" />} className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+              </OperationalField>
+            </div>
+          </OperationalPanel>
 
-        {/* Section 2: Opportunity Analysis */}
-        <div>
-          <SectionDivider number={2} title="OPPORTUNITY ANALYSIS" accentColor="primary" />
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FormItem label="Lead Source" id="source" required>
+          <OperationalPanel>
+            <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+                <Calculator className="h-4 w-4" />
+              </div>
+              <h3 className="text-[13px] font-semibold text-slate-900">Analisis Peluang</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <OperationalField label="Sumber Lead">
                 <Select name="source" required>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase"><SelectValue placeholder="SELECT" /></SelectTrigger>
-                  <SelectContent className="font-black text-xs uppercase">{SOURCES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                </Select>
-              </FormItem>
-              <FormItem label="Product Interest" id="productInterest" required>
-                <DnaInput id="productInterest" name="productInterest" required placeholder="e.g. SERUM" className="font-black uppercase text-xs" />
-              </FormItem>
-              <FormItem label="Product Vertical" id="category" required>
-                <Select name="category" required>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase"><SelectValue placeholder="SELECT" /></SelectTrigger>
-                  <SelectContent className="font-black text-xs uppercase">
-                    {["SKINCARE", "BODYCARE", "BABYCARE", "HAIRCARE", "DECORATIVE", "PARFUM"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  <SelectTrigger className="h-9 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-700">
+                    <SelectValue placeholder="Pilih sumber" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SOURCES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
-              </FormItem>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FormItem label="Estimated MOQ (Pcs)" id="moq" required>
-                <DnaInput id="moq" name="moq" type="number" required placeholder="e.g. 1000" className="font-black uppercase text-xs" value={moq} onChange={(e) => setMoq(e.target.value)} />
-              </FormItem>
-              <FormItem label="HPP / Unit Price (Rp)" id="unitPrice" required>
-                <DnaInput id="unitPrice" name="unitPrice" type="number" required placeholder="e.g. 150000" icon={<DollarSign className="h-4 w-4" />} className="font-black uppercase text-xs" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} />
-              </FormItem>
-              <FormItem label="Estimated Value (MOQ × HPP)" id="estimatedValue">
+              </OperationalField>
+              <OperationalField label="Minat Produk">
+                <DnaInput id="productInterest" name="productInterest" required placeholder="Contoh: Serum" className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+              </OperationalField>
+              <OperationalField label="Kategori Produk">
+                <Select name="category" required>
+                  <SelectTrigger className="h-9 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-700">
+                    <SelectValue placeholder="Pilih kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </OperationalField>
+
+              <OperationalField label="Estimasi MOQ (Pcs)">
+                <DnaInput id="moq" name="moq" type="number" required placeholder="Contoh: 1000" className="h-9 rounded-md border-slate-200 text-[12px] font-medium" value={moq} onChange={(e) => setMoq(e.target.value)} />
+              </OperationalField>
+              <OperationalField label="HPP / Harga Satuan (Rp)">
+                <DnaInput id="unitPrice" name="unitPrice" type="number" required placeholder="Contoh: 150000" icon={<DollarSign className="h-4 w-4" />} className="h-9 rounded-md border-slate-200 text-[12px] font-medium" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} />
+              </OperationalField>
+              <OperationalField label="Nilai Estimasi (MOQ × HPP)">
                 <DnaInput
-                  id="estimatedValue" name="estimatedValue"
-                  value={(Number(moq) * Number(unitPrice) || 0).toLocaleString()}
+                  id="estimatedValue"
+                  name="estimatedValue"
+                  value={(() => {
+                    const m = Number(moq);
+                    const u = Number(unitPrice);
+                    if (!Number.isFinite(m) || !Number.isFinite(u)) return "—";
+                    const total = m * u;
+                    if (!Number.isFinite(total) || total <= 0) return "—";
+                    return total.toLocaleString();
+                  })()}
                   readOnly
                   icon={<Calculator className="h-4 w-4 text-blue-500" />}
-                  className="font-black uppercase text-xs bg-blue-50/50 border-blue-100 text-blue-900"
+                  className="h-9 rounded-md border-blue-100 bg-blue-50/50 text-blue-900 text-[12px] font-semibold"
                 />
-              </FormItem>
+              </OperationalField>
             </div>
-            <FormItem label="Brief / Requirements" id="notes">
-              <textarea id="notes" name="notes" placeholder="ADDITIONAL NOTES..." className="w-full h-20 bg-slate-50 border border-slate-200 rounded-xl p-4 font-medium text-xs text-slate-900 focus:outline-none focus:border-blue-500 transition-all resize-none" />
-            </FormItem>
-          </div>
-        </div>
 
-      </form>
+            <div className="mt-4">
+              <OperationalField label="Brief / Kebutuhan">
+                <textarea
+                  id="notes"
+                  name="notes"
+                  placeholder="Catatan tambahan..."
+                  className="min-h-[80px] w-full rounded-md border border-slate-200 bg-white p-3 text-[12px] font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </OperationalField>
+            </div>
+          </OperationalPanel>
+        </form>
+
+        <aside className="lg:col-span-1 flex flex-col gap-4 lg:sticky lg:top-4 self-start">
+          <OperationalPanel>
+            <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <h3 className="text-[13px] font-semibold text-slate-900">Penugasan Internal</h3>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Label className="mb-1.5 block text-[11px] font-medium text-slate-600">PIC</Label>
+                <Select
+                  name="picId"
+                  value={selectedPic || ""}
+                  onValueChange={(val) => val && setSelectedPic(val)}
+                >
+                  <SelectTrigger className="h-9 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-700">
+                    <SelectValue placeholder="Mendeteksi..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AUTO">Auto-balance</SelectItem>
+                    {staffs?.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <OperationalButton
+                type="button"
+                variant="primary"
+                onClick={() => (document.getElementById('intake-form') as HTMLFormElement)?.requestSubmit()}
+                disabled={createLeadMutation.isPending}
+                className="w-full"
+              >
+                {createLeadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Daftarkan Lead
+              </OperationalButton>
+            </div>
+          </OperationalPanel>
+
+          <OperationalPanel>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-blue-600" />
+              <h3 className="text-[13px] font-semibold text-slate-900">Protokol SLA</h3>
+            </div>
+            <p className="mt-2 text-[12px] leading-relaxed text-slate-600">
+              Respons harus dimulai dalam 24 jam setelah pengiriman.
+            </p>
+          </OperationalPanel>
+        </aside>
+      </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
@@ -250,15 +285,6 @@ export default function LeadIntakePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </FormShell>
-  );
-}
-
-function FormItem({ label, id, required, children }: { label: string; id: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="text-[10px] font-black uppercase text-slate-400 ml-1">{label} {required && <span className="text-red-500">*</span>}</Label>
-      {children}
-    </div>
+    </OperationalPageShell>
   );
 }

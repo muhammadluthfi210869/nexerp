@@ -32,7 +32,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
 import { TableWrapper, DnaBadge, DnaButton } from "@/components/dna";
 
 export default function RegulatoryPipelinePage() {
@@ -56,35 +57,34 @@ export default function RegulatoryPipelinePage() {
     mutationFn: ({ id, stage, notes }: any) => api.patch(`/legality/pipeline/${id}`, { currentStage: stage, notes }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["regulatory-pipeline"] });
-      toast.success("Pipeline synchronized");
+      toast.success("Pipeline berhasil disinkronkan");
     }
   });
 
   const stages = [
-    { value: "ALL", label: "All Projects" },
-    { value: "DRAFT", label: "Draft" },
-    { value: "SUBMITTED", label: "Submitted" },
-    { value: "EVALUATION", label: "Evaluation" },
-    { value: "REVISION", label: "Revision" },
-    { value: "PUBLISHED", label: "Published" },
+    { value: "ALL", label: "Semua Proyek" },
+    { value: "DRAFT", label: "Draf" },
+    { value: "SUBMITTED", label: "Diajukan" },
+    { value: "EVALUATION", label: "Evaluasi" },
+    { value: "REVISION", label: "Revisi" },
+    { value: "PUBLISHED", label: "Diterbitkan" },
   ];
 
   const getDnaStageBadge = (stage: string) => {
     switch (stage) {
-      case "DRAFT": return <DnaBadge status="default">DRAFT</DnaBadge>;
-      case "SUBMITTED": return <DnaBadge status="info">SUBMITTED</DnaBadge>;
-      case "EVALUATION": return <DnaBadge status="warning">EVALUATION</DnaBadge>;
-      case "REVISION": return <DnaBadge status="critical">REVISION</DnaBadge>;
-      case "PUBLISHED": return <DnaBadge status="success">PUBLISHED</DnaBadge>;
-      default: return <DnaBadge status="default">{stage}</DnaBadge>;
+      case "DRAFT": return <DnaBadge status="default">Draf</DnaBadge>;
+      case "SUBMITTED": return <DnaBadge status="info">Diajukan</DnaBadge>;
+      case "EVALUATION": return <DnaBadge status="warning">Evaluasi</DnaBadge>;
+      case "REVISION": return <DnaBadge status="critical">Revisi</DnaBadge>;
+      case "PUBLISHED": return <DnaBadge status="success">Diterbitkan</DnaBadge>;
+      default: return <DnaBadge status="default">{getOperationalStatusLabel(stage)}</DnaBadge>;
     }
   };
 
   return (
-    <DashboardShell
-      title="Regulatory"
-      titleAccent="Pipeline"
-      subtitle="Real-time product passport tracking & lifecycle management."
+    <OperationalMigrationShell
+      title="Pipeline Regulasi"
+      subtitle="Pelacakan paspor produk dan pengelolaan siklus hidup"
     >
       <div className="space-y-6 animate-fade-slide-in">
         <TableWrapper
@@ -95,7 +95,7 @@ export default function RegulatoryPipelinePage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input 
                   type="text"
-                  placeholder="SEARCH CLIENT OR BRAND..." 
+                  placeholder="Cari klien atau merek..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
@@ -126,18 +126,18 @@ export default function RegulatoryPipelinePage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PROJECT IDENTITY</th>
-                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">LIFECYCLE STAGE</th>
-                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">SMART-GATES</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PIC & CLIENT</th>
-                  <th className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">OPERATION</th>
+                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">Identitas Proyek</th>
+                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">Tahap Siklus Hidup</th>
+                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">Gerbang Validasi</th>
+                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PIC & Klien</th>
+                  <th className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">Operasi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Syncing regulatory pipeline...
+                      Memuat pipeline regulasi...
                     </td>
                   </tr>
                 ) : !pipelines || pipelines.length === 0 ? (
@@ -158,7 +158,7 @@ export default function RegulatoryPipelinePage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <DnaBadge status="info">{pipe.type}</DnaBadge>
-                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight leading-none">{pipe.registrationNo || "PENDING"}</span>
+                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight leading-none">{pipe.registrationNo || "Belum bernomor"}</span>
                               </div>
                               <h4 className="text-[11px] font-black italic tracking-tight text-slate-900 uppercase group-hover:text-blue-600 transition-colors leading-none">
                                 {pipe.lead?.brandName || pipe.lead?.clientName}
@@ -169,7 +169,7 @@ export default function RegulatoryPipelinePage() {
                         <td className="px-4 py-3 text-center">
                           {getDnaStageBadge(pipe.currentStage)}
                           <div className="mt-1 flex items-center justify-center gap-1 text-[8px] font-bold text-slate-300 uppercase leading-none">
-                            <Clock className="w-3.5 h-3.5" /> {pipe.daysInStage} Days
+                            <Clock className="w-3.5 h-3.5" /> {pipe.daysInStage} hari
                           </div>
                         </td>
                         <td className="px-4 py-3">
@@ -196,7 +196,7 @@ export default function RegulatoryPipelinePage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight leading-none">PIC: {pipe.legalPIC?.name || "Unassigned"}</span>
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight leading-none">PIC: {pipe.legalPIC?.name || "Belum ditugaskan"}</span>
                             <div className="flex items-center gap-1.5 text-slate-400">
                               <Building2 className="w-3 h-3 text-slate-300 shrink-0" />
                               <span className="text-[9px] font-bold uppercase truncate max-w-[120px] leading-none">{pipe.lead?.clientName}</span>
@@ -216,7 +216,7 @@ export default function RegulatoryPipelinePage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-xl p-1.5 shadow-xl">
                               <div className="px-2.5 py-1.5 border-b border-slate-50 mb-1">
-                                <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">Lifecycle Management</p>
+                                <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">Pengelolaan Siklus Hidup</p>
                               </div>
                               {stages.slice(1).map((s) => (
                                 <DropdownMenuItem 
@@ -224,7 +224,7 @@ export default function RegulatoryPipelinePage() {
                                   onClick={() => updateStageMutation.mutate({ id: pipe.id, stage: s.value })}
                                   className="p-2.5 rounded-lg cursor-pointer text-[10px] font-black uppercase tracking-tight italic gap-2 hover:bg-blue-50 hover:text-blue-600 outline-none"
                                 >
-                                  <ArrowRight className="w-3.5 h-3.5" /> Move to {s.label}
+                                  <ArrowRight className="w-3.5 h-3.5" /> Pindahkan ke {s.label}
                                 </DropdownMenuItem>
                               ))}
                               <DropdownMenuSeparator className="bg-slate-50" />
@@ -232,7 +232,7 @@ export default function RegulatoryPipelinePage() {
                                 onClick={() => setSelectedPipeline(pipe)}
                                 className="p-2.5 rounded-lg cursor-pointer text-[10px] font-black uppercase tracking-tight italic gap-2 hover:bg-slate-50 outline-none"
                               >
-                                <History className="w-4 h-4 text-slate-400" /> Audit Trail
+                                <History className="w-4 h-4 text-slate-400" /> Jejak Audit
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -267,7 +267,7 @@ export default function RegulatoryPipelinePage() {
                 </div>
                 <div className="pb-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <DnaBadge status="info">{log.stage}</DnaBadge>
+                    <DnaBadge status="info">{getOperationalStatusLabel(log.stage)}</DnaBadge>
                     <span className="text-[8px] font-black text-slate-300 uppercase leading-none">{new Date(log.date).toLocaleString()}</span>
                   </div>
                   <p className="text-xs font-bold text-slate-500 italic uppercase">{log.notes}</p>
@@ -277,6 +277,6 @@ export default function RegulatoryPipelinePage() {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

@@ -49,7 +49,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
 import { EmptyState } from "@/components/empty-state";
 
 export default function ReceivingPage() {
@@ -57,26 +58,32 @@ export default function ReceivingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState("");
   const [doRef, setDoRef] = useState("");
-  const [invoiceNo, setInvoiceNo] = useState("");
-  const [arrivalDate, setArrivalDate] = useState("");
-  const [taxTreatment, setTaxTreatment] = useState("PPN_11");
+  const [receivedQtys, setReceivedQtys] = useState<Record<string, string>>({});
   
   const { data: purchaseOrders } = useQuery({
     queryKey: ["approved-po"],
     queryFn: async () => {
       const res = await api.get("/scm/purchase-orders");
       return (unwrapResponse(res) || [])
-        .filter((po: any) => po.status === 'ORDERED' || po.status === 'PARTIAL')
+        .filter((po: any) => po.status === 'ORDERED' || po.status === 'SHIPPED')
         .map((po: any) => ({
-          id: po.poNumber || po.id,
+          id: po.id,
+          number: po.poNumber || po.id,
           vendor: po.supplier?.name || '-',
           items: (po.items || []).map((i: any) => ({
+            materialId: i.materialId,
             name: i.material?.name || '-',
             qty: Number(i.quantity || 0),
+            receivedQty: Number(i.receivedQty || 0),
             unit: i.material?.unit || 'PCS',
           })),
         }));
     }
+  });
+
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ["receiving-warehouses"],
+    queryFn: async () => unwrapResponse(await api.get("/warehouse/warehouses")) || [],
   });
 
   const { data: receipts, isLoading } = useQuery({
@@ -84,12 +91,13 @@ export default function ReceivingPage() {
     queryFn: async () => {
       const res = await api.get("/scm/inbounds");
       return (unwrapResponse(res) || []).map((grn: any) => ({
+        receiptId: grn.id,
         id: grn.inboundNumber || grn.id,
         poId: grn.po?.poNumber || grn.poId || '-',
         vendor: grn.po?.supplier?.name || '-',
         date: grn.receivedAt ? new Date(grn.receivedAt).toISOString().split('T')[0] : '-',
-        status: grn.status === 'APPROVED' ? 'VERIFIED' : 'PENDING',
-        qc: grn.status === 'APPROVED' ? 'PASSED' : 'WAITING',
+        status: grn.status === 'APPROVED' ? 'POSTED' : grn.status,
+        qc: grn.items?.every((item: any) => item.qcStatus === 'GOOD') ? 'PASSED' : grn.status === 'APPROVED' ? 'QUARANTINE' : 'WAITING',
       }));
     }
   });
@@ -109,6 +117,11 @@ export default function ReceivingPage() {
       toast.error(err.response?.data?.message || "Failed to register GRN.");
     }
   });
+  const postGRNMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/scm/inbounds/${id}/status`, { status: "APPROVED" }),
+    onSuccess: () => { toast.success("Goods Receipt posted. Stock tercatat sebagai QUARANTINE."); queryClient.invalidateQueries({ queryKey: ["goods-receipts"] }); queryClient.invalidateQueries({ queryKey: ["approved-po"] }); },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Posting GRN gagal."),
+  });
 
   const arrivalsToday = receipts?.filter((r: any) => r.date === new Date().toISOString().split('T')[0]).length || 0;
   const awaitingQc = receipts?.filter((r: any) => r.qc === 'WAITING').length || 0;
@@ -116,22 +129,21 @@ export default function ReceivingPage() {
   const rejected = receipts?.filter((r: any) => r.status === 'REJECTED' || r.qc === 'FAILED').length || 0;
 
   return (
-    <DashboardShell
-      title="PENERIMAAN"
-      titleAccent="BARANG"
+    <OperationalMigrationShell
+      title="Penerimaan Barang"
       subtitle="Verifikasi logistik masuk & serah terima QC"
       actions={
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <DnaButton variant="primary" size="lg" icon={<Plus className="h-5 w-5 stroke-[3px]" />}>
+            <DnaButton variant="primary" icon={<Plus className="h-4 w-4" />}>
               Daftarkan Kedatangan
             </DnaButton>
           </DialogTrigger>
           <DialogContent className="sm:max-w-2xl bg-white rounded-[24px] border border-slate-100 shadow-2xl p-0 overflow-hidden">
             <div className="bg-white p-8 text-slate-900 flex justify-between items-center border-b border-slate-200">
                <div>
-                   <h2 className="text-xl font-black uppercase italic tracking-tighter">Penerimaan Barang Baru (GRN)</h2>
-                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Inventory Integrity Protocol v2.4</p>
+                   <h2 className="text-lg font-semibold">Penerimaan Barang Baru (GRN)</h2>
+                   <p className="text-slate-500 text-xs mt-1">Catat kedatangan barang untuk proses QC.</p>
                </div>
                <PackageCheck className="h-12 w-12 text-blue-500 opacity-50 pointer-events-none" />
             </div>
@@ -147,42 +159,29 @@ export default function ReceivingPage() {
                          <SelectContent className="bg-white border-none shadow-sm rounded-2xl p-2">
                            {purchaseOrders?.map((po: any) => (
                                <SelectItem key={po.id} value={po.id} className="font-black py-3 rounded-xl">
-                                 {po.id} <span className="text-[10px] text-slate-400 ml-2">Vendor: {po.vendor}</span>
+                                 {po.number} <span className="text-[10px] text-slate-400 ml-2">Vendor: {po.vendor}</span>
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">No. DO / Referensi</label>
-                          <DnaInput placeholder="No. Pengiriman Vendor" value={doRef} onChange={(e) => setDoRef(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">No. Faktur (Invoice)</label>
-                          <DnaInput placeholder="F-2400-XXXXX" value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} />
-                      </div>
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">No. DO / Referensi</label>
+                     <DnaInput placeholder="No. Pengiriman Vendor" value={doRef} onChange={(e) => setDoRef(e.target.value)} />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Tanggal Kedatangan</label>
-                          <DnaInput type="datetime-local" value={arrivalDate} onChange={(e) => setArrivalDate(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Perlakuan Pajak</label>
-                         <Select value={taxTreatment} onValueChange={(val: string | null) => setTaxTreatment(val || "PPN_11")}>
-                             <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                                <SelectValue />
-                             </SelectTrigger>
-                            <SelectContent className="bg-white border-none shadow-sm rounded-2xl p-2">
-                               <SelectItem value="NON_TAX" className="font-black">NON TAXABLE</SelectItem>
-                               <SelectItem value="PPN_11" className="font-black">PPN 11%</SelectItem>
-                           </SelectContent>
-                        </Select>
-                     </div>
-                  </div>
+                  {selectedPO && (
+                    <div className="space-y-3 rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jumlah fisik diterima</p>
+                      {purchaseOrders?.find((po: any) => po.id === selectedPO)?.items?.map((item: any) => (
+                        <div key={item.materialId} className="grid grid-cols-[1fr_120px] gap-3 items-center">
+                          <p className="text-xs font-bold text-slate-700">{item.name} <span className="text-slate-400">· pesan {item.qty} {item.unit} · sisa {item.qty - item.receivedQty} {item.unit}</span></p>
+                          <DnaInput aria-label={`Jumlah diterima ${item.name}`} type="number" min="0" max={item.qty - item.receivedQty} placeholder="0" value={receivedQtys[item.materialId] || ""} onChange={(e) => setReceivedQtys((old) => ({ ...old, [item.materialId]: e.target.value }))} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
                      <div className="flex items-center gap-4">
@@ -190,8 +189,8 @@ export default function ReceivingPage() {
                            <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black text-blue-900 uppercase tracking-tight">QC Handshake Required</p>
-                           <p className="text-xs font-black text-blue-700 mt-0.5">Verification will be routed to QC Lab.</p>
+                           <p className="text-[10px] font-black text-blue-900 uppercase tracking-tight">Perlu Serah Terima QC</p>
+                           <p className="text-xs font-black text-blue-700 mt-0.5">Verifikasi akan diteruskan ke Lab QC.</p>
                         </div>
                      </div>
                      <DnaBadge status="info" className="bg-white">
@@ -202,15 +201,16 @@ export default function ReceivingPage() {
 
                <div className="pt-6 flex gap-4">
                    <DnaButton variant="ghost" onClick={() => setIsModalOpen(false)}>Batal</DnaButton>
-                    <DnaButton variant="primary" size="lg" className="flex-1" disabled={createGRNMutation.isPending} onClick={() => {
+                   <DnaButton variant="primary" size="lg" className="flex-1" disabled={createGRNMutation.isPending} onClick={() => {
                      const selectedPo = purchaseOrders?.find((po: any) => po.id === selectedPO);
+                     const items = (selectedPo?.items || []).map((i: any) => ({ materialId: i.materialId, qtyActual: Number(receivedQtys[i.materialId] || 0) })).filter((i: any) => i.qtyActual > 0);
+                     if (!selectedPO || !warehouses[0]?.id || !items.length) { toast.error("Pilih PO, gudang aktif, dan masukkan jumlah fisik yang diterima."); return; }
                      createGRNMutation.mutate({
                        poId: selectedPO,
-                       warehouseId: undefined,
-                       items: (selectedPo?.items || []).map((i: any) => ({
-                         materialId: i.id || i.name,
-                         qtyActual: Number(i.qty || 0),
-                       })),
+                       warehouseId: warehouses[0].id,
+                       supplierReference: doRef || undefined,
+                       idempotencyKey: crypto.randomUUID(),
+                       items,
                      });
                    }}>
                      {createGRNMutation.isPending ? 'MENGIRIM...' : 'Simpan Kedatangan'}
@@ -234,12 +234,12 @@ export default function ReceivingPage() {
          <Table>
             <TableHeader className="bg-slate-50/50">
                <TableRow className="hover:bg-transparent border-slate-100">
-                   <TableHead className="py-7 pl-10 font-black text-slate-400 uppercase tracking-tight text-[9px]">ID GRN</TableHead>
-                   <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">PO Asal</TableHead>
-                   <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Pemasok</TableHead>
-                   <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Status QC</TableHead>
-                   <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Siklus</TableHead>
-                   <TableHead className="pr-10 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Verifikasi</TableHead>
+                   <TableHead className="py-7 pl-10">ID GRN</TableHead>
+                   <TableHead>PO Asal</TableHead>
+                   <TableHead>Pemasok</TableHead>
+                   <TableHead className="text-center">Status QC</TableHead>
+                   <TableHead className="text-center">Status</TableHead>
+                   <TableHead className="pr-10 text-right">Verifikasi</TableHead>
                </TableRow>
             </TableHeader>
             <TableBody>
@@ -289,18 +289,18 @@ export default function ReceivingPage() {
                            receipt.qc === 'PASSED' ? 'success' :
                            receipt.qc === 'WAITING' ? 'warning' : 'critical'
                          }>
-                            {receipt.qc}
+                            {getOperationalStatusLabel(receipt.qc)}
                          </DnaBadge>
                       </TableCell>
                       <TableCell className="text-center">
-                          <DnaBadge status={receipt.status === 'VERIFIED' ? 'info' : 'default'}>
-                            {receipt.status}
+                          <DnaBadge status={receipt.status === 'POSTED' ? 'info' : 'default'}>
+                            {getOperationalStatusLabel(receipt.status)}
                          </DnaBadge>
                       </TableCell>
                       <TableCell className="pr-10 text-right">
                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" className="rounded-xl font-black uppercase text-[9px] text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2">
-                               <FileSearch className="h-3 w-3" /> Inspeksi
+                            <Button variant="ghost" size="sm" disabled={receipt.status !== 'PENDING' || postGRNMutation.isPending} onClick={() => postGRNMutation.mutate(receipt.receiptId)} className="rounded-xl font-black uppercase text-[9px] text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2">
+                               <FileSearch className="h-3 w-3" /> {receipt.status === 'PENDING' ? 'Post GRN' : 'Inspeksi'}
                             </Button>
                              <Button variant="ghost" size="icon" className="rounded-xl border border-slate-200 shadow-sm bg-white hover:bg-slate-100 hover:text-slate-900 transition-all">
                                <MoreVertical className="h-4 w-4" />
@@ -312,6 +312,6 @@ export default function ReceivingPage() {
              </TableBody>
          </Table>
       </TableWrapper>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

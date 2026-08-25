@@ -51,7 +51,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 export default function PurchaseReturnsPage() {
   const queryClient = useQueryClient();
@@ -182,14 +184,13 @@ export default function PurchaseReturnsPage() {
   };
 
   return (
-    <DashboardShell
-      title="RETUR"
-      titleAccent="PEMBELIAN"
+    <OperationalMigrationShell
+      title="Retur Pembelian"
       subtitle="Kelola debit pemasok, penolakan material, dan pembalikan stok."
       actions={
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <DnaButton variant="primary" size="lg" icon={<Plus />} className="bg-rose-600 hover:bg-rose-700 shadow-sm h-16 px-10 rounded-2xl">
+            <DnaButton variant="primary" icon={<Plus className="h-4 w-4" />} className="bg-rose-600 hover:bg-rose-700">
               Buat Retur
             </DnaButton>
           </DialogTrigger>
@@ -197,7 +198,7 @@ export default function PurchaseReturnsPage() {
             <div className="bg-rose-900 p-8 text-white flex justify-between items-center">
                <div>
                    <h2 className="text-xl font-black tracking-tight text-white">Transaksi Retur SCM</h2>
-                   <p className="text-rose-200 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5">Inventory Correction Protocol v4.0</p>
+                   <p className="text-rose-200 text-xs mt-1.5">Koreksi penerimaan dan pembalikan stok</p>
                </div>
                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 shrink-0 pointer-events-none">
                   <PackageX className="h-6 w-6 text-rose-300" />
@@ -265,7 +266,7 @@ export default function PurchaseReturnsPage() {
                                        />
                                     </TableCell>
                                     <TableCell className="py-4 px-4 text-right">
-                                       <p className="font-black text-slate-900 text-sm">Rp {item.unitPrice.toLocaleString()}</p>
+                                       <p className="font-black text-slate-900 text-sm">{formatOperationalCurrency(item.unitPrice)}</p>
                                     </TableCell>
                                  </TableRow>
                               ))}
@@ -295,7 +296,7 @@ export default function PurchaseReturnsPage() {
       {/* Engine Badge */}
       <div className="flex items-center gap-3 mb-8">
         <RotateCcw className="h-5 w-5 text-rose-500 animate-spin-slow" />
-        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-rose-500">Reverse Logistics Engine</span>
+        <span className="text-xs font-semibold text-rose-500">Proses retur logistik</span>
       </div>
 
       {/* Registry */}
@@ -345,10 +346,10 @@ export default function PurchaseReturnsPage() {
                               <span className="text-[10px] font-medium text-slate-600">{ret.creator?.fullName || '-'}</span>
                            </div>
                         </TableCell>
-                        <TableCell className="py-4 px-4 text-right tabular-nums font-black text-rose-600 text-base">Rp {Number(ret.totalValue).toLocaleString()}</TableCell>
+                        <TableCell className="py-4 px-4 text-right tabular-nums font-black text-rose-600 text-base">{formatOperationalCurrency(ret.totalValue)}</TableCell>
                         <TableCell className="py-4 px-4 text-center">
                            <DnaBadge status={ret.status === 'COMPLETED' ? 'success' : ret.status === 'CANCELLED' || ret.status === 'REJECTED' ? 'default' : ret.status === 'WAITING_APPROVAL' ? 'warning' : 'info'}>
-                              {ret.status?.replace('_', ' ') || 'DRAFT'}
+                              {getOperationalStatusLabel(ret.status)}
                            </DnaBadge>
                         </TableCell>
                         <TableCell className="py-4 px-4 text-right">
@@ -451,6 +452,6 @@ export default function PurchaseReturnsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

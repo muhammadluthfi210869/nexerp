@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { Search, CheckCircle2, XCircle, Loader2 } from "lucide-react";
@@ -31,11 +32,18 @@ export default function RequestListPage() {
     !search || r.title?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getPriorityLabel = (priority?: string | null) => ({
+    CRITICAL: "Kritis",
+    HIGH: "Tinggi",
+    MEDIUM: "Sedang",
+    NORMAL: "Normal",
+    LOW: "Rendah",
+  }[priority || ""] || "—");
+
   return (
-    <DashboardShell
-      title="List"
-      titleAccent="Permintaan"
-      subtitle="Review & kelola permintaan perubahan dari user"
+    <OperationalMigrationShell
+      title="Daftar Permintaan"
+      subtitle="Tinjau dan kelola permintaan perubahan dari pengguna"
     >
       <div className="flex gap-4 mb-6">
         <DnaInput
@@ -51,7 +59,7 @@ export default function RequestListPage() {
           <TableHeader className="bg-slate-50/50">
             <TableRow>
               <TableHead className="text-[9px] font-black uppercase text-slate-400">Judul</TableHead>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400">User</TableHead>
+              <TableHead className="text-[9px] font-black uppercase text-slate-400">Pengguna</TableHead>
               <TableHead className="text-[9px] font-black uppercase text-slate-400">Prioritas</TableHead>
               <TableHead className="text-[9px] font-black uppercase text-slate-400">Tanggal</TableHead>
               <TableHead className="text-[9px] font-black uppercase text-slate-400 text-center">Status</TableHead>
@@ -81,7 +89,7 @@ export default function RequestListPage() {
                       req.priority === "CRITICAL" ? "critical" :
                       req.priority === "HIGH" ? "warning" :
                       "default"
-                    }>{req.priority || "MEDIUM"}</DnaBadge>
+                    }>{getPriorityLabel(req.priority)}</DnaBadge>
                   </TableCell>
                   <TableCell className="text-xs text-slate-500">{req.createdAt}</TableCell>
                   <TableCell className="text-center">
@@ -89,7 +97,7 @@ export default function RequestListPage() {
                       req.status === "APPROVED" ? "success" :
                       req.status === "REJECTED" ? "critical" :
                       "warning"
-                    }>{req.status || "PENDING"}</DnaBadge>
+                    }>{getOperationalStatusLabel(req.status || "PENDING")}</DnaBadge>
                   </TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex justify-end gap-2">
@@ -117,6 +125,6 @@ export default function RequestListPage() {
           </TableBody>
         </Table>
       </div>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

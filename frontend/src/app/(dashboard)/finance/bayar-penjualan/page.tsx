@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -8,25 +8,15 @@ import {
   CircleDollarSign,
   Wallet,
   FileCheck2,
-  CreditCard,
   Calendar,
   ShieldCheck,
   Building2,
   CheckCircle2,
-  XCircle,
   Clock,
   MoreHorizontal,
   Landmark,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DnaInput, DnaButton } from "@/components/dna";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +33,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalMigrationShell,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import { QueryLoading, QueryError } from "@/components/query-states";
 
 interface Invoice {
@@ -108,23 +106,112 @@ export default function BayarPenjualanPage() {
   };
 
   const filteredInvoices =
-    invoices?.filter(
+    (invoices || []).filter(
       (inv) =>
-        inv.invoiceNumber
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
+        inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inv.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
   const totalReceivable =
-    invoices?.reduce((sum, inv) => sum + inv.remainingAmount, 0) || 0;
+    (invoices || []).reduce((sum, inv) => sum + inv.remainingAmount, 0);
   const totalCollected =
-    invoices?.reduce((sum, inv) => sum + inv.paidAmount, 0) || 0;
+    (invoices || []).reduce((sum, inv) => sum + inv.paidAmount, 0);
   const overdueCount =
-    invoices?.filter((inv) => inv.status === "OVERDUE").length || 0;
+    (invoices || []).filter((inv) => inv.status === "OVERDUE").length;
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "invoiceNumber",
+        header: "Invoice Number",
+        cell: ({ row }: any) => {
+          const inv = row.original;
+          return (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                <FileCheck2 className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{inv.invoiceNumber}</span>
+                <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">Due: {inv.dueDate}</span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "customerName",
+        header: "Customer",
+        cell: ({ getValue }: any) => (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-black text-[9px] text-slate-500 uppercase">
+              {String(getValue()).charAt(0)}
+            </div>
+            <p className="font-black text-slate-900 text-xs uppercase italic">{String(getValue())}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "totalAmount",
+        header: () => <div className="text-right">Amount</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "paidAmount",
+        header: () => <div className="text-right">Paid</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "remainingAmount",
+        header: () => <div className="text-right">Remaining</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ getValue }: any) => {
+          const status = getValue() as string;
+          const tone = status === "PAID" ? "success" : status === "OVERDUE" ? "danger" : "pending";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={tone}>{getOperationalStatusLabel(status)}</OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }: any) => {
+          const inv = row.original;
+          return (
+            <div className="flex justify-end gap-1.5">
+              {inv.remainingAmount > 0 && (
+                <DnaButton
+                  onClick={() => openPaymentModal(inv)}
+                  variant="primary"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-[8px]"
+                  icon={<CircleDollarSign className="h-3.5 w-3.5" />}
+                >
+                  Terima Pembayaran
+                </DnaButton>
+              )}
+              <DnaButton
+                variant="outline"
+                size="sm"
+                icon={<MoreHorizontal className="h-3.5 w-3.5" />}
+              />
+            </div>
+          );
+        },
+      },
+    ],
+    [],
+  );
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="BAYAR"
       titleAccent="PENJUALAN"
       subtitle="Penerimaan Pembayaran Piutang — Customer Payment Terminal"
@@ -149,160 +236,46 @@ export default function BayarPenjualanPage() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard
+          <OperationalMetricGrid>
+            <OperationalMetricCard
               label="Total Piutang"
-              value={`Rp ${totalReceivable.toLocaleString("id-ID")}`}
-              icon={<Wallet className="text-emerald-600" />}
+              value={formatOperationalCurrency(totalReceivable)}
+              icon={<Wallet className="h-4 w-4" />}
+              tone="green"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Telah Ditagih"
-              value={`Rp ${totalCollected.toLocaleString("id-ID")}`}
-              icon={<CheckCircle2 className="text-blue-600" />}
+              value={formatOperationalCurrency(totalCollected)}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              tone="blue"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Overdue"
-              value={overdueCount.toString()}
-              subValue="Faktur jatuh tempo"
-              icon={<Clock className="text-rose-500" />}
+              value={overdueCount}
+              helper="Faktur jatuh tempo"
+              icon={<Clock className="h-4 w-4" />}
+              tone="red"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Outstanding"
               value={`${filteredInvoices.length} Faktur`}
-              icon={<FileCheck2 className="text-amber-500" />}
+              icon={<FileCheck2 className="h-4 w-4" />}
+              tone="amber"
             />
-          </div>
+          </OperationalMetricGrid>
 
-          <TableWrapper
-            filters={
-              <div className="relative w-full max-w-md">
-                <DnaInput
-                  icon={<Search className="h-4 w-4" />}
-                  placeholder="Cari invoice / pelanggan..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            }
-          >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Invoice Number
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Amount
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Paid
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Remaining
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Status
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.map((inv) => (
-                  <TableRow
-                    key={inv.id}
-                    className="group hover:bg-emerald-50/30 transition-all duration-300 border-b border-slate-50"
-                  >
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                          <FileCheck2 className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">
-                            {inv.invoiceNumber}
-                          </span>
-                          <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">
-                            Due: {inv.dueDate}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-black text-[9px] text-slate-500 uppercase">
-                          {inv.customerName.charAt(0)}
-                        </div>
-                        <p className="font-black text-slate-900 text-xs uppercase italic">
-                          {inv.customerName}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">
-                      Rp {inv.totalAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">
-                      Rp {inv.paidAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">
-                      Rp {inv.remainingAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge
-                        status={
-                          inv.status === "PAID"
-                            ? "success"
-                            : inv.status === "OVERDUE"
-                              ? "critical"
-                              : "warning"
-                        }
-                      >
-                        {inv.status === "PAID"
-                          ? "Lunas"
-                          : inv.status === "OVERDUE"
-                            ? "Overdue"
-                            : "Belum Lunas"}
-                      </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
-                      <div className="flex justify-end gap-1.5">
-                        {inv.remainingAmount > 0 && (
-                          <DnaButton
-                            onClick={() => openPaymentModal(inv)}
-                            variant="primary"
-                            size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-[8px]"
-                            icon={<CircleDollarSign className="h-3.5 w-3.5" />}
-                          >
-                            Terima Pembayaran
-                          </DnaButton>
-                        )}
-                        <DnaButton
-                          variant="outline"
-                          size="sm"
-                          icon={<MoreHorizontal className="h-3.5 w-3.5" />}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredInvoices.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-10 text-slate-400 italic"
-                    >
-                      Tidak ada faktur ditemukan.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
+          <DnaInput
+            icon={<Search className="h-4 w-4" />}
+            placeholder="Cari invoice / pelanggan..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <OperationalDataTable
+            data={filteredInvoices}
+            columns={columns as any}
+            getRowId={(row: any) => row.id}
+            searchPlaceholder="Cari invoice / pelanggan..."
+          />
 
           <div className="bg-emerald-50/30 border border-emerald-100/20 rounded-2xl p-6 flex gap-6 items-center shadow-sm">
             <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600 shrink-0 border border-slate-100">
@@ -335,7 +308,7 @@ export default function BayarPenjualanPage() {
           )}
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }
 
@@ -411,7 +384,7 @@ function PaymentForm({
             Sisa Tagihan
           </p>
           <p className="font-black text-sm text-rose-600 mt-1">
-            Rp {invoice.remainingAmount.toLocaleString("id-ID")}
+            {formatOperationalCurrency(invoice.remainingAmount)}
           </p>
         </div>
       </div>

@@ -35,10 +35,16 @@ interface CustomChartProps {
 }
 
 const CustomChart: React.FC<CustomChartProps> = ({ data, color, color2, data2 }) => {
+  // Guard: the dashboard analytics endpoint can return partial shapes during
+  // bootstrap or auth failures. Always coerce to an array before plotting so
+  // a missing `data` field can never throw "Cannot read properties of
+  // undefined (reading 'length')".
+  const safeData: number[] = Array.isArray(data) ? data : [];
+  const safeData2: number[] | undefined = Array.isArray(data2) ? data2 : undefined;
   const maxVal = 150;
-  const i = 500 / (data.length - 1);
-  const a = data.map((val, idx) => `${idx * i},${150 - (val / maxVal) * 150}`).join(" ");
-  const o = data2 ? data2.map((val, idx) => `${idx * i},${150 - (val / maxVal) * 150}`).join(" ") : null;
+  const i = safeData.length > 1 ? 500 / (safeData.length - 1) : 0;
+  const a = safeData.map((val, idx) => `${idx * i},${150 - (val / maxVal) * 150}`).join(" ");
+  const o = safeData2 ? safeData2.map((val, idx) => `${idx * i},${150 - (val / maxVal) * 150}`).join(" ") : null;
 
   return (
     <svg viewBox="0 0 500 150" style={{ width: "100%", height: "180px", overflow: "visible" }}>
@@ -87,7 +93,7 @@ const CustomChart: React.FC<CustomChartProps> = ({ data, color, color2, data2 })
           <path d={`M ${o} L 500,150 L 0,150 Z`} fill={`url(#grad-${color2!.replace("#", "")})`} />
         </>
       )}
-      {data.map((val, idx) => (
+      {safeData.map((val, idx) => (
         <circle
           key={idx}
           cx={idx * i}
@@ -103,21 +109,26 @@ const CustomChart: React.FC<CustomChartProps> = ({ data, color, color2, data2 })
 };
 
 // --- DATA TRANSFORMATION HELPERS ---
-function formatRupiah(value: number): string {
-  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)} M`;
-  if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)} Jt`;
-  if (value >= 1_000) return `Rp ${(value / 1_000).toFixed(0)}k`;
-  return `Rp ${value.toLocaleString()}`;
+function formatRupiah(value: unknown): string {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return "—";
+  if (n === 0) return "Rp 0";
+  if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(2)} M`;
+  if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1)} Jt`;
+  if (n >= 1_000) return `Rp ${(n / 1_000).toFixed(0)}k`;
+  return `Rp ${n.toLocaleString("id-ID")}`;
 }
 
-function formatNumber(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return value.toLocaleString();
+function formatNumber(value: unknown): string {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return "—";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString("id-ID");
 }
 
-function scaleTrendData(raw: number[] | undefined, defaultVal: number[]): number[] {
-  if (!raw || raw.length === 0) return defaultVal;
+function scaleTrendData(raw: number[] | undefined | null, defaultVal: number[]): number[] {
+  if (!Array.isArray(raw) || raw.length === 0) return defaultVal;
   const max = Math.max(...raw, 1);
   return raw.map(v => 40 + (v / max) * 100);
 }
@@ -245,11 +256,12 @@ export default function MarketingDashboardClient() {
   const costPerLeadVal = analytics.budget?.costPerLead ? formatRupiah(analytics.budget.costPerLead) : "-";
   const costPerSampleVal = analytics.budget?.costPerSample ? formatRupiah(analytics.budget.costPerSample) : "-";
 
-  // Trends
-  const rawLeadsTrend = analytics.trends?.map((t: any) => t.leads as number);
-  const rawCplTrend = analytics.trends?.map((t: any) => t.cpl as number);
-  const rawClosingTrend = analytics.trends?.map((t: any) => t.closing as number);
-  const rawCpaTrend = analytics.trends?.map((t: any) => t.cpa as number);
+  // Trends — guard against analytics.trends being undefined or non-array.
+  const trendsArr: any[] = Array.isArray(analytics.trends) ? analytics.trends : DASHBOARD_DUMMY_DATA.trends;
+  const rawLeadsTrend = trendsArr.map((t: any) => t.leads as number);
+  const rawCplTrend = trendsArr.map((t: any) => t.cpl as number);
+  const rawClosingTrend = trendsArr.map((t: any) => t.closing as number);
+  const rawCpaTrend = trendsArr.map((t: any) => t.cpa as number);
 
   const leadsTrend = scaleTrendData(rawLeadsTrend, DASHBOARD_DUMMY_DATA.trends.map((t) => t.leads));
   const cplTrend = scaleTrendData(rawCplTrend, DASHBOARD_DUMMY_DATA.trends.map((t) => t.cpl));

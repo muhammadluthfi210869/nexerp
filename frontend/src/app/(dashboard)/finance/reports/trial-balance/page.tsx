@@ -1,30 +1,29 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { 
-  BarChart3, 
-  Calendar, 
-  ArrowRightLeft, 
-  Download, 
-  CheckCircle2, 
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  BarChart3,
+  Calendar,
+  ArrowRightLeft,
+  Download,
+  CheckCircle2,
   XCircle,
   FileSearch,
-  ChevronRight
 } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaInput, DnaButton, DnaBadge, TableWrapper, DataCard } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import {
+  OperationalDataTable,
+  OperationalPanel,
+  OperationalField,
+  OperationalButton,
+  OperationalInput,
+  OperationalMetricGrid,
+  OperationalMetricCard,
+} from "@/components/operational";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 interface TrialBalanceItem {
   id: string;
@@ -41,10 +40,10 @@ interface TrialBalanceItem {
 
 export default function TrialBalancePage() {
   const [data, setData] = useState<TrialBalanceItem[]>([]);
-  const [totals, setTotals] = useState({ 
-    awalDebit: 0, awalCredit: 0, 
-    perubahanDebit: 0, perubahanCredit: 0, 
-    akhirDebit: 0, akhirCredit: 0 
+  const [totals, setTotals] = useState({
+    awalDebit: 0, awalCredit: 0,
+    perubahanDebit: 0, perubahanCredit: 0,
+    akhirDebit: 0, akhirCredit: 0
   });
   const [isBalanced, setIsBalanced] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -71,186 +70,265 @@ export default function TrialBalancePage() {
     fetchData();
   }, [fetchData]);
 
-  const formatCurrency = (val: number) => {
-    if (val === 0) return "-";
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0
-    }).format(val);
-  };
+  const gapAmount = Math.abs(totals.akhirDebit - totals.akhirCredit);
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "code",
+        header: "Kode",
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <span className="text-[12px] font-medium text-slate-500">
+            {row.original.code || "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "name",
+        header: "Nama Akun",
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-slate-900">{row.original.name || "—"}</span>
+            <span className="text-[11px] text-slate-500">{row.original.type}</span>
+          </div>
+        ),
+      },
+      {
+        id: "awalDebit",
+        accessorKey: "awalDebit",
+        header: () => <div className="text-right">Saldo Awal (D)</div>,
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="text-right font-mono tabular-nums text-[13px] text-slate-500">
+            {formatOperationalCurrency(row.original.awalDebit)}
+          </div>
+        ),
+      },
+      {
+        id: "awalCredit",
+        accessorKey: "awalCredit",
+        header: () => <div className="text-right">Saldo Awal (K)</div>,
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="text-right font-mono tabular-nums text-[13px] text-slate-500">
+            {formatOperationalCurrency(row.original.awalCredit)}
+          </div>
+        ),
+      },
+      {
+        id: "perubahanDebit",
+        accessorKey: "perubahanDebit",
+        header: () => <div className="text-right">Perubahan (D)</div>,
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="text-right font-mono font-medium tabular-nums text-[13px] text-blue-600">
+            {formatOperationalCurrency(row.original.perubahanDebit)}
+          </div>
+        ),
+      },
+      {
+        id: "perubahanCredit",
+        accessorKey: "perubahanCredit",
+        header: () => <div className="text-right">Perubahan (K)</div>,
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="text-right font-mono font-medium tabular-nums text-[13px] text-blue-600">
+            {formatOperationalCurrency(row.original.perubahanCredit)}
+          </div>
+        ),
+      },
+      {
+        id: "akhirDebit",
+        accessorKey: "akhirDebit",
+        header: () => <div className="text-right">Saldo Akhir (D)</div>,
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="text-right font-mono font-semibold tabular-nums text-[13px] text-slate-900">
+            {formatOperationalCurrency(row.original.akhirDebit)}
+          </div>
+        ),
+      },
+      {
+        id: "akhirCredit",
+        accessorKey: "akhirCredit",
+        header: () => <div className="text-right">Saldo Akhir (K)</div>,
+        cell: ({ row }: { row: { original: TrialBalanceItem } }) => (
+          <div className="text-right font-mono font-semibold tabular-nums text-[13px] text-slate-900">
+            {formatOperationalCurrency(row.original.akhirCredit)}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
-    <DashboardShell title="TRIAL" titleAccent="BALANCE" subtitle="Verifikasi keseimbangan Debit & Kredit seluruh akun buku besar secara real-time.">
-      <div className="animate-fade-slide-in space-y-10">
-        <div className="flex gap-4 items-end bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Mulai Dari</label>
-            <DnaInput 
-              type="date" 
+    <OperationalMigrationShell title="Neraca Saldo" subtitle="Verifikasi keseimbangan Debit & Kredit seluruh akun buku besar secara real-time.">
+      <OperationalPanel>
+        <div className="flex gap-4 items-end flex-wrap">
+          <OperationalField label="Mulai Dari">
+            <OperationalInput
+              type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               icon={<Calendar className="w-4 h-4" />}
-              className="text-xs font-black"
             />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Sampai</label>
-            <DnaInput 
-              type="date" 
+          </OperationalField>
+          <OperationalField label="Sampai">
+            <OperationalInput
+              type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               icon={<Calendar className="w-4 h-4" />}
-              className="text-xs font-black"
             />
-          </div>
-          <DnaButton 
+          </OperationalField>
+          <OperationalButton
             variant="primary"
             onClick={fetchData}
             disabled={loading}
           >
             {loading ? "MEMUAT..." : "FILTER DATA"}
-          </DnaButton>
+          </OperationalButton>
         </div>
+      </OperationalPanel>
 
-        {/* Audit Status Banner */}
-        <div className={cn(
-          "p-5 rounded-2xl flex items-center justify-between border shadow-sm transition-all duration-500",
-          isBalanced 
-            ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
-            : "bg-rose-50 border-rose-100 text-rose-700"
-        )}>
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "p-3 rounded-2xl",
-              isBalanced ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
-            )}>
-              {isBalanced ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5 animate-pulse" />}
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-wider">Status Audit: {isBalanced ? "NERACA SALDO SEIMBANG" : "NERACA SALDO SELISIH"}</h4>
-              <p className="text-[10px] font-medium opacity-80 mt-1">
-                {isBalanced 
-                  ? "Semua buku pembantu debit dan kredit memiliki total yang sama (seimbang sempurna)."
-                  : "Terdapat perbedaan saldo akumulasi antara kolom Debit dan Kredit."}
-              </p>
-            </div>
+      {/* Audit Status Banner */}
+      <div className={cn(
+        "p-5 rounded-2xl flex items-center justify-between border shadow-sm transition-all duration-500",
+        isBalanced
+          ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+          : "bg-rose-50 border-rose-100 text-rose-700"
+      )}>
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "p-3 rounded-2xl",
+            isBalanced ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+          )}>
+            {isBalanced ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5 animate-pulse" />}
           </div>
-          <div className="flex gap-4 items-center">
-            <div className="text-right">
-              <p className="text-[8px] font-black uppercase opacity-60">Total Debit</p>
-              <p className="text-base font-black font-mono">{formatCurrency(totals.akhirDebit)}</p>
-            </div>
-            <div className="w-px h-8 bg-slate-200 mx-1" />
-            <div className="text-right">
-              <p className="text-[8px] font-black uppercase opacity-60">Total Kredit</p>
-              <p className="text-base font-black font-mono">{formatCurrency(totals.akhirCredit)}</p>
-            </div>
-            {!isBalanced && (
-              <>
-                <div className="w-px h-8 bg-rose-200 mx-1" />
-                <div className="text-right text-rose-600">
-                  <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
-                  <p className="text-base font-black font-mono">{formatCurrency(Math.abs(totals.akhirDebit - totals.akhirCredit))}</p>
-                </div>
-              </>
-            )}
+          <div>
+            <h4 className="text-xs font-black uppercase tracking-wider">Status Audit: {isBalanced ? "NERACA SALDO SEIMBANG" : "NERACA SALDO SELISIH"}</h4>
+            <p className="text-[10px] font-medium opacity-80 mt-1">
+              {isBalanced
+                ? "Semua buku pembantu debit dan kredit memiliki total yang sama (seimbang sempurna)."
+                : "Terdapat perbedaan saldo akumulasi antara kolom Debit dan Kredit."}
+            </p>
           </div>
         </div>
-
-        {/* Full-width Table */}
-        <TableWrapper>
-          <div className="overflow-x-auto">
-            <Table className="table-dense min-w-[1000px]">
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead rowSpan={2} className="px-4 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px] border-r border-slate-100">Kode</TableHead>
-                  <TableHead rowSpan={2} className="px-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px] border-r border-slate-100">Nama Akun</TableHead>
-                  <TableHead colSpan={2} className="px-4 py-2 text-center font-black text-slate-400 uppercase tracking-tight text-[9px] border-b border-r border-slate-100">Saldo Awal</TableHead>
-                  <TableHead colSpan={2} className="px-4 py-2 text-center font-black text-slate-400 uppercase tracking-tight text-[9px] border-b border-r border-slate-100">Perubahan</TableHead>
-                  <TableHead colSpan={2} className="px-4 py-2 text-center font-black text-slate-400 uppercase tracking-tight text-[9px] border-b border-slate-100">Saldo Akhir</TableHead>
-                </TableRow>
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="px-4 py-2 text-[9px] font-black uppercase tracking-tight text-right border-r border-slate-100 text-slate-400">Debit</TableHead>
-                  <TableHead className="px-4 py-2 text-[9px] font-black uppercase tracking-tight text-right border-r border-slate-100 text-slate-400">Kredit</TableHead>
-                  <TableHead className="px-4 py-2 text-[9px] font-black uppercase tracking-tight text-right border-r border-slate-100 text-slate-400">Debit</TableHead>
-                  <TableHead className="px-4 py-2 text-[9px] font-black uppercase tracking-tight text-right border-r border-slate-100 text-slate-400">Kredit</TableHead>
-                  <TableHead className="px-4 py-2 text-[9px] font-black uppercase tracking-tight text-right border-r border-slate-100 text-slate-400">Debit</TableHead>
-                  <TableHead className="px-4 py-2 text-[9px] font-black uppercase tracking-tight text-right text-slate-400">Kredit</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <AnimatePresence mode="popLayout">
-                  {data.map((item) => (
-                    <TableRow 
-                      key={item.id}
-                      className="group hover:bg-blue-50/30 transition-colors"
-                    >
-                      <TableCell className="px-4 py-4 border-r border-slate-50 text-left">
-                        <span className="text-[10px] font-black font-sans text-slate-400 group-hover:text-blue-600">
-                          {item.code}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-50 text-left">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-black text-slate-800 group-hover:text-blue-900 transition-colors">{item.name}</span>
-                          <span className="text-[8px] font-medium text-slate-400 uppercase tracking-tighter mt-0.5">{item.type}</span>
-                        </div>
-                      </TableCell>
-                      {/* Saldo Awal */}
-                      <TableCell className="px-4 py-4 text-right border-r border-slate-50 font-mono text-xs tabular-nums text-slate-500">
-                        {formatCurrency(item.awalDebit)}
-                      </TableCell>
-                      <TableCell className="px-4 py-4 text-right border-r border-slate-50 font-mono text-xs tabular-nums text-slate-500">
-                        {formatCurrency(item.awalCredit)}
-                      </TableCell>
-                      {/* Perubahan */}
-                      <TableCell className="px-4 py-4 text-right border-r border-slate-50 font-mono font-black text-xs tabular-nums text-blue-600">
-                        {formatCurrency(item.perubahanDebit)}
-                      </TableCell>
-                      <TableCell className="px-4 py-4 text-right border-r border-slate-50 font-mono font-black text-xs tabular-nums text-blue-600">
-                        {formatCurrency(item.perubahanCredit)}
-                      </TableCell>
-                      {/* Saldo Akhir */}
-                      <TableCell className="px-4 py-4 text-right border-r border-slate-50 font-mono font-black text-xs tabular-nums text-slate-900">
-                        {formatCurrency(item.akhirDebit)}
-                      </TableCell>
-                      <TableCell className="px-4 py-4 text-right font-mono font-black text-xs tabular-nums text-slate-900">
-                        {formatCurrency(item.akhirCredit)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </AnimatePresence>
-              </TableBody>
-              <tfoot className="bg-slate-900 text-white font-black uppercase text-[10px]">
-                <tr>
-                  <td colSpan={2} className="px-6 py-6 border-r border-slate-800 text-center uppercase tracking-tight text-xs">
-                    Total Akumulasi
-                  </td>
-                  <td className="px-4 py-6 text-right border-r border-slate-800 tabular-nums font-mono">
-                    {formatCurrency(totals.awalDebit)}
-                  </td>
-                  <td className="px-4 py-6 text-right border-r border-slate-800 tabular-nums font-mono">
-                    {formatCurrency(totals.awalCredit)}
-                  </td>
-                  <td className="px-4 py-6 text-right border-r border-slate-800 tabular-nums font-mono">
-                    {formatCurrency(totals.perubahanDebit)}
-                  </td>
-                  <td className="px-4 py-6 text-right border-r border-slate-800 tabular-nums font-mono">
-                    {formatCurrency(totals.perubahanCredit)}
-                  </td>
-                  <td className="px-4 py-6 text-right border-r border-slate-800 tabular-nums font-mono">
-                    {formatCurrency(totals.akhirDebit)}
-                  </td>
-                  <td className="px-4 py-6 text-right border-r border-slate-800 tabular-nums font-mono">
-                    {formatCurrency(totals.akhirCredit)}
-                  </td>
-                </tr>
-              </tfoot>
-            </Table>
+        <div className="flex gap-4 items-center">
+          <div className="text-right">
+            <p className="text-[8px] font-black uppercase opacity-60">Total Debit</p>
+            <p className="text-base font-black font-mono">{formatOperationalCurrency(totals.akhirDebit)}</p>
           </div>
-        </TableWrapper>
+          <div className="w-px h-8 bg-slate-200 mx-1" />
+          <div className="text-right">
+            <p className="text-[8px] font-black uppercase opacity-60">Total Kredit</p>
+            <p className="text-base font-black font-mono">{formatOperationalCurrency(totals.akhirCredit)}</p>
+          </div>
+          {!isBalanced && (
+            <>
+              <div className="w-px h-8 bg-rose-200 mx-1" />
+              <div className="text-right text-rose-600">
+                <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
+                <p className="text-base font-black font-mono">{formatOperationalCurrency(gapAmount)}</p>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </DashboardShell>
+
+      <OperationalMetricGrid>
+        <OperationalMetricCard
+          label="Total Saldo Awal Debit"
+          value={formatOperationalCurrency(totals.awalDebit)}
+          icon={<ArrowRightLeft className="w-4 h-4" />}
+          tone="blue"
+        />
+        <OperationalMetricCard
+          label="Total Saldo Awal Kredit"
+          value={formatOperationalCurrency(totals.awalCredit)}
+          icon={<ArrowRightLeft className="w-4 h-4" />}
+          tone="purple"
+        />
+        <OperationalMetricCard
+          label="Total Perubahan Debit"
+          value={formatOperationalCurrency(totals.perubahanDebit)}
+          icon={<BarChart3 className="w-4 h-4" />}
+          tone="amber"
+        />
+        <OperationalMetricCard
+          label="Total Perubahan Kredit"
+          value={formatOperationalCurrency(totals.perubahanCredit)}
+          icon={<BarChart3 className="w-4 h-4" />}
+          tone="green"
+        />
+        <OperationalMetricCard
+          label="Selisih (Gap)"
+          value={formatOperationalCurrency(gapAmount)}
+          icon={isBalanced ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+          tone={isBalanced ? "green" : "red"}
+        />
+      </OperationalMetricGrid>
+
+      <OperationalDataTable
+        data={data as unknown as TrialBalanceItem[]}
+        columns={columns as any}
+        getRowId={(row: TrialBalanceItem) => row.id}
+        toolbar={
+          <div className="flex items-center gap-2 text-[11px] text-slate-500">
+            <FileSearch className="h-3.5 w-3.5" />
+            <span>{data.length} akun terdaftar</span>
+          </div>
+        }
+        searchPlaceholder="Cari kode atau nama akun..."
+      />
+
+      {/* Totals Footer */}
+      <OperationalPanel>
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-4 items-center">
+          <div className="md:col-span-1 text-[10px] font-black uppercase text-slate-500 tracking-tight">
+            Total Akumulasi
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-black uppercase text-slate-400">Awal (D)</p>
+            <p className="text-[13px] font-mono font-semibold tabular-nums text-slate-900">
+              {formatOperationalCurrency(totals.awalDebit)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-black uppercase text-slate-400">Awal (K)</p>
+            <p className="text-[13px] font-mono font-semibold tabular-nums text-slate-900">
+              {formatOperationalCurrency(totals.awalCredit)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-black uppercase text-slate-400">Perubahan (D)</p>
+            <p className="text-[13px] font-mono font-semibold tabular-nums text-slate-900">
+              {formatOperationalCurrency(totals.perubahanDebit)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-black uppercase text-slate-400">Perubahan (K)</p>
+            <p className="text-[13px] font-mono font-semibold tabular-nums text-slate-900">
+              {formatOperationalCurrency(totals.perubahanCredit)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-black uppercase text-slate-400">Akhir (D)</p>
+            <p className="text-[13px] font-mono font-semibold tabular-nums text-slate-900">
+              {formatOperationalCurrency(totals.akhirDebit)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] font-black uppercase text-slate-400">Akhir (K)</p>
+            <p className="text-[13px] font-mono font-semibold tabular-nums text-slate-900">
+              {formatOperationalCurrency(totals.akhirCredit)}
+            </p>
+          </div>
+        </div>
+      </OperationalPanel>
+
+      <footer className="flex justify-center gap-3 pt-4 border-t border-slate-100">
+        <OperationalButton variant="primary">
+          <Download className="w-4 h-4" />
+          <span>Export Laporan</span>
+        </OperationalButton>
+      </footer>
+    </OperationalMigrationShell>
   );
 }

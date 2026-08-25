@@ -178,6 +178,22 @@ export class FormulasService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // INV-07: Historical truth must not silently change.
+      // Block mutation on SUPERSEDED formulas — create a new revision instead.
+      const existing = await tx.formula.findUnique({
+        where: { id },
+        select: { status: true, version: true },
+      });
+      if (!existing) throw new NotFoundException('Formula not found');
+      if (existing.status === 'SUPERSEDED') {
+        throw new ForbiddenException({
+          message:
+            'FORMULA_HISTORY_PROTECTED: Cannot mutate SUPERSEDED formula. Create a new revision instead.',
+          formulaVersion: existing.version,
+          formulaStatus: existing.status,
+        });
+      }
+
       // A. Update Formula Header
       await tx.formula.update({
         where: { id },
@@ -380,6 +396,15 @@ export class FormulasService {
     });
 
     if (!formula) throw new NotFoundException('Formula not found');
+
+    // INV-07: Lock production only on the CURRENT formula, not a SUPERSEDED one.
+    if (formula.status === 'SUPERSEDED') {
+      throw new ForbiddenException({
+        message:
+          'FORMULA_HISTORY_PROTECTED: Cannot lock for production on a SUPERSEDED formula. Create a new revision.',
+        formulaVersion: formula.version,
+      });
+    }
 
     // Production Gate: Materials must exist and be valid
     const items = formula.phases.flatMap((p) => p.items);

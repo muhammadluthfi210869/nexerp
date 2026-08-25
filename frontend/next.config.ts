@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
   experimental: {

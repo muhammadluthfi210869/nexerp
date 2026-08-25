@@ -95,6 +95,7 @@
 }
 
 :root {
+  color-scheme: light;
   /* ═══ BRAND TOKENS ═══ */
   --brand-black: #0F172A;
   --brand-white: #FFFFFF;
@@ -170,8 +171,10 @@
   --card-py: 16px;
   --card-radius: 12px;
   --table-header-h: 40px;
-  --table-row-h: 40px;
+  --table-row-h: 44px;
   --table-cell-px: 12px;
+  --table-radius: 12px;
+  --table-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   --module-title-size: 24px;
   --module-subtitle-size: 12px;
   /* Migration-friendly shell: preserve the old ERP's familiar working width. */
@@ -201,10 +204,90 @@
 }
 
 .dark {
-  --background: #FFFFFF;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  color-scheme: dark;
+  /* R3 Gate 3 — soft dark operational palette. No pure #000, no pure #FFF large text. */
+
+  /* Brand */
+  --brand-black: #F1F5F9;
+  --brand-white: #0B1220;
+
+  /* Surface */
+  --app-bg: #0B1220;                  /* soft near-black/navy-gray page */
+  --card-surface: #111A2E;            /* slightly raised charcoal surface */
+  --dark-accent: #F1F5F9;
+
+  /* Semantic palette (kept distinguishable in dark) */
+  --status-action: #60A5FA;
+  --status-success: #34D399;
+  --status-warning: #FBBF24;
+  --status-critical: #F87171;
+  --accent-purple: #A78BFA;
+
+  /* Gray scale — dark-side */
+  --gray-50: #0F1A30;
+  --gray-100: #1B2640;
+  --gray-400: #64748B;
+  --gray-500: #94A3B8;
+  --gray-900: #E2E8F0;
+
+  /* Base + ink */
+  --base: #0B1220;
+  --surface: #111A2E;
+  --text-main: #E2E8F0;
+  --text-muted: #94A3B8;
+
+  /* Sidebar */
+  --sidebar: #0B1220;
+  --sidebar-foreground: #E2E8F0;
+  --sidebar-accent: #1B2640;
+  --sidebar-accent-foreground: #F1F5F9;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-border: #1B2640;
+  --sidebar-ring: #2563EB;
+
+  /* Generic shadcn-style */
+  --background: #0B1220;
+  --foreground: #E2E8F0;
+  --card: #111A2E;
+  --card-foreground: #E2E8F0;
+  --popover: #111A2E;
+  --popover-foreground: #E2E8F0;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1B2640;
+  --secondary-foreground: #E2E8F0;
+  --muted: #111A2E;
+  --muted-foreground: #94A3B8;
+  --accent: #1B2640;
+  --accent-foreground: #E2E8F0;
+  --destructive: #DC2626;
+  --border: #1B2640;
+  --input: #1B2640;
+  --ring: #2563EB;
+
+  /* Insight status surfaces */
+  --insight-success-bg: #052E1F;
+  --insight-success-border: #065F46;
+  --insight-success-text: #6EE7B7;
+  --insight-action-bg: #0B2545;
+  --insight-action-border: #1D4ED8;
+  --insight-action-text: #93C5FD;
+  --insight-warning-bg: #2A1E07;
+  --insight-warning-border: #92400E;
+  --insight-warning-text: #FCD34D;
+
+  /* Alert surfaces */
+  --alert-critical-bg: #2A0A0A;
+  --alert-critical-border: #7F1D1D;
+  --alert-warning-bg: #2A1E07;
+  --alert-warning-border: #92400E;
+
+  /* Status pills */
+  --status-stable-bg: #052E1F;
+  --status-stable-text: #6EE7B7;
+  --status-sync-bg: #2A0A0A;
+  --status-sync-text: #F87171;
 }
 
 @layer base {
@@ -572,7 +655,7 @@
   width: 100%;
   overflow: hidden;
   border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
+  border-radius: var(--table-radius);
   background: #fff;
   box-shadow: var(--shadow-card);
 }
@@ -622,11 +705,11 @@
   padding: 0 var(--table-cell-px);
   border-bottom: 1px solid var(--border-color);
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: none;
   white-space: nowrap;
 }
 
@@ -649,6 +732,382 @@
   padding: 6px var(--table-cell-px);
   vertical-align: middle;
   white-space: nowrap;
+}
+
+/* ═══ CANONICAL ERP TABLE SHELL ═══
+   Shared by operational, workflow, and analytical tables. The shell owns
+   density and scanning rhythm; page-specific cells may still add semantic
+   colors, badges, or actions without changing the geometry. */
+.erp-table-shell {
+  border-radius: var(--table-radius);
+  box-shadow: var(--table-shadow);
+}
+
+.erp-data-table {
+  position: relative;
+  overflow: visible;
+  background: #fff;
+  border: 1px solid var(--border-color);
+}
+
+.erp-data-table-title {
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.erp-data-table .erp-table-toolbar-search {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+
+.erp-data-table .erp-table-scroll {
+  overflow-x: auto;
+}
+
+.erp-data-table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.erp-data-table-sort svg {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+}
+
+.erp-data-table-sort:hover svg,
+.erp-data-table-sort:focus-visible svg {
+  color: #2563eb;
+}
+
+.erp-data-table-columns {
+  position: relative;
+}
+
+.erp-data-table-columns-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: grid;
+  min-width: 180px;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #dbe4ef;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.erp-data-table-columns-menu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.erp-data-table-state {
+  height: 120px !important;
+  color: #64748b;
+  text-align: center;
+}
+
+.erp-data-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  min-height: 48px;
+  padding: 8px 16px;
+  border-top: 1px solid #eef2f7;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.erp-data-table-pagination label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-data-table-pagination select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #dbe4ef;
+  border-radius: 7px;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+}
+
+.erp-data-table-pagination-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.erp-data-table-pagination-actions button {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #dbe4ef;
+  border-radius: 7px;
+  background: #fff;
+  color: #475569;
+}
+
+.erp-data-table-pagination-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.erp-data-table-pagination-actions svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Canonical table typography: a quiet hierarchy that supports long scanning sessions. */
+.erp-table-shell > .erp-table-scroll > table > thead > tr > th {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 16px !important;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr > td {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr > td .font-black,
+.erp-table-shell > .erp-table-scroll > table > tbody > tr > td .font-extrabold {
+  font-weight: 600 !important;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr > td .font-bold {
+  font-weight: 500 !important;
+}
+
+.erp-table-shell [class~="text-[9px]"] {
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+.erp-table-shell [class~="text-[10px]"] {
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+.erp-table-toolbar {
+  min-height: 52px;
+  padding: 10px 16px;
+}
+
+.erp-table-toolbar-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 32px;
+}
+
+.erp-table-toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #94a3b8;
+}
+
+.erp-table-toolbar-search:focus-within {
+  border-color: #93c5fd;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.erp-table-toolbar-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.erp-table-toolbar-search input::placeholder {
+  color: #94a3b8;
+}
+
+.erp-table-result-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.erp-table-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.erp-table-toolbar-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.erp-table-toolbar-actions button:hover {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.erp-table-toolbar-actions svg {
+  width: 14px;
+  height: 14px;
+}
+
+.erp-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.erp-table-shell > .erp-table-scroll > table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.erp-table-shell > .erp-table-scroll > table > thead > tr > th {
+  height: var(--table-header-h);
+  padding: 0 var(--table-cell-px);
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr {
+  min-height: var(--table-row-h);
+  transition: background-color 150ms ease;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr:hover {
+  background: #f8fafc;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr:not(:last-child) > td {
+  border-bottom: 1px solid #eef2f7;
+}
+
+.erp-table-shell > .erp-table-scroll > table > tbody > tr > td {
+  height: var(--table-row-h);
+  padding: 6px var(--table-cell-px);
+  vertical-align: middle;
+}
+
+/* Normalize manual page tables to the same DNA while they are being migrated
+   to TableWrapper. Explicit semantic emphasis can still use <strong>. */
+.erp-page-shell main table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--table-radius);
+  font-size: 13px;
+}
+
+.erp-page-shell main table > thead > tr > th {
+  height: var(--table-header-h);
+  padding: 0 var(--table-cell-px);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.erp-page-shell main table > tbody > tr > td {
+  height: var(--table-row-h);
+  padding: 6px var(--table-cell-px);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
+  vertical-align: middle;
+}
+
+.erp-page-shell main table > tbody > tr > td .font-black,
+.erp-page-shell main table > tbody > tr > td .font-extrabold,
+.erp-page-shell main table > tbody > tr > td .font-bold {
+  font-weight: 600 !important;
+}
+
+.erp-page-shell main table > tbody > tr:not(:last-child) > td {
+  border-bottom-color: #eef2f7;
+}
+
+.erp-page-shell main table > tbody > tr:hover {
+  background: #f8fafc;
+}
+
+@media (max-width: 639px) {
+  .erp-table-toolbar {
+    min-height: 48px;
+    padding: 8px 12px;
+  }
+
+  .erp-table-shell > .erp-table-scroll > table {
+    min-width: 680px;
+  }
+
+  .erp-table-toolbar-content {
+    flex-wrap: wrap;
+  }
+
+  .erp-table-toolbar-search {
+    min-width: 180px;
+    flex: 1 1 180px;
+  }
+
+  .erp-table-toolbar-actions {
+    margin-left: 0;
+  }
 }
 
 /* PHASE 4 PILOT POLISH */
@@ -737,6 +1196,96 @@
   letter-spacing: -0.05em;
 }
 
+/* Compact dashboard card slots: metric cards stay readable and never stretch
+   into a full-width banner when a page exposes only one or two metrics. */
+.erp-metric-card {
+  align-self: start;
+  justify-self: start;
+}
+
+/* Every metric row uses the same four desktop slots. The :has selector lets
+   existing page grids opt in automatically without rewriting each dashboard.
+   A page with two or three metrics therefore keeps the same left-to-right
+   positions as a page with four metrics instead of stretching its cards. */
+.erp-page-shell .grid:has(> .erp-metric-card) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: start;
+  column-gap: 20px;
+  width: 100%;
+  max-width: 1360px;
+}
+
+/* BusDev and Digital Marketing still contain legacy inline card markup. These
+   classes bring their outer grid/card geometry into the same compact system
+   while leaving their domain-specific KPI content intact. */
+.erp-bussdev-card-grid,
+.erp-marketing-card-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+  width: 100%;
+  max-width: 1360px;
+  justify-content: start;
+}
+
+.erp-bussdev-card-grid > div,
+.erp-marketing-card-grid > div {
+  border-radius: 12px !important;
+  padding: 20px !important;
+}
+
+@media (max-width: 639px) {
+  .erp-metric-card {
+    max-width: 100%;
+    min-height: 112px !important;
+    padding: 14px !important;
+  }
+
+  .erp-metric-card h3 {
+    font-size: 24px !important;
+  }
+
+  .erp-metric-card p {
+    font-size: 11px;
+  }
+
+  .erp-page-shell .grid:has(> .erp-metric-card) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 12px;
+    max-width: none;
+  }
+
+  .erp-bussdev-card-grid,
+  .erp-marketing-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: 12px !important;
+    row-gap: 12px !important;
+    max-width: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .erp-page-shell .grid:has(> .erp-metric-card),
+  .erp-bussdev-card-grid,
+  .erp-marketing-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .erp-page-shell .grid:has(> .erp-metric-card) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+    max-width: none;
+  }
+
+  .erp-bussdev-card-grid,
+  .erp-marketing-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-width: none;
+  }
+}
+
 @media (max-width: 1023px) {
   .erp-sidebar {
     display: none !important;
@@ -815,6 +1364,466 @@
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ═══ OPERATIONAL UI LAYER ═══
+   Scoped to five golden operational pages. Dashboard components and tokens
+   intentionally remain unchanged. */
+.erp-operational {
+  --operational-section-gap: 20px;
+  --operational-subsection-gap: 12px;
+  --operational-grid-gap: 16px;
+  --table-header-h: 40px;
+  --table-row-h: 42px;
+  --table-cell-px: 12px;
+  --table-radius: 12px;
+  --table-shadow: none;
+  width: 100%;
+  max-width: 1600px;
+  min-height: calc(100vh - var(--header-height) - var(--page-py) - var(--page-pb));
+  background: var(--app-bg);
+  box-shadow: 0 0 0 100vmax var(--app-bg);
+  clip-path: inset(0 -100vmax);
+  color: var(--text-main);
+}
+
+.operational-page-header {
+  display: flex;
+  min-height: 54px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--operational-section-gap);
+}
+
+.operational-page-header h1 {
+  color: var(--foreground);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.operational-page-header p {
+  margin-top: 4px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.operational-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.operational-page-content,
+.operational-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--operational-section-gap);
+}
+
+.operational-substack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--operational-subsection-gap);
+}
+
+.operational-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--operational-grid-gap);
+  width: 100%;
+}
+
+.operational-metric-grid[data-metric-count="1"] {
+  grid-template-columns: minmax(0, 420px);
+}
+
+.operational-metric-grid[data-metric-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.operational-metric-grid[data-metric-count="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.operational-metric-grid[data-metric-count="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.operational-metric-card {
+  display: flex;
+  min-width: 0;
+  min-height: 96px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-surface);
+  box-shadow: none;
+}
+
+.operational-metric-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.operational-metric-label {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.operational-metric-value {
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-metric-helper {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-metric-icon {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.operational-metric-icon svg { width: 17px; height: 17px; }
+.operational-metric-icon.is-blue { background:#eff6ff; color:#2563eb; }
+.operational-metric-icon.is-green { background:#ecfdf5; color:#059669; }
+.operational-metric-icon.is-amber { background:#fffbeb; color:#d97706; }
+.operational-metric-icon.is-red { background:#fef2f2; color:#dc2626; }
+.operational-metric-icon.is-purple { background:#faf5ff; color:#7c3aed; }
+
+.operational-panel {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-surface);
+  box-shadow: none;
+}
+
+.operational-panel-title {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.operational-tabs-list {
+  display: inline-flex !important;
+  width: fit-content;
+  max-width: 100%;
+  height: 38px !important;
+  justify-content: flex-start !important;
+  gap: 3px;
+  overflow-x: auto;
+  padding: 3px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: #f8fafc !important;
+  color: var(--muted-foreground) !important;
+  box-shadow: none !important;
+}
+
+.operational-tabs-trigger {
+  height: 30px !important;
+  min-height: 30px !important;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 0 11px !important;
+  border-radius: 7px !important;
+  color: var(--muted-foreground) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.operational-tabs-trigger[data-state="active"] {
+  background: var(--brand-blue) !important;
+  color: #fff !important;
+}
+
+.operational-tabs-content {
+  margin-top: 16px !important;
+  outline: none;
+}
+
+.operational-input-wrap {
+  display: flex;
+  width: 100%;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--input);
+  border-radius: 8px;
+  background: #fff;
+  color: #94a3b8;
+}
+
+.operational-input-wrap:focus-within {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+
+.operational-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.operational-input-icon,
+.operational-input-icon svg { width: 15px; height: 15px; }
+
+.operational-search-input {
+  width: 288px;
+  max-width: 100%;
+  flex: 0 1 288px;
+}
+
+.operational-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.operational-field input,
+.operational-field select,
+.operational-control {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--input);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 400;
+  outline: none;
+}
+
+.operational-field input:focus,
+.operational-field select:focus,
+.operational-control:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+
+/* Read-only system-provided field primitive.
+ * Used for inherited, calculated, or locked values that the user should
+ * not edit. No domain semantics are encoded here — pages decide when to
+ * use it. Tone variants control visual treatment only. */
+.operational-field-readonly {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.operational-field-readonly-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.operational-field-readonly-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+.operational-field-readonly-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.operational-field-readonly.is-inherited {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+.operational-field-readonly.is-calculated {
+  border-style: solid;
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+}
+.operational-field-readonly.is-locked {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  opacity: 0.85;
+}
+
+.operational-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid var(--input);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+}
+
+.operational-button {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.operational-button.is-primary { background:#2563eb; color:#fff; }
+.operational-button.is-primary:hover { background:#1d4ed8; }
+.operational-button.is-secondary { border-color:#dbe4ef; background:#fff; color:#334155; }
+.operational-button.is-secondary:hover { background:#f8fafc; }
+.operational-button.is-danger { border-color:#fecaca; background:#fef2f2; color:#b91c1c; }
+.operational-button.is-ghost { background:transparent; color:#475569; }
+.operational-button:disabled { cursor:not-allowed; opacity:.5; }
+
+.operational-status-badge {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.operational-status-badge.is-neutral { border-color:#e2e8f0; background:#f8fafc; color:#475569; }
+.operational-status-badge.is-pending { border-color:#fde68a; background:#fffbeb; color:#b45309; }
+.operational-status-badge.is-process { border-color:#bfdbfe; background:#eff6ff; color:#1d4ed8; }
+.operational-status-badge.is-success { border-color:#a7f3d0; background:#ecfdf5; color:#047857; }
+.operational-status-badge.is-danger { border-color:#fecaca; background:#fef2f2; color:#b91c1c; }
+.operational-status-badge.is-purple { border-color:#ddd6fe; background:#f5f3ff; color:#6d28d9; }
+
+.erp-operational .erp-table-shell {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.erp-operational .erp-table-toolbar {
+  min-height: 46px;
+  padding: 6px 12px;
+}
+
+.erp-operational .erp-table-toolbar-content { gap: 10px; min-height: 34px; }
+.erp-operational .erp-table-toolbar-search { height: 34px; }
+.erp-operational .erp-data-table-pagination { min-height: 44px; padding: 6px 12px; }
+.erp-operational .erp-table-scroll { max-height: none; }
+.erp-operational .erp-data-table .erp-table-scroll > table > thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.erp-operational .erp-data-table .erp-table-scroll > table > thead > tr > th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.erp-operational .erp-data-table .erp-table-scroll > table > tbody > tr > td {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.erp-operational .erp-data-table-title { font-size:13px; font-weight:600; }
+.erp-operational .erp-table-result-label { font-size:11px; font-weight:500; }
+.erp-operational .erp-data-table-sort { min-height:30px; }
+.erp-operational .erp-data-table-pagination,
+.erp-operational .erp-data-table-pagination select { font-size:11px; }
+
+.operational-toolbar-control {
+  height: 34px !important;
+  min-height: 34px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+@media (max-width: 1023px) {
+  .operational-metric-grid,
+  .operational-metric-grid[data-metric-count] { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+@media (max-width: 639px) {
+  .operational-page-header { align-items: stretch; flex-direction: column; }
+  .operational-page-actions { width:100%; flex-wrap:wrap; }
+  .operational-metric-grid,
+  .operational-metric-grid[data-metric-count] { grid-template-columns: 1fr; }
+  .operational-tabs-list { width:100%; }
+  .operational-metric-card { min-height:88px; }
 }
 
 

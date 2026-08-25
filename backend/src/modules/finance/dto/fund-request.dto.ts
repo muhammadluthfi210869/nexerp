@@ -27,18 +27,18 @@ export class CreateFundRequestDto {
 
 export class ApproveFundRequestDto {
   @IsUUID()
-  @IsNotEmpty()
-  approvedById!: string;
+  @IsOptional()
+  approvedById?: string;
 }
 
 export class DisburseFundRequestDto {
   @IsUUID()
-  @IsNotEmpty()
-  disbursedById!: string;
+  @IsOptional()
+  disbursedById?: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  accountId!: string; // The account from which money is taken (e.g., 1110)
+  @IsOptional()
+  accountId?: string; // Optional: Finance may use the configured cash account.
 }
 
 export class DirectorApproveFundRequestDto {

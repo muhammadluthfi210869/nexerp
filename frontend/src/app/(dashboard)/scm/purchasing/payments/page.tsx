@@ -25,7 +25,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import {
   Table,
   TableBody,
@@ -42,7 +44,7 @@ const statusLabel = (status: string) => {
     case "UNPAID": return "Belum Lunas";
     case "PAID": return "Lunas";
     case "PARTIAL": return "Sebagian";
-    default: return status;
+    default: return getOperationalStatusLabel(status);
   }
 };
 
@@ -80,11 +82,11 @@ export default function PurchasePaymentPrototype() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
-      toast.success("Payment executed successfully");
+      toast.success("Pembayaran berhasil diproses");
       setIsModalOpen(false);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Payment failed");
+      toast.error(err?.response?.data?.message || "Pembayaran gagal diproses");
     },
   });
 
@@ -119,13 +121,13 @@ export default function PurchasePaymentPrototype() {
   };
 
   return (
-    <DashboardShell title="PEMBELIAN" titleAccent="PEMBAYARAN" subtitle="Penyelesaian pembayaran & pelacakan">
+    <OperationalMigrationShell title="Pembayaran Pembelian" subtitle="Penyelesaian pembayaran dan pelacakan">
       <div className="space-y-8 animate-fade-slide-in">
         {/* KPI Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <StatCard label="Hutang Tertunda" value="Rp 24,000,000" subValue="12 overdue | Audit Required" icon={<Wallet className="text-rose-600" />} />
-          <StatCard label="Total Lunas (MTD)" value="Rp 189,500,000" subValue="75% efficiency target achieved" icon={<CircleDollarSign className="text-emerald-500" />} />
-          <StatCard label="Gateway Pembayaran" value="Instant Settlement" subValue="Instant gateway settlement active" icon={<Zap className="text-blue-500" />} />
+          <StatCard label="Hutang Tertunda" value="Rp 24.000.000" subValue="12 jatuh tempo | Perlu audit" icon={<Wallet className="text-rose-600" />} />
+          <StatCard label="Total Lunas (MTD)" value="Rp 189.500.000" subValue="75% target efisiensi tercapai" icon={<CircleDollarSign className="text-emerald-500" />} />
+          <StatCard label="Gateway Pembayaran" value="Penyelesaian Instan" subValue="Gateway pembayaran aktif" icon={<Zap className="text-blue-500" />} />
         </div>
 
         {/* Main List Table */}
@@ -208,13 +210,13 @@ export default function PurchasePaymentPrototype() {
                       <span className="text-[11px] font-black text-slate-600 uppercase tracking-tighter">{formatDate(inv.issuedAt)}</span>
                     </TableCell>
                     <TableCell className="py-4 px-4 text-right">
-                      <span className="font-black text-slate-900 text-sm tabular-nums">Rp {Number(inv.amountDue).toLocaleString()}</span>
+                      <span className="font-black text-slate-900 text-sm tabular-nums">{formatOperationalCurrency(inv.amountDue)}</span>
                     </TableCell>
                     <TableCell className="py-4 px-4 text-right">
                       <span className={cn(
                         "font-black text-sm tabular-nums",
                         outstanding > 0 ? "text-rose-600" : "text-emerald-500"
-                      )}>Rp {outstanding.toLocaleString()}</span>
+                      )}>{formatOperationalCurrency(outstanding)}</span>
                     </TableCell>
                     <TableCell className="py-4 px-4 text-center">
                       <DnaBadge status={inv.status === "PAID" ? "success" : "critical"}>
@@ -277,7 +279,7 @@ export default function PurchasePaymentPrototype() {
 
                 <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 grid grid-cols-2 gap-4">
                   <div className="col-span-2 border-b border-slate-200 pb-2">
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Supplier</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pemasok</p>
                     <p className="font-black text-xs uppercase italic text-emerald-600">{selectedInvoice.supplier?.name || "-"}</p>
                   </div>
                   <div>
@@ -285,8 +287,8 @@ export default function PurchasePaymentPrototype() {
                     <p className="font-black text-xs uppercase italic">{selectedInvoice.invoiceNumber}</p>
                   </div>
                   <div>
-                    <p className="text-[8px] font-black text-slate-400 uppercase">Rem. Balance</p>
-                    <p className="font-black text-xs uppercase italic tabular-nums text-rose-600">Rp {Number(selectedInvoice.outstandingAmount).toLocaleString()}</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase">Sisa Tagihan</p>
+                    <p className="font-black text-xs uppercase italic tabular-nums text-rose-600">{formatOperationalCurrency(selectedInvoice.outstandingAmount)}</p>
                   </div>
                 </div>
 
@@ -296,7 +298,7 @@ export default function PurchasePaymentPrototype() {
                     <Wallet className="h-5 w-5 text-emerald-600" />
                     <div className="flex flex-col">
                       <span className="font-black text-xs uppercase text-slate-900">Gunakan Uang Muka</span>
-                      <span className="text-[9px] font-black text-slate-400 uppercase">Available: Rp 500,000</span>
+                      <span className="text-[9px] font-black text-slate-400">Tersedia: Rp 500.000</span>
                     </div>
                   </div>
                   <Checkbox
@@ -389,14 +391,14 @@ export default function PurchasePaymentPrototype() {
             <Zap className="h-8 w-8" />
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 italic">Owner Insight: Treasury Health</p>
-            <p className="text-sm font-medium text-slate-600 leading-relaxed uppercase">
-              Maintaining a healthy debt-to-equity ratio requires diligent settlement of aging payables.
-              Consider <span className="text-emerald-600 font-black">Early Settlement</span> for vendors offering discount terms.
+            <p className="text-xs font-semibold text-emerald-600">Catatan operasional: kesehatan kas</p>
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">
+              Rasio kewajiban yang sehat memerlukan penyelesaian tagihan secara disiplin.
+              Pertimbangkan <span className="text-emerald-600 font-semibold">pelunasan lebih awal</span> untuk vendor yang menawarkan diskon.
             </p>
           </div>
         </div>
       </div>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

@@ -1,57 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Plus,
-  Search,
   FileEdit,
   Truck,
   PackageCheck,
-  ChevronRight,
   User,
   Package,
   ShoppingCart,
-  Calendar,
   Trash2,
-  ShieldAlert,
-  ClipboardList,
-  ArrowRight,
-  MoreVertical,
   CheckCircle2,
   Send,
-  Droplets,
-  Zap,
-  Filter,
   Loader2,
   XCircle,
-  AlertCircle,
   Receipt,
   BadgeCheck,
   Ban,
   Eye,
-  FileInput,
-  Building2,
-  Hash,
-  DollarSign,
   Percent,
-  CalendarDays
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
+  OperationalButton,
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalDate } from "@/lib/operational-formatters";
 import {
   Dialog,
   DialogContent,
@@ -65,12 +50,10 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { QueryLoading, QueryError } from "@/components/query-states";
+import { QueryLoading } from "@/components/query-states";
 import { EmptyState } from "@/components/empty-state";
 
 interface CartItem {
@@ -81,16 +64,16 @@ interface CartItem {
   price: number;
 }
 
-const STATUS_BADGE_MAP: Record<string, "success" | "warning" | "default" | "info" | "critical"> = {
-  DRAFT: "default",
-  PENDING_APPROVAL: "warning",
+const STATUS_TONE: Record<string, "neutral" | "pending" | "success" | "danger" | "process" | "purple"> = {
+  DRAFT: "neutral",
+  PENDING_APPROVAL: "pending",
   APPROVED: "success",
-  REJECTED: "critical",
-  ORDERED: "info",
-  SHIPPED: "info",
+  REJECTED: "danger",
+  ORDERED: "process",
+  SHIPPED: "process",
   RECEIVED: "success",
-  CANCELLED: "default",
-  SUBMITTED: "warning",
+  CANCELLED: "danger",
+  SUBMITTED: "pending",
 };
 
 export default function PurchasingPage() {
@@ -294,457 +277,557 @@ export default function PurchasingPage() {
     }
   };
 
-  const pendingPrCount = String(prs?.filter((r: any) => r.status === 'DRAFT' || r.status === 'SUBMITTED').length || 0).padStart(2, '0');
-  const activePoCount = String(purchaseOrders?.filter((po: any) => po.status === 'APPROVED' || po.status === 'ORDERED').length || 0).padStart(2, '0');
-  const awaitingGrnCount = String(purchaseOrders?.filter((po: any) => po.status === 'ORDERED').length || 0).padStart(2, '0');
+  const pendingPrCount = prs?.filter((r: any) => r.status === 'DRAFT' || r.status === 'SUBMITTED').length || 0;
+  const activePoCount = purchaseOrders?.filter((po: any) => po.status === 'APPROVED' || po.status === 'ORDERED').length || 0;
+  const awaitingGrnCount = purchaseOrders?.filter((po: any) => po.status === 'ORDERED').length || 0;
   const totalPoValue = (purchaseOrders || []).reduce((sum: number, po: any) => sum + Number(po.totalValue || 0), 0);
 
+  const poColumns = useMemo(
+    () => [
+      {
+        accessorKey: "poNumber",
+        header: "No. PO",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-3 min-w-[150px]">
+            <div className="grid h-9 w-9 place-items-center rounded-md bg-slate-100 text-slate-700">
+              <ShoppingCart className="h-4 w-4" />
+            </div>
+            <span className="text-[12px] font-semibold uppercase text-slate-900 whitespace-nowrap">
+              {row.original.poNumber}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "supplier",
+        header: "Supplier",
+        cell: ({ row }: { row: { original: any } }) => (
+          <span className="text-[12px] font-medium text-slate-700">{row.original.supplier?.name || "—"}</span>
+        ),
+      },
+      {
+        accessorKey: "estArrival",
+        header: "Tgl",
+        cell: ({ row }: { row: { original: any } }) => {
+          const dateValue = row.original.estArrival || row.original.createdAt;
+          return (
+            <span className="text-[11px] font-medium text-slate-600 whitespace-nowrap">
+              {formatOperationalDate(dateValue) || "—"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "scm",
+        header: "Pembuat",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600">
+            <User className="h-3 w-3 text-slate-400" />
+            <span>{row.original.scm?.fullName || "—"}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "totalValue",
+        header: () => <div className="text-right">Nilai</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <span className="block text-right text-[12px] font-semibold tabular-nums text-slate-900">
+            Rp {Number(row.original.totalValue || 0).toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }: { row: { original: any } }) => {
+          const s = row.original.status || "DRAFT";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={STATUS_TONE[s] || "neutral"}>
+                {getOperationalStatusLabel(s)}
+              </OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Aksi</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-end gap-1.5">
+            {(row.original.status === 'DRAFT' || row.original.status === 'PENDING_APPROVAL') && (
+              <>
+                <OperationalButton
+                  variant="primary"
+                  onClick={() => setApproveDialog({ id: row.original.id, type: "PO" })}
+                  className="h-8 px-2 text-[11px]"
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  <span>Setuju</span>
+                </OperationalButton>
+                <OperationalButton
+                  variant="secondary"
+                  onClick={() => setRejectDialog({ id: row.original.id, type: "PO" })}
+                  className="h-8 px-2 text-[11px]"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  <span>Tolak</span>
+                </OperationalButton>
+              </>
+            )}
+            {row.original.status === 'APPROVED' && (
+              <OperationalButton variant="primary" className="h-8 px-2 text-[11px]">
+                <Send className="h-3.5 w-3.5" />
+                <span>Kirim PO</span>
+              </OperationalButton>
+            )}
+            <OperationalButton variant="ghost" className="h-8 w-8 p-0" aria-label="Detail">
+              <Eye className="h-4 w-4" />
+            </OperationalButton>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const prColumns = useMemo(
+    () => [
+      {
+        accessorKey: "id",
+        header: "ID",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-3 min-w-[120px]">
+            <div className="grid h-9 w-9 place-items-center rounded-md bg-amber-50 text-amber-700 text-[10px] font-semibold">
+              PR
+            </div>
+            <span className="text-[12px] font-semibold uppercase text-slate-900 whitespace-nowrap">
+              #{row.original.id?.split('-')[0]}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "warehouse",
+        header: "Gudang",
+        cell: ({ row }: { row: { original: any } }) => (
+          <span className="text-[12px] font-medium text-slate-700">{row.original.warehouse?.name || "—"}</span>
+        ),
+      },
+      {
+        accessorKey: "creator",
+        header: "Pembuat",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600">
+            <User className="h-3 w-3 text-slate-400" />
+            <span>{row.original.creator?.fullName || row.original.createdBy || "—"}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "items",
+        header: () => <div className="text-right">Jml Item</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <span className="block text-right text-[12px] font-semibold text-slate-900">{row.original.items?.length || 0}</span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }: { row: { original: any } }) => {
+          const s = row.original.status || "DRAFT";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={STATUS_TONE[s] || "neutral"}>
+                {getOperationalStatusLabel(s)}
+              </OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Aksi</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-end gap-1.5">
+            {row.original.status === 'SUBMITTED' && (
+              <>
+                <OperationalButton
+                  variant="primary"
+                  onClick={() => setApproveDialog({ id: row.original.id, type: "PR" })}
+                  className="h-8 px-2 text-[11px]"
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  <span>Setuju</span>
+                </OperationalButton>
+                <OperationalButton
+                  variant="secondary"
+                  onClick={() => setRejectDialog({ id: row.original.id, type: "PR" })}
+                  className="h-8 px-2 text-[11px]"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  <span>Tolak</span>
+                </OperationalButton>
+              </>
+            )}
+            <OperationalButton variant="ghost" className="h-8 w-8 p-0" aria-label="Detail">
+              <Eye className="h-4 w-4" />
+            </OperationalButton>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  if (vendorsLoading || materialsLoading || whLoading || prsLoading || poLoading) {
+    return (
+      <OperationalPageShell title="Pengadaan" subtitle="Memuat data...">
+        <QueryLoading message="Memuat data pengadaan..." />
+      </OperationalPageShell>
+    );
+  }
+
   return (
-    <DashboardShell
-      title="PENGADAAN"
-      titleAccent="PEMBELIAN"
+    <OperationalPageShell
+      title="Pengadaan Pembelian"
       subtitle="Purchase Order & Requisisi — Supply Chain Management"
       actions={
-        <DnaButton variant="primary" size="lg" onClick={() => setIsPOModalOpen(true)} icon={<Plus className="h-4 w-4" />}>
-          Buat PO Baru
-        </DnaButton>
+        <OperationalButton variant="primary" onClick={() => setIsPOModalOpen(true)}>
+          <Plus className="h-4 w-4" />
+          <span>Buat PO Baru</span>
+        </OperationalButton>
       }
     >
-      {vendorsLoading || materialsLoading || whLoading || prsLoading || poLoading ? (
-        <QueryLoading message="Memuat data pengadaan..." />
-      ) : (
-        <>
-          {/* PO Creation Dialog */}
-          <Dialog open={isPOModalOpen} onOpenChange={setIsPOModalOpen}>
-            <DialogContent className="sm:max-w-4xl bg-white rounded-[24px] border border-slate-100 shadow-2xl p-0 overflow-hidden max-h-[90vh]">
-              <div className="bg-blue-600 p-8 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none" />
-                <div className="relative z-10">
-                  <h2 className="text-xl font-black tracking-tight">Buat Purchase Order</h2>
-                  <p className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5">Procurement Order Protocol v4.0</p>
-                </div>
-                <div className="absolute right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 shrink-0">
-                  <ShoppingCart className="h-6 w-6 text-blue-300" />
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="PR Menunggu"
+            value={String(pendingPrCount).padStart(2, '0')}
+            icon={<FileEdit className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="PO Aktif"
+            value={String(activePoCount).padStart(2, '0')}
+            icon={<Truck className="h-4 w-4" />}
+            tone="purple"
+          />
+          <OperationalMetricCard
+            label="Menunggu GRN"
+            value={String(awaitingGrnCount).padStart(2, '0')}
+            icon={<PackageCheck className="h-4 w-4" />}
+            tone="green"
+          />
+          <OperationalMetricCard
+            label="Total Nilai PO"
+            value={`Rp ${(totalPoValue / 1000000).toFixed(1)}jt`}
+            icon={<Receipt className="h-4 w-4" />}
+            tone="amber"
+          />
+        </OperationalMetricGrid>
+
+        <OperationalPanel>
+          <div className="flex items-center justify-between">
+            <h3 className="text-[14px] font-semibold text-slate-900">Daftar Purchase Order</h3>
+          </div>
+          <div className="mt-3">
+            {(purchaseOrders?.length ?? 0) === 0 ? (
+              <EmptyState
+                icon={<ShoppingCart className="h-8 w-8 text-slate-300" />}
+                title="Belum Ada PO"
+                description="Buat purchase order baru untuk memulai pengadaan."
+                action={
+                  <OperationalButton variant="primary" onClick={() => setIsPOModalOpen(true)}>
+                    Buat PO Baru
+                  </OperationalButton>
+                }
+              />
+            ) : (
+              <OperationalDataTable
+                data={purchaseOrders as any}
+                columns={poColumns as any}
+                getRowId={(row: any) => row.id}
+                searchPlaceholder="Cari PO..."
+              />
+            )}
+          </div>
+        </OperationalPanel>
+
+        <OperationalPanel>
+          <h3 className="text-[14px] font-semibold text-slate-900">Daftar Purchase Request</h3>
+          <div className="mt-3">
+            {(prs?.length ?? 0) === 0 ? (
+              <EmptyState
+                icon={<FileEdit className="h-8 w-8 text-slate-300" />}
+                title="Belum Ada Purchase Request"
+                description="Permintaan pembelian akan muncul di sini setelah dibuat."
+              />
+            ) : (
+              <OperationalDataTable
+                data={prs as any}
+                columns={prColumns as any}
+                getRowId={(row: any) => row.id}
+                searchPlaceholder="Cari PR..."
+              />
+            )}
+          </div>
+        </OperationalPanel>
+      </div>
+
+      {/* PO Creation Dialog */}
+      <Dialog open={isPOModalOpen} onOpenChange={setIsPOModalOpen}>
+        <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-4xl rounded-xl border border-slate-100 bg-white p-0">
+          <div className="bg-blue-600 p-6 text-white relative overflow-hidden">
+            <div className="relative z-10">
+              <h2 className="text-[16px] font-semibold">Buat Purchase Order</h2>
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.16em] text-blue-100">Procurement Order Protocol v4.0</p>
+            </div>
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-md border border-white/20 bg-white/10">
+              <ShoppingCart className="h-5 w-5 text-blue-300" />
+            </div>
+          </div>
+
+          <div className="max-h-[calc(90vh-120px)] space-y-6 overflow-y-auto p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="operational-field">
+                <span>Supplier <span className="text-rose-500">*</span></span>
+                <Select value={selectedVendor} onValueChange={(val: string | null) => setSelectedVendor(val || "")}>
+                  <SelectTrigger className="h-9 bg-slate-50 border border-slate-200 rounded-md font-medium text-[12px]">
+                    <SelectValue placeholder="Pilih Supplier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors?.map((v: any) => (
+                      <SelectItem key={v.id} value={v.id} className="text-[12px] font-medium">{v.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="operational-field">
+                <span>Gudang Tujuan</span>
+                <Select value={selectedWarehouse} onValueChange={(val: string | null) => setSelectedWarehouse(val || "")}>
+                  <SelectTrigger className="h-9 bg-slate-50 border border-slate-200 rounded-md font-medium text-[12px]">
+                    <SelectValue placeholder="Pilih Gudang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses?.map((w: any) => (
+                      <SelectItem key={w.id} value={w.id} className="text-[12px] font-medium">{w.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="operational-field">
+                <span>Tanggal</span>
+                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 font-medium text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div className="operational-field">
+                <span>Jatuh Tempo</span>
+                <input type="date" value={selectedDueDate} onChange={(e) => setSelectedDueDate(e.target.value)} className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 font-medium text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div className="operational-field">
+                <span>Pajak (%)</span>
+                <div className="relative">
+                  <Percent className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input type="number" value={taxPercent} onChange={(e) => setTaxPercent(e.target.value)} className="h-9 w-full rounded-md border border-slate-200 bg-slate-50 pl-8 pr-3 font-medium text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
+            </div>
 
-              <div className="p-8 space-y-8 max-h-[calc(90vh-120px)] overflow-y-auto">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Supplier <span className="text-red-500">*</span></Label>
-                    <Select value={selectedVendor} onValueChange={(val: string | null) => setSelectedVendor(val || "")}>
-                      <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                        <SelectValue placeholder="Pilih Supplier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vendors?.map((v: any) => (
-                          <SelectItem key={v.id} value={v.id} className="font-medium py-3">{v.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Gudang Tujuan</Label>
-                    <Select value={selectedWarehouse} onValueChange={(val: string | null) => setSelectedWarehouse(val || "")}>
-                      <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                        <SelectValue placeholder="Pilih Gudang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {warehouses?.map((w: any) => (
-                          <SelectItem key={w.id} value={w.id} className="font-medium py-3">{w.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            <div className="operational-field">
+              <span>Pilih Barang</span>
+              <Select onValueChange={(val: string | null) => val && addItem(val)}>
+                <SelectTrigger className="h-9 bg-slate-50 border border-slate-200 rounded-md font-medium text-[12px]">
+                  <SelectValue placeholder="+ Tambah Barang ke Keranjang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {materials?.map((m: any) => (
+                    <SelectItem key={m.id} value={m.id} className="text-[12px] font-medium">
+                      {m.name} <span className="text-[10px] text-slate-500">({m.unit})</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Tanggal</Label>
-                    <DnaInput type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Jatuh Tempo</Label>
-                    <DnaInput type="date" value={selectedDueDate} onChange={(e) => setSelectedDueDate(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Pajak (%)</Label>
-                    <DnaInput type="number" value={taxPercent} onChange={(e) => setTaxPercent(e.target.value)} icon={<Percent className="h-3.5 w-3.5" />} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black text-slate-400 uppercase block">Pilih Barang</Label>
-                  <Select onValueChange={(val: string | null) => val && addItem(val)}>
-                    <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                      <SelectValue placeholder="+ Tambah Barang ke Keranjang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {materials?.map((m: any) => (
-                        <SelectItem key={m.id} value={m.id} className="font-medium py-3">
-                          {m.name} <span className="text-[10px] text-slate-400 ml-2">({m.unit})</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
-                  <div className="bg-slate-50 px-4 py-3 flex justify-between items-center border-b border-slate-200">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                      <ShoppingCart className="h-3.5 w-3.5" /> Keranjang Belanja ({items.length} item)
-                    </span>
-                    {items.length > 0 && (
-                      <Button variant="ghost" size="sm" onClick={() => setItems([])} className="text-rose-500 hover:bg-rose-50 h-7 text-[10px] font-black uppercase">
-                        <Trash2 className="h-3 w-3 mr-1" /> Bersihkan
-                      </Button>
-                    )}
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-table-header text-slate-400 uppercase">Barang</TableHead>
-                        <TableHead className="text-table-header text-slate-400 uppercase text-center">Qty</TableHead>
-                        <TableHead className="text-table-header text-slate-400 uppercase text-right">Harga</TableHead>
-                        <TableHead className="text-table-header text-slate-400 uppercase text-right">Subtotal</TableHead>
-                        <TableHead className="w-12"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-12 text-center">
-                            <ShoppingCart className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-                            <p className="text-slate-300 font-medium text-sm">Belum ada barang. Pilih barang di atas.</p>
-                          </TableCell>
-                        </TableRow>
-                      ) : items.map((item) => (
-                        <TableRow key={item.materialId} className="group">
-                          <TableCell className="py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                                <Package className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-slate-900 text-sm">{item.name}</p>
-                                <p className="text-[10px] text-slate-400">Unit: {item.unit}</p>
-                              </div>
+            <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
+                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                  <ShoppingCart className="h-3.5 w-3.5" /> Keranjang ({items.length} item)
+                </span>
+                {items.length > 0 && (
+                  <button
+                    onClick={() => setItems([])}
+                    className="flex items-center gap-1 text-[10px] font-semibold uppercase text-rose-500 hover:bg-rose-50 rounded px-2 py-1"
+                  >
+                    <Trash2 className="h-3 w-3" /> Bersihkan
+                  </button>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase text-slate-500">Barang</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase text-slate-500 text-center">Qty</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase text-slate-500 text-right">Harga</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase text-slate-500 text-right">Subtotal</th>
+                      <th className="w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {items.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center">
+                          <ShoppingCart className="mx-auto mb-2 h-7 w-7 text-slate-200" />
+                          <p className="text-[12px] font-medium text-slate-400">Belum ada barang. Pilih barang di atas.</p>
+                        </td>
+                      </tr>
+                    ) : items.map((item) => (
+                      <tr key={item.materialId}>
+                        <td className="py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="grid h-8 w-8 place-items-center rounded-md bg-blue-50 text-blue-600">
+                              <Package className="h-3.5 w-3.5" />
                             </div>
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            <Input
-                              type="number"
-                              value={item.qty}
-                              onChange={(e) => updateItem(item.materialId, "qty", Number(e.target.value))}
-                              className="w-20 h-9 text-center mx-auto font-black text-xs"
-                              min={0}
-                            />
-                          </TableCell>
-                          <TableCell className="py-3 text-right">
-                            <Input
-                              type="number"
-                              value={item.price}
-                              onChange={(e) => updateItem(item.materialId, "price", Number(e.target.value))}
-                              className="w-28 h-9 text-right ml-auto font-black text-xs"
-                              min={0}
-                            />
-                          </TableCell>
-                          <TableCell className="py-3 text-right font-black text-blue-600 text-sm">
-                            Rp {(item.qty * item.price).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="py-3 text-right">
-                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.materialId)} className="h-8 w-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-500">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                <div className="bg-slate-50 rounded-2xl p-6 space-y-2 border border-slate-200">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-500">Subtotal</span>
-                    <span className="font-black text-slate-900">Rp {subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-500">Pajak ({taxPercent}%)</span>
-                    <span className="font-black text-slate-900">Rp {tax.toLocaleString()}</span>
-                  </div>
-                  <div className="border-t border-slate-200 pt-2 flex justify-between text-base">
-                    <span className="font-black text-slate-700">Grand Total</span>
-                    <span className="font-black text-blue-600 text-lg tabular-nums">Rp {grandTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black text-slate-400 uppercase block">Catatan</Label>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Catatan untuk supplier..."
-                    className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium resize-none"
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-slate-200 p-6 flex gap-4 justify-end">
-                <DnaButton variant="ghost" onClick={() => { setIsPOModalOpen(false); resetForm(); }}>Batal</DnaButton>
-                <DnaButton variant="primary" onClick={handleCreatePO} disabled={createPOMutation.isPending || items.length === 0}>
-                  {createPOMutation.isPending ? "Menyimpan..." : "Simpan Pembelian"}
-                </DnaButton>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Approve Confirmation */}
-          <Dialog open={!!approveDialog} onOpenChange={(open) => { if (!open) setApproveDialog(null); }}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  Konfirmasi Persetujuan
-                </DialogTitle>
-                <DialogDescription>
-                  Setujui {approveDialog?.type === "PO" ? "Purchase Order" : "Purchase Request"} ini? Tindakan ini akan mengubah status menjadi APPROVED.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="gap-2">
-                <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
-                <DnaButton variant="primary" onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-700">
-                  Ya, Setujui
-                </DnaButton>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Reject Dialog */}
-          <Dialog open={!!rejectDialog} onOpenChange={(open) => { if (!open) { setRejectDialog(null); setRejectReason(""); } }}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Ban className="h-5 w-5 text-rose-500" />
-                  Konfirmasi Penolakan
-                </DialogTitle>
-                <DialogDescription>
-                  Tolak {rejectDialog?.type === "PO" ? "Purchase Order" : "Purchase Request"} ini. Berikan alasan penolakan.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <Label className="text-[9px] font-black text-slate-400 uppercase">Alasan Penolakan</Label>
-                <Textarea
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Alasan mengapa ditolak..."
-                  className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium resize-none"
-                  rows={3}
-                />
-              </div>
-              <DialogFooter className="gap-2">
-                <DnaButton variant="ghost" onClick={() => { setRejectDialog(null); setRejectReason(""); }}>Batal</DnaButton>
-                <DnaButton variant="primary" onClick={handleReject} className="bg-rose-600 hover:bg-rose-700">
-                  Ya, Tolak
-                </DnaButton>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard label="PR Menunggu" value={pendingPrCount} icon={<FileEdit className="text-blue-600" />} />
-            <StatCard label="PO Aktif" value={activePoCount} icon={<Truck className="text-blue-600" />} />
-            <StatCard label="Menunggu GRN" value={awaitingGrnCount} icon={<PackageCheck className="text-emerald-600" />} />
-            <StatCard label="Total Nilai PO" value={`Rp ${(totalPoValue / 1000000).toFixed(1)}jt`} icon={<Receipt className="text-amber-600" />} />
-          </div>
-
-          {/* PO Registry */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-blue-600 rounded-full" />
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">Daftar Purchase Order</h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <DnaInput placeholder="Cari PO..." icon={<Search />} className="w-64" />
+                            <div>
+                              <p className="text-[12px] font-medium text-slate-900">{item.name}</p>
+                              <p className="text-[10px] text-slate-500">Unit: {item.unit}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 text-center">
+                          <Input
+                            type="number"
+                            value={item.qty}
+                            onChange={(e) => updateItem(item.materialId, "qty", Number(e.target.value))}
+                            className="mx-auto h-8 w-20 rounded-md border border-slate-200 bg-white text-center font-medium text-[12px]"
+                            min={0}
+                          />
+                        </td>
+                        <td className="py-2 text-right">
+                          <Input
+                            type="number"
+                            value={item.price}
+                            onChange={(e) => updateItem(item.materialId, "price", Number(e.target.value))}
+                            className="ml-auto h-8 w-24 rounded-md border border-slate-200 bg-white text-right font-medium text-[12px]"
+                            min={0}
+                          />
+                        </td>
+                        <td className="py-2 text-right text-[12px] font-semibold text-blue-600">
+                          Rp {(item.qty * item.price).toLocaleString()}
+                        </td>
+                        <td className="py-2 text-right">
+                          <OperationalButton variant="ghost" onClick={() => removeItem(item.materialId)} className="h-7 w-7 p-0">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </OperationalButton>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <TableWrapper>
-              <Table className="table-dense">
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">No. PO</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Supplier</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Tgl</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Pembuat</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Nilai</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Status</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(!purchaseOrders || purchaseOrders.length === 0) ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="py-16 text-center">
-                        <EmptyState
-                          icon={<ShoppingCart className="h-8 w-8 text-slate-300" />}
-                          title="Belum Ada PO"
-                          description="Buat purchase order baru untuk memulai pengadaan."
-                          action={<DnaButton variant="primary" onClick={() => setIsPOModalOpen(true)}>Buat PO Baru</DnaButton>}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ) : purchaseOrders?.map((po: any) => (
-                    <TableRow key={po.id} className="group hover:bg-slate-50/30 transition-all">
-                      <TableCell className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-white text-slate-900 flex items-center justify-center shadow-sm border border-slate-200">
-                            <ClipboardList className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <span className="font-black text-slate-900 text-xs uppercase italic">{po.poNumber}</span>
-                            <p className="text-[9px] font-black text-slate-400 mt-0.5 uppercase">{po.createdAt ? new Date(po.createdAt).toLocaleDateString() : '-'}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 font-medium text-slate-700 text-xs">{po.supplier?.name || '-'}</TableCell>
-                      <TableCell className="py-3 px-4 text-slate-500 text-[10px] font-medium">
-                        {po.estArrival ? new Date(po.estArrival).toLocaleDateString() : '-'}
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        <div className="flex items-center gap-1.5">
-                          <User className="h-3 w-3 text-slate-400" />
-                          <span className="text-[10px] font-medium text-slate-600">{po.scm?.fullName || '-'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs tabular-nums">
-                        Rp {Number(po.totalValue).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <DnaBadge status={STATUS_BADGE_MAP[po.status] || "default"}>
-                          {po.status?.replace('_', ' ') || 'DRAFT'}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-1.5">
-                          {po.status === 'DRAFT' && (
-                            <>
-                              <DnaButton variant="primary" size="sm" onClick={() => setApproveDialog({ id: po.id, type: "PO" })} className="bg-emerald-600 hover:bg-emerald-700">
-                                <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Setuju
-                              </DnaButton>
-                              <DnaButton variant="outline" size="sm" onClick={() => setRejectDialog({ id: po.id, type: "PO" })} className="text-rose-600 border-rose-200 hover:bg-rose-50">
-                                <XCircle className="h-3.5 w-3.5 mr-1" /> Tolak
-                              </DnaButton>
-                            </>
-                          )}
-                          {po.status === 'APPROVED' && (
-                            <DnaButton variant="primary" size="sm" icon={<Send className="h-3.5 w-3.5" />}>
-                              Kirim PO
-                            </DnaButton>
-                          )}
-                          {po.status === 'PENDING_APPROVAL' && (
-                            <>
-                              <DnaButton variant="primary" size="sm" onClick={() => setApproveDialog({ id: po.id, type: "PO" })} className="bg-emerald-600 hover:bg-emerald-700">
-                                <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Setuju
-                              </DnaButton>
-                              <DnaButton variant="outline" size="sm" onClick={() => setRejectDialog({ id: po.id, type: "PO" })} className="text-rose-600 border-rose-200 hover:bg-rose-50">
-                                <XCircle className="h-3.5 w-3.5 mr-1" /> Tolak
-                              </DnaButton>
-                            </>
-                          )}
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-500">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableWrapper>
-          </div>
-
-          {/* PR Registry */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-amber-500 rounded-full" />
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">Daftar Purchase Request</h3>
+            <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="flex justify-between text-[12px]">
+                <span className="font-medium text-slate-600">Subtotal</span>
+                <span className="font-semibold text-slate-900">Rp {subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-[12px]">
+                <span className="font-medium text-slate-600">Pajak ({taxPercent}%)</span>
+                <span className="font-semibold text-slate-900">Rp {tax.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-[14px]">
+                <span className="font-semibold text-slate-700">Grand Total</span>
+                <span className="font-semibold tabular-nums text-blue-600">Rp {grandTotal.toLocaleString()}</span>
               </div>
             </div>
 
-            <TableWrapper>
-              <Table className="table-dense">
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">ID</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Gudang</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Pembuat</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Jml Item</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Status</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(!prs || prs.length === 0) ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-16 text-center">
-                        <p className="text-slate-400 font-medium">Belum ada permintaan pembelian.</p>
-                      </TableCell>
-                    </TableRow>
-                  ) : prs?.map((pr: any) => (
-                    <TableRow key={pr.id} className="group hover:bg-slate-50/30 transition-all">
-                      <TableCell className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-amber-600 text-white flex items-center justify-center font-black text-[10px] italic">
-                            PR
-                          </div>
-                          <div>
-                            <p className="font-black text-slate-900 text-xs uppercase italic">#{pr.id?.split('-')[0]}</p>
-                            <p className="text-[9px] font-black text-slate-400 mt-0.5">{new Date(pr.createdAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 font-medium text-slate-700 text-xs">{pr.warehouse?.name || '-'}</TableCell>
-                      <TableCell className="py-3 px-4">
-                        <div className="flex items-center gap-1.5">
-                          <User className="h-3 w-3 text-slate-400" />
-                          <span className="text-[10px] font-medium text-slate-600">{pr.creator?.fullName || pr.createdBy || '-'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs">{pr.items?.length || 0}</TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <DnaBadge status={STATUS_BADGE_MAP[pr.status] || "default"}>
-                          {pr.status?.replace('_', ' ') || 'DRAFT'}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-1.5">
-                          {pr.status === 'SUBMITTED' && (
-                            <>
-                              <DnaButton variant="primary" size="sm" onClick={() => setApproveDialog({ id: pr.id, type: "PR" })} className="bg-emerald-600 hover:bg-emerald-700">
-                                <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Setuju
-                              </DnaButton>
-                              <DnaButton variant="outline" size="sm" onClick={() => setRejectDialog({ id: pr.id, type: "PR" })} className="text-rose-600 border-rose-200 hover:bg-rose-50">
-                                <XCircle className="h-3.5 w-3.5 mr-1" /> Tolak
-                              </DnaButton>
-                            </>
-                          )}
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-500">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+            <div className="operational-field">
+              <span>Catatan</span>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Catatan untuk supplier..."
+                className="min-h-16 rounded-md border border-slate-200 bg-slate-50 p-3 text-[12px] font-medium text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+              />
+            </div>
           </div>
-        </>
-      )}
-    </DashboardShell>
+
+          <div className="flex justify-end gap-3 border-t border-slate-200 p-4">
+            <OperationalButton variant="ghost" onClick={() => { setIsPOModalOpen(false); resetForm(); }}>
+              Batal
+            </OperationalButton>
+            <OperationalButton
+              variant="primary"
+              onClick={handleCreatePO}
+              disabled={createPOMutation.isPending || items.length === 0}
+            >
+              {createPOMutation.isPending ? "Menyimpan..." : "Simpan Pembelian"}
+            </OperationalButton>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Confirmation */}
+      <Dialog open={!!approveDialog} onOpenChange={(open) => { if (!open) setApproveDialog(null); }}>
+        <DialogContent className="sm:max-w-md rounded-xl border border-slate-200 bg-white p-0">
+          <DialogHeader className="p-4">
+            <DialogTitle className="flex items-center gap-2 text-[14px] font-semibold">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              Konfirmasi Persetujuan
+            </DialogTitle>
+            <DialogDescription>
+              Setujui {approveDialog?.type === "PO" ? "Purchase Order" : "Purchase Request"} ini? Tindakan ini akan mengubah status menjadi APPROVED.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 p-4">
+            <OperationalButton variant="ghost" onClick={() => setApproveDialog(null)}>
+              Batal
+            </OperationalButton>
+            <OperationalButton variant="primary" onClick={handleApprove}>
+              Ya, Setujui
+            </OperationalButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog open={!!rejectDialog} onOpenChange={(open) => { if (!open) { setRejectDialog(null); setRejectReason(""); } }}>
+        <DialogContent className="sm:max-w-md rounded-xl border border-slate-200 bg-white p-0">
+          <DialogHeader className="p-4">
+            <DialogTitle className="flex items-center gap-2 text-[14px] font-semibold">
+              <Ban className="h-5 w-5 text-rose-500" />
+              Konfirmasi Penolakan
+            </DialogTitle>
+            <DialogDescription>
+              Tolak {rejectDialog?.type === "PO" ? "Purchase Order" : "Purchase Request"} ini. Berikan alasan penolakan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-4 py-2">
+            <Label className="text-[10px] font-semibold uppercase text-slate-500">Alasan Penolakan</Label>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Alasan mengapa ditolak..."
+              className="mt-1 min-h-20 rounded-md border border-slate-200 bg-slate-50 p-3 text-[12px] font-medium text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500"
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 p-4">
+            <OperationalButton variant="ghost" onClick={() => { setRejectDialog(null); setRejectReason(""); }}>
+              Batal
+            </OperationalButton>
+            <OperationalButton variant="danger" onClick={handleReject}>
+              Ya, Tolak
+            </OperationalButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </OperationalPageShell>
   );
 }

@@ -5,14 +5,12 @@ import {
   Patch,
   Param,
   Body,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { GoodsRequirementService } from '../services/goods-requirement.service';
-import {
-  CreateGoodsRequirementDto,
-  UpdateGoodsRequirementStatusDto,
-} from '../dto/goods-requirement.dto';
+import { UpdateGoodsRequirementStatusDto } from '../dto/goods-requirement.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -25,11 +23,22 @@ import { UserRole } from '@prisma/client';
 export class GoodsRequirementController {
   constructor(private readonly service: GoodsRequirementService) {}
 
-  @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.PRODUCTION)
-  @ApiOperation({ summary: 'Create goods requirement (MRP)' })
-  create(@Body() dto: CreateGoodsRequirementDto) {
-    return this.service.create(dto);
+  @Post('from-sales-order/:salesOrderId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM)
+  @ApiOperation({ summary: 'Derive an immutable requirement from a committed Sales Order' })
+  generate(@Param('salesOrderId') salesOrderId: string, @Req() req: { user: { id: string } }) {
+    return this.service.generateFromCommittedSalesOrder(salesOrderId, req.user.id);
+  }
+
+  @Post(':id/purchase-requests')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM)
+  @ApiOperation({ summary: 'Create a PR from inherited requirement lines; no material re-entry' })
+  createPurchaseRequest(
+    @Param('id') id: string,
+    @Body() body: { warehouseId: string; supplierId?: string; priority?: any; notes?: string; idempotencyKey: string; unitPrices?: Array<{ requirementItemId: string; unitPrice: number }> },
+    @Req() req: { user: { id: string } },
+  ) {
+    return this.service.createPurchaseRequestFromRequirement(id, req.user.id, body);
   }
 
   @Get()

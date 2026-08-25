@@ -10,7 +10,7 @@ import {
   Clock, CheckCircle2, TrendingUp, Calculator
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational";
 import { DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
 import { WoDetailDrawer } from "@/components/production/WoDetailDrawer";
 import { Input } from "@/components/ui/input";
@@ -516,7 +516,7 @@ function SchedulesTableView() {
 
 export default function SchedulePage() {
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="Penjadwalan"
       titleAccent="Produksi"
       subtitle="Gantt chart & jadwal produksi per-stage"
@@ -537,6 +537,6 @@ export default function SchedulePage() {
           </Suspense>
         </TabsContent>
       </Tabs>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

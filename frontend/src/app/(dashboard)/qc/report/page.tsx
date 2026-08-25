@@ -3,9 +3,15 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StatCard, KpiCard, TableWrapper, SectionLabel, DnaBadge } from "@/components/dna";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
 import { ShieldCheck, AlertTriangle, TrendingDown, FlaskConical, Loader2 } from "lucide-react";
 
 interface QCAudit {
@@ -21,6 +27,11 @@ interface QCAudit {
   notes: string | null;
   createdAt: string;
 }
+
+const SEVERITY_TONE: Record<string, "danger" | "pending" | "neutral"> = {
+  CRITICAL: "danger",
+  MAJOR: "pending",
+};
 
 export default function QCReportPage() {
   const { data: audits, isLoading } = useQuery<QCAudit[]>({
@@ -48,69 +59,124 @@ export default function QCReportPage() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
 
+  const rejectColumns = useMemo(
+    () => [
+      {
+        accessorKey: "createdAt",
+        header: "Tanggal",
+        cell: ({ getValue }: { getValue: () => string }) => (
+          <span className="text-[13px] tabular-nums text-slate-700">{formatDate(String(getValue()))}</span>
+        ),
+      },
+      {
+        accessorKey: "phase",
+        header: () => <div className="text-center">Part</div>,
+        cell: ({ getValue }: { getValue: () => string | null }) => (
+          <div className="text-center text-[13px] text-slate-700">{getValue() ?? "—"}</div>
+        ),
+      },
+      {
+        accessorKey: "severity",
+        header: () => <div className="text-center">Severity</div>,
+        cell: ({ getValue }: { getValue: () => string | null }) => {
+          const s = getValue();
+          if (!s) return <div className="text-center text-slate-400">—</div>;
+          const tone = SEVERITY_TONE[s] ?? "neutral";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={tone}>{s}</OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "defectCategory",
+        header: () => <div className="text-center">Category</div>,
+        cell: ({ getValue }: { getValue: () => string | null }) => (
+          <div className="text-center text-[13px] text-slate-700">{getValue() ?? "—"}</div>
+        ),
+      },
+      {
+        accessorKey: "defectType",
+        header: "Cause",
+        cell: ({ getValue }: { getValue: () => string | null }) => (
+          <span className="text-[13px] text-slate-700">{getValue() ?? "—"}</span>
+        ),
+      },
+      {
+        accessorKey: "notes",
+        header: "Description",
+        cell: ({ getValue }: { getValue: () => string | null }) => (
+          <span className="text-[13px] text-slate-500 line-clamp-1 max-w-xs">
+            {getValue() ?? "—"}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <DashboardShell
-      title="QC"
-      titleAccent="Report"
+    <OperationalMigrationShell
+      title="Laporan QC"
       subtitle="Aktivitas QC, performa vendor & analisis reject"
     >
       {isLoading ? (
-        <div className="flex justify-center p-20"><Loader2 className="animate-spin h-10 w-10 text-blue-600" /></div>
+        <div className="flex justify-center p-20">
+          <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
+        </div>
       ) : (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Inspeksi Bulan Ini" value={stats?.totalInspections ?? "0"} icon={<FlaskConical />} />
-            <KpiCard label="Pass Rate" value={stats?.passRate ?? "0%"} targetPct={parseInt(stats?.passRate ?? "0") || 0} icon={<ShieldCheck />} />
-            <StatCard label="Total Reject" value={stats?.totalReject ?? "0"} icon={<AlertTriangle />} />
-            <StatCard label="Nilai Kerugian" value={stats?.totalLoss ?? "Rp 0"} icon={<TrendingDown />} />
-          </div>
+        <div className="space-y-6">
+          <OperationalMetricGrid>
+            <OperationalMetricCard
+              label="Inspeksi Bulan Ini"
+              value={stats?.totalInspections ?? "0"}
+              icon={<FlaskConical className="h-4 w-4" />}
+              tone="blue"
+            />
+            <OperationalMetricCard
+              label="Pass Rate"
+              value={stats?.passRate ?? "0%"}
+              icon={<ShieldCheck className="h-4 w-4" />}
+              tone="green"
+              helper={`Target ${stats?.passRate ?? "0%"}`}
+            />
+            <OperationalMetricCard
+              label="Total Reject"
+              value={stats?.totalReject ?? "0"}
+              icon={<AlertTriangle className="h-4 w-4" />}
+              tone="amber"
+            />
+            <OperationalMetricCard
+              label="Nilai Kerugian"
+              value={stats?.totalLoss ?? "Rp 0"}
+              icon={<TrendingDown className="h-4 w-4" />}
+              tone="red"
+            />
+          </OperationalMetricGrid>
 
           {rejects && rejects.length > 0 && (
-            <div>
-              <SectionLabel>Analisis Reject per Item</SectionLabel>
-              <TableWrapper>
-                <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow>
-                      <TableHead className="text-table-header text-slate-400 py-4 px-4">Date</TableHead>
-                      <TableHead className="text-table-header text-slate-400 text-center py-4 px-4">Part</TableHead>
-                      <TableHead className="text-table-header text-slate-400 text-center py-4 px-4">Severity</TableHead>
-                      <TableHead className="text-table-header text-slate-400 text-center py-4 px-4">Category</TableHead>
-                      <TableHead className="text-table-header text-slate-400 py-4 px-4">Cause</TableHead>
-                      <TableHead className="text-table-header text-slate-400 py-4 px-4">Description</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rejects.map((r) => (
-                      <TableRow key={r.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                        <TableCell className="py-3 px-4 text-slate-500 text-xs tabular-nums">{formatDate(r.createdAt)}</TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <DnaBadge>{r.phase || "—"}</DnaBadge>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <DnaBadge status={r.severity === "CRITICAL" ? "critical" : r.severity === "MAJOR" ? "warning" : "default"}>
-                            {r.severity || "—"}
-                          </DnaBadge>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center text-slate-500">{r.defectCategory || "—"}</TableCell>
-                        <TableCell className="py-3 px-4 text-slate-500">{r.defectType || "—"}</TableCell>
-                        <TableCell className="py-3 px-4 text-slate-400 text-xs max-w-xs truncate">{r.notes || "—"}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableWrapper>
-            </div>
+            <OperationalPanel>
+              <OperationalDataTable
+                data={rejects}
+                columns={rejectColumns as any}
+                getRowId={(row: QCAudit) => row.id}
+                searchPlaceholder="Cari part, kategori, atau deskripsi..."
+                emptyMessage="Tidak ada data reject."
+              />
+            </OperationalPanel>
           )}
 
           {rejects && rejects.length === 0 && (
-            <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-[24px]">
-              <ShieldCheck className="w-12 h-12 text-emerald-200 mx-auto mb-4" />
-              <p className="text-sm font-medium text-slate-400">Belum ada data reject. Semua produk dalam kondisi baik.</p>
-            </div>
+            <OperationalPanel className="flex flex-col items-center justify-center py-16 text-center">
+              <ShieldCheck className="w-12 h-12 text-emerald-300 mb-3" />
+              <p className="text-[13px] font-medium text-slate-500">
+                Belum ada data reject. Semua produk dalam kondisi baik.
+              </p>
+            </OperationalPanel>
           )}
         </div>
       )}
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

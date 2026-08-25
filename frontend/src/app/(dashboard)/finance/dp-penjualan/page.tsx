@@ -10,7 +10,11 @@ import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalMigrationShell,
+  OperationalPanel,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import {
   Dialog,
   DialogContent,
@@ -128,7 +132,7 @@ export default function DPPenjualanPage() {
   const isReady = soId && date && coaId && Number(amount) > 0 && !!buktiFile;
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="DP"
       titleAccent="PENJUALAN"
       subtitle="Uang Muka Penjualan — Sales Down Payment Terminal"
@@ -136,7 +140,7 @@ export default function DPPenjualanPage() {
         <DnaBadge status="info">Sales DP</DnaBadge>
       }
     >
-      <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative">
+      <OperationalPanel>
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-blue-600">
           <ArrowDownCircle size={180} />
         </div>
@@ -167,7 +171,7 @@ export default function DPPenjualanPage() {
             </div>
 
             {selectedSO && (
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 space-y-5 animate-fade-slide-in">
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 space-y-5">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-blue-600" />
                   <p className="text-[10px] font-black uppercase tracking-tight text-blue-600">Order Detail</p>
@@ -177,7 +181,7 @@ export default function DPPenjualanPage() {
                     <p className="text-[8px] font-black uppercase text-slate-400 tracking-wider">Customer</p>
                     <div className="flex items-center gap-2">
                       <User className="w-3.5 h-3.5 text-slate-400" />
-                      <p className="font-black text-slate-900 text-sm uppercase">{selectedSO.lead?.clientName}</p>
+                      <p className="font-black text-slate-900 text-sm uppercase">{selectedSO.lead?.clientName || "—"}</p>
                     </div>
                   </div>
                   <div className="space-y-1">
@@ -197,7 +201,7 @@ export default function DPPenjualanPage() {
                         <div key={idx} className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <Package className="w-3 h-3 text-slate-400" />
-                            <span className="font-medium text-slate-700 uppercase">{item.product?.name || item.name}</span>
+                            <span className="font-medium text-slate-700 uppercase">{item.product?.name || item.name || "—"}</span>
                           </div>
                           <span className="font-black text-slate-900 font-mono tabular-nums">{item.quantity} pcs</span>
                         </div>
@@ -211,15 +215,15 @@ export default function DPPenjualanPage() {
                 <div className="space-y-3 pt-3 border-t border-blue-100">
                   <div className="flex justify-between items-center">
                     <p className="text-[8px] font-black uppercase text-slate-400 tracking-wider">Total Tagihan</p>
-                    <p className="text-lg font-black text-slate-900 font-mono tabular-nums">{formatCurrency(selectedSOTotal)}</p>
+                    <p className="text-lg font-black text-slate-900 font-mono tabular-nums">{formatOperationalCurrency(selectedSOTotal)}</p>
                   </div>
                   <div className="flex justify-between items-center">
                     <p className="text-[8px] font-black uppercase text-green-600 tracking-wider">Sudah Dibayar</p>
-                    <p className="text-sm font-black text-green-600 font-mono tabular-nums">{formatCurrency(selectedSOPaid)}</p>
+                    <p className="text-sm font-black text-green-600 font-mono tabular-nums">{formatOperationalCurrency(selectedSOPaid)}</p>
                   </div>
                   <div className="flex justify-between items-center">
                     <p className="text-[8px] font-black uppercase text-red-600 tracking-wider">Sisa Tagihan</p>
-                    <p className="text-sm font-black text-red-600 font-mono tabular-nums">{formatCurrency(selectedSOTotal - selectedSOPaid)}</p>
+                    <p className="text-sm font-black text-red-600 font-mono tabular-nums">{formatOperationalCurrency(selectedSOTotal - selectedSOPaid)}</p>
                   </div>
                 </div>
               </div>
@@ -227,7 +231,7 @@ export default function DPPenjualanPage() {
           </div>
 
           {/* Right: DP Form */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-5 relative">
             <div className="flex items-center gap-2 mb-2">
               <ArrowDownCircle className="w-4 h-4 text-blue-600" />
               <p className="text-[10px] font-black uppercase tracking-tight text-blue-600">Down Payment Entry</p>
@@ -343,7 +347,7 @@ export default function DPPenjualanPage() {
             </div>
           </div>
         </div>
-      </div>
+      </OperationalPanel>
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
@@ -356,6 +360,6 @@ export default function DPPenjualanPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

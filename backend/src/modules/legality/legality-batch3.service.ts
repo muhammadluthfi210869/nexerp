@@ -1,35 +1,42 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
-import { RegStage, RegType } from '@prisma/client';
+import { RegStage, RegType, LegalApplicability } from '@prisma/client';
+import {
+  eligibleDownstreamFormulaOrder,
+  eligibleDownstreamFormulaWhere,
+} from '../rnd/formula-eligibility';
 
 /**
- * BATCH 3 — Legalitas operational service.
+ * BATCH 3 — Legalitas operational service (corrected).
  *
- * Owns three flows that did NOT exist before Batch 3:
+ * Applicability is now an EXPLICIT decision recorded on SampleRequest:
  *
- *   1. intakeForCompletedSample(sampleId, actorId)
- *      R&D APPROVED → creates a RegulatoryPipeline row idempotently.
- *      Pins sampleRequestId + formulaId. No re-entry of upstream facts.
+ *   UNKNOWN         → legal gate BLOCKS (must not silently bypass)
+ *   REQUIRED        → a RegulatoryPipeline must reach PUBLISHED
+ *   NOT_APPLICABLE  → no pipeline is required (explicit operator decision)
  *
- *   2. advancePipelineStage(pipelineId, targetStage, actorId, reason?)
- *      Linear RegStage advance with revision preservation:
- *      REVISION is a back-edge that retains currentStage's logHistory entry.
+ * The auto-intake R&D listener no longer hardcodes BPOM for every
+ * approved sample — it consults sampleRequest.legalApplicability.
+ * If applicability is UNKNOWN, the listener leaves the decision to a
+ * human and emits an explicit "applicability decision required" event.
  *
- *   3. getReadinessForLead(leadId, sampleId)
- *      SO eligibility check: if any RegulatoryPipeline exists for the
- *      (leadId, sampleId) tuple, ALL must be PUBLISHED. Otherwise
- *      NOT_APPLICABLE — some products don't need legal.
+ * Formula is selected deterministically: the sample's CURRENT eligible
+ * formula (PRODUCTION_LOCKED, highest version, never SUPERSEDED).
  *
- * Existing HKI/BPOM/Halal flows (separate legacy tables) are NOT touched.
- * They remain operational via LegalityService but are out of Batch 3 scope.
+ * Ownership: legalPicId is left NULL on auto-intake so the item lands
+ * in the Legalitas department queue. The R&D handoff actor is recorded
+ * in logHistory as the actor of the handoff — NOT the Legalitas owner.
  */
 @Injectable()
 export class LegalityBatch3Service {
   private readonly logger = new Logger(LegalityBatch3Service.name);
 
-  // Linear advance map. PUBLISHED is terminal.
-  // REVISION is a one-way back-edge from EVALUATION (per existing schema semantics).
   private readonly advanceMap: Record<RegStage, RegStage[]> = {
     [RegStage.DRAFT]: [RegStage.SUBMITTED],
     [RegStage.SUBMITTED]: [RegStage.EVALUATION, RegStage.REVISION],
@@ -44,72 +51,168 @@ export class LegalityBatch3Service {
   ) {}
 
   /**
-   * INV-05: idempotent intake. Repeated R&D→Legal calls return the existing
-   * pipeline row, never a duplicate.
+   * Idempotent intake. Two cases:
+   *  - Auto (R&D APPROVED listener): respects sample.legalApplicability.
+   *    UNKNOWN => no pipeline, log + emit decision-required event.
+   *    REQUIRED => create pipeline with sample.legalType ?? BPOM.
+   *    NOT_APPLICABLE => no pipeline, no event.
+   *  - Manual endpoint: callers may pass applicability override.
    */
   async intakeForCompletedSample(
     sampleRequestId: string,
     actorId: string,
+    override?: { applicability?: LegalApplicability; legalType?: RegType },
   ) {
-    this.logger.log(`[INTAKE] called sampleRequestId=${sampleRequestId} actorId=${actorId}`);
+    this.logger.log(
+      `[INTAKE] called sampleRequestId=${sampleRequestId} actorId=${actorId}`,
+    );
     const sample = await this.prisma.sampleRequest.findUnique({
       where: { id: sampleRequestId },
       include: {
-        formulas: { where: { status: { not: 'SUPERSEDED' } }, orderBy: { version: 'desc' } },
+        formulas: {
+          where: eligibleDownstreamFormulaWhere(sampleRequestId),
+          orderBy: eligibleDownstreamFormulaOrder,
+          take: 1,
+        },
         lead: true,
       },
     });
-    if (!sample) throw new NotFoundException(`Sample ${sampleRequestId} not found`);
+    if (!sample)
+      throw new NotFoundException(`Sample ${sampleRequestId} not found`);
 
+    const applicability = override?.applicability ?? sample.legalApplicability;
+
+    if (applicability === LegalApplicability.NOT_APPLICABLE) {
+      this.logger.log(
+        `[INTAKE] skipped — sample ${sample.id} explicitly NOT_APPLICABLE`,
+      );
+      return { pipeline: null, idempotent: true, applicability };
+    }
+
+    if (applicability === LegalApplicability.UNKNOWN) {
+      this.logger.warn(
+        `[INTAKE] blocked — sample ${sample.id} applicability is UNKNOWN. Human decision required.`,
+      );
+      // Persist the override (if provided) so a subsequent retry can succeed.
+      if (override?.applicability) {
+        await this.prisma.sampleRequest.update({
+          where: { id: sample.id },
+          data: {
+            legalApplicability: override.applicability,
+            legalType: override.legalType ?? sample.legalType ?? null,
+          },
+        });
+        // Fall through and continue with the new decision if it became REQUIRED.
+        if (override.applicability === LegalApplicability.NOT_APPLICABLE) {
+          return { pipeline: null, idempotent: true, applicability };
+        }
+      } else {
+        this.eventEmitter.emit('legality.batch3.applicability_required', {
+          sampleRequestId: sample.id,
+          leadId: sample.leadId,
+          handoffActorId: actorId,
+        });
+        throw new BadRequestException(
+          'LEGAL_APPLICABILITY_UNKNOWN: Sample has no explicit legal applicability. A human must mark it REQUIRED or NOT_APPLICABLE before intake can proceed.',
+        );
+      }
+    }
+
+    // REQUIRED path.
     const formula = sample.formulas[0];
     if (!formula) {
       throw new BadRequestException(
-        'LEGALITAS_INTAKE_BLOCKED: Sample has no active Formula. R&D must complete formulation first.',
+        'LEGALITAS_INTAKE_BLOCKED: Sample has no eligible downstream Formula (must be PRODUCTION_LOCKED / SAMPLE_LOCKED / MINOR_COMPLIANCE_FIX / BPOM_REGISTRATION_PROCESS, non-SUPERSEDED). R&D must lock the formula first.',
       );
     }
 
-    // Idempotency: one pipeline per (leadId, sampleRequestId, type). Look up first.
+    // No silent BPOM default. REQUIRED applicability MUST carry an explicit
+    // legalType (BPOM / HKI_BRAND / HALAL / etc.) before a pipeline can be
+    // created. If the decision was REQUIRED but no type was provided, fail
+    // closed and force a human decision via PATCH /legality/sample/:id/applicability.
+    const legalType: RegType | null =
+      override?.legalType ?? sample.legalType ?? null;
+    if (!legalType) {
+      this.logger.warn(
+        `[INTAKE] blocked — sample ${sample.id} applicability=REQUIRED but no explicit legalType. Human decision required.`,
+      );
+      this.eventEmitter.emit('legality.batch3.legal_type_required', {
+        sampleRequestId: sample.id,
+        leadId: sample.leadId,
+        handoffActorId: actorId,
+      });
+      throw new BadRequestException(
+        'LEGAL_TYPE_REQUIRED: Sample applicability is REQUIRED but no explicit legalType has been recorded. Call PATCH /legality/sample/:sampleId/applicability with {applicability:"REQUIRED", legalType:"BPOM|HKI_BRAND|HALAL"} before intake can proceed.',
+      );
+    }
+
+    // Idempotency: one pipeline per (leadId, sampleRequestId, type).
+    // The DB-level UNIQUE constraint backstops the lookup-then-create
+    // race when the listener fires concurrently from duplicate events.
     const existing = await this.prisma.regulatoryPipeline.findFirst({
       where: {
         leadId: sample.leadId,
         sampleRequestId: sample.id,
-        type: RegType.BPOM,
+        type: legalType,
       },
     });
     if (existing) {
       this.logger.log(
-        `[INTAKE] idempotent — returning existing pipeline ${existing.id} for sample ${sample.id}`,
+        `[INTAKE] idempotent — returning existing pipeline ${existing.id}`,
       );
-      return { pipeline: existing, idempotent: true };
+      return { pipeline: existing, idempotent: true, applicability };
     }
 
-    // Create new pipeline. Use $transaction so the row + logHistory are atomic.
-    const pipeline = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.regulatoryPipeline.create({
-        data: {
-          leadId: sample.leadId,
-          sampleRequestId: sample.id,
-          formulaId: formula.id,
-          type: RegType.BPOM,
-          currentStage: RegStage.DRAFT,
-          legalPicId: actorId,
-          daysInStage: 0,
-          logHistory: [
-            {
-              at: new Date().toISOString(),
-              action: 'INTAKE',
-              fromStage: null,
-              toStage: RegStage.DRAFT,
-              actorId,
-              note: `Auto-intake from R&D APPROVED sample ${sample.sampleCode}`,
-            },
-          ],
-        },
+    let pipeline;
+    try {
+      pipeline = await this.prisma.$transaction(async (tx) => {
+        return tx.regulatoryPipeline.create({
+          data: {
+            leadId: sample.leadId,
+            sampleRequestId: sample.id,
+            formulaId: formula.id,
+            type: legalType,
+            currentStage: RegStage.DRAFT,
+            // legalPicId deliberately NULL — item goes to Legalitas queue.
+            legalPicId: null,
+            daysInStage: 0,
+            logHistory: [
+              {
+                at: new Date().toISOString(),
+                action: 'INTAKE',
+                fromStage: null,
+                toStage: RegStage.DRAFT,
+                handoffActorId: actorId,
+                note: `Auto-intake from R&D APPROVED sample ${sample.sampleCode}. Formula=${formula.formulaCode}@v${formula.version}`,
+              },
+            ],
+          },
+        });
       });
-      return created;
-    });
+    } catch (err: any) {
+      // P2002 = unique constraint violation. A concurrent listener beat
+      // us to the create — read and return the winner.
+      if (err?.code === 'P2002') {
+        const winner = await this.prisma.regulatoryPipeline.findFirst({
+          where: {
+            leadId: sample.leadId,
+            sampleRequestId: sample.id,
+            type: legalType,
+          },
+        });
+        if (winner) {
+          this.logger.log(
+            `[INTAKE] race resolved — returning existing pipeline ${winner.id}`,
+          );
+          return { pipeline: winner, idempotent: true, applicability };
+        }
+      }
+      throw err;
+    }
 
-    this.logger.log(`[INTAKE] created pipeline ${pipeline.id} for sample ${sample.id}`);
+    this.logger.log(
+      `[INTAKE] created pipeline ${pipeline.id} for sample ${sample.id}`,
+    );
     this.eventEmitter.emit('legality.batch3.intake', {
       pipelineId: pipeline.id,
       leadId: sample.leadId,
@@ -117,13 +220,9 @@ export class LegalityBatch3Service {
       formulaId: formula.id,
     });
 
-    return { pipeline, idempotent: false };
+    return { pipeline, idempotent: false, applicability };
   }
 
-  /**
-   * INV-12: invalid transitions are backend-blocked. REVISION is preserved
-   * as a logHistory entry (history preservation — INV-11).
-   */
   async advancePipelineStage(
     pipelineId: string,
     targetStage: RegStage,
@@ -133,7 +232,8 @@ export class LegalityBatch3Service {
     const pipeline = await this.prisma.regulatoryPipeline.findUnique({
       where: { id: pipelineId },
     });
-    if (!pipeline) throw new NotFoundException(`Pipeline ${pipelineId} not found`);
+    if (!pipeline)
+      throw new NotFoundException(`Pipeline ${pipelineId} not found`);
 
     const allowed = this.advanceMap[pipeline.currentStage];
     if (!allowed.includes(targetStage)) {
@@ -178,31 +278,82 @@ export class LegalityBatch3Service {
   }
 
   /**
-   * INV-03: legal gate is backend-enforced. Used by SO creation.
+   * Deterministic SO eligibility probe.
    *
-   * Rule (deterministic, documented in Batch 3 closure §13):
-   *   - If ANY RegulatoryPipeline exists for (leadId, sampleId), ALL must
-   *     be PUBLISHED. Otherwise the project is NOT_READY.
-   *   - If NONE exists, project is NOT_APPLICABLE — eligible for SO
-   *     without legal gating (per current product mix).
-   *   - If any pipeline is in REVISION, blocked (reason required downstream).
+   *   UNKNOWN          → eligible=false, reason=LEGAL_UNKNOWN (BLOCKED)
+   *   NOT_APPLICABLE   → eligible=true,  reason=NOT_APPLICABLE
+   *   REQUIRED + all PUBLISHED → eligible=true, reason=LEGAL_READY
+   *   REQUIRED + any REVISION  → eligible=false, reason=LEGAL_REVISION
+   *   REQUIRED + otherwise     → eligible=false, reason=LEGAL_PENDING
+   *
+   * Absence of pipeline rows is NEVER treated as NOT_APPLICABLE — only an
+   * explicit sample.legalApplicability === NOT_APPLICABLE does that.
    */
   async getReadinessForLead(leadId: string, sampleId: string) {
+    const sample = await this.prisma.sampleRequest.findUnique({
+      where: { id: sampleId },
+      select: { legalApplicability: true, legalType: true },
+    });
+    if (!sample) {
+      return {
+        eligible: false,
+        reason: 'LEGAL_UNKNOWN',
+        message: 'Sample not found; cannot determine legal applicability.',
+        pipelines: [],
+      };
+    }
+
+    if (sample.legalApplicability === LegalApplicability.UNKNOWN) {
+      return {
+        eligible: false,
+        reason: 'LEGAL_UNKNOWN',
+        message:
+          'Legal applicability has not been decided. A Legalitas user must mark REQUIRED or NOT_APPLICABLE.',
+        pipelines: [],
+      };
+    }
+
+    if (sample.legalApplicability === LegalApplicability.NOT_APPLICABLE) {
+      return {
+        eligible: true,
+        reason: 'NOT_APPLICABLE',
+        message: 'Sample is explicitly NOT_APPLICABLE for legal review.',
+        pipelines: [],
+      };
+    }
+
+    if (!sample.legalType) {
+      return {
+        eligible: false,
+        reason: 'LEGAL_TYPE_REQUIRED',
+        message:
+          'Applicability is REQUIRED but no legal type has been decided. Record an explicit legalType before intake can proceed.',
+        pipelines: [],
+      };
+    }
+
+    // REQUIRED — pipeline check.
     const pipelines = await this.prisma.regulatoryPipeline.findMany({
       where: { leadId, sampleRequestId: sampleId },
     });
 
     if (pipelines.length === 0) {
+      // applicability is REQUIRED but no pipeline exists — fail-closed.
       return {
-        eligible: true,
-        reason: 'NOT_APPLICABLE',
-        message: 'No legal pipeline required for this project.',
+        eligible: false,
+        reason: 'LEGAL_UNKNOWN',
+        message:
+          'Applicability is REQUIRED but no RegulatoryPipeline exists. Intake must run.',
         pipelines: [],
       };
     }
 
-    const allPublished = pipelines.every((p) => p.currentStage === RegStage.PUBLISHED);
-    const anyInRevision = pipelines.some((p) => p.currentStage === RegStage.REVISION);
+    const allPublished = pipelines.every(
+      (p) => p.currentStage === RegStage.PUBLISHED,
+    );
+    const anyInRevision = pipelines.some(
+      (p) => p.currentStage === RegStage.REVISION,
+    );
 
     if (allPublished) {
       return {
@@ -230,7 +381,6 @@ export class LegalityBatch3Service {
     };
   }
 
-  /** Convenience used by SO service. */
   async assertEligible(leadId: string, sampleId: string) {
     const readiness = await this.getReadinessForLead(leadId, sampleId);
     if (!readiness.eligible) {
@@ -241,10 +391,34 @@ export class LegalityBatch3Service {
     }
     return readiness;
   }
+
+  /**
+   * Small admin helper: set explicit legal applicability + type on a
+   * sample. Used by the manual intake endpoint and by tests.
+   */
+  async setApplicability(
+    sampleRequestId: string,
+    applicability: LegalApplicability,
+    legalType?: RegType | null,
+    actorId?: string,
+  ) {
+    const sample = await this.prisma.sampleRequest.findUnique({
+      where: { id: sampleRequestId },
+    });
+    if (!sample)
+      throw new NotFoundException(`Sample ${sampleRequestId} not found`);
+    return this.prisma.sampleRequest.update({
+      where: { id: sampleRequestId },
+      data: {
+        legalApplicability: applicability,
+        legalType: legalType ?? sample.legalType ?? null,
+      },
+    });
+  }
 }
 
-/** Event names emitted/consumed by this service. */
 export const LEGALITY_BATCH3_EVENTS = {
   INTAKE: 'legality.batch3.intake',
   PUBLISHED: 'legality.batch3.published',
+  APPLICABILITY_REQUIRED: 'legality.batch3.applicability_required',
 } as const;

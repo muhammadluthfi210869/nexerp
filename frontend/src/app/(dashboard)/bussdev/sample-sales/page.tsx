@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -12,18 +12,8 @@ import {
   Truck,
   CheckCircle2,
   Clock,
-  XCircle,
-  Send,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DnaInput, DnaButton } from "@/components/dna";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +22,15 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalMigrationShell,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import Link from "next/link";
 
@@ -47,12 +45,12 @@ interface SampleOrder {
   status: string;
 }
 
-const statusMap: Record<string, { label: string; badge: "warning" | "info" | "success" | "critical" | "purple" }> = {
-  PENDING: { label: "PENDING", badge: "warning" },
-  PROCESS: { label: "PROCESS", badge: "info" },
-  SHIPPED: { label: "SHIPPED", badge: "purple" },
-  COMPLETED: { label: "COMPLETED", badge: "success" },
-  CANCELLED: { label: "CANCELLED", badge: "critical" },
+const statusBadgeTone: Record<string, "pending" | "process" | "purple" | "success" | "danger"> = {
+  PENDING: "pending",
+  PROCESS: "process",
+  SHIPPED: "purple",
+  COMPLETED: "success",
+  CANCELLED: "danger",
 };
 
 export default function SampleSalesPage() {
@@ -79,7 +77,7 @@ export default function SampleSalesPage() {
   });
 
   const filteredOrders =
-    orders?.filter((o) => {
+    (orders || []).filter((o) => {
       const matchSearch =
         o.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         o.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,13 +86,88 @@ export default function SampleSalesPage() {
       return matchSearch && matchStatus;
     }) || [];
 
-  const totalSamples = orders?.length || 0;
-  const pendingCount = orders?.filter((o) => o.status === "PENDING").length || 0;
-  const completedCount = orders?.filter((o) => o.status === "COMPLETED").length || 0;
-  const shippedCount = orders?.filter((o) => o.status === "SHIPPED").length || 0;
+  const totalSamples = (orders || []).length;
+  const pendingCount = (orders || []).filter((o) => o.status === "PENDING").length;
+  const completedCount = (orders || []).filter((o) => o.status === "COMPLETED").length;
+  const shippedCount = (orders || []).filter((o) => o.status === "SHIPPED").length;
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "code",
+        header: "Kode",
+        cell: ({ getValue }: any) => (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+              <Package className="h-4 w-4" />
+            </div>
+            <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{String(getValue())}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Tanggal",
+        cell: ({ getValue }: any) => <span className="text-[11px] font-medium text-slate-500 tabular-nums">{String(getValue())}</span>,
+      },
+      {
+        accessorKey: "customerName",
+        header: "Customer",
+        cell: ({ getValue }: any) => <p className="font-black text-slate-900 text-xs uppercase italic">{String(getValue())}</p>,
+      },
+      {
+        accessorKey: "productName",
+        header: "Produk",
+        cell: ({ getValue }: any) => <span className="text-[11px] font-medium text-slate-600">{String(getValue())}</span>,
+      },
+      {
+        accessorKey: "qty",
+        header: () => <div className="text-right">Qty</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{Number(getValue()).toLocaleString("id-ID")}</div>,
+      },
+      {
+        accessorKey: "unitPrice",
+        header: () => <div className="text-right">Harga</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ getValue }: any) => {
+          const status = getValue() as string;
+          const tone = statusBadgeTone[status] || "neutral";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={tone}>{getOperationalStatusLabel(status)}</OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Aksi</div>,
+        cell: ({ row }: any) => (
+          <div className="flex justify-end gap-1.5">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<Eye className="h-3.5 w-3.5" />}
+              onClick={() => setDetailOrder(row.original)}
+            />
+            <DnaButton
+              variant="ghost"
+              size="sm"
+              icon={<MoreHorizontal className="h-3.5 w-3.5" />}
+            />
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="SAMPLE"
       titleAccent="SALES"
       subtitle="Penjualan Sample — Sample Order Pipeline"
@@ -121,165 +194,68 @@ export default function SampleSalesPage() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard
+          <OperationalMetricGrid>
+            <OperationalMetricCard
               label="Total Samples"
-              value={totalSamples.toString()}
-              icon={<Package className="text-blue-600" />}
+              value={totalSamples}
+              icon={<Package className="h-4 w-4" />}
+              tone="blue"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Pending"
-              value={pendingCount.toString()}
-              subValue="Menunggu proses"
-              icon={<Clock className="text-amber-500" />}
+              value={pendingCount}
+              helper="Menunggu proses"
+              icon={<Clock className="h-4 w-4" />}
+              tone="amber"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Shipped"
-              value={shippedCount.toString()}
-              subValue="Dalam pengiriman"
-              icon={<Truck className="text-purple-600" />}
+              value={shippedCount}
+              helper="Dalam pengiriman"
+              icon={<Truck className="h-4 w-4" />}
+              tone="purple"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Completed"
-              value={completedCount.toString()}
-              subValue="Selesai"
-              icon={<CheckCircle2 className="text-emerald-600" />}
+              value={completedCount}
+              helper="Selesai"
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              tone="green"
             />
-          </div>
+          </OperationalMetricGrid>
 
-          <TableWrapper
-            filters={
-              <div className="flex flex-col md:flex-row gap-4 w-full">
-                <div className="relative flex-1 max-w-md">
-                  <DnaInput
-                    icon={<Search className="h-4 w-4" />}
-                    placeholder="Cari kode, customer, atau produk..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {["ALL", "PENDING", "PROCESS", "SHIPPED", "COMPLETED", "CANCELLED"].map(
-                    (s) => (
-                      <button
-                        key={s}
-                        onClick={() => setStatusFilter(s)}
-                        className={cn(
-                          "px-4 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border",
-                          statusFilter === s
-                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                            : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
-                        )}
-                      >
-                        {s === "ALL" ? "Semua" : s}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-            }
-          >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Kode
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Tanggal
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Produk
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Qty
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Harga
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Status
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Aksi
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow
-                    key={order.id}
-                    className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50"
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <DnaInput
+              icon={<Search className="h-4 w-4" />}
+              placeholder="Cari kode, customer, atau produk..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="flex gap-2 flex-wrap">
+              {["ALL", "PENDING", "PROCESS", "SHIPPED", "COMPLETED", "CANCELLED"].map(
+                (s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={cn(
+                      "px-4 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border",
+                      statusFilter === s
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                    )}
                   >
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                          <Package className="h-4 w-4" />
-                        </div>
-                        <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">
-                          {order.code}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="text-[11px] font-medium text-slate-500 tabular-nums">
-                        {order.createdAt}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <p className="font-black text-slate-900 text-xs uppercase italic">
-                        {order.customerName}
-                      </p>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="text-[11px] font-medium text-slate-600">
-                        {order.productName}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">
-                      {order.qty.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">
-                      Rp {order.unitPrice.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge status={statusMap[order.status]?.badge || "default"}>
-                        {statusMap[order.status]?.label || order.status}
-                      </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
-                      <div className="flex justify-end gap-1.5">
-                        <DnaButton
-                          variant="outline"
-                          size="sm"
-                          icon={<Eye className="h-3.5 w-3.5" />}
-                          onClick={() => setDetailOrder(order)}
-                        />
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          icon={<MoreHorizontal className="h-3.5 w-3.5" />}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredOrders.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-center py-10 text-slate-400 italic"
-                    >
-                      Tidak ada sample order ditemukan.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
+                    {s === "ALL" ? "Semua" : s}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+          <OperationalDataTable
+            data={filteredOrders}
+            columns={columns as any}
+            getRowId={(row: any) => row.id}
+            searchPlaceholder="Cari kode, customer, atau produk..."
+          />
         </>
       )}
 
@@ -320,18 +296,18 @@ export default function SampleSalesPage() {
               </div>
               <div>
                 <p className="text-[9px] font-black text-slate-400 uppercase">Harga</p>
-                <p className="font-black text-sm text-slate-900 mt-1 tabular-nums">Rp {detailOrder?.unitPrice.toLocaleString("id-ID")}</p>
+                <p className="font-black text-sm text-slate-900 mt-1 tabular-nums">{formatOperationalCurrency(detailOrder?.unitPrice)}</p>
               </div>
             </div>
             <div>
               <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Status</p>
-              <DnaBadge status={statusMap[detailOrder?.status || "PENDING"]?.badge || "default"}>
-                {statusMap[detailOrder?.status || "PENDING"]?.label || detailOrder?.status}
-              </DnaBadge>
+              <OperationalStatusBadge status={statusBadgeTone[detailOrder?.status || "PENDING"] || "neutral"}>
+                {getOperationalStatusLabel(detailOrder?.status || "PENDING")}
+              </OperationalStatusBadge>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

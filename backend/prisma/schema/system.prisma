@@ -104,12 +104,12 @@ model ErrorLog {
 }
 
 model TaskBoard {
-  id          String     @id @default(uuid()) @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
   name        String
-  color       String     @default("#3B82F6")
+  color       String   @default("#3B82F6")
   createdById String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   tasks TaskItem[]
 
@@ -117,16 +117,16 @@ model TaskBoard {
 }
 
 model TaskItem {
-  id          String    @id @default(uuid()) @db.Uuid
-  boardId     String    @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  boardId     String   @db.Uuid
   title       String
   description String?
-  status      String    @default("TODO")
+  status      String   @default("TODO")
   assigneeId  String?
-  labels      String[]  @default([])
-  order       Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  labels      String[] @default([])
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   board TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
 

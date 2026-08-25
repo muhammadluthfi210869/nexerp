@@ -45,7 +45,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 interface Bill {
   id: string;
@@ -111,22 +113,21 @@ export default function VendorBillsPage() {
   ) || [];
 
   return (
-    <DashboardShell
-      title="Vendor"
-      titleAccent="Bills"
-      subtitle="Debt obligation management & vendor reconciliation"
+    <OperationalMigrationShell
+      title="Tagihan Vendor"
+      subtitle="Pengelolaan kewajiban dan rekonsiliasi vendor"
       actions={
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <DnaButton variant="primary" icon={<Plus className="h-4 w-4" />}>
-              Register Bill
+              Daftarkan Tagihan
             </DnaButton>
           </DialogTrigger>
           <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
             <DialogHeader className="p-8 bg-slate-900 text-white flex flex-row justify-between items-center">
                <div>
-                  <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">Register New Bill</DialogTitle>
-                  <p className="text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em] mt-2">Payable Registration Protocol v2.1</p>
+                  <DialogTitle className="text-lg font-semibold text-white">Daftarkan Tagihan Baru</DialogTitle>
+                  <p className="text-slate-300 text-xs mt-1">Masukkan kewajiban vendor ke dalam ledger.</p>
                </div>
                <Receipt className="h-12 w-12 text-rose-500/80" />
             </DialogHeader>
@@ -135,13 +136,13 @@ export default function VendorBillsPage() {
                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Vendor Entity</label>
+                        <label className="text-xs font-semibold text-slate-500 ml-1">Vendor</label>
                         <Select
                           value={billForm.vendorId}
                           onValueChange={(val) => setBillForm({ ...billForm, vendorId: val || "" })}
                         >
                             <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                              <SelectValue placeholder="Select Vendor..." />
+                              <SelectValue placeholder="Pilih vendor..." />
                            </SelectTrigger>
                            <SelectContent>
                               {vendors?.map((v: any) => (
@@ -151,7 +152,7 @@ export default function VendorBillsPage() {
                         </Select>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Bill Reference ID</label>
+                        <label className="text-xs font-semibold text-slate-500 ml-1">Referensi Tagihan</label>
                         <DnaInput 
                           placeholder="INV/2024/..." 
                           value={billForm.billRef}
@@ -162,7 +163,7 @@ export default function VendorBillsPage() {
 
                   <div className="grid grid-cols-2 gap-6">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Issue Date</label>
+                        <label className="text-xs font-semibold text-slate-500 ml-1">Tanggal Terbit</label>
                         <DnaInput 
                           type="date" 
                           value={billForm.issueDate}
@@ -170,7 +171,7 @@ export default function VendorBillsPage() {
                         />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Due Date</label>
+                        <label className="text-xs font-semibold text-slate-500 ml-1">Jatuh Tempo</label>
                         <DnaInput 
                           type="date" 
                           value={billForm.dueDate}
@@ -180,7 +181,7 @@ export default function VendorBillsPage() {
                   </div>
 
                   <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Total Bill Amount (IDR)</label>
+                     <label className="text-xs font-semibold text-slate-500 ml-1">Total Tagihan (IDR)</label>
                      <div className="relative">
                         <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-slate-300">Rp</span>
                         <DnaInput 
@@ -196,14 +197,14 @@ export default function VendorBillsPage() {
 
                <div className="pt-6 flex justify-end gap-4 border-t border-slate-50">
                     <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>
-                      Discard
+                      Batal
                     </DnaButton>
                     <DnaButton 
                       variant="primary" 
                       onClick={() => createBillMutation.mutate()} 
                       disabled={createBillMutation.isPending}
                     >
-                      {createBillMutation.isPending ? "REGISTERING..." : "Commit to Ledger"}
+                      {createBillMutation.isPending ? "Mendaftarkan..." : "Simpan Tagihan"}
                     </DnaButton>
                </div>
             </div>
@@ -215,23 +216,23 @@ export default function VendorBillsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
          <StatCard 
-           label="Total Debt (AP)" 
-           value={`Rp ${stats?.apTotal?.toLocaleString("id-ID") || 0}`} 
+           label="Total Terutang (AP)"
+           value={formatOperationalCurrency(stats?.apTotal)}
            icon={<AlertCircle className="text-rose-600" />} 
          />
          <StatCard 
-           label="Monthly Expense" 
-           value={`Rp ${stats?.expense?.toLocaleString("id-ID") || 0}`} 
+           label="Pengeluaran Bulan Ini"
+           value={formatOperationalCurrency(stats?.expense)}
            icon={<CreditCard className="text-amber-600" />} 
          />
          <StatCard 
-           label="Uncollected AR" 
-           value={`Rp ${stats?.uncollected?.toLocaleString("id-ID") || 0}`} 
+           label="Piutang Belum Tertagih"
+           value={formatOperationalCurrency(stats?.uncollected)}
            icon={<Truck className="text-slate-500" />} 
          />
          <StatCard 
-           label="Cash In (MTD)" 
-           value={`Rp ${stats?.cashIn?.toLocaleString("id-ID") || 0}`} 
+           label="Kas Masuk (MTD)"
+           value={formatOperationalCurrency(stats?.cashIn)}
            icon={<Receipt className="text-emerald-600" />} 
          />
       </div>
@@ -242,7 +243,7 @@ export default function VendorBillsPage() {
           <div className="relative w-full max-w-md">
             <DnaInput 
               icon={<Search className="h-4 w-4" />}
-              placeholder="Search bills..."
+              placeholder="Cari tagihan..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -252,12 +253,12 @@ export default function VendorBillsPage() {
         <Table>
           <TableHeader className="bg-slate-50/50">
              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Bill ID</TableHead>
-                <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Vendor Entity</TableHead>
-                <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Timeline</TableHead>
-                <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Balance</TableHead>
-                <TableHead className="py-4 px-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Protocol Status</TableHead>
-                <TableHead className="pr-10 text-right py-4 px-4 font-black text-slate-400 uppercase tracking-tight text-[9px]">Verification</TableHead>
+                <TableHead className="py-4 px-4 text-left">ID Tagihan</TableHead>
+                <TableHead className="py-4 px-4 text-left">Vendor</TableHead>
+                <TableHead className="py-4 px-4 text-left">Linimasa</TableHead>
+                <TableHead className="py-4 px-4 text-right">Saldo</TableHead>
+                <TableHead className="py-4 px-4 text-center">Status</TableHead>
+                <TableHead className="pr-10 text-right py-4 px-4">Verifikasi</TableHead>
             </TableRow>
          </TableHeader>
          <TableBody>
@@ -283,16 +284,16 @@ export default function VendorBillsPage() {
                      <div className="space-y-1">
                         <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">Issue: {bill.date}</p>
                         <p className="text-[10px] font-black text-rose-500 uppercase tracking-tight flex items-center gap-1">
-                           <Clock className="h-2.5 w-2.5" /> Due: {bill.dueDate}
+                           <Clock className="h-2.5 w-2.5" /> Jatuh tempo: {bill.dueDate}
                         </p>
                      </div>
                   </TableCell>
                   <TableCell className="text-right font-black text-slate-900 font-mono tabular-nums">
-                     Rp {bill.total.toLocaleString("id-ID")}
+                     {formatOperationalCurrency(bill.total)}
                   </TableCell>
                   <TableCell className="text-center">
                      <DnaBadge status={bill.status === 'PAID' ? 'success' : bill.status === 'PARTIAL' ? 'warning' : 'critical'}>
-                        {bill.status}
+                        {getOperationalStatusLabel(bill.status)}
                      </DnaBadge>
                   </TableCell>
                   <TableCell className="pr-10 text-right">
@@ -313,6 +314,6 @@ export default function VendorBillsPage() {
          </TableBody>
         </Table>
       </TableWrapper>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

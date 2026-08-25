@@ -11,12 +11,13 @@ import {
   Trash2, Ban, ClipboardList, Star, Wallet, Barcode, Box, ArrowUpRight,
   ArrowUpFromLine
 } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DashboardCard } from "@/components/dna/DashboardCard";
-import { SectionLabel } from "@/components/dna/SectionLabel";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
-import { MetricRow } from "@/components/dna/MetricRow";
+import {
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+} from "@/components/operational";
 
 interface AutomationItem {
   slug: string;
@@ -146,99 +147,104 @@ export default function AutomationOverviewPage() {
   const totalAI = AUTOMATIONS.reduce((sum, g) => sum + g.items.filter(i => i.type === "AI").length, 0);
   const totalReady = AUTOMATIONS.reduce((sum, g) => sum + g.items.filter(i => i.status === "ready").length, 0);
   const totalConfig = AUTOMATIONS.reduce((sum, g) => sum + g.items.filter(i => i.status === "config").length, 0);
+  const totalItems = AUTOMATIONS.reduce((s, g) => s + g.items.length, 0);
 
   return (
-    <DashboardShell
+    <OperationalPageShell
       title="Automation Engine"
-      titleAccent="34 Automations"
-      subtitle={`${totalNonAI} Non-AI · ${totalAI} AI/Hybrid · ${totalReady} Data Ready · ${totalConfig} Needs Config`}
+      subtitle={`34 Automations · ${totalNonAI} Non-AI · ${totalAI} AI/Hybrid · ${totalReady} Data Ready · ${totalConfig} Needs Config`}
     >
       {/* Fase Progress Cards */}
-      <div className="grid grid-cols-6 gap-4">
+      <OperationalMetricGrid>
         {FASE_INFO.map((f) => {
           const count = AUTOMATIONS.reduce((s, g) => s + g.items.filter(i => i.fase === f.fase).length, 0);
           return (
-            <StatCard
+            <OperationalMetricCard
               key={f.fase}
               label={f.label}
-              value={String(count)}
-              subValue={`Fase ${f.fase}`}
+              value={count}
+              helper={`Fase ${f.fase} · ${f.desc}`}
+              tone={f.fase === 5 ? "purple" : f.fase >= 3 ? "blue" : "neutral"}
             />
           );
         })}
-      </div>
+      </OperationalMetricGrid>
 
       {/* Per Division Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {AUTOMATIONS.map((group) => (
-          <DashboardCard key={group.name}>
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <group.icon className="w-4 h-4 text-slate-600" />
+      <div className="operational-stack">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {AUTOMATIONS.map((group) => (
+            <OperationalPanel key={group.name}>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <group.icon className="w-4 h-4 text-slate-600" />
+                  </div>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{group.name}</h3>
                 </div>
-                <SectionLabel>{group.name}</SectionLabel>
+                <OperationalStatusBadge status="process">{group.items.length}</OperationalStatusBadge>
               </div>
-              <DnaBadge status="info">{group.items.length}</DnaBadge>
-            </div>
-            <div className="space-y-1.5">
-              {group.items.map((item) => (
-                <div
-                  key={item.slug}
-                  onClick={() => router.push(`/automation/${item.slug}`)}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
-                      <item.icon className="w-3.5 h-3.5 text-slate-500" />
-                    </div>
-                    <div>
-                      <p className="text-[12px] font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
-                        {item.title}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
-                          Fase {item.fase}
-                        </span>
-                        <span className="text-[8px] text-slate-300">·</span>
-                        <DnaBadge status={item.type === "AI" ? "purple" : "success"}>{item.type}</DnaBadge>
+              <div className="space-y-1.5">
+                {group.items.map((item) => (
+                  <div
+                    key={item.slug}
+                    onClick={() => router.push(`/automation/${item.slug}`)}
+                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+                        <item.icon className="w-3.5 h-3.5 text-slate-500" />
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
+                          {item.title}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                            Fase {item.fase}
+                          </span>
+                          <span className="text-[8px] text-slate-300">·</span>
+                          <OperationalStatusBadge status={item.type === "AI" ? "purple" : "success"}>
+                            {item.type}
+                          </OperationalStatusBadge>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <OperationalStatusBadge status={item.status === "ready" ? "success" : "pending"}>
+                        {item.status === "ready" ? "Ready" : "Config"}
+                      </OperationalStatusBadge>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <DnaBadge status={item.status === "ready" ? "success" : "warning"}>
-                      {item.status === "ready" ? "Ready" : "Config"}
-                    </DnaBadge>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500 transition-colors" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DashboardCard>
-        ))}
+                ))}
+              </div>
+            </OperationalPanel>
+          ))}
+        </div>
       </div>
 
       {/* Legend Card */}
-      <DashboardCard label="Legend">
+      <OperationalPanel>
         <div className="flex flex-wrap gap-6 text-[12px]">
           <div className="flex items-center gap-2">
-            <DnaBadge status="success">Data Ready</DnaBadge>
+            <OperationalStatusBadge status="success">Data Ready</OperationalStatusBadge>
             <span className="text-slate-500">Data sudah ada, tinggal logic</span>
           </div>
           <div className="flex items-center gap-2">
-            <DnaBadge status="warning">Needs Config</DnaBadge>
+            <OperationalStatusBadge status="pending">Needs Config</OperationalStatusBadge>
             <span className="text-slate-500">Butuh setting awal (1x)</span>
           </div>
           <div className="flex items-center gap-2">
-            <DnaBadge status="purple">AI / Hybrid</DnaBadge>
+            <OperationalStatusBadge status="purple">AI / Hybrid</OperationalStatusBadge>
             <span className="text-slate-500">Pakai AI (bisa local LLM)</span>
           </div>
           <div className="flex items-center gap-2">
-            <DnaBadge status="info">Non-AI</DnaBadge>
+            <OperationalStatusBadge status="process">Non-AI</OperationalStatusBadge>
             <span className="text-slate-500">Logic murni, tanpa API AI</span>
           </div>
         </div>
-      </DashboardCard>
-    </DashboardShell>
+      </OperationalPanel>
+    </OperationalPageShell>
   );
 }

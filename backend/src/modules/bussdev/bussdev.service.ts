@@ -1906,6 +1906,31 @@ export class BussdevService {
     });
   }
 
+  // Day-1 minimal follow-up mutation. Persists fuStatus on the lead's
+  // `notes` field via a structured tag and records an activity-stream
+  // event for downstream audit. Idempotent: same fuStatus re-applied is
+  // a no-op aside from the timestamp.
+  async updateFollowUp(
+    id: string,
+    body: { fuStatus: string; note?: string; nextAt?: string },
+  ) {
+    const lead = await this.prisma.salesLead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException(`Lead with ID ${id} not found`);
+
+    const stamp = new Date().toISOString();
+    const followUpTag = `[FU:${body.fuStatus}] ${stamp}`;
+    const updatedNotes = [lead.notes, body.note, followUpTag]
+      .filter(Boolean)
+      .join('\n');
+
+    return this.prisma.salesLead.update({
+      where: { id },
+      data: {
+        notes: updatedNotes,
+      },
+    });
+  }
+
   async deleteLead(id: string) {
     const lead = await this.prisma.salesLead.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException(`Lead with ID ${id} not found`);

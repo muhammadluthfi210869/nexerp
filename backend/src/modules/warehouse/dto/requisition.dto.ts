@@ -49,3 +49,31 @@ export class UpdateRequisitionStatusDto {
   @IsEnum(RequisitionHeaderStatus)
   status!: RequisitionHeaderStatus;
 }
+
+export class RequisitionReturnItemDto {
+  @IsUUID()
+  requisitionItemId!: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  qty!: number;
+}
+
+export class IssueRequisitionDto {
+  @IsString()
+  idempotencyKey!: string;
+}
+
+export class ReturnRequisitionDto {
+  @IsString()
+  idempotencyKey!: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RequisitionReturnItemDto)
+  items!: RequisitionReturnItemDto[];
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}

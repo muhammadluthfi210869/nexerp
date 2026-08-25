@@ -52,10 +52,31 @@ export class CashService {
         throw new BadRequestException('Debit account not found');
       }
 
+      const sourcePo = dto.category === CashDisburseCategory.UANG_MUKA_PEMBELIAN && dto.referenceId
+        ? await tx.purchaseOrder.findUnique({ where: { id: dto.referenceId } })
+        : null;
+      if (sourcePo) {
+        // Serialize retries for the same PO/source event at the database row.
+        // The existing source lookup then becomes a deterministic idempotency gate.
+        await tx.$queryRaw`SELECT id FROM purchase_orders WHERE id = ${sourcePo.id}::uuid FOR UPDATE`;
+        const existingSource = await tx.journalEntry.findFirst({
+          where: { sourceEntityType: 'PurchaseOrder', sourceEntityId: sourcePo.id },
+          include: { lines: true },
+        });
+        if (existingSource) return existingSource;
+      }
+
       const journal = await tx.journalEntry.create({
         data: {
           date: entryDate,
           reference: await this.idGenerator.generateId('KLR'),
+          ...(sourcePo ? {
+            poId: sourcePo.id,
+            sourceEntityType: 'PurchaseOrder',
+            sourceEntityId: sourcePo.id,
+            category: 'HPP',
+            direction: 'EXPENSE',
+          } : {}),
           description: `Kas Keluar: ${dto.entityName} — ${dto.notes} [${dto.category}]`,
           attachmentUrls: dto.attachmentUrls || [],
           lines: {
@@ -77,6 +98,10 @@ export class CashService {
         });
 
         if (po) {
+          const existingInvoice = await tx.invoice.findFirst({
+            where: { poId: dto.referenceId, type: 'DP' },
+          });
+          if (existingInvoice) return journal;
           await tx.invoice.create({
             data: {
               invoiceNumber: await this.idGenerator.generateId('DPP'),

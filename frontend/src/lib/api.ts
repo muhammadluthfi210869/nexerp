@@ -11,11 +11,24 @@ import { getMockData } from "@/lib/mock-data";
  *
  * Login prototype: superadmin@nexerp.id / password123
  * (bukan untuk operasional — badge "PROTOTYPE MODE" tampil di dashboard).
+ *
+ * R3 Gate 2 safety: prototype mode is REFUSED in production builds.
+ * Even if NEXT_PUBLIC_PROTOTYPE_MODE=true is set, a production runtime
+ * (NODE_ENV=production OR explicit NEX_PROTOTYPE_ALLOW=true required)
+ * will not enable mock adapter. This prevents accidental demo data
+ * masquerading as real business truth.
  */
+const NEX_PROTOTYPE_ALLOW = process.env.NEXT_PUBLIC_PROTOTYPE_ALLOW === "true";
+const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
+
 export const IS_PROTOTYPE_MODE =
-  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  ["demo.nexerp.id", "compact.nexerp.id"].includes(
-    (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
+  NEX_PROTOTYPE_ALLOW &&
+  !IS_PRODUCTION_BUILD &&
+  (
+    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
+    ["demo.nexerp.id", "compact.nexerp.id"].includes(
+      (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
+    )
   );
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ||

@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  ClipboardCheck, 
-  AlertCircle, 
-  CheckCircle2, 
+import {
+  ClipboardCheck,
+  AlertCircle,
+  CheckCircle2,
   Barcode,
   PlusCircle,
   FileSpreadsheet,
@@ -15,30 +15,33 @@ import {
   Warehouse,
   Lock,
   ShieldCheck,
-  Trash2
+  Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  OperationalButton,
+  OperationalInput,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalDate } from "@/lib/operational-formatters";
 import { Input } from "@/components/ui/input";
-import { StatCard, DashboardCard } from "@/components/dna";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { 
+import {
   Dialog,
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+  DialogContent,
 } from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function StockOpnamePage() {
   const queryClient = useQueryClient();
@@ -77,7 +80,7 @@ export default function StockOpnamePage() {
   });
 
   const pinApproveMutation = useMutation({
-    mutationFn: async ({ id, pin }: { id: string; pin: string }) => 
+    mutationFn: async ({ id, pin }: { id: string; pin: string }) =>
       api.post(`/warehouse/opname/${id}/approve-pin`, { userId: "system", pin }),
     onSuccess: () => {
       toast.success("Opname approved with Manager PIN. Inventory adjusted.");
@@ -109,278 +112,310 @@ export default function StockOpnamePage() {
   const completedCount = opnameSessions?.filter((s: any) => s.status === 'COMPLETED')?.length || 0;
 
   return (
-    <DashboardShell
-      title="STOCK"
-      titleAccent="OPNAME"
-      subtitle="PHYSICAL STOCK RECONCILIATION & VARIANCE ANALYSIS TERMINAL"
+    <OperationalPageShell
+      title="Stock Opname"
+      subtitle="Physical Stock Reconciliation & Variance Analysis Terminal"
       actions={
-        <Button onClick={() => setIsModalOpen(true)} className="h-14 px-8 bg-brand-black text-white hover:bg-slate-800 rounded-2xl shadow-xl shadow-slate-100 font-black uppercase tracking-tighter text-sm border-none italic">
-          <PlusCircle className="mr-2 h-5 w-5 stroke-[3px]" /> NEW AUDIT SESSION
-        </Button>
+        <OperationalButton variant="primary" onClick={() => setIsModalOpen(true)}>
+          <PlusCircle className="h-4 w-4" />
+          <span>New Audit Session</span>
+        </OperationalButton>
       }
     >
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Total Sessions"
+            value={String(opnameSessions?.length || 0).padStart(2, '0')}
+            icon={<Box className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="Draft / Pending"
+            value={String(draftCount).padStart(2, '0')}
+            icon={<AlertCircle className="h-4 w-4" />}
+            tone="amber"
+          />
+          <OperationalMetricCard
+            label="Completed"
+            value={String(completedCount).padStart(2, '0')}
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            tone="green"
+          />
+          <OperationalMetricCard
+            label="Nodes Audited"
+            value={String(warehouses?.length || 0).padStart(2, '0')}
+            icon={<Warehouse className="h-4 w-4" />}
+            tone="purple"
+          />
+        </OperationalMetricGrid>
 
-      {/* 📊 II. AUDIT ANALYTICS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <StatCard label="TOTAL SESSIONS" value={String(opnameSessions?.length || 0).padStart(2, '0')} className="[&_h3]:text-brand-black" icon={<Box className="h-7 w-7" />} />
-         <StatCard label="DRAFT / PENDING" value={String(draftCount).padStart(2, '0')} className="[&_h3]:text-amber-600" icon={<AlertCircle className="h-7 w-7" />} />
-         <StatCard label="COMPLETED" value={String(completedCount).padStart(2, '0')} className="[&_h3]:text-emerald-600" icon={<CheckCircle2 className="h-7 w-7" />} />
-         <StatCard label="NODES AUDITED" value={String(warehouses?.length || 0).padStart(2, '0')} className="[&_h3]:text-indigo-600" icon={<Warehouse className="h-7 w-7" />} />
-      </div>
-
-      {/* 📑 III. AUDIT SESSIONS */}
-      <div className="space-y-6">
-         <div className="flex items-center gap-2">
-            <div className="w-1 h-4 bg-brand-black rounded-full" />
-            <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">📑 III. AUDIT SESSIONS</h3>
-         </div>
-
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {opnameSessions?.map((session: any) => {
-               const totalDiff = session.items?.reduce((sum: number, i: any) => sum + Number(i.difference || 0), 0) || 0;
-               const isDraft = session.status === 'DRAFT';
-               return (
-                  <DashboardCard key={session.id} className={cn(
-                     "overflow-hidden !p-0",
-                     isDraft ? "!bg-brand-black text-white !border-amber-500/20" : ""
-                  )}>
-                     <div className="p-8 space-y-8">
-                        <div className="flex justify-between items-start">
-                           <div className={cn(
-                              "h-14 w-14 rounded-2xl flex items-center justify-center transition-transform group-hover:-rotate-12 shadow-xl",
-                              isDraft ? "bg-amber-500 text-brand-black shadow-amber-500/20" : "bg-slate-50 text-slate-300"
-                           )}>
-                              {isDraft ? <ClipboardCheck className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6 text-emerald-500" />}
-                           </div>
-                            <DnaBadge 
-                               status={isDraft ? "warning" : "success"}
-                               className={cn(
-                                  "px-4 py-1.5 text-[9px]",
-                                  isDraft ? "animate-pulse" : ""
-                               )}
-                            >
-                               {session.status}
-                            </DnaBadge>
-                        </div>
-
-                        <div>
-                           <h3 className={cn("text-2xl font-black italic uppercase tracking-tighter", isDraft ? "text-white" : "text-brand-black")}>
-                              {session.warehouse?.name}
-                           </h3>
-                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 italic">ID: {session.opnameNumber} • {session.createdAt}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className={cn("p-4 rounded-2xl border", isDraft ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-100")}>
-                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">ITEMS</p>
-                              <p className={cn("text-xl font-black tabular", isDraft ? "text-white" : "text-brand-black")}>{session.items?.length || 0}</p>
-                           </div>
-                           <div className={cn("p-4 rounded-2xl border", isDraft ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-100")}>
-                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">VARIANCE</p>
-                              <p className={cn("text-xl font-black tabular", totalDiff < 0 ? "text-rose-500" : "text-emerald-500")}>
-                                 {totalDiff > 0 ? '+' : ''}{totalDiff}
-                              </p>
-                           </div>
-                        </div>
-
-                        {isDraft ? (
-                           <Button 
-                              onClick={() => { setSelectedOpnameId(session.id); setIsPinModalOpen(true); }}
-                              className="w-full h-14 bg-white text-brand-black hover:bg-amber-500 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all italic border-none shadow-xl"
-                           >
-                              <Lock className="mr-2 h-4 w-4" /> AUTHORIZE PIN
-                           </Button>
-                        ) : (
-                           <div className="h-14 flex items-center justify-center gap-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest italic">SYNCED & VERIFIED</span>
-                           </div>
-                        )}
-                     </div>
-                  </DashboardCard>
-               );
-            })}
-         </div>
-      </div>
-
-      {/* 🛠️ IV. ADVANCED AUDIT TOOLS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-         <DashboardCard className="!p-10 relative overflow-hidden">
-            <div className="relative z-10 flex items-center gap-8">
-               <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:rotate-6 transition-transform">
-                  <FileSpreadsheet className="h-10 w-10 text-slate-300 group-hover:text-amber-500 transition-colors" />
-               </div>
-               <div>
-                  <h4 className="text-2xl font-black italic uppercase tracking-tighter text-brand-black">BULK RECONCILIATION</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 leading-relaxed">IMPORT PHYSICAL COUNTS FROM EXCEL TO MASS-VERIFY INVENTORY LOCATIONS.</p>
-                  <Button className="mt-6 h-12 px-8 bg-brand-black text-white rounded-xl font-black uppercase tracking-widest text-[9px] italic border-none">UPLOAD SPREADSHEET</Button>
-               </div>
+        <OperationalPanel>
+          <h3 className="text-[13px] font-semibold uppercase text-slate-700">Audit Sessions</h3>
+          {isLoading ? (
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-56 bg-slate-50 rounded-md animate-pulse" />
+              ))}
             </div>
-            <Zap className="h-40 w-40 text-slate-50 absolute -right-10 -bottom-10 group-hover:scale-110 transition-transform duration-1000" />
-         </DashboardCard>
-
-         <DashboardCard className="!p-10 relative overflow-hidden">
-            <div className="relative z-10 flex items-center gap-8">
-               <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:-rotate-6 transition-transform">
-                  <Barcode className="h-10 w-10 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-               </div>
-               <div>
-                  <h4 className="text-2xl font-black italic uppercase tracking-tighter text-brand-black">SCANNER PROTOCOL</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 leading-relaxed">CONNECT WIRELESS BARCODE SCANNERS FOR HIGH-SPEED PHYSICAL STOCK COUNTING.</p>
-                  <Button className="mt-6 h-12 px-8 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-[9px] italic border-none shadow-lg shadow-indigo-100">ENABLE SCANNER</Button>
-               </div>
+          ) : (opnameSessions?.length ?? 0) === 0 ? (
+            <div className="mt-3 rounded-md border border-dashed border-slate-200 py-12 text-center">
+              <ClipboardCheck className="mx-auto mb-3 h-10 w-10 text-slate-200" />
+              <p className="text-[13px] font-medium text-slate-400">Belum ada sesi opname</p>
             </div>
-            <ClipboardCheck className="h-40 w-40 text-slate-50 absolute -right-10 -bottom-10 group-hover:scale-110 transition-transform duration-1000" />
-         </DashboardCard>
+          ) : (
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {opnameSessions?.map((session: any) => {
+                const totalDiff = session.items?.reduce((sum: number, i: any) => sum + Number(i.difference || 0), 0) || 0;
+                const isDraft = session.status === 'DRAFT';
+                return (
+                  <OperationalPanel key={session.id} className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className={cn(
+                        "grid h-12 w-12 place-items-center rounded-md",
+                        isDraft ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+                      )}>
+                        {isDraft ? <ClipboardCheck className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                      </div>
+                      <OperationalStatusBadge status={isDraft ? "pending" : "success"}>
+                        {getOperationalStatusLabel(session.status)}
+                      </OperationalStatusBadge>
+                    </div>
+
+                    <div>
+                      <h3 className="text-[16px] font-semibold text-slate-900">
+                        {session.warehouse?.name || "—"}
+                      </h3>
+                      <p className="mt-0.5 text-[11px] font-medium uppercase text-slate-500">
+                        ID: {session.opnameNumber} • {formatOperationalDate(session.createdAt) || "—"}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-md border border-slate-100 bg-slate-50 p-3">
+                        <p className="text-[10px] font-medium uppercase text-slate-500">Items</p>
+                        <p className="mt-1 text-[16px] font-semibold text-slate-900">{session.items?.length || 0}</p>
+                      </div>
+                      <div className="rounded-md border border-slate-100 bg-slate-50 p-3">
+                        <p className="text-[10px] font-medium uppercase text-slate-500">Variance</p>
+                        <p className={cn(
+                          "mt-1 text-[16px] font-semibold tabular-nums",
+                          totalDiff < 0 ? "text-rose-600" : "text-emerald-600"
+                        )}>
+                          {totalDiff > 0 ? '+' : ''}{totalDiff}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isDraft ? (
+                      <OperationalButton
+                        variant="primary"
+                        onClick={() => { setSelectedOpnameId(session.id); setIsPinModalOpen(true); }}
+                        className="w-full"
+                      >
+                        <Lock className="h-4 w-4" />
+                        <span>Authorize PIN</span>
+                      </OperationalButton>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 rounded-md border border-emerald-100 bg-emerald-50 py-3">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span className="text-[11px] font-semibold uppercase text-emerald-700">Synced & Verified</span>
+                      </div>
+                    )}
+                  </OperationalPanel>
+                );
+              })}
+            </div>
+          )}
+        </OperationalPanel>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <OperationalPanel className="relative overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="grid h-14 w-14 place-items-center rounded-md bg-slate-50 text-slate-400">
+                <FileSpreadsheet className="h-7 w-7" />
+              </div>
+              <div>
+                <h4 className="text-[14px] font-semibold text-slate-900">Bulk Reconciliation</h4>
+                <p className="mt-1 text-[11px] font-medium uppercase text-slate-500">Import physical counts from Excel to mass-verify inventory locations.</p>
+                <OperationalButton variant="primary" className="mt-3">
+                  Upload Spreadsheet
+                </OperationalButton>
+              </div>
+            </div>
+            <Zap className="pointer-events-none absolute -right-8 -bottom-8 h-32 w-32 text-slate-50" />
+          </OperationalPanel>
+
+          <OperationalPanel className="relative overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="grid h-14 w-14 place-items-center rounded-md bg-slate-50 text-slate-400">
+                <Barcode className="h-7 w-7" />
+              </div>
+              <div>
+                <h4 className="text-[14px] font-semibold text-slate-900">Scanner Protocol</h4>
+                <p className="mt-1 text-[11px] font-medium uppercase text-slate-500">Connect wireless barcode scanners for high-speed physical stock counting.</p>
+                <OperationalButton variant="primary" className="mt-3">
+                  Enable Scanner
+                </OperationalButton>
+              </div>
+            </div>
+            <ClipboardCheck className="pointer-events-none absolute -right-8 -bottom-8 h-32 w-32 text-slate-50" />
+          </OperationalPanel>
+        </div>
       </div>
 
       {/* PIN Approval Dialog */}
       <Dialog open={isPinModalOpen} onOpenChange={setIsPinModalOpen}>
-        <DialogContent className="sm:max-w-[480px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
-          <div className="bg-brand-black p-10 text-white text-center relative">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-xl shadow-amber-500/20">
-              <Lock className="h-8 w-8 text-brand-black" />
+        <DialogContent className="sm:max-w-[480px] rounded-xl border border-slate-200 bg-white p-0">
+          <div className="bg-slate-900 p-8 text-center text-white">
+            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-md bg-amber-500 text-slate-900">
+              <Lock className="h-6 w-6" />
             </div>
-            <h3 className="text-2xl font-black italic uppercase tracking-tighter">MANAGER <span className="text-slate-500">AUTHORIZATION</span></h3>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">ENTER 6-DIGIT ESCALATION PIN TO COMMIT ADJUSTMENT</p>
+            <h3 className="text-[16px] font-semibold uppercase">Manager Authorization</h3>
+            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">Enter 6-digit escalation PIN to commit adjustment</p>
           </div>
-          <div className="p-10 space-y-8">
-            <Input 
-              type="password" 
+          <div className="space-y-5 p-8">
+            <Input
+              type="password"
               maxLength={6}
-              value={pin} 
-              onChange={(e) => setPin(e.target.value)} 
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
               placeholder="••••••"
-              className="h-20 text-center text-4xl tracking-[0.5em] font-black bg-slate-50 border-slate-200 rounded-2xl focus:ring-amber-500/20"
+              className="h-14 rounded-md border border-slate-200 bg-slate-50 text-center text-2xl tracking-[0.5em] font-medium focus:ring-amber-500/20"
             />
-            <Button 
+            <OperationalButton
+              variant="primary"
               onClick={() => selectedOpnameId && pinApproveMutation.mutate({ id: selectedOpnameId, pin })}
               disabled={pin.length < 4 || pinApproveMutation.isPending}
-              className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-amber-100 italic transition-all"
+              className="w-full h-12"
             >
-              <ShieldCheck className="mr-2 h-5 w-5" /> VERIFY & EXECUTE ADJUSTMENT
-            </Button>
+              <ShieldCheck className="h-4 w-4" />
+              <span>Verify & Execute Adjustment</span>
+            </OperationalButton>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[1000px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
-           <div className="bg-brand-black p-10 text-white relative">
-              <h2 className="text-3xl font-black italic uppercase tracking-tighter">PHYSICAL <span className="text-slate-500">STOCK COUNT</span></h2>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">INVENTORY AUDIT PROTOCOL V4.0</p>
-              <ClipboardCheck className="absolute right-10 top-1/2 -translate-y-1/2 h-16 w-16 text-white/5" />
-           </div>
-           <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">AUDIT DATE</label>
-                    <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs" />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">LEAD AUDITOR (PIC)</label>
-                    <Select defaultValue="system">
-                       <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                          <SelectValue placeholder="SELECT PIC..." />
-                       </SelectTrigger>
-                       <SelectContent>
-                          <SelectItem value="system" className="font-black uppercase text-[10px]">ZAKI (SYSTEM ADMIN)</SelectItem>
-                          <SelectItem value="wh_sup" className="font-black uppercase text-[10px]">ANDI (WH SUPERVISOR)</SelectItem>
-                       </SelectContent>
-                    </Select>
-                 </div>
+        <DialogContent className="sm:max-w-[1000px] rounded-xl border border-slate-200 bg-white p-0">
+          <div className="bg-slate-900 p-8 text-white relative">
+            <h2 className="text-[18px] font-semibold">Physical Stock Count</h2>
+            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">Inventory Audit Protocol v4.0</p>
+            <ClipboardCheck className="absolute right-8 top-1/2 -translate-y-1/2 h-12 w-12 text-white/5" />
+          </div>
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto p-8">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="operational-field">
+                <span>Audit Date</span>
+                <input type="date" defaultValue={new Date().toISOString().split('T')[0]} className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 font-medium text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">TARGET WAREHOUSE</label>
-                     <Select onValueChange={(v) => setSelectedWarehouse(v as string ?? '')}>
-                       <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                          <SelectValue placeholder="SELECT WAREHOUSE..." />
-                       </SelectTrigger>
-                       <SelectContent>
-                          {warehouses?.map((w: any) => <SelectItem key={w.id} value={w.id} className="font-black uppercase text-[10px]">{w.name}</SelectItem>)}
-                       </SelectContent>
-                    </Select>
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">AUDIT NOTES</label>
-                    <Input value={opnameNotes} onChange={(e) => setOpnameNotes(e.target.value)} placeholder="ROUTINE CYCLE COUNT..." className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs" />
-                 </div>
+              <div className="operational-field">
+                <span>Lead Auditor (PIC)</span>
+                <Select defaultValue="system">
+                  <SelectTrigger className="h-9 bg-slate-50 border-slate-200 rounded-md font-medium text-[12px]">
+                    <SelectValue placeholder="Select PIC..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="system" className="text-[12px] font-medium">Zaki (System Admin)</SelectItem>
+                    <SelectItem value="wh_sup" className="text-[12px] font-medium">Andi (WH Supervisor)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <label className="text-[10px] font-black uppercase text-brand-black tracking-widest">APPEND MATERIAL TO AUDIT</label>
-                  <Select onValueChange={(v) => addMaterial(v as string ?? '')}>
-                    <SelectTrigger className="h-14 border-2 border-dashed border-slate-200 bg-white rounded-2xl font-black uppercase text-[10px] text-slate-400">
-                       <SelectValue placeholder="+ APPEND MATERIAL TO AUDIT" />
-                    </SelectTrigger>
-                    <SelectContent>
-                       {materials?.map((m: any) => <SelectItem key={m.id} value={m.id} className="font-black uppercase text-[10px]">{m.name} (SYSTEM: {Number(m.stockQty)})</SelectItem>)}
-                    </SelectContent>
-                 </Select>
-
-                  {opnameItems.length > 0 && (
-                     <TableWrapper>
-                        <table className="w-full text-left">
-                           <thead>
-                              <tr className="bg-slate-100/50 border-b border-slate-200">
-                                 <th className="px-4 py-3 text-table-header text-slate-400">MATERIAL</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-center">SYSTEM QTY</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-center">ACTUAL QTY</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-center">DIFF</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-right">ACTION</th>
-                              </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-200">
-                              {opnameItems.map((item, idx) => {
-                                 const diff = item.actualQty - item.systemQty;
-                                 return (
-                                    <tr key={idx} className="bg-white">
-                                       <td className="px-4 py-3 text-[10px] font-black uppercase italic">{item.name}</td>
-                                       <td className="px-4 py-3 text-[10px] font-black tabular text-center text-slate-400">{item.systemQty}</td>
-                                       <td className="px-4 py-3 text-center">
-                                          <Input 
-                                             type="number" value={item.actualQty}
-                                             onChange={(e) => {
-                                                const newItems = [...opnameItems]; 
-                                                newItems[idx].actualQty = Number(e.target.value); 
-                                                setOpnameItems(newItems);
-                                             }}
-                                             className="w-24 h-9 bg-slate-50 border-amber-100 rounded-lg text-center font-black text-xs text-amber-600"
-                                          />
-                                       </td>
-                                       <td className="px-4 py-3 text-center">
-                                          <span className={cn("text-[10px] font-black tabular", diff < 0 ? "text-rose-600" : diff > 0 ? "text-emerald-600" : "text-slate-300")}>
-                                             {diff > 0 ? "+" : ""}{diff}
-                                          </span>
-                                       </td>
-                                       <td className="px-4 py-3 text-right">
-                                          <Button variant="ghost" size="sm" onClick={() => setOpnameItems(opnameItems.filter((_, i) => i !== idx))} className="text-rose-500 hover:bg-rose-50 h-8 w-8 p-0">
-                                             <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                       </td>
-                                    </tr>
-                                 );
-                              })}
-                           </tbody>
-                        </table>
-                     </TableWrapper>
-                  )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="operational-field">
+                <span>Target Warehouse</span>
+                <Select onValueChange={(v) => setSelectedWarehouse((v as string) ?? '')}>
+                  <SelectTrigger className="h-9 bg-slate-50 border-slate-200 rounded-md font-medium text-[12px]">
+                    <SelectValue placeholder="Select warehouse..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses?.map((w: any) => <SelectItem key={w.id} value={w.id} className="text-[12px] font-medium">{w.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
+              <div className="operational-field">
+                <span>Audit Notes</span>
+                <Input value={opnameNotes} onChange={(e) => setOpnameNotes(e.target.value)} placeholder="Routine cycle count..." className="h-9 bg-slate-50 border border-slate-200 rounded-md font-medium text-[12px]" />
+              </div>
+            </div>
 
-              <Button 
-                 onClick={handleCreate}
-                 className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-amber-100 transition-all italic"
-                 disabled={createMutation.isPending}
-              >
-                 {createMutation.isPending ? "PROCESSING..." : "SUBMIT AUDIT RESULTS"}
-              </Button>
-           </div>
+            <div className="space-y-3 border-t border-slate-100 pt-4">
+              <span className="text-[10px] font-semibold uppercase text-slate-700">Append Material to Audit</span>
+              <Select onValueChange={(v) => addMaterial((v as string) ?? '')}>
+                <SelectTrigger className="h-9 border-2 border-dashed border-slate-200 bg-white rounded-md font-medium text-[11px] text-slate-500">
+                  <SelectValue placeholder="+ Append material to audit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {materials?.map((m: any) => <SelectItem key={m.id} value={m.id} className="text-[12px] font-medium">{m.name} (System: {Number(m.stockQty)})</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              {opnameItems.length > 0 && (
+                <div className="overflow-hidden rounded-md border border-slate-200">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-500">Material</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-500 text-center">System Qty</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-500 text-center">Actual Qty</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-500 text-center">Diff</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-500 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {opnameItems.map((item, idx) => {
+                        const diff = item.actualQty - item.systemQty;
+                        return (
+                          <tr key={idx} className="bg-white">
+                            <td className="px-3 py-2 text-[11px] font-medium text-slate-700">{item.name}</td>
+                            <td className="px-3 py-2 text-[11px] font-medium tabular-nums text-center text-slate-500">{item.systemQty}</td>
+                            <td className="px-3 py-2 text-center">
+                              <Input
+                                type="number" value={item.actualQty}
+                                onChange={(e) => {
+                                  const newItems = [...opnameItems];
+                                  newItems[idx].actualQty = Number(e.target.value);
+                                  setOpnameItems(newItems);
+                                }}
+                                className="h-8 w-20 mx-auto rounded-md border border-amber-200 bg-slate-50 text-center font-medium text-[11px] text-amber-600"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span className={cn("text-[11px] font-semibold tabular-nums", diff < 0 ? "text-rose-600" : diff > 0 ? "text-emerald-600" : "text-slate-300")}>
+                                {diff > 0 ? "+" : ""}{diff}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <button
+                                onClick={() => setOpnameItems(opnameItems.filter((_, i) => i !== idx))}
+                                className="grid h-7 w-7 place-items-center rounded-md text-rose-500 hover:bg-rose-50"
+                                aria-label="Hapus"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <OperationalButton
+              variant="primary"
+              onClick={handleCreate}
+              className="w-full h-12"
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? "Processing..." : "Submit Audit Results"}
+            </OperationalButton>
+          </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }
-
-

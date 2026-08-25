@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -12,34 +12,32 @@ import {
   FileText,
   AlertTriangle,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
+import { DnaInput, DnaButton } from "@/components/dna";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalDataTable,
+  OperationalMigrationShell,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 interface Bill {
   id: string;
@@ -69,10 +67,10 @@ function getTodayDate() {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
-const statusMap: Record<string, { label: string; badge: "success" | "warning" | "critical" }> = {
-  PAID: { label: "LUNAS", badge: "success" },
-  PARTIAL: { label: "SEBAGIAN", badge: "warning" },
-  UNPAID: { label: "TERUTANG", badge: "critical" },
+const statusBadgeTone: Record<string, "success" | "pending" | "danger"> = {
+  PAID: "success",
+  PARTIAL: "pending",
+  UNPAID: "danger",
 };
 
 export default function BayarPembelianPage() {
@@ -102,7 +100,7 @@ export default function BayarPembelianPage() {
         remaining: Number(b.remaining || b.totalAmount),
         status: b.status,
       }));
-    }
+    },
   });
 
   const { data: coaAccounts } = useQuery<CoaAccount[]>({
@@ -114,7 +112,7 @@ export default function BayarPembelianPage() {
         code: c.code,
         name: c.name,
       }));
-    }
+    },
   });
 
   const payMutation = useMutation({
@@ -161,7 +159,7 @@ export default function BayarPembelianPage() {
     const num = Number(value);
     setPaymentForm({ ...paymentForm, amount: num });
     if (selectedBill && num > selectedBill.remaining) {
-      setValidationError(`Amount cannot exceed remaining balance of Rp ${selectedBill.remaining.toLocaleString("id-ID")}`);
+      setValidationError(`Amount cannot exceed remaining balance of ${formatOperationalCurrency(selectedBill.remaining)}`);
     } else {
       setValidationError("");
     }
@@ -193,99 +191,103 @@ export default function BayarPembelianPage() {
     payMutation.mutate();
   }
 
-  const statusLabel = (status: string) => statusMap[status]?.label || status;
-  const statusBadge = (status: string) => statusMap[status]?.badge || "default";
-
-  const filteredBills = bills?.filter(b =>
+  const filteredBills = (bills || []).filter(b =>
     b.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b.vendorName.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "billNumber",
+        header: "Invoice Number",
+        cell: ({ getValue }: any) => (
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-sm">
+              <Receipt className="h-4 w-4" />
+            </div>
+            <span className="font-black text-slate-900 tracking-tight text-sm uppercase italic">{String(getValue() || "—")}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "vendorName",
+        header: "Supplier",
+        cell: ({ getValue }: any) => (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Building2 className="h-4 w-4 text-slate-400" />
+            </div>
+            <p className="font-black text-slate-900 text-xs uppercase italic">{String(getValue() || "—")}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "totalAmount",
+        header: () => <div className="text-right">Amount</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "paidAmount",
+        header: () => <div className="text-right">Paid</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-black text-emerald-600 text-xs font-mono tabular-nums">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "remaining",
+        header: () => <div className="text-right">Remaining</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ getValue }: any) => {
+          const status = getValue() as string;
+          const tone = statusBadgeTone[status] || "neutral";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={tone}>{getOperationalStatusLabel(status)}</OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Action</div>,
+        cell: ({ row }: any) => (
+          <div className="flex justify-end">
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Wallet className="h-3.5 w-3.5" />}
+              onClick={() => handleOpenModal(row.original)}
+            >
+              Bayar
+            </DnaButton>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="BAYAR"
       titleAccent="PEMBELIAN"
       subtitle="Pembayaran Faktur Pembelian — Vendor Payment Terminal"
     >
-      <TableWrapper
-        filters={
-          <div className="relative w-full max-w-md">
-            <DnaInput
-              icon={<Search className="h-4 w-4" />}
-              placeholder="Search by invoice or supplier..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        }
-      >
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice Number</TableHead>
-              <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</TableHead>
-              <TableHead className="py-4 px-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-              <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBills.map((bill) => (
-              <TableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                <TableCell className="pl-6 text-left">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                      <Receipt className="h-4 w-4" />
-                    </div>
-                    <span className="font-black text-slate-900 tracking-tight text-sm uppercase italic">{bill.billNumber}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-left">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <Building2 className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <p className="font-black text-slate-900 text-xs uppercase italic">{bill.vendorName}</p>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
-                  Rp {bill.totalAmount.toLocaleString("id-ID")}
-                </TableCell>
-                <TableCell className="text-right font-black text-emerald-600 text-xs font-mono tabular-nums">
-                  Rp {bill.paidAmount.toLocaleString("id-ID")}
-                </TableCell>
-                <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
-                  Rp {bill.remaining.toLocaleString("id-ID")}
-                </TableCell>
-                <TableCell className="text-center">
-                  <DnaBadge status={statusBadge(bill.status)}>
-                    {statusLabel(bill.status)}
-                  </DnaBadge>
-                </TableCell>
-                <TableCell className="pr-6 text-right">
-                  <DnaButton
-                    variant="primary"
-                    size="sm"
-                    icon={<Wallet className="h-3.5 w-3.5" />}
-                    onClick={() => handleOpenModal(bill)}
-                  >
-                    Bayar
-                  </DnaButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredBills.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-slate-400 italic">
-                  No bills found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableWrapper>
+      <DnaInput
+        icon={<Search className="h-4 w-4" />}
+        placeholder="Search by invoice or supplier..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <OperationalDataTable
+        data={filteredBills}
+        columns={columns as any}
+        getRowId={(row: any) => row.id}
+        searchPlaceholder="Cari invoice atau supplier..."
+      />
 
       <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleCloseModal(); }}>
         <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
@@ -302,26 +304,26 @@ export default function BayarPembelianPage() {
               <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-tight">Invoice</span>
-                  <DnaBadge status={statusBadge(selectedBill.status)}>
-                    {statusLabel(selectedBill.status)}
-                  </DnaBadge>
+                  <OperationalStatusBadge status={statusBadgeTone[selectedBill.status] || "neutral"}>
+                    {getOperationalStatusLabel(selectedBill.status)}
+                  </OperationalStatusBadge>
                 </div>
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-slate-400" />
-                  <span className="font-black text-slate-900 text-lg uppercase italic">{selectedBill.billNumber}</span>
+                  <span className="font-black text-slate-900 text-lg uppercase italic">{selectedBill.billNumber ?? "—"}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-4 pt-2 border-t border-slate-200/50">
                   <div>
                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">Supplier</p>
-                    <p className="font-black text-slate-900 text-xs uppercase italic">{selectedBill.vendorName}</p>
+                    <p className="font-black text-slate-900 text-xs uppercase italic">{selectedBill.vendorName ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">Total</p>
-                    <p className="font-black text-slate-900 text-xs font-mono">Rp {selectedBill.totalAmount.toLocaleString("id-ID")}</p>
+                    <p className="font-black text-slate-900 text-xs font-mono">{formatOperationalCurrency(selectedBill.totalAmount)}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">Remaining</p>
-                    <p className="font-black text-emerald-600 text-xs font-mono">Rp {selectedBill.remaining.toLocaleString("id-ID")}</p>
+                    <p className="font-black text-emerald-600 text-xs font-mono">{formatOperationalCurrency(selectedBill.remaining)}</p>
                   </div>
                 </div>
               </div>
@@ -339,10 +341,10 @@ export default function BayarPembelianPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Cash / Bank Account <span className="text-red-500">*</span></label>
-                   <Select
-                     value={paymentForm.coaId}
-                     onValueChange={(val: string | null) => setPaymentForm({ ...paymentForm, coaId: val ?? "" })}
-                   >
+                  <Select
+                    value={paymentForm.coaId}
+                    onValueChange={(val: string | null) => setPaymentForm({ ...paymentForm, coaId: val ?? "" })}
+                  >
                     <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
                       <SelectValue placeholder="Select account..." />
                     </SelectTrigger>
@@ -382,7 +384,7 @@ export default function BayarPembelianPage() {
                 {selectedBill && paymentForm.amount > 0 && !validationError && (
                   <p className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 mt-1 ml-1">
                     <CheckCircle2 className="h-3 w-3" />
-                    Remaining after payment: Rp {(selectedBill.remaining - paymentForm.amount).toLocaleString("id-ID")}
+                    Remaining after payment: {formatOperationalCurrency(selectedBill.remaining - paymentForm.amount)}
                   </p>
                 )}
               </div>
@@ -425,6 +427,6 @@ export default function BayarPembelianPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

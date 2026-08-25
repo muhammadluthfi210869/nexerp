@@ -3,13 +3,17 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { ArrowUpCircle, Plus, Trash2, Save } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, Save, ArrowUpCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
 import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +21,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  OperationalButton,
+  OperationalField,
+  OperationalInput,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 export default function CashInPage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -72,7 +85,7 @@ export default function CashInPage() {
         description: `Kas Masuk dari ${sender}: ${entries.map(e => e.memo).filter(Boolean).join(', ') || totalCash}`,
         lines,
       });
-      toast.success(`Kas Masuk Rp ${totalCash.toLocaleString()} berhasil dicatat!`);
+      toast.success(`Kas Masuk ${formatOperationalCurrency(totalCash)} berhasil dicatat!`);
       setEntries([]);
       setSender("");
       setCartAccount("");
@@ -86,24 +99,26 @@ export default function CashInPage() {
   };
 
   return (
-    <DashboardShell title="KAS" titleAccent="MASUK" subtitle="Penerimaan Dana — Multi-Line Cash Receipt Terminal"
-      actions={<DnaBadge status="success">Cash In</DnaBadge>}
+    <OperationalPageShell
+      title="Kas Masuk"
+      subtitle="Penerimaan dana — entri jurnal multi-line"
+      actions={<OperationalStatusBadge status="success">Cash In</OperationalStatusBadge>}
     >
-      <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-emerald-500">
-          <ArrowUpCircle size={180} />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-tight text-slate-400">Tanggal Transaksi</Label>
-            <DnaInput type="date" value={date} onChange={e => setDate(e.target.value)} className="h-11 rounded-xl bg-slate-50 border-none" />
+      <OperationalPanel>
+        <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <div className="grid h-7 w-7 place-items-center rounded-md bg-emerald-50 text-emerald-600">
+            <ArrowUpCircle className="h-4 w-4" />
           </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-tight text-slate-400">Kas / Bank (Debit) <span className="text-red-500">*</span></Label>
-             <Select onValueChange={(v: string | null) => setCashAccountId(v || "")}>
-              <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                <SelectValue placeholder="Pilih Akun Kas/Bank" />
+          <h3 className="text-[13px] font-semibold text-slate-900">Header Transaksi</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <OperationalField label="Tanggal Transaksi">
+            <DnaInput type="date" value={date} onChange={e => setDate(e.target.value)} className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+          </OperationalField>
+          <OperationalField label="Kas / Bank (Debit)">
+            <Select value={cashAccountId} onValueChange={(v: string | null) => setCashAccountId(v || "")}>
+              <SelectTrigger className="h-9 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-700">
+                <SelectValue placeholder="Pilih akun kas/bank" />
               </SelectTrigger>
               <SelectContent>
                 {cashAccounts.map((acc: any) => (
@@ -111,62 +126,60 @@ export default function CashInPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-tight text-slate-400">Diterima Dari</Label>
-            <DnaInput placeholder="Nama pengirim..." value={sender} onChange={e => setSender(e.target.value)} className="h-11 rounded-xl bg-slate-50 border-none" />
-          </div>
+          </OperationalField>
+          <OperationalField label="Diterima Dari">
+            <DnaInput placeholder="Nama pengirim..." value={sender} onChange={e => setSender(e.target.value)} className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+          </OperationalField>
+        </div>
+      </OperationalPanel>
+
+      <OperationalPanel>
+        <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <h3 className="text-[13px] font-semibold text-slate-900">Tambah Penerimaan per Akun (Kredit)</h3>
+        </div>
+        <div className="grid grid-cols-1 gap-3 rounded-md border border-slate-100 bg-slate-50/50 p-3 md:grid-cols-4 md:items-end">
+          <OperationalField label="Akun Pendapatan">
+            <Select onValueChange={v => setCartAccount(v || "")} value={cartAccount}>
+              <SelectTrigger className="h-9 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-700">
+                <SelectValue placeholder="Pilih akun" />
+              </SelectTrigger>
+              <SelectContent>
+                {counterpartAccounts.map((acc: any) => (
+                  <SelectItem key={acc.id} value={acc.id}>{acc.code} - {acc.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </OperationalField>
+          <OperationalField label="Jumlah (Rp)">
+            <DnaInput type="number" placeholder="0" value={cartAmount} onChange={e => setCartAmount(e.target.value)} className="h-9 rounded-md border-slate-200 text-[12px] font-medium tabular-nums" />
+          </OperationalField>
+          <OperationalField label="Memo">
+            <DnaInput placeholder="Catatan" value={cartMemo} onChange={e => setCartMemo(e.target.value)} className="h-9 rounded-md border-slate-200 text-[12px] font-medium" />
+          </OperationalField>
+          <OperationalButton variant="primary" onClick={addEntry}>
+            <Plus className="h-4 w-4" /> Tambah
+          </OperationalButton>
         </div>
 
-        <div className="mb-8">
-          <Label className="text-[10px] font-black uppercase tracking-tight text-slate-400 mb-2 block">Tambah Penerimaan per Akun (Kredit)</Label>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 items-end">
-            <div>
-              <Label className="text-[8px] font-black uppercase text-slate-400">Akun Pendapatan</Label>
-              <Select onValueChange={v => setCartAccount(v || "")} value={cartAccount}>
-                <SelectTrigger className="h-10 bg-white border border-slate-200 rounded-xl text-xs">
-                  <SelectValue placeholder="Pilih Akun" />
-                </SelectTrigger>
-                <SelectContent>
-                  {counterpartAccounts.map((acc: any) => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.code} - {acc.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-[8px] font-black uppercase text-slate-400">Jumlah (Rp)</Label>
-              <DnaInput type="number" placeholder="0" value={cartAmount} onChange={e => setCartAmount(e.target.value)} className="h-10 bg-white border border-slate-100 rounded-xl text-xs" />
-            </div>
-            <div>
-              <Label className="text-[8px] font-black uppercase text-slate-400">Memo</Label>
-              <DnaInput placeholder="Catatan" value={cartMemo} onChange={e => setCartMemo(e.target.value)} className="h-10 bg-white border border-slate-100 rounded-xl text-xs" />
-            </div>
-            <DnaButton onClick={addEntry} variant="primary" className="h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700">
-              <Plus className="w-4 h-4 mr-1" /> Tambah
-            </DnaButton>
-          </div>
-        </div>
-
-        <div className="mb-8">
+        <div className="mt-4">
           <TableWrapper>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-[9px] font-black uppercase text-slate-400">Akun</TableHead>
-                  <TableHead className="text-[9px] font-black uppercase text-slate-400 text-right">Jumlah</TableHead>
-                  <TableHead className="text-[9px] font-black uppercase text-slate-400">Memo</TableHead>
+                  <TableHead className="text-[12px] font-semibold normal-case text-slate-500">Akun</TableHead>
+                  <TableHead className="text-[12px] font-semibold normal-case text-slate-500 text-right">Jumlah</TableHead>
+                  <TableHead className="text-[12px] font-semibold normal-case text-slate-500">Memo</TableHead>
                   <TableHead className="text-right"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {entries.map((e, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium text-xs">{e.accountName}</TableCell>
-                    <TableCell className="font-black text-xs text-right text-emerald-600 font-mono tabular-nums">Rp {e.amount.toLocaleString()}</TableCell>
-                    <TableCell className="text-xs text-slate-400">{e.memo}</TableCell>
+                    <TableCell className="text-[12px] font-medium text-slate-900">{e.accountName}</TableCell>
+                    <TableCell className="text-right text-[12px] font-semibold text-emerald-700 tabular-nums">{formatOperationalCurrency(e.amount)}</TableCell>
+                    <TableCell className="text-[12px] text-slate-500">{e.memo}</TableCell>
                     <TableCell className="text-right">
-                      <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg text-slate-300 hover:text-rose-500" onClick={() => removeEntry(idx)}>
+                      <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-md text-slate-400 hover:text-rose-600" onClick={() => removeEntry(idx)}>
                         <Trash2 size={14} />
                       </DnaButton>
                     </TableCell>
@@ -174,7 +187,7 @@ export default function CashInPage() {
                 ))}
                 {entries.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-[10px] text-slate-400 py-8">Belum ada entry. Tambah penerimaan di atas.</TableCell>
+                    <TableCell colSpan={4} className="py-8 text-center text-[12px] text-slate-500">Belum ada entry. Tambah penerimaan di atas.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -182,20 +195,21 @@ export default function CashInPage() {
           </TableWrapper>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center bg-slate-50 rounded-2xl p-6 border border-slate-200">
-          <div className="mb-4 md:mb-0">
-            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total Penerimaan</p>
-            <p className="text-2xl font-black tracking-tighter text-emerald-600 font-mono tabular-nums">Rp {totalCash.toLocaleString()}</p>
+        <div className="mt-4 flex flex-col items-stretch justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/50 p-4 md:flex-row md:items-center">
+          <div>
+            <p className="text-[11px] font-medium text-slate-500">Total Penerimaan</p>
+            <p className="text-[18px] font-semibold text-emerald-700 tabular-nums">{formatOperationalCurrency(totalCash)}</p>
           </div>
-          <DnaButton variant="primary" className="bg-emerald-600 hover:bg-emerald-700 h-14 px-12 rounded-2xl disabled:opacity-20"
+          <OperationalButton
+            variant="primary"
             disabled={!isReady || isSubmitting}
             onClick={handleSubmit}
-            icon={<Save className="w-4 h-4" />}
           >
+            <Save className="h-4 w-4" />
             {isSubmitting ? "Memproses..." : "Simpan Transaksi"}
-          </DnaButton>
+          </OperationalButton>
         </div>
-      </div>
+      </OperationalPanel>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
@@ -209,6 +223,6 @@ export default function CashInPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

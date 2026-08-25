@@ -19,6 +19,7 @@ describe('DocumentAutomationService — Unit Tests', () => {
     salesOrder: { findUnique: jest.fn() },
     workOrder: { findUnique: jest.fn() },
     deliveryOrder: { findUnique: jest.fn() },
+    formula: { findUnique: jest.fn() },
     documentDraft: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -268,6 +269,111 @@ describe('DocumentAutomationService — Unit Tests', () => {
       expect(prisma.documentDraft.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ status: DocumentDraftStatus.DRAFT }) }),
       );
+    });
+  });
+
+  // R1 GATE 0A — Goods Requirement lineage fix verification.
+  // The createGoodsRequirementFromDraft is private; we drive it through approveDraft()
+  // (which calls executeApprovedDraft → createGoodsRequirementFromDraft).
+  // executeApprovedDraft wraps the conversion in try/catch and logs failures —
+  // so for CASE C the line failure is silent at the call site, but the
+  // Goods Requirement is NOT created (fail-closed at the data layer).
+  describe('R1: Goods Requirement lineage (salesOrderVersion + formulaVersion)', () => {
+    function buildDraft(overrides: Partial<any> = {}) {
+      return {
+        id: 'draft-gr',
+        draftNumber: 'GR-001',
+        documentType: DocumentType.GOODS_REQUIREMENT,
+        status: DocumentDraftStatus.DRAFT,
+        sourceType: SourceDocumentType.SALES_ORDER,
+        sourceId: 'so-1',
+        payload: {
+          orderNumber: 'SO-001',
+          brandName: 'B',
+          clientName: 'PT',
+          items: [{ productName: 'Serum', materialId: 'mat-1', quantityRequired: 100, unit: 'KG' }],
+          notes: 'ok',
+        },
+        ...overrides,
+      };
+    }
+
+    it('CASE A: valid upstream SO + Formula V3 → GR persisted with pinned salesOrderVersion + formulaVersion', async () => {
+      const draft = buildDraft();
+      prisma.documentDraft.findUnique.mockResolvedValue(draft);
+      // Prisma's documentDraft.update returns the FULL updated record in production,
+      // so the mock mirrors that — executeApprovedDraft routes by documentType.
+      prisma.documentDraft.update.mockResolvedValue({ ...draft, status: DocumentDraftStatus.APPROVED });
+      prisma.salesOrder.findUnique.mockResolvedValue({ id: 'so-1', version: 2, formulaId: 'f-1' });
+      prisma.formula.findUnique.mockResolvedValue({ version: 3 });
+      prisma.goodsRequirement.create.mockResolvedValue({ id: 'gr-1', code: 'GR-001' });
+
+      await service.approveDraft('draft-gr', { notes: 'go' }, 'u1');
+
+      expect(prisma.salesOrder.findUnique).toHaveBeenCalledWith({ where: { id: 'so-1' }, select: { id: true, version: true, formulaId: true } });
+      expect(prisma.formula.findUnique).toHaveBeenCalledWith({ where: { id: 'f-1' }, select: { version: true } });
+      const callArgs = prisma.goodsRequirement.create.mock.calls[0][0];
+      expect(callArgs.data.salesOrderId).toBe('so-1');
+      expect(callArgs.data.salesOrderVersion).toBe(2);
+      expect(callArgs.data.formulaId).toBe('f-1');
+      expect(callArgs.data.formulaVersion).toBe(3);
+      expect(callArgs.data.items.create[0].uom).toBe('KG');
+    });
+
+    it('CASE B: V4 exists later but upstream SO still pins V3 → GR still created with formulaVersion=3 (NOT V4)', async () => {
+      const draft = buildDraft();
+      prisma.documentDraft.findUnique.mockResolvedValue(draft);
+      prisma.documentDraft.update.mockResolvedValue({ ...draft, status: DocumentDraftStatus.APPROVED });
+      // SO is committed at version 2 with formula f-1 (V3). V4 is a newer
+      // revision but is NOT what the upstream SO references.
+      prisma.salesOrder.findUnique.mockResolvedValue({ id: 'so-1', version: 2, formulaId: 'f-1' });
+      prisma.formula.findUnique.mockResolvedValue({ version: 3 });
+      prisma.goodsRequirement.create.mockResolvedValue({ id: 'gr-1', code: 'GR-001' });
+
+      await service.approveDraft('draft-gr', {}, 'u1');
+
+      expect(prisma.formula.findUnique).toHaveBeenCalledWith({ where: { id: 'f-1' }, select: { version: true } });
+      const callArgs = prisma.goodsRequirement.create.mock.calls[0][0];
+      expect(callArgs.data.formulaVersion).toBe(3);
+    });
+
+    it('CASE C: source SO missing → fails closed, no Goods Requirement created', async () => {
+      const draft = buildDraft();
+      prisma.documentDraft.findUnique.mockResolvedValue(draft);
+      prisma.documentDraft.update.mockResolvedValue({ ...draft, status: DocumentDraftStatus.APPROVED });
+      prisma.salesOrder.findUnique.mockResolvedValue(null);
+
+      // executeApprovedDraft swallows the throw and logs, so approveDraft
+      // returns the APPROVED draft. The fail-closed guarantee is that
+      // NO Goods Requirement gets created and NO formula lookup is attempted.
+      const result = await service.approveDraft('draft-gr', {}, 'u1');
+      expect(result.status).toBe(DocumentDraftStatus.APPROVED);
+      expect(prisma.goodsRequirement.create).not.toHaveBeenCalled();
+      expect(prisma.formula.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('CASE C2: source SO has no pinned Formula → fails closed, no Goods Requirement created', async () => {
+      const draft = buildDraft();
+      prisma.documentDraft.findUnique.mockResolvedValue(draft);
+      prisma.documentDraft.update.mockResolvedValue({ ...draft, status: DocumentDraftStatus.APPROVED });
+      prisma.salesOrder.findUnique.mockResolvedValue({ id: 'so-1', version: 1, formulaId: null });
+
+      const result = await service.approveDraft('draft-gr', {}, 'u1');
+      expect(result.status).toBe(DocumentDraftStatus.APPROVED);
+      expect(prisma.goodsRequirement.create).not.toHaveBeenCalled();
+      expect(prisma.formula.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('CASE C3: pinned Formula row missing → fails closed, no Goods Requirement created', async () => {
+      const draft = buildDraft();
+      prisma.documentDraft.findUnique.mockResolvedValue(draft);
+      prisma.documentDraft.update.mockResolvedValue({ ...draft, status: DocumentDraftStatus.APPROVED });
+      prisma.salesOrder.findUnique.mockResolvedValue({ id: 'so-1', version: 1, formulaId: 'f-ghost' });
+      prisma.formula.findUnique.mockResolvedValue(null);
+
+      const result = await service.approveDraft('draft-gr', {}, 'u1');
+      expect(result.status).toBe(DocumentDraftStatus.APPROVED);
+      expect(prisma.goodsRequirement.create).not.toHaveBeenCalled();
     });
   });
 });

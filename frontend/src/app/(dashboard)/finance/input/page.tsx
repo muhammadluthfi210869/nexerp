@@ -3,8 +3,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpCircle, ArrowDownCircle } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaBadge } from "@/components/dna";
+import {
+  OperationalPageShell,
+  OperationalStatusBadge,
+} from "@/components/operational";
 
 export default function FinanceInputPage() {
   const router = useRouter();
@@ -33,11 +35,10 @@ export default function FinanceInputPage() {
   ];
 
   return (
-    <DashboardShell
-      title="FINANCE"
-      titleAccent="INPUT"
+    <OperationalPageShell
+      title="Finance Input"
       subtitle="Pencatatan transaksi kas masuk dan kas keluar"
-      actions={<DnaBadge status="info">Input Terminal</DnaBadge>}
+      actions={<OperationalStatusBadge status="process">Input Terminal</OperationalStatusBadge>}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {inputs.map((item) => (
@@ -61,6 +62,6 @@ export default function FinanceInputPage() {
           </button>
         ))}
       </div>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

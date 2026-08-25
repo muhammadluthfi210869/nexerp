@@ -10,30 +10,28 @@ import {
   Calendar,
   User,
   TrendingUp,
-  BarChart4,
   Award,
-  ShieldCheck,
   Users,
   Coins,
   ChevronDown,
-  Edit3,
   AlertCircle,
   History,
   Loader2,
-  Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { StatCard, KpiCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
+import { formatOperationalNumber } from "@/lib/operational-formatters";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+  OperationalButton,
+  OperationalField,
+  OperationalInput,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -147,32 +145,26 @@ export default function SalesTargetPrototype() {
   };
 
   const selectedUser = users.find(u => u.id === formData.userId);
+  const topPerformer = targets.length > 0 ? users.find(u => u.id === targets[0]?.userId)?.fullName : null;
 
   return (
-    <DashboardShell
-      title="TARGET"
-      titleAccent="Penjualan"
+    <OperationalPageShell
+      title="Target Penjualan"
       subtitle="Goal Setting & Strategic Performance Management for Marketing Personnel"
       actions={
-        <div className="flex gap-4">
-          <DnaButton
-            variant="outline"
-            onClick={() => setView("list")}
-            size="md"
-          >
-            <History className="mr-2 h-4 w-4 text-blue-500" /> Riwayat
-          </DnaButton>
-          <DnaButton
-            onClick={() => setView("form")}
-            variant="primary"
-            size="md"
-          >
-            <Plus className="mr-2 h-5 w-5" /> Buat
-          </DnaButton>
+        <div className="flex gap-2">
+          <button type="button" className="operational-button is-secondary" onClick={() => setView("list")}>
+            <History className="h-4 w-4" />
+            <span>Riwayat</span>
+          </button>
+          <button type="button" className="operational-button is-primary" onClick={() => setView("form")}>
+            <Plus className="h-4 w-4" />
+            <span>Buat</span>
+          </button>
         </div>
       }
     >
-      <div className="animate-fade-slide-in space-y-10">
+      <div className="operational-stack">
         <AnimatePresence mode="wait">
           {view === "list" ? (
             <motion.div
@@ -180,124 +172,136 @@ export default function SalesTargetPrototype() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-10"
+              className="operational-stack"
             >
-              {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
+              <OperationalMetricGrid>
+                <OperationalMetricCard
                   label="Active Personnel"
                   value={users.length}
-                  icon={<Users className="text-blue-500" />}
+                  icon={<Users className="h-4 w-4" />}
+                  tone="blue"
                 />
-                <StatCard
+                <OperationalMetricCard
                   label="Total Targets"
                   value={targets.length}
-                  icon={<Coins className="text-emerald-500" />}
+                  icon={<Coins className="h-4 w-4" />}
+                  tone="green"
                 />
-                <KpiCard
+                <OperationalMetricCard
                   label="Avg. Achievement"
                   value="78%"
-                  targetPct={78}
-                  icon={<TrendingUp className="text-amber-500" />}
+                  helper="Target vs actual ratio"
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  tone="amber"
                 />
-                <StatCard
+                <OperationalMetricCard
                   label="Top Performer"
-                  value={targets.length > 0 ? (users.find(u => u.id === targets[0]?.userId)?.fullName || "—") : "—"}
-                  icon={<Award className="text-blue-500" />}
+                  value={topPerformer ?? "—"}
+                  icon={<Award className="h-4 w-4" />}
+                  tone="blue"
                 />
-              </div>
+              </OperationalMetricGrid>
 
-              {/* List Table */}
-              <TableWrapper
-                filters={
-                  <div className="flex justify-between items-center bg-white">
-                    <div className="relative w-72">
-                      <DnaInput
-                        placeholder="Search Personnel..."
-                        icon={<Search className="h-4 w-4" />}
-                        className="text-xs font-black"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="bg-slate-50 text-slate-500 font-black text-[9px] uppercase px-4 py-2 rounded-lg border border-slate-100">
-                        Period: {new Date().getFullYear()}
-                      </span>
-                    </div>
+              <OperationalPanel>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-blue-600" />
+                    <h3 className="text-[14px] font-semibold text-slate-900">Daftar Target Penjualan</h3>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                      {filteredTargets.length}
+                    </span>
                   </div>
-                }
-              >
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-slate-50/50">
-                      <TableRow className="hover:bg-transparent border-slate-100">
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Marketing Personnel</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400">Target Period</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Target Nominal</TableHead>
-                        <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                        <TableHead className="py-4 px-4 pr-6 text-table-header text-slate-400 text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                    <OperationalInput
+                      icon={<Search className="h-4 w-4" />}
+                      placeholder="Cari personnel..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="md:w-72"
+                    />
+                    <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-500">
+                      Period: {new Date().getFullYear()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full table-fixed border-collapse text-left">
+                    <colgroup>
+                      <col className="w-[28%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[20%]" />
+                    </colgroup>
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Marketing Personnel</th>
+                        <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Target Period</th>
+                        <th className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wider text-slate-500">Target Nominal</th>
+                        <th className="px-3 py-2 text-center text-[11px] font-medium uppercase tracking-wider text-slate-500">Status</th>
+                        <th className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wider text-slate-500">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-20 text-center">
-                            <div className="flex flex-col items-center gap-3">
-                              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                              <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">Loading targets...</p>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                        <tr>
+                          <td colSpan={5} className="py-16 text-center text-[12px] text-slate-400">
+                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-500" />
+                            <p className="mt-2">Memuat target...</p>
+                          </td>
+                        </tr>
                       ) : filteredTargets.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-20 text-center">
-                            <div className="flex flex-col items-center gap-3">
-                              <Target className="h-10 w-10 text-slate-200" />
-                              <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">Belum ada data target</p>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                        <tr>
+                          <td colSpan={5} className="py-16 text-center text-[12px] text-slate-400">
+                            <Target className="mx-auto h-8 w-8 text-slate-200" />
+                            <p className="mt-2">Belum ada data target</p>
+                          </td>
+                        </tr>
                       ) : (
                         filteredTargets.map((target) => (
-                          <TableRow key={target.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                            <TableCell className="py-3 px-4">
-                              <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center shadow-sm group-hover:rotate-12 transition-transform shrink-0">
-                                  <User className="h-4.5 w-4.5 text-slate-600" />
+                          <tr key={target.id} className="border-b border-slate-100 transition hover:bg-blue-50/30">
+                            <td className="px-3 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <div className="grid h-8 w-8 place-items-center rounded-md bg-slate-100 text-slate-600">
+                                  <User className="h-4 w-4" />
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{target.user?.fullName || "—"}</span>
-                                  <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">Marketing Executive</span>
+                                  <span className="text-[12px] font-semibold text-slate-900">
+                                    {target.user?.fullName || "—"}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">Marketing Executive</span>
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
+                            </td>
+                            <td className="px-3 py-2.5">
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-3.5 w-3.5 text-blue-500" />
-                                <span className="text-[10px] font-black text-slate-900 uppercase italic">{MONTHS[target.month - 1]} {target.year}</span>
+                                <span className="text-[12px] font-medium text-slate-900">
+                                  {MONTHS[target.month - 1]} {target.year}
+                                </span>
                               </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4 text-right">
-                              <span className="text-xs font-black text-slate-900 tabular-nums">Rp {Number(target.nominalTarget).toLocaleString()}</span>
-                            </TableCell>
-                            <TableCell className="py-3 px-4 text-center">
-                              <span className="rounded-lg px-2.5 py-1 font-black uppercase text-[8px] shadow-sm bg-blue-100 text-blue-700">
-                                Active
-                              </span>
-                            </TableCell>
-                            <TableCell className="py-3 px-4 pr-6 text-right">
-                              <DnaButton variant="ghost" size="sm">
+                            </td>
+                            <td className="px-3 py-2.5 text-right text-[12px] font-semibold tabular-nums text-slate-900">
+                              Rp {formatOperationalNumber(target.nominalTarget)}
+                            </td>
+                            <td className="px-3 py-2.5 text-center">
+                              <OperationalStatusBadge status="success">
+                                {getOperationalStatusLabel("ACTIVE")}
+                              </OperationalStatusBadge>
+                            </td>
+                            <td className="px-3 py-2.5 text-right">
+                              <button type="button" className="operational-button is-secondary h-8 px-3 text-[11px]">
                                 Detail
-                              </DnaButton>
-                            </TableCell>
-                          </TableRow>
+                              </button>
+                            </td>
+                          </tr>
                         ))
                       )}
-                    </TableBody>
-                  </Table>
+                    </tbody>
+                  </table>
                 </div>
-              </TableWrapper>
+              </OperationalPanel>
             </motion.div>
           ) : (
             <motion.div
@@ -305,174 +309,159 @@ export default function SalesTargetPrototype() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="max-w-7xl mx-auto space-y-10 pb-20"
+              className="mx-auto grid max-w-7xl grid-cols-1 gap-6 pb-12 lg:grid-cols-12"
             >
-              {/* Form Nav */}
-              <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <button
-                  onClick={() => setView("list")}
-                  className="group rounded-2xl p-2 pr-6 transition-all hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center"
-                >
-                  <div className="h-11 w-11 rounded-xl bg-slate-100 text-slate-600 shadow-sm flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-all">
-                    <ChevronLeft className="h-5 w-5" />
+              <div className="lg:col-span-12">
+                <OperationalPanel>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 md:flex-row md:items-center md:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setView("list")}
+                      className="inline-flex items-center gap-2 rounded-md p-2 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                      <span className="text-[11px] font-medium">Cancel Protocol</span>
+                    </button>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Target Configuration</span>
+                        <span className="text-[12px] font-semibold text-blue-600">Protocol 14-ST</span>
+                      </div>
+                      <OperationalButton
+                        variant="primary"
+                        onClick={handleSubmit}
+                        disabled={saving}
+                      >
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        <span>{saving ? "Saving..." : "Save Target"}</span>
+                      </OperationalButton>
+                    </div>
                   </div>
-                  <span className="ml-4 font-black uppercase text-[10px] tracking-widest italic text-slate-400 group-hover:text-rose-600">Cancel Protocol</span>
-                </button>
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Target Configuration</span>
-                    <span className="text-xs font-black uppercase text-blue-600">Protocol 14-ST</span>
-                  </div>
-                  <div className="h-10 w-[1px] bg-slate-100" />
-                  <DnaButton
-                    onClick={handleSubmit}
-                    variant="primary"
-                    size="lg"
-                    icon={saving ? <Loader2 className="animate-spin" /> : <Save />}
-                    disabled={saving}
-                  >
-                    {saving ? "Saving..." : "Save Target"}
-                  </DnaButton>
-                </div>
+                </OperationalPanel>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Left: Configuration Panel */}
-                <div className="lg:col-span-8 space-y-10">
-                  <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-6">
-                    <div className="flex items-center gap-3">
-                      <Users className="h-5 w-5 text-blue-600" />
-                      <h2 className="text-xl font-black uppercase tracking-tighter italic">Personnel <span className="text-blue-600">& Period</span></h2>
+              <div className="space-y-6 lg:col-span-8">
+                <OperationalPanel>
+                  <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+                      <Users className="h-4 w-4" />
                     </div>
-
-                    <div className="space-y-6">
-                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nama Sales <span className="text-red-500">*</span></label>
-                        <div className="relative">
-                          <DnaInput
-                            placeholder="Search from staff members..."
-                            icon={<Search className="h-5 w-5" />}
-                            className="h-12 font-black uppercase text-xs italic"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                          {filteredUsers.map(user => (
-                            <span
-                              key={user.id}
-                              onClick={() => setFormData({ ...formData, userId: user.id })}
-                              className={cn(
-                                "h-10 px-4 rounded-lg border bg-white hover:bg-blue-600 hover:text-white transition-all cursor-pointer font-black uppercase text-[9px] tracking-tight inline-flex items-center",
-                                formData.userId === user.id
-                                  ? "border-blue-600 bg-blue-600 text-white"
-                                  : "border-slate-200 text-slate-900"
-                              )}
-                            >
-                              {user.fullName}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Periode Tahun</label>
-                          <DnaInput
-                            type="number"
-                            value={formData.year}
-                            min={2020}
-                            max={2099}
-                            icon={<Calendar className="h-4 w-4" />}
-                            className="font-black text-xs"
-                            onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                          />
-                        </div>
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Periode Bulan</label>
-                          <div className="relative">
-                            <select
-                              value={formData.month}
-                              onChange={(e) => setFormData({ ...formData, month: Number(e.target.value) })}
-                              className="w-full h-14 px-6 bg-slate-50 border border-slate-200 rounded-2xl font-black uppercase text-xs appearance-none focus:ring-2 focus:ring-blue-500 transition-all italic"
-                            >
-                              {MONTHS.map((m, i) => (
-                                <option key={m} value={i + 1}>{m}</option>
-                              ))}
-                            </select>
-                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <h3 className="text-[14px] font-semibold text-slate-900">Personnel & Period</h3>
                   </div>
 
-                  {/* Valuation Panel */}
-                  <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-6">
-                    <div className="flex items-center gap-3">
-                      <Coins className="h-5 w-5 text-blue-600" />
-                      <h2 className="text-xl font-black uppercase tracking-tighter italic">Revenue <span className="text-blue-600">Goal</span></h2>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="block text-[11px] font-medium text-slate-600">Nama Sales <span className="text-rose-500">*</span></label>
+                      <OperationalInput
+                        icon={<Search className="h-4 w-4" />}
+                        placeholder="Search from staff members..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                      <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3">
+                        {filteredUsers.map(user => (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, userId: user.id })}
+                            className={cn(
+                              "rounded-md border px-3 py-1 text-[11px] font-medium transition cursor-pointer",
+                              formData.userId === user.id
+                                ? "border-blue-600 bg-blue-600 text-white"
+                                : "border-slate-200 bg-white text-slate-900 hover:border-blue-300",
+                            )}
+                          >
+                            {user.fullName}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Target Nominal (IDR) <span className="text-red-500">*</span></label>
-                      <div className="relative">
-                        <DnaInput
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <OperationalField label="Periode Tahun">
+                        <input
                           type="number"
-                          placeholder="0"
-                          value={formData.nominalTarget || ""}
-                          onChange={(e) => setFormData({ ...formData, nominalTarget: Number(e.target.value) })}
-                          className="h-24 pl-24 font-black text-5xl tabular-nums italic text-slate-900"
+                          value={formData.year}
+                          min={2020}
+                          max={2099}
+                          onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
                         />
-                        <span className="absolute left-8 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300 pointer-events-none">Rp</span>
-                      </div>
+                      </OperationalField>
+                      <OperationalField label="Periode Bulan">
+                        <div className="relative">
+                          <select
+                            value={formData.month}
+                            onChange={(e) => setFormData({ ...formData, month: Number(e.target.value) })}
+                          >
+                            {MONTHS.map((m, i) => (
+                              <option key={m} value={i + 1}>{m}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        </div>
+                      </OperationalField>
                     </div>
                   </div>
-                </div>
+                </OperationalPanel>
 
-                {/* Right: Insight & Rules */}
-                <div className="lg:col-span-4 space-y-10">
-                  <div className="sticky top-10 space-y-10">
-                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm text-slate-900 overflow-hidden relative">
-                      <div className="relative z-10 space-y-10">
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Target Governance</p>
-                          <h2 className="text-3xl font-black italic tracking-tighter uppercase mt-2 text-slate-900">Performance <br /> <span className="text-blue-600">Benchmark</span></h2>
-                        </div>
-
-                        <div className="space-y-8 pt-10 border-t border-slate-200">
-                          <div className="flex gap-4">
-                            <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-200">
-                              <TrendingUp className="h-5 w-5 text-emerald-500" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-black uppercase text-slate-900">Dynamic Growth</span>
-                              <span className="text-[9px] font-medium text-slate-400 uppercase italic">Targets are recalculated vs Last Year</span>
-                            </div>
-                          </div>
-                          <div className="flex gap-4">
-                            <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-200">
-                              <ShieldCheck className="h-5 w-5 text-blue-500" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-black uppercase text-slate-900">Incentive Locked</span>
-                              <span className="text-[9px] font-medium text-slate-400 uppercase italic">Linked to bonus automated engine</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <Target className="h-48 w-48 text-black/5 absolute -right-12 -bottom-12 rotate-12" />
+                <OperationalPanel>
+                  <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+                      <Coins className="h-4 w-4" />
                     </div>
+                    <h3 className="text-[14px] font-semibold text-slate-900">Revenue Goal</h3>
+                  </div>
 
-                    <div className="p-5 border-2 border-dashed border-slate-200 rounded-2xl bg-white/50 space-y-4">
-                      <div className="flex items-center gap-3 text-blue-600">
-                        <AlertCircle className="h-5 w-5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Protocol Intelligence</span>
-                      </div>
-                      <p className="text-xs font-medium text-slate-400 leading-relaxed uppercase italic">
-                        &quot;All targets are finalized on the 1st of every month. Changes after the 5th require CEO level authorization.&quot;
-                      </p>
+                  <OperationalField label="Target Nominal (IDR) *">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={formData.nominalTarget || ""}
+                        onChange={(e) => setFormData({ ...formData, nominalTarget: Number(e.target.value) })}
+                        className="h-16 pl-14 text-[24px] font-semibold tabular-nums text-slate-900"
+                      />
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[18px] font-semibold text-slate-300">Rp</span>
                     </div>
+                  </OperationalField>
+                </OperationalPanel>
+              </div>
+
+              <div className="space-y-6 lg:col-span-4">
+                <div className="sticky top-10 space-y-6">
+                  <OperationalPanel>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-blue-600">Target Governance</p>
+                    <h2 className="mt-2 text-[20px] font-semibold text-slate-900">Performance Benchmark</h2>
+                    <ul className="mt-4 space-y-3 border-t border-slate-100 pt-4 text-[12px] text-slate-700">
+                      <li className="flex items-start gap-2">
+                        <div className="grid h-7 w-7 place-items-center rounded-md bg-emerald-50 text-emerald-600">
+                          <TrendingUp className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-semibold text-slate-900">Dynamic Growth</span>
+                          <span className="text-[10px] text-slate-500">Targets recalculated vs Last Year</span>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+                          <Award className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-semibold text-slate-900">Incentive Locked</span>
+                          <span className="text-[10px] text-slate-500">Linked to bonus automated engine</span>
+                        </div>
+                      </li>
+                    </ul>
+                  </OperationalPanel>
+
+                  <div className="rounded-md border-2 border-dashed border-slate-200 bg-white/60 p-4">
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-[10px] font-medium uppercase tracking-wider">Protocol Intelligence</span>
+                    </div>
+                    <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+                      "All targets are finalized on the 1st of every month. Changes after the 5th require CEO level authorization."
+                    </p>
                   </div>
                 </div>
               </div>
@@ -480,6 +469,7 @@ export default function SalesTargetPrototype() {
           )}
         </AnimatePresence>
       </div>
+
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
@@ -487,11 +477,15 @@ export default function SalesTargetPrototype() {
           </DialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+            <button type="button" className="operational-button is-secondary" onClick={() => setShowConfirm(false)}>
+              Batal
+            </button>
+            <button type="button" className="operational-button is-primary" onClick={confirmSubmit}>
+              Ya, Simpan
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

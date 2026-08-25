@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
 import { TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
 import { 
   Table, 
@@ -33,10 +34,6 @@ export default function FinanceApprovalsPage() {
       const resp = await api.get("/finance/fund-requests");
       return resp.data;
     },
-    initialData: [
-      { id: "1", amount: 2500000, reason: "Top Up Facebook Ads", departmentId: "MARKETING", status: "PENDING_APPROVAL_MGR", createdAt: new Date().toISOString(), user: { fullName: "Marketing Lead" } },
-      { id: "2", amount: 500000, reason: "Beli Token Listrik Pabrik", departmentId: "GUDANG", status: "APPROVED_BY_MGR", createdAt: new Date().toISOString(), user: { fullName: "Staf GA" } }
-    ]
   });
 
   const approveMutation = useMutation({
@@ -60,7 +57,7 @@ export default function FinanceApprovalsPage() {
     return (
       req.reason?.toLowerCase().includes(term) ||
       req.departmentId?.toLowerCase().includes(term) ||
-      req.user?.fullName?.toLowerCase().includes(term) ||
+      req.requester?.fullName?.toLowerCase().includes(term) ||
       req.status?.toLowerCase().includes(term)
     );
   });
@@ -74,15 +71,14 @@ export default function FinanceApprovalsPage() {
       case "PAID":
         return <DnaBadge status="success">Sudah Cair</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge status="default">{getOperationalStatusLabel(status)}</DnaBadge>;
     }
   };
 
   return (
-    <DashboardShell
-      title="PERSETUJUAN"
-      titleAccent="DANA"
-      subtitle="Pengawasan Manajerial & Pelepasan Fiskal"
+    <OperationalMigrationShell
+      title="Persetujuan Dana"
+      subtitle="Pengawasan manajerial dan pelepasan fiskal"
     >
       <div className="space-y-6 animate-fade-slide-in">
         <TableWrapper
@@ -92,10 +88,10 @@ export default function FinanceApprovalsPage() {
                 <span className="status-dot bg-blue-500 animate-pulse" />
                 <div>
                   <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
-                    DAFTAR PENGAJUAN DANA
+                    Daftar Pengajuan Dana
                   </h3>
                   <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight mt-0.5">
-                    Memerlukan Verifikasi & Validasi Keuangan • {filteredRequests.length} Item
+                    Memerlukan verifikasi dan validasi keuangan • {filteredRequests.length} item
                   </p>
                 </div>
               </div>
@@ -105,7 +101,7 @@ export default function FinanceApprovalsPage() {
                     icon={<Search className="w-4 h-4" />}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="CARI PENGAJUAN..."
+                    placeholder="Cari pengajuan..."
                     className="bg-slate-50 border-none rounded-xl text-xs"
                   />
                 </div>
@@ -116,13 +112,13 @@ export default function FinanceApprovalsPage() {
           <Table className="table-dense">
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 pl-6 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">ID / TANGGAL</TableHead>
-                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DEPARTEMEN</TableHead>
-                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DESKRIPSI / KEPERLUAN</TableHead>
-                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DIAJUKAN OLEH</TableHead>
-                <TableHead className="text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMINAL</TableHead>
-                <TableHead className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</TableHead>
-                <TableHead className="pr-6 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">AKSI</TableHead>
+                <TableHead className="py-4 pl-6 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">ID / Tanggal</TableHead>
+                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">Departemen</TableHead>
+                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">Deskripsi / Keperluan</TableHead>
+                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">Diajukan Oleh</TableHead>
+                <TableHead className="text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">Nominal</TableHead>
+                <TableHead className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">Status</TableHead>
+                <TableHead className="pr-6 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -150,7 +146,7 @@ export default function FinanceApprovalsPage() {
                       <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{req.reason}</p>
                     </TableCell>
                     <TableCell className="py-3">
-                      <p className="text-[10px] font-medium text-slate-600 italic">{req.user?.fullName}</p>
+                        <p className="text-[10px] font-medium text-slate-600 italic">{req.requester?.fullName || "—"}</p>
                     </TableCell>
                     <TableCell className="py-3 text-right font-mono tabular-nums text-xs font-black">
                       {formatCurrency(req.amount)}
@@ -168,7 +164,7 @@ export default function FinanceApprovalsPage() {
                             onClick={() => approveMutation.mutate(req.id)}
                             disabled={approveMutation.isPending}
                           >
-                            SETUJUI
+                            Setujui
                           </DnaButton>
                         )}
                         {req.status === "APPROVED_BY_MGR" && (
@@ -180,12 +176,12 @@ export default function FinanceApprovalsPage() {
                             disabled={disburseMutation.isPending}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white"
                           >
-                            CAIRKAN
+                            Cairkan
                           </DnaButton>
                         )}
                         {req.status === "PAID" && (
                           <DnaBadge status="success">
-                            SELESAI
+                            Selesai
                           </DnaBadge>
                         )}
                       </div>
@@ -197,6 +193,6 @@ export default function FinanceApprovalsPage() {
           </Table>
         </TableWrapper>
       </div>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

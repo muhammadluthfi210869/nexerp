@@ -6,6 +6,7 @@ import {
   Param,
   Get,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -40,8 +41,8 @@ export class RndController {
 
   @Post('sample/:id/accept')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
-  acceptSample(@Param('id') id: string) {
-    return this.rndService.acceptSample(id);
+  acceptSample(@Param('id') id: string, @Req() req: any) {
+    return this.rndService.acceptSample(id, req?.user?.id);
   }
 
   @Get('dashboard')

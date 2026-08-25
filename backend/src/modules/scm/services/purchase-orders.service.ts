@@ -15,6 +15,7 @@ import { LegalityService } from '../../legality/legality.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { FinanceService } from '../../finance/finance.service';
 
 @Injectable()
 export class PurchaseOrdersService {
@@ -23,6 +24,9 @@ export class PurchaseOrdersService {
     @Inject(forwardRef(() => LegalityService))
     private legality: LegalityService,
     private idGenerator: IdGeneratorService,
+    // Pre-R4 hardening: cross-domain Invoice writes must route through Finance.
+    @Inject(forwardRef(() => FinanceService))
+    private finance: FinanceService,
   ) {}
 
   async create(userId: string, dto: CreatePurchaseOrderDto) {
@@ -158,6 +162,34 @@ export class PurchaseOrdersService {
     return po;
   }
 
+  /** Stable, read-only receiving contract. Batch 5 owns every stock mutation. */
+  async getBatch5Handoff(id: string) {
+    const po = await this.prisma.purchaseOrder.findUnique({
+      where: { id },
+      include: {
+        supplier: { select: { id: true, name: true } },
+        items: { include: { material: { select: { id: true, name: true, unit: true } } } },
+        purchaseRequest: { include: { requirement: true } },
+      },
+    });
+    if (!po) throw new NotFoundException(`PO ${id} not found`);
+    return {
+      purchaseOrderId: po.id,
+      poNumber: po.poNumber,
+      status: po.status,
+      supplier: po.supplier,
+      requirement: po.purchaseRequest?.requirement ? {
+        id: po.purchaseRequest.requirement.id,
+        salesOrderId: po.purchaseRequest.requirement.salesOrderId,
+        salesOrderVersion: po.purchaseRequest.requirement.salesOrderVersion,
+        formulaId: po.purchaseRequest.requirement.formulaId,
+        formulaVersion: po.purchaseRequest.requirement.formulaVersion,
+      } : null,
+      lines: po.items.map((line) => ({ materialId: line.materialId, materialName: line.material.name, orderedQty: line.quantity, uom: line.material.unit, receivedQty: line.receivedQty, unitPrice: line.unitPrice })),
+      receiving: { allowed: false, reason: 'BATCH_5_OWNS_GOODS_RECEIPT_AND_INVENTORY_MUTATION' },
+    };
+  }
+
   async updateStatus(id: string, status: string, reason?: string) {
     const po = await this.prisma.purchaseOrder.findUnique({
       where: { id },
@@ -182,17 +214,15 @@ export class PurchaseOrdersService {
 
     if (!po) throw new NotFoundException('Purchase Order not found');
 
-    return this.prisma.invoice.create({
-      data: {
-        invoiceNumber: `DP-PUR-${po.poNumber}`,
-        category: 'PAYABLE',
-        type: 'DP',
-        poId: po.id,
-        amountDue: amount,
-        outstandingAmount: amount,
-        notes: notes || `Down Payment for ${po.poNumber}`,
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
-      },
+    // Pre-R4 hardening: route cross-domain Invoice writes through Finance.
+    // Pre-R4 this created the Invoice row directly via prisma.invoice.create,
+    // which was one of four independent write paths to the Invoice table.
+    return this.finance.createInvoice('PAYABLE', {
+      type: 'DP',
+      amountDue: amount,
+      poId: po.id,
+      notes: notes || `Down Payment for ${po.poNumber}`,
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   }
 }

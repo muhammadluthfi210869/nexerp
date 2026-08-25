@@ -82,6 +82,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Dasbor Marketing", href: "/marketing/dashboard", type: "dashboard" },
       { name: "Input Kampanye", href: "/marketing/input", type: "input" },
       { name: "Tugas Marketing", href: "/marketing/management-task", type: "action" },
+      { name: "WhatsApp Sales", href: "/marketing/whatsapp-sales", type: "action" },
       { name: "Riwayat Lead", href: "/marketing/logs", type: "history" },
     ]
   },
@@ -152,6 +153,10 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Dasbor Produksi", href: "/production", type: "dashboard" },
       { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
       { name: "Operasional", href: "/production/operations", type: "dashboard" },
+      { name: "Work Orders", href: "/production/work-orders", type: "action" },
+      { name: "Batch Records", href: "/production/batch-records", type: "history" },
+      { name: "Gudang Produksi", href: "/production/warehouse", type: "history" },
+      { name: "Audit Produksi", href: "/production/audit", type: "history" },
       { name: "Pipeline", href: "/production/operations?tab=pipeline", type: "history" },
       { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
     ]
@@ -162,9 +167,12 @@ const MODULE_STRUCTURE: NavGroup[] = [
     roles: ["SUPER_ADMIN", "QC_LAB", "DIRECTOR"],
     items: [
       { name: "Dasbor Quality Control", href: "/qc/dashboard", type: "dashboard" },
+      { name: "Workbench QC", href: "/qc/workbench", type: "action" },
       { name: "Inspeksi Lab", href: "/qc/inspections", type: "action" },
+      { name: "Checklist", href: "/qc/checklist", type: "input" },
       { name: "Uji Stabilitas", href: "/qc/stability", type: "action" },
       { name: "Pusat CoA", href: "/qc/coa", type: "history" },
+      { name: "Report QC", href: "/qc/report", type: "history" },
       { name: "Audit Trail", href: "/executive/audit", type: "history" },
     ]
   },
@@ -176,6 +184,8 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Dasbor Gudang", href: "/warehouse", type: "dashboard" },
       { name: "Gudang", href: "/warehouse/gudang", type: "action" },
       { name: "Stok", href: "/warehouse/stok", type: "history" },
+      { name: "Inbound", href: "/warehouse/inbound", type: "action" },
+      { name: "Shipment", href: "/logistics/shipments", type: "action" },
       { name: "Data Gudang", href: "/master/warehouses", type: "input" },
     ]
   },

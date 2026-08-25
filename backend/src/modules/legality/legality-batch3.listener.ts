@@ -3,21 +3,18 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { LegalityBatch3Service } from './legality-batch3.service';
 
 /**
- * BATCH 3 — Cross-module listener.
+ * BATCH 3 (corrected) — Cross-module listener.
  *
- * Listens for `rnd.sample.approved` (emitted by RndService on SampleStage
- * transition to APPROVED) and triggers idempotent Legalitas intake.
+ * Listens for `rnd.sample.approved` and triggers Legalitas intake.
  *
- * The actual event payload is the SampleRequest id. Anything that emits
- * `{ sampleRequestId, actorId }` works — see RndService for the source.
+ * Applicability is now driven by the sample's explicit
+ * sampleRequest.legalApplicability field. UNKNOWN samples do NOT
+ * auto-create pipelines — they emit a "decision required" event for a
+ * Legalitas operator and surface a clear SO-eligibility BLOCK.
  *
- * Failures are logged but DO NOT crash the originating R&D transaction —
- * intake is a fire-and-forget side effect, not a hard precondition.
- *
- * NOTE: `@OnEvent` only fires when the listener class is registered as a
- * provider inside a fully-bootstrapped NestApplication. In TestingModule
- * the decorator metadata is set but the wiring doesn't happen — see the
- * e2e spec for manual `eventEmitter.on()` registration in tests.
+ * Idempotency: replay of the same event never creates a duplicate
+ * pipeline because intake itself is idempotent on
+ * (leadId, sampleRequestId, type).
  */
 @Injectable()
 export class LegalityBatch3Listener {
@@ -37,15 +34,12 @@ export class LegalityBatch3Listener {
         payload.actorId,
       );
       this.logger.log(
-        `[INTAKE] sample=${payload.sampleRequestId} → pipeline=${result.pipeline.id} (idempotent=${result.idempotent})`,
+        `[INTAKE] sample=${payload.sampleRequestId} → pipeline=${result.pipeline?.id ?? 'none'} (idempotent=${result.idempotent}, applicability=${result.applicability})`,
       );
     } catch (err) {
-      // INV-03: legal gate is enforced at SO-creation time, not here.
-      // Intake failure must not bubble back into R&D transaction.
       this.logger.error(
         `[INTAKE] failed for sample ${payload.sampleRequestId}: ${(err as Error).message}`,
       );
     }
   }
 }
-

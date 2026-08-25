@@ -24,7 +24,8 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { formatOperationalDate } from "@/lib/operational-formatters";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
 
@@ -74,6 +75,12 @@ const DIVISION_ICONS: Record<string, typeof Package> = {
   "R&D": Zap,
   Legal: Shield,
   System: Settings,
+};
+
+const SEVERITY_LABELS: Record<string, string> = {
+  CRITICAL: "Kritis",
+  WARNING: "Peringatan",
+  INFO: "Info",
 };
 
 export default function NotificationsPage() {
@@ -141,9 +148,8 @@ export default function NotificationsPage() {
   const warningCount = notifications?.filter((n) => n.severity === "WARNING").length || 0;
 
   return (
-    <DashboardShell
-      title="Dashboard"
-      titleAccent="Notifikasi"
+    <OperationalMigrationShell
+      title="Notifikasi Operasional"
       subtitle="Pusat notifikasi & alert seluruh divisi"
       actions={
         <div className="flex gap-3">
@@ -167,15 +173,15 @@ export default function NotificationsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <StatCard icon={<Bell className="text-blue-600" />} label="Total Notifikasi" value={totalNotifications} />
             <StatCard icon={<Eye className="text-purple-600" />} label="Belum Dibaca" value={unreadCount} />
-            <StatCard icon={<AlertTriangle className="text-rose-600" />} label="Critical" value={criticalCount} />
-            <StatCard icon={<AlertCircle className="text-amber-600" />} label="Warning" value={warningCount} />
+            <StatCard icon={<AlertTriangle className="text-rose-600" />} label="Kritis" value={criticalCount} />
+            <StatCard icon={<AlertCircle className="text-amber-600" />} label="Peringatan" value={warningCount} />
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white border border-[var(--border-color)] rounded-[24px] p-6 shadow-sm space-y-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <Filter className="h-4 w-4 text-slate-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filter</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Penyaring</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <DnaInput
@@ -200,9 +206,9 @@ export default function NotificationsPage() {
                 onChange={(e) => setFilterSeverity(e.target.value)}
                 className="h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-tight text-slate-600 appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500/5 transition-all"
               >
-                <option value="all">Semua Severity</option>
-                <option value="CRITICAL">Critical</option>
-                <option value="WARNING">Warning</option>
+                <option value="all">Semua Tingkat</option>
+                <option value="CRITICAL">Kritis</option>
+                <option value="WARNING">Peringatan</option>
                 <option value="INFO">Info</option>
               </select>
             </div>
@@ -219,7 +225,7 @@ export default function NotificationsPage() {
                 <div
                   key={notif.id}
                   className={cn(
-                    "bg-white border rounded-[24px] p-6 shadow-sm transition-all hover:shadow-md group",
+                    "bg-white border rounded-xl p-4 transition-colors group",
                     notif.isRead ? "border-[var(--border-color)]" : config.bg,
                     !notif.isRead && "ring-1 ring-inset ring-current/5"
                   )}
@@ -237,7 +243,7 @@ export default function NotificationsPage() {
                           <div className="flex items-center gap-2">
                             <h3
                               className={cn(
-                                "font-black text-sm uppercase tracking-tight",
+                                "font-black text-sm tracking-tight",
                                 notif.isRead ? "text-slate-600" : "text-slate-900"
                               )}
                             >
@@ -251,7 +257,7 @@ export default function NotificationsPage() {
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
-                          <DnaBadge status={config.badge}>{notif.severity}</DnaBadge>
+                          <DnaBadge status={config.badge}>{SEVERITY_LABELS[notif.severity] || notif.severity}</DnaBadge>
                         </div>
                       </div>
 
@@ -259,17 +265,13 @@ export default function NotificationsPage() {
                       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-50">
                         <div className="flex items-center gap-1.5">
                           <DivIcon className="h-3 w-3 text-slate-300" />
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">{notif.division}</span>
+                          <span className="text-[9px] font-bold text-slate-400">{notif.division === "System" ? "Sistem" : notif.division}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3 w-3 text-slate-300" />
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">
-                            {new Date(notif.date).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
+                          <span className="text-[9px] font-bold text-slate-400">
+                            {formatOperationalDate(notif.date, {
+                              day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
                             })}
                           </span>
                         </div>
@@ -307,6 +309,6 @@ export default function NotificationsPage() {
           </div>
         </>
       )}
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

@@ -23,7 +23,8 @@ import {
   Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { StatCard, KpiCard, DnaInput, TableWrapper, DnaBadge } from "@/components/dna";
 
@@ -123,9 +124,8 @@ export default function ChecklistProgressPage() {
   const overdueCount = checklists?.filter((c) => c.status === "OVERDUE" || (c.deadline && new Date(c.deadline) < new Date() && c.progress < 100)).length || 0;
 
   return (
-    <DashboardShell
-      title="Checklist"
-      titleAccent="Progress"
+    <OperationalMigrationShell
+      title="Progres Checklist"
       subtitle="Monitoring progres seluruh checklist QC aktif"
     >
       {isLoading ? (
@@ -149,7 +149,7 @@ export default function ChecklistProgressPage() {
                     Semua Checklist Aktif
                   </h3>
                   <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight mt-0.5">
-                    Progress real-time • {filtered.length} Items
+                    Progres real-time • {filtered.length} item
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -242,7 +242,7 @@ export default function ChecklistProgressPage() {
                     </TableCell>
                     <TableCell className="py-3 text-center">
                       <DnaBadge status={getStatusBadge(item.status)}>
-                        {item.status}
+                        {getOperationalStatusLabel(item.status)}
                       </DnaBadge>
                     </TableCell>
                     <TableCell className="py-3 pr-6 text-right">
@@ -277,6 +277,6 @@ export default function ChecklistProgressPage() {
           </TableWrapper>
         </>
       )}
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

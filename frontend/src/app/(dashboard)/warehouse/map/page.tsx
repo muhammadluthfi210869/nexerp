@@ -12,7 +12,7 @@ import {
 import { DataCard } from "@/components/dna";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational";
 
 export default function WarehouseMapPage() {
   const { data: locations = [] } = useQuery({
@@ -63,7 +63,7 @@ export default function WarehouseMapPage() {
   }, [locations]);
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="Warehouse"
       titleAccent="Map"
       subtitle="Digital Twin & Spatial Inventory Audit"
@@ -181,7 +181,7 @@ export default function WarehouseMapPage() {
             </DataCard>
         </div>
       </div>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }
 

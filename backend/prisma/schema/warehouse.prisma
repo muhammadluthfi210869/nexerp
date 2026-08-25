@@ -88,6 +88,7 @@ model MaterialItem {
   shipmentItems        ShipmentItem[]
   stockAdjustmentItems StockAdjustmentItem[]
   stockOpnameItems     StockOpnameItem[]
+  productionUsages     ProductionMaterialUsage[]
   transferOrderItems   TransferOrderItem[]
   purchaseReturnItems  PurchaseReturnItem[]
   stepDetails          ProductionStepDetail[]
@@ -141,59 +142,72 @@ model Supplier {
 }
 
 model PurchaseRequest {
-  id          String                @id @default(uuid()) @db.Uuid
-  requestDate DateTime              @default(now())
-  warehouseId String                @db.Uuid
-  priority    PRPriority            @default(MEDIUM)
-  status      PRStatus              @default(DRAFT)
-  notes       String?
-  supplierId  String?               @db.Uuid
-  createdById String?               @db.Uuid
-  createdAt   DateTime              @default(now())
-  items       PurchaseRequestItem[]
-  creator     User?                 @relation("PurchaseRequestCreator", fields: [createdById], references: [id])
-  supplier    Supplier?             @relation(fields: [supplierId], references: [id])
-  warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
+  id             String                @id @default(uuid()) @db.Uuid
+  requestDate    DateTime              @default(now())
+  warehouseId    String                @db.Uuid
+  priority       PRPriority            @default(MEDIUM)
+  status         PRStatus              @default(DRAFT)
+  notes          String?
+  supplierId     String?               @db.Uuid
+  createdById    String?               @db.Uuid
+  createdAt      DateTime              @default(now())
+  // Batch 4: source requirement is inherited, never typed by SCM.
+  requirementId  String?               @db.Uuid
+  idempotencyKey String?
+  items          PurchaseRequestItem[]
+  creator        User?                 @relation("PurchaseRequestCreator", fields: [createdById], references: [id])
+  supplier       Supplier?             @relation(fields: [supplierId], references: [id])
+  warehouse      Warehouse             @relation(fields: [warehouseId], references: [id])
+  requirement    GoodsRequirement?     @relation(fields: [requirementId], references: [id])
+  purchaseOrder  PurchaseOrder?
 
+  @@unique([requirementId, idempotencyKey])
+  @@index([requirementId])
   @@map("purchase_requests")
 }
 
 model PurchaseRequestItem {
-  id             String          @id @default(uuid()) @db.Uuid
-  requestId      String          @db.Uuid
-  materialId     String          @db.Uuid
-  qtyRequired    Decimal         @db.Decimal(15, 2)
-  estimatedPrice Decimal?        @db.Decimal(15, 2)
-  material       MaterialItem    @relation(fields: [materialId], references: [id])
-  request        PurchaseRequest @relation(fields: [requestId], references: [id])
+  id                String                @id @default(uuid()) @db.Uuid
+  requestId         String                @db.Uuid
+  materialId        String                @db.Uuid
+  qtyRequired       Decimal               @db.Decimal(15, 2)
+  estimatedPrice    Decimal?              @db.Decimal(15, 2)
+  requirementItemId String?               @db.Uuid
+  material          MaterialItem          @relation(fields: [materialId], references: [id])
+  request           PurchaseRequest       @relation(fields: [requestId], references: [id])
+  requirementItem   GoodsRequirementItem? @relation(fields: [requirementItemId], references: [id])
 
   @@map("purchase_request_items")
 }
 
 model PurchaseOrder {
-  id             String              @id @default(uuid()) @db.Uuid
-  poNumber       String              @unique
-  supplierId     String?             @db.Uuid
-  scmId          String?             @db.Uuid
-  status         POStatus            @default(ORDERED)
-  totalValue     Decimal             @default(0) @db.Decimal(15, 2)
-  currencyId     String?             @db.Uuid
-  estArrival     DateTime?           @db.Date
-  dueDate        DateTime?           @db.Date
-  taxPercent     Decimal?            @db.Decimal(5, 2)
-  notes          String?
-  deletedAt      DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime?           @updatedAt
-  leadId         String?             @db.Uuid
-  items          PurchaseOrderItem[]
-  currency       Currency?           @relation(fields: [currencyId], references: [id])
-  lead           SalesLead?          @relation(fields: [leadId], references: [id])
-  scm            User?               @relation("SCMProcessor", fields: [scmId], references: [id])
-  supplier       Supplier?           @relation(fields: [supplierId], references: [id])
-  inbounds       WarehouseInbound[]
-  invoices       Invoice[]
-  journalEntries JournalEntry[]
+  id              String              @id @default(uuid()) @db.Uuid
+  poNumber        String              @unique
+  supplierId      String?             @db.Uuid
+  scmId           String?             @db.Uuid
+  status          POStatus            @default(ORDERED)
+  totalValue      Decimal             @default(0) @db.Decimal(15, 2)
+  currencyId      String?             @db.Uuid
+  estArrival      DateTime?           @db.Date
+  dueDate         DateTime?           @db.Date
+  taxPercent      Decimal?            @db.Decimal(5, 2)
+  notes           String?
+  deletedAt       DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime?           @updatedAt
+  leadId          String?             @db.Uuid
+  // One issued PO may be the committed outcome of one PR. Direct/manual POs
+  // remain possible when requestId is null.
+  requestId       String?             @unique @db.Uuid
+  items           PurchaseOrderItem[]
+  currency        Currency?           @relation(fields: [currencyId], references: [id])
+  lead            SalesLead?          @relation(fields: [leadId], references: [id])
+  scm             User?               @relation("SCMProcessor", fields: [scmId], references: [id])
+  supplier        Supplier?           @relation(fields: [supplierId], references: [id])
+  inbounds        WarehouseInbound[]
+  invoices        Invoice[]
+  journalEntries  JournalEntry[]
+  purchaseRequest PurchaseRequest?    @relation(fields: [requestId], references: [id])
 
   @@map("purchase_orders")
 }
@@ -215,16 +229,22 @@ model PurchaseOrderItem {
 }
 
 model WarehouseInbound {
-  id            String           @id @default(uuid()) @db.Uuid
-  inboundNumber String           @unique @default(uuid())
-  poId          String?          @db.Uuid
-  status        InboundStatus    @default(PENDING)
-  receivedAt    DateTime         @default(now())
-  warehouseId   String           @db.Uuid
-  items         InboundItem[]
-  po            PurchaseOrder?   @relation(fields: [poId], references: [id])
-  returns       PurchaseReturn[]
-  warehouse     Warehouse        @relation(fields: [warehouseId], references: [id])
+  id                String           @id @default(uuid()) @db.Uuid
+  inboundNumber     String           @unique @default(uuid())
+  poId              String?          @db.Uuid
+  status            InboundStatus    @default(PENDING)
+  receivedAt        DateTime         @default(now())
+  warehouseId       String           @db.Uuid
+  /// Supplier delivery document / idempotency identity.  A receipt is a
+  /// first-class physical event and is never inferred from the PO state.
+  supplierReference String?
+  idempotencyKey    String?          @unique
+  reversedAt        DateTime?
+  reversalReason    String?
+  items             InboundItem[]
+  po                PurchaseOrder?   @relation(fields: [poId], references: [id])
+  returns           PurchaseReturn[]
+  warehouse         Warehouse        @relation(fields: [warehouseId], references: [id])
 
   @@map("warehouse_inbounds")
 }
@@ -274,6 +294,10 @@ model InboundItem {
   qtyActual    Decimal          @db.Decimal(15, 3)
   isQuarantine Boolean          @default(true)
   qcStatus     QCStatus         @default(QUARANTINE)
+  lotNumber    String?
+  expDate      DateTime?
+  /// Exactly one posted stock mutation is linked to a receipt line.
+  inventoryId  String?          @unique @db.Uuid
   inbound      WarehouseInbound @relation(fields: [inboundId], references: [id])
   material     MaterialItem     @relation(fields: [materialId], references: [id])
 
@@ -312,6 +336,9 @@ model InventoryTransaction {
   unitValueAtTransaction Decimal?           @db.Decimal(15, 2)
   /// Link to specific batch/inventory record
   inventoryId            String?            @db.Uuid
+  /// Unique command identity for retry-safe stock mutations.  Null keeps
+  /// historical transactions and unrelated movement contracts compatible.
+  commandKey             String?            @unique
   inventory              MaterialInventory? @relation(fields: [inventoryId], references: [id])
   material               MaterialItem       @relation(fields: [materialId], references: [id])
   warehouse              Warehouse?         @relation(fields: [warehouseId], references: [id])
@@ -323,26 +350,30 @@ model InventoryTransaction {
 }
 
 model MaterialInventory {
-  id             String                   @id @default(uuid()) @db.Uuid
-  materialId     String                   @db.Uuid
-  supplierId     String                   @db.Uuid
-  batchNumber    String
-  internalQrCode String?                  @unique
-  currentStock   Decimal                  @db.Decimal(15, 2)
-  expDate        DateTime?
-  lastRestock    DateTime                 @default(now())
-  locationId     String?                  @db.Uuid
-  qcStatus       QCStatus                 @default(GOOD)
-  isSensitive    Boolean                  @default(false)
-  auditAccuracy  Decimal?                 @default(100.00) @db.Decimal(5, 2)
-  receivingDate  DateTime?                @default(now())
-  notes          String?
-  location       WarehouseLocation?       @relation(fields: [locationId], references: [id])
-  material       MaterialItem             @relation(fields: [materialId], references: [id])
-  supplier       Supplier                 @relation(fields: [supplierId], references: [id])
-  transactions   InventoryTransaction[]
-  productionLogs ProductionLog[]
-  fulfillments   RequisitionFulfillment[]
+  id               String                    @id @default(uuid()) @db.Uuid
+  materialId       String                    @db.Uuid
+  supplierId       String                    @db.Uuid
+  batchNumber      String
+  internalQrCode   String?                   @unique
+  currentStock     Decimal                   @db.Decimal(15, 2)
+  /// On-hand is physical quantity; reserved is a committed but unissued
+  /// quantity. Available is derived, never persisted independently.
+  reservedQty      Decimal                   @default(0) @db.Decimal(15, 2)
+  expDate          DateTime?
+  lastRestock      DateTime                  @default(now())
+  locationId       String?                   @db.Uuid
+  qcStatus         QCStatus                  @default(GOOD)
+  isSensitive      Boolean                   @default(false)
+  auditAccuracy    Decimal?                  @default(100.00) @db.Decimal(5, 2)
+  receivingDate    DateTime?                 @default(now())
+  notes            String?
+  location         WarehouseLocation?        @relation(fields: [locationId], references: [id])
+  material         MaterialItem              @relation(fields: [materialId], references: [id])
+  supplier         Supplier                  @relation(fields: [supplierId], references: [id])
+  transactions     InventoryTransaction[]
+  productionLogs   ProductionLog[]
+  fulfillments     RequisitionFulfillment[]
+  productionUsages ProductionMaterialUsage[]
 
   @@index([materialId])
   @@index([locationId])

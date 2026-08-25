@@ -22,8 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, DnaButton, DnaInput } from "@/components/dna";
+import { DnaInput, DnaButton } from "@/components/dna";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -32,6 +31,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  OperationalButton,
+  OperationalField,
+  OperationalPageShell,
+  OperationalPanel,
+} from "@/components/operational";
 
 export default function SampleSalesInputPage() {
   const queryClient = useQueryClient();
@@ -105,86 +110,70 @@ export default function SampleSalesInputPage() {
   };
 
   return (
-    <DashboardShell
-      title="BUAT"
-      titleAccent="SALES SAMPLE"
-      subtitle="Form input permintaan sample baru — Sample Request Portal"
+    <OperationalPageShell
+      title="Buat Sales Sample"
+      subtitle="Form input permintaan sample baru untuk BusDev"
     >
-      <DataCard
-        dotColor="bg-blue-600"
-        title="SAMPLE ORDER DETAILS"
-        titleColor="text-slate-400"
-        className="!p-5 rounded-2xl"
-      >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <UserCircle className="h-3.5 w-3.5" /> Customer <span className="text-red-500">*</span>
-              </Label>
+      <form onSubmit={handleSubmit}>
+        <OperationalPanel>
+          <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+            <div className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600">
+              <Package className="h-4 w-4" />
+            </div>
+            <h3 className="text-[13px] font-semibold text-slate-900">Detail Sample Order</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <OperationalField label="Customer">
               <Select value={customerId} onValueChange={(v) => setCustomerId(v || "")}>
-                <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all">
-                  <SelectValue placeholder="Pilih Customer..." />
+                <SelectTrigger className="h-9 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-700">
+                  <SelectValue placeholder="Pilih customer..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                <SelectContent>
                   {customers?.map((c: any) => (
-                    <SelectItem
-                      key={c.id}
-                      value={c.id}
-                      className="text-xs font-bold uppercase"
-                    >
+                    <SelectItem key={c.id} value={c.id} className="text-xs">
                       {c.clientName || c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </OperationalField>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Package className="h-3.5 w-3.5" /> Nama Produk <span className="text-red-500">*</span>
-              </Label>
+            <OperationalField label="Nama Produk">
               <DnaInput
-                placeholder="e.g. Serum Brightening 30ml"
+                placeholder="Contoh: Serum Brightening 30ml"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="h-9 rounded-md border-slate-200 text-[12px] font-medium"
               />
+            </OperationalField>
+
+            <div className="md:col-span-2">
+              <OperationalField label="Deskripsi">
+                <textarea
+                  rows={3}
+                  placeholder="Deskripsi detail sample..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[80px] w-full rounded-md border border-slate-200 bg-white p-3 text-[12px] font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </OperationalField>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5" /> Deskripsi
-              </Label>
-              <textarea
-                rows={3}
-                placeholder="Deskripsi detail sample..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none placeholder:text-slate-300"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Hash className="h-3.5 w-3.5" /> Qty <span className="text-red-500">*</span>
-              </Label>
+            <OperationalField label="Qty">
               <DnaInput
                 type="number"
                 min="1"
                 placeholder="0"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="h-9 rounded-md border-slate-200 text-[12px] font-medium tabular-nums"
               />
-            </div>
+            </OperationalField>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <DollarSign className="h-3.5 w-3.5" /> Harga Satuan (IDR)
-              </Label>
+            <OperationalField label="Harga Satuan (IDR)">
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-[10px]">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">
                   Rp
                 </span>
                 <DnaInput
@@ -193,49 +182,42 @@ export default function SampleSalesInputPage() {
                   placeholder="0"
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value)}
-                  className="h-11 pl-12 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
+                  className="h-9 rounded-md border-slate-200 pl-9 text-[12px] font-medium tabular-nums"
                 />
               </div>
-            </div>
+            </OperationalField>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" /> Target Delivery
-              </Label>
+            <OperationalField label="Target Delivery">
               <DnaInput
                 type="date"
                 value={targetDeliveryDate}
                 onChange={(e) => setTargetDeliveryDate(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="h-9 rounded-md border-slate-200 text-[12px] font-medium"
               />
-            </div>
+            </OperationalField>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <StickyNote className="h-3.5 w-3.5" /> Catatan
-              </Label>
+            <OperationalField label="Catatan">
               <DnaInput
                 placeholder="Catatan tambahan..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="h-9 rounded-md border-slate-200 text-[12px] font-medium"
               />
-            </div>
+            </OperationalField>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
-            <DnaButton
+          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+            <OperationalButton
               type="submit"
-              disabled={!canSubmit}
               variant="primary"
-              icon={<Send className="h-4 w-4" />}
-              className="h-12 rounded-xl bg-blue-600 hover:bg-blue-700"
+              disabled={!canSubmit}
             >
-              {mutation.isPending ? "MEMPROSES..." : "SUBMIT SAMPLE ORDER"}
-            </DnaButton>
+              <Send className="h-4 w-4" />
+              {mutation.isPending ? "Memproses..." : "Submit Sample Order"}
+            </OperationalButton>
           </div>
-        </form>
-      </DataCard>
+        </OperationalPanel>
+      </form>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
@@ -249,6 +231,6 @@ export default function SampleSalesInputPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

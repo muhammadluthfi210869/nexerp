@@ -35,18 +35,22 @@ async function bootstrap() {
   const hash = await bcrypt.hash(password, 10);
   await prisma.user.upsert({
     where: { email },
-    update: { passwordHash: hash, roles: ['SUPER_ADMIN', 'RND', 'COMMERCIAL'] },
+    // The scoped golden-flow operator crosses the Batch 2/3 handoff into
+    // Batch 4 SCM. These are real application roles, not a guard bypass.
+    update: { passwordHash: hash, roles: ['SUPER_ADMIN', 'RND', 'COMMERCIAL', 'SCM', 'PURCHASING'] },
     create: {
       email,
       passwordHash: hash,
       fullName: 'Batch2 RND Demo',
-      roles: ['SUPER_ADMIN', 'RND', 'COMMERCIAL'],
+      roles: ['SUPER_ADMIN', 'RND', 'COMMERCIAL', 'SCM', 'PURCHASING'],
     },
   });
   Logger.log(`[BATCH2-STAGING] ensured demo user ${email}`);
 
   const port = parseInt(process.env.BATCH2_STAGING_PORT || '3002', 10);
-  await app.listen(port);
+  // Dual-stack bind so both 127.0.0.1 (Node/PowerShell) and ::1
+  // (localhost as resolved by Next.js/Chromium) reach the backend.
+  await app.listen(port, '::');
   Logger.log(
     `[BATCH2-STAGING] Batch-2 vertical-slice backend listening on :${port}`,
   );

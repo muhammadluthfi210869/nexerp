@@ -31,6 +31,7 @@ import {
   MessageSquare,
   X,
 } from "lucide-react";
+import { InitialCapturePanel } from "./InitialCapturePanel";
 
 interface Lead {
   id: string; trackingCode: string; intent: string | null;
@@ -833,6 +834,9 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onRefreshDetail, loading }: 
           </div>
         </div>
       )}
+
+      {/* 📇 Initial Capture — Batch 5 Phase B (surface operasional BusDev) */}
+      <InitialCapturePanel lead={lead} onSaved={onRefreshDetail} />
 
       {/* 🤖 AI Suggestion (Fase 3.2) */}
       <div className="bg-gradient-to-br from-indigo-50/60 to-blue-50/40 border border-indigo-100 rounded-2xl p-4 mb-4">

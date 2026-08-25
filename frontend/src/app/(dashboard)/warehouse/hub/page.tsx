@@ -25,11 +25,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { formatOperationalNumber, formatOperationalDate } from "@/lib/operational-formatters";
+import { OperationalMigrationShell, OperationalMetricCard, OperationalMetricGrid } from "@/components/operational";
 import { DetailSection, DataField } from "./helpers";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
 
 interface MaterialCatalogItem {
   id: string;
@@ -95,34 +95,41 @@ export default function WarehouseHubPage() {
       .length || 0;
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="Stock"
       titleAccent="Hub"
       subtitle="Master-Detail Inventory & Asset Valuation"
     >
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
+      <OperationalMetricGrid>
+        <OperationalMetricCard
           label="Total SKU"
           value={catalog?.length || 0}
-          icon={<Box className="text-blue-600" />}
+          icon={<Box className="h-4 w-4" />}
+          tone="blue"
         />
-        <StatCard
+        <OperationalMetricCard
           label="Total Valuation"
-          value={`Rp ${(totalValuation / 1000000).toFixed(1)}M`}
-          icon={<BadgeDollarSign className="text-emerald-600" />}
+          value={
+            Number.isFinite(totalValuation) && totalValuation > 0
+              ? `Rp ${(totalValuation / 1000000).toFixed(1)}M`
+              : "—"
+          }
+          icon={<BadgeDollarSign className="h-4 w-4" />}
+          tone="green"
         />
-        <StatCard
+        <OperationalMetricCard
           label="Stok Kritis"
           value={criticalItems}
-          icon={<AlertTriangle className="text-rose-600" />}
-          className={criticalItems > 0 ? "bg-rose-50 border-rose-200" : ""}
+          icon={<AlertTriangle className="h-4 w-4" />}
+          tone="red"
         />
-        <StatCard
+        <OperationalMetricCard
           label="Storage Utility"
           value={`${stats?.capacity?.utility || 0}%`}
-          icon={<TrendingDown className="text-slate-900" />}
+          icon={<TrendingDown className="h-4 w-4" />}
+          tone="neutral"
         />
-      </div>
+      </OperationalMetricGrid>
 
       {/* MAIN GRID */}
       <TableWrapper className="shadow-2xl shadow-slate-200/50">
@@ -221,7 +228,7 @@ export default function WarehouseHubPage() {
                             isCritical ? "text-rose-600" : "text-slate-900",
                           )}
                         >
-                          {Number(item.stockQty).toLocaleString()}
+                          {formatOperationalNumber(item.stockQty)}
                         </span>
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                           {item.unit}
@@ -238,7 +245,7 @@ export default function WarehouseHubPage() {
                               : "text-slate-300",
                           )}
                         >
-                          {quarantineQty.toLocaleString()}
+                          {formatOperationalNumber(quarantineQty)}
                         </span>
                         <span className="text-[8px] font-bold text-slate-400 uppercase">
                           On Hold
@@ -248,7 +255,7 @@ export default function WarehouseHubPage() {
                     <td>
                       <div className="space-y-0.5">
                         <p className="font-black text-slate-900 text-xs tabular-nums">
-                          Rp {hpp.toLocaleString()}
+                          Rp {formatOperationalNumber(hpp)}
                         </p>
                         <p className="text-[9px] font-black text-emerald-500 uppercase italic">
                           Moving Avg
@@ -432,7 +439,7 @@ export default function WarehouseHubPage() {
                                   {inv.qcStatus}
                                 </DnaBadge>
                                 <p className="text-sm font-black text-slate-900">
-                                  {Number(inv.currentStock).toLocaleString()}{" "}
+                                  {formatOperationalNumber(inv.currentStock)}{" "}
                                   {selectedItem.unit}
                                 </p>
                               </div>
@@ -502,7 +509,7 @@ export default function WarehouseHubPage() {
                                   {log.type.replace("_", " ")}
                                 </p>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">
-                                  {new Date(log.createdAt).toLocaleString()} •{" "}
+                                  {formatOperationalDate(log.createdAt)} •{" "}
                                   {log.referenceNo || "NO_REF"}
                                 </p>
                               </div>
@@ -522,7 +529,7 @@ export default function WarehouseHubPage() {
                                   )
                                     ? "+"
                                     : "-"}
-                                  {Number(log.quantity).toLocaleString()}
+                                  {formatOperationalNumber(log.quantity)}
                                 </p>
                               </div>
                             </div>
@@ -549,6 +556,6 @@ export default function WarehouseHubPage() {
           )}
         </SheetContent>
       </Sheet>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

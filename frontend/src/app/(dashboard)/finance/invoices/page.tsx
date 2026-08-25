@@ -29,7 +29,9 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import { FinalDocumentPdfButton } from "@/components/documents/FinalDocumentPdfButton";
 
 interface Invoice {
@@ -77,17 +79,16 @@ export default function InvoicingPage() {
   ) || [];
 
   return (
-    <DashboardShell
-      title="ACCOUNTS"
-      titleAccent="RECEIVABLE"
-      subtitle="Customer invoicing & collections management"
+    <OperationalMigrationShell
+      title="Piutang Pelanggan"
+      subtitle="Penerbitan invoice dan pengelolaan penagihan pelanggan"
       actions={
         <div className="flex gap-2">
            <DnaButton variant="outline" icon={<Download />}>
-               Export Ledger
+               Ekspor Ledger
            </DnaButton>
            <DnaButton variant="primary" icon={<Zap />}>
-               Batch Billing
+               Tagihan Massal
            </DnaButton>
         </div>
       }
@@ -96,21 +97,21 @@ export default function InvoicingPage() {
         {/* KPI Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
-            label="Total Receivables"
+            label="Total Piutang"
             value="Rp 170.0M"
-            subValue="Rp 45.0M Overdue for 14 Days"
+            subValue="Rp 45,0 jt jatuh tempo 14 hari"
             icon={<CreditCard className="text-blue-600" />}
           />
           <StatCard
-            label="Collected (MTD)"
+            label="Tertagih (MTD)"
             value="Rp 89.2M"
-            subValue="65% Target Completion"
+            subValue="65% dari target"
             icon={<UserCheck className="text-emerald-500" />}
           />
           <StatCard
-            label="Pending Approval"
-            value="4 Invoices"
-            subValue="Execute Review Gate"
+            label="Menunggu Persetujuan"
+            value="4 Invoice"
+            subValue="Menunggu pemeriksaan"
             icon={<AlertTriangle className="text-amber-500" />}
           />
         </div>
@@ -121,7 +122,7 @@ export default function InvoicingPage() {
             <div className="relative w-full max-w-md">
               <DnaInput
                 icon={<Search className="h-4 w-4" />}
-                placeholder="Search invoices..."
+                placeholder="Cari invoice..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -131,12 +132,12 @@ export default function InvoicingPage() {
           <Table className="table-dense">
             <TableHeader className="bg-slate-50/70">
               <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice Identity</TableHead>
-                <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Client / Partner</TableHead>
-                <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Commercial Origin</TableHead>
-                <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount Due</TableHead>
-                <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Protocol Status</TableHead>
-                <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
+                <TableHead className="py-4 pl-6 text-left">Identitas Invoice</TableHead>
+                <TableHead className="text-left">Pelanggan / Mitra</TableHead>
+                <TableHead className="text-center">Sumber Transaksi</TableHead>
+                <TableHead className="text-right">Jumlah Terutang</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="pr-6 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -149,7 +150,7 @@ export default function InvoicingPage() {
                       </div>
                       <div className="flex flex-col">
                         <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{inv.id}</span>
-                        <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">Due: {inv.dueDate}</span>
+                        <span className="text-[9px] font-medium text-slate-400 mt-0.5">Jatuh tempo: {inv.dueDate}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -167,11 +168,11 @@ export default function InvoicingPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
-                    Rp {inv.amount.toLocaleString("id-ID")}
+                    {formatOperationalCurrency(inv.amount)}
                   </TableCell>
                   <TableCell className="text-center">
                     <DnaBadge status={inv.status === 'PAID' ? 'success' : inv.status === 'OVERDUE' ? 'critical' : 'info'}>
-                      {inv.status}
+                      {getOperationalStatusLabel(inv.status)}
                     </DnaBadge>
                   </TableCell>
                   <TableCell className="pr-6 text-right">
@@ -205,6 +206,6 @@ export default function InvoicingPage() {
           </Table>
         </TableWrapper>
       </div>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

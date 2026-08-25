@@ -1,23 +1,26 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { 
-  ShieldCheck, 
-  Calendar, 
-  ArrowRight, 
-  TrendingUp, 
-  CheckCircle2, 
+import { useState, useEffect, useCallback } from "react";
+import {
+  Calendar,
+  TrendingUp,
+  CheckCircle2,
   XCircle,
   FileText,
   Download,
   Info
 } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaInput, DnaButton, DnaBadge, DataCard, StatCard } from "@/components/dna";
+import {
+  OperationalPanel,
+  OperationalField,
+  OperationalButton,
+  OperationalInput,
+} from "@/components/operational";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 
 interface AccountItem {
   id: string;
@@ -65,14 +68,6 @@ export default function BalanceSheetPage() {
     fetchData();
   }, [fetchData]);
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0
-    }).format(val);
-  };
-
   const buildTree = (items: AccountItem[]) => {
     const map: Record<string, AccountItem> = {};
     const tree: AccountItem[] = [];
@@ -98,9 +93,7 @@ export default function BalanceSheetPage() {
 
     return (
       <>
-        <motion.div 
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
           className={cn(
             "flex justify-between items-center py-2 px-3 rounded-xl transition-all group text-xs",
             level === 0 ? "bg-slate-100/50 mb-1" : "hover:bg-slate-50",
@@ -135,11 +128,11 @@ export default function BalanceSheetPage() {
               level === 0 ? "text-slate-900" : "text-slate-600",
               acc.balance < 0 ? "text-rose-500" : ""
             )}>
-              {formatCurrency(acc.balance || (acc.creditBalance - acc.debitBalance))}
+              {formatOperationalCurrency(acc.balance || (acc.creditBalance - acc.debitBalance))}
             </p>
             <button className="text-[7px] font-black text-blue-500 uppercase hover:underline opacity-0 group-hover:opacity-100 transition-opacity">Detail Ledger</button>
           </div>
-        </motion.div>
+        </div>
         {isOpen && hasChildren && acc.children?.map(child => (
           <RenderAccountRow key={child.id} acc={child} level={level + 1} />
         ))}
@@ -150,182 +143,183 @@ export default function BalanceSheetPage() {
   if (!data && loading) return <div className="p-20 text-center font-black animate-pulse">MEMUAT LAPORAN...</div>;
 
   return (
-    <DashboardShell title="BALANCE" titleAccent="SHEET" subtitle="Laporan posisi keuangan perusahaan — aset, liabilitas, dan ekuitas.">
-      <div className="animate-fade-slide-in space-y-10">
-        <div className="flex gap-4 items-end bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Posisi Per Tanggal</label>
-            <DnaInput 
-              type="date" 
+    <OperationalMigrationShell title="Neraca" subtitle="Laporan posisi keuangan perusahaan — aset, liabilitas, dan ekuitas.">
+      <OperationalPanel>
+        <div className="flex gap-4 items-end">
+          <OperationalField label="Posisi Per Tanggal">
+            <OperationalInput
+              type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               icon={<Calendar className="w-4 h-4" />}
               className="text-xs font-black w-[200px]"
             />
-          </div>
-          <DnaButton 
+          </OperationalField>
+          <OperationalButton
             variant="primary"
             onClick={fetchData}
             disabled={loading}
           >
             {loading ? "MEMUAT..." : "PERBARUI"}
-          </DnaButton>
+          </OperationalButton>
         </div>
+      </OperationalPanel>
 
-        {/* Balancing Banner at top */}
-        <div className={cn(
-          "p-5 rounded-2xl flex items-center justify-between border shadow-sm transition-all duration-500",
-          data?.isBalanced 
-            ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
-            : "bg-rose-50 border-rose-100 text-rose-700"
-        )}>
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "p-3 rounded-2xl",
-              data?.isBalanced ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
-            )}>
-              {data?.isBalanced ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5 animate-pulse" />}
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-wider">Status Neraca: {data?.isBalanced ? "SEIMBANG" : "TIDAK SEIMBANG"}</h4>
-              <p className="text-[10px] font-medium opacity-80 mt-1">
-                {data?.isBalanced 
-                  ? "Persamaan dasar akuntansi terpenuhi: Aset = Liabilitas + Ekuitas."
-                  : "Terdapat perbedaan nilai antara total Aktiva dan total Pasiva."}
-              </p>
-            </div>
+      {/* Balancing Banner at top */}
+      <div className={cn(
+        "p-5 rounded-2xl flex items-center justify-between border shadow-sm transition-all duration-500",
+        data?.isBalanced
+          ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+          : "bg-rose-50 border-rose-100 text-rose-700"
+      )}>
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "p-3 rounded-2xl",
+            data?.isBalanced ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+          )}>
+            {data?.isBalanced ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5 animate-pulse" />}
           </div>
-          <div className="flex gap-4 items-center">
-            <div className="text-right">
-              <p className="text-[8px] font-black uppercase opacity-60">Total Aset</p>
-              <p className="text-base font-black font-mono">{formatCurrency(data?.assets.total || 0)}</p>
-            </div>
-            <div className="w-px h-8 bg-slate-200 mx-1" />
-            <div className="text-right">
-              <p className="text-[8px] font-black uppercase opacity-60">Liabilitas + Ekuitas</p>
-              <p className="text-base font-black font-mono">{formatCurrency(data?.totalLiabilitiesAndEquity || 0)}</p>
-            </div>
-            {!data?.isBalanced && (
-              <>
-                <div className="w-px h-8 bg-rose-200 mx-1" />
-                <div className="text-right text-rose-600">
-                  <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
-                  <p className="text-base font-black font-mono">{formatCurrency(Math.abs((data?.assets.total || 0) - (data?.totalLiabilitiesAndEquity || 0)))}</p>
-                </div>
-              </>
-            )}
+          <div>
+            <h4 className="text-xs font-black uppercase tracking-wider">Status Neraca: {data?.isBalanced ? "SEIMBANG" : "TIDAK SEIMBANG"}</h4>
+            <p className="text-[10px] font-medium opacity-80 mt-1">
+              {data?.isBalanced
+                ? "Persamaan dasar akuntansi terpenuhi: Aset = Liabilitas + Ekuitas."
+                : "Terdapat perbedaan nilai antara total Aktiva dan total Pasiva."}
+            </p>
           </div>
         </div>
+        <div className="flex gap-4 items-center">
+          <div className="text-right">
+            <p className="text-[8px] font-black uppercase opacity-60">Total Aset</p>
+            <p className="text-base font-black font-mono">{formatOperationalCurrency(data?.assets.total || 0)}</p>
+          </div>
+          <div className="w-px h-8 bg-slate-200 mx-1" />
+          <div className="text-right">
+            <p className="text-[8px] font-black uppercase opacity-60">Liabilitas + Ekuitas</p>
+            <p className="text-base font-black font-mono">{formatOperationalCurrency(data?.totalLiabilitiesAndEquity || 0)}</p>
+          </div>
+          {!data?.isBalanced && (
+            <>
+              <div className="w-px h-8 bg-rose-200 mx-1" />
+              <div className="text-right text-rose-600">
+                <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
+                <p className="text-base font-black font-mono">{formatOperationalCurrency(Math.abs((data?.assets.total || 0) - (data?.totalLiabilitiesAndEquity || 0)))}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* ASSETS SIDE */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* ASSETS SIDE */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-4">
+            <h3 className="text-2xl font-black uppercase tracking-tighter italic text-slate-300">
+              AKTIVA <span className="text-slate-900">(ASSETS)</span>
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Debit Balance</span>
+            </div>
+          </div>
+
+          <OperationalPanel>
+            <div className="space-y-1">
+              {data && buildTree(data.assets.items).map(acc => (
+                <RenderAccountRow key={acc.id} acc={acc} />
+              ))}
+
+              {data?.assets.items.length === 0 && (
+                <div className="p-20 text-center text-slate-300 italic text-sm font-medium">No asset records found.</div>
+              )}
+            </div>
+            <div className="m-2 p-6 bg-blue-600 rounded-2xl text-white flex justify-between items-center shadow-sm">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 block mb-1">Grand Total</span>
+                <span className="text-sm font-black uppercase tracking-tight">TOTAL AKTIVA</span>
+              </div>
+              <span className="text-2xl font-black text-emerald-300 font-mono tabular-nums tracking-tighter">{formatOperationalCurrency(data?.assets.total || 0)}</span>
+            </div>
+          </OperationalPanel>
+        </div>
+
+        {/* LIABILITIES & EQUITY SIDE */}
+        <div className="space-y-8">
+          {/* Liabilities Section */}
           <div className="space-y-6">
             <div className="flex items-center justify-between px-4">
               <h3 className="text-2xl font-black uppercase tracking-tighter italic text-slate-300">
-                AKTIVA <span className="text-slate-900">(ASSETS)</span>
+                PASIVA <span className="text-slate-900">(LIABILITIES)</span>
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Debit Balance</span>
-              </div>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Credit Balance</span>
             </div>
 
-            <DataCard>
+            <OperationalPanel>
               <div className="space-y-1">
-                {data && buildTree(data.assets.items).map(acc => (
+                {data && buildTree(data.liabilities.items).map(acc => (
+                  <RenderAccountRow key={acc.id} acc={acc} />
+                ))}
+              </div>
+              <div className="m-2 p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100">
+                <span className="text-xs font-black uppercase tracking-tight text-slate-500 italic">Subtotal Liabilities</span>
+                <span className="text-base font-black text-slate-950 font-mono tabular-nums">{formatOperationalCurrency(data?.liabilities.total || 0)}</span>
+              </div>
+            </OperationalPanel>
+          </div>
+
+          {/* Equity Section */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-4">
+              <h3 className="text-2xl font-black uppercase tracking-tighter italic text-slate-300">
+                EKUITAS <span className="text-slate-900">(EQUITIES)</span>
+              </h3>
+            </div>
+
+            <OperationalPanel>
+              <div className="space-y-1">
+                {data && buildTree(data.equity.items).map(acc => (
                   <RenderAccountRow key={acc.id} acc={acc} />
                 ))}
 
-                {data?.assets.items.length === 0 && (
-                  <div className="p-20 text-center text-slate-300 italic text-sm font-medium">No asset records found.</div>
-                )}
-              </div>
-              <div className="m-2 p-6 bg-blue-600 rounded-2xl text-white flex justify-between items-center shadow-sm">
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 block mb-1">Grand Total</span>
-                  <span className="text-sm font-black uppercase tracking-tight">TOTAL AKTIVA</span>
-                </div>
-                <span className="text-2xl font-black text-emerald-300 font-mono tabular-nums tracking-tighter">{formatCurrency(data?.assets.total || 0)}</span>
-              </div>
-            </DataCard>
-          </div>
-
-          {/* LIABILITIES & EQUITY SIDE */}
-          <div className="space-y-8">
-            {/* Liabilities Section */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between px-4">
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-slate-300">
-                  PASIVA <span className="text-slate-900">(LIABILITIES)</span>
-                </h3>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Credit Balance</span>
-              </div>
-
-              <DataCard>
-                <div className="space-y-1">
-                  {data && buildTree(data.liabilities.items).map(acc => (
-                    <RenderAccountRow key={acc.id} acc={acc} />
-                  ))}
-                </div>
-                <div className="m-2 p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100">
-                  <span className="text-xs font-black uppercase tracking-tight text-slate-500 italic">Subtotal Liabilities</span>
-                  <span className="text-base font-black text-slate-950 font-mono tabular-nums">{formatCurrency(data?.liabilities.total || 0)}</span>
-                </div>
-              </DataCard>
-            </div>
-
-            {/* Equity Section */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between px-4">
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-slate-300">
-                  EKUITAS <span className="text-slate-900">(EQUITIES)</span>
-                </h3>
-              </div>
-
-              <DataCard>
-                <div className="space-y-1">
-                  {data && buildTree(data.equity.items).map(acc => (
-                    <RenderAccountRow key={acc.id} acc={acc} />
-                  ))}
-
-                  {/* Laba Tahun Berjalan (Net Income) */}
-                  <div className="flex justify-between items-center p-4 rounded-xl bg-blue-50/50 border border-blue-100 mt-4 shadow-sm group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
-                        <TrendingUp className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-blue-900 uppercase tracking-tight">Laba Tahun Berjalan</p>
-                        <p className="text-[8px] font-black text-blue-400 uppercase flex items-center gap-1 mt-0.5">
-                          <Info className="w-3 h-3" /> Net Income (Revenue - Expense)
-                        </p>
-                      </div>
+                {/* Laba Tahun Berjalan (Net Income) */}
+                <div className="flex justify-between items-center p-4 rounded-xl bg-blue-50/50 border border-blue-100 mt-4 shadow-sm group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                      <TrendingUp className="w-4 h-4" />
                     </div>
-                    <span className="text-base font-black text-blue-700 font-mono tabular-nums">{formatCurrency(data?.equity.netIncome || 0)}</span>
+                    <div>
+                      <p className="text-xs font-black text-blue-900 uppercase tracking-tight">Laba Tahun Berjalan</p>
+                      <p className="text-[8px] font-black text-blue-400 uppercase flex items-center gap-1 mt-0.5">
+                        <Info className="w-3 h-3" /> Net Income (Revenue - Expense)
+                      </p>
+                    </div>
                   </div>
+                  <span className="text-base font-black text-blue-700 font-mono tabular-nums">{formatOperationalCurrency(data?.equity.netIncome || 0)}</span>
                 </div>
-                <div className="m-2 p-6 bg-blue-950 rounded-2xl text-white flex justify-between items-center shadow-sm">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-300 block mb-1">Grand Total</span>
-                    <span className="text-sm font-black uppercase tracking-tight">TOTAL PASIVA</span>
-                  </div>
-                  <span className="text-2xl font-black text-amber-400 font-mono tabular-nums tracking-tighter">{formatCurrency(data?.totalLiabilitiesAndEquity || 0)}</span>
+              </div>
+              <div className="m-2 p-6 bg-blue-950 rounded-2xl text-white flex justify-between items-center shadow-sm">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-300 block mb-1">Grand Total</span>
+                  <span className="text-sm font-black uppercase tracking-tight">TOTAL PASIVA</span>
                 </div>
-              </DataCard>
-            </div>
+                <span className="text-2xl font-black text-amber-400 font-mono tabular-nums tracking-tighter">{formatOperationalCurrency(data?.totalLiabilitiesAndEquity || 0)}</span>
+              </div>
+            </OperationalPanel>
           </div>
         </div>
-
-        {/* Footer Actions */}
-        <footer className="flex justify-center gap-4 pt-10 border-t border-slate-100">
-          <DnaButton variant="primary" size="lg" icon={<Download className="w-4 h-4" />}>
-            Cetak PDF Laporan
-          </DnaButton>
-          <DnaButton variant="outline" size="lg" icon={<FileText className="w-4 h-4" />}>
-            Audit Ledger
-          </DnaButton>
-        </footer>
       </div>
-    </DashboardShell>
+
+      {/* Footer Actions */}
+      <footer className="flex justify-center gap-4 pt-10 border-t border-slate-100">
+        <OperationalButton variant="primary">
+          <Download className="w-4 h-4" />
+          <span>Cetak PDF Laporan</span>
+        </OperationalButton>
+        <OperationalButton variant="secondary">
+          <FileText className="w-4 h-4" />
+          <span>Audit Ledger</span>
+        </OperationalButton>
+      </footer>
+    </OperationalMigrationShell>
   );
 }

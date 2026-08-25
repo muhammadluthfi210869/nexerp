@@ -1,11 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { Briefcase, Users, Clock, Plus, Eye, Send, CheckCircle2, Search, X } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useState, useMemo } from "react";
+import {
+  Briefcase,
+  Users,
+  Clock,
+  Plus,
+  Eye,
+  Send,
+  CheckCircle2,
+} from "lucide-react";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 type PositionStatus = "SENT" | "PENDING" | "DONE";
@@ -29,10 +48,16 @@ const POSITION_DATA: Position[] = [
   { id: "REQ-006", position: "Finance Staff", department: "Finance", candidates: 15, status: "DONE", daysOpen: 10, createdAt: "2026-05-16" },
 ];
 
-const STATUS_META: Record<PositionStatus, { label: string; status: "success" | "info" | "warning" | "purple" | "default" }> = {
-  SENT: { label: "Sent", status: "info" },
-  PENDING: { label: "Pending", status: "warning" },
-  DONE: { label: "Done", status: "success" },
+const POSITION_STATUS_LABEL: Record<PositionStatus, string> = {
+  SENT: "Terkirim",
+  PENDING: "Menunggu",
+  DONE: "Selesai",
+};
+
+const POSITION_STATUS_TONE: Record<PositionStatus, "info" | "pending" | "success"> = {
+  SENT: "info",
+  PENDING: "pending",
+  DONE: "success",
 };
 
 export default function RecruitmentPage() {
@@ -53,150 +78,170 @@ export default function RecruitmentPage() {
     setForm({ position: "", department: "" });
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "position",
+        header: "Posisi",
+        cell: ({ row }: { row: { original: Position } }) => (
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-slate-900">{row.original.position}</span>
+            <span className="text-[11px] text-slate-500">{row.original.id}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "department",
+        header: "Departemen",
+        cell: ({ getValue }: { getValue: () => string }) => (
+          <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+            {String(getValue())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "candidates",
+        header: () => <div className="text-center">Kandidat</div>,
+        cell: ({ getValue }: { getValue: () => number }) => (
+          <div className="text-center text-[13px] font-medium tabular-nums text-slate-900">
+            {Number(getValue()).toLocaleString("id-ID")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }: { row: { original: Position } }) => {
+          const s = row.original.status;
+          return (
+            <div className="flex justify-center">
+              <span className={`operational-status-badge is-${POSITION_STATUS_TONE[s]}`}>
+                {POSITION_STATUS_LABEL[s] ?? getOperationalStatusLabel(s)}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "daysOpen",
+        header: () => <div className="text-center">Hari Terbuka</div>,
+        cell: ({ getValue }: { getValue: () => number }) => (
+          <div className="text-center text-[13px] font-medium tabular-nums text-slate-900">
+            {String(getValue())}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-center">Aksi</div>,
+        cell: ({ row }: { row: { original: Position } }) => (
+          <div className="flex justify-center gap-2">
+            <button
+              type="button"
+              className="operational-button is-secondary h-8 px-3 text-[11px]"
+              aria-label="Detail posisi"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Detail</span>
+            </button>
+            {row.original.status === "PENDING" && (
+              <button type="button" className="operational-button is-primary h-8 px-3 text-[11px]">
+                <Send className="h-3.5 w-3.5" />
+                <span>Kirim</span>
+              </button>
+            )}
+            {row.original.status === "SENT" && (
+              <button type="button" className="operational-button is-success h-8 px-3 text-[11px]" style={{ background: "#059669", color: "#fff", borderColor: "#059669" }}>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Tutup</span>
+              </button>
+            )}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <DashboardShell
-      title="Recruitment"
-      titleAccent="Pipeline"
-      subtitle="Position Requisition Tracking & Candidate Pipeline"
+    <OperationalPageShell
+      title="Rekrutmen"
+      subtitle="Pelacakan posisi rekrutmen & pipeline kandidat"
       actions={
-        <DnaButton variant="primary" onClick={() => setIsModalOpen(true)} icon={<Plus className="stroke-[3px]" />}>
-          CREATE POSITION
-        </DnaButton>
+        <button type="button" className="operational-button is-primary" onClick={() => setIsModalOpen(true)}>
+          <Plus className="h-4 w-4" />
+          <span>Buat Posisi</span>
+        </button>
       }
     >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
-            label="Open Positions"
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Posisi Terbuka"
             value={openPositions}
-            icon={<Briefcase className="text-blue-500" />}
+            icon={<Briefcase className="h-4 w-4" />}
+            tone="blue"
           />
-          <StatCard
-            label="Total Candidates"
+          <OperationalMetricCard
+            label="Total Kandidat"
             value={totalCandidates}
-            icon={<Users className="text-purple-500" />}
+            icon={<Users className="h-4 w-4" />}
+            tone="purple"
           />
-          <StatCard
-            label="Time to Fill (Avg)"
-            value={`${avgDaysOpen} Days`}
-            icon={<Clock className="text-amber-500" />}
+          <OperationalMetricCard
+            label="Rata-rata Hari"
+            value={`${avgDaysOpen} Hari`}
+            icon={<Clock className="h-4 w-4" />}
+            tone="amber"
           />
-        </div>
+        </OperationalMetricGrid>
 
-        {/* Table */}
-        <div className="rounded-[24px] border border-slate-200 shadow-sm overflow-hidden bg-white">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 border-b border-slate-100">
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Position</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Department</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Candidates</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Status</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Days Open</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {POSITION_DATA.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-wider py-8">
-                      Tidak ada posisi rekrutmen ditemukan
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  POSITION_DATA.map((row) => (
-                    <TableRow key={row.id} className="group hover:bg-slate-50/50 transition-all">
-                      <TableCell>
-                        <p className="text-[11px] font-black text-slate-900 uppercase">{row.position}</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{row.id}</p>
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black text-slate-700 bg-slate-100 rounded px-2 py-0.5 uppercase">
-                          {row.department}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.candidates}</p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <DnaBadge status={STATUS_META[row.status].status}>
-                          {STATUS_META[row.status].label}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.daysOpen}</p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <DnaButton variant="outline" size="sm" icon={<Eye className="w-3.5 h-3.5" />}>
-                            DETAIL
-                          </DnaButton>
-                          {row.status === "PENDING" && (
-                            <DnaButton variant="primary" size="sm" icon={<Send className="w-3.5 h-3.5" />}>
-                              SEND
-                            </DnaButton>
-                          )}
-                          {row.status === "SENT" && (
-                            <DnaButton variant="secondary" size="sm" icon={<CheckCircle2 className="w-3.5 h-3.5" />} className="bg-emerald-600 hover:bg-emerald-700">
-                              CLOSE
-                            </DnaButton>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <OperationalDataTable
+          data={POSITION_DATA as unknown as Position[]}
+          columns={columns as any}
+          getRowId={(row: Position) => row.id}
+          searchPlaceholder="Cari posisi, departemen, atau status..."
+        />
       </div>
 
-      {/* Create Position Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl border border-slate-200 shadow-sm p-0 overflow-hidden">
-          <div className="bg-blue-600 p-6 text-white">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none italic">
-              CREATE POSITION
-            </DialogTitle>
-            <DialogDescription className="text-blue-100 font-medium uppercase text-[9px] tracking-widest mt-2 leading-none">
-              Formulir Pembukaan Posisi Rekrutmen Baru
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Buat Posisi Baru</DialogTitle>
+            <DialogDescription>
+              Formulir pembukaan posisi rekrutmen baru.
             </DialogDescription>
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Position Name</label>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="operational-field">
+              <span>Nama Posisi</span>
               <input
                 type="text"
                 value={form.position}
                 onChange={(e) => setForm({ ...form, position: e.target.value })}
-                placeholder="e.g. QC Supervisor"
-                className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                placeholder="Contoh: QC Supervisor"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Department</label>
+            <div className="operational-field">
+              <span>Departemen</span>
               <input
                 type="text"
                 value={form.department}
                 onChange={(e) => setForm({ ...form, department: e.target.value })}
-                placeholder="e.g. QC"
-                className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                placeholder="Contoh: QC"
               />
             </div>
           </div>
-          <DialogFooter className="p-6 pt-0 flex gap-2 justify-end">
-            <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>
-              CANCEL
-            </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreate}>
-              CREATE
-            </DnaButton>
+          <DialogFooter>
+            <button type="button" className="operational-button is-secondary" onClick={() => setIsModalOpen(false)}>
+              Batal
+            </button>
+            <button type="button" className="operational-button is-primary" onClick={handleCreate}>
+              Buat
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

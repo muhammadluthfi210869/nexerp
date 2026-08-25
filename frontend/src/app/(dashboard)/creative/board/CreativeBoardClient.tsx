@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Plus, 
+import {
+  Plus,
   Search
 } from "lucide-react";
 import { usePerformanceAudit } from "@/hooks/usePerformanceAudit";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalPageShell } from "@/components/operational";
 import { DnaButton, DnaInput } from "@/components/dna";
 
 // Modular Components
@@ -29,7 +29,7 @@ export default function CreativeBoardClient({ initialTasks }: any) {
   // SSE Listener for real-time updates
   useEffect(() => {
     const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/events/creative`);
-    
+
     eventSource.onmessage = (event) => {
       const payload = JSON.parse(event.data);
       if (payload.type === 'creative_update') {
@@ -168,9 +168,8 @@ export default function CreativeBoardClient({ initialTasks }: any) {
   });
 
   return (
-    <DashboardShell
-      title="Creative"
-      titleAccent="Hub"
+    <OperationalPageShell
+      title="Creative Hub"
       subtitle="Packaging Design & Artwork Lifecycle Management"
       actions={
         <div className="flex gap-4">
@@ -181,7 +180,7 @@ export default function CreativeBoardClient({ initialTasks }: any) {
              icon={<Search />}
              className="w-64"
            />
-           <DnaButton 
+           <DnaButton
              variant="secondary"
              size="md"
              icon={<Plus />}
@@ -195,18 +194,18 @@ export default function CreativeBoardClient({ initialTasks }: any) {
       <CreativeBoardHeader tasks={filteredTasks} />
       <KanbanBoard tasks={filteredTasks} onTaskClick={handleTaskClick} />
 
-      <CreateDesignTaskModal 
+      <CreateDesignTaskModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={(data) => createTaskMutation(data)}
       />
 
-      <DesignHubDrawer 
-        task={selectedTask} 
-        isOpen={isDrawerOpen} 
+      <DesignHubDrawer
+        task={selectedTask}
+        isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onAction={handleAction}
       />
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

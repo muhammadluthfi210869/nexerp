@@ -75,9 +75,15 @@ export class FinanceController {
   @Post('verify-payment')
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
   async verifyPaymentFromSales(
-    @Body() dto: { type: string; id: string; verifiedBy: string },
+    @Req() req: { user: { id: string } },
+    @Body() dto: { type: string; id: string; verifiedBy?: string },
   ) {
-    return this.financeService.verifyOrderPayment(dto);
+    // Audit identity: actor MUST come from authenticated request, not caller-supplied body.
+    // Callers may still pass `verifiedBy` in body for display; service overrides it.
+    return this.financeService.verifyOrderPayment({
+      ...dto,
+      verifiedBy: req.user.id,
+    });
   }
 
   @Post('bills')
@@ -209,12 +215,14 @@ export class FinanceController {
   @Patch('validate-payment/:activityId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
   async validateBussdevPayment(
+    @Req() req: { user: { id: string } },
     @Param('activityId') activityId: string,
-    @Body() dto: { validatedBy: string },
+    @Body() dto: { validatedBy?: string },
   ) {
+    // Audit identity: derive actor from authenticated user.
     return this.financeService.validateBussdevPayment(
       activityId,
-      dto.validatedBy,
+      req.user.id,
     );
   }
 
@@ -222,33 +230,35 @@ export class FinanceController {
 
   @Post('fund-request')
   async createFundRequest(
-    @Req() req: { user: { userId: string } },
+    @Req() req: { user: { id: string } },
     @Body() dto: CreateFundRequestDto,
   ) {
-    return this.financeService.createFundRequest(req.user.userId, dto);
+    return this.financeService.createFundRequest(req.user.id, dto);
   }
 
   @Get('fund-requests/me')
-  async getMyFundRequests(@Req() req: { user: { userId: string } }) {
-    return this.financeService.getMyFundRequests(req.user.userId);
+  async getMyFundRequests(@Req() req: { user: { id: string } }) {
+    return this.financeService.getMyFundRequests(req.user.id);
   }
 
   @Patch('fund-request/:id/approve')
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE) // Finance or Admin can approve
   async approveFundRequest(
     @Param('id') id: string,
+    @Req() req: { user: { id: string } },
     @Body() dto: ApproveFundRequestDto,
   ) {
-    return this.financeService.approveFundRequest(id, dto);
+    return this.financeService.approveFundRequest(id, { ...dto, approvedById: req.user.id });
   }
 
   @Post('fund-request/:id/disburse')
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
   async disburseFundRequest(
     @Param('id') id: string,
+    @Req() req: { user: { id: string } },
     @Body() dto: DisburseFundRequestDto,
   ) {
-    return this.financeService.disburseFundRequest(id, dto);
+    return this.financeService.disburseFundRequest(id, { ...dto, disbursedById: req.user.id });
   }
 
   @Post('fund-request/:id/director-approve')
@@ -406,8 +416,12 @@ export class FinanceController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @ApiOperation({ summary: 'Alias for POST /finance/verify-payment' })
   async verifyPaymentAlias(
-    @Body() dto: { type: string; id: string; verifiedBy: string },
+    @Req() req: { user: { id: string } },
+    @Body() dto: { type: string; id: string; verifiedBy?: string },
   ) {
-    return this.financeService.verifyOrderPayment(dto);
+    return this.financeService.verifyOrderPayment({
+      ...dto,
+      verifiedBy: req.user.id,
+    });
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -17,15 +17,7 @@ import {
   Landmark,
   UploadCloud,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DnaInput, DnaButton } from "@/components/dna";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +36,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalMigrationShell,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import { QueryLoading, QueryError } from "@/components/query-states";
 
 interface SamplePayment {
@@ -105,21 +105,98 @@ export default function BayarSamplePage() {
   });
 
   const filteredSamples =
-    samples?.filter(
+    (samples || []).filter(
       (s) =>
         s.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
   const totalOutstanding =
-    samples?.reduce((sum, s) => sum + s.remainingAmount, 0) || 0;
+    (samples || []).reduce((sum, s) => sum + s.remainingAmount, 0);
   const totalPaid =
-    samples?.reduce((sum, s) => sum + s.paidAmount, 0) || 0;
+    (samples || []).reduce((sum, s) => sum + s.paidAmount, 0);
   const awaitingPayment =
-    samples?.filter((s) => s.remainingAmount > 0).length || 0;
+    (samples || []).filter((s) => s.remainingAmount > 0).length;
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "code",
+        header: "Kode Sample",
+        cell: ({ getValue }: any) => (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+              <FileCheck2 className="h-4 w-4" />
+            </div>
+            <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{String(getValue())}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "customerName",
+        header: "Customer",
+        cell: ({ getValue }: any) => <p className="font-black text-slate-900 text-xs uppercase italic">{String(getValue())}</p>,
+      },
+      {
+        accessorKey: "totalAmount",
+        header: () => <div className="text-right">Total</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "paidAmount",
+        header: () => <div className="text-right">Sudah Bayar</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "remainingAmount",
+        header: () => <div className="text-right">Sisa</div>,
+        cell: ({ getValue }: any) => <div className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">{formatOperationalCurrency(getValue())}</div>,
+      },
+      {
+        accessorKey: "paymentStatus",
+        header: () => <div className="text-center">Status Bayar</div>,
+        cell: ({ getValue }: any) => {
+          const status = getValue() as string;
+          const tone = status === "PAID" ? "success" : status === "PARTIAL" ? "pending" : "danger";
+          return (
+            <div className="flex justify-center">
+              <OperationalStatusBadge status={tone}>{getOperationalStatusLabel(status)}</OperationalStatusBadge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Aksi</div>,
+        cell: ({ row }: any) => {
+          const sample = row.original;
+          return (
+            <div className="flex justify-end">
+              {sample.remainingAmount > 0 && (
+                <DnaButton
+                  onClick={() => {
+                    setSelectedSample(sample);
+                    setPaymentFile(null);
+                    setIsModalOpen(true);
+                  }}
+                  variant="primary"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-[8px]"
+                  icon={<CircleDollarSign className="h-3.5 w-3.5" />}
+                >
+                  Bayar
+                </DnaButton>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [],
+  );
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="BAYAR"
       titleAccent="SAMPLE"
       subtitle="Pembayaran Sample Sales — Sample Payment Terminal"
@@ -133,147 +210,46 @@ export default function BayarSamplePage() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard
+          <OperationalMetricGrid>
+            <OperationalMetricCard
               label="Total Outstanding"
-              value={`Rp ${totalOutstanding.toLocaleString("id-ID")}`}
-              icon={<Wallet className="text-rose-500" />}
+              value={formatOperationalCurrency(totalOutstanding)}
+              icon={<Wallet className="h-4 w-4" />}
+              tone="red"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Telah Dibayar"
-              value={`Rp ${totalPaid.toLocaleString("id-ID")}`}
-              icon={<CheckCircle2 className="text-emerald-600" />}
+              value={formatOperationalCurrency(totalPaid)}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              tone="green"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Menunggu Bayar"
-              value={awaitingPayment.toString()}
-              subValue="Sample pending"
-              icon={<Clock className="text-amber-500" />}
+              value={awaitingPayment}
+              helper="Sample pending"
+              icon={<Clock className="h-4 w-4" />}
+              tone="amber"
             />
-            <StatCard
+            <OperationalMetricCard
               label="Total Samples"
               value={`${filteredSamples.length} Order`}
-              icon={<FileCheck2 className="text-blue-600" />}
+              icon={<FileCheck2 className="h-4 w-4" />}
+              tone="blue"
             />
-          </div>
+          </OperationalMetricGrid>
 
-          <TableWrapper
-            filters={
-              <div className="relative w-full max-w-md">
-                <DnaInput
-                  icon={<Search className="h-4 w-4" />}
-                  placeholder="Cari kode sample atau customer..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            }
-          >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Kode Sample
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Total
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Sudah Bayar
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Sisa
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Status Bayar
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Aksi
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSamples.map((sample) => (
-                  <TableRow
-                    key={sample.id}
-                    className="group hover:bg-emerald-50/30 transition-all duration-300 border-b border-slate-50"
-                  >
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                          <FileCheck2 className="h-4 w-4" />
-                        </div>
-                        <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">
-                          {sample.code}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <p className="font-black text-slate-900 text-xs uppercase italic">
-                        {sample.customerName}
-                      </p>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">
-                      Rp {sample.totalAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">
-                      Rp {sample.paidAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">
-                      Rp {sample.remainingAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge
-                        status={
-                          sample.paymentStatus === "PAID"
-                            ? "success"
-                            : sample.paymentStatus === "PARTIAL"
-                              ? "warning"
-                              : "critical"
-                        }
-                      >
-                        {sample.paymentStatus === "PAID"
-                          ? "Lunas"
-                          : sample.paymentStatus === "PARTIAL"
-                            ? "Partial"
-                            : "Belum Bayar"}
-                      </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
-                      {sample.remainingAmount > 0 && (
-                        <DnaButton
-                          onClick={() => {
-                            setSelectedSample(sample);
-                            setPaymentFile(null);
-                            setIsModalOpen(true);
-                          }}
-                          variant="primary"
-                          size="sm"
-                          className="bg-emerald-600 hover:bg-emerald-700 text-[8px]"
-                          icon={<CircleDollarSign className="h-3.5 w-3.5" />}
-                        >
-                          Bayar
-                        </DnaButton>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredSamples.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-10 text-slate-400 italic"
-                    >
-                      Tidak ada sample payment ditemukan.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
+          <DnaInput
+            icon={<Search className="h-4 w-4" />}
+            placeholder="Cari kode sample atau customer..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <OperationalDataTable
+            data={filteredSamples}
+            columns={columns as any}
+            getRowId={(row: any) => row.id}
+            searchPlaceholder="Cari kode sample atau customer..."
+          />
         </>
       )}
 
@@ -300,7 +276,7 @@ export default function BayarSamplePage() {
           )}
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }
 
@@ -368,13 +344,13 @@ function PaymentForm({
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase">Total</p>
           <p className="font-black text-xs uppercase text-slate-900 mt-1 tabular-nums">
-            Rp {sample.totalAmount.toLocaleString("id-ID")}
+            {formatOperationalCurrency(sample.totalAmount)}
           </p>
         </div>
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase">Sisa Tagihan</p>
           <p className="font-black text-sm text-rose-600 mt-1 tabular-nums">
-            Rp {sample.remainingAmount.toLocaleString("id-ID")}
+            {formatOperationalCurrency(sample.remainingAmount)}
           </p>
         </div>
       </div>
@@ -521,17 +497,17 @@ function PaymentForm({
       </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Konfirmasi</DialogTitle>
-            </DialogHeader>
-            <p>Apakah Anda yakin ingin menyimpan data ini?</p>
-            <DialogFooter>
-              <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-              <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

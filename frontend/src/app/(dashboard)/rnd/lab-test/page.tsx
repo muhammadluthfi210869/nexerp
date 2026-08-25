@@ -31,7 +31,7 @@ export default function LabTestCenterPage() {
 
   const { data: formulas } = useQuery({
     queryKey: ["formulas"],
-    queryFn: async () => (await api.get("/formulas")).data,
+    queryFn: async () => (await api.get("/rnd/formulas")).data,
   });
 
   const { data: results, isLoading } = useQuery({

@@ -4,42 +4,46 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { 
-  ArrowRightLeft, 
-  History, 
-  Plus, 
-  Search, 
-  Calendar, 
-  Warehouse, 
-  Package, 
-  Trash2, 
-  ChevronLeft, 
-  Save, 
-  Eye, 
+import {
+  ArrowRightLeft,
+  History,
+  Plus,
+  Search,
+  Warehouse,
+  Trash2,
+  ChevronLeft,
+  Save,
+  Eye,
   CheckCircle2,
   Clock,
   ArrowRight,
   ClipboardList,
   Layers,
   ArrowDownToLine,
-  ShieldCheck,
-  TrendingUp,
-  Boxes,
   Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import {
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalInput,
+  OperationalStatusBadge,
+  OperationalField,
+  OperationalButton,
+  getOperationalStatusLabel,
+} from "@/components/operational/OperationalUI";
+import { DnaInput } from "@/components/dna";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import { toast } from "sonner";
 
 const formatDate = (dateStr: string) => {
@@ -125,32 +129,35 @@ export default function InventoryMutationPrototype() {
   };
 
   return (
-    <DashboardShell
-      title={view === "list" ? "MUTASI" : "BUAT MUTASI"}
-      titleAccent="BARANG"
+    <OperationalMigrationShell
+      title={view === "list" ? "MUTASI BARANG" : "BUAT MUTASI"}
       subtitle={
-        view === "list" 
-          ? "(Protokol Transfer Stok & Pergerakan Aset Antar-Gudang)" 
-          : "(Drafting Phase • Protocol 09-MT)"
+        view === "list"
+          ? "Protokol Transfer Stok & Pergerakan Aset Antar-Gudang"
+          : "Drafting Phase • Protocol 09-MT"
       }
       actions={
         view === "list" ? (
           <div className="flex gap-3">
-            <DnaButton variant="outline" size="md" icon={<History className="text-amber-500" />}>
-              Riwayat
-            </DnaButton>
-            <DnaButton variant="primary" size="md" icon={<Plus />} onClick={() => setView("form")} className="hover:scale-[1.02] active:scale-[0.98]">
-              Buat
-            </DnaButton>
+            <button type="button" className="operational-button is-secondary">
+              <History className="h-4 w-4 text-amber-500" />
+              <span>Riwayat</span>
+            </button>
+            <button type="button" onClick={() => setView("form")} className="operational-button is-primary">
+              <Plus className="h-4 w-4" />
+              <span>Buat</span>
+            </button>
           </div>
         ) : (
           <div className="flex gap-3">
-            <DnaButton variant="ghost" icon={<ChevronLeft />} onClick={() => setView("list")} className="text-rose-500 hover:bg-rose-50 hover:text-rose-500">
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" size="md" icon={<Save />} onClick={handleFinalize} disabled={createMutation.isPending} className="hover:scale-[1.02] active:scale-[0.98]">
-              {createMutation.isPending ? "Processing..." : "Finalize Transfer"}
-            </DnaButton>
+            <button type="button" onClick={() => setView("list")} className="operational-button is-ghost text-rose-500 hover:bg-rose-50">
+              <ChevronLeft className="h-4 w-4" />
+              <span>Batal</span>
+            </button>
+            <button type="button" onClick={handleFinalize} disabled={createMutation.isPending} className="operational-button is-primary">
+              <Save className="h-4 w-4" />
+              <span>{createMutation.isPending ? "Processing..." : "Finalize Transfer"}</span>
+            </button>
           </div>
         )
       }
@@ -162,39 +169,56 @@ export default function InventoryMutationPrototype() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-[var(--section-gap)]"
+            className="flex flex-col gap-6"
           >
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Transfer Tertunda" value="5" icon={<Clock className="text-amber-500" />} />
-            <StatCard label="Berhasil" value="128" icon={<CheckCircle2 className="text-emerald-500" />} />
-            <StatCard label="Frekuensi Transfer" value="12/hari" icon={<ArrowRightLeft className="text-blue-600" />} />
-            <StatCard label="Peringatan Stok" value="3" icon={<Layers className="text-rose-600" />} />
-            </div>
+            <OperationalMetricGrid>
+              <OperationalMetricCard
+                label="Transfer Tertunda"
+                value="5"
+                icon={<Clock className="h-4 w-4" />}
+                tone="amber"
+              />
+              <OperationalMetricCard
+                label="Berhasil"
+                value="128"
+                icon={<CheckCircle2 className="h-4 w-4" />}
+                tone="green"
+              />
+              <OperationalMetricCard
+                label="Frekuensi Transfer"
+                value="12/hari"
+                icon={<ArrowRightLeft className="h-4 w-4" />}
+                tone="blue"
+              />
+              <OperationalMetricCard
+                label="Peringatan Stok"
+                value="3"
+                icon={<Layers className="h-4 w-4" />}
+                tone="red"
+              />
+            </OperationalMetricGrid>
 
             {/* List Table */}
-            <TableWrapper
-              filters={
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                  <div className="w-72">
-                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari ID Mutasi..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
-                  </div>
-                  <div className="flex gap-4">
-                    <DnaButton variant="ghost" className="h-10 px-5 rounded-lg text-[9px] text-slate-500 hover:bg-slate-50 hover:text-slate-500">
-                      Filter: Semua Status
-                    </DnaButton>
-                  </div>
+            <section className="operational-panel">
+              <div className="flex justify-between items-center mb-4">
+                <div className="w-72">
+                  <OperationalInput icon={<Search className="h-4 w-4 text-slate-400" />} placeholder="Cari ID Mutasi..." />
                 </div>
-              }
-            >
+                <div className="flex gap-4">
+                  <button type="button" className="operational-button is-ghost text-slate-500">
+                    Filter: Semua Status
+                  </button>
+                </div>
+              </div>
               <Table className="table-dense">
                 <TableHeader>
                   <TableRow className="bg-slate-50/50">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">ID Transfer</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Asal / Tujuan</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Dibuat Oleh</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
+                    <TableHead className="py-4 px-4 text-[11px] font-medium text-slate-500">ID Transfer</TableHead>
+                    <TableHead className="py-4 px-4 text-[11px] font-medium text-slate-500">Asal / Tujuan</TableHead>
+                    <TableHead className="py-4 px-4 text-[11px] font-medium text-slate-500">Dibuat Oleh</TableHead>
+                    <TableHead className="py-4 px-4 text-[11px] font-medium text-slate-500 text-center">Status</TableHead>
+                    <TableHead className="py-4 px-4 text-[11px] font-medium text-slate-500 text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -202,14 +226,14 @@ export default function InventoryMutationPrototype() {
                     <TableRow>
                       <TableCell colSpan={5} className="py-20 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat transfer...</p>
+                        <p className="text-[11px] mt-4 text-slate-400">Memuat transfer...</p>
                       </TableCell>
                     </TableRow>
                   )}
                   {!transferLoading && transferList.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada transfer</p>
+                        <p className="text-[11px] text-slate-300">Belum ada transfer</p>
                       </TableCell>
                     </TableRow>
                   )}
@@ -218,11 +242,11 @@ export default function InventoryMutationPrototype() {
                       <TableCell className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                            <ClipboardList className="h-4.5 w-4.5" />
+                            <ClipboardList className="h-4 w-4" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{mut.transferNumber || mut.kode}</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase">{formatDate(mut.date || mut.createdAt)}</span>
+                            <span className="font-semibold text-slate-900 tracking-tight text-[12px]">{mut.transferNumber || mut.kode}</span>
+                            <span className="text-[10px] text-slate-400">{formatDate(mut.date || mut.createdAt)}</span>
                           </div>
                         </div>
                       </TableCell>
@@ -230,23 +254,23 @@ export default function InventoryMutationPrototype() {
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-1.5">
                              <Warehouse className="h-3 w-3 text-slate-400" />
-                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">{mut.sourceWarehouse?.name || mut.dari || "-"}</span>
+                             <span className="text-[11px] font-semibold text-slate-600">{mut.sourceWarehouse?.name || mut.dari || "—"}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                              <Warehouse className="h-3 w-3 text-blue-600" />
-                             <span className="text-[10px] font-black text-blue-600 uppercase italic tracking-tighter">{mut.destWarehouse?.name || mut.ke || "-"}</span>
+                             <span className="text-[11px] font-semibold text-blue-600">{mut.destWarehouse?.name || mut.ke || "—"}</span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-4">
-                        <DnaBadge status="default" className="rounded-md text-[8px] px-1.5 py-0.5">
-                          {mut.createdBy || mut.pembuat || "-"}
-                        </DnaBadge>
+                        <OperationalStatusBadge status="neutral" className="text-[10px]">
+                          {mut.createdBy || mut.pembuat || "—"}
+                        </OperationalStatusBadge>
                       </TableCell>
                       <TableCell className="py-4 px-4 text-center">
-                        <DnaBadge status={mut.status === "COMPLETED" || mut.status === "Selesai" ? "success" : "warning"} className="text-[8px]">
-                          {mut.status === "COMPLETED" ? "Selesai" : mut.status === "PENDING" ? "Proses" : mut.status || "-"}
-                        </DnaBadge>
+                        <OperationalStatusBadge status={mut.status === "COMPLETED" || mut.status === "Selesai" ? "success" : "pending"} className="text-[10px]">
+                          {mut.status === "COMPLETED" ? "Selesai" : mut.status === "PENDING" ? "Proses" : getOperationalStatusLabel(mut.status)}
+                        </OperationalStatusBadge>
                       </TableCell>
                       <TableCell className="py-4 px-4 text-right">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
@@ -257,7 +281,7 @@ export default function InventoryMutationPrototype() {
                   ))}
                 </TableBody>
               </Table>
-            </TableWrapper>
+            </section>
           </motion.div>
         ) : (
           <motion.div
@@ -265,7 +289,7 @@ export default function InventoryMutationPrototype() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-[var(--section-gap)] pb-10"
+            className="flex flex-col gap-6 pb-10"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                {/* Left: Routing */}
@@ -273,19 +297,19 @@ export default function InventoryMutationPrototype() {
                    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8 relative overflow-hidden">
                       <div className="relative z-10 space-y-6">
                          <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">Transfer Path</p>
-                            <h3 className="text-2xl font-black italic tracking-tighter uppercase">Warehouse <br/> <span className="text-blue-500 text-3xl">Migration</span></h3>
+                            <p className="text-[11px] font-semibold tracking-widest text-blue-600">Transfer Path</p>
+                            <h3 className="text-2xl font-semibold tracking-tight">Warehouse <br/> <span className="text-blue-500 text-3xl">Migration</span></h3>
                          </div>
 
                          <div className="space-y-5">
                             <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase block">
-                                  <ArrowDownToLine className="h-3 w-3" /> Gudang Asal
+                               <label className="text-[11px] font-semibold text-slate-400 uppercase block">
+                                  <ArrowDownToLine className="h-3 w-3 inline" /> Gudang Asal
                                </label>
                                <select
                                  value={sourceWarehouse}
                                  onChange={(e) => setSourceWarehouse(e.target.value)}
-                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none"
+                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-[12px]"
                                >
                                    <option value="" className="bg-white">-- Pilih Gudang --</option>
                                    <option value="00000000-0000-0000-0000-000000000001" className="bg-white">Gudang Utama</option>
@@ -295,18 +319,18 @@ export default function InventoryMutationPrototype() {
 
                             <div className="flex justify-center">
                                <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                  <ArrowRight className="h-4.5 w-4.5 rotate-90" />
+                                  <ArrowRight className="h-4 w-4 rotate-90" />
                                </div>
                             </div>
 
                             <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase block">
-                                  <Warehouse className="h-3 w-3" /> Gudang Tujuan
+                               <label className="text-[11px] font-semibold text-slate-400 uppercase block">
+                                  <Warehouse className="h-3 w-3 inline" /> Gudang Tujuan
                                </label>
                                <select
                                  value={destWarehouse}
                                  onChange={(e) => setDestWarehouse(e.target.value)}
-                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none"
+                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-[12px]"
                                >
                                    <option value="" className="bg-white">-- Pilih Gudang --</option>
                                    <option value="00000000-0000-0000-0000-000000000003" className="bg-white">Gudang Produksi</option>
@@ -317,11 +341,11 @@ export default function InventoryMutationPrototype() {
                          </div>
 
                          <div className="pt-6 border-t border-slate-200 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Logistics Notes</label>
+                            <label className="text-[11px] font-semibold text-slate-400 uppercase block">Logistics Notes</label>
                             <textarea
                               value={notes}
                               onChange={(e) => setNotes(e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-[12px] font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
                               rows={3}
                               placeholder="Provide reason for mutation..."
                             />
@@ -336,20 +360,20 @@ export default function InventoryMutationPrototype() {
                    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8">
                       <div className="flex items-center justify-between">
                          <div className="space-y-1">
-                            <h2 className="text-xl font-black uppercase tracking-tighter italic">Resource <span className="text-blue-600">Selection</span></h2>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select assets for logical migration</p>
+                            <h2 className="text-xl font-semibold tracking-tight">Resource <span className="text-blue-600">Selection</span></h2>
+                            <p className="text-[11px] font-semibold text-slate-400 tracking-widest">Select assets for logical migration</p>
                          </div>
-                         <DnaBadge status="info">
+                         <OperationalStatusBadge status="purple">
                             Asset Integrity Verified
-                         </DnaBadge>
+                         </OperationalStatusBadge>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                          <div className="md:col-span-6 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Search Asset</label>
-                            <select 
+                            <label className="text-[11px] font-semibold text-slate-400 uppercase block">Search Asset</label>
+                            <select
                               onChange={(e) => setSelectedProduct(materialList.find((p: any) => p.id === e.target.value))}
-                              className="w-full h-11 px-4 bg-slate-50 border-none rounded-xl font-black text-xs italic uppercase appearance-none"
+                              className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-[12px]"
                             >
                                <option value="">— CHOOSE ASSET —</option>
                                {materialList.map((p: any) => (
@@ -358,18 +382,19 @@ export default function InventoryMutationPrototype() {
                             </select>
                          </div>
                          <div className="md:col-span-3 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Transfer Qty</label>
-                            <DnaInput 
-                              type="number" 
+                            <label className="text-[11px] font-semibold text-slate-400 uppercase block">Transfer Qty</label>
+                            <DnaInput
+                              type="number"
                               value={qty}
                               onChange={(e) => setQty(Number(e.target.value))}
-                              className="h-11 bg-slate-50 border-none rounded-xl font-black text-center text-xs" 
+                              className="h-11 bg-slate-50 border-slate-200 rounded-xl font-semibold text-center text-[12px]"
                             />
                          </div>
                          <div className="md:col-span-3 h-11">
-                            <DnaButton variant="primary" icon={<Plus />} onClick={addToCart} className="w-full h-full text-[9px]">
-                              Add to Transfer
-                            </DnaButton>
+                            <OperationalButton variant="primary" onClick={addToCart} className="w-full h-full text-[11px]">
+                              <Plus className="h-4 w-4" />
+                              <span>Add to Transfer</span>
+                            </OperationalButton>
                          </div>
                       </div>
                    </div>
@@ -379,14 +404,15 @@ export default function InventoryMutationPrototype() {
                       <div className="flex items-center justify-between mb-6">
                          <div className="flex items-center gap-2">
                              <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                <Layers className="h-4.5 w-4.5" />
+                                <Layers className="h-4 w-4" />
                             </div>
-                            <h3 className="text-base font-black uppercase italic tracking-tighter">Migration <span className="text-blue-600">Manifest</span></h3>
+                            <h3 className="text-base font-semibold tracking-tight">Migration <span className="text-blue-600">Manifest</span></h3>
                          </div>
                          {cart.length > 0 && (
-                           <DnaButton variant="ghost" icon={<Trash2 />} onClick={() => setCart([])} className="text-[9px] text-rose-500 hover:bg-rose-50 hover:text-rose-500 rounded-lg h-9">
-                             Clear Manifest
-                           </DnaButton>
+                           <button type="button" onClick={() => setCart([])} className="operational-button is-ghost text-rose-500 hover:bg-rose-50 rounded-md h-9 text-[11px]">
+                             <Trash2 className="h-4 w-4" />
+                             <span>Clear Manifest</span>
+                           </button>
                          )}
                       </div>
 
@@ -394,11 +420,11 @@ export default function InventoryMutationPrototype() {
                          <Table className="table-dense">
                             <TableHeader>
                                <TableRow className="bg-slate-50/50">
-                                  <TableHead className="py-4 px-4 text-[9px] font-black uppercase text-slate-400">Barang</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Kode</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Satuan</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Qty Mutasi</TableHead>
-                                  <TableHead className="py-4 px-4 text-right text-[9px] font-black uppercase text-slate-400">Aksi</TableHead>
+                                  <TableHead className="py-4 px-4 text-[11px] font-semibold text-slate-500">Barang</TableHead>
+                                  <TableHead className="py-4 px-4 text-center text-[11px] font-semibold text-slate-500">Kode</TableHead>
+                                  <TableHead className="py-4 px-4 text-center text-[11px] font-semibold text-slate-500">Satuan</TableHead>
+                                  <TableHead className="py-4 px-4 text-center text-[11px] font-semibold text-slate-500">Qty Mutasi</TableHead>
+                                  <TableHead className="py-4 px-4 text-right text-[11px] font-semibold text-slate-500">Aksi</TableHead>
                                </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -407,7 +433,7 @@ export default function InventoryMutationPrototype() {
                                     <TableCell colSpan={5} className="py-14 text-center">
                                        <div className="flex flex-col items-center gap-3">
                                           <ArrowRightLeft className="h-10 w-10 text-slate-200" />
-                                          <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.3em]">No assets staged for migration</p>
+                                          <p className="text-[11px] text-slate-300 tracking-widest">No assets staged for migration</p>
                                        </div>
                                     </TableCell>
                                  </TableRow>
@@ -415,13 +441,13 @@ export default function InventoryMutationPrototype() {
                                  cart.map((item, i) => (
                                    <TableRow key={i} className="group hover:bg-slate-50 transition-all border-b border-slate-50">
                                       <TableCell className="py-4 px-4">
-                                         <span className="font-black text-slate-900 text-xs uppercase">{item.name}</span>
+                                         <span className="font-semibold text-slate-900 text-[12px]">{item.name}</span>
                                       </TableCell>
                                       <TableCell className="py-4 px-4 text-center">
-                                         <DnaBadge status="default" className="rounded-md text-[8px] px-1.5 py-0.5">{item.code || item.id}</DnaBadge>
+                                         <OperationalStatusBadge status="neutral" className="text-[10px]">{item.code || item.id}</OperationalStatusBadge>
                                       </TableCell>
-                                      <TableCell className="py-4 px-4 text-center font-black text-slate-400 text-xs uppercase">{item.unit || "pcs"}</TableCell>
-                                      <TableCell className="py-4 px-4 text-center font-black text-slate-900 text-xs tabular-nums">
+                                      <TableCell className="py-4 px-4 text-center font-semibold text-slate-400 text-[12px]">{item.unit || "pcs"}</TableCell>
+                                      <TableCell className="py-4 px-4 text-center font-semibold text-slate-900 text-[12px] tabular-nums">
                                          {item.qty}
                                       </TableCell>
                                       <TableCell className="py-4 px-4 text-right">
@@ -441,6 +467,6 @@ export default function InventoryMutationPrototype() {
           </motion.div>
         )}
       </AnimatePresence>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

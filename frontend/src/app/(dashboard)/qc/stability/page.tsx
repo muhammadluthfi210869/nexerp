@@ -1,36 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { 
-  FlaskConical, 
-  Search, 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  AlertTriangle,
+import {
+  FlaskConical,
+  Calendar,
   ChevronRight,
   Timer,
   History,
   Beaker,
   Thermometer,
   CloudRain,
-  ShieldCheck,
   ClipboardCheck,
-  MoreVertical,
-  Activity,
   Plus,
   Loader2,
 } from "lucide-react";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
-import { DataCard } from "@/components/dna/DataCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalDataTable,
+  OperationalInput,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  OperationalPanel,
+  OperationalTabs,
+  OperationalTabsContent,
+  OperationalTabsList,
+  OperationalTabsTrigger,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalDate } from "@/lib/operational-formatters";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +55,7 @@ export default function StabilityTestingPage() {
   const [showNewStudy, setShowNewStudy] = useState(false);
   const [showLogResult, setShowLogResult] = useState<string | null>(null);
   const [localStudies, setLocalStudies] = useState<StabilityStudy[]>([]);
+  const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
 
   const [newStudy, setNewStudy] = useState({
@@ -198,207 +199,243 @@ export default function StabilityTestingPage() {
 
   const allStudies = [...(stabilityLogs || []), ...localStudies];
 
+  const filtered = useMemo(() => {
+    if (!search) return allStudies;
+    const q = search.toLowerCase();
+    return allStudies.filter((s: any) =>
+      (s.product || "").toLowerCase().includes(q) ||
+      (s.batch || "").toLowerCase().includes(q) ||
+      (s.id || "").toLowerCase().includes(q)
+    );
+  }, [allStudies, search]);
+
+  const stableCount = allStudies.filter((s: any) => s.status === "STABLE").length;
+  const monitoringCount = allStudies.filter((s: any) => s.status === "MONITORING").length;
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "id",
+        header: "Study ID",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-md bg-blue-50 text-blue-600">
+              <Timer className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-semibold text-slate-900">{row.original.id}</span>
+              <span className="text-[11px] text-slate-500">Started: {formatOperationalDate(row.original.startDate)}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "product",
+        header: "Product / Formulation",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-2">
+            <div className="grid h-7 w-7 place-items-center rounded-md bg-slate-100 text-slate-500">
+              <Beaker className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-semibold text-slate-900">{row.original.product}</span>
+              <span className="text-[11px] text-slate-500">Batch: {row.original.batch}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "chamber",
+        header: () => <div className="text-center">Chamber</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-center">
+            <span className="operational-status-badge is-info">
+              Chamber {row.original.chamber || "A"}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "interval",
+        header: () => <div className="text-center">Interval</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-center">
+            <span className="operational-status-badge is-neutral">{row.original.interval || "1M"}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "nextTest",
+        header: "Next Test Gate",
+        cell: ({ getValue }: { getValue: () => string }) => (
+          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-700 tabular-nums">
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            <span>{formatOperationalDate(getValue()) || "—"}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Integrity Status</div>,
+        cell: ({ row }: { row: { original: any } }) => {
+          const s = row.original.status;
+          const tone = s === "STABLE" ? "success" : s === "MONITORING" ? "pending" : "danger";
+          return (
+            <div className="flex justify-center">
+              <span className={`operational-status-badge is-${tone}`}>
+                {getOperationalStatusLabel(s)}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="operational-button is-secondary h-8 px-3 text-[11px]"
+              onClick={() => {
+                setShowLogResult(row.original.id);
+                setLogResult({ date: new Date().toISOString().split("T")[0], month: (row.original.currentMonth || 1) + 1, ph: "", viscosity: "", appearance: "STABLE", notes: "" });
+              }}
+            >
+              Log Result
+              <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <DashboardShell
-      title="Stability"
-      titleAccent="Testing"
+    <OperationalPageShell
+      title="Stability Testing"
       subtitle="Accelerated & real-time stability verification protocols"
       actions={
-        <div className="flex gap-4">
-          <DnaButton variant="outline" className="rounded-[14px] text-[12px]">
-            <History className="mr-2 h-4 w-4" /> Stability Archives
-          </DnaButton>
-          <DnaButton
-            variant="secondary"
-            className="rounded-[14px] text-[12px]"
+        <div className="flex items-center gap-2">
+          <button type="button" className="operational-button is-secondary">
+            <History className="h-4 w-4" />
+            <span>Stability Archives</span>
+          </button>
+          <button
+            type="button"
+            className="operational-button is-primary"
             onClick={() => setShowNewStudy(true)}
           >
-            <Plus className="mr-2 h-5 w-5" /> Start New Study
-          </DnaButton>
+            <Plus className="h-4 w-4" />
+            <span>Start New Study</span>
+          </button>
         </div>
       }
     >
-      {/* Environmental Chamber Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <StatCard
-          label="Chamber A: Accelerated"
-          value="40°C"
-          subValue="75% RH / Status: Operating within scientific threshold"
-          icon={<Thermometer className="h-4 w-4" />}
-        />
-        <StatCard
-          label="Chamber B: Real-Time"
-          value="25°C"
-          subValue="60% RH / Status: Stable"
-          icon={<CloudRain className="h-4 w-4" />}
-        />
-        <DataCard
-          title="Active Studies"
-          className="bg-blue-600 text-white relative overflow-hidden"
-          titleColor="text-blue-200"
-        >
-          <h3 className="text-4xl font-black text-white mt-2">
-            {allStudies.length} <span className="text-lg font-light">Samples</span>
-          </h3>
-          <div className="flex gap-2">
-            <DnaBadge status="default" className="bg-white/10 text-white border-none">Skin: 8</DnaBadge>
-            <DnaBadge status="default" className="bg-white/10 text-white border-none">Color: 4</DnaBadge>
-          </div>
-        </DataCard>
-      </div>
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Chamber A: Accelerated"
+            value="40°C"
+            helper="75% RH · Operating within scientific threshold"
+            icon={<Thermometer className="h-4 w-4" />}
+            tone="red"
+          />
+          <OperationalMetricCard
+            label="Chamber B: Real-Time"
+            value="25°C"
+            helper="60% RH · Stable"
+            icon={<CloudRain className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="Active Studies"
+            value={allStudies.length}
+            helper={`${stableCount} stabil · ${monitoringCount} monitoring`}
+            icon={<FlaskConical className="h-4 w-4" />}
+            tone="purple"
+          />
+        </OperationalMetricGrid>
 
-      {/* Stability Logs Table */}
-      <TableWrapper>
-        <table>
-          <thead className="bg-[#F8FAFC]">
-            <tr className="hover:bg-transparent border-[var(--border-color)]">
-              <th className="py-6 pl-10 text-table-header">Study ID</th>
-              <th className="text-table-header">Product / Formulation</th>
-              <th className="text-table-header text-center">Chamber</th>
-              <th className="text-table-header text-center">Interval</th>
-              <th className="text-table-header">Next Test Gate</th>
-              <th className="text-table-header text-center">Integrity Status</th>
-              <th className="pr-10 text-right text-table-header">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={7} className="text-center py-12">
-                  <Loader2 className="h-5 w-5 animate-spin inline mr-2 text-slate-400" />
-                  <span className="text-slate-400 text-sm">Loading studies...</span>
-                </td>
-              </tr>
-            )}
-            {!isLoading && allStudies.length === 0 && (
-              <tr>
-                <td colSpan={7} className="text-center py-12">
-                  <p className="text-slate-400 text-sm">No active stability studies</p>
-                </td>
-              </tr>
-            )}
-            {allStudies.map((log: any) => (
-              <tr
-                key={log.id}
-                className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-[var(--border-color)]"
-              >
-                <td className="py-6 pl-10">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gray-100 text-gray-900 flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
-                      <Timer className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-900 tracking-tight text-sm">{log.id}</span>
-                      <span className="text-[11px] font-medium text-slate-400">Started: {log.startDate}</span>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <Beaker className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900 text-sm">{log.product}</p>
-                      <p className="text-[11px] font-medium text-slate-400">Batch: {log.batch}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="text-center">
-                  <DnaBadge status={log.chamber === "A" ? "info" : "default"}>
-                    Chamber {log.chamber || "A"}
-                  </DnaBadge>
-                </td>
-                <td className="text-center">
-                  <DnaBadge status="default">{log.interval || "1M"}</DnaBadge>
-                </td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                    <p className="font-medium text-slate-500 text-[11px]">{log.nextTest}</p>
-                  </div>
-                </td>
-                <td className="text-center">
-                  <DnaBadge status={log.status === "STABLE" ? "success" : "critical"}>
-                    {log.status}
-                  </DnaBadge>
-                </td>
-                <td className="pr-10 text-right">
-                  <DnaButton
-                    variant="outline"
-                    className="h-9 px-4 text-[10px]"
-                    onClick={() => {
-                      setShowLogResult(log.id);
-                      setLogResult({ date: new Date().toISOString().split("T")[0], month: (log.currentMonth || 1) + 1, ph: "", viscosity: "", appearance: "STABLE", notes: "" });
-                    }}
-                  >
-                    Log Result <ChevronRight className="ml-2 h-3 w-3" />
-                  </DnaButton>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </TableWrapper>
+        <OperationalPanel>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <OperationalInput
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari study, product, atau batch..."
+              className="max-w-sm"
+            />
+          </div>
+        </OperationalPanel>
+
+        <OperationalDataTable
+          data={filtered as any}
+          columns={columns as any}
+          getRowId={(row: any) => row.id}
+          loading={isLoading}
+          searchPlaceholder="Cari study..."
+        />
+      </div>
 
       {/* New Stability Study Dialog */}
       <Dialog open={showNewStudy} onOpenChange={setShowNewStudy}>
-        <DialogContent className="sm:max-w-[520px] bg-white rounded-2xl p-0 overflow-hidden border-none shadow-xl">
-          <div className="p-6 bg-blue-600 text-white relative">
+        <DialogContent className="sm:max-w-[520px] rounded-xl border border-slate-200 bg-white p-0">
+          <div className="bg-blue-600 p-5 text-white">
             <div className="flex items-center gap-3">
               <FlaskConical className="h-6 w-6" />
               <div>
-                <h3 className="text-lg font-black">New Stability Study</h3>
-                <p className="text-blue-100 text-xs font-medium mt-0.5">Configure accelerated or real-time aging protocol</p>
+                <h3 className="text-[16px] font-semibold">New Stability Study</h3>
+                <p className="mt-0.5 text-[11px] font-medium text-blue-100">Configure accelerated or real-time aging protocol</p>
               </div>
             </div>
           </div>
-          <div className="p-6 space-y-5">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Product / Formulation</Label>
-              <DnaInput
+          <div className="space-y-4 p-5">
+            <div className="operational-field">
+              <span>Product / Formulation</span>
+              <input
                 value={newStudy.product}
                 onChange={(e) => setNewStudy((p) => ({ ...p, product: e.target.value }))}
                 placeholder="Enter product name..."
-                className="h-12 font-medium"
+                className="h-9"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Batch Reference</Label>
-              <DnaInput
+            <div className="operational-field">
+              <span>Batch Reference</span>
+              <input
                 value={newStudy.batch}
                 onChange={(e) => setNewStudy((p) => ({ ...p, batch: e.target.value }))}
                 placeholder="Batch number..."
-                className="h-12 font-medium"
+                className="h-9"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Chamber</Label>
+            <div className="operational-field">
+              <span>Chamber</span>
               <select
                 value={newStudy.chamber}
                 onChange={(e) => setNewStudy((p) => ({ ...p, chamber: e.target.value }))}
-                className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 font-bold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 font-medium text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="A">Chamber A — 40°C / 75% RH (Accelerated)</option>
                 <option value="B">Chamber B — 25°C / 60% RH (Real-Time)</option>
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Start Date</Label>
-                <DnaInput
+            <div className="grid grid-cols-2 gap-3">
+              <div className="operational-field">
+                <span>Start Date</span>
+                <input
                   type="date"
                   value={newStudy.startDate}
                   onChange={(e) => setNewStudy((p) => ({ ...p, startDate: e.target.value }))}
-                  className="h-12 font-medium"
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Test Interval</Label>
+              <div className="operational-field">
+                <span>Test Interval</span>
                 <select
                   value={newStudy.interval}
                   onChange={(e) => setNewStudy((p) => ({ ...p, interval: e.target.value }))}
-                  className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 font-bold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 font-medium text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="1M">1 Month</option>
                   <option value="3M">3 Months</option>
@@ -407,99 +444,99 @@ export default function StabilityTestingPage() {
                 </select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Notes</Label>
+            <div className="operational-field">
+              <span>Notes</span>
               <textarea
                 value={newStudy.notes}
                 onChange={(e) => setNewStudy((p) => ({ ...p, notes: e.target.value }))}
-                className="w-full h-24 rounded-xl border border-slate-200 bg-slate-50 p-4 font-medium text-sm text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="min-h-24 w-full rounded-md border border-slate-200 bg-slate-50 p-3 font-medium text-[12px] text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Study objectives or special conditions..."
               />
             </div>
           </div>
-          <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-            <DnaButton
-              variant="outline"
+          <div className="flex gap-3 border-t border-slate-100 bg-slate-50 p-4">
+            <button
+              type="button"
+              className="operational-button is-secondary flex-1 h-10"
               onClick={() => setShowNewStudy(false)}
-              className="flex-1 h-12 rounded-xl font-bold"
             >
               Cancel
-            </DnaButton>
-            <DnaButton
-              variant="primary"
+            </button>
+            <button
+              type="button"
+              className="operational-button is-primary flex-1 h-10"
               onClick={handleCreateStudy}
               disabled={createStudyMutation.isPending}
-              className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200"
             >
               {createStudyMutation.isPending ? "Creating..." : "Start Study"}
-            </DnaButton>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Log Result Dialog */}
       <Dialog open={!!showLogResult} onOpenChange={(open) => !open && setShowLogResult(null)}>
-        <DialogContent className="sm:max-w-[520px] bg-white rounded-2xl p-0 overflow-hidden border-none shadow-xl">
-          <div className="p-6 bg-emerald-600 text-white relative">
+        <DialogContent className="sm:max-w-[520px] rounded-xl border border-slate-200 bg-white p-0">
+          <div className="bg-emerald-600 p-5 text-white">
             <div className="flex items-center gap-3">
               <ClipboardCheck className="h-6 w-6" />
               <div>
-                <h3 className="text-lg font-black">Log Test Result</h3>
-                <p className="text-emerald-100 text-xs font-medium mt-0.5">Record stability test measurements</p>
+                <h3 className="text-[16px] font-semibold">Log Test Result</h3>
+                <p className="mt-0.5 text-[11px] font-medium text-emerald-100">Record stability test measurements</p>
               </div>
             </div>
           </div>
-          <div className="p-6 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Test Date</Label>
-                <DnaInput
+          <div className="space-y-4 p-5">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="operational-field">
+                <span>Test Date</span>
+                <input
                   type="date"
                   value={logResult.date}
                   onChange={(e) => setLogResult((p) => ({ ...p, date: e.target.value }))}
-                  className="h-12 font-medium"
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Month</Label>
-                <DnaInput
+              <div className="operational-field">
+                <span>Month</span>
+                <input
                   type="number"
                   value={logResult.month}
                   onChange={(e) => setLogResult((p) => ({ ...p, month: Number(e.target.value) }))}
-                  className="h-12 font-medium"
+                  className="h-9"
                   min={1}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">pH Value</Label>
-                <DnaInput
+            <div className="grid grid-cols-2 gap-3">
+              <div className="operational-field">
+                <span>pH Value</span>
+                <input
                   value={logResult.ph}
                   onChange={(e) => setLogResult((p) => ({ ...p, ph: e.target.value }))}
                   placeholder="e.g. 6.8"
-                  className="h-12 font-medium"
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Viscosity (cPs)</Label>
-                <DnaInput
+              <div className="operational-field">
+                <span>Viscosity (cPs)</span>
+                <input
                   value={logResult.viscosity}
                   onChange={(e) => setLogResult((p) => ({ ...p, viscosity: e.target.value }))}
                   placeholder="e.g. 1200"
-                  className="h-12 font-medium"
+                  className="h-9"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Appearance Verdict</Label>
+            <div className="operational-field">
+              <span>Appearance Verdict</span>
               <div className="flex gap-2">
                 {["STABLE", "DEGRADED", "UNSTABLE"].map((opt) => (
                   <button
                     key={opt}
                     type="button"
                     onClick={() => setLogResult((p) => ({ ...p, appearance: opt }))}
-                    className={`flex-1 h-12 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border-2 ${
+                    className={`flex-1 h-9 rounded-md font-bold text-[11px] uppercase tracking-wider transition-all border ${
                       logResult.appearance === opt
                         ? opt === "STABLE"
                           ? "bg-emerald-50 border-emerald-500 text-emerald-700"
@@ -514,35 +551,35 @@ export default function StabilityTestingPage() {
                 ))}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Notes</Label>
+            <div className="operational-field">
+              <span>Notes</span>
               <textarea
                 value={logResult.notes}
                 onChange={(e) => setLogResult((p) => ({ ...p, notes: e.target.value }))}
-                className="w-full h-20 rounded-xl border border-slate-200 bg-slate-50 p-4 font-medium text-sm text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="min-h-20 w-full rounded-md border border-slate-200 bg-slate-50 p-3 font-medium text-[12px] text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="Observations..."
               />
             </div>
           </div>
-          <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-            <DnaButton
-              variant="outline"
+          <div className="flex gap-3 border-t border-slate-100 bg-slate-50 p-4">
+            <button
+              type="button"
+              className="operational-button is-secondary flex-1 h-10"
               onClick={() => setShowLogResult(null)}
-              className="flex-1 h-12 rounded-xl font-bold"
             >
               Cancel
-            </DnaButton>
-            <DnaButton
-              variant="primary"
+            </button>
+            <button
+              type="button"
+              className="operational-button is-primary flex-1 h-10"
               onClick={() => handleLogResult(showLogResult!)}
               disabled={logResultMutation.isPending}
-              className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200"
             >
               {logResultMutation.isPending ? "Submitting..." : "Log Result"}
-            </DnaButton>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

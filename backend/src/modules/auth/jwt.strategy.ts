@@ -14,10 +14,20 @@ interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private usersService: UsersService) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.length < 32) {
+      // Pre-R4 hardening: refuse to boot with a missing/short JWT secret.
+      // Earlier the strategy silently used 'ERP_SECRET' as a fallback,
+      // which made every deployment's tokens forgeable.
+      throw new Error(
+        'JWT_SECRET is required and must be at least 32 characters. ' +
+          'Run `npm run check:env` or generate with `openssl rand -hex 32`.',
+      );
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'ERP_SECRET', // Ideally should use config service
+      secretOrKey: secret,
     });
   }
 

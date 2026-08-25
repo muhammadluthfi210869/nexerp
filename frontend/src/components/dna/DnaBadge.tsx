@@ -24,7 +24,7 @@ export function DnaBadge({ status = "default", children, className, onClick }: D
     <span
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 text-[10px] font-black uppercase rounded-lg px-3 py-1 border shadow-sm",
+        "inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase rounded-lg px-3 py-1 border shadow-sm",
         statusClasses[status],
         onClick && "cursor-pointer hover:opacity-80 transition-opacity",
         className

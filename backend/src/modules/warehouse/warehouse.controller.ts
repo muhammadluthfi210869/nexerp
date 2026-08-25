@@ -8,6 +8,7 @@ import {
   Patch,
   Request,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -18,6 +19,8 @@ import { RequisitionService } from './services/requisition.service';
 import { StockIntelligenceService } from './services/stock-intelligence.service';
 import {
   CreateRequisitionDto,
+  IssueRequisitionDto,
+  ReturnRequisitionDto,
   UpdateRequisitionStatusDto,
 } from './dto/requisition.dto';
 
@@ -162,7 +165,8 @@ export class WarehouseController {
     );
   }
 
-  // === PHASE 1: Inbound Management ===
+  // Legacy inbound creation remains read-only here. Canonical receiving is
+  // SCM /scm/inbounds so PO lineage and duplicate-post protections cannot be bypassed.
 
   @Get('inbounds')
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
@@ -170,11 +174,6 @@ export class WarehouseController {
     return this.warehouseService.getInbounds();
   }
 
-  @Post('inbounds')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
-  async createInbound(@Body() data: any) {
-    return this.warehouseService.createInbound(data);
-  }
 
   // === PHASE 1: Stock Adjustment ===
 
@@ -219,7 +218,7 @@ export class WarehouseController {
     @Param('id') id: string,
     @Body() body: { performedBy?: string },
   ) {
-    return this.warehouseService.releaseFromQuarantine(id, body.performedBy);
+    throw new BadRequestException('Record the inbound QC disposition through /scm/inbounds/:id/qc-validate. Quarantine release cannot create stock a second time.');
   }
 
   // === STOCK INTELLIGENCE ===
@@ -290,5 +289,25 @@ export class WarehouseController {
     @Body() dto: UpdateRequisitionStatusDto,
   ) {
     return this.requisitionService.updateStatus(id, dto);
+  }
+
+  @Post('requisitions/:id/issue')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async issueRequisition(
+    @Param('id') id: string,
+    @Body() dto: IssueRequisitionDto,
+    @Request() req: any,
+  ) {
+    return this.requisitionService.issue(id, dto, req.user.id);
+  }
+
+  @Post('requisitions/:id/return')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async returnRequisition(
+    @Param('id') id: string,
+    @Body() dto: ReturnRequisitionDto,
+    @Request() req: any,
+  ) {
+    return this.requisitionService.returnToWarehouse(id, dto, req.user.id);
   }
 }

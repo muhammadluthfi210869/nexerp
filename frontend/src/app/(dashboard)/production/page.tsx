@@ -6,7 +6,16 @@ import { Calendar, Factory, ClipboardList } from "lucide-react";
 import { getMockData } from "@/lib/mock-data";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
-const IS_PROTOTYPE_MODE = process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+
+// PROTOTYPE MODE — same hardened gate as `lib/api.ts`:
+//   prototype mode is REFUSED in production builds even if the env var
+//   is set. See `frontend/src/lib/api.ts` for the canonical rule.
+const NEX_PROTOTYPE_ALLOW = process.env.NEXT_PUBLIC_PROTOTYPE_ALLOW === "true";
+const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
+const IS_PROTOTYPE_MODE =
+  NEX_PROTOTYPE_ALLOW &&
+  !IS_PRODUCTION_BUILD &&
+  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
 
 async function fetchFromApi(path: string) {
   try {
@@ -20,6 +29,7 @@ async function fetchFromApi(path: string) {
 
 export default async function ProductionDashboardPage() {
   // PROTOTYPE MODE: kalau fetch ke backend gagal, pakai data contoh.
+  // Production build (NODE_ENV=production) NEVER falls back to mock data.
   const live = await fetchFromApi("/production/dashboard");
   const data = IS_PROTOTYPE_MODE ? (live ?? getMockData("/production/dashboard")) : live;
 

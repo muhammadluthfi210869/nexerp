@@ -5,6 +5,7 @@ import {
   Body,
   Request,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
@@ -48,13 +49,33 @@ export class QcController {
     @Request() req: { user: User },
     @Body() dto: { step_log_id: string; status: string; notes?: string },
   ) {
-    const statusMap: Record<string, string> = {
+    // Canonical QC decision set is GOOD / QUARANTINE / REJECT.
+    // (QUARANTINE is the "on hold" state — used to flag without rejecting.)
+    // The legacy snake_case endpoint only mapped PASS→GOOD and FAIL→REJECT,
+    // which silently lost HOLD requests. Normalize every code here.
+    const normalized = (dto.status ?? '').toUpperCase();
+    const statusMap: Record<string, 'GOOD' | 'QUARANTINE' | 'REJECT'> = {
       PASS: 'GOOD',
+      GOOD: 'GOOD',
+      HOLD: 'QUARANTINE',
+      QUARANTINE: 'QUARANTINE',
       FAIL: 'REJECT',
+      REJECT: 'REJECT',
+      // Indonesian equivalents used by field operators:
+      LULUS: 'GOOD',
+      TAHAN: 'QUARANTINE',
+      TOLAK: 'REJECT',
     };
+    const finalStatus = statusMap[normalized];
+    if (!finalStatus) {
+      // Unknown status — refuse loudly rather than silently default.
+      throw new BadRequestException(
+        `Status QC tidak dikenal: ${dto.status}. Gunakan GOOD/QUARANTINE/REJECT (atau PASS/HOLD/FAIL).`,
+      );
+    }
     return this.qcService.create(req.user.id, {
       stepLogId: dto.step_log_id,
-      status: (statusMap[dto.status?.toUpperCase()] || dto.status) as any,
+      status: finalStatus,
       notes: dto.notes,
     });
   }

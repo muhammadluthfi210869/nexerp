@@ -1,27 +1,27 @@
 model DocumentDraft {
-  id              String             @id @default(uuid()) @db.Uuid
-  draftNumber     String             @unique
+  id              String              @id @default(uuid()) @db.Uuid
+  draftNumber     String              @unique
   documentType    DocumentType
   sourceType      SourceDocumentType
-  sourceId        String             @db.Uuid
+  sourceId        String              @db.Uuid
   status          DocumentDraftStatus @default(DRAFT)
-  payload         Json               // The auto-generated document data
-  originalPayload Json?              // Snapshot before any edits
-  autoApproveAt   DateTime?          // When to auto-approve if not edited
+  payload         Json // The auto-generated document data
+  originalPayload Json? // Snapshot before any edits
+  autoApproveAt   DateTime? // When to auto-approve if not edited
   approvedAt      DateTime?
-  approvedById    String?            @db.Uuid
+  approvedById    String?             @db.Uuid
   rejectedAt      DateTime?
-  rejectedById    String?            @db.Uuid
+  rejectedById    String?             @db.Uuid
   rejectReason    String?
-  finalDocumentId String?            // ID of the converted final document
+  finalDocumentId String? // ID of the converted final document
   notes           String?
-  createdById     String?            @db.Uuid
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  createdById     String?             @db.Uuid
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
-  approver        User?              @relation("DocumentDraftApprover", fields: [approvedById], references: [id])
-  rejecter        User?              @relation("DocumentDraftRejecter", fields: [rejectedById], references: [id])
-  creator         User?              @relation("DraftCreator", fields: [createdById], references: [id])
+  approver User? @relation("DocumentDraftApprover", fields: [approvedById], references: [id])
+  rejecter User? @relation("DocumentDraftRejecter", fields: [rejectedById], references: [id])
+  creator  User? @relation("DraftCreator", fields: [createdById], references: [id])
 
   @@index([documentType, status])
   @@index([sourceType, sourceId])

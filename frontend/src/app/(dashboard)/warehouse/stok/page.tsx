@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatOperationalCurrency, formatOperationalCompactCurrency } from "@/lib/operational-formatters";
 
 export default function StokPage() {
   const [tab, setTab] = useState("stok");
@@ -79,8 +80,12 @@ export default function StokPage() {
   });
 
   const totalValuation = catalog?.reduce((acc: number, item: any) => {
-    const price = item.valuations?.[0]?.movingAveragePrice || Number(item.unitPrice);
-    return acc + (Number(item.stockQty) * price);
+    const rawPrice = item.valuations?.[0]?.movingAveragePrice ?? item.unitPrice;
+    const price = Number(rawPrice);
+    if (!Number.isFinite(price)) return acc;
+    const qty = Number(item.stockQty);
+    if (!Number.isFinite(qty)) return acc;
+    return acc + qty * price;
   }, 0) || 0;
 
   const criticalItems = catalog?.filter((item: any) => Number(item.stockQty) <= Number(item.minLevel)).length || 0;
@@ -106,7 +111,7 @@ export default function StokPage() {
         <TabsContent value="stok" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <StatCard label="Total SKU" value={catalog?.length || 0} subValue="Active Materials" icon={<Box />} />
-            <StatCard label="Total Valuation" value={`Rp ${(totalValuation / 1000000).toFixed(1)}M`} subValue="Inventory Value" icon={<BadgeDollarSign />} />
+            <StatCard label="Total Valuation" value={formatOperationalCompactCurrency(totalValuation)} subValue="Inventory Value" icon={<BadgeDollarSign />} />
             <StatCard label="Stok Kritis" value={criticalItems} subValue="Below Min Level" icon={<AlertTriangle />} />
             <StatCard label="Unique Categories" value={String(new Set(catalog?.map((i: any) => i.category?.name).filter(Boolean)).size || 0)} subValue="Material Types" icon={<Package />} />
           </div>
@@ -148,7 +153,10 @@ export default function StokPage() {
                     </tr>
                   ) : catalog?.map((item: any) => {
                     const isCritical = Number(item.stockQty) <= Number(item.minLevel);
-                    const hpp = item.valuations?.[0]?.movingAveragePrice || Number(item.unitPrice);
+                    const rawHpp = item.valuations?.[0]?.movingAveragePrice ?? item.unitPrice;
+                    const hpp = rawHpp === null || rawHpp === undefined || rawHpp === "" || !Number.isFinite(Number(rawHpp))
+                      ? null
+                      : Number(rawHpp);
                     return (
                       <tr key={item.id} className="group hover:bg-slate-50/50 transition-all">
                         <td className="px-6 py-5">
@@ -178,7 +186,7 @@ export default function StokPage() {
                         </td>
                         <td className="px-6 py-5 text-center text-sm font-bold text-slate-400 tabular">{Number(item.minLevel).toLocaleString()}</td>
                         <td className="px-6 py-5">
-                          <span className="text-xs font-black text-emerald-600">Rp {hpp.toLocaleString()}</span>
+                          <span className="text-xs font-black text-emerald-600">{formatOperationalCurrency(hpp)}</span>
                         </td>
                         <td className="px-6 py-5 text-center">
                           <div className="flex items-center justify-center gap-2">

@@ -92,7 +92,7 @@ export default function BatchRecordsPage() {
   const { data: formulas } = useQuery({
     queryKey: ["production-formulas"],
     queryFn: async () => {
-      const res = await api.get("/formulas");
+      const res = await api.get("/rnd/formulas");
       return res.data || [];
     },
   });
@@ -647,3 +647,4 @@ export default function BatchRecordsPage() {
     </DashboardShell>
   );
 }
+

@@ -13,32 +13,32 @@ export function StatCard({ label, value, subValue, icon, className }: StatCardPr
   const iconEl = React.isValidElement(icon) ? icon : null
   const bgIcon = React.isValidElement(icon)
     ? React.cloneElement(icon as React.ReactElement<any>, {
-        className: "w-[110px] h-[110px] stroke-[0.75px] text-slate-300/25 transition-all duration-700",
+        className: "w-[72px] h-[72px] stroke-[0.75px] text-slate-300/20 transition-opacity duration-200",
       })
     : null
 
   return (
     <div
       className={cn(
-        "bg-white border border-[var(--border-color)] rounded-[24px] p-8 shadow-sm transition-all group overflow-hidden relative flex items-center animate-fade-slide-in hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)]",
+        "erp-metric-card bg-white border border-[var(--border-color)] rounded-[12px] p-5 shadow-sm transition-colors group overflow-hidden relative flex items-center animate-fade-slide-in w-full max-w-[320px] min-w-0 justify-self-start min-h-[136px]",
         className
       )}
     >
       <div className="flex justify-between items-center relative z-10 w-full">
         <div className="space-y-2 flex-1 min-w-0 pr-4">
-          <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.1em] group-hover:text-slate-900 transition-colors">
+          <p className="text-xs font-semibold text-slate-500 tracking-normal leading-4 group-hover:text-slate-900 transition-colors">
             {label}
           </p>
-          <h3 className="text-[32px] font-black text-slate-900 tracking-[-0.02em] tabular leading-tight">
+          <h3 className="text-[28px] font-black text-slate-900 tracking-[-0.02em] tabular leading-tight">
             {value ?? "—"}
           </h3>
           {subValue && (
             typeof subValue === "string" ? (
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
+              <p className="text-xs font-medium text-slate-400 leading-4">
                 {subValue}
               </p>
             ) : (
-              <div className="text-[11px] font-bold uppercase tracking-wider leading-tight">
+              <div className="text-xs font-medium leading-4">
                 {subValue}
               </div>
             )

@@ -59,7 +59,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell } from "@/components/operational";
 
 export default function WarehouseWorkstation() {
   const queryClient = useQueryClient();
@@ -192,7 +192,7 @@ export default function WarehouseWorkstation() {
   };
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="WAREHOUSE"
       titleAccent="OPS"
       subtitle="STRICT MULTI-TAB EXECUTION & MATERIAL HANDOVER PORTAL"
@@ -244,11 +244,11 @@ export default function WarehouseWorkstation() {
             </div>
             <div className="grid grid-cols-1 gap-6">
                {procurementItems.map((item: any) => (
-                  <WorkCard 
+                  <WorkCard
                     key={item.id}
                     icon={<Truck />}
-                    title={`PO: ${item.poId}`}
-                    subtitle={`${item.receivedAt} • ${item.items?.length} MATERIALS IN QUEUE`}
+                    title={item.poId ? `PO: ${item.poId}` : "PO: —"}
+                    subtitle={`${item.receivedAt ?? "—"} • ${item.items?.length ?? 0} MATERIALS IN QUEUE`}
                     status="IN_TRANSIT"
                     actionLabel="RECEIVE BATCH"
                     onAction={() => toast.info("PROCEED TO INBOUND TAB")}
@@ -266,11 +266,11 @@ export default function WarehouseWorkstation() {
                </div>
                <div className="grid grid-cols-1 gap-6">
                   {internalTransfers.map((item: any) => (
-                    <WorkCard 
+                    <WorkCard
                       key={item.id}
                       icon={<ArrowRightLeft />}
-                      title={item.transferNumber}
-                      subtitle={`${item.sourceWarehouse?.name} → ${item.destWarehouse?.name}`}
+                      title={item.transferNumber ?? "—"}
+                      subtitle={`${item.sourceWarehouse?.name ?? "—"} → ${item.destWarehouse?.name ?? "—"}`}
                       status={item.status}
                       actionLabel="EXECUTE MOVE"
                       isAmber={true}
@@ -286,11 +286,11 @@ export default function WarehouseWorkstation() {
                </div>
                <div className="grid grid-cols-1 gap-6">
                   {stockOpnames.map((item: any) => (
-                    <WorkCard 
+                    <WorkCard
                       key={item.id}
                       icon={<ClipboardCheck />}
-                      title={item.opnameNumber}
-                      subtitle={`${item.warehouse?.name} • ITEMS: ${item.items?.length}`}
+                      title={item.opnameNumber ?? "—"}
+                      subtitle={`${item.warehouse?.name ?? "—"} • ITEMS: ${item.items?.length ?? 0}`}
                       status={item.approvalStatus}
                       actionLabel="APPROVE DISCREPANCY"
                       onAction={() => setSelectedOpname(item)}
@@ -639,7 +639,7 @@ export default function WarehouseWorkstation() {
            </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }
 

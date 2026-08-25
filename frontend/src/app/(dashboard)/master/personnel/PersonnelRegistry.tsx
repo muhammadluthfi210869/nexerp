@@ -11,23 +11,16 @@ import {
   UserCheck,
   Building2,
   Lock,
-  Zap,
   Fingerprint,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -38,12 +31,17 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableShell } from "@/components/layout/TableShell";
+import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import {
+  OperationalMetricGrid,
+  OperationalMetricCard,
+  OperationalPanel,
+  OperationalInput,
+  OperationalField,
+  OperationalButton,
+  OperationalDataTable,
+  OperationalStatusBadge,
+} from "@/components/operational/OperationalUI";
 
 type Department = { id: string; name: string };
 
@@ -127,203 +125,223 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
 
   const linkedCount = employees.filter(e => e.userId).length;
 
+  const columns: ColumnDef<Employee>[] = [
+    {
+      id: "identity",
+      header: "Staff Identity",
+      accessorFn: (row) => row.fullName,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center text-sm font-black uppercase">
+            {row.original.fullName.charAt(0)}
+          </div>
+          <div>
+            <div className="font-black text-slate-900 text-xs uppercase">{row.original.fullName}</div>
+            <div className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{row.original.employeeId}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "position",
+      header: "Position / Unit",
+      accessorFn: (row) => row.position,
+      cell: ({ row }) => (
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] font-black text-slate-900 uppercase">{row.original.position}</span>
+          <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">
+            {row.original.department?.name || "Operations"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: "contact",
+      header: "Contact",
+      accessorFn: (row) => row.phone || "",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+          <Phone className="w-3 h-3" /> {row.original.phone || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "link",
+      header: "System Link",
+      accessorFn: (row) => row.userId,
+      cell: ({ row }) => (
+        row.original.userId ? (
+          <OperationalStatusBadge status="success">
+            <Shield className="w-3 h-3" /> Linked
+          </OperationalStatusBadge>
+        ) : (
+          <OperationalStatusBadge status="neutral">Off-Network</OperationalStatusBadge>
+        )
+      ),
+    },
+    {
+      id: "actions",
+      header: "Action",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <OperationalButton
+          variant="ghost"
+          onClick={() => {
+            setEditingEmployee(row.original);
+            setFormData({
+              fullName: row.original.fullName,
+              employeeId: row.original.employeeId,
+              position: row.original.position,
+              phone: row.original.phone || "",
+              departmentId: row.original.departmentId,
+            });
+            setIsModalOpen(true);
+          }}
+        >
+          <Fingerprint className="w-3.5 h-3.5" />
+        </OperationalButton>
+      ),
+    },
+  ];
+
   return (
-    <TableShell
-      title="Personnel"
-      titleAccent="Registry Hub"
-      subtitle="Human Capital Ledger — Global staff directory and departmental hierarchy synchronization"
+    <OperationalMigrationShell
+      title="Data Personel"
+      subtitle="Direktori staf dan sinkronisasi struktur departemen"
       actions={
-        <DnaButton
+        <OperationalButton
           variant="primary"
-          icon={<Plus />}
           onClick={() => {
             setEditingEmployee(null);
             setFormData({ fullName: "", employeeId: "", position: "", phone: "", departmentId: "" });
             setIsModalOpen(true);
           }}
         >
-          Onboard Personnel
-        </DnaButton>
+          <Plus className="h-4 w-4" />
+          <span>Onboard Personnel</span>
+        </OperationalButton>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-[var(--card-gap)]">
-        <StatCard label="Active Staff" value={employees.length} subValue="Total Employees" icon={<UserCheck />} />
-        <StatCard label="Departments" value={departments.length || 0} subValue="Operational Units" icon={<Building2 />} />
-        <StatCard label="System Access" value={linkedCount} subValue="Users with Clearance" icon={<Lock />} />
-      </div>
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Active Staff"
+            value={employees.length}
+            helper="Total Employees"
+            icon={<UserCheck className="h-4 w-4" />}
+            tone="green"
+          />
+          <OperationalMetricCard
+            label="Departments"
+            value={departments.length || 0}
+            helper="Operational Units"
+            icon={<Building2 className="h-4 w-4" />}
+            tone="blue"
+          />
+          <OperationalMetricCard
+            label="System Access"
+            value={linkedCount}
+            helper="Users with Clearance"
+            icon={<Lock className="h-4 w-4" />}
+            tone="purple"
+          />
+        </OperationalMetricGrid>
 
-      <TableWrapper
-        filters={
-          <div className="flex items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-3">
-              <span className="status-dot bg-blue-500" />
-              <div>
-                <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
-                  Personnel Directory
-                </h3>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                  {filteredEmployees.length} Records
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <DnaInput
-                icon={<Search />}
-                placeholder="Search by name or ID..."
-                className="md:w-56"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <OperationalPanel className="flex items-center justify-between gap-4 w-full">
+          <div className="flex items-center gap-3">
+            <span className="status-dot bg-blue-500" />
+            <div>
+              <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
+                Personnel Directory
+              </h3>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                {filteredEmployees.length} Records
+              </p>
             </div>
           </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Staff Identity</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Position / Unit</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Contact</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">System Link</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading && employees.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Syncing HRIS...</p>
-                  </TableCell>
-                </TableRow>
-              ) : filteredEmployees.map((emp) => (
-                <TableRow key={emp.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
-                  <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center group-hover:bg-blue-600 transition-colors text-sm font-black uppercase">
-                        {emp.fullName.charAt(0)}
-                      </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs uppercase block">{emp.fullName}</span>
-                        <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{emp.employeeId}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] font-black text-slate-900 uppercase">{emp.position}</span>
-                      <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{emp.department?.name || "Operations"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                      <Phone className="w-3 h-3" /> {emp.phone || "---"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-center">
-                    {emp.userId ? (
-                      <DnaBadge status="success">
-                        <Shield className="w-3 h-3" /> Linked
-                      </DnaBadge>
-                    ) : (
-                      <DnaBadge status="default">Off-Network</DnaBadge>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <DnaButton
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingEmployee(emp);
-                        setFormData({
-                          fullName: emp.fullName,
-                          employeeId: emp.employeeId,
-                          position: emp.position,
-                          phone: emp.phone || "",
-                          departmentId: emp.departmentId,
-                        });
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      <Fingerprint className="w-3.5 h-3.5" />
-                    </DnaButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </TableWrapper>
+          <div className="flex items-center gap-3">
+            <OperationalInput
+              icon={<Search className="h-4 w-4" />}
+              placeholder="Search by name or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="md:w-72"
+            />
+          </div>
+        </OperationalPanel>
+
+        <OperationalDataTable
+          data={filteredEmployees}
+          columns={columns as any}
+          getRowId={(row: Employee) => row.id}
+          searchPlaceholder=""
+          enableSearch={false}
+          enableColumnVisibility={false}
+          loading={loading}
+          emptyMessage="Syncing HRIS..."
+        />
+      </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white">
-          <DialogHeader className="p-6 bg-slate-800 text-white">
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-600/20 rounded-xl">
-                <UserIcon className="w-6 h-6 text-blue-400" />
-              </div>
+              <UserIcon className="w-6 h-6 text-blue-400" />
               <div>
-                <DialogTitle className="text-sm font-black uppercase tracking-tight">
+                <DialogTitle>
                   {editingEmployee ? "Edit Profile" : "Onboard Staff"}
                 </DialogTitle>
-                <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mt-1">Personnel Asset Protocol</p>
+                <DialogDescription>Personnel Asset Protocol</DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="operational-stack">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Name</label>
+              <OperationalField label="Full Name">
                 <input
                   placeholder="e.g. JOHN DOE"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase"
                   autoFocus
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Staff ID</label>
+              </OperationalField>
+              <OperationalField label="Staff ID">
                 <input
                   placeholder="EMP-2024-XXX"
                   value={formData.employeeId}
                   onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                  className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase"
                 />
-              </div>
+              </OperationalField>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Department</label>
+              <OperationalField label="Department">
                 <Select value={formData.departmentId} onValueChange={(v) => setFormData({ ...formData, departmentId: v || "" })}>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                    {departments.map(d => <SelectItem key={d.id} value={d.id} className="text-xs font-bold uppercase">{d.name}</SelectItem>)}
-                    {departments.length === 0 && <SelectItem value="default" className="text-xs font-bold uppercase">Operations</SelectItem>}
+                  <SelectContent>
+                    {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    {departments.length === 0 && <SelectItem value="default">Operations</SelectItem>}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Position</label>
-                <input value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase" />
-              </div>
+              </OperationalField>
+              <OperationalField label="Position">
+                <input value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} />
+              </OperationalField>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone / WhatsApp</label>
-              <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-            </div>
+            <OperationalField label="Phone / WhatsApp">
+              <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+            </OperationalField>
 
-            <DialogFooter className="pt-4 gap-3">
-              <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>Discard</DnaButton>
-              <DnaButton variant="primary" type="submit">
+            <DialogFooter className="gap-3">
+              <OperationalButton variant="secondary" onClick={() => setIsModalOpen(false)}>Discard</OperationalButton>
+              <OperationalButton variant="primary" type="submit">
                 {editingEmployee ? "Update" : "Onboard"}
                 <ChevronRight className="w-4 h-4" />
-              </DnaButton>
+              </OperationalButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -336,11 +354,11 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
           </DialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+            <OperationalButton variant="secondary" onClick={() => setShowConfirm(false)}>Batal</OperationalButton>
+            <OperationalButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</OperationalButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+    </OperationalMigrationShell>
   );
 }

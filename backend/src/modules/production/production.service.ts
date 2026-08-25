@@ -148,6 +148,128 @@ export class ProductionService {
     });
   }
 
+  /** Batch 6: record actual production facts without touching Warehouse stock. */
+  async recordExecution(workOrderId: string, userId: string, dto: any) {
+    const actualOutput = Number(dto.actualOutput);
+    if (!Number.isFinite(actualOutput) || actualOutput < 0) {
+      throw new BadRequestException('Actual output must be a non-negative number');
+    }
+    const commandKey = dto.commandKey as string | undefined;
+    return this.prisma.$transaction(async (tx: any) => {
+      const wo = await tx.workOrder.findUnique({
+        where: { id: workOrderId },
+        include: { plan: { include: { formula: true } } },
+      });
+      if (!wo?.plan) throw new BadRequestException('Production plan is required');
+      if (commandKey) {
+        const prior = await tx.productionLog.findUnique({ where: { executionCommandKey: commandKey } });
+        if (prior) return { idempotent: true, productionLog: prior, usages: [] };
+      }
+      const usages: any[] = [];
+      for (const line of dto.materialUsages || []) {
+        // Serialize usage decisions for the same issued requisition. This is
+        // the production-side guard; it does not create an inventory ledger row.
+        await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "material_requisitions" WHERE "workOrderId" = ${workOrderId} AND "materialId" = ${line.materialId} FOR UPDATE`);
+        const used = Number(line.qtyUsed);
+        if (!Number.isFinite(used) || used < 0) throw new BadRequestException('Used quantity must be non-negative');
+        const returned = Number(line.qtyReturned || 0);
+        if (returned < 0) throw new BadRequestException('Returned quantity must be non-negative');
+        const reqs = await tx.materialRequisition.findMany({
+          where: { workOrderId, materialId: line.materialId },
+          include: { fulfillments: true, material: true },
+        });
+        const sent = reqs.reduce((sum: number, r: any) => sum + Number(r.qtyIssued || 0), 0) ||
+          reqs.reduce((sum: number, r: any) => sum + r.fulfillments.reduce((s: number, f: any) => s + Number(f.qtyIssued || 0), 0), 0);
+        const priorUsage = await tx.productionMaterialUsage.aggregate({ where: { planId: wo.plan.id, materialId: line.materialId }, _sum: { qtyUsed: true, qtyReturned: true } });
+        const alreadyAccounted = Number(priorUsage._sum.qtyUsed || 0) + Number(priorUsage._sum.qtyReturned || 0);
+        if (alreadyAccounted + used + returned > sent && !line.reason) {
+          throw new BadRequestException({ code: 'USED_EXCEEDS_SENT', message: `Used + returned exceeds sent for ${line.materialId}` });
+        }
+        const variance = sent - used - returned;
+        const usage = await tx.productionMaterialUsage.create({
+          data: {
+            planId: wo.plan.id,
+            workOrderId,
+            materialId: line.materialId,
+            inventoryId: line.inventoryId,
+            qtySent: sent,
+            qtyUsed: used,
+            qtyReturned: returned,
+            variance,
+            uom: line.uom,
+            reason: line.reason,
+            commandKey: line.commandKey,
+          },
+        });
+        usages.push(usage);
+      }
+      const log = await tx.productionLog.create({
+        data: {
+          workOrderId,
+          planId: wo.plan.id,
+          stage: 'PACKING',
+          inputQty: wo.targetQty,
+          goodQty: actualOutput,
+          quarantineQty: 0,
+          rejectQty: 0,
+          machineId: dto.machineId,
+          operatorId: userId,
+          notes: dto.notes || 'BATCH6_EXECUTION_RECORDED',
+          executionCommandKey: commandKey,
+        },
+      });
+      return { idempotent: false, productionLog: log, usages, formulaId: wo.plan.formulaId, formulaVersion: wo.plan.formulaVersionSnapshot };
+    });
+  }
+
+  /** Batch 6: QC-only checkpoint signature. Missing or failed checkpoints block completion. */
+  async recordCheckpoint(workOrderId: string, userId: string, dto: any) {
+    const phase = String(dto.phase || '').toUpperCase();
+    if (!['MIXING', 'FILLING', 'PACKING', 'FINAL'].includes(phase)) throw new BadRequestException('Invalid QC checkpoint');
+    return this.prisma.$transaction(async (tx: any) => {
+      const wo = await tx.workOrder.findUnique({ where: { id: workOrderId }, include: { plan: true } });
+      if (!wo?.plan) throw new BadRequestException('Production plan not found');
+      const prior = await tx.productionStepLog.findFirst({ where: { woId: wo.plan.id, stage: phase === 'FINAL' ? 'PACKING' : phase }, include: { qcAudits: true }, orderBy: { createdAt: 'desc' } });
+      const existing = prior?.qcAudits?.find((a: any) => a.phase === phase);
+      if (existing) return { idempotent: true, audit: existing };
+      const stepLog = await tx.productionStepLog.create({
+        data: { woId: wo.plan.id, stage: phase === 'FINAL' ? 'PACKING' : phase, inputQty: wo.targetQty, qtyResult: Number(dto.qtyResult || 0), qtyReject: dto.result === 'FAIL' ? Number(dto.qtyReject || 0) : 0, qtyQuarantine: 0 },
+      });
+      const status = String(dto.result || 'PASS').toUpperCase() === 'PASS' ? 'GOOD' : 'REJECT';
+      const audit = await tx.qCAudit.create({ data: { stepLogId: stepLog.id, qcId: userId, phase, status, notes: dto.notes, defectType: status === 'REJECT' ? dto.reason : undefined } });
+      if (status === 'REJECT') await tx.workOrder.update({ where: { id: workOrderId }, data: { stage: 'QC_HOLD' } });
+      return { idempotent: false, audit };
+    });
+  }
+
+  async completeBatch(workOrderId: string, userId: string, dto: any) {
+    const commandKey = dto.commandKey as string | undefined;
+    return this.prisma.$transaction(async (tx: any) => {
+      const wo = await tx.workOrder.findUnique({ where: { id: workOrderId }, include: { plan: { include: { formula: true } } } });
+      if (!wo?.plan) throw new BadRequestException('Production plan not found');
+      if (commandKey) {
+        const prior = await tx.finishedGood.findUnique({ where: { postedCommandKey: commandKey } });
+        if (prior) return { idempotent: true, finishedGood: prior };
+      }
+      const audits = await tx.qCAudit.findMany({ where: { stepLog: { woId: wo.plan.id }, phase: { in: ['MIXING', 'FILLING', 'PACKING', 'FINAL'] } }, orderBy: { createdAt: 'desc' } });
+      for (const phase of ['MIXING', 'FILLING', 'PACKING', 'FINAL']) {
+        const latest = audits.find((a: any) => a.phase === phase);
+        if (!latest || latest.status !== 'GOOD') throw new BadRequestException({ code: 'QC_GATE_BLOCKED', message: `${phase} QC must pass before completion` });
+      }
+      const actual = Number(dto.actualOutput ?? 0);
+      if (actual < 0) throw new BadRequestException('Actual output must be non-negative');
+      const lotNumber = dto.lotNumber || `${wo.plan.batchNo}-FG`;
+      const fg = await tx.finishedGood.upsert({
+        where: { woId: wo.plan.id },
+        update: { stockQty: actual, lotNumber, formulaId: wo.plan.formulaId, formulaVersionSnapshot: wo.plan.formulaVersionSnapshot, qcStatus: 'RELEASED', availability: 'AVAILABLE', postedCommandKey: commandKey },
+        create: { woId: wo.plan.id, stockQty: actual, lotNumber, formulaId: wo.plan.formulaId, formulaVersionSnapshot: wo.plan.formulaVersionSnapshot, qcStatus: 'RELEASED', availability: 'AVAILABLE', postedCommandKey: commandKey },
+      });
+      await tx.productionPlan.update({ where: { id: wo.plan.id }, data: { status: 'DONE' } });
+      await tx.workOrder.update({ where: { id: workOrderId }, data: { stage: 'FINISHED_GOODS', actualCompletion: new Date() } });
+      return { idempotent: false, finishedGood: fg, formulaId: wo.plan.formulaId, formulaVersion: wo.plan.formulaVersionSnapshot };
+    });
+  }
+
   async reportBreakdown(
     workOrderId: string,
     stage: LifecycleStatus,
@@ -932,6 +1054,7 @@ export class ProductionService {
     return this.prisma.workOrder.findMany({
       where,
       include: {
+        plan: { include: { formula: { select: { id: true, formulaCode: true, version: true } } } },
         lead: {
           select: {
             clientName: true,
@@ -965,6 +1088,7 @@ export class ProductionService {
         },
       },
       include: {
+        plan: { include: { formula: { select: { id: true, formulaCode: true, version: true } } } },
         lead: {
           select: { clientName: true, brandName: true, productInterest: true },
         },
@@ -972,6 +1096,7 @@ export class ProductionService {
           orderBy: { loggedAt: 'desc' },
           take: 1,
         },
+        requisitions: { include: { material: true, fulfillments: true } },
       },
       orderBy: { woNumber: 'asc' },
     });
@@ -2167,8 +2292,12 @@ export class ProductionService {
   async assignFormulaToPlan(planId: string, formulaId: string) {
     const plan = await this.prisma.productionPlan.findUnique({
       where: { id: planId },
+      include: { logs: { take: 1 } },
     });
     if (!plan) throw new NotFoundException('Production Plan not found');
+    if (plan.status !== LifecycleStatus.PLANNING || plan.logs.length > 0) {
+      throw new BadRequestException('Formula is immutable after production begins');
+    }
 
     const formula = await this.prisma.formula.findUnique({
       where: { id: formulaId },
@@ -2177,7 +2306,7 @@ export class ProductionService {
 
     return this.prisma.productionPlan.update({
       where: { id: planId },
-      data: { formulaId },
+      data: { formulaId, formulaVersionSnapshot: formula.version },
     });
   }
 

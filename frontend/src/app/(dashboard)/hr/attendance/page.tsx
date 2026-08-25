@@ -1,10 +1,20 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Clock, UserCheck, AlertTriangle, MapPin, Search, CalendarDays } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaBadge, DnaButton } from "@/components/dna";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertTriangle,
+  CalendarDays,
+  Clock,
+  MapPin,
+  UserCheck,
+} from "lucide-react";
+import {
+  OperationalDataTable,
+  OperationalMetricCard,
+  OperationalMetricGrid,
+  OperationalPageShell,
+  getOperationalStatusLabel,
+} from "@/components/operational";
 
 type AttendanceStatus = "ON_TIME" | "LATE" | "OUTSIDE_GEOFENCE";
 
@@ -32,158 +42,156 @@ const ATTENDANCE_DATA: Attendance[] = [
   { id: "A-010", employee: "Maya Sari", division: "Creative", clockIn: "07:40", clockOut: "16:00", status: "ON_TIME", photoUrl: "", date: "2026-05-26" },
 ];
 
-const STATUS_META: Record<AttendanceStatus, { label: string; status: "success" | "warning" | "critical" }> = {
-  ON_TIME: { label: "On Time", status: "success" },
-  LATE: { label: "Late", status: "warning" },
-  OUTSIDE_GEOFENCE: { label: "Outside Geofence", status: "critical" },
+const ATTENDANCE_STATUS_LABEL: Record<AttendanceStatus, string> = {
+  ON_TIME: "Tepat Waktu",
+  LATE: "Terlambat",
+  OUTSIDE_GEOFENCE: "Luar Geofence",
 };
 
 export default function AttendancePage() {
-  const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("2026-05-26");
 
-  const filtered = useMemo(() => {
-    let list = [...ATTENDANCE_DATA];
-    if (search.trim()) {
-      const term = search.toLowerCase();
-      list = list.filter(
-        (a) =>
-          a.employee.toLowerCase().includes(term) ||
-          a.division.toLowerCase().includes(term) ||
-          a.status.toLowerCase().includes(term),
-      );
-    }
-    if (dateFilter) {
-      list = list.filter((a) => a.date === dateFilter);
-    }
-    return list;
-  }, [search, dateFilter]);
+  const filteredByDate = useMemo(() => {
+    if (!dateFilter) return ATTENDANCE_DATA;
+    return ATTENDANCE_DATA.filter((a) => a.date === dateFilter);
+  }, [dateFilter]);
 
   const presentToday = ATTENDANCE_DATA.length;
   const onTime = ATTENDANCE_DATA.filter((a) => a.status === "ON_TIME").length;
   const late = ATTENDANCE_DATA.filter((a) => a.status === "LATE").length;
   const outsideGeofence = ATTENDANCE_DATA.filter((a) => a.status === "OUTSIDE_GEOFENCE").length;
 
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "employee",
+        header: "Karyawan",
+        cell: ({ row }: { row: { original: Attendance } }) => (
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-slate-900">{row.original.employee}</span>
+            <span className="text-[11px] text-slate-500">{row.original.id}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "division",
+        header: "Divisi",
+        cell: ({ getValue }: { getValue: () => string }) => (
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+            {String(getValue())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "clockIn",
+        header: () => <div className="text-center">Clock In</div>,
+        cell: ({ getValue }: { getValue: () => string }) => (
+          <div className="text-center text-[13px] font-medium tabular-nums text-slate-900">
+            {String(getValue())}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "clockOut",
+        header: () => <div className="text-center">Clock Out</div>,
+        cell: ({ getValue }: { getValue: () => string | null }) => (
+          <div className="text-center text-[13px] tabular-nums text-slate-500">
+            {getValue() ?? "—"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }: { row: { original: Attendance } }) => {
+          const s = row.original.status;
+          const tone =
+            s === "ON_TIME" ? "success" : s === "LATE" ? "pending" : "danger";
+          return (
+            <div className="flex justify-center">
+              <span className={`operational-status-badge is-${tone}`}>
+                {ATTENDANCE_STATUS_LABEL[s] ?? getOperationalStatusLabel(s)}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "photoUrl",
+        header: () => <div className="text-center">Foto</div>,
+        cell: ({ row }: { row: { original: Attendance } }) => (
+          <div className="text-center text-[11px] text-slate-500">
+            {row.original.photoUrl ? "IMG" : "—"}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <DashboardShell
-      title="Attendance"
-      titleAccent="Workbench"
-      subtitle="Daily Attendance Monitoring & Geofence Validation"
+    <OperationalPageShell
+      title="Absensi"
+      subtitle="Pemantauan absensi harian & validasi geofence"
       actions={
-        <div className="flex items-center gap-3">
-          <div className="relative w-44">
-            <CalendarDays className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <div className="flex items-center gap-2">
+          <div className="operational-field">
             <input
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-wider focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+              aria-label="Filter tanggal"
+              className="h-9 w-44"
             />
           </div>
-          <DnaButton variant="primary" icon={<Clock className="stroke-[3px]" />}>
-            SYNC TODAY
-          </DnaButton>
+          <button type="button" className="operational-button is-primary">
+            <Clock className="h-4 w-4" />
+            <span>Sinkronkan Hari Ini</span>
+          </button>
         </div>
       }
     >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <StatCard
-            label="Present Today"
+      <div className="operational-stack">
+        <OperationalMetricGrid>
+          <OperationalMetricCard
+            label="Hadir Hari Ini"
             value={presentToday}
-            icon={<UserCheck className="text-emerald-500" />}
+            icon={<UserCheck className="h-4 w-4" />}
+            tone="green"
           />
-          <StatCard
-            label="On Time"
+          <OperationalMetricCard
+            label="Tepat Waktu"
             value={onTime}
-            icon={<Clock className="text-blue-500" />}
+            icon={<Clock className="h-4 w-4" />}
+            tone="blue"
           />
-          <StatCard
-            label="Late"
+          <OperationalMetricCard
+            label="Terlambat"
             value={late}
-            icon={<AlertTriangle className="text-amber-500" />}
+            icon={<AlertTriangle className="h-4 w-4" />}
+            tone="amber"
           />
-          <StatCard
-            label="Outside Geofence"
+          <OperationalMetricCard
+            label="Luar Geofence"
             value={outsideGeofence}
-            icon={<MapPin className="text-rose-500" />}
+            icon={<MapPin className="h-4 w-4" />}
+            tone="red"
           />
-        </div>
+        </OperationalMetricGrid>
 
-        {/* Search + Table */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="CARI KARYAWAN..."
-                className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-              />
+        <OperationalDataTable
+          data={filteredByDate as unknown as Attendance[]}
+          columns={columns as any}
+          getRowId={(row: Attendance) => row.id}
+          toolbar={
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <CalendarDays className="h-3.5 w-3.5" />
+              <span>Tanggal aktif: {dateFilter}</span>
             </div>
-          </div>
-
-          <div className="rounded-[24px] border border-slate-200 shadow-sm overflow-hidden bg-white">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50/50 border-b border-slate-100">
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Employee</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Division</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Clock In</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Clock Out</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Status</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Photo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-wider py-8">
-                        Tidak ada data absensi ditemukan
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filtered.map((row) => (
-                      <TableRow key={row.id} className="group hover:bg-slate-50/50 transition-all">
-                        <TableCell>
-                          <p className="text-[11px] font-black text-slate-900 uppercase">{row.employee}</p>
-                        </TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-[9px] font-black text-slate-700 bg-slate-100 rounded px-2 py-0.5 uppercase">
-                            {row.division}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.clockIn}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <p className="text-[11px] font-bold text-slate-400 tabular-nums">{row.clockOut ?? "—"}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <DnaBadge status={STATUS_META[row.status].status}>
-                            {STATUS_META[row.status].label}
-                          </DnaBadge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center">
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[8px] font-black text-slate-400 uppercase">
-                              {row.photoUrl ? "IMG" : "—"}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </div>
+          }
+          searchPlaceholder="Cari karyawan, divisi, atau status..."
+        />
       </div>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

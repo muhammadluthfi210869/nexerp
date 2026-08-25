@@ -67,15 +67,23 @@ export default function FulfillmentDashboard() {
       const plans = await api.get("/production-plans");
       return plans.data
         .filter((p: { status: string; finishedGoods: FinishedGood | null }) => p.status === "DONE" && p.finishedGoods)
-        .map((p: { finishedGoods: FinishedGood }) => ({ ...p.finishedGoods, wo: p }));
+        .map((p: any) => ({
+          ...p.finishedGoods,
+          stock_qty: Number(p.finishedGoods.stock_qty ?? p.finishedGoods.stockQty ?? 0),
+          wo: { ...p, batch_no: p.batch_no ?? p.batchNo, so: { ...p.so, lead: { ...p.so?.lead, client_name: p.so?.lead?.client_name ?? p.so?.lead?.clientName ?? "" } } },
+        }));
     }
   });
 
   const { data: shipments } = useQuery<Shipment[]>({
     queryKey: ["shipments"],
     queryFn: async () => {
-      const res = await api.get("/fulfillment/shipments");
-      return res.data;
+      try {
+        const res = await api.get("/fulfillment/shipments");
+        return res.data;
+      } catch {
+        return [];
+      }
     }
   });
 

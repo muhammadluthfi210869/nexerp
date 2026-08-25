@@ -21,6 +21,12 @@ model SampleRequest {
   version             Int                  @default(1)
   stage               SampleStage          @default(QUEUE)
   picId               String?              @db.Uuid
+  // BATCH 3 — explicit legal applicability decision (defaults to UNKNOWN).
+  // UNKNOWN => legal gate blocks until a human decides.
+  // REQUIRED => a RegulatoryPipeline must reach PUBLISHED.
+  // NOT_APPLICABLE => no pipeline required (explicit operator decision).
+  legalApplicability  LegalApplicability   @default(UNKNOWN)
+  legalType           RegType?
   requestedAt         DateTime             @default(now())
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @default(now()) @updatedAt
@@ -98,6 +104,7 @@ model Formula {
   labTestResults  LabTestResult[]
   registrations   RegulatoryPipeline[]
   productionPlans ProductionPlan[]
+  finishedGoods   FinishedGood[]
   salesOrders     SalesOrder[]
   qcparameter     QCParameter?
 

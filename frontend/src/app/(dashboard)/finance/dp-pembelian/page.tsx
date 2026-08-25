@@ -10,28 +10,34 @@ import {
   Save,
   Loader2,
   AlertCircle,
-  ArrowDownCircle
+  ArrowDownCircle,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  OperationalMigrationShell,
+  OperationalPanel,
+  OperationalStatusBadge,
+  getOperationalStatusLabel,
+} from "@/components/operational";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
 import {
   Dialog,
   DialogContent,
@@ -132,7 +138,7 @@ export default function DpPembelianPage() {
   const submitDisabled = isSaveDisabled || !date || !coaId || amount <= 0 || submitMutation.isPending;
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="DP"
       titleAccent="PEMBELIAN"
       subtitle="Uang Muka Pembelian — Purchase Down Payment Terminal"
@@ -143,7 +149,7 @@ export default function DpPembelianPage() {
       }
     >
       {/* PO Selector */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative">
+      <OperationalPanel>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
             <FileText className="h-5 w-5" />
@@ -201,11 +207,11 @@ export default function DpPembelianPage() {
             </p>
           </div>
         )}
-      </div>
+      </OperationalPanel>
 
       {/* PO Details Panel */}
       {selectedPo && (
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative animate-fade-slide-in">
+        <OperationalPanel>
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <Building2 className="h-5 w-5" />
@@ -224,62 +230,54 @@ export default function DpPembelianPage() {
               </p>
             </div>
             <div className="ml-auto">
-              <DnaBadge
-                status={
-                  selectedPo.status === "APPROVED"
-                    ? "success"
-                    : selectedPo.status === "PENDING"
-                    ? "warning"
-                    : "default"
-                }
+              <OperationalStatusBadge
+                status={selectedPo.status === "APPROVED" ? "success" : selectedPo.status === "PENDING" ? "pending" : "neutral"}
               >
                 {selectedPo.status.replace("_", " ")}
-              </DnaBadge>
+              </OperationalStatusBadge>
             </div>
           </div>
 
           {selectedPo.items && selectedPo.items.length > 0 && (
-            <TableWrapper>
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="border-slate-100">
-                    <TableHead className="py-3 px-4 font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                      Item
-                    </TableHead>
-                    <TableHead className="py-3 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                      Qty
-                    </TableHead>
-                    <TableHead className="py-3 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                      Unit Price
-                    </TableHead>
-                    <TableHead className="py-3 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                      Total
-                    </TableHead>
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="border-slate-100">
+                  <TableHead className="py-3 px-4 font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                    Item
+                  </TableHead>
+                  <TableHead className="py-3 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                    Qty
+                  </TableHead>
+                  <TableHead className="py-3 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                    Unit Price
+                  </TableHead>
+                  <TableHead className="py-3 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                    Total
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedPo.items.map((item) => (
+                  <TableRow
+                    key={item.id}
+                    className="border-b border-slate-50 hover:bg-slate-50/30 transition-all"
+                  >
+                    <TableCell className="py-3 px-4 font-medium text-slate-900 text-sm">
+                      {item.itemName}
+                    </TableCell>
+                    <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-slate-700">
+                      {item.qty.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-slate-700">
+                      {formatOperationalCurrency(item.unitPrice)}
+                    </TableCell>
+                    <TableCell className="py-3 px-4 text-right font-black text-slate-900 font-mono tabular-nums">
+                      {formatOperationalCurrency(item.totalPrice)}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {selectedPo.items.map((item) => (
-                    <TableRow
-                      key={item.id}
-                      className="border-b border-slate-50 hover:bg-slate-50/30 transition-all"
-                    >
-                      <TableCell className="py-3 px-4 font-medium text-slate-900 text-sm">
-                        {item.itemName}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-slate-700">
-                        {item.qty.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-slate-700">
-                        Rp {item.unitPrice.toLocaleString("id-ID")}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right font-black text-slate-900 font-mono tabular-nums">
-                        Rp {item.totalPrice.toLocaleString("id-ID")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+                ))}
+              </TableBody>
+            </Table>
           )}
 
           <div className="mt-4 pt-4 border-t border-slate-50 flex justify-end">
@@ -288,15 +286,15 @@ export default function DpPembelianPage() {
                 Total Pesanan
               </p>
               <p className="text-2xl font-black text-slate-900 tracking-tighter font-mono tabular-nums">
-                Rp {selectedPo.totalAmount.toLocaleString("id-ID")}
+                {formatOperationalCurrency(selectedPo.totalAmount)}
               </p>
             </div>
           </div>
-        </div>
+        </OperationalPanel>
       )}
 
       {/* DP Form */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative">
+      <OperationalPanel>
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-rose-600">
           <ArrowDownCircle size={160} />
         </div>
@@ -403,7 +401,7 @@ export default function DpPembelianPage() {
               : "Simpan DP Pembelian"}
           </DnaButton>
         </div>
-      </div>
+      </OperationalPanel>
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
@@ -416,6 +414,6 @@ export default function DpPembelianPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }

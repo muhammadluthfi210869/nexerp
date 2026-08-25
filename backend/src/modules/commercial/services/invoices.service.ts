@@ -1,22 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreateInvoiceDto } from '../dto/create-invoice.dto';
+import { FinanceService } from '../../finance/finance.service';
 
 @Injectable()
 export class InvoicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    // Pre-R4 hardening: route cross-domain Invoice writes through Finance.
+    @Inject(forwardRef(() => FinanceService))
+    private finance: FinanceService,
+  ) {}
 
   async create(dto: CreateInvoiceDto) {
-    return this.prisma.invoice.create({
-      data: {
-        invoiceNumber: dto.id,
-        category: 'RECEIVABLE',
-        soId: dto.soId,
-        type: dto.type,
-        amountDue: dto.amountDue,
-        outstandingAmount: dto.amountDue,
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // Default 14 days
-      },
+    return this.finance.createInvoice('RECEIVABLE', {
+      type: dto.type,
+      amountDue: dto.amountDue,
+      soId: dto.soId,
     });
   }
 

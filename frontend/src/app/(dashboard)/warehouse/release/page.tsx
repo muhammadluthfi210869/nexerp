@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import ReleaseClient from "./ReleaseClient";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Button } from "@/components/ui/button";
+import { OperationalPageShell } from "@/components/operational";
+import { OperationalButton } from "@/components/operational";
 import { Zap } from "lucide-react";
 
 export const metadata = {
@@ -19,18 +19,18 @@ export default function ReleasePage() {
         </div>
       </div>
     }>
-      <DashboardShell
-        title="Material"
-        titleAccent="Release"
+      <OperationalPageShell
+        title="Material Release"
         subtitle="Production material dispatch and release monitoring."
         actions={
-          <Button className="bg-emerald-500 text-white hover:bg-emerald-600 rounded-2xl px-6 h-11 font-black uppercase tracking-tighter text-[11px] shadow-xl shadow-emerald-500/10 border-0">
-            <Zap className="w-4 h-4 mr-2" /> BATCH RELEASE
-          </Button>
+          <OperationalButton variant="primary" type="button">
+            <Zap className="h-4 w-4 mr-2" />
+            <span>Batch Release</span>
+          </OperationalButton>
         }
       >
         <ReleaseClient />
-      </DashboardShell>
+      </OperationalPageShell>
     </Suspense>
   );
 }

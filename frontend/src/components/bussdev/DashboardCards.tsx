@@ -273,6 +273,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
 
     return (
       <div
+        className="erp-bussdev-card-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
@@ -398,6 +399,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
 
     return (
       <div
+        className="erp-bussdev-card-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, 1fr)",
@@ -459,6 +461,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
 
     return (
       <div
+        className="erp-bussdev-card-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
@@ -523,6 +526,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
 
     return (
       <div
+        className="erp-bussdev-card-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
@@ -773,6 +777,7 @@ export function DashboardCards({ variant, data }: DashboardCardsProps) {
 
     return (
       <div
+        className="erp-bussdev-card-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",

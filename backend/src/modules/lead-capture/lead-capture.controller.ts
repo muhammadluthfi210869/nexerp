@@ -8,79 +8,130 @@ import {
   Body,
   Param,
   Query,
+  Headers,
   HttpCode,
   HttpStatus,
+  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { LeadCaptureService } from './lead-capture.service';
 import { KommoService } from './kommo.service';
 import { LeadStatus, WorkflowStatus } from '@prisma/client';
+import { IsOptional, IsString, IsDateString } from 'class-validator';
 
 // ── DTO (inline for simplicity) ──
 
 class TrackDto {
-  intent?: string;
-  pageUrl?: string;
-  pageTitle?: string;
-  referrer?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  utmContent?: string;
-  utmTerm?: string;
-  deviceType?: string;
-  browser?: string;
-  ipAddress?: string;
-  city?: string;
-  country?: string;
-  sessionId?: string;
-  assignedName?: string;   // Round-robin agent name
-  assignedPhone?: string;  // Round-robin agent phone number
+  @IsOptional() @IsString() intent?: string;
+  @IsOptional() @IsString() pageUrl?: string;
+  @IsOptional() @IsString() pageTitle?: string;
+  @IsOptional() @IsString() referrer?: string;
+  @IsOptional() @IsString() utmSource?: string;
+  @IsOptional() @IsString() utmMedium?: string;
+  @IsOptional() @IsString() utmCampaign?: string;
+  @IsOptional() @IsString() utmContent?: string;
+  @IsOptional() @IsString() utmTerm?: string;
+  @IsOptional() @IsString() deviceType?: string;
+  @IsOptional() @IsString() browser?: string;
+  @IsOptional() @IsString() ipAddress?: string;
+  @IsOptional() @IsString() city?: string;
+  @IsOptional() @IsString() country?: string;
+  @IsOptional() @IsString() sessionId?: string;
+  @IsOptional() @IsString() assignedName?: string;   // Round-robin agent name
+  @IsOptional() @IsString() assignedPhone?: string;  // Round-robin agent phone number
 }
 
 class WhatsAppUpdateDto {
-  phone!: string;
-  waName?: string;
-  waMessage?: string;
-  msgId?: string;
+  @IsString() phone!: string;
+  @IsOptional() @IsString() waName?: string;
+  @IsOptional() @IsString() waMessage?: string;
+  @IsOptional() @IsString() msgId?: string;
+}
+
+/**
+ * POST /lead-capture/website-bridge/track
+ *
+ * Server-authoritative handoff from the dreamlab.id website (Vercel).
+ * The website runs its own round-robin against its VPS (4 Sales),
+ * then forwards the assignment here with the customer-facing tracking
+ * code. This endpoint persists the journey:
+ *
+ *   sourcePage → thankYouPage → assigned Sales → waDestinationPhone
+ *
+ * Trust boundary: caller MUST present `x-dreamlab-bridge-secret`
+ * matching `ERP_BRIDGE_SECRET` env. No public anonymous writes.
+ *
+ * Idempotency: `websiteIntentId` is the canonical tracking code the
+ * website shows in the WhatsApp message (e.g. "DL1A2B3C4D5"). Re-POST
+ * with the same id returns the existing lead (no duplicates) and
+ * preserves the assigned Sales.
+ *
+ * Phone policy: `assignedPhone` (Sales WhatsApp number) is the
+ * destination we redirect the customer to. `whatsappPhone` (customer
+ * phone) is NEVER set here — it stays NULL until Self QR matches an
+ * inbound WhatsApp chat to [Kode: <websiteIntentId>].
+ */
+class BridgeTrackDto {
+  @IsString() websiteIntentId!: string;
+  @IsOptional() @IsString() assignedSalesId?: string;
+  @IsOptional() @IsString() assignedName?: string;
+  @IsOptional() @IsString() assignedPhone?: string;
+  @IsOptional() @IsString() pageUrl?: string;            // thank-you page URL
+  @IsOptional() @IsString() sourcePage?: string;         // original source page URL
+  @IsOptional() @IsString() ctaType?: string;
+  @IsOptional() @IsDateString() ctaClickedAt?: string;
+  @IsOptional() @IsDateString() thankYouViewedAt?: string;
+  @IsOptional() @IsString() intent?: string;
+  @IsOptional() @IsString() source?: string;
+  @IsOptional() @IsString() referrer?: string;
+  @IsOptional() @IsString() utmSource?: string;
+  @IsOptional() @IsString() utmMedium?: string;
+  @IsOptional() @IsString() utmCampaign?: string;
+  @IsOptional() @IsString() utmContent?: string;
+  @IsOptional() @IsString() utmTerm?: string;
+  @IsOptional() @IsString() deviceType?: string;
+  @IsOptional() @IsString() browser?: string;
+  @IsOptional() @IsString() ipAddress?: string;
+  @IsOptional() @IsString() sessionId?: string;
 }
 
 class UpdateLeadDto {
-  fullName?: string;
-  company?: string;
-  email?: string;
-  phone?: string;
-  notes?: string;
-  status?: LeadStatus;
-  workflowStatus?: WorkflowStatus;
-  assignedTo?: string;
-  lostReason?: string;
-  aiStatus?: string;
+  @IsOptional() @IsString() fullName?: string;
+  @IsOptional() @IsString() company?: string;
+  @IsOptional() @IsString() email?: string;
+  @IsOptional() @IsString() phone?: string;
+  @IsOptional() @IsString() notes?: string;
+  @IsOptional() status?: LeadStatus;
+  @IsOptional() workflowStatus?: WorkflowStatus;
+  @IsOptional() @IsString() assignedTo?: string;
+  @IsOptional() @IsString() lostReason?: string;
+  @IsOptional() @IsString() aiStatus?: string;
 }
 
 class UpdateAttributeDto {
-  confirmed?: boolean;
-  value?: string;
+  @IsOptional() confirmed?: boolean;
+  @IsOptional() @IsString() value?: string;
 }
 
 class BulkUpdateDto {
-  ids!: string[];
-  status?: LeadStatus;
-  workflowStatus?: WorkflowStatus;
-  assignedTo?: string;
+  @IsString({ each: true }) ids!: string[];
+  @IsOptional() status?: LeadStatus;
+  @IsOptional() workflowStatus?: WorkflowStatus;
+  @IsOptional() @IsString() assignedTo?: string;
 }
 
 class ListQueryDto {
-  status?: LeadStatus;
-  workflowStatus?: WorkflowStatus;
-  source?: string;
-  search?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  @IsOptional() status?: LeadStatus;
+  @IsOptional() workflowStatus?: WorkflowStatus;
+  @IsOptional() @IsString() source?: string;
+  @IsOptional() @IsString() search?: string;
+  @IsOptional() @IsDateString() dateFrom?: string;
+  @IsOptional() @IsDateString() dateTo?: string;
+  @IsOptional() page?: number;
+  @IsOptional() limit?: number;
+  @IsOptional() @IsString() sortBy?: string;
+  @IsOptional() sortOrder?: 'asc' | 'desc';
 }
 
 // ── Controller ──
@@ -103,6 +154,41 @@ export class LeadCaptureController {
     return this.service.track(dto);
   }
 
+  /**
+   * Website → ERP bridge (idempotent).
+   * See BridgeTrackDto above for the data contract.
+   */
+  @Post('website-bridge/track')
+  @HttpCode(HttpStatus.OK)
+  async bridgeTrack(
+    @Headers('x-dreamlab-bridge-secret') secret: string | undefined,
+    @Body() dto: BridgeTrackDto,
+  ) {
+    const expected = process.env.ERP_BRIDGE_SECRET;
+    if (!expected || expected.length === 0) {
+      throw new BadRequestException('ERP_BRIDGE_SECRET not configured on server');
+    }
+    if (!secret || secret !== expected) {
+      throw new UnauthorizedException('Invalid bridge secret');
+    }
+    if (!dto?.websiteIntentId || typeof dto.websiteIntentId !== 'string') {
+      throw new BadRequestException('websiteIntentId is required');
+    }
+    return this.service.bridgeTrack(dto);
+  }
+
+  /**
+   * Fire-and-forget click tracking from the website thank-you page.
+   * Records the moment the user actually clicked the WhatsApp button
+   * (distinct from the bridge call which only records view → assignment).
+   * Self QR will later bind this journey to the inbound chat.
+   */
+  @Post('whatsapp-click/:trackingCode')
+  @HttpCode(HttpStatus.OK)
+  async recordWhatsAppClick(@Param('trackingCode') trackingCode: string) {
+    return this.service.recordWhatsAppClick(trackingCode);
+  }
+
   @Put('whatsapp/:trackingCode')
   @HttpCode(HttpStatus.OK)
   async updateFromWhatsApp(
@@ -119,6 +205,24 @@ export class LeadCaptureController {
   @Get()
   async list(@Query() query: ListQueryDto) {
     return this.service.listLeads(query);
+  }
+
+  /**
+   * Minimal read model for the Self QR → LeadCapture validation pipeline.
+   * Returns the exact columns the tracking code needs to render a row:
+   * trackingCode, name (fullName), product (first LeadAttribute), customer
+   * WhatsApp phone, source page, thank-you page, CTA, assigned Sales,
+   * whatsappClickedAt, whatsappVerifiedAt, verificationStatus.
+   *
+   * Intentionally no charts / KPI / analytics — just the validated lead
+   * list. Backed by an index on verificationStatus + assignedSalesId.
+   */
+  @Get('tracked')
+  async tracked(@Query() query: { verificationStatus?: string; limit?: string }) {
+    return this.service.listTrackedLeads({
+      verificationStatus: query.verificationStatus,
+      limit: query.limit ? Number(query.limit) : undefined,
+    });
   }
 
   @Get('stats')

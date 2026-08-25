@@ -1,16 +1,16 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Search, 
-  Plus, 
-  Upload, 
-  Edit2, 
+import {
+  Search,
+  Plus,
+  Upload,
+  Edit2,
   Trash2,
-  Beaker
+  Beaker,
 } from "lucide-react";
 import {
   Dialog,
@@ -22,9 +22,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton } from "@/components/dna";
+import {
+  OperationalDataTable,
+  OperationalPageShell,
+  getOperationalStatusLabel,
+} from "@/components/operational";
 
 export default function MasterInciPage() {
   const queryClient = useQueryClient();
@@ -42,7 +44,7 @@ export default function MasterInciPage() {
       if (categoryFilter !== "ALL") params.append("category", categoryFilter);
       const resp = await api.get(`/legality/master-inci?${params.toString()}`);
       return resp.data;
-    }
+    },
   });
 
   const createMutation = useMutation({
@@ -51,7 +53,7 @@ export default function MasterInciPage() {
       queryClient.invalidateQueries({ queryKey: ["master-inci"] });
       toast.success("INCI added to regulatory brain");
       setIsAddDialogOpen(false);
-    }
+    },
   });
 
   const updateMutation = useMutation({
@@ -61,7 +63,7 @@ export default function MasterInciPage() {
       toast.success("Regulatory limits updated");
       setIsAddDialogOpen(false);
       setEditingItem(null);
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -69,7 +71,7 @@ export default function MasterInciPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["master-inci"] });
       toast.success("Ingredient removed");
-    }
+    },
   });
 
   const bulkImportMutation = useMutation({
@@ -78,17 +80,17 @@ export default function MasterInciPage() {
       queryClient.invalidateQueries({ queryKey: ["master-inci"] });
       toast.success(`Import Success: ${resp.data.importedCount} added, ${resp.data.updatedCount} updated`);
       setIsImportDialogOpen(false);
-    }
+    },
   });
 
   const categories = [
-    { value: "ALL", label: "All Categories", color: "bg-slate-100 text-slate-600" },
-    { value: "ALLOWED", label: "Allowed", color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-    { value: "RESTRICTED", label: "Restricted", color: "bg-amber-50 text-amber-600 border-amber-100" },
-    { value: "PROHIBITED", label: "Prohibited", color: "bg-rose-50 text-rose-600 border-rose-100" },
-    { value: "PRESERVATIVE", label: "Preservative", color: "bg-indigo-50 text-indigo-600 border-indigo-100" },
-    { value: "COLORANT", label: "Colorant", color: "bg-purple-50 text-purple-600 border-purple-100" },
-    { value: "UV_FILTER", label: "UV Filter", color: "bg-blue-50 text-blue-600 border-blue-100" },
+    { value: "ALL", label: "All Categories" },
+    { value: "ALLOWED", label: "Allowed" },
+    { value: "RESTRICTED", label: "Restricted" },
+    { value: "PROHIBITED", label: "Prohibited" },
+    { value: "PRESERVATIVE", label: "Preservative" },
+    { value: "COLORANT", label: "Colorant" },
+    { value: "UV_FILTER", label: "UV Filter" },
   ];
 
   const handleEdit = (item: any) => {
@@ -111,204 +113,265 @@ export default function MasterInciPage() {
     reader.readAsText(file);
   };
 
-  const getDnaCategoryBadge = (category: string) => {
+  const categoryTone = (category: string) => {
     switch (category) {
-      case "ALLOWED": return <DnaBadge status="success">ALLOWED</DnaBadge>;
-      case "RESTRICTED": return <DnaBadge status="warning">RESTRICTED</DnaBadge>;
-      case "PROHIBITED": return <DnaBadge status="critical">PROHIBITED</DnaBadge>;
-      case "PRESERVATIVE": return <DnaBadge status="purple">PRESERVATIVE</DnaBadge>;
-      case "COLORANT": return <DnaBadge status="purple">COLORANT</DnaBadge>;
-      case "UV_FILTER": return <DnaBadge status="info">UV FILTER</DnaBadge>;
-      default: return <DnaBadge status="default">{category}</DnaBadge>;
+      case "ALLOWED":
+        return "success";
+      case "RESTRICTED":
+        return "pending";
+      case "PROHIBITED":
+        return "danger";
+      case "PRESERVATIVE":
+      case "COLORANT":
+        return "purple";
+      case "UV_FILTER":
+        return "process";
+      default:
+        return "neutral";
     }
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "inciName",
+        header: "Ingredient Profile",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex items-center gap-3">
+            <div
+              className={`h-9 w-9 rounded-xl flex items-center justify-center border shrink-0 ${
+                row.original.category === "PROHIBITED"
+                  ? "bg-rose-50 text-rose-500 border-rose-100"
+                  : row.original.category === "RESTRICTED"
+                    ? "bg-amber-50 text-amber-500 border-amber-100"
+                    : "bg-slate-50 text-slate-400 border-slate-100"
+              }`}
+            >
+              <Beaker className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[12px] font-medium text-slate-900 uppercase tracking-tight">
+                {row.original.inciName}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                CAS: {row.original.casNumber || "—"}
+              </span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "category",
+        header: "Safety Category",
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-start">
+            <span className={`operational-status-badge is-${categoryTone(row.original.category)}`}>
+              {row.original.category || "—"}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "maxConcentration",
+        header: () => <div className="text-center">Max Conc.</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="text-center text-[13px] font-medium tabular-nums text-slate-900">
+            {row.original.maxConcentration ? (
+              `${row.original.maxConcentration}%`
+            ) : (
+              <span className="text-[10px] uppercase text-slate-400">No Limit</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "regulatory",
+        header: "Regulatory Notes",
+        cell: ({ row }: { row: { original: any } }) => (
+          <p className="text-[11px] text-slate-500 line-clamp-1 max-w-[300px]">
+            {row.original.prohibitedContext ||
+              row.original.warningText ||
+              "General cosmetic usage allowed."}
+          </p>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }: { row: { original: any } }) => (
+          <div className="flex justify-end gap-1">
+            <button
+              type="button"
+              className="operational-button is-ghost h-8 w-8 p-0"
+              onClick={() => handleEdit(row.original)}
+              aria-label="Edit ingredient"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              className="operational-button is-danger h-8 w-8 p-0"
+              onClick={() => {
+                if (confirm("Are you sure?")) deleteMutation.mutate(row.original.id);
+              }}
+              aria-label="Delete ingredient"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [deleteMutation],
+  );
+
   return (
-    <DashboardShell
-      title="MASTER"
-      titleAccent="INCI"
+    <OperationalPageShell
+      title="Master INCI"
       subtitle="International chemical standards & concentration limits."
       actions={
-        <div className="flex gap-3">
-          <DnaButton 
-            variant="outline" 
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="operational-button is-secondary"
             onClick={() => setIsImportDialogOpen(true)}
-            icon={<Upload />}
           >
-            Bulk Import
-          </DnaButton>
-          <DnaButton 
-            variant="primary"
-            onClick={() => { setEditingItem(null); setIsAddDialogOpen(true); }}
-            icon={<Plus />}
+            <Upload className="h-4 w-4" />
+            <span>Bulk Import</span>
+          </button>
+          <button
+            type="button"
+            className="operational-button is-primary"
+            onClick={() => {
+              setEditingItem(null);
+              setIsAddDialogOpen(true);
+            }}
           >
-            Add Ingredient
-          </DnaButton>
+            <Plus className="h-4 w-4" />
+            <span>Add Ingredient</span>
+          </button>
         </div>
       }
     >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Data Grid with TableWrapper */}
-        <TableWrapper
-          filters={
-            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between w-full">
-              {/* Search Input */}
-              <div className="relative w-full lg:w-[400px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <input 
-                  type="text"
-                  placeholder="SEARCH INCI OR CAS..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-
-              {/* Category Filters Switches */}
-              <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    onClick={() => setCategoryFilter(cat.value)}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight whitespace-nowrap transition-all cursor-pointer",
-                      categoryFilter === cat.value 
-                        ? "bg-white text-blue-600 shadow-sm border border-slate-200" 
-                        : "text-slate-400 hover:text-slate-600 border border-transparent"
-                    )}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
+      <div className="operational-stack">
+        <section className="operational-panel">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="operational-input-wrap w-full lg:w-[400px]">
+              <span className="operational-input-icon">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search INCI or CAS..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          }
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">INGREDIENT PROFILE</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">SAFETY CATEGORY</th>
-                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">MAX CONC.</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">REGULATORY NOTES</th>
-                  <th className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Synchronizing chemical database...
-                    </td>
-                  </tr>
-                ) : !incis || incis.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      No chemical standards found matching your criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  incis.map((item: any) => (
-                    <tr key={item.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "h-9 w-9 rounded-xl flex items-center justify-center border shrink-0 transition-colors",
-                            item.category === "PROHIBITED" ? "bg-rose-50 text-rose-500 border-rose-100" :
-                            item.category === "RESTRICTED" ? "bg-amber-50 text-amber-500 border-amber-100" :
-                            "bg-slate-50 text-slate-400 border-slate-100"
-                          )}>
-                            <Beaker className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-tight italic">{item.inciName}</h4>
-                            <span className="text-[8px] font-bold text-slate-300 font-sans mt-0.5 block leading-none">CAS: {item.casNumber || "N/A"}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {getDnaCategoryBadge(item.category)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {item.maxConcentration ? (
-                          <span className="text-[13px] font-black text-slate-900 italic leading-none">{item.maxConcentration}%</span>
-                        ) : (
-                          <span className="text-slate-300 font-bold italic text-[9px] uppercase leading-none">No Limit</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 max-w-[300px]">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase italic line-clamp-1">
-                          {item.prohibitedContext || item.warningText || "General cosmetic usage allowed."}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <DnaButton 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleEdit(item)} 
-                            icon={<Edit2 className="w-3.5 h-3.5" />} 
-                          />
-                          <DnaButton 
-                            size="sm" 
-                            variant="danger" 
-                            onClick={() => { if(confirm("Are you sure?")) deleteMutation.mutate(item.id); }} 
-                            icon={<Trash2 className="w-3.5 h-3.5" />} 
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setCategoryFilter(cat.value)}
+                  className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight whitespace-nowrap transition-all cursor-pointer ${
+                    categoryFilter === cat.value
+                      ? "bg-white text-blue-600 shadow-sm border border-slate-200"
+                      : "text-slate-400 hover:text-slate-600 border border-transparent"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </TableWrapper>
+        </section>
+
+        <OperationalDataTable
+          data={(incis ?? []) as any[]}
+          columns={columns as any}
+          getRowId={(row: any) => row.id}
+          loading={isLoading}
+          emptyMessage="No chemical standards found matching your criteria."
+          toolbar={
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {incis?.length ?? 0} entri
+            </span>
+          }
+          searchPlaceholder="Cari INCI atau CAS..."
+        />
       </div>
 
-      {/* Dialogs remain functional but styled cleaner */}
+      {/* Add / Edit Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl bg-white rounded-2xl p-0 overflow-hidden border border-slate-100 shadow-2xl">
-          <DialogHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <DialogTitle className="text-xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
-              {editingItem ? "EDIT REGULATORY LIMIT" : "ADD NEW INGREDIENT"}
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? "Edit Regulatory Limit" : "Add New Ingredient"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target as HTMLFormElement);
-            const data = Object.fromEntries(formData.entries());
-            if (editingItem) updateMutation.mutate({ ...data, id: editingItem.id });
-            else createMutation.mutate(data);
-          }} className="p-6 space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const data = Object.fromEntries(formData.entries());
+              if (editingItem) updateMutation.mutate({ ...data, id: editingItem.id });
+              else createMutation.mutate(data);
+            }}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[8px] font-black uppercase tracking-wider text-slate-400">INCI Name</Label>
-                <Input name="inciName" defaultValue={editingItem?.inciName} required className="rounded-xl h-11 bg-slate-50 border-slate-200" />
+              <div className="operational-field">
+                <span>INCI Name</span>
+                <Input name="inciName" defaultValue={editingItem?.inciName} required />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[8px] font-black uppercase tracking-wider text-slate-400">CAS Number</Label>
-                <Input name="casNumber" defaultValue={editingItem?.casNumber} className="rounded-xl h-11 bg-slate-50 border-slate-200 font-sans" />
+              <div className="operational-field">
+                <span>CAS Number</span>
+                <Input name="casNumber" defaultValue={editingItem?.casNumber} />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Category</Label>
-                <select name="category" defaultValue={editingItem?.category || "ALLOWED"} className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold uppercase cursor-pointer">
-                  {categories.slice(1).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              <div className="operational-field">
+                <span>Category</span>
+                <select
+                  name="category"
+                  defaultValue={editingItem?.category || "ALLOWED"}
+                  className="h-9 px-3 rounded-lg bg-slate-50 border border-slate-200 text-[12px] font-bold uppercase"
+                >
+                  {categories.slice(1).map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Max Concentration (%)</Label>
-                <Input name="maxConcentration" type="number" step="0.01" defaultValue={editingItem?.maxConcentration} className="rounded-xl h-11 bg-slate-50 border-slate-200" />
+              <div className="operational-field">
+                <span>Max Concentration (%)</span>
+                <Input
+                  name="maxConcentration"
+                  type="number"
+                  step="0.01"
+                  defaultValue={editingItem?.maxConcentration}
+                />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Prohibited Context / Warning Text</Label>
-              <textarea name="prohibitedContext" defaultValue={editingItem?.prohibitedContext} className="w-full h-20 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold italic focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none" placeholder="Context when prohibited, e.g. not to be used in aerosol formulations..." />
+            <div className="operational-field">
+              <span>Prohibited Context / Warning Text</span>
+              <textarea
+                name="prohibitedContext"
+                defaultValue={editingItem?.prohibitedContext}
+                placeholder="Context when prohibited, e.g. not to be used in aerosol formulations..."
+                className="min-h-20 rounded-lg bg-slate-50 border border-slate-200 text-[12px] font-bold italic px-3 py-2"
+              />
             </div>
-            <DialogFooter className="pt-4 flex gap-2 justify-end">
-              <DnaButton type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>CANCEL</DnaButton>
-              <DnaButton type="submit" variant="primary">SAVE INGREDIENT</DnaButton>
+            <DialogFooter className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                className="operational-button is-secondary"
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="operational-button is-primary">
+                Save Ingredient
+              </button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -316,32 +379,39 @@ export default function MasterInciPage() {
 
       {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white rounded-2xl border border-slate-100 shadow-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-6 bg-blue-600 text-white">
-            <DialogTitle className="text-xl font-black uppercase italic tracking-tighter leading-none">
-              BULK REGULATORY IMPORT
-            </DialogTitle>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Regulatory Import</DialogTitle>
           </DialogHeader>
-          <div className="p-6 space-y-4">
-            <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">
-              Upload a valid JSON file containing INCI ingredients array to perform batch updates on chemical standard compliance limits.
+          <div className="space-y-4 py-2">
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Upload a valid JSON file containing INCI ingredients array to perform batch
+              updates on chemical standard compliance limits.
             </p>
-            <div className="relative border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100/50 transition-colors cursor-pointer">
-              <input 
-                type="file" 
-                accept=".json" 
+            <label className="relative border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100/50 cursor-pointer">
+              <input
+                type="file"
+                accept=".json"
                 onChange={handleBulkImport}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <Upload className="w-8 h-8 text-slate-300 mb-2 pointer-events-none" />
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider leading-none">Select JSON File</span>
-            </div>
+              <Upload className="h-8 w-8 text-slate-300 mb-2 pointer-events-none" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Select JSON File
+              </span>
+            </label>
           </div>
-          <DialogFooter className="p-6 pt-0 flex justify-end">
-            <DnaButton variant="outline" onClick={() => setIsImportDialogOpen(false)}>CLOSE</DnaButton>
+          <DialogFooter className="flex justify-end pt-2">
+            <button
+              type="button"
+              className="operational-button is-secondary"
+              onClick={() => setIsImportDialogOpen(false)}
+            >
+              Close
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </OperationalPageShell>
   );
 }

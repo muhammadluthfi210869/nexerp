@@ -1,27 +1,37 @@
 model GoodsRequirement {
-  id            String      @id @default(uuid()) @db.Uuid
-  code          String      @unique
-  salesOrderId  String      @db.Uuid
-  date          DateTime
-  notes         String?
-  status        String      @default("DRAFT")
-  createdById   String?     @db.Uuid
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                String   @id @default(uuid()) @db.Uuid
+  code              String   @unique
+  salesOrderId      String   @db.Uuid
+  // Batch 4: immutable basis of the committed Sales Order revision.
+  salesOrderVersion Int
+  formulaId         String?  @db.Uuid
+  formulaVersion    Int
+  date              DateTime
+  notes             String?
+  status            String   @default("DRAFT")
+  createdById       String?  @db.Uuid
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  items GoodsRequirementItem[]
+  items            GoodsRequirementItem[]
+  purchaseRequests PurchaseRequest[]
 
+  @@unique([salesOrderId, salesOrderVersion])
+  @@index([salesOrderId, salesOrderVersion])
   @@map("goods_requirements")
 }
 
 model GoodsRequirementItem {
-  id            String  @id @default(uuid()) @db.Uuid
-  requirementId String  @db.Uuid
-  materialId    String  @db.Uuid
-  qty           Decimal @db.Decimal(15, 2)
-  notes         String?
+  id               String   @id @default(uuid()) @db.Uuid
+  requirementId    String   @db.Uuid
+  materialId       String   @db.Uuid
+  qty              Decimal  @db.Decimal(15, 2)
+  uom              String
+  dosagePercentage Decimal? @db.Decimal(10, 5)
+  notes            String?
 
-  requirement GoodsRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  requirement          GoodsRequirement      @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  purchaseRequestItems PurchaseRequestItem[]
 
   @@map("goods_requirement_items")
 }

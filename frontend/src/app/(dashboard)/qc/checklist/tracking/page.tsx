@@ -17,9 +17,9 @@ import {
   History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { OperationalMigrationShell, OperationalMetricCard, OperationalMetricGrid } from "@/components/operational";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, KpiCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 
 interface ChecklistTracking {
   id: string;
@@ -102,7 +102,7 @@ export default function ChecklistTrackingPage() {
     : 0;
 
   return (
-    <DashboardShell
+    <OperationalMigrationShell
       title="Checklist"
       titleAccent="Tracking"
       subtitle="Timeline penyelesaian checklist & verifikasi kualitas"
@@ -120,12 +120,32 @@ export default function ChecklistTrackingPage() {
         <QueryError error="Gagal memuat data" onRetry={() => window.location.reload()} />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard icon={<ClipboardCheck className="text-blue-600" />} label="Total Selesai" value={totalCompleted} />
-            <StatCard icon={<CheckCircle2 className="text-emerald-600" />} label="Terverifikasi" value={verifiedCount} />
-            <StatCard icon={<Users className="text-purple-600" />} label="PIC Aktif" value={pics.length - 1} />
-            <KpiCard icon={<History />} label="Rata-rata Pass Rate" value={`${avgPassRate}%`} targetPct={avgPassRate} />
-          </div>
+          <OperationalMetricGrid>
+            <OperationalMetricCard
+              icon={<ClipboardCheck className="h-4 w-4" />}
+              label="Total Selesai"
+              value={totalCompleted}
+              tone="blue"
+            />
+            <OperationalMetricCard
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              label="Terverifikasi"
+              value={verifiedCount}
+              tone="green"
+            />
+            <OperationalMetricCard
+              icon={<Users className="h-4 w-4" />}
+              label="PIC Aktif"
+              value={Math.max(pics.length - 1, 0)}
+              tone="purple"
+            />
+            <OperationalMetricCard
+              icon={<History className="h-4 w-4" />}
+              label="Rata-rata Pass Rate"
+              value={`${avgPassRate}%`}
+              tone="amber"
+            />
+          </OperationalMetricGrid>
 
           {/* Filters */}
           <div className="bg-white border border-[var(--border-color)] rounded-[24px] p-6 shadow-sm space-y-4">
@@ -322,6 +342,6 @@ export default function ChecklistTrackingPage() {
           </div>
         </>
       )}
-    </DashboardShell>
+    </OperationalMigrationShell>
   );
 }
