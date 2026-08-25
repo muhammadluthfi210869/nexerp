@@ -1,15 +1,17 @@
--- ─────────────────────────────────────────────────────────────────
+-- ------------------------------------------------------------------
 -- R4 pre-flight fix: align TEXT id columns with the canonical UUID
 -- shape before batch3-batch7 migrations apply.
 --
 -- Why this rewrite
 --   The previous version used a blanket heuristic
---     "every TEXT id | *Id | *_id → UUID"
+--     "every TEXT id | *Id | *_id -> UUID"
 --   which is unsound: column-naming is NOT evidence of UUID intent.
 --   In particular, round_robin_state.id is declared String
 --   (@default("singleton")) in the canonical Prisma schema, not UUID.
 --   The previous migration crashed on protected production-light data
---   with invalid input syntax for type uuid: singleton.
+--   with `invalid input syntax for type uuid: 'singleton'`.
+--   It also had cross-table FK ordering bugs (FK recreated before
+--   the referenced column was altered to UUID).
 --
 -- How this rewrite is safe (data-preserving)
 --   1. The list of columns to convert is the EXPLICIT allowlist derived
@@ -17,53 +19,82 @@
 --      r4-final-go-live-evidence/01-release-artifact/UUID_CONVERSION_ALLOWLIST.txt).
 --      Every entry has @db.Uuid in the schema. Anything not on the list
 --      stays unchanged.
---   2. For each entry the migration verifies at run-time:
---        a. table exists in the public schema (else skip silently),
---        b. column exists with data_type='text' (else skip silently),
---        c. ALL populated values match the UUID regex (else skip with RAISE NOTICE).
---      The cast only runs when all three checks pass. There is no eager cast.
+--   2. Three-pass structure:
+--        Pass 1: snapshot every FK that touches a column we plan to alter.
+--        Pass 2: drop all those FKs first (handles cross-table FK ordering).
+--        Pass 3: alter every allowlist column that qualifies
+--                (table exists; column is text; all populated values UUID-valid;
+--                 regex test, no eager ::uuid cast).
+--        Pass 4: recreate the FKs verbatim (their definitions reference
+--                columns by name; pg_get_constraintdef captures them pre-alter).
 --   3. round_robin_state.id is not in the allowlist (schema declares String,
 --      not @db.Uuid) so it is never touched.
---   4. Each column DEFAULT is dropped before the alter (some defaults do not
---      auto-cast to UUID; Prisma sets its own @default(uuid()) at insert
---      time, so leaving the DEFAULT unset is the contract).
---   5. FK drops/creates are scoped to the affected tables. The recreated FKs
---      reference the now-UUID columns by name; their definitions are captured
---      with pg_get_constraintdef before the alter so they round-trip verbatim.
---   6. If a future deployment has populated a target column with non-UUID
+--   4. Each column's DEFAULT is dropped before the alter.
+--   5. If a future deployment has populated a target column with non-UUID
 --      data, that column is skipped (RAISE NOTICE) and the operator is
 --      expected to add a deterministic ID-mapping migration first.
 --
 -- Why a NEW migration instead of editing applied files
 --   This rewrites 20260822085000_r4_fix_text_id_columns_to_uuid. Per R4
---   §7/§10 that migration was NOT applied to protected production
+--   section 7/10 that migration was NOT applied to protected production
 --   (it does not exist in the persistent prod migrations dir). The R4
 --   pre-flight may be corrected only if not applied to protected/persistent
---   production — that precondition holds.
---
--- What this migration does
---   For each (table, column) on the explicit allowlist, in three phases:
---     Phase 1: drop FKs touching the table.
---     Phase 2: drop DEFAULT, ALTER column TYPE UUID USING column::uuid.
---     Phase 3: recreate the dropped FKs.
--- ─────────────────────────────────────────────────────────────────
+--   production - that precondition holds.
+-- ------------------------------------------------------------------
 
 DO $$
 DECLARE
   entry       RECORD;
+  alter_rec   RECORD;
   fk          RECORD;
   fk_drop     TEXT[] := ARRAY[]::TEXT[];
   fk_create   TEXT[] := ARRAY[]::TEXT[];
   i           INT;
-  tbl_exists  BOOLEAN;
-  col_is_text BOOLEAN;
-  has_bad_val BOOLEAN;
   allow_tbl   TEXT;
   allow_col   TEXT;
+  has_bad_val BOOLEAN;
 BEGIN
-  -- Iterate the explicit allowlist. Anything not on this list is never altered.
+  -- Pass 1: snapshot every FK whose source OR target is a TEXT id-shaped
+  -- column in a public, non-Prisma-internal table. This includes FKs whose
+  -- referenced column is itself on the allowlist, so we can drop them all
+  -- BEFORE we alter any column.
+  FOR fk IN
+    SELECT DISTINCT
+      c.conname,
+      c.conrelid::regclass::text AS tbl,
+      pg_get_constraintdef(c.oid) AS def
+    FROM pg_constraint c
+    WHERE c.contype = 'f'
+      AND c.connamespace = 'public'::regnamespace
+      AND EXISTS (
+        SELECT 1 FROM information_schema.columns col
+        WHERE col.table_schema = 'public'
+          AND col.data_type = 'text'
+          AND col.table_name NOT LIKE '\_%' ESCAPE ''
+          AND (col.column_name = 'id'
+               OR col.column_name LIKE '%Id'
+               OR col.column_name LIKE '%_id')
+          AND (col.table_name = c.conrelid::regclass::text
+               OR col.table_name = c.confrelid::regclass::text)
+      )
+  LOOP
+    fk_drop   := array_append(fk_drop,
+      format('ALTER TABLE %s DROP CONSTRAINT %I', fk.tbl, fk.conname));
+    fk_create := array_append(fk_create,
+      format('ALTER TABLE %s ADD CONSTRAINT %I %s',
+             fk.tbl, fk.conname, fk.def));
+  END LOOP;
+
+  -- Pass 2: drop every queued FK first (handles cross-table ordering).
+  IF fk_drop IS NOT NULL THEN
+    FOR i IN 1 .. array_length(fk_drop, 1) LOOP
+      EXECUTE fk_drop[i];
+    END LOOP;
+  END IF;
+
+  -- Pass 3: iterate the explicit allowlist and alter qualifying columns.
   FOR entry IN
-SELECT * FROM (
+    SELECT * FROM (
 VALUES
   ('account_health_logs', 'id'),
   ('accounts', 'id'),
@@ -442,27 +473,25 @@ VALUES
   ('work_orders', 'id'),
   ('work_orders', 'leadId'),
   ('work_orders', 'planId')
-  ) AS allowlist(table_name, column_name)
+    ) AS allowlist(table_name, column_name)
   LOOP
     allow_tbl := entry.table_name;
     allow_col := entry.column_name;
 
     -- a. Table must exist.
-    SELECT EXISTS (
+    IF NOT EXISTS (
       SELECT 1 FROM information_schema.tables
-      WHERE table_schema='public' AND table_name=allow_tbl
-    ) INTO tbl_exists;
-    IF NOT tbl_exists THEN
+      WHERE table_schema = 'public' AND table_name = allow_tbl
+    ) THEN
       CONTINUE;
     END IF;
 
     -- b. Column must exist AND currently be text.
-    SELECT EXISTS (
+    IF NOT EXISTS (
       SELECT 1 FROM information_schema.columns
-      WHERE table_schema='public' AND table_name=allow_tbl
-        AND column_name=allow_col AND data_type='text'
-    ) INTO col_is_text;
-    IF NOT col_is_text THEN
+      WHERE table_schema = 'public' AND table_name = allow_tbl
+        AND column_name = allow_col AND data_type = 'text'
+    ) THEN
       CONTINUE;
     END IF;
 
@@ -473,44 +502,30 @@ VALUES
       'SELECT EXISTS (SELECT 1 FROM %I.%I WHERE %I IS NOT NULL '
       || 'AND (LENGTH(%I) <> 36 '
       || 'OR %I::text !~ ''^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'') LIMIT 1)',
-      allow_tbl, allow_tbl, allow_col, allow_col, allow_col
+      'public', allow_tbl, allow_col, allow_col, allow_col
     ) INTO has_bad_val;
     IF has_bad_val THEN
-      RAISE NOTICE 'r4_fix_text_id_columns_to_uuid: skip %.% — contains non-UUID values',
+      RAISE NOTICE 'r4_fix_text_id_columns_to_uuid: skip %.% - contains non-UUID values',
         allow_tbl, allow_col;
       CONTINUE;
     END IF;
 
-    -- Phase 1: capture FKs touching this table (both directions) and queue drops/creates.
-    FOR fk IN
-      SELECT c.conname,
-             c.conrelid::regclass::text AS tbl,
-             pg_get_constraintdef(c.oid) AS def
-      FROM pg_constraint c
-      WHERE c.contype='f'
-        AND c.connamespace='public'::regnamespace
-        AND (c.conrelid::regclass::text = allow_tbl
-             OR c.confrelid::regclass::text = allow_tbl)
-    LOOP
-      fk_drop   := array_append(fk_drop,
-        format('ALTER TABLE %s DROP CONSTRAINT %I', fk.tbl, fk.conname));
-      fk_create := array_append(fk_create,
-        format('ALTER TABLE %s ADD CONSTRAINT %I %s',
-               fk.tbl, fk.conname, fk.def));
-    END LOOP;
-
-    -- Phase 2: drop DEFAULT, alter column TYPE UUID USING column::uuid.
+    -- Drop DEFAULT (some defaults don't auto-cast to UUID; Prisma sets
+    -- its own @default(uuid()) at insert time).
     EXECUTE format('ALTER TABLE %I ALTER COLUMN %I DROP DEFAULT',
                    allow_tbl, allow_col);
+
+    -- Alter column TYPE UUID USING column::uuid.
     EXECUTE format('ALTER TABLE %I ALTER COLUMN %I TYPE UUID USING %I::uuid',
                    allow_tbl, allow_col, allow_col);
   END LOOP;
 
-  -- Phase 3: drop and recreate all queued FKs (FOREACH handles empty arrays cleanly).
-  FOREACH i IN ARRAY fk_drop LOOP
-    EXECUTE i;
-  END LOOP;
-  FOREACH i IN ARRAY fk_create LOOP
-    EXECUTE i;
-  END LOOP;
+  -- Pass 4: recreate every FK verbatim. Their definitions reference columns
+  -- by name; after Pass 3 the columns are UUID, so the recreated FKs land
+  -- on the new column type.
+  IF fk_create IS NOT NULL THEN
+    FOR i IN 1 .. array_length(fk_create, 1) LOOP
+      EXECUTE fk_create[i];
+    END LOOP;
+  END IF;
 END $$;

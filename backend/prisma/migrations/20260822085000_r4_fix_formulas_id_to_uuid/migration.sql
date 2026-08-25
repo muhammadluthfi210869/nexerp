@@ -124,8 +124,7 @@ BEGIN
       || 'AND (%I IS NULL OR LENGTH(%I) <> 36 '
       || 'OR %I::text !~ ''^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'') '
       || 'LIMIT 1',
-      alter_rec.table_name, alter_rec.table_name,
-      alter_rec.column_name,
+      'public', alter_rec.table_name, alter_rec.column_name,
       alter_rec.column_name, alter_rec.column_name,
       alter_rec.column_name);
     IF EXISTS (SELECT 1 FROM _r4_uuid_check) THEN
