@@ -1,61 +1,72 @@
-
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-async function reconcileBussdevStaff() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
+/**
+ * R4 Bootstrap Reconciliation — id:empotent.
+ * Ensures each R4-bootstrap role user has the corresponding staff record
+ * required by downstream business code paths. Runs against any
+ * environment that has the 8 R4-bootstrap users.
+ */
+async function reconcileAll() {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
-  console.log('--- RECONCILIATION: Bussdev Staff Sync Start ---');
+  console.log('--- STAFF RECONCILIATION START ---');
 
   try {
-    // 1. Find all users with COMMERCIAL role
+    // 1. BussdevStaff — required by lead.service.ts PIC fallback.
     const bdUsers = await prisma.user.findMany({
-      where: {
-        roles: {
-          has: 'COMMERCIAL' as any, // Cast because of how Prisma handles string arrays in some versions
-        },
-      },
+      where: { roles: { has: 'COMMERCIAL' } },
     });
-
-    console.log(`Found ${bdUsers.length} users with COMMERCIAL role.`);
-
-    for (const user of bdUsers) {
-      if (!user.id) continue;
-      
-      // 2. Check if they have a BussdevStaff record
-      const existingStaff = await prisma.bussdevStaff.findUnique({
-        where: { userId: user.id },
-      });
-
-      if (!existingStaff) {
-        console.log(`User ${user.fullName} (${user.email}) missing Staff record. Creating...`);
+    for (const u of bdUsers) {
+      const existing = await prisma.bussdevStaff.findUnique({ where: { userId: u.id } });
+      if (!existing) {
         await prisma.bussdevStaff.create({
           data: {
-            userId: user.id,
-            name: user.fullName || 'Unknown BD Staff',
-            targetRevenue: 100000000, // Default target
+            userId: u.id,
+            name: u.fullName || 'Unknown BD Staff',
+            targetRevenue: 100000000,
             isActive: true,
           },
         });
-        console.log(`✅ Staff record created for ${user.fullName}`);
+        console.log(`✓ BussdevStaff created for ${u.email}`);
       } else {
-        console.log(`✔ User ${user.fullName} already has a Staff record.`);
+        console.log(`• BussdevStaff already exists for ${u.email}`);
       }
     }
 
-    console.log('--- RECONCILIATION COMPLETE ---');
-  } catch (error) {
-    console.error('Critical Error during reconciliation:', error);
+    // 2. RndStaff — required by sample-request PIC fallback.
+    const rndUsers = await prisma.user.findMany({
+      where: { roles: { has: 'RND' } },
+    });
+    for (const u of rndUsers) {
+      const existing = await prisma.rndStaff.findFirst({ where: { name: u.fullName || '' } });
+      if (!existing) {
+        await prisma.rndStaff.create({
+          data: {
+            name: u.fullName || 'Unknown RND Staff',
+            specialty: 'General',
+            isActive: true,
+            maxWeeklyCapacity: 10,
+          },
+        });
+        console.log(`✓ RndStaff created for ${u.email}`);
+      } else {
+        console.log(`• RndStaff already exists for ${u.email}`);
+      }
+    }
+
+    console.log('--- STAFF RECONCILIATION COMPLETE ---');
+  } catch (err) {
+    console.error('Critical Error during reconciliation:', err);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-reconcileBussdevStaff();
+reconcileAll();
