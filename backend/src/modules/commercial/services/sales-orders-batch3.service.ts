@@ -67,7 +67,7 @@ export class SalesOrdersBatch3Service {
         productName: string;
         quantity: number;
         unitPrice: number;
-        netto?: number;
+        netto: number; // R4-BUSINESS-READY §5: required; was optional and defaulted to 0.
         taxId?: string;
       }>;
     },
@@ -216,7 +216,7 @@ export class SalesOrdersBatch3Service {
               productName: item.productName,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
-              netto: item.netto ?? 0,
+              netto: item.netto,
               taxId: item.taxId,
               subtotal: Number(item.quantity) * Number(item.unitPrice),
             })),

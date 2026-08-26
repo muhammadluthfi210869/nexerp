@@ -212,4 +212,37 @@ export class BussdevListener {
   handleFormulaLocked(event: any) {
     this.logger.log(`[EVENT] Formula Locked for Lead ${event.leadId}.`);
   }
+
+  /**
+   * R4-BUSINESS-READY §6: every Sales Order commit auto-creates a Design Task
+   * linked to that SO so the canonical packaging-design gate
+   * (`lead.designTasks.every(kanbanState === 'LOCKED')`) is reachable via
+   * the existing creative flow (POST /creative/task → submit → apj-review →
+   * client-review → unlock). No SQL bypass; no fake approval.
+   */
+  @OnEvent('sales_order.created')
+  async handleSalesOrderCreated(event: { salesOrderId: string; leadId?: string }) {
+    try {
+      const so = await this.prisma.salesOrder.findUnique({
+        where: { id: event.salesOrderId },
+        include: { lead: true },
+      });
+      if (!so?.leadId) return;
+      const existing = await this.prisma.designTask.findFirst({
+        where: { soId: so.id },
+      });
+      if (existing) return;
+      await this.prisma.designTask.create({
+        data: {
+          leadId: so.leadId,
+          soId: so.id,
+          brief: `Packaging Design for SO ${so.orderNumber} — ${so.lead?.clientName ?? ''}`.trim(),
+          taskType: 'PACKAGING',
+        },
+      });
+      this.logger.log(`[SO→DESIGN] Auto-created designTask for SO ${so.orderNumber}`);
+    } catch (error: any) {
+      this.logger.error(`handleSalesOrderCreated failed: ${error.message}`);
+    }
+  }
 }

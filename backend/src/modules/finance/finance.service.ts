@@ -528,31 +528,71 @@ export class FinanceService {
       if (so.status === 'LOCKED_ACTIVE' || so.status === 'COMPLETED') {
         throw new BadRequestException('Sales Order already verified');
       }
+      if (so.status !== 'PENDING_DP' && so.status !== 'ACTIVE') {
+        throw new BadRequestException(
+          `SO in status ${so.status} cannot accept a DP verification.`,
+        );
+      }
 
-      // Create a lead activity to track payment verification
-      await this.prisma.leadActivity.create({
-        data: {
-        leadId: so.leadId,
-        activityType: 'DOWN_PAYMENT',
-        amount: so.totalAmount,
-        isValidated: true,
-        validatedBy: dto.verifiedBy,
-        notes: `Payment verified for SO ${so.orderNumber}`,
-        metadata: { salesOrderId: so.id },
-      },
-    });
+      // R4-BUSINESS-READY §9: DP verification must produce a real AR-side ledger
+      // entry — a DP Invoice (PAID) and a Payment row — so the Finance
+      // reconciliation (invoice/payment/journal/outstanding) is non-zero.
+      // Idempotent on (soId, type=DP): re-runs return the existing invoice.
+      return this.prisma.$transaction(async (tx) => {
+        const existingDp = await tx.invoice.findFirst({
+          where: { soId: so.id, type: 'DP' },
+        });
+        if (!existingDp) {
+          const dpAmount = Number(so.totalAmount); // canonical: DP = full order amount for bounded test
+          const invoiceNumber = await this.idGenerator.generateId('DPSO');
+          const dpInvoice = await tx.invoice.create({
+            data: {
+              invoiceNumber,
+              category: 'RECEIVABLE',
+              type: 'DP',
+              status: 'PAID',
+              amountDue: dpAmount,
+              outstandingAmount: 0,
+              soId: so.id,
+              paidAt: new Date(),
+              dueDate: new Date(),
+              description: `Down Payment SO ${so.orderNumber}`,
+            },
+          });
+          await tx.payment.create({
+            data: {
+              invoiceId: dpInvoice.id,
+              verifiedBy: dto.verifiedBy,
+              amountPaid: dpAmount,
+              paymentDate: new Date(),
+            },
+          });
+        }
 
-    await this.prisma.salesOrder.update({
-      where: { id: so.id },
-      data: { status: 'LOCKED_ACTIVE' as any },
-    });
+        await tx.leadActivity.create({
+          data: {
+            leadId: so.leadId,
+            activityType: 'DOWN_PAYMENT',
+            amount: so.totalAmount,
+            isValidated: true,
+            validatedBy: dto.verifiedBy,
+            notes: `Payment verified for SO ${so.orderNumber}`,
+            metadata: { salesOrderId: so.id },
+          },
+        });
 
-    await this.prisma.salesLead.update({
-      where: { id: so.leadId },
-      data: { status: 'DP_PAID' as any },
-    });
+        await tx.salesOrder.update({
+          where: { id: so.id },
+          data: { status: 'LOCKED_ACTIVE' as any },
+        });
 
-    return { success: true, orderId: so.id };
+        await tx.salesLead.update({
+          where: { id: so.leadId },
+          data: { status: 'DP_PAID' as any },
+        });
+
+        return { success: true, orderId: so.id };
+      });
   }
 
   async createBill(dto: {

@@ -966,17 +966,55 @@ export class ProductionService {
     notes?: string;
   }) {
     const woNumber = await this.idGenerator.generateId('WO');
+    const batchNo = await this.idGenerator.generateId('BMR');
 
     return this.prisma.$transaction(async (tx: any) => {
+      // R4-BUSINESS-READY §7: derive the pinned formula from the lead's sample
+      // lineage so the WO and ProductionPlan share the same version-truth
+      // invariant. Without this, downstream `wo.plan` lookups fail with
+      // "Production plan not found" and the FINISHED_GOODS path breaks.
+      const lead = await tx.salesLead.findUnique({
+        where: { id: dto.leadId },
+        include: {
+          salesOrders: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              formula: true,
+              sample: true,
+            },
+          },
+        },
+      });
+      if (!lead) throw new NotFoundException('Lead not found');
+      const so = lead.salesOrders?.[0];
+      if (!so?.formulaId) {
+        throw new BadRequestException(
+          'PRODUCTION_PLAN_REQUIRES_PINNED_FORMULA: WO cannot be created without a SO with a pinned Formula.',
+        );
+      }
+
+      const plan = await tx.productionPlan.create({
+        data: {
+          soId: so.id,
+          adminId: dto.notes ? (await this.resolveAdminId(tx, dto.leadId)) : lead.id,
+          batchNo,
+          status: 'PLANNING',
+          formulaId: so.formulaId,
+          formulaVersionSnapshot: so.formula?.version ?? 1,
+        },
+      });
+
       const wo = await tx.workOrder.create({
         data: {
           woNumber,
           leadId: dto.leadId,
+          planId: plan.id,
           targetQty: dto.targetQty,
           targetCompletion: new Date(dto.targetCompletion),
           stage: 'WAITING_MATERIAL',
         },
-        include: { lead: true },
+        include: { lead: true, plan: true },
       });
 
       // Create Material Requisitions from BOM
@@ -989,6 +1027,7 @@ export class ProductionService {
           const totalQty = Number(bomItem.quantityPerUnit) * dto.targetQty;
           await tx.materialRequisition.create({
             data: {
+              woId: plan.id,
               workOrderId: wo.id,
               materialId: bomItem.materialId,
               qtyRequested: totalQty,
@@ -1011,6 +1050,24 @@ export class ProductionService {
 
       return wo;
     });
+  }
+
+  /**
+   * Resolve the production admin (PLAN_OWNER) for a new ProductionPlan.
+   * ProductionPlansService.create() requires an adminId (PPIC user). We pick
+   * the first user with PRODUCTION/PRODUCTION_OP role who is ACTIVE.
+   */
+  private async resolveAdminId(tx: any, _leadId: string): Promise<string> {
+    const admin = await tx.user.findFirst({
+      where: { roles: { has: 'PRODUCTION' }, status: 'ACTIVE' },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!admin) {
+      throw new BadRequestException(
+        'PRODUCTION_ADMIN_REQUIRED: No active PRODUCTION user exists to own the ProductionPlan.',
+      );
+    }
+    return admin.id;
   }
 
   async getMicroFlowDiagnostics() {

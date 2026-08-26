@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   IsUUID,
   ValidateNested,
@@ -20,9 +21,14 @@ export class Batch3CreateSOItemDto {
   @IsNumber()
   unitPrice!: number;
 
+  // R4-BUSINESS-READY §5: netto is the per-unit finished-product gram weight
+  // carried into the SO item. It is the canonical output-mass basis for
+  // Goods Requirement derivation (goods-requirement.service.ts:25). Required
+  // at creation so the downstream derivation succeeds without ad-hoc DB
+  // correction.
   @IsNumber()
-  @IsOptional()
-  netto?: number;
+  @IsPositive()
+  netto!: number;
 
   @IsUUID()
   @IsOptional()

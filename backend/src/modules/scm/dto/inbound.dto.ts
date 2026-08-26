@@ -58,3 +58,20 @@ export class UpdateInboundStatusDto {
   @IsNotEmpty()
   status!: InboundStatus;
 }
+
+export class QcValidateItemDto {
+  @IsString()
+  @IsNotEmpty()
+  inboundItemId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  qcStatus!: string; // QCStatus enum value: GOOD | QUARANTINE | REJECT
+}
+
+export class QcValidateDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => QcValidateItemDto)
+  items!: QcValidateItemDto[];
+}
