@@ -1,62 +1,61 @@
-import React from "react"
-import { cn } from "@/lib/utils"
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
-  label: string
-  value: string | number
-  subValue?: string | React.ReactNode
-  icon?: React.ReactNode
-  className?: string
+  label: string;
+  value: string | number | React.ReactNode;
+  subValue?: string | React.ReactNode;
+  icon?: React.ReactNode;
+  className?: string;
 }
 
+/**
+ * Canonical-aligned StatCard. Uses canonical MetricCard layout:
+ * - 12px radius
+ * - subtle 1px neutral border
+ * - fixed min-height
+ * - semantic tints only when appropriate
+ */
 export function StatCard({ label, value, subValue, icon, className }: StatCardProps) {
-  const iconEl = React.isValidElement(icon) ? icon : null
-  const bgIcon = React.isValidElement(icon)
-    ? React.cloneElement(icon as React.ReactElement<any>, {
-        className: "w-[72px] h-[72px] stroke-[0.75px] text-slate-300/20 transition-opacity duration-200",
-      })
-    : null
+  const helper = subValue !== undefined && subValue !== null && subValue !== false
+    ? (typeof subValue === "string" || typeof subValue === "number" ? subValue : null)
+    : null;
 
   return (
     <div
+      role="group"
+      aria-label={`${label} metric`}
+      data-metric-card
+      data-variant="neutral"
       className={cn(
-        "erp-metric-card bg-white border border-[var(--border-color)] rounded-[12px] p-5 shadow-sm transition-colors group overflow-hidden relative flex items-center animate-fade-slide-in w-full max-w-[320px] min-w-0 justify-self-start min-h-[136px]",
-        className
+        "erp-metric-card flex flex-col justify-between rounded-[12px] border border-[#E2E8F0] bg-white",
+        "px-5 py-4 min-h-[116px] min-w-0 w-full",
+        className,
       )}
     >
-      <div className="flex justify-between items-center relative z-10 w-full">
-        <div className="space-y-2 flex-1 min-w-0 pr-4">
-          <p className="text-xs font-semibold text-slate-500 tracking-normal leading-4 group-hover:text-slate-900 transition-colors">
-            {label}
-          </p>
-          <h3 className="text-[28px] font-black text-slate-900 tracking-[-0.02em] tabular leading-tight">
-            {value ?? "—"}
-          </h3>
-          {subValue && (
-            typeof subValue === "string" ? (
-              <p className="text-xs font-medium text-slate-400 leading-4">
-                {subValue}
-              </p>
-            ) : (
-              <div className="text-xs font-medium leading-4">
-                {subValue}
-              </div>
-            )
-          )}
-        </div>
-        {iconEl && (
-          <div className="p-4 bg-slate-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg shrink-0">
-            <span className="[&>svg]:w-[18px] [&>svg]:h-[18px]">
-              {iconEl}
-            </span>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-medium text-slate-500 leading-4 uppercase tracking-wide">
+          {label}
+        </p>
+        {icon && (
+          <span
+            aria-hidden="true"
+            className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center bg-slate-50 text-slate-500"
+          >
+            {icon}
+          </span>
         )}
       </div>
-      {bgIcon && (
-        <div className="absolute -bottom-5 -right-5 pointer-events-none select-none z-0">
-          {bgIcon}
-        </div>
-      )}
+      <div className="mt-2">
+        <p className="text-[26px] font-semibold leading-[30px] tracking-tight tabular-nums text-slate-900">
+          {value ?? "—"}
+        </p>
+        {helper && (
+          <p className="mt-1 text-[11px] leading-4 text-slate-500">{helper}</p>
+        )}
+      </div>
     </div>
-  )
+  );
 }

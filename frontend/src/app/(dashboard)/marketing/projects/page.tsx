@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function MarketingProjectsPage() {
-  redirect("/marketing/management-task?tab=projects");
+ redirect("/marketing/management-task?tab=projects");
 }

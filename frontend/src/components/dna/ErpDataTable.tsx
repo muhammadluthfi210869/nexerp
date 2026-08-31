@@ -85,93 +85,166 @@ export function ErpDataTable<TData>({
   const canNext = table.getCanNextPage()
 
   return (
-    <section className={cn("erp-table-shell erp-data-table", className)} aria-label={title ?? "Data table"}>
-      <div className="erp-table-toolbar">
-        <div className="erp-table-toolbar-content">
-          {title && <div className="erp-data-table-title">{title}</div>}
+    <section
+      className={cn(
+        "rounded-[12px] border border-[#E2E8F0] bg-white overflow-hidden",
+        className,
+      )}
+      aria-label={title ?? "Data table"}
+    >
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E2E8F0]">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {title && (
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-4 w-1 rounded-full bg-blue-600 shrink-0" />
+              <h3 className="text-[13px] font-semibold text-slate-900 truncate">{title}</h3>
+              <span className="text-[11px] font-medium text-slate-400 tabular-nums">{totalRows}</span>
+            </div>
+          )}
           {enableSearch && (
-            <label className="erp-table-toolbar-search" aria-label={searchPlaceholder}>
-              <Search aria-hidden="true" className="h-4 w-4 shrink-0" />
+            <label className="flex items-center gap-2 h-9 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400 min-w-[220px]">
+              <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
               <input
                 value={globalFilter}
                 onChange={(event) => setGlobalFilter(event.target.value)}
                 placeholder={searchPlaceholder}
                 type="search"
+                className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
               />
             </label>
           )}
-          <span className="erp-table-result-label" aria-live="polite">{totalRows} hasil</span>
-          <div className="erp-table-toolbar-actions">
-            {toolbar}
-            {enableColumnVisibility && (
-              <div className="erp-data-table-columns">
-                <button type="button" onClick={() => setShowColumns((value) => !value)} aria-expanded={showColumns}>
-                  <Columns3 aria-hidden="true" /> Kolom
-                </button>
-                {showColumns && (
-                  <div className="erp-data-table-columns-menu" role="menu">
-                    {table.getAllLeafColumns().filter((column) => column.getCanHide()).map((column) => (
-                      <label key={column.id}>
-                        <input type="checkbox" checked={column.getIsVisible()} onChange={column.getToggleVisibilityHandler()} />
-                        <span>{typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          {toolbar}
+          {enableColumnVisibility && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowColumns((value) => !value)}
+                aria-expanded={showColumns}
+                className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <Columns3 aria-hidden="true" className="h-4 w-4" /> Kolom
+              </button>
+              {showColumns && (
+                <div className="absolute right-0 top-10 z-10 min-w-[180px] rounded-lg border border-[#E2E8F0] bg-white p-2 shadow-md">
+                  {table.getAllLeafColumns().filter((column) => column.getCanHide()).map((column) => (
+                    <label key={column.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded text-[12px]">
+                      <input
+                        type="checkbox"
+                        checked={column.getIsVisible()}
+                        onChange={column.getToggleVisibilityHandler()}
+                        className="rounded border-[#E2E8F0]"
+                      />
+                      <span className="text-slate-700">{typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="erp-table-scroll" tabIndex={0} aria-label="Scrollable data table">
-        <table>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <tr key={headerGroup.id} className="bg-slate-50/70 border-b border-[#E2E8F0]">
                 {headerGroup.headers.map((header) => {
-                  const canSort = header.column.getCanSort()
-                  const sorted = header.column.getIsSorted()
+                  const canSort = header.column.getCanSort();
+                  const sorted = header.column.getIsSorted();
                   return (
-                    <th key={header.id} colSpan={header.colSpan} aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : "none"}>
+                    <th
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className="h-[42px] px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider"
+                      aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : "none"}
+                    >
                       {header.isPlaceholder ? null : canSort ? (
-                        <button type="button" className="erp-data-table-sort" onClick={header.column.getToggleSortingHandler()}>
+                        <button
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="inline-flex items-center gap-1 text-inherit"
+                        >
                           {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sorted === "asc" ? <ChevronUp aria-hidden="true" /> : sorted === "desc" ? <ChevronDown aria-hidden="true" /> : <ChevronsUpDown aria-hidden="true" />}
+                          {sorted === "asc" ? <ChevronUp className="h-3 w-3" aria-hidden="true" /> : sorted === "desc" ? <ChevronDown className="h-3 w-3" aria-hidden="true" /> : <ChevronsUpDown className="h-3 w-3 text-slate-300" aria-hidden="true" />}
                         </button>
-                      ) : flexRender(header.column.columnDef.header, header.getContext())}
+                      ) : (
+                        flexRender(header.column.columnDef.header, header.getContext())
+                      )}
                     </th>
-                  )
+                  );
                 })}
               </tr>
             ))}
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={columns.length} className="erp-data-table-state">Memuat data...</td></tr>
-            ) : visibleRows.length === 0 ? (
-              <tr><td colSpan={columns.length} className="erp-data-table-state">{emptyMessage}</td></tr>
-            ) : visibleRows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}
+              <tr>
+                <td colSpan={columns.length} className="h-[80px] text-center text-[12px] text-slate-400">
+                  <span className="inline-block h-4 w-4 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin align-middle mr-2" />
+                  Memuat...
+                </td>
               </tr>
-            ))}
+            ) : visibleRows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center">
+                  <div className="flex flex-col items-center justify-center py-8 px-4">
+                    <p className="text-[13px] font-medium text-slate-700">{emptyMessage}</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              visibleRows.map((row) => (
+                <tr key={row.id} className="border-b border-[#E2E8F0] last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="h-[44px] px-4 text-[13px] text-slate-700 align-middle">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      <footer className="erp-data-table-pagination">
-        <span>Halaman {pageCount === 0 ? 0 : currentPage} dari {pageCount}</span>
-        <label>Baris
-          <select value={table.getState().pagination.pageSize} onChange={(event) => table.setPageSize(Number(event.target.value))}>
-            {pageSizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
-          </select>
-        </label>
-        <div className="erp-data-table-pagination-actions">
-          <button type="button" aria-label="Halaman sebelumnya" disabled={!canPrevious} onClick={() => table.previousPage()}><ChevronLeft aria-hidden="true" /></button>
-          <button type="button" aria-label="Halaman berikutnya" disabled={!canNext} onClick={() => table.nextPage()}><ChevronRight aria-hidden="true" /></button>
+      {pageCount > 0 && (
+        <div className="flex items-center justify-between px-4 py-2 border-t border-[#E2E8F0] text-[11px] text-slate-500">
+          <span>Halaman {pageCount === 0 ? 0 : currentPage} dari {pageCount}</span>
+          <label className="flex items-center gap-2">
+            Baris
+            <select
+              value={table.getState().pagination.pageSize}
+              onChange={(event) => table.setPageSize(Number(event.target.value))}
+              className="h-7 px-2 rounded border border-[#E2E8F0] bg-white text-[12px]"
+            >
+              {pageSizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
+            </select>
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Halaman sebelumnya"
+              disabled={!canPrevious}
+              onClick={() => table.previousPage()}
+              className="h-8 w-8 grid place-items-center rounded-md border border-[#E2E8F0] bg-white text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="Halaman berikutnya"
+              disabled={!canNext}
+              onClick={() => table.nextPage()}
+              className="h-8 w-8 grid place-items-center rounded-md border border-[#E2E8F0] bg-white text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-      </footer>
+      )}
     </section>
-  )
+  );
 }

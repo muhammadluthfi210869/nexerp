@@ -4,5 +4,5 @@
 import { redirect } from "next/navigation";
 
 export default function FundRequestsRedirect() {
-  redirect("/finance/fund");
+ redirect("/finance/fund");
 }

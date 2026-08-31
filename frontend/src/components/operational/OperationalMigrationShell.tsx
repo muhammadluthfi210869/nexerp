@@ -1,21 +1,21 @@
-import type { ReactNode } from "react";
-import { OperationalPageShell, OperationalPanel } from "./OperationalUI";
-import styles from "./OperationalMigrationShell.module.css";
+"use client";
+
+import * as React from "react";
+import { PageShell, SectionCard, SectionCardContent } from "@/components/canonical";
 
 interface OperationalMigrationShellProps {
   title: string;
   titleAccent?: string;
   subtitle?: string;
-  actions?: ReactNode;
-  filters?: ReactNode;
-  pagination?: ReactNode;
-  children: ReactNode;
+  actions?: React.ReactNode;
+  filters?: React.ReactNode;
+  pagination?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 /**
- * Compatibility shell for controlled migration batches.
- * It applies the approved operational grammar without changing dashboard
- * primitives or the frozen Golden Page implementation.
+ * Canonical-aligned migration shell.
+ * Wraps canonical PageShell + SectionCard for filters.
  */
 export function OperationalMigrationShell({
   title,
@@ -29,17 +29,14 @@ export function OperationalMigrationShell({
   const resolvedTitle = [title, titleAccent].filter(Boolean).join(" ");
 
   return (
-    <OperationalPageShell
-      title={resolvedTitle}
-      subtitle={subtitle}
-      actions={actions}
-      className={styles.scope}
-    >
+    <PageShell title={resolvedTitle} subtitle={subtitle} actions={actions}>
       {filters ? (
-        <OperationalPanel className={styles.filters}>{filters}</OperationalPanel>
+        <SectionCard>
+          <SectionCardContent>{filters}</SectionCardContent>
+        </SectionCard>
       ) : null}
-      <div className={styles.content}>{children}</div>
-      {pagination ? <div className={styles.pagination}>{pagination}</div> : null}
-    </OperationalPageShell>
+      <div className="flex flex-col gap-6">{children}</div>
+      {pagination ? <div>{pagination}</div> : null}
+    </PageShell>
   );
 }

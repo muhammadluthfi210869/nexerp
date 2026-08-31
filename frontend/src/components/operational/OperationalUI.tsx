@@ -7,10 +7,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { DataTable as CanonicalDataTable, type DataTableProps } from "@/components/canonical/DataTable";
 import {
-  ErpDataTable,
-  type ErpDataTableProps,
-} from "@/components/dna/ErpDataTable";
+  SectionCard as CanonicalSectionCard,
+  SectionCardContent,
+  StatusBadge as CanonicalStatusBadge,
+  MetricCard as CanonicalMetricCard,
+  PageShell as CanonicalPageShell,
+} from "@/components/canonical";
 import { cn } from "@/lib/utils";
 
 export function OperationalPageShell({
@@ -27,16 +31,13 @@ export function OperationalPageShell({
   className?: string;
 }) {
   return (
-    <div className={cn("erp-operational", className)}>
-      <header className="operational-page-header">
-        <div className="min-w-0">
-          <h1>{title}</h1>
-          {subtitle ? <p>{subtitle}</p> : null}
-        </div>
-        {actions ? <div className="operational-page-actions">{actions}</div> : null}
-      </header>
-      <div className="operational-page-content">{children}</div>
-    </div>
+    <CanonicalPageShell
+      title={title}
+      subtitle={subtitle}
+      actions={actions}
+    >
+      <div className={cn("flex flex-col gap-6", className)}>{children}</div>
+    </CanonicalPageShell>
   );
 }
 
@@ -47,13 +48,8 @@ export function OperationalMetricGrid({
   children: React.ReactNode;
   className?: string;
 }) {
-  const metricCount = React.Children.count(children);
-
   return (
-    <div
-      className={cn("operational-metric-grid", className)}
-      data-metric-count={Math.min(metricCount, 5)}
-    >
+    <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4", className)}>
       {children}
     </div>
   );
@@ -72,15 +68,23 @@ export function OperationalMetricCard({
   icon?: React.ReactNode;
   tone?: "neutral" | "blue" | "green" | "amber" | "red" | "purple";
 }) {
+  const variantMap = {
+    neutral: "neutral",
+    blue: "info",
+    green: "success",
+    amber: "warning",
+    red: "danger",
+    purple: "info",
+  } as const;
+
   return (
-    <section className="operational-metric-card">
-      <div className="operational-metric-copy">
-        <span className="operational-metric-label">{label}</span>
-        <strong className="operational-metric-value">{value ?? "—"}</strong>
-        {helper ? <span className="operational-metric-helper">{helper}</span> : null}
-      </div>
-      {icon ? <span className={cn("operational-metric-icon", `is-${tone}`)}>{icon}</span> : null}
-    </section>
+    <CanonicalMetricCard
+      label={label}
+      value={value}
+      helper={helper}
+      icon={icon}
+      variant={variantMap[tone]}
+    />
   );
 }
 
@@ -91,23 +95,27 @@ export function OperationalPanel({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <section className={cn("operational-panel", className)}>{children}</section>;
+  return (
+    <CanonicalSectionCard className={className}>
+      <SectionCardContent>{children}</SectionCardContent>
+    </CanonicalSectionCard>
+  );
 }
 
 export function OperationalTabs(props: React.ComponentProps<typeof Tabs>) {
-  return <Tabs {...props} className={cn("operational-tabs", props.className)} />;
+  return <Tabs {...props} />;
 }
 
 export function OperationalTabsList(props: React.ComponentProps<typeof TabsList>) {
-  return <TabsList {...props} className={cn("operational-tabs-list", props.className)} />;
+  return <TabsList {...props} />;
 }
 
 export function OperationalTabsTrigger(props: React.ComponentProps<typeof TabsTrigger>) {
-  return <TabsTrigger {...props} className={cn("operational-tabs-trigger", props.className)} />;
+  return <TabsTrigger {...props} />;
 }
 
 export function OperationalTabsContent(props: React.ComponentProps<typeof TabsContent>) {
-  return <TabsContent {...props} className={cn("operational-tabs-content", props.className)} />;
+  return <TabsContent {...props} />;
 }
 
 export const OperationalInput = React.forwardRef<
@@ -115,10 +123,24 @@ export const OperationalInput = React.forwardRef<
   React.InputHTMLAttributes<HTMLInputElement> & { icon?: React.ReactNode }
 >(function OperationalInput({ className, icon, ...props }, ref) {
   return (
-    <label className={cn("operational-input-wrap", className)}>
-      {icon ? <span className="operational-input-icon">{icon}</span> : null}
-      <input ref={ref} {...props} />
-    </label>
+    <div className="relative">
+      {icon && (
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 [&>svg]:w-3.5 [&>svg]:h-3.5 pointer-events-none">
+          {icon}
+        </div>
+      )}
+      <input
+        ref={ref}
+        {...props}
+        className={cn(
+          "h-10 w-full bg-white border border-[#E2E8F0] rounded-lg text-[12px] font-medium text-slate-700 placeholder:text-slate-400",
+          "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50",
+          "transition-all",
+          icon ? "pl-10 pr-3" : "px-3",
+          className,
+        )}
+      />
+    </div>
   );
 });
 
@@ -132,22 +154,19 @@ export function OperationalField({
   className?: string;
 }) {
   return (
-    <label className={cn("operational-field", className)}>
-      <span>{label}</span>
+    <label className={cn("flex flex-col gap-1.5", className)}>
+      {label && (
+        <span className="text-[11px] font-medium text-slate-700">{label}</span>
+      )}
       {children}
     </label>
   );
 }
 
-/**
- * Non-editable system-provided value primitive.
- * Distinguishes inherited/calculated/locked system data from user input.
- * No domain semantics are encoded here — pages decide when to use it.
- */
 export function OperationalFieldReadOnly({
   label,
   value,
-  tone = "neutral",
+  tone: _tone = "neutral",
   hint,
   className,
 }: {
@@ -158,10 +177,17 @@ export function OperationalFieldReadOnly({
   className?: string;
 }) {
   return (
-    <div className={cn("operational-field-readonly", `is-${tone}`, className)}>
-      <span className="operational-field-readonly-label">{label}</span>
-      <span className="operational-field-readonly-value">{value ?? "—"}</span>
-      {hint ? <span className="operational-field-readonly-hint">{hint}</span> : null}
+    <div
+      className={cn(
+        "flex flex-col gap-1 px-3 py-2 bg-slate-50 border border-[#E2E8F0] rounded-lg",
+        className,
+      )}
+    >
+      <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+        {label}
+      </span>
+      <span className="text-[13px] font-medium text-slate-900">{value ?? "—"}</span>
+      {hint && <span className="text-[10px] text-slate-500">{hint}</span>}
     </div>
   );
 }
@@ -173,10 +199,21 @@ export function OperationalButton({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "danger" | "ghost";
 }) {
+  const variantClasses = {
+    primary: "bg-blue-600 text-white hover:bg-blue-700 border-blue-600",
+    secondary: "bg-white text-slate-700 border-[#E2E8F0] hover:bg-slate-50",
+    danger: "bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-600 hover:text-white",
+    ghost: "bg-transparent text-slate-500 border-transparent hover:bg-slate-100",
+  };
+
   return (
     <button
       {...props}
-      className={cn("operational-button", `is-${variant}`, className)}
+      className={cn(
+        "inline-flex items-center gap-2 h-9 px-3 rounded-lg border text-[12px] font-medium transition-colors",
+        variantClasses[variant],
+        className,
+      )}
     />
   );
 }
@@ -226,6 +263,15 @@ export function getOperationalStatusLabel(value?: string | null) {
   return OPERATIONAL_STATUS_LABELS[value] || value.replaceAll("_", " ");
 }
 
+const STATUS_TO_VARIANT: Record<OperationalStatus, "default" | "success" | "info" | "warning" | "destructive"> = {
+  neutral: "default",
+  pending: "warning",
+  process: "info",
+  success: "success",
+  danger: "destructive",
+  purple: "info",
+};
+
 export function OperationalStatusBadge({
   status = "neutral",
   children,
@@ -236,26 +282,24 @@ export function OperationalStatusBadge({
   className?: string;
 }) {
   return (
-    <span className={cn("operational-status-badge", `is-${status}`, className)}>
+    <CanonicalStatusBadge variant={STATUS_TO_VARIANT[status]} className={className}>
       {children}
-    </span>
+    </CanonicalStatusBadge>
   );
 }
 
 export function OperationalDataTable<TData>({
   pageSize = 25,
-  pageSizeOptions = [25, 50, 100],
   searchPlaceholder = "Cari data...",
   className,
   ...props
-}: ErpDataTableProps<TData>) {
+}: DataTableProps<TData>) {
   return (
-    <ErpDataTable
+    <CanonicalDataTable
       {...props}
       pageSize={pageSize}
-      pageSizeOptions={pageSizeOptions}
       searchPlaceholder={searchPlaceholder}
-      className={cn("operational-data-table", className)}
+      className={className}
     />
   );
 }

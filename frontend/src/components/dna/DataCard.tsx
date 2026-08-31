@@ -1,36 +1,56 @@
-import { cn } from "@/lib/utils"
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { SectionCard, SectionCardContent } from "@/components/canonical";
 
 interface DataCardProps {
-  dotColor?: string
-  title?: string
-  titleColor?: string
-  children: React.ReactNode
-  className?: string
-  noShadow?: boolean
+  dotColor?: string;
+  title?: string;
+  titleColor?: string;
+  children: React.ReactNode;
+  className?: string;
+  noShadow?: boolean;
 }
 
-export function DataCard({ dotColor, title, titleColor, children, className, noShadow }: DataCardProps) {
+/**
+ * Canonical-aligned DataCard. Wraps canonical SectionCard.
+ * Provides optional legacy `dotColor`, `title`, `titleColor` headers.
+ */
+export function DataCard({
+  dotColor,
+  title,
+  titleColor,
+  children,
+  className,
+  noShadow: _noShadow,
+}: DataCardProps) {
+  const dotClass = dotColor
+    ? dotColor.startsWith("bg-")
+      ? dotColor
+      : `bg-${dotColor}`
+    : null;
+
   return (
-    <div
-      className={cn(
-        "erp-data-card bg-white border border-[var(--border-color)] rounded-[16px] p-6 flex flex-col h-full transition-shadow animate-fade-slide-in",
-        noShadow ? "" : "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]",
-        className
-      )}
-    >
-      {(dotColor || title) && (
-        <div className="flex items-center gap-3 mb-5">
-          {dotColor && <span className={cn("status-dot", dotColor)} />}
+    <SectionCard className={className}>
+      {(dotClass || title) && (
+        <div className="px-5 pt-4 flex items-center gap-2">
+          {dotClass && (
+            <span className={cn("inline-block h-1.5 w-1.5 rounded-full", dotClass)} />
+          )}
           {title && (
-            <h3 className={cn("text-xs font-bold tracking-wide", titleColor || "text-slate-400")}>
+            <h3
+              className={cn(
+                "text-[11px] font-semibold tracking-wide uppercase",
+                titleColor || "text-slate-500",
+              )}
+            >
               {title}
             </h3>
           )}
         </div>
       )}
-      <div className="flex-1 space-y-4">
-        {children}
-      </div>
-    </div>
-  )
+      <SectionCardContent>{children}</SectionCardContent>
+    </SectionCard>
+  );
 }

@@ -7,18 +7,18 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function ApjReleaseRedirect() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace("/legality/pipeline");
-  }, [router]);
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-        APJ Release · Not in initial rollout
-      </p>
-      <p className="text-[11px] font-medium text-slate-500">
-        Dialihkan ke Pipeline Legalitas...
-      </p>
-    </div>
-  );
+ const router = useRouter();
+ useEffect(() => {
+ router.replace("/legality/pipeline");
+ }, [router]);
+ return (
+ <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+ <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+ APJ Release · Not in initial rollout
+ </p>
+ <p className="text-[11px] font-medium text-slate-500">
+ Dialihkan ke Pipeline Legalitas...
+ </p>
+ </div>
+ );
 }

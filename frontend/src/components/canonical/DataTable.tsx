@@ -38,7 +38,10 @@ export interface DataTableProps<TData> {
   title?: string;
   searchPlaceholder?: string;
   pageSize?: number;
+  pageSizeOptions?: number[];
   enableSearch?: boolean;
+  /** Legacy passthrough — column visibility toggle. Currently no-op; use ErpDataTable for the feature. */
+  enableColumnVisibility?: boolean;
   loading?: boolean;
   emptyMessage?: string;
   emptyDescription?: string;
@@ -63,6 +66,7 @@ export function DataTable<TData>({
   searchPlaceholder = "Cari...",
   pageSize = 10,
   enableSearch = true,
+  enableColumnVisibility: _enableColumnVisibility,
   loading = false,
   emptyMessage = "Tidak ada data",
   emptyDescription,

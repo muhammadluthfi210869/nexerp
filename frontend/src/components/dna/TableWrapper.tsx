@@ -1,22 +1,26 @@
-import { cn } from "@/lib/utils"
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { SectionCard, SectionCardContent } from "@/components/canonical";
 
 interface TableWrapperProps {
-  children: React.ReactNode
-  className?: string
-  filters?: React.ReactNode
+  children: React.ReactNode;
+  className?: string;
+  filters?: React.ReactNode;
 }
 
+/**
+ * Canonical-aligned TableWrapper. Wraps canonical SectionCard.
+ * Provides optional legacy `filters` slot above the table content.
+ */
 export function TableWrapper({ children, className, filters }: TableWrapperProps) {
   return (
-    <div className={cn("erp-table-shell rounded-[var(--table-radius)] border border-[var(--border-color)] shadow-[var(--table-shadow)] overflow-hidden bg-white animate-fade-slide-in", className)}>
+    <SectionCard className={cn("overflow-hidden", className)}>
       {filters && (
-        <div className="erp-table-toolbar border-b border-slate-100 bg-white">
-          {filters}
-        </div>
+        <div className="border-b border-[#E2E8F0] bg-white">{filters}</div>
       )}
-      <div className="erp-table-scroll">
-        {children}
-      </div>
-    </div>
-  )
+      <SectionCardContent className="p-0">{children}</SectionCardContent>
+    </SectionCard>
+  );
 }

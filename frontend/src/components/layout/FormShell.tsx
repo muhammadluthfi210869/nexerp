@@ -1,5 +1,7 @@
-import React from "react";
-import { ModuleHeader } from "./ModuleHeader";
+"use client";
+
+import * as React from "react";
+import { PageShell } from "@/components/canonical";
 
 interface FormShellProps {
   title: string;
@@ -12,9 +14,8 @@ interface FormShellProps {
 }
 
 /**
- * Shell template for ALL input/form pages.
- * Enforces a 2/3 + 1/3 split layout with consistent spacing.
- * Right sidebar is sticky for action panels.
+ * Canonical-aligned FormShell. Wraps canonical PageShell.
+ * Optional sticky right sidebar for action panels.
  */
 export function FormShell({
   title,
@@ -25,34 +26,24 @@ export function FormShell({
   fullWidth = false,
   children,
 }: FormShellProps) {
+  const resolvedTitle = [title, titleAccent].filter(Boolean).join(" ");
+
   return (
-    <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
-      <ModuleHeader
-        title={title}
-        titleAccent={titleAccent}
-        subtitle={subtitle}
-        actions={actions}
-      />
+    <PageShell title={resolvedTitle} subtitle={subtitle} actions={actions}>
       {sidebar ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 'var(--section-gap)' }}>
-          <div className="lg:col-span-2 flex flex-col" style={{ gap: 'var(--section-gap)' }}>
-            {children}
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-6">{children}</div>
           <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-[var(--page-py)] flex flex-col" style={{ gap: 'var(--subsection-gap)' }}>
+            <div className="lg:sticky lg:top-4 flex flex-col gap-4">
               {sidebar}
             </div>
           </div>
         </div>
       ) : (
-        <div
-          className={fullWidth ? "w-full flex flex-col" : "max-w-4xl flex flex-col"}
-          style={{ gap: 'var(--section-gap)' }}
-        >
+        <div className={fullWidth ? "w-full flex flex-col gap-6" : "max-w-4xl flex flex-col gap-6"}>
           {children}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
-

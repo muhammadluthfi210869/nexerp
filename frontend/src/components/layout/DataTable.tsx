@@ -1,5 +1,17 @@
-import React from "react";
+"use client";
+
+import * as React from "react";
 import { cn } from "@/lib/utils";
+
+/**
+ * Canonical-aligned DataTable primitives.
+ * All match canonical visual grammar:
+ * - 12px outer radius
+ * - subtle 1px neutral border
+ * - 42px header height
+ * - 44px row height
+ * - 11px uppercase headers with subtle slate-50 surface
+ */
 
 interface DataTableProps {
   children: React.ReactNode;
@@ -8,11 +20,13 @@ interface DataTableProps {
 
 export function DataTable({ children, className }: DataTableProps) {
   return (
-    <div 
-      className={cn("erp-table-shell bg-white border border-border shadow-[var(--table-shadow)] overflow-hidden", className)}
-      style={{ borderRadius: 'var(--table-radius)' }}
+    <div
+      className={cn(
+        "rounded-[12px] border border-[#E2E8F0] bg-white overflow-hidden",
+        className,
+      )}
     >
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full text-left border-collapse text-[13px]">
         {children}
       </table>
     </div>
@@ -25,7 +39,7 @@ interface DataTableHeadProps {
 }
 
 export function DataTableHead({ children, className }: DataTableHeadProps) {
-  return <thead className={cn("bg-slate-50/50", className)}>{children}</thead>;
+  return <thead className={cn("bg-slate-50/70", className)}>{children}</thead>;
 }
 
 interface DataTableThProps {
@@ -38,12 +52,11 @@ export function DataTableTh({ children, className, align = "left" }: DataTableTh
   return (
     <th
       className={cn(
-        "text-[10px] font-bold text-slate-400 uppercase tracking-wider",
+        "h-[42px] px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider",
         align === "center" && "text-center",
         align === "right" && "text-right",
-        className
+        className,
       )}
-      style={{ padding: `0 var(--table-cell-px)`, height: 'var(--table-row-h)' }}
     >
       {children}
     </th>
@@ -58,9 +71,12 @@ interface DataTableRowProps {
 
 export function DataTableRow({ children, className, onClick }: DataTableRowProps) {
   return (
-    <tr 
+    <tr
       onClick={onClick}
-      className={cn("hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0", className)}
+      className={cn(
+        "border-b border-[#E2E8F0] last:border-b-0 hover:bg-slate-50/50 transition-colors",
+        className,
+      )}
     >
       {children}
     </tr>
@@ -79,15 +95,11 @@ export function DataTableCell({ children, align = "left", className, colSpan }: 
     <td
       colSpan={colSpan}
       className={cn(
-        "align-middle",
+        "h-[44px] px-4 text-[13px] text-slate-700 align-middle",
         align === "center" && "text-center",
         align === "right" && "text-right",
-        className
+        className,
       )}
-      style={{
-        padding: `0 var(--table-cell-px)`,
-        height: 'var(--table-row-h)',
-      }}
     >
       {children}
     </td>
@@ -99,9 +111,5 @@ interface DataTableBodyProps {
 }
 
 export function DataTableBody({ children }: DataTableBodyProps) {
-  return (
-    <tbody className="divide-y divide-slate-50">
-      {children}
-    </tbody>
-  );
+  return <tbody className="divide-y divide-slate-100">{children}</tbody>;
 }

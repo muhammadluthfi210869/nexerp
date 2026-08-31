@@ -1,5 +1,7 @@
-import React from "react";
-import { ModuleHeader } from "./ModuleHeader";
+"use client";
+
+import * as React from "react";
+import { PageShell } from "@/components/canonical";
 
 interface TableShellProps {
   title: string;
@@ -12,32 +14,22 @@ interface TableShellProps {
 }
 
 /**
- * Shell template for ALL list/registry/pipeline pages.
- * Provides standardized filter bar, full-width table area, and pagination slot.
+ * Canonical-aligned TableShell. Wraps canonical PageShell.
  */
 export function TableShell({ title, titleAccent, subtitle, actions, filters, pagination, children }: TableShellProps) {
+  const resolvedTitle = [title, titleAccent].filter(Boolean).join(" ");
+
   return (
-    <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
-      <ModuleHeader
-        title={title}
-        titleAccent={titleAccent}
-        subtitle={subtitle}
-        actions={actions}
-      />
+    <PageShell title={resolvedTitle} subtitle={subtitle} actions={actions}>
       {filters && (
-        <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {filters}
         </div>
       )}
-      <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
-        {children}
-      </div>
+      <div className="flex flex-col gap-6">{children}</div>
       {pagination && (
-        <div className="mt-4 flex justify-between items-center">
-          {pagination}
-        </div>
+        <div className="mt-2 flex justify-between items-center">{pagination}</div>
       )}
-    </div>
+    </PageShell>
   );
 }
-

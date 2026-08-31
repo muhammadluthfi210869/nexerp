@@ -1,36 +1,51 @@
-import React from "react"
-import { cn } from "@/lib/utils"
+"use client";
 
-type BadgeStatus = "success" | "info" | "warning" | "critical" | "purple" | "default"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { StatusBadge as CanonicalStatusBadge, StatusVariant } from "@/components/canonical";
+
+type BadgeStatus = "success" | "info" | "warning" | "critical" | "purple" | "default";
 
 interface DnaBadgeProps {
-  status?: BadgeStatus
-  children: React.ReactNode
-  className?: string
-  onClick?: () => void
+  status?: BadgeStatus;
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
 }
 
-const statusClasses: Record<BadgeStatus, string> = {
-  success: "bg-[#ECFDF5] text-[#059669] border-[#DCFCE7]",
-  info: "bg-blue-50 text-blue-600 border-blue-100",
-  warning: "bg-amber-50 text-amber-600 border-amber-100",
-  critical: "bg-[#FEF2F2] text-[#DC2626] border-[#FECDD3]",
-  purple: "bg-purple-50 text-purple-600 border-purple-100",
-  default: "bg-slate-50 text-slate-600 border-slate-100",
-}
+const STATUS_MAP: Record<BadgeStatus, StatusVariant> = {
+  success: "success",
+  info: "info",
+  warning: "warning",
+  critical: "destructive",
+  purple: "info",
+  default: "default",
+};
 
+/**
+ * Canonical-aligned DnaBadge. Wraps canonical StatusBadge.
+ * Maps legacy `status` prop to canonical variant.
+ */
 export function DnaBadge({ status = "default", children, className, onClick }: DnaBadgeProps) {
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "inline-flex items-center rounded-md transition-opacity hover:opacity-80",
+          className,
+        )}
+      >
+        <CanonicalStatusBadge variant={STATUS_MAP[status]}>
+          {children}
+        </CanonicalStatusBadge>
+      </button>
+    );
+  }
   return (
-    <span
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase rounded-lg px-3 py-1 border shadow-sm",
-        statusClasses[status],
-        onClick && "cursor-pointer hover:opacity-80 transition-opacity",
-        className
-      )}
-    >
+    <CanonicalStatusBadge variant={STATUS_MAP[status]} className={className}>
       {children}
-    </span>
-  )
+    </CanonicalStatusBadge>
+  );
 }
