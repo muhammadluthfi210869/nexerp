@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "patch-package",
-    "prebuild": "prisma generate && npm run check:env",
+    "prebuild": "prisma generate",
     "prestart": "npm run check:env",
     "check:env": "ts-node scripts/check-env.ts",
     "build": "nest build",
