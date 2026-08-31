@@ -4,8 +4,16 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { KpiCard } from "@/components/dna/KpiCard";
 import { SectionLabel } from "@/components/dna/SectionLabel";
+import {
+  MetricCard,
+  CanonicalMetricGrid,
+  SectionCard,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+  type DataTableProps,
+} from "@/components/canonical";
 import { Users, CheckCircle2, DollarSign, TrendingUp, Phone, Clock, AlertTriangle } from "lucide-react";
 
 export default function BussdevMyPerformancePage() {
@@ -29,6 +37,27 @@ export default function BussdevMyPerformancePage() {
   const myContactRate = myLeadCount > 0 ? Math.round((myContacted / myLeadCount) * 100) : 0;
   const myDealRate = myLeadCount > 0 ? Math.round((myDeals / myLeadCount) * 100) : 0;
 
+  const columns: DataTableProps<any>["columns"] = React.useMemo(
+    () => [
+      { id: "client", header: "Client", accessorKey: "clientName" },
+      { id: "brand", header: "Brand", accessorKey: "brandName" },
+      {
+        id: "status",
+        header: "Status",
+        cell: ({ row }: any) => <StatusBadge variant={mapStatus(row.original.status)}>{row.original.status || "—"}</StatusBadge>,
+      },
+      {
+        id: "value",
+        header: "Value",
+        cell: ({ row }: any) =>
+          row.original.estimatedValue
+            ? `Rp ${(Number(row.original.estimatedValue) / 1e6).toFixed(0)}M`
+            : "—",
+      },
+    ],
+    [],
+  );
+
   return (
     <DashboardShell
       title="My"
@@ -36,46 +65,31 @@ export default function BussdevMyPerformancePage() {
       subtitle="Personal sales performance metrics. Only your data is shown here."
     >
       <div className="space-y-10">
-        <div className="grid grid-cols-4 gap-8">
-          <KpiCard label="My Leads" value={String(myLeadCount)} targetPct={myLeadCount >= 10 ? 100 : myLeadCount * 10} icon={<Users />} />
-          <KpiCard label="Contact Rate" value={`${myContactRate}%`} targetPct={myContactRate} icon={<Phone />} />
-          <KpiCard label="My Deals" value={String(myDeals)} targetPct={myDeals >= 3 ? 100 : myDeals * 33} icon={<CheckCircle2 />} />
-          <KpiCard label="Deal Rate" value={`${myDealRate}%`} targetPct={myDealRate} icon={<TrendingUp />} />
-        </div>
+        <CanonicalMetricGrid>
+          <MetricCard label="My Leads" value={String(myLeadCount)} subValue={`Target ${myLeadCount >= 10 ? "✓" : `${myLeadCount}/10`}`} icon={<Users />} />
+          <MetricCard label="Contact Rate" value={`${myContactRate}%`} subValue="Across my leads" icon={<Phone />} />
+          <MetricCard label="My Deals" value={String(myDeals)} subValue={`Goal ${myDeals >= 3 ? "✓" : `${myDeals}/3`}`} icon={<CheckCircle2 />} />
+          <MetricCard label="Deal Rate" value={`${myDealRate}%`} subValue="Won / contacted" icon={<TrendingUp />} />
+        </CanonicalMetricGrid>
 
-        <div className="bg-white border border-slate-200 rounded-[24px] p-8">
-          <SectionLabel>My Pipeline</SectionLabel>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[#F9FAFB] border-b">
-                  <th className="text-table-header text-slate-400 px-6 py-4">Client</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Status</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Brand</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Value</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F1F5F9]">
-                {(myLeads || []).slice(0, 10).map((lead: any, i: number) => (
-                  <tr key={lead.id || i}>
-                    <td className="text-[11px] font-bold text-slate-700 px-6 py-4">{lead.clientName || "—"}</td>
-                    <td className="px-6 py-4"><span className="text-[9px] font-black text-slate-500 uppercase">{lead.status || "—"}</span></td>
-                    <td className="text-[11px] font-bold text-slate-600 px-6 py-4">{lead.brandName || "—"}</td>
-                    <td className="text-[11px] font-bold text-slate-700 tabular px-6 py-4">{lead.estimatedValue ? `Rp ${(lead.estimatedValue / 1e6).toFixed(0)}M` : "—"}</td>
-                  </tr>
-                ))}
-                {(!myLeads || myLeads.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="text-center text-[11px] font-bold text-slate-400 py-12">No leads assigned yet</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <SectionCard>
+          <div className="px-1 pt-1">
+            <SectionLabel>My Pipeline</SectionLabel>
           </div>
-        </div>
+          <div className="mt-4">
+            <DataTable<any>
+              data={(myLeads || []).slice(0, 10)}
+              columns={columns}
+              title="My Pipeline"
+              searchPlaceholder="Search leads, brands, status..."
+              pageSize={10}
+              pageSizeOptions={[10, 25, 50]}
+            />
+          </div>
+        </SectionCard>
 
-        <div className="grid grid-cols-2 gap-8">
-          <div className="bg-white border border-slate-200 rounded-[24px] p-8">
+        <div className="grid grid-cols-2 gap-6">
+          <SectionCard>
             <SectionLabel>Activity Summary</SectionLabel>
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between py-2 border-b border-slate-100">
@@ -91,25 +105,25 @@ export default function BussdevMyPerformancePage() {
                 <span className="text-[11px] font-black text-blue-600 tabular">{stats?.recentActivity || 0} events</span>
               </div>
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="bg-white border border-slate-200 rounded-[24px] p-8">
+          <SectionCard>
             <SectionLabel>Quick Tips</SectionLabel>
             <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-[#F0FDF4] border border-[#DCFCE7] rounded-[16px] text-[10px] font-bold text-[#166534]">
+              <div className="flex items-center gap-3 p-3 bg-[#F0FDF4] border border-[#DCFCE7] rounded-[12px] text-[10px] font-bold text-[#166534]">
                 <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                 Follow up leads within 24 hours to improve contact rate
               </div>
-              <div className="flex items-center gap-3 p-3 bg-[#FEF9C3] border border-[#FEF08A] rounded-[16px] text-[10px] font-bold text-[#854D0E]">
+              <div className="flex items-center gap-3 p-3 bg-[#FEF9C3] border border-[#FEF08A] rounded-[12px] text-[10px] font-bold text-[#854D0E]">
                 <Clock className="w-4 h-4 flex-shrink-0" />
                 Samples stuck &gt;14 days: {stats?.cards?.leads?.value ? "Review now" : "None pending"}
               </div>
-              <div className="flex items-center gap-3 p-3 bg-[#EFF6FF] border border-[#DBEAFE] rounded-[16px] text-[10px] font-bold text-[#1E40AF]">
+              <div className="flex items-center gap-3 p-3 bg-[#EFF6FF] border border-[#DBEAFE] rounded-[12px] text-[10px] font-bold text-[#1E40AF]">
                 <TrendingUp className="w-4 h-4 flex-shrink-0" />
                 Target deal rate: 15% — aim for 1 deal per 7 qualified leads
               </div>
             </div>
-          </div>
+          </SectionCard>
         </div>
       </div>
     </DashboardShell>

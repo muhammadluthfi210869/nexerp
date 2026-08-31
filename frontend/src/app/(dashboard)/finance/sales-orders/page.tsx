@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
+import { DnaInput, DnaButton } from "@/components/dna";
+import { StatusBadge, mapStatus } from "@/components/canonical";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,7 @@ export default function SalesOrderPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isProofModalOpen, setIsProofModalOpen] = useState(false);
 
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders } = useQuery({
     queryKey: ["finance-sales-orders"],
     queryFn: async () => (await api.get("/finance/sales-orders")).data,
   });
@@ -114,7 +115,7 @@ export default function SalesOrderPage() {
           if (o.paymentProofUrl) {
             return (
               <div className="flex flex-col items-center gap-2">
-                <DnaBadge status="warning" className="animate-pulse">PENDING VALIDATION</DnaBadge>
+                <StatusBadge variant="warning" className="animate-pulse">PENDING VALIDATION</StatusBadge>
                 <DnaButton
                   variant="ghost"
                   className="h-6 text-[8px] text-blue-600 hover:bg-blue-50"
@@ -204,15 +205,7 @@ export default function SalesOrderPage() {
     [],
   );
 
-  if (isLoading) {
-    return (
-      <OperationalMigrationShell title="Sales" titleAccent="Validation Hub" subtitle="Validating Commercial Commitments & Down Payments">
-        <div className="flex justify-center p-20">
-          <Loader2 className="animate-spin h-10 w-10 text-amber-600" />
-        </div>
-      </OperationalMigrationShell>
-    );
-  }
+  // Batch 1: render page even when loading; canonical EmptyState shows in table area.
 
   return (
     <OperationalMigrationShell
@@ -226,7 +219,7 @@ export default function SalesOrderPage() {
           {pendingVerification.map((order: any) => (
             <div key={order.id} className="p-6 bg-white border border-slate-200 shadow-sm border-l-4 border-amber-500 rounded-2xl group hover:scale-[1.02] transition-all">
               <div className="flex justify-between items-start mb-4">
-                <DnaBadge status="warning">AWAITING DP</DnaBadge>
+                <StatusBadge variant="warning">AWAITING DP</StatusBadge>
                 <span className="text-[10px] font-black text-slate-300">#{order.id}</span>
               </div>
               <h4 className="font-black text-slate-900 uppercase italic text-sm line-clamp-1">{order.lead?.clientName || "—"}</h4>

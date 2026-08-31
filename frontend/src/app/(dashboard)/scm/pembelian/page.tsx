@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, TableWrapper, DnaBadge } from "@/components/dna";
+import { StatCard, TableWrapper } from "@/components/dna";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatusBadge, mapStatus } from "@/components/canonical";
 import {
   Table,
   TableBody,
@@ -39,21 +40,7 @@ import { EmptyState } from "@/components/empty-state";
 import { formatCurrency } from "@/lib/utils";
 import { DnaButton } from "@/components/dna";
 
-const STATUS_BADGE_MAP: Record<string, "success" | "warning" | "default" | "info" | "critical"> = {
-  DRAFT: "default",
-  PENDING_APPROVAL: "warning",
-  APPROVED: "success",
-  REJECTED: "critical",
-  ORDERED: "info",
-  SHIPPED: "info",
-  RECEIVED: "success",
-  CANCELLED: "default",
-  SUBMITTED: "warning",
-  COMPLETED: "success",
-  UNPAID: "critical",
-  PAID: "success",
-  PARTIAL: "warning",
-};
+// Legacy STATUS_BADGE_MAP removed: replaced by canonical mapStatus() in @/components/canonical
 
 function PRTab() {
   const { data: requests, isLoading } = useQuery({
@@ -122,7 +109,7 @@ function PRTab() {
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs">{pr.items?.length || 0}</TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <DnaBadge status={STATUS_BADGE_MAP[pr.status] || "default"}>{pr.status?.replace("_", " ") || "DRAFT"}</DnaBadge>
+                  <StatusBadge variant={mapStatus(pr.status)}>{pr.status?.replace("_", " ") || "DRAFT"}</StatusBadge>
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right">
                   <Link href={`/scm/purchase-requests`} className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase">Lihat</Link>
@@ -203,7 +190,7 @@ function POTab() {
                 <TableCell className="py-3 px-4 text-slate-500 text-[10px] font-medium">{po.estArrival ? new Date(po.estArrival).toLocaleDateString() : "-"}</TableCell>
                 <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs tabular-nums">Rp {Number(po.totalValue).toLocaleString()}</TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <DnaBadge status={STATUS_BADGE_MAP[po.status] || "default"}>{po.status?.replace("_", " ") || "DRAFT"}</DnaBadge>
+                  <StatusBadge variant={mapStatus(po.status)}>{po.status?.replace("_", " ") || "DRAFT"}</StatusBadge>
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right">
                   <Link href="/scm/purchasing" className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase">Lihat</Link>
@@ -286,10 +273,10 @@ function ReceivingTab() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="py-3 px-4"><DnaBadge status="default">{receipt.poId}</DnaBadge></TableCell>
+                <TableCell className="py-3 px-4"><StatusBadge variant="default">{receipt.poId}</StatusBadge></TableCell>
                 <TableCell className="py-3 px-4 font-medium text-slate-700 text-xs">{receipt.vendor}</TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <DnaBadge status={receipt.qc === "PASSED" ? "success" : "warning"}>{receipt.qc}</DnaBadge>
+                  <StatusBadge variant={receipt.qc === "PASSED" ? "success" : "warning"}>{receipt.qc}</StatusBadge>
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right">
                   <Link href="/scm/receiving" className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase">Lihat</Link>
@@ -375,9 +362,9 @@ function ReturnsTab() {
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right font-black text-rose-600 text-xs">Rp {Number(ret.totalValue).toLocaleString()}</TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <DnaBadge status={ret.status === "COMPLETED" ? "success" : ret.status === "CANCELLED" ? "default" : ret.status === "WAITING_APPROVAL" ? "warning" : "info"}>
+                  <StatusBadge variant={mapStatus(ret.status)}>
                     {ret.status?.replace("_", " ") || "DRAFT"}
-                  </DnaBadge>
+                  </StatusBadge>
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right">
                   <Link href="/scm/purchase-returns" className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase">Lihat</Link>
@@ -462,7 +449,7 @@ function PaymentsTab() {
                   Rp {Number(inv.outstandingAmount).toLocaleString()}
                 </TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <DnaBadge status={inv.status === "PAID" ? "success" : "critical"}>{inv.status === "PAID" ? "Lunas" : inv.status === "UNPAID" ? "Belum Lunas" : inv.status}</DnaBadge>
+                  <StatusBadge variant={inv.status === "PAID" ? "success" : "destructive"}>{inv.status === "PAID" ? "Lunas" : inv.status === "UNPAID" ? "Belum Lunas" : inv.status}</StatusBadge>
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right">
                   <Link href="/scm/purchasing/payments" className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase">Lihat</Link>
@@ -542,7 +529,7 @@ function DPTab() {
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs">Rp {Number(dp.amountDue).toLocaleString()}</TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <DnaBadge status={dp.status === "PAID" ? "success" : "warning"}>{dp.status === "PAID" ? "Lunas" : "Belum Lunas"}</DnaBadge>
+                  <StatusBadge variant={dp.status === "PAID" ? "success" : "warning"}>{dp.status === "PAID" ? "Lunas" : "Belum Lunas"}</StatusBadge>
                 </TableCell>
                 <TableCell className="py-3 px-4 text-right">
                   <Link href="/scm/purchasing/down-payment" className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase">Lihat</Link>

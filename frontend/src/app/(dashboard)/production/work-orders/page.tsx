@@ -50,7 +50,8 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, StatCard, DnaBadge, DnaButton } from "@/components/dna";
+import { TableWrapper, StatCard, DnaButton } from "@/components/dna";
+import { StatusBadge, mapStatus, CanonicalMetricGrid } from "@/components/canonical";
 
 const STAGE_MAP: Record<string, { label: string; status: "default" | "info" | "warning" | "critical" | "purple" | "success" }> = {
   WAITING_MATERIAL: { label: "Waiting Material", status: "default" },
@@ -246,12 +247,12 @@ export default function WorkOrdersPage() {
       }
     >
       {/* Live Plant Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <CanonicalMetricGrid>
          <StatCard label="Active Batches" value={activeCount} icon={<Activity className="text-indigo-500" />} />
          <StatCard label="Awaiting Material" value={waitingCount} icon={<Clock className="text-amber-500" />} />
          <StatCard label="QC Hold" value={qcHoldCount} icon={<ShieldCheck className="text-rose-500" />} />
          <StatCard label="Total Orders" value={workOrders?.length || 0} icon={<Factory className="text-slate-800" />} />
-      </div>
+      </CanonicalMetricGrid>
 
       {/* Work Orders Table */}
       <TableWrapper>
@@ -315,9 +316,9 @@ export default function WorkOrdersPage() {
                          <TableCell className="py-3 min-w-[180px]">
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <DnaBadge status={stageInfo.status} className="shadow-none py-0.5 px-2 rounded-md text-[8px]">
+                                <StatusBadge variant={stageInfo.status === "critical" ? "destructive" : stageInfo.status === "purple" ? "info" : (stageInfo.status as any)} className="shadow-none py-0.5 px-2 rounded-md text-[8px]">
                                   {stageInfo.label}
-                                </DnaBadge>
+                                </StatusBadge>
                                 <span className="text-[8px] font-black text-slate-400 tabular-nums">{progress}%</span>
                               </div>
                               <Progress value={progress} className="h-1.5 bg-slate-100" />
@@ -331,13 +332,13 @@ export default function WorkOrdersPage() {
                          </TableCell>
                          <TableCell className="py-3 text-center">
                             {qcFlag ? (
-                              <DnaBadge status="critical" className="shadow-none py-0.5 px-2 rounded-md text-[8px] animate-pulse">
+                              <StatusBadge variant="destructive" className="shadow-none py-0.5 px-2 rounded-md text-[8px] animate-pulse">
                                 QC REQUIRED
-                              </DnaBadge>
+                              </StatusBadge>
                             ) : latestLog?.notes?.includes('QC_VERIFIED') ? (
-                              <DnaBadge status="success" className="shadow-none py-0.5 px-2 rounded-md text-[8px]">
+                              <StatusBadge variant="success" className="shadow-none py-0.5 px-2 rounded-md text-[8px]">
                                 QC PASS
-                              </DnaBadge>
+                              </StatusBadge>
                             ) : (
                               <span className="text-slate-300 text-[8px] font-bold">—</span>
                             )}

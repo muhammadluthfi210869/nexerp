@@ -13,7 +13,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { StatCard, DashboardCard } from "@/components/dna";
 import { DataCard } from "@/components/dna/DataCard";
 import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaBadge } from "@/components/dna/DnaBadge";
+import { StatusBadge, mapStatus, CanonicalMetricGrid } from "@/components/canonical";
 import {
   Package,
   ClipboardCheck,
@@ -109,12 +109,12 @@ export default function StokPage() {
         </TabsList>
 
         <TabsContent value="stok" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <CanonicalMetricGrid>
             <StatCard label="Total SKU" value={catalog?.length || 0} subValue="Active Materials" icon={<Box />} />
             <StatCard label="Total Valuation" value={formatOperationalCompactCurrency(totalValuation)} subValue="Inventory Value" icon={<BadgeDollarSign />} />
             <StatCard label="Stok Kritis" value={criticalItems} subValue="Below Min Level" icon={<AlertTriangle />} />
             <StatCard label="Unique Categories" value={String(new Set(catalog?.map((i: any) => i.category?.name).filter(Boolean)).size || 0)} subValue="Material Types" icon={<Package />} />
-          </div>
+          </CanonicalMetricGrid>
 
           <DashboardCard className="!p-4 !rounded-[1.5rem] mb-6 flex items-center gap-4">
             <Warehouse className="w-4 h-4 text-slate-400" />
@@ -174,7 +174,7 @@ export default function StokPage() {
                           </div>
                         </td>
                         <td className="px-6 py-5">
-                          <DnaBadge status="default">{item.category?.name || 'Uncategorized'}</DnaBadge>
+                          <StatusBadge variant="default">{item.category?.name || 'Uncategorized'}</StatusBadge>
                         </td>
                         <td className="px-6 py-5 text-center">
                           <span className={cn(
@@ -217,12 +217,12 @@ export default function StokPage() {
         </TabsContent>
 
         <TabsContent value="opname" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <CanonicalMetricGrid>
             <StatCard label="Total Sessions" value={String(opnames?.length || 0)} subValue="All Audit Sessions" icon={<ClipboardCheck />} />
             <StatCard label="Completed" value={String(opnames?.filter((s: any) => s.status === 'COMPLETED').length || 0)} subValue="Synced & Verified" icon={<ShieldCheck />} />
             <StatCard label="Draft / Pending" value={String(opnames?.filter((s: any) => s.status === 'DRAFT').length || 0)} subValue="Awaiting Auth" icon={<Clock />} />
             <StatCard label="Warehouses" value={String(new Set(opnames?.map((s: any) => s.warehouse?.name).filter(Boolean)).size || 0)} subValue="Audited Nodes" icon={<Warehouse />} />
-          </div>
+          </CanonicalMetricGrid>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {opnames?.map((session: any) => {
@@ -241,7 +241,7 @@ export default function StokPage() {
                       )}>
                         {isDraft ? <ClipboardCheck className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6 text-emerald-500" />}
                       </div>
-                      <DnaBadge status={isDraft ? 'warning' : 'success'}>{session.status}</DnaBadge>
+                      <StatusBadge variant={isDraft ? 'warning' : 'success'}>{session.status}</StatusBadge>
                     </div>
                     <div>
                       <h3 className={cn("text-xl font-black italic uppercase tracking-tighter", isDraft ? "text-white" : "text-brand-black")}>
@@ -279,12 +279,12 @@ export default function StokPage() {
         </TabsContent>
 
         <TabsContent value="adjustment" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <CanonicalMetricGrid>
             <StatCard label="Total Adjustments" value={String(adjustments?.length || 0)} subValue="All Records" icon={<SlidersHorizontal />} />
             <StatCard label="Approved" value={String(adjustments?.filter((a: any) => a.status === 'APPROVED').length || 0)} subValue="Applied" icon={<CheckCircle2 />} />
             <StatCard label="Pending" value={String(adjustments?.filter((a: any) => a.status === 'PENDING').length || 0)} subValue="Awaiting Review" icon={<Clock />} />
             <StatCard label="SKU Adjusted" value={String(adjustments?.reduce((s: number, a: any) => s + (a.items?.length || 0), 0) || 0)} subValue="Total Lines" icon={<Package />} />
-          </div>
+          </CanonicalMetricGrid>
 
           <TableWrapper>
             <div className="overflow-x-auto">
@@ -312,7 +312,7 @@ export default function StokPage() {
                       </td>
                       <td className="px-6 py-5 text-center text-[10px] font-black tabular">{adj.items?.length || 0}</td>
                       <td className="px-6 py-5 text-center">
-                        <DnaBadge status={adj.status === 'APPROVED' ? 'success' : adj.status === 'PENDING' ? 'warning' : 'default'}>{adj.status}</DnaBadge>
+                        <StatusBadge variant={adj.status === 'APPROVED' ? 'success' : adj.status === 'PENDING' ? 'warning' : 'default'}>{adj.status}</StatusBadge>
                       </td>
                       <td className="px-6 py-5 text-right text-[10px] font-bold text-slate-400">{adj.createdAt?.split('T')[0] || '-'}</td>
                     </tr>
