@@ -29,7 +29,6 @@ import {
   MaterialType,
   NormalBalance,
   PaymentType,
-  PeriodStatus,
   PRPriority,
   PRStatus,
   POStatus,
@@ -668,17 +667,14 @@ async function main() {
 
   const periodName = 'FY2026-08';
   const periodId = ID('period:2026-08');
-  await prisma.financialPeriod.upsert({
-    where: { name: periodName },
-    update: { status: PeriodStatus.OPEN },
-    create: {
-      id: periodId,
-      name: periodName,
-      startDate: new Date('2026-08-01'),
-      endDate: new Date('2026-08-31'),
-      status: PeriodStatus.OPEN,
-    },
-  });
+  // ponytail: 2026-08-31 — R4 shadow's financial_periods has both `name` and `label` NOT NULL
+  // but Prisma model only declares `name`. Use raw upsert so we satisfy the DB constraint.
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO financial_periods (id, name, label, "startDate", "endDate", status, "createdAt", "updatedAt")
+       VALUES ($1, $2, $2, $3, $4, 'OPEN'::"PeriodStatus", NOW(), NOW())
+       ON CONFLICT (name) DO UPDATE SET status = 'OPEN'::"PeriodStatus", "updatedAt" = NOW()`,
+    periodId, periodName, new Date('2026-08-01'), new Date('2026-08-31'),
+  );
 
   // Invoices — show legitimate operational state only.
   // Intentionally NOT pretending Shipment→Finance Golden Flow has passed.
