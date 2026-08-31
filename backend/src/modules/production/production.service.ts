@@ -1210,18 +1210,24 @@ export class ProductionService {
           include: { workOrder: true },
         });
 
-        // Create a production log to notify that material is released
-        await tx.productionLog.create({
-          data: {
-            workOrder: rel(requisition.workOrderId),
-            stage: updated.workOrder.stage,
-            inputQty: 0,
-            goodQty: 0,
-            quarantineQty: 0,
-            rejectQty: 0,
-            notes: `WAREHOUSE_ACTION: MATERIAL_RELEASED (${requisition.id}) — ${Number(requisition.qtyRequested)} ${requisition.material.unit} deducted`,
-          },
-        });
+        // Create a production log to notify that material is released.
+        // The MR may carry workOrderId (WorkOrder) OR woId (ProductionPlan)
+        // depending on the issuing flow. Only write a production log when a
+        // WorkOrder is actually linked; the production-plan-side flow records
+        // its own log via ProductionPlansService.
+        if (updated.workOrder) {
+          await tx.productionLog.create({
+            data: {
+              workOrder: rel(requisition.workOrderId),
+              stage: updated.workOrder.stage,
+              inputQty: 0,
+              goodQty: 0,
+              quarantineQty: 0,
+              rejectQty: 0,
+              notes: `WAREHOUSE_ACTION: MATERIAL_RELEASED (${requisition.id}) — ${Number(requisition.qtyRequested)} ${requisition.material.unit} deducted`,
+            },
+          });
+        }
 
         return updated;
       })
