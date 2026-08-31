@@ -203,23 +203,8 @@ export default function LoginPage() {
           </form>
         </Card>
 
-        {(IS_PROTOTYPE_MODE || isDemoHost()) && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-center shadow-sm">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600">
-              ⚡ Prototype Mode — Data Contoh
-            </p>
-            <p className="mt-1 text-[11px] font-bold text-amber-800">
-              Demo: <span className="font-mono">{PROTOTYPE_EMAIL}</span> ·{" "}
-              <span className="font-mono">{PROTOTYPE_PASSWORD}</span>
-            </p>
-            <p className="mt-0.5 text-[9px] font-medium text-amber-600">
-              Bukan data operasional — hanya untuk presentasi / demo
-            </p>
-          </div>
-        )}
-
         <p className="text-center text-[11px] font-medium text-slate-400 tracking-tight uppercase">
-          Powered by Nex Systems • V9.0 Prototype Baseline
+          NEX ERP · Authorized Access Only
         </p>
       </div>
     </div>
