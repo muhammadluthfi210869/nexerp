@@ -53,8 +53,26 @@ async function ensureUser(
   f: { email: string; fullName: string; roles: UserRole[] },
 ): Promise<{ id: string; created: boolean }> {
   const existing = await prisma.user.findUnique({ where: { email: f.email } });
-  if (existing) return { id: existing.id, created: false };
   const hash = await bcrypt.hash(R4_PASSWORD, 10);
+  if (existing) {
+    // Idempotent upsert: keep role set aligned with the fixture spec, refresh
+    // passwordHash on each run so a stale password cannot lock out a test role.
+    const needsUpdate =
+      JSON.stringify(existing.roles.sort()) !== JSON.stringify([...f.roles].sort()) ||
+      existing.fullName !== f.fullName;
+    if (needsUpdate) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash: hash,
+          fullName: f.fullName,
+          roles: f.roles,
+          status: 'ACTIVE',
+        },
+      });
+    }
+    return { id: existing.id, created: false };
+  }
   const user = await prisma.user.create({
     data: {
       email: f.email,
