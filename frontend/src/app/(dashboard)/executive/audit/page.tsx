@@ -1,11 +1,10 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
-  History,
   Search,
   Filter,
   Download,
@@ -16,8 +15,18 @@ import {
   Lock,
   Fingerprint,
 } from "lucide-react";
-import { OperationalDataTable, OperationalMetricCard, OperationalMetricGrid, OperationalPageShell, getOperationalStatusLabel } from "@/components/operational";
+import {
+  PageShell,
+  CanonicalMetricGrid,
+  MetricCard,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+  SectionCard,
+  SectionCardContent,
+} from "@/components/canonical";
 import { format } from "date-fns";
+import type { ColumnDef } from "@tanstack/react-table";
 
 const ACTION_TONE: Record<string, string> = {
   CREATE: "bg-emerald-50",
@@ -62,12 +71,12 @@ export default function AuditTrailPage() {
     [logs, searchTerm]
   );
 
-  const columns = useMemo(
+  const columns = useMemo<ColumnDef<any, any>[]>(
     () => [
       {
         accessorKey: "createdAt",
         header: "Timestamp",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Clock className="h-3.5 w-3.5 text-slate-300" />
             <div>
@@ -84,7 +93,7 @@ export default function AuditTrailPage() {
       {
         accessorKey: "user",
         header: "Identity",
-        cell: ({ row }: { row: { original: any } }) => {
+        cell: ({ row }) => {
           const u = row.original.user;
           const initials = (u?.name || "—").substring(0, 2).toUpperCase();
           return (
@@ -103,7 +112,7 @@ export default function AuditTrailPage() {
       {
         accessorKey: "action",
         header: "Action Protocol",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <ActionIcon type={row.original.type} />
             <p className="text-[11px] font-black uppercase text-slate-700">{row.original.action}</p>
@@ -113,9 +122,11 @@ export default function AuditTrailPage() {
       {
         accessorKey: "entityType",
         header: "Entity Scope",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="space-y-1">
-            <span className="operational-status-badge is-info">{row.original.entityType}</span>
+            <StatusBadge variant={mapStatus(row.original.entityType)}>
+              {row.original.entityType}
+            </StatusBadge>
             <p className="text-[10px] font-bold text-slate-400">#{row.original.entityId}</p>
           </div>
         ),
@@ -123,7 +134,7 @@ export default function AuditTrailPage() {
       {
         accessorKey: "hash",
         header: "Checksum",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex items-center justify-end gap-1">
             <Fingerprint className="h-3.5 w-3.5 text-slate-300" />
             <p className="text-[8px] font-mono text-slate-400 uppercase break-all max-w-[120px]">
@@ -137,69 +148,59 @@ export default function AuditTrailPage() {
   );
 
   return (
-    <OperationalPageShell
+    <PageShell
       title="Audit Trail"
       subtitle="Centralized Transactional Integrity & User Forensics"
       actions={
         <div className="flex items-center gap-2">
-          <div className="operational-field">
-            <span className="sr-only">Search</span>
+          <label className="flex items-center gap-2 h-9 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400 min-w-[260px]">
+            <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <input
-              type="text"
-              placeholder="Cari hash / user / entity..."
+              type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 w-64 pl-9"
+              placeholder="Cari hash / user / entity..."
+              className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
             />
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-          </div>
-          <button type="button" className="operational-button is-secondary h-9 px-3">
+          </label>
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+          >
             <Filter className="h-4 w-4" />
           </button>
-          <button type="button" className="operational-button is-secondary h-9 px-3">
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+          >
             <Download className="h-4 w-4" />
             <span>Export Ledger</span>
           </button>
         </div>
       }
     >
-      <div className="operational-stack">
-        <OperationalMetricGrid>
-          <OperationalMetricCard
-            label="Active Sessions"
-            value="24"
-            icon={<User className="h-4 w-4" />}
-            tone="blue"
-          />
-          <OperationalMetricCard
-            label="System Integrity"
-            value="100%"
-            icon={<Lock className="h-4 w-4" />}
-            tone="green"
-          />
-          <OperationalMetricCard
-            label="Today's Mutations"
-            value="1,402"
-            icon={<Database className="h-4 w-4" />}
-            tone="purple"
-          />
-          <OperationalMetricCard
-            label="Risk Index"
-            value="0.00"
-            icon={<AlertCircle className="h-4 w-4" />}
-            tone="red"
-          />
-        </OperationalMetricGrid>
+      <div className="flex flex-col gap-6">
+        <CanonicalMetricGrid>
+          <MetricCard label="Active Sessions" value="24" icon={<User />} variant="info" />
+          <MetricCard label="System Integrity" value="100%" icon={<Lock />} variant="success" />
+          <MetricCard label="Today's Mutations" value="1,402" icon={<Database />} variant="warning" />
+          <MetricCard label="Risk Index" value="0.00" icon={<AlertCircle />} variant="danger" />
+        </CanonicalMetricGrid>
 
-        <OperationalDataTable
-          data={(filteredLogs as any[]) || []}
-          columns={columns as any}
-          getRowId={(row: any) => row.id}
-          searchPlaceholder="Cari hash, user, atau entity..."
-          loading={isLoading}
-          emptyMessage="Tidak ada data forensik ditemukan"
-        />
+        <SectionCard>
+          <SectionCardContent className="p-0">
+            <DataTable
+              data={(filteredLogs as any[]) || []}
+              columns={columns}
+              getRowId={(row: any) => row.id}
+              searchPlaceholder="Cari hash, user, atau entity..."
+              loading={isLoading}
+              emptyMessage="Tidak ada data forensik ditemukan"
+              enableSearch={false}
+            />
+          </SectionCardContent>
+        </SectionCard>
       </div>
-    </OperationalPageShell>
+    </PageShell>
   );
 }

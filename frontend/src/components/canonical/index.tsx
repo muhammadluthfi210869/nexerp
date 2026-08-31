@@ -27,6 +27,7 @@ export {
   CardFooter as SectionCardFooter,
 } from "@/components/ui/card";
 export { ModuleHeader as PageHeader } from "@/components/layout/ModuleHeader";
+export { DashboardShell as PageShell } from "@/components/layout/DashboardShell";
 export { Badge as StatusBadge } from "@/components/ui/badge";
 import { badgeVariants } from "@/components/ui/badge";
 export {

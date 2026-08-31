@@ -1,0 +1,70 @@
+{
+  "capturedAt": "2026-08-31T23:16:44.970Z",
+  "viewport": "1600x1000",
+  "theme": "light",
+  "auth": "superadmin@dreamlab.id",
+  "okCount": 10,
+  "failCount": 0,
+  "results": [
+    {
+      "route": "/executive/audit",
+      "filename": "01-executive.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/marketing/dashboard",
+      "filename": "02-marketing.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/bussdev/client-manager",
+      "filename": "03-busdev.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/finance/invoices",
+      "filename": "04-finance.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/rnd/repository",
+      "filename": "05-rnd.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/scm/purchasing/payments",
+      "filename": "06-scm.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/production/audit",
+      "filename": "07-production.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/qc/coa",
+      "filename": "08-qc.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/warehouse/inbound",
+      "filename": "09-warehouse.png",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/legality/permits",
+      "filename": "10-legal.png",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

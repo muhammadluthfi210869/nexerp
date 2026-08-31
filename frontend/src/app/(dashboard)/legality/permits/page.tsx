@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -14,23 +14,24 @@ import {
   Gavel,
   History,
   Download,
-  Calendar,
   Zap,
   Globe,
   Verified,
   ArrowRight,
 } from "lucide-react";
-import { DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
 import {
-  OperationalButton,
-  OperationalMetricCard,
-  OperationalMetricGrid,
-  OperationalPageShell,
-  OperationalPanel,
-  OperationalStatusBadge,
-} from "@/components/operational";
+  PageShell,
+  CanonicalMetricGrid,
+  MetricCard,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+  SectionCard,
+  SectionCardContent,
+} from "@/components/canonical";
 import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
 import { formatOperationalDate } from "@/lib/operational-formatters";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export default function LegalityHub() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,7 +92,7 @@ export default function LegalityHub() {
   const inProgress = permits?.filter((p: any) => p.status === 'EXPIRED' || p.status === 'EXPIRING_SOON').length ?? 0;
   const healthScore = permits?.length > 0 ? Math.round((activePermits / permits.length) * 100) + '%' : '100%';
 
-  const filteredPermits = permits.filter((p: any) => {
+  const filteredPermits = useMemo(() => permits.filter((p: any) => {
     const term = searchTerm.toLowerCase();
     return (
       p.id?.toLowerCase().includes(term) ||
@@ -99,154 +100,186 @@ export default function LegalityHub() {
       p.issuer?.toLowerCase().includes(term) ||
       p.type?.toLowerCase().includes(term)
     );
-  });
+  }), [permits, searchTerm]);
+
+  const columns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "permit",
+      header: "Permit ID / Referensi",
+      cell: ({ row }: any) => (
+        <div className="flex items-center gap-2">
+          <div className="grid h-7 w-7 place-items-center rounded-lg bg-amber-50 text-amber-600">
+            <FileText className="h-3.5 w-3.5" />
+          </div>
+          <span className="text-[12px] font-medium text-slate-900">{row.original.id}</span>
+        </div>
+      ),
+    },
+    {
+      id: "name",
+      header: "Nama / Penerbit",
+      cell: ({ row }: any) => (
+        <div>
+          <p className="text-[12px] font-medium text-slate-900">{row.original.name}</p>
+          <p className="text-[11px] text-slate-500">{row.original.issuer}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "type",
+      header: "Kategori",
+      cell: ({ getValue }: any) => (
+        <StatusBadge variant="default">{String(getValue() ?? "—")}</StatusBadge>
+      ),
+    },
+    {
+      accessorKey: "expiry",
+      header: "Berlaku s/d",
+      cell: ({ getValue }: any) => (
+        <span className="text-[12px] text-slate-600 tabular-nums">
+          {formatOperationalDate(getValue())}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="text-center">Status</div>,
+      cell: ({ row }: any) => (
+        <div className="flex justify-center">
+          <StatusBadge variant={mapStatus(row.original.status)}>
+            {STATUS_LABELS[row.original.status] || getOperationalStatusLabel(row.original.status)}
+          </StatusBadge>
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Aksi</div>,
+      cell: ({ row }: any) => (
+        <div className="flex justify-end gap-1">
+          <button
+            type="button"
+            aria-label="Download"
+            className="h-7 w-7 rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50 inline-flex items-center justify-center"
+            onClick={() => console.log("Download permit:", row.original.id)}
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
+          {STATUS_FLOW[row.original.status] && STATUS_FLOW[row.original.status].length > 0 && (
+            <button
+              type="button"
+              className="h-7 px-2 inline-flex items-center gap-1 rounded-md bg-amber-500 text-white text-[11px] font-medium hover:bg-amber-600"
+              onClick={() => setAdvancePermit(row.original)}
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+              <span>Maju</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className="h-7 px-2 inline-flex items-center gap-1 rounded-md border border-[#E2E8F0] bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50"
+            onClick={() => console.log("View permit details:", row.original.id)}
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span>Detail</span>
+          </button>
+        </div>
+      ),
+    },
+  ], []);
 
   return (
-    <OperationalPageShell
+    <PageShell
       title="Registry Perizinan"
       subtitle="Pelacakan permit, lisensi, dan kepatuhan regulasi"
       actions={
         <div className="flex gap-2">
-          <DnaButton variant="outline" icon={<History className="h-4 w-4 text-amber-500" />}>
-            Audit Log
-          </DnaButton>
-          <DnaButton variant="primary" icon={<PlusCircle className="h-4 w-4" />} className="bg-amber-600 hover:bg-amber-700 text-white">
-            Tambah Permit
-          </DnaButton>
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <History className="h-4 w-4 text-amber-500" />
+            <span>Audit Log</span>
+          </button>
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-amber-600 text-white text-[12px] font-medium hover:bg-amber-700"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Tambah Permit</span>
+          </button>
         </div>
       }
     >
-      <OperationalMetricGrid>
-        <OperationalMetricCard label="Permit Aktif" value={activePermits} icon={<Verified className="h-4 w-4" />} tone="green" />
-        <OperationalMetricCard label="Segera Habis" value={expiringSoon} icon={<Clock className="h-4 w-4" />} tone="amber" />
-        <OperationalMetricCard label="Dalam Proses" value={inProgress} icon={<Zap className="h-4 w-4" />} tone="blue" />
-        <OperationalMetricCard label="Kesehatan Regulasi" value={healthScore} icon={<ShieldCheck className="h-4 w-4" />} />
-      </OperationalMetricGrid>
+      <div className="flex flex-col gap-6">
+        <CanonicalMetricGrid>
+          <MetricCard label="Permit Aktif" value={activePermits} icon={<Verified />} variant="success" />
+          <MetricCard label="Segera Habis" value={expiringSoon} icon={<Clock />} variant="warning" />
+          <MetricCard label="Dalam Proses" value={inProgress} icon={<Zap />} variant="info" />
+          <MetricCard label="Kesehatan Regulasi" value={healthScore} icon={<ShieldCheck />} variant="neutral" />
+        </CanonicalMetricGrid>
 
-      <OperationalPanel>
-        <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-amber-500" />
-            <h3 className="text-[13px] font-semibold text-slate-900">Indeks Permit & Lisensi</h3>
-            <span className="text-[11px] font-medium text-slate-500">· {filteredPermits.length} record</span>
-          </div>
-          <div className="relative w-full max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Cari permit ID / penerbit..."
-              className="h-9 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-[12px] font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-        </div>
+        <DataTable
+          title="Indeks Permit & Lisensi"
+          data={filteredPermits}
+          columns={columns}
+          getRowId={(row: any) => row.id}
+          loading={isLoading}
+          searchPlaceholder="Cari permit ID / penerbit..."
+          emptyMessage="Tidak ada data berkas perizinan"
+          toolbarRight={
+            <label className="flex items-center gap-2 h-9 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400 min-w-[260px]">
+              <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="Cari permit ID / penerbit..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
+              />
+            </label>
+          }
+          enableSearch={false}
+        />
 
-        <TableWrapper>
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="px-3 py-2 text-[12px] font-semibold normal-case text-slate-500">Permit ID / Referensi</th>
-                <th className="px-3 py-2 text-[12px] font-semibold normal-case text-slate-500">Nama / Penerbit</th>
-                <th className="px-3 py-2 text-[12px] font-semibold normal-case text-slate-500">Kategori</th>
-                <th className="px-3 py-2 text-[12px] font-semibold normal-case text-slate-500">Berlaku s/d</th>
-                <th className="px-3 py-2 text-center text-[12px] font-semibold normal-case text-slate-500">Status</th>
-                <th className="px-3 py-2 text-right text-[12px] font-semibold normal-case text-slate-500">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-[12px] text-slate-500">Memuat data registry...</td>
-                </tr>
-              ) : filteredPermits.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-[12px] text-slate-500">Tidak ada data berkas perizinan yang ditemukan</td>
-                </tr>
-              ) : (
-                filteredPermits.map((permit: any) => (
-                  <tr key={permit.id} className="hover:bg-slate-50">
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="grid h-7 w-7 place-items-center rounded-md bg-amber-50 text-amber-600">
-                          <FileText className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-[12px] font-semibold text-slate-900">{permit.id}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3">
-                      <p className="text-[12px] font-semibold text-slate-900">{permit.name}</p>
-                      <p className="text-[11px] text-slate-500">{permit.issuer}</p>
-                    </td>
-                    <td className="px-3 py-3">
-                      <DnaBadge status="default">{permit.type}</DnaBadge>
-                    </td>
-                    <td className="px-3 py-3 text-[12px] text-slate-600 tabular-nums">
-                      {formatOperationalDate(permit.expiry)}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <OperationalStatusBadge
-                        status={
-                          permit.status === 'ACTIVE' ? "success" :
-                          permit.status === 'EXPIRING_SOON' ? "pending" :
-                          permit.status === 'EXPIRED' ? "danger" : "neutral"
-                        }
-                      >
-                        {STATUS_LABELS[permit.status] || getOperationalStatusLabel(permit.status)}
-                      </OperationalStatusBadge>
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <DnaButton size="sm" variant="ghost" icon={<Download className="h-3.5 w-3.5" />} onClick={() => console.log("Download permit:", permit.id)} />
-                        {STATUS_FLOW[permit.status] && STATUS_FLOW[permit.status].length > 0 && (
-                          <DnaButton size="sm" variant="primary" icon={<ArrowRight className="h-3.5 w-3.5" />} onClick={() => setAdvancePermit(permit)} className="bg-amber-600 hover:bg-amber-700 text-white">
-                            Maju
-                          </DnaButton>
-                        )}
-                        <DnaButton size="sm" variant="outline" icon={<ChevronRight className="h-3.5 w-3.5" />} onClick={() => console.log("View permit details:", permit.id)}>
-                          Detail
-                        </DnaButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </TableWrapper>
-      </OperationalPanel>
-
-      <OperationalPanel>
-        <div className="flex flex-col items-center gap-4 md:flex-row">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-amber-500 text-white">
-            <Gavel className="h-5 w-5" />
-          </div>
-          <div className="flex-1 space-y-1">
-            <h4 className="text-[13px] font-semibold text-slate-900">Regulatory Intelligence</h4>
-            <p className="text-[12px] leading-relaxed text-slate-600">
-              Pelacakan otomatis siklus renewal untuk 12+ badan regulasi internasional. Mesin proaktif kami memberi notifikasi ke konsultan hukum 90 hari sebelum masa berlaku habis.
-            </p>
-            <div className="flex gap-4 pt-1">
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                <Globe className="h-3.5 w-3.5 text-amber-500" /> Kepatuhan Global
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Digital Vault
-              </span>
+        <SectionCard>
+          <SectionCardContent>
+            <div className="flex flex-col items-center gap-4 md:flex-row">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-amber-500 text-white">
+                <Gavel className="h-5 w-5" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="text-[13px] font-semibold text-slate-900">Regulatory Intelligence</h4>
+                <p className="text-[12px] leading-relaxed text-slate-600">
+                  Pelacakan otomatis siklus renewal untuk 12+ badan regulasi internasional. Mesin proaktif kami memberi notifikasi ke konsultan hukum 90 hari sebelum masa berlaku habis.
+                </p>
+                <div className="flex gap-4 pt-1">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                    <Globe className="h-3.5 w-3.5 text-amber-500" /> Kepatuhan Global
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Digital Vault
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-slate-800 text-white text-[12px] font-medium hover:bg-slate-900"
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span>Peta Regulasi</span>
+              </button>
             </div>
-          </div>
-          <DnaButton variant="secondary" icon={<ChevronRight />} className="bg-slate-800 text-white">
-            Peta Regulasi
-          </DnaButton>
-        </div>
-      </OperationalPanel>
+          </SectionCardContent>
+        </SectionCard>
+      </div>
 
       {advancePermit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="mx-4 w-full max-w-lg overflow-hidden rounded-[12px] border border-[#E2E8F0] bg-white">
             <div className="border-b border-amber-100 bg-amber-50 p-4">
               <div className="flex items-center gap-2">
-                <div className="grid h-8 w-8 place-items-center rounded-md bg-amber-500 text-white">
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500 text-white">
                   <ArrowRight className="h-4 w-4" />
                 </div>
                 <div>
@@ -256,7 +289,7 @@ export default function LegalityHub() {
               </div>
             </div>
             <div className="space-y-4 p-4">
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+              <div className="rounded-lg border border-[#E2E8F0] bg-slate-50 p-3">
                 <p className="mb-1 text-[10px] font-medium text-slate-500">Permit</p>
                 <p className="text-[13px] font-semibold text-slate-900">{advancePermit.name}</p>
                 <p className="text-[11px] text-slate-500">{advancePermit.id} • {advancePermit.issuer}</p>
@@ -265,9 +298,9 @@ export default function LegalityHub() {
               <div>
                 <p className="mb-2 text-[11px] font-medium text-slate-500">Status Saat Ini</p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <DnaBadge status={advancePermit.status === 'ACTIVE' ? 'success' : advancePermit.status === 'EXPIRED' ? 'critical' : 'warning'}>
+                  <StatusBadge variant={mapStatus(advancePermit.status)}>
                     {STATUS_LABELS[advancePermit.status] || advancePermit.status}
-                  </DnaBadge>
+                  </StatusBadge>
                   <ArrowRight className="h-4 w-4 text-slate-300" />
                   <span className="text-[11px] text-slate-500">Maju ke:</span>
                 </div>
@@ -278,7 +311,7 @@ export default function LegalityHub() {
                       onClick={() => {
                         setAdvancePermit({ ...advancePermit, _nextStatus: nextStatus });
                       }}
-                      className={`rounded-md border-2 px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                      className={`rounded-lg border-2 px-3 py-1.5 text-[12px] font-medium transition-colors ${
                         advancePermit._nextStatus === nextStatus
                           ? "border-amber-500 bg-amber-500 text-white"
                           : "border-slate-200 bg-white text-slate-600 hover:border-amber-300"
@@ -295,7 +328,7 @@ export default function LegalityHub() {
                 <textarea
                   value={advanceNotes}
                   onChange={(e) => setAdvanceNotes(e.target.value)}
-                  className="min-h-[80px] w-full rounded-md border border-slate-200 bg-white p-3 text-[12px] font-medium text-slate-700 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="min-h-[80px] w-full rounded-lg border border-[#E2E8F0] bg-white p-3 text-[12px] font-medium text-slate-700 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   placeholder="Tambahkan catatan untuk perubahan status ini..."
                 />
               </div>
@@ -303,7 +336,7 @@ export default function LegalityHub() {
             <div className="flex gap-2 border-t border-slate-100 bg-slate-50 p-4">
               <button
                 onClick={() => { setAdvancePermit(null); setAdvanceNotes(""); }}
-                className="h-9 flex-1 rounded-md border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-100"
+                className="h-9 flex-1 rounded-lg border border-[#E2E8F0] text-[12px] font-medium text-slate-600 hover:bg-slate-100"
               >
                 Batal
               </button>
@@ -318,7 +351,7 @@ export default function LegalityHub() {
                   }
                 }}
                 disabled={!advancePermit._nextStatus || advanceMutation.isPending}
-                className="h-9 flex-1 rounded-md bg-amber-500 text-[12px] font-medium text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-9 flex-1 rounded-lg bg-amber-500 text-[12px] font-medium text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {advanceMutation.isPending ? "Memperbarui..." : "Konfirmasi Maju"}
               </button>
@@ -326,6 +359,6 @@ export default function LegalityHub() {
           </div>
         </div>
       )}
-    </OperationalPageShell>
+    </PageShell>
   );
 }

@@ -1,0 +1,174 @@
+.scope {
+  --migration-control-height: 36px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.filters {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 6px 12px;
+}
+
+.pagination {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-surface);
+}
+
+.scope :global(.erp-metric-card) {
+  width: 100%;
+  max-width: none;
+  min-height: 96px;
+  padding: 16px;
+  border-color: var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.scope :global(.erp-metric-card h3) {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+}
+
+.scope :global(.erp-metric-card > div > div:last-child) {
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.scope :global(.erp-metric-card > div > div:last-child svg) {
+  width: 17px;
+  height: 17px;
+}
+
+@media (min-width: 1024px) {
+  .scope :global(.grid:has(> .erp-metric-card:nth-child(3):last-child)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+.scope :global(.shadow-card),
+.scope :global(.shadow-sm),
+.scope :global(.shadow-md),
+.scope :global(.shadow-lg),
+.scope :global(.shadow-xl),
+.scope :global(.shadow-2xl) {
+  box-shadow: none !important;
+}
+
+.scope :global(.rounded-2xl),
+.scope :global(.rounded-3xl),
+.scope :global(.rounded-\[2rem\]) {
+  border-radius: 12px !important;
+}
+
+.scope :global(button),
+.scope :global(input),
+.scope :global(select) {
+  min-height: var(--migration-control-height);
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.scope :global(input),
+.scope :global(select) {
+  height: var(--migration-control-height) !important;
+  padding-right: 10px !important;
+}
+
+.scope :global(textarea) {
+  min-height: 80px;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+.scope :global([role="tablist"]) {
+  width: fit-content;
+  max-width: 100%;
+  height: 38px !important;
+  gap: 3px;
+  padding: 3px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.scope :global([role="tab"]) {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 11px !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.scope :global([role="tab"][data-state="active"]) {
+  background: var(--brand-blue) !important;
+  color: #fff !important;
+}
+
+.scope :global(table) {
+  font-size: 13px;
+}
+
+.scope :global(thead tr) {
+  height: 40px;
+}
+
+.scope :global(tbody tr) {
+  height: 42px;
+}
+
+.scope :global(th) {
+  height: 40px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.scope :global(td) {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.scope :global(td p),
+.scope :global(td span) {
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.scope :global(.grid) {
+  gap: 16px;
+}
+
+@media (max-width: 639px) {
+  .filters {
+    align-items: stretch;
+  }
+}

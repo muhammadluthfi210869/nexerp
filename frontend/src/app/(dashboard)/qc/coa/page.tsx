@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -19,18 +19,21 @@ import {
   X,
 } from "lucide-react";
 import {
-  OperationalDataTable,
-  OperationalMetricCard,
-  OperationalMetricGrid,
-  OperationalPageShell,
-  OperationalPanel,
-  getOperationalStatusLabel,
-} from "@/components/operational";
+  PageShell,
+  CanonicalMetricGrid,
+  MetricCard,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+  SectionCard,
+  SectionCardContent,
+} from "@/components/canonical";
 import { formatOperationalDate } from "@/lib/operational-formatters";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export default function CoACenterPage() {
   const [search, setSearch] = useState("");
@@ -93,24 +96,24 @@ export default function CoACenterPage() {
     }).length;
   }, [coaRecords]);
 
-  const columns = useMemo(
+  const columns = useMemo<ColumnDef<any, any>[]>(
     () => [
       {
         accessorKey: "id",
         header: "Certificate ID",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-md bg-emerald-50 text-emerald-600">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-600">
               <ShieldCheck className="h-4 w-4" />
             </div>
-            <span className="text-[13px] font-semibold text-slate-900 uppercase">{row.original.id}</span>
+            <span className="text-[13px] font-medium text-slate-900 uppercase">{row.original.id}</span>
           </div>
         ),
       },
       {
         accessorKey: "product",
         header: "Product & Batch",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="text-[13px] font-medium text-slate-900">{row.original.product}</span>
             <span className="text-[11px] text-slate-500">Batch Ref: {row.original.batch}</span>
@@ -120,9 +123,9 @@ export default function CoACenterPage() {
       {
         accessorKey: "analyst",
         header: "Authorized By",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <div className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-600">
+            <div className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
               {row.original.analyst !== "—" ? row.original.analyst.charAt(0) : "?"}
             </div>
             <span className="text-[12px] font-medium text-slate-700">{row.original.analyst}</span>
@@ -132,32 +135,32 @@ export default function CoACenterPage() {
       {
         accessorKey: "releaseDate",
         header: "Release Date",
-        cell: ({ getValue }: { getValue: () => string }) => (
+        cell: ({ getValue }) => (
           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-700 tabular-nums">
             <Calendar className="h-3.5 w-3.5 text-slate-400" />
-            <span>{formatOperationalDate(getValue()) || "—"}</span>
+            <span>{formatOperationalDate(String(getValue())) || "—"}</span>
           </div>
         ),
       },
       {
         accessorKey: "status",
         header: () => <div className="text-center">Audit Status</div>,
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex justify-center">
-            <span className="operational-status-badge is-success">
-              {getOperationalStatusLabel(row.original.status)}
-            </span>
+            <StatusBadge variant={mapStatus(row.original.status)}>
+              {row.original.status}
+            </StatusBadge>
           </div>
         ),
       },
       {
         id: "actions",
         header: () => <div className="text-right">Documents</div>,
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              className="operational-button is-ghost h-8 w-8 p-0"
+              className="h-8 w-8 rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50 inline-flex items-center justify-center"
               aria-label="View"
               onClick={() => setViewCoaId(row.original.id)}
             >
@@ -165,14 +168,14 @@ export default function CoACenterPage() {
             </button>
             <button
               type="button"
-              className="operational-button is-ghost h-8 w-8 p-0"
+              className="h-8 w-8 rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50 inline-flex items-center justify-center"
               aria-label="Print"
             >
               <Printer className="h-4 w-4" />
             </button>
             <button
               type="button"
-              className="operational-button is-secondary h-8 px-3 text-[11px]"
+              className="h-8 px-3 inline-flex items-center gap-1 rounded-md border border-[#E2E8F0] bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50"
             >
               <Download className="h-3.5 w-3.5" />
               <span>PDF CoA</span>
@@ -185,115 +188,117 @@ export default function CoACenterPage() {
   );
 
   return (
-    <OperationalPageShell
+    <PageShell
       title="CoA Center"
       subtitle="Professional Certificate of Analysis generation & archive"
       actions={
         <div className="flex items-center gap-2">
-          <button type="button" className="operational-button is-secondary">
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+          >
             <HistoryIcon className="h-4 w-4" />
             <span>Global Archive</span>
           </button>
-          <button type="button" className="operational-button is-primary">
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700"
+          >
             <Zap className="h-4 w-4" />
             <span>Batch Auto-Generate</span>
           </button>
         </div>
       }
     >
-      <div className="operational-stack">
-        <OperationalMetricGrid>
-          <OperationalMetricCard
-            label="Total CoA Records"
-            value={totalRecords}
-            icon={<FileText className="h-4 w-4" />}
-            tone="blue"
-          />
-          <OperationalMetricCard
-            label="Verified"
-            value={verifiedCount}
-            icon={<ShieldCheck className="h-4 w-4" />}
-            tone="green"
-          />
-          <OperationalMetricCard
-            label="Released (30 hari)"
-            value={monthCount}
-            icon={<Calendar className="h-4 w-4" />}
-            tone="purple"
-          />
-        </OperationalMetricGrid>
+      <div className="flex flex-col gap-6">
+        <CanonicalMetricGrid>
+          <MetricCard label="Total CoA Records" value={totalRecords} icon={<FileText />} variant="info" />
+          <MetricCard label="Verified" value={verifiedCount} icon={<ShieldCheck />} variant="success" />
+          <MetricCard label="Released (30 hari)" value={monthCount} icon={<Calendar />} variant="warning" />
+        </CanonicalMetricGrid>
 
-        <OperationalPanel>
-          <div className="flex flex-row items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                placeholder="Search by Batch Number or Product Name..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="operational-input-wrap h-9 w-full pl-10"
-              />
+        <SectionCard>
+          <SectionCardContent>
+            <div className="flex flex-row items-center gap-3">
+              <label className="flex items-center gap-2 h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400 flex-1">
+                <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Search by Batch Number or Product Name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="h-10 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Clear Filter
+              </button>
             </div>
-            <button
-              type="button"
-              className="operational-button is-secondary h-9"
-              onClick={() => setSearch("")}
-            >
-              Clear Filter
-            </button>
-          </div>
-        </OperationalPanel>
+          </SectionCardContent>
+        </SectionCard>
 
-        <OperationalDataTable
+        <DataTable
           data={filtered as any}
-          columns={columns as any}
+          columns={columns}
           getRowId={(row: any) => row.id}
           loading={isLoading}
           searchPlaceholder="Cari CoA..."
+          emptyMessage="Belum ada CoA terverifikasi"
+          enableSearch={false}
         />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <OperationalPanel>
-            <h3 className="text-[13px] font-semibold text-slate-900">Standard CoA Template</h3>
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-emerald-500" />
-                  <span className="text-[12px] font-semibold uppercase text-slate-700">Clinical Export V1</span>
+          <SectionCard>
+            <SectionCardContent>
+              <h3 className="text-[13px] font-semibold text-slate-900">Standard CoA Template</h3>
+              <div className="mt-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-slate-50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-emerald-500" />
+                    <span className="text-[12px] font-medium text-slate-700">Clinical Export V1</span>
+                  </div>
+                  <StatusBadge variant="success">Active</StatusBadge>
                 </div>
-                <span className="operational-status-badge is-success">{getOperationalStatusLabel("ACTIVE")}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 opacity-60">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-slate-400" />
-                  <span className="text-[12px] font-semibold uppercase text-slate-700">Retail Minimalist V2</span>
+                <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-slate-50 px-3 py-2 opacity-60">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-slate-400" />
+                    <span className="text-[12px] font-medium text-slate-700">Retail Minimalist V2</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <button type="button" className="operational-button is-primary mt-4 w-full">
-              Manage Templates
-            </button>
-          </OperationalPanel>
+              <button
+                type="button"
+                className="h-9 mt-4 w-full rounded-lg bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700"
+              >
+                Manage Templates
+              </button>
+            </SectionCardContent>
+          </SectionCard>
 
-          <OperationalPanel className="relative overflow-hidden">
-            <h3 className="text-[13px] font-semibold text-slate-900">CoA Security Vault</h3>
-            <p className="mt-1 text-[11px] font-medium uppercase text-slate-500">Digital signatures & integrity verification</p>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-md bg-emerald-50 text-emerald-600">
-                <Lock className="h-6 w-6" />
+          <SectionCard>
+            <SectionCardContent>
+              <h3 className="text-[13px] font-semibold text-slate-900">CoA Security Vault</h3>
+              <p className="mt-1 text-[11px] text-slate-500">Digital signatures & integrity verification</p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <Lock className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-[12px] font-semibold text-slate-900">256-bit Encrypted</p>
+                  <p className="text-[11px] text-slate-500">All exported CoAs are cryptographically signed.</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[12px] font-bold text-slate-900 uppercase">256-bit Encrypted</p>
-                <p className="text-[11px] font-medium text-slate-500">All exported CoAs are cryptographically signed.</p>
-              </div>
-            </div>
-          </OperationalPanel>
+            </SectionCardContent>
+          </SectionCard>
         </div>
       </div>
 
-      {/* View CoA Modal */}
       <Dialog open={!!viewCoaId} onOpenChange={(open) => !open && setViewCoaId(null)}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[640px] rounded-xl border border-slate-200 bg-white p-0">
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[640px] rounded-[12px] border border-[#E2E8F0] bg-white p-0">
           <div className="relative bg-emerald-600 p-5 text-white">
             <button
               onClick={() => setViewCoaId(null)}
@@ -306,48 +311,48 @@ export default function CoACenterPage() {
               <ShieldCheck className="h-6 w-6" />
               <div>
                 <h3 className="text-[16px] font-semibold">Certificate of Analysis</h3>
-                <p className="mt-0.5 text-[11px] font-medium text-emerald-100">
+                <p className="mt-0.5 text-[11px] text-emerald-100">
                   {selectedCoa?.id || viewCoaId}
                 </p>
               </div>
             </div>
           </div>
           {selectedCoa ? (
-            <div className="space-y-5 p-5">
-              <div className="grid grid-cols-2 gap-3 rounded-md border border-slate-100 bg-slate-50 p-3">
+            <div className="flex flex-col gap-5 p-5">
+              <div className="grid grid-cols-2 gap-3 rounded-lg border border-[#E2E8F0] bg-slate-50 p-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Product</p>
-                  <p className="mt-1 text-[13px] font-semibold text-slate-900">{selectedCoa.product}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Product</p>
+                  <p className="mt-1 text-[13px] font-medium text-slate-900">{selectedCoa.product}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Batch</p>
-                  <p className="mt-1 text-[13px] font-semibold text-slate-900">{selectedCoa.batch}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Batch</p>
+                  <p className="mt-1 text-[13px] font-medium text-slate-900">{selectedCoa.batch}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Release Date</p>
-                  <p className="mt-1 text-[13px] font-semibold text-slate-900">{formatOperationalDate(selectedCoa.releaseDate)}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Release Date</p>
+                  <p className="mt-1 text-[13px] font-medium text-slate-900">{formatOperationalDate(selectedCoa.releaseDate)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Inspector</p>
-                  <p className="mt-1 text-[13px] font-semibold text-slate-900">{selectedCoa.analyst}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Inspector</p>
+                  <p className="mt-1 text-[13px] font-medium text-slate-900">{selectedCoa.analyst}</p>
                 </div>
                 {selectedCoa.phase && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Phase</p>
-                    <span className="operational-status-badge is-info mt-1">{selectedCoa.phase}</span>
+                  <div className="col-span-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Phase</p>
+                    <StatusBadge variant="info" className="mt-1">{selectedCoa.phase}</StatusBadge>
                   </div>
                 )}
               </div>
 
               <div>
-                <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Test Parameters</h4>
-                <div className="overflow-hidden rounded-md border border-slate-100">
+                <h4 className="mb-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Test Parameters</h4>
+                <div className="overflow-hidden rounded-lg border border-[#E2E8F0]">
                   <table className="w-full text-left">
                     <thead className="bg-slate-50">
                       <tr>
-                        <th className="px-3 py-2 text-[10px] font-bold uppercase text-slate-400">Parameter</th>
-                        <th className="px-3 py-2 text-[10px] font-bold uppercase text-slate-400">Result</th>
-                        <th className="px-3 py-2 text-[10px] font-bold uppercase text-slate-400">Status</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-400">Parameter</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-400">Result</th>
+                        <th className="px-3 py-2 text-[10px] font-medium uppercase text-slate-400">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -355,38 +360,34 @@ export default function CoACenterPage() {
                         Object.entries(selectedCoa.parameters)
                           .filter(([, v]) => v !== undefined && v !== null)
                           .map(([key, value]) => (
-                            <tr key={key} className="border-t border-slate-100">
-                              <td className="px-3 py-2 text-[12px] font-semibold uppercase text-slate-700">{key}</td>
+                            <tr key={key} className="border-t border-[#E2E8F0]">
+                              <td className="px-3 py-2 text-[12px] font-medium uppercase text-slate-700">{key}</td>
                               <td className="px-3 py-2 font-mono text-[12px] text-slate-600">
                                 {typeof value === "boolean" ? (value ? "PASS" : "FAIL") : String(value)}
                               </td>
                               <td className="px-3 py-2">
-                                <span className={`operational-status-badge ${value !== false ? "is-success" : "is-danger"}`}>
+                                <StatusBadge variant={value !== false ? "success" : "destructive"}>
                                   {value !== false ? "PASS" : "FAIL"}
-                                </span>
+                                </StatusBadge>
                               </td>
                             </tr>
                           ))}
                     </tbody>
                   </table>
                 </div>
-                {(!selectedCoa.parameters ||
-                  Object.values(selectedCoa.parameters).filter((v) => v !== undefined && v !== null).length === 0) && (
-                  <p className="mt-2 text-[12px] italic text-slate-400">No parameter data recorded for this audit</p>
-                )}
               </div>
 
               {selectedCoa.notes && (
-                <div className="rounded-md border border-slate-100 bg-slate-50 p-3">
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Notes</p>
+                <div className="rounded-lg border border-[#E2E8F0] bg-slate-50 p-3">
+                  <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">Notes</p>
                   <p className="text-[12px] text-slate-600">{selectedCoa.notes}</p>
                 </div>
               )}
 
-              <div className="flex items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
+              <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 <div>
-                  <p className="text-[12px] font-bold uppercase text-emerald-800">This audit is verified as GOOD</p>
+                  <p className="text-[12px] font-medium text-emerald-800">This audit is verified as GOOD</p>
                   <p className="text-[10px] text-emerald-600">
                     The Certificate of Analysis confirms all parameters passed quality inspection.
                   </p>
@@ -401,6 +402,6 @@ export default function CoACenterPage() {
           )}
         </DialogContent>
       </Dialog>
-    </OperationalPageShell>
+    </PageShell>
   );
 }

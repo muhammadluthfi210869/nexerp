@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -14,7 +14,6 @@ import {
   Clock,
   Filter,
   Eye,
-  Trash2,
   CheckCheck,
   Shield,
   Zap,
@@ -24,10 +23,17 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
+import {
+  PageShell,
+  CanonicalMetricGrid,
+  MetricCard,
+  SectionCard,
+  SectionCardContent,
+  StatusBadge,
+  EmptyState,
+} from "@/components/canonical";
 import { formatOperationalDate } from "@/lib/operational-formatters";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
 
 interface Notification {
   id: string;
@@ -43,25 +49,25 @@ interface Notification {
 
 const SEVERITY_CONFIG: Record<
   string,
-  { icon: typeof AlertTriangle; color: string; bg: string; badge: "critical" | "warning" | "info" }
+  { icon: typeof AlertTriangle; color: string; bg: string; variant: "destructive" | "warning" | "info" }
 > = {
   CRITICAL: {
     icon: AlertTriangle,
     color: "text-rose-600",
     bg: "bg-rose-50 border-rose-100",
-    badge: "critical",
+    variant: "destructive",
   },
   WARNING: {
     icon: AlertCircle,
     color: "text-amber-600",
     bg: "bg-amber-50 border-amber-100",
-    badge: "warning",
+    variant: "warning",
   },
   INFO: {
     icon: Info,
     color: "text-blue-600",
     bg: "bg-blue-50 border-blue-100",
-    badge: "info",
+    variant: "info",
   },
 };
 
@@ -148,20 +154,19 @@ export default function NotificationsPage() {
   const warningCount = notifications?.filter((n) => n.severity === "WARNING").length || 0;
 
   return (
-    <OperationalMigrationShell
+    <PageShell
       title="Notifikasi Operasional"
       subtitle="Pusat notifikasi & alert seluruh divisi"
       actions={
-        <div className="flex gap-3">
-          <DnaButton
-            variant="outline"
-            icon={<CheckCheck />}
-            onClick={() => markAllReadMutation.mutate()}
-            disabled={unreadCount === 0}
-          >
-            Tandai Semua Dibaca
-          </DnaButton>
-        </div>
+        <button
+          type="button"
+          onClick={() => markAllReadMutation.mutate()}
+          disabled={unreadCount === 0}
+          className="h-10 px-4 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <CheckCheck className="h-4 w-4" />
+          Tandai Semua Dibaca
+        </button>
       }
     >
       {isLoading ? (
@@ -170,145 +175,140 @@ export default function NotificationsPage() {
         <QueryError error="Gagal memuat notifikasi" onRetry={() => window.location.reload()} />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard icon={<Bell className="text-blue-600" />} label="Total Notifikasi" value={totalNotifications} />
-            <StatCard icon={<Eye className="text-purple-600" />} label="Belum Dibaca" value={unreadCount} />
-            <StatCard icon={<AlertTriangle className="text-rose-600" />} label="Kritis" value={criticalCount} />
-            <StatCard icon={<AlertCircle className="text-amber-600" />} label="Peringatan" value={warningCount} />
-          </div>
+          <CanonicalMetricGrid>
+            <MetricCard label="Total Notifikasi" value={totalNotifications} icon={<Bell />} variant="info" />
+            <MetricCard label="Belum Dibaca" value={unreadCount} icon={<Eye />} variant="warning" />
+            <MetricCard label="Kritis" value={criticalCount} icon={<AlertTriangle />} variant="danger" />
+            <MetricCard label="Peringatan" value={warningCount} icon={<AlertCircle />} variant="warning" />
+          </CanonicalMetricGrid>
 
-          {/* Filter Bar */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Filter className="h-4 w-4 text-slate-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Penyaring</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <DnaInput
-                icon={<Search className="h-4 w-4" />}
-                placeholder="Cari notifikasi..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <select
-                value={filterDivision}
-                onChange={(e) => setFilterDivision(e.target.value)}
-                className="h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-tight text-slate-600 appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500/5 transition-all"
-              >
-                {divisions.map((d) => (
-                  <option key={d} value={d}>
-                    {d === "all" ? "Semua Divisi" : d}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterSeverity}
-                onChange={(e) => setFilterSeverity(e.target.value)}
-                className="h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-tight text-slate-600 appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500/5 transition-all"
-              >
-                <option value="all">Semua Tingkat</option>
-                <option value="CRITICAL">Kritis</option>
-                <option value="WARNING">Peringatan</option>
-                <option value="INFO">Info</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Notifications List */}
-          <div className="space-y-3">
-            {filtered.map((notif) => {
-              const config = SEVERITY_CONFIG[notif.severity] || SEVERITY_CONFIG.INFO;
-              const SeverityIcon = config.icon;
-              const DivIcon = DIVISION_ICONS[notif.division] || Bell;
-
-              return (
-                <div
-                  key={notif.id}
-                  className={cn(
-                    "bg-white border rounded-xl p-4 transition-colors group",
-                    notif.isRead ? "border-[var(--border-color)]" : config.bg,
-                    !notif.isRead && "ring-1 ring-inset ring-current/5"
-                  )}
+          <SectionCard>
+            <SectionCardContent>
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="h-4 w-4 text-slate-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Penyaring</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label className="flex items-center gap-2 h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400">
+                  <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <input
+                    type="search"
+                    placeholder="Cari notifikasi..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
+                  />
+                </label>
+                <select
+                  value={filterDivision}
+                  onChange={(e) => setFilterDivision(e.target.value)}
+                  className="h-10 px-3 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <div className="flex items-start gap-5">
-                    {/* Severity Icon */}
-                    <div className={cn("p-3 rounded-2xl border shrink-0", config.bg)}>
-                      <SeverityIcon className={cn("h-5 w-5", config.color)} />
-                    </div>
+                  {divisions.map((d) => (
+                    <option key={d} value={d}>
+                      {d === "all" ? "Semua Divisi" : d}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterSeverity}
+                  onChange={(e) => setFilterSeverity(e.target.value)}
+                  className="h-10 px-3 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="all">Semua Tingkat</option>
+                  <option value="CRITICAL">Kritis</option>
+                  <option value="WARNING">Peringatan</option>
+                  <option value="INFO">Info</option>
+                </select>
+              </div>
+            </SectionCardContent>
+          </SectionCard>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <h3
-                              className={cn(
-                                "font-black text-sm tracking-tight",
-                                notif.isRead ? "text-slate-600" : "text-slate-900"
-                              )}
-                            >
-                              {notif.title}
-                            </h3>
-                            {!notif.isRead && (
-                              <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                            )}
-                          </div>
-                          <p className="text-[11px] text-slate-500 leading-relaxed">{notif.message}</p>
-                        </div>
+          <div className="flex flex-col gap-3">
+            {filtered.length === 0 ? (
+              <EmptyState
+                icon={<Bell className="h-8 w-8 text-slate-300" />}
+                title="Tidak Ada Notifikasi"
+                description="Semua sudah terbaca atau belum ada data baru."
+              />
+            ) : (
+              filtered.map((notif) => {
+                const config = SEVERITY_CONFIG[notif.severity] || SEVERITY_CONFIG.INFO;
+                const SeverityIcon = config.icon;
+                const DivIcon = DIVISION_ICONS[notif.division] || Bell;
 
-                        <div className="flex items-center gap-3 shrink-0">
-                          <DnaBadge status={config.badge}>{SEVERITY_LABELS[notif.severity] || notif.severity}</DnaBadge>
-                        </div>
+                return (
+                  <div
+                    key={notif.id}
+                    className={cn(
+                      "rounded-[12px] border bg-white border-[#E2E8F0] p-4 transition-colors group",
+                      !notif.isRead && config.bg,
+                    )}
+                  >
+                    <div className="flex items-start gap-5">
+                      <div className={cn("p-3 rounded-lg border shrink-0", config.bg)}>
+                        <SeverityIcon className={cn("h-5 w-5", config.color)} />
                       </div>
 
-                      {/* Meta */}
-                      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-50">
-                        <div className="flex items-center gap-1.5">
-                          <DivIcon className="h-3 w-3 text-slate-300" />
-                          <span className="text-[9px] font-bold text-slate-400">{notif.division === "System" ? "Sistem" : notif.division}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <h3
+                                className={cn(
+                                  "font-semibold text-[14px] tracking-tight",
+                                  notif.isRead ? "text-slate-600" : "text-slate-900"
+                                )}
+                              >
+                                {notif.title}
+                              </h3>
+                              {!notif.isRead && (
+                                <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                              )}
+                            </div>
+                            <p className="text-[12px] text-slate-500 leading-relaxed">{notif.message}</p>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <StatusBadge variant={config.variant}>
+                              {SEVERITY_LABELS[notif.severity] || notif.severity}
+                            </StatusBadge>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="h-3 w-3 text-slate-300" />
-                          <span className="text-[9px] font-bold text-slate-400">
-                            {formatOperationalDate(notif.date, {
-                              day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-                            })}
-                          </span>
+
+                        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100">
+                          <div className="flex items-center gap-1.5">
+                            <DivIcon className="h-3 w-3 text-slate-400" />
+                            <span className="text-[10px] font-medium text-slate-500">{notif.division === "System" ? "Sistem" : notif.division}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3 w-3 text-slate-400" />
+                            <span className="text-[10px] font-medium text-slate-500">
+                              {formatOperationalDate(notif.date, {
+                                day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          {!notif.isRead && (
+                            <button
+                              type="button"
+                              onClick={() => markReadMutation.mutate(notif.id)}
+                              className="ml-auto inline-flex items-center gap-1 h-7 px-2 rounded-md text-[11px] font-medium text-blue-600 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              Tandai Dibaca
+                            </button>
+                          )}
                         </div>
-                        {!notif.isRead && (
-                          <DnaButton
-                            variant="ghost"
-                            size="sm"
-                            icon={<CheckCircle2 />}
-                            onClick={() => markReadMutation.mutate(notif.id)}
-                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            Tandai Dibaca
-                          </DnaButton>
-                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-
-            {filtered.length === 0 && (
-              <div className="py-20 text-center">
-                <div className="flex flex-col items-center justify-center">
-                  <Bell className="h-12 w-12 text-slate-200 mb-3" />
-                  <p className="text-sm font-black italic text-slate-400 uppercase tracking-wider">
-                    Tidak Ada Notifikasi
-                  </p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1">
-                    Semua sudah terbaca atau belum ada data baru
-                  </p>
-                </div>
-              </div>
+                );
+              })
             )}
           </div>
         </>
       )}
-    </OperationalMigrationShell>
+    </PageShell>
   );
 }

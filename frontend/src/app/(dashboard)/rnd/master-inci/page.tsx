@@ -13,13 +13,13 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  OperationalDataTable,
-  OperationalField,
-  OperationalPageShell,
-  OperationalPanel,
-  OperationalStatusBadge,
-  getOperationalStatusLabel,
-} from "@/components/operational";
+  PageShell,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+  SectionCard,
+  SectionCardContent,
+} from "@/components/canonical";
 import {
   Dialog,
   DialogContent,
@@ -29,15 +29,16 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { ColumnDef } from "@tanstack/react-table";
 
 const CATEGORIES = [
-  { value: "ALL", label: "All Categories", tone: "neutral" as const },
-  { value: "ALLOWED", label: "Allowed", tone: "success" as const },
-  { value: "RESTRICTED", label: "Restricted", tone: "pending" as const },
-  { value: "PROHIBITED", label: "Prohibited", tone: "danger" as const },
-  { value: "PRESERVATIVE", label: "Preservative", tone: "process" as const },
-  { value: "COLORANT", label: "Colorant", tone: "process" as const },
-  { value: "UV_FILTER", label: "UV Filter", tone: "process" as const },
+  { value: "ALL", label: "All Categories", variant: "default" as const },
+  { value: "ALLOWED", label: "Allowed", variant: "success" as const },
+  { value: "RESTRICTED", label: "Restricted", variant: "warning" as const },
+  { value: "PROHIBITED", label: "Prohibited", variant: "destructive" as const },
+  { value: "PRESERVATIVE", label: "Preservative", variant: "info" as const },
+  { value: "COLORANT", label: "Colorant", variant: "info" as const },
+  { value: "UV_FILTER", label: "UV Filter", variant: "info" as const },
 ];
 
 export default function MasterInciPage() {
@@ -115,18 +116,12 @@ export default function MasterInciPage() {
     reader.readAsText(file);
   };
 
-  const categoryToneMap = useMemo(() => {
-    const m: Record<string, "neutral" | "success" | "pending" | "danger" | "process"> = {};
-    CATEGORIES.forEach((c) => (m[c.value] = c.tone));
-    return m;
-  }, []);
-
-  const columns = useMemo(
+  const columns = useMemo<ColumnDef<any, any>[]>(
     () => [
       {
         accessorKey: "inciName",
         header: "Ingredient Profile",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <span
               className={cn(
@@ -141,7 +136,7 @@ export default function MasterInciPage() {
               <Beaker className="h-4 w-4" />
             </span>
             <div>
-              <h4 className="text-[13px] font-semibold text-slate-900">{row.original.inciName}</h4>
+              <h4 className="text-[13px] font-medium text-slate-900">{row.original.inciName}</h4>
               <span className="text-[11px] text-slate-500">CAS: {row.original.casNumber || "N/A"}</span>
             </div>
           </div>
@@ -150,18 +145,16 @@ export default function MasterInciPage() {
       {
         accessorKey: "category",
         header: "Safety Category",
-        cell: ({ row }: { row: { original: any } }) => {
-          const cat = row.original.category;
-          const tone = categoryToneMap[cat] ?? "neutral";
-          return (
-            <OperationalStatusBadge status={tone}>{cat ?? "—"}</OperationalStatusBadge>
-          );
-        },
+        cell: ({ row }) => (
+          <StatusBadge variant={mapStatus(row.original.category)}>
+            {row.original.category ?? "—"}
+          </StatusBadge>
+        ),
       },
       {
         accessorKey: "maxConcentration",
         header: () => <div className="text-center">Max Conc.</div>,
-        cell: ({ getValue }: { getValue: () => number | null }) => (
+        cell: ({ getValue }) => (
           <div className="text-center text-[13px] font-medium text-slate-900">
             {getValue() ? `${getValue()}%` : <span className="text-slate-400">No Limit</span>}
           </div>
@@ -170,7 +163,7 @@ export default function MasterInciPage() {
       {
         accessorKey: "prohibitedContext",
         header: "Regulatory Notes",
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <p className="text-[12px] text-slate-500 line-clamp-1 max-w-[300px]">
             {row.original.prohibitedContext ||
               row.original.warningText ||
@@ -181,7 +174,7 @@ export default function MasterInciPage() {
       {
         id: "actions",
         header: () => <div className="text-right">Aksi</div>,
-        cell: ({ row }: { row: { original: any } }) => (
+        cell: ({ row }) => (
           <div className="flex justify-end gap-1">
             <button
               type="button"
@@ -205,44 +198,11 @@ export default function MasterInciPage() {
         ),
       },
     ],
-    [categoryToneMap],
-  );
-
-  const filters = (
-    <div className="flex flex-col lg:flex-row gap-4 items-center w-full">
-      <div className="relative w-full lg:w-[400px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-        <OperationalField label="">
-          <input
-            placeholder="Cari INCI atau CAS..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-10 pl-10 bg-slate-50 border-slate-200 focus:bg-white"
-          />
-        </OperationalField>
-      </div>
-
-      <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => setCategoryFilter(cat.value)}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase whitespace-nowrap transition-all",
-              categoryFilter === cat.value
-                ? "bg-white text-blue-600 shadow-sm border border-slate-200"
-                : "text-slate-500 hover:text-slate-700",
-            )}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-    </div>
+    [],
   );
 
   return (
-    <OperationalPageShell
+    <PageShell
       title="Master INCI"
       subtitle="International Nomenclature of Cosmetic Ingredients"
       actions={
@@ -250,7 +210,7 @@ export default function MasterInciPage() {
           <button
             type="button"
             onClick={() => setIsImportDialogOpen(true)}
-            className="operational-button is-secondary"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
           >
             <Upload className="h-4 w-4" />
             <span>Bulk Import</span>
@@ -261,7 +221,7 @@ export default function MasterInciPage() {
               setEditingItem(null);
               setIsAddDialogOpen(true);
             }}
-            className="operational-button is-primary"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
             <span>Tambah Bahan</span>
@@ -269,16 +229,49 @@ export default function MasterInciPage() {
         </div>
       }
     >
-      <div className="operational-stack">
-        <OperationalPanel>{filters}</OperationalPanel>
+      <div className="flex flex-col gap-6">
+        <SectionCard>
+          <SectionCardContent>
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center w-full">
+              <label className="flex items-center gap-2 h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400 w-full lg:w-[400px]">
+                <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Cari INCI atau CAS..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
+                />
+              </label>
 
-        <OperationalDataTable
+              <div className="flex gap-1.5 p-1 bg-slate-50 rounded-lg border border-[#E2E8F0] overflow-x-auto no-scrollbar">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => setCategoryFilter(cat.value)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-md text-[10px] font-medium uppercase whitespace-nowrap transition-all",
+                      categoryFilter === cat.value
+                        ? "bg-white text-blue-600 shadow-sm border border-slate-200"
+                        : "text-slate-500 hover:text-slate-700",
+                    )}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </SectionCardContent>
+        </SectionCard>
+
+        <DataTable
           data={incis ?? []}
-          columns={columns as any}
+          columns={columns}
           getRowId={(row: any) => row.id}
           searchPlaceholder="Cari INCI, CAS, atau catatan..."
           emptyMessage="Belum ada data INCI."
           loading={isLoading}
+          enableSearch={false}
         />
       </div>
 
@@ -300,26 +293,29 @@ export default function MasterInciPage() {
             className="space-y-4"
           >
             <div className="grid grid-cols-2 gap-4">
-              <OperationalField label="INCI Name">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-slate-700">INCI Name</label>
                 <input
                   name="inciName"
                   defaultValue={editingItem?.inciName}
                   required
-                  className="bg-slate-50 border-slate-200"
+                  className="h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
-              </OperationalField>
-              <OperationalField label="CAS Number">
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-slate-700">CAS Number</label>
                 <input
                   name="casNumber"
                   defaultValue={editingItem?.casNumber}
-                  className="bg-slate-50 border-slate-200"
+                  className="h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
-              </OperationalField>
-              <OperationalField label="Category">
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-slate-700">Category</label>
                 <select
                   name="category"
                   defaultValue={editingItem?.category || "ALLOWED"}
-                  className="bg-slate-50 border-slate-200"
+                  className="h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
                   {CATEGORIES.slice(1).map((c) => (
                     <option key={c.value} value={c.value}>
@@ -327,33 +323,38 @@ export default function MasterInciPage() {
                     </option>
                   ))}
                 </select>
-              </OperationalField>
-              <OperationalField label="Max Concentration (%)">
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-slate-700">Max Concentration (%)</label>
                 <input
                   name="maxConcentration"
                   type="number"
                   step="0.01"
                   defaultValue={editingItem?.maxConcentration}
-                  className="bg-slate-50 border-slate-200"
+                  className="h-10 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
-              </OperationalField>
+              </div>
             </div>
-            <OperationalField label="Prohibited Context">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-slate-700">Prohibited Context</label>
               <textarea
                 name="prohibitedContext"
                 defaultValue={editingItem?.prohibitedContext}
-                className="bg-slate-50 border-slate-200 min-h-[80px] resize-none"
+                className="min-h-[80px] px-3 py-2 rounded-lg border border-[#E2E8F0] bg-slate-50 text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
-            </OperationalField>
+            </div>
             <DialogFooter className="gap-2">
               <button
                 type="button"
                 onClick={() => setIsAddDialogOpen(false)}
-                className="operational-button is-secondary"
+                className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
               >
                 Batal
               </button>
-              <button type="submit" className="operational-button is-primary">
+              <button
+                type="submit"
+                className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700"
+              >
                 Simpan Bahan
               </button>
             </DialogFooter>
@@ -381,13 +382,13 @@ export default function MasterInciPage() {
             <button
               type="button"
               onClick={() => setIsImportDialogOpen(false)}
-              className="operational-button is-secondary"
+              className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
             >
               Tutup
             </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </OperationalPageShell>
+    </PageShell>
   );
 }

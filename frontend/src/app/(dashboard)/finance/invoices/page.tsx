@@ -1,38 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
-  Plus,
   Search,
   FileCheck2,
-  ArrowUpRight,
-  UserCheck,
   CreditCard,
-  Printer,
-  Mail,
-  MoreHorizontal,
-  ChevronRight,
-  Download,
+  UserCheck,
   AlertTriangle,
-  Zap
+  Download,
+  Zap,
+  Mail,
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { OperationalMigrationShell } from "@/components/operational/OperationalMigrationShell";
-import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
-import { formatOperationalCurrency } from "@/lib/operational-formatters";
+  PageShell,
+  CanonicalMetricGrid,
+  MetricCard,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+} from "@/components/canonical";
 import { FinalDocumentPdfButton } from "@/components/documents/FinalDocumentPdfButton";
+import { formatOperationalCurrency } from "@/lib/operational-formatters";
+import { getOperationalStatusLabel } from "@/components/operational/OperationalUI";
+import type { ColumnDef } from "@tanstack/react-table";
 
 interface Invoice {
   id: string;
@@ -70,7 +62,7 @@ export default function InvoicingPage() {
         brandName: inv.so?.brandName || "",
         items: inv.so?.items || [],
       }));
-    }
+    },
   });
 
   const filteredInvoices = invoices?.filter(inv =>
@@ -78,134 +70,169 @@ export default function InvoicingPage() {
     inv.customer.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  const columns = useMemo<ColumnDef<Invoice, any>[]>(
+    () => [
+      {
+        id: "invoice",
+        header: "Identitas Invoice",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+              <FileCheck2 className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-medium text-slate-900 tracking-tight text-[12px] uppercase">{row.original.id}</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">Jatuh tempo: {row.original.dueDate}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "customer",
+        header: "Pelanggan / Mitra",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-medium text-[10px] text-slate-500 uppercase">
+              {row.original.customer.charAt(0)}
+            </div>
+            <p className="font-medium text-slate-900 text-[12px] uppercase">{row.original.customer}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "source",
+        header: () => <div className="text-center">Sumber Transaksi</div>,
+        cell: ({ getValue }) => (
+          <div className="text-center">
+            <span className="rounded-md border border-[#E2E8F0] text-slate-500 font-medium uppercase text-[10px] tracking-tight px-1.5 py-0.5">
+              {String(getValue() ?? "—")}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "amount",
+        header: () => <div className="text-right">Jumlah Terutang</div>,
+        cell: ({ getValue }) => (
+          <span className="block text-right font-medium text-slate-900 text-[12px] tabular-nums">
+            {formatOperationalCurrency(Number(getValue() ?? 0))}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ getValue }) => (
+          <div className="text-center">
+            <StatusBadge variant={mapStatus(String(getValue()))}>
+              {getOperationalStatusLabel(String(getValue()))}
+            </StatusBadge>
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Aksi</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-end gap-1.5">
+            <FinalDocumentPdfButton
+              documentType={row.original.type === "DP" ? "INVOICE_DP" : "INVOICE_FINAL"}
+              documentNumber={row.original.invoiceNumber}
+              data={{
+                clientName: row.original.clientName,
+                brandName: row.original.brandName,
+                soNumber: row.original.id,
+                amount: row.original.amount,
+                items: row.original.items,
+                dueDate: row.original.dueDate,
+                notes: `${row.original.source} for ${row.original.clientName}`,
+              }}
+            />
+            <button
+              type="button"
+              aria-label="Email"
+              className="h-8 w-8 rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50 inline-flex items-center justify-center"
+            >
+              <Mail className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <OperationalMigrationShell
+    <PageShell
       title="Piutang Pelanggan"
       subtitle="Penerbitan invoice dan pengelolaan penagihan pelanggan"
       actions={
         <div className="flex gap-2">
-           <DnaButton variant="outline" icon={<Download />}>
-               Ekspor Ledger
-           </DnaButton>
-           <DnaButton variant="primary" icon={<Zap />}>
-               Tagihan Massal
-           </DnaButton>
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="h-4 w-4" />
+            <span>Ekspor Ledger</span>
+          </button>
+          <button
+            type="button"
+            className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700"
+          >
+            <Zap className="h-4 w-4" />
+            <span>Tagihan Massal</span>
+          </button>
         </div>
       }
     >
-      <div className="space-y-6">
-        {/* KPI Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
+      <div className="flex flex-col gap-6">
+        <CanonicalMetricGrid>
+          <MetricCard
             label="Total Piutang"
             value="Rp 170.0M"
-            subValue="Rp 45,0 jt jatuh tempo 14 hari"
-            icon={<CreditCard className="text-blue-600" />}
+            helper="Rp 45,0 jt jatuh tempo 14 hari"
+            icon={<CreditCard />}
+            variant="info"
           />
-          <StatCard
+          <MetricCard
             label="Tertagih (MTD)"
             value="Rp 89.2M"
-            subValue="65% dari target"
-            icon={<UserCheck className="text-emerald-500" />}
+            helper="65% dari target"
+            icon={<UserCheck />}
+            variant="success"
           />
-          <StatCard
+          <MetricCard
             label="Menunggu Persetujuan"
             value="4 Invoice"
-            subValue="Menunggu pemeriksaan"
-            icon={<AlertTriangle className="text-amber-500" />}
+            helper="Menunggu pemeriksaan"
+            icon={<AlertTriangle />}
+            variant="warning"
           />
-        </div>
+        </CanonicalMetricGrid>
 
-        {/* Invoices Table */}
-        <TableWrapper
-          filters={
-            <div className="relative w-full max-w-md">
-              <DnaInput
-                icon={<Search className="h-4 w-4" />}
+        <DataTable
+          title="Daftar Invoice"
+          searchPlaceholder="Cari invoice..."
+          data={filteredInvoices}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={isLoading}
+          emptyMessage="Belum ada invoice ditemukan"
+          toolbarRight={
+            <label className="flex items-center gap-2 h-9 px-3 rounded-lg border border-[#E2E8F0] bg-slate-50 text-slate-400">
+              <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <input
+                type="search"
                 placeholder="Cari invoice..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-0 outline-0 text-[12px] text-slate-700 placeholder:text-slate-400"
               />
-            </div>
+            </label>
           }
-        >
-          <Table className="table-dense">
-            <TableHeader className="bg-slate-50/70">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 pl-6 text-left">Identitas Invoice</TableHead>
-                <TableHead className="text-left">Pelanggan / Mitra</TableHead>
-                <TableHead className="text-center">Sumber Transaksi</TableHead>
-                <TableHead className="text-right">Jumlah Terutang</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="pr-6 text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredInvoices.map((inv) => (
-                <TableRow key={inv.id} className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50">
-                  <TableCell className="pl-6 text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <FileCheck2 className="h-4 w-4" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{inv.id}</span>
-                        <span className="text-[9px] font-medium text-slate-400 mt-0.5">Jatuh tempo: {inv.dueDate}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-left">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-black text-[9px] text-slate-500 uppercase">
-                        {inv.customer.charAt(0)}
-                      </div>
-                      <p className="font-black text-slate-900 text-xs uppercase italic">{inv.customer}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="rounded-lg border border-slate-200 text-slate-500 font-medium uppercase text-[8px] tracking-tight px-1.5 py-0.5">
-                      {inv.source}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
-                    {formatOperationalCurrency(inv.amount)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <DnaBadge status={inv.status === 'PAID' ? 'success' : inv.status === 'OVERDUE' ? 'critical' : 'info'}>
-                      {getOperationalStatusLabel(inv.status)}
-                    </DnaBadge>
-                  </TableCell>
-                  <TableCell className="pr-6 text-right">
-                    <div className="flex justify-end gap-1.5">
-                      <FinalDocumentPdfButton
-                        documentType={inv.type === "DP" ? "INVOICE_DP" : "INVOICE_FINAL"}
-                        documentNumber={inv.invoiceNumber}
-                        data={{
-                          clientName: inv.clientName,
-                          brandName: inv.brandName,
-                          soNumber: inv.id,
-                          amount: inv.amount,
-                          items: inv.items,
-                          dueDate: inv.dueDate,
-                          notes: `${inv.source} for ${inv.clientName}`,
-                        }}
-                      />
-                      <DnaButton variant="outline" size="sm" icon={<Mail className="h-3.5 w-3.5" />} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredInvoices.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-slate-400 italic">
-                    No invoices found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableWrapper>
+          enableSearch={false}
+        />
       </div>
-    </OperationalMigrationShell>
+    </PageShell>
   );
 }

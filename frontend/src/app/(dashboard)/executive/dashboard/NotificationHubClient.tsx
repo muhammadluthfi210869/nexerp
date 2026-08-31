@@ -1,23 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  ShieldAlert, 
-  Wallet, 
-  Activity, 
-  Truck, 
-  Users, 
-  FlaskConical, 
-  Zap, 
+import {
+  ShieldAlert,
+  Wallet,
+  Activity,
+  Truck,
+  Users,
+  FlaskConical,
+  Zap,
   Clock,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
-  TrendingDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { SectionCard as Card } from "@/components/canonical";
+import { StatusBadge as Badge } from "@/components/canonical";
 
 const ProblemCard = ({ title, icon: Icon, color, issues }: { title: string, icon: any, color: string, issues: any[] }) => (
   <Card className="rounded-2xl p-5 border border-slate-100 bg-white flex flex-col h-full shadow-sm hover:shadow-md transition-all">
