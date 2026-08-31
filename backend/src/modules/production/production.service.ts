@@ -997,7 +997,7 @@ export class ProductionService {
       const plan = await tx.productionPlan.create({
         data: {
           soId: so.id,
-          adminId: dto.notes ? (await this.resolveAdminId(tx, dto.leadId)) : lead.id,
+          adminId: await this.resolveAdminId(tx, dto.leadId),
           batchNo,
           status: 'PLANNING',
           formulaId: so.formulaId,
