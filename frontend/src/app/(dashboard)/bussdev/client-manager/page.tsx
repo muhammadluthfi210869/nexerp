@@ -1,22 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Search, BookUser, FlaskConical, Package, RefreshCw, ArrowUpRight, Star, ChevronDown, Loader2 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
 import {
-  OperationalPageShell,
+  BookUser,
+  FlaskConical,
+  Package,
+  RefreshCw,
+  ArrowUpRight,
+  ChevronDown,
+  Loader2,
+  Search,
+  Users,
+  Target,
+  CheckCircle2,
+  TrendingUp,
+  AlertTriangle,
+  DollarSign,
+} from "lucide-react";
+import {
   OperationalTabs,
   OperationalTabsContent,
   OperationalTabsList,
   OperationalTabsTrigger,
 } from "@/components/operational";
-import { DashboardCards } from "@/components/bussdev/DashboardCards";
-import { PipelineLeadTable } from "@/components/bussdev/PipelineLeadTable";
+import { OperationalPageShell } from "@/components/operational/OperationalUI";
+import {
+  MetricCard,
+  CanonicalMetricGrid,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+} from "@/components/canonical";
+import type { ColumnDef } from "@tanstack/react-table";
 import { StageConfirmDialog } from "@/components/bussdev/StageConfirmDialog";
 import { SAMPLE_STAGES, PRODUCTION_STAGES } from "@/components/bussdev/pipeline-constants";
+import { cn, formatCurrency } from "@/lib/utils";
 
 // ── Buku Tamu Tab ──
 
@@ -24,25 +45,17 @@ function BukuTamuContent() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: guests, isLoading: isLoadingGuests } = useQuery({
+  const { data: guests = [] } = useQuery({
     queryKey: ["client-manager-guests"],
     queryFn: async () => {
-      try {
-        return (await api.get("/guests")).data;
-      } catch {
-        return [];
-      }
+      try { return (await api.get("/guests")).data ?? []; } catch { return []; }
     },
   });
 
-  const { data: intakeLeads, isLoading: isLoadingLeads } = useQuery({
+  const { data: intakeLeads = [] } = useQuery({
     queryKey: ["bussdev-leads-group", "guest"],
     queryFn: async () => {
-      try {
-        return (await api.get<any[]>("/bussdev/leads/group/guest?mine=true")).data;
-      } catch {
-        return [];
-      }
+      try { return (await api.get<any[]>("/bussdev/leads/group/guest?mine=true")).data ?? []; } catch { return []; }
     },
   });
 
@@ -56,130 +69,137 @@ function BukuTamuContent() {
     onError: (err: any) => toast.error(err.response?.data?.message || "Gagal konversi"),
   });
 
-  const mergedItems = [
-    ...(guests || []).map((g: any) => ({
-      id: g.id,
-      type: "guest" as const,
-      clientName: g.clientName,
-      contactInfo: g.contactInfo,
-      productInterest: g.productInterest,
-      date: g.visitDate,
-    })),
-    ...(intakeLeads || []).map((l: any) => ({
-      id: l.id,
-      type: "lead" as const,
-      clientName: l.clientName,
-      contactInfo: l.contactInfo || "—",
-      productInterest: l.productInterest,
-      date: l.createdAt,
-    })),
-  ];
-
-  const filtered = mergedItems.filter(
-    (item) =>
-      item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.productInterest?.toLowerCase().includes(searchQuery.toLowerCase()),
+  const merged = useMemo(
+    () => [
+      ...(guests as any[]).map((g: any) => ({
+        id: g.id,
+        type: "guest" as const,
+        clientName: g.clientName,
+        contactInfo: g.contactInfo,
+        productInterest: g.productInterest,
+        date: g.visitDate,
+      })),
+      ...(intakeLeads as any[]).map((l: any) => ({
+        id: l.id,
+        type: "lead" as const,
+        clientName: l.clientName,
+        contactInfo: l.contactInfo || "—",
+        productInterest: l.productInterest,
+        date: l.createdAt,
+      })),
+    ],
+    [guests, intakeLeads],
   );
 
-  const isLoading = isLoadingGuests || isLoadingLeads;
+  const filtered = useMemo(
+    () => merged.filter((item) =>
+      item.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.productInterest?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
+    [merged, searchQuery],
+  );
 
-  if (isLoading) return <div className="h-96 rounded-md bg-slate-50 animate-pulse" />;
+  const guestCount = (guests as any[]).length;
+  const leadCount = (intakeLeads as any[]).length;
+  const totalCount = merged.length;
+
+  const columns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "source",
+      header: "Sumber",
+      accessorFn: (row) => row.type,
+      cell: ({ getValue }) => {
+        const t = getValue() as string;
+        return (
+          <StatusBadge variant={t === "guest" ? "warning" : "info"}>
+            {t === "guest" ? "TAMU" : "INTAKE"}
+          </StatusBadge>
+        );
+      },
+    },
+    {
+      id: "name",
+      header: "Nama",
+      accessorKey: "clientName",
+      cell: ({ getValue }) => (
+        <span className="font-medium text-slate-900">{String(getValue() ?? "—")}</span>
+      ),
+    },
+    {
+      id: "contact",
+      header: "Kontak",
+      accessorKey: "contactInfo",
+      cell: ({ getValue }) => (
+        <span className="text-slate-600">{String(getValue() ?? "—")}</span>
+      ),
+    },
+    {
+      id: "product",
+      header: "Produk",
+      accessorKey: "productInterest",
+      cell: ({ getValue }) => (
+        <span className="text-blue-600 font-medium">
+          {(String(getValue() ?? "—")).toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      id: "date",
+      header: "Tanggal",
+      accessorFn: (row) => row.date,
+      cell: ({ getValue }) => {
+        const d = getValue() as string | undefined;
+        return (
+          <span className="tabular-nums text-slate-600">
+            {d ? new Date(d).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}
+          </span>
+        );
+      },
+    },
+    {
+      id: "action",
+      header: () => <div className="text-right">Aksi</div>,
+      enableSorting: false,
+      cell: ({ row }) => {
+        const item = row.original;
+        if (item.type === "guest") {
+          return (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => convertMutation.mutate(item.id)}
+                disabled={convertMutation.isPending}
+                className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-blue-600 text-white text-[11px] font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                <ArrowUpRight className="h-3 w-3" />
+                Konversi
+              </button>
+            </div>
+          );
+        }
+        return <span className="text-[11px] text-blue-600 font-medium">SUDAH LEAD</span>;
+      },
+    },
+  ], [convertMutation]);
 
   return (
-    <div className="operational-stack">
-      <section className="operational-panel">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-blue-600" />
-            <h3 className="text-[14px] font-semibold text-slate-900">Registry Tamu</h3>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-              {filtered.length}
-            </span>
-          </div>
-          <div className="operational-input-wrap md:w-80">
-            <span className="operational-input-icon">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="search"
-              placeholder="Cari tamu / lead..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </section>
-      <section className="operational-panel">
-        {filtered.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed border-collapse text-left">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="w-[12%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Sumber</th>
-                  <th className="w-[20%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Nama</th>
-                  <th className="w-[20%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Kontak</th>
-                  <th className="w-[20%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Produk</th>
-                  <th className="w-[13%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Tanggal</th>
-                  <th className="w-[15%] px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wider text-slate-500">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-100 transition hover:bg-blue-50/40">
-                    <td className="px-3 py-2.5">
-                      <span
-                        className={cn(
-                          "rounded-md border px-2 py-0.5 text-[10px] font-medium",
-                          item.type === "guest"
-                            ? "border-orange-100 bg-orange-50 text-orange-700"
-                            : "border-blue-100 bg-blue-50 text-blue-700",
-                        )}
-                      >
-                        {item.type === "guest" ? "TAMU" : "INTAKE"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-[12px] font-medium text-slate-900">
-                      {item.clientName}
-                    </td>
-                    <td className="px-3 py-2.5 text-[11px] text-slate-800">{item.contactInfo || "—"}</td>
-                    <td className="px-3 py-2.5 text-[11px] font-medium text-blue-600">
-                      {(item.productInterest || "—").toUpperCase()}
-                    </td>
-                    <td className="px-3 py-2.5 tabular-nums text-[11px] text-slate-600">
-                      {item.date
-                        ? new Date(item.date).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          })
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2.5 text-right">
-                      {item.type === "guest" ? (
-                        <button
-                          type="button"
-                          className="operational-button is-primary h-8 px-3 text-[11px]"
-                          onClick={() => convertMutation.mutate(item.id)}
-                          disabled={convertMutation.isPending}
-                        >
-                          <ArrowUpRight className="h-3 w-3" />
-                          <span>Konversi</span>
-                        </button>
-                      ) : (
-                        <span className="text-[10px] font-medium text-blue-600">SUDAH LEAD</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="py-10 text-center text-[12px] text-slate-400">
-            Tidak ada data tamu atau lead.
-          </p>
-        )}
-      </section>
+    <div className="space-y-4">
+      <CanonicalMetricGrid>
+        <MetricCard label="Total Tamu" value={guestCount} helper="Buku Tamu" icon={<BookUser />} variant="info" />
+        <MetricCard label="Total Lead" value={leadCount} helper="Sudah Intake" icon={<Users />} variant="neutral" />
+        <MetricCard label="Gabungan" value={totalCount} helper="Gabung Tamu + Lead" icon={<Target />} variant="neutral" />
+      </CanonicalMetricGrid>
+
+      <DataTable
+        title="Registry Tamu & Intake Lead"
+        searchPlaceholder="Cari tamu / lead..."
+        data={filtered}
+        columns={columns}
+        getRowId={(row) => row.id}
+        enableSearch={false}
+        emptyMessage="Belum ada tamu atau lead"
+        emptyDescription="Tamu yang berkunjung akan muncul di sini setelah didaftarkan."
+      />
     </div>
   );
 }
@@ -195,82 +215,96 @@ function SampleContent() {
   const { data: analytics } = useQuery({
     queryKey: ["bussdev-analytics", "sample"],
     queryFn: async () => {
-      try {
-        return (await api.get("/bussdev/analytics/sample")).data;
-      } catch {
-        return null;
-      }
+      try { return (await api.get("/bussdev/analytics/sample")).data; } catch { return null; }
     },
   });
 
-  const { data: leads, isLoading } = useQuery({
+  const { data: leads = [] } = useQuery({
     queryKey: ["bussdev-leads-group", "sample"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/sample?mine=true")).data,
+    queryFn: async () => {
+      try { return (await api.get<any[]>("/bussdev/leads/group/sample?mine=true")).data ?? []; } catch { return []; }
+    },
   });
 
-  const filtered = leads?.filter(
-    (l: any) =>
+  const filtered = useMemo(
+    () => (leads as any[]).filter((l) =>
       l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       l.brandName?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
+    [leads, searchQuery],
   );
 
-  const pipelineLeads = filtered?.map((l: any) => ({
-    id: l.id,
-    clientName: l.clientName,
-    brandName: l.brandName,
-    productInterest: l.productInterest,
-    category: l.category,
-    source: l.source || null,
-    moq: Number(l.moq || 0),
-    unitPrice: Number(l.unitPrice || 0),
-    estimatedValue: Number(l.estimatedValue || 0),
-    status: l.status || l.stage,
-    slaDays: l.slaDays || 0,
-    notes: l.notes || null,
-  }));
+  const activeSamples = analytics?.activeSamples ?? filtered.length;
+  const sampleApproved = analytics?.sampleApproved ?? filtered.filter((l) => l.status === "APPROVED").length;
+  const dealRate = analytics?.conversionToProd ?? 0;
 
-  const handleAdvance = (lead: any, targetStage: string) => {
-    setSelectedLead(lead);
-    setNextStage(targetStage);
-    setIsModalOpen(true);
-  };
-  const handleMarkLost = (lead: any) => {
-    setSelectedLead(lead);
-    setNextStage("LOST");
-    setIsModalOpen(true);
-  };
+  const columns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "client",
+      header: "Client & Brand",
+      cell: ({ row }) => {
+        const o = row.original;
+        return (
+          <div>
+            <p className="text-[13px] font-medium text-slate-900">{o.clientName}</p>
+            {o.brandName ? <p className="text-[11px] text-slate-500">{o.brandName}</p> : null}
+          </div>
+        );
+      },
+    },
+    {
+      id: "interest",
+      header: "Interest",
+      accessorKey: "productInterest",
+      cell: ({ getValue }) => (
+        <span className="text-blue-600 font-medium text-[12px]">
+          {(String(getValue() ?? "—")).toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      id: "value",
+      header: () => <div className="text-right">Est. Value</div>,
+      accessorKey: "estimatedValue",
+      cell: ({ getValue }) => (
+        <span className="tabular-nums text-[13px] font-medium text-slate-900">
+          {formatCurrency(Number(getValue() ?? 0))}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: () => <div className="text-center">Status</div>,
+      accessorKey: "status",
+      cell: ({ getValue }) => (
+        <div className="text-center">
+          <StatusBadge variant={mapStatus(getValue() as string)}>
+            {String(getValue() ?? "—")}
+          </StatusBadge>
+        </div>
+      ),
+    },
+  ], []);
 
   return (
-    <div className="operational-stack">
-      <DashboardCards variant="sample" data={analytics} />
-      <section className="operational-panel">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-blue-800" />
-            <h3 className="text-[14px] font-semibold text-slate-900">Sample Stream</h3>
-          </div>
-          <div className="operational-input-wrap md:w-80">
-            <span className="operational-input-icon">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="search"
-              placeholder="Cari brand / client..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="mt-3">
-          <PipelineLeadTable
-            leads={pipelineLeads}
-            isLoading={isLoading}
-            onAdvance={handleAdvance}
-            onMarkLost={handleMarkLost}
-            stageMap={SAMPLE_STAGES}
-          />
-        </div>
-      </section>
+    <div className="space-y-4">
+      <CanonicalMetricGrid>
+        <MetricCard label="Sample Aktif" value={activeSamples} helper="Sedang di R&D" icon={<FlaskConical />} variant="warning" />
+        <MetricCard label="Sample Approved" value={sampleApproved} helper="App. Rate" icon={<CheckCircle2 />} variant="success" />
+        <MetricCard label="Deal Rate" value={`${dealRate}%`} helper="Sample → Deal" icon={<TrendingUp />} variant="info" />
+      </CanonicalMetricGrid>
+
+      <DataTable
+        title="Sample Stream"
+        searchPlaceholder="Cari brand / client..."
+        data={filtered}
+        columns={columns}
+        getRowId={(row) => row.id}
+        enableSearch={false}
+        emptyMessage="Belum ada sample lead"
+        emptyDescription="Lead yang masuk fase sample akan muncul di sini."
+      />
+
       <StageConfirmDialog
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
@@ -281,138 +315,124 @@ function SampleContent() {
   );
 }
 
-// ── Produksi Tab ──
+// ── Production Tab ──
 
 function ProductionContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLead, setSelectedLead] = useState<any>(null);
-  const [nextStage, setNextStage] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading] = useState(false);
 
   const { data: analytics } = useQuery({
     queryKey: ["bussdev-analytics", "production"],
     queryFn: async () => {
-      try {
-        return (await api.get("/bussdev/analytics/production")).data;
-      } catch {
-        return null;
-      }
+      try { return (await api.get("/bussdev/analytics/production")).data; } catch { return null; }
     },
   });
 
-  const { data: leads, isLoading } = useQuery({
+  const { data: leads = [] } = useQuery({
     queryKey: ["bussdev-leads-group", "production"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/production?mine=true")).data,
+    queryFn: async () => {
+      try { return (await api.get<any[]>("/bussdev/leads/group/production?mine=true")).data ?? []; } catch { return []; }
+    },
   });
 
-  const filtered = leads?.filter(
-    (l: any) =>
+  const filtered = useMemo(
+    () => (leads as any[]).filter((l) =>
       l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       l.brandName?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
+    [leads, searchQuery],
   );
 
-  const pipelineLeads = filtered?.map((l: any) => ({
-    id: l.id,
-    clientName: l.clientName,
-    brandName: l.brandName,
-    productInterest: l.productInterest,
-    category: l.category,
-    source: l.source || null,
-    moq: Number(l.moq || 0),
-    unitPrice: Number(l.unitPrice || 0),
-    estimatedValue: Number(l.estimatedValue || 0),
-    status: l.status || l.stage,
-    slaDays: l.slaDays || 0,
-    notes: l.notes || null,
-  }));
+  const conversionRate = analytics?.conversionRate ?? 0;
+  const onTime = analytics?.onTimeDelivery ?? "—";
 
-  const handleAdvance = (lead: any, targetStage: string) => {
-    setSelectedLead(lead);
-    setNextStage(targetStage);
-    setIsModalOpen(true);
-  };
-  const handleMarkLost = (lead: any) => {
-    setSelectedLead(lead);
-    setNextStage("LOST");
-    setIsModalOpen(true);
-  };
-
-  if (isLoading)
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
-      </div>
-    );
+  const columns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "client",
+      header: "Client & Brand",
+      cell: ({ row }) => {
+        const o = row.original;
+        return (
+          <div>
+            <p className="text-[13px] font-medium text-slate-900">{o.clientName}</p>
+            {o.brandName ? <p className="text-[11px] text-slate-500">{o.brandName}</p> : null}
+          </div>
+        );
+      },
+    },
+    {
+      id: "category",
+      header: "Category",
+      accessorKey: "category",
+      cell: ({ getValue }) => (
+        <span className="text-slate-700">{String(getValue() ?? "—")}</span>
+      ),
+    },
+    {
+      id: "moq",
+      header: () => <div className="text-right">MOQ</div>,
+      accessorKey: "moq",
+      cell: ({ getValue }) => (
+        <span className="tabular-nums text-[13px] font-medium text-slate-900">
+          {Number(getValue() ?? 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: () => <div className="text-center">Status</div>,
+      accessorKey: "status",
+      cell: ({ getValue }) => (
+        <div className="text-center">
+          <StatusBadge variant={mapStatus(getValue() as string)}>
+            {String(getValue() ?? "—")}
+          </StatusBadge>
+        </div>
+      ),
+    },
+  ], []);
 
   return (
-    <div className="operational-stack">
-      <DashboardCards variant="production" data={analytics} />
-      <section className="operational-panel">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-cyan-800" />
-            <h3 className="text-[14px] font-semibold text-slate-900">Batch Stream</h3>
-          </div>
-          <div className="operational-input-wrap md:w-80">
-            <span className="operational-input-icon">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="search"
-              placeholder="Cari brand / client..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="mt-3">
-          <PipelineLeadTable
-            leads={pipelineLeads}
-            isLoading={isLoading}
-            onAdvance={handleAdvance}
-            onMarkLost={handleMarkLost}
-            stageMap={PRODUCTION_STAGES}
-          />
-        </div>
-      </section>
-      <StageConfirmDialog
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        lead={selectedLead}
-        targetStage={nextStage}
+    <div className="space-y-4">
+      <CanonicalMetricGrid>
+        <MetricCard label="Conversion Rate" value={`${conversionRate}%`} helper="Leads → Deal" icon={<Target />} variant="success" />
+        <MetricCard label="On-Time Delivery" value={onTime} helper="SLA Compliance" icon={<CheckCircle2 />} variant="info" />
+        <MetricCard label="Total Lead" value={filtered.length} helper="Fase Produksi" icon={<Package />} variant="neutral" />
+      </CanonicalMetricGrid>
+
+      <DataTable
+        title="Batch Stream"
+        searchPlaceholder="Cari brand / client..."
+        data={filtered}
+        columns={columns}
+        getRowId={(row) => row.id}
+        enableSearch={false}
+        loading={isLoading}
+        emptyMessage="Belum ada production lead"
+        emptyDescription="Lead yang masuk fase produksi akan muncul di sini."
       />
     </div>
   );
 }
 
-// ── RO Tab ──
+// ── Repeat Order Tab ──
 
-const FU_CONFIG: Record<string, { label: string; color: string }> = {
-  NOT_FOLLOWED_UP: { label: "Belum FU", color: "bg-slate-100 text-slate-500" },
-  FU_1: { label: "FU 1", color: "bg-amber-100 text-amber-700" },
-  FU_2: { label: "FU 2", color: "bg-orange-100 text-orange-700" },
-  FU_3: { label: "FU 3", color: "bg-rose-100 text-rose-700" },
+const FU_CONFIG: Record<string, { label: string; variant: "default" | "warning" | "info" | "destructive" }> = {
+  NOT_FOLLOWED_UP: { label: "Belum FU", variant: "default" },
+  FU_1: { label: "FU 1", variant: "warning" },
+  FU_2: { label: "FU 2", variant: "info" },
+  FU_3: { label: "FU 3", variant: "destructive" },
 };
 
 function ROContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [fuDropdownOpen, setFuDropdownOpen] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: analytics, isLoading: isAnalyticsLoading } = useQuery({
-    queryKey: ["bussdev-analytics", "ro"],
-    queryFn: async () => {
-      try {
-        return (await api.get("/bussdev/analytics/ro")).data;
-      } catch {
-        return null;
-      }
-    },
-  });
-
-  const { data: leads, isLoading: isLeadsLoading } = useQuery({
+  const { data: leads = [] } = useQuery({
     queryKey: ["bussdev-leads-group", "ro"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/ro?mine=true")).data,
+    queryFn: async () => {
+      try { return (await api.get<any[]>("/bussdev/leads/group/ro?mine=true")).data ?? []; } catch { return []; }
+    },
   });
 
   const updateFuMutation = useMutation({
@@ -423,168 +443,109 @@ function ROContent() {
       toast.success("Status follow-up diperbarui!");
       queryClient.invalidateQueries({ queryKey: ["bussdev-leads-group"] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal memperbarui status FU");
-    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Gagal memperbarui status FU"),
   });
 
-  const filtered = leads?.filter(
-    (l: any) =>
+  const filtered = useMemo(
+    () => (leads as any[]).filter((l) =>
       l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       l.brandName?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
+    [leads, searchQuery],
   );
 
-  const isLoading = isAnalyticsLoading || isLeadsLoading;
+  const activeRo = filtered.filter((l) => l.orderCount > 0).length;
+  const totalSpent = filtered.reduce((sum: number, l: any) => sum + Number(l.planOmset || l.estimatedValue || 0), 0);
+
+  const columns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "client",
+      header: "Brand & Client",
+      cell: ({ row }) => {
+        const o = row.original;
+        return (
+          <div>
+            <p className="text-[13px] font-medium text-slate-900">{o.clientName}</p>
+            {o.brandName ? <p className="text-[11px] text-slate-500">({o.brandName})</p> : null}
+          </div>
+        );
+      },
+    },
+    {
+      id: "interest",
+      header: "Interest",
+      accessorKey: "productInterest",
+      cell: ({ getValue }) => (
+        <span className="text-blue-600 font-medium text-[12px]">
+          {(String(getValue() ?? "—")).toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      id: "orders",
+      header: () => <div className="text-center">Orders</div>,
+      cell: ({ row }) => {
+        const oc = row.original.orderCount || 0;
+        return <span className="tabular-nums text-[13px] font-medium">{oc}x</span>;
+      },
+    },
+    {
+      id: "spent",
+      header: () => <div className="text-right">Total Spent</div>,
+      cell: ({ row }) => (
+        <span className="tabular-nums text-[13px] font-medium text-slate-900">
+          {formatCurrency(Number(row.original.planOmset || row.original.estimatedValue || 0))}
+        </span>
+      ),
+    },
+    {
+      id: "loyalty",
+      header: () => <div className="text-center">Loyalty</div>,
+      cell: ({ row }) => {
+        const oc = row.original.orderCount || 0;
+        const level = oc >= 3 ? "GOLD" : oc >= 1 ? "SILVER" : "BRONZE";
+        return (
+          <div className="text-center">
+            <StatusBadge variant={oc >= 3 ? "warning" : oc >= 1 ? "info" : "default"}>
+              {level}
+            </StatusBadge>
+          </div>
+        );
+      },
+    },
+    {
+      id: "fu",
+      header: () => <div className="text-center">Follow Up</div>,
+      cell: ({ row }) => {
+        const fu = (row.original.fuStatus || "NOT_FOLLOWED_UP") as string;
+        const cfg = FU_CONFIG[fu] ?? FU_CONFIG.NOT_FOLLOWED_UP;
+        return (
+          <div className="text-center">
+            <StatusBadge variant={cfg.variant}>{cfg.label}</StatusBadge>
+          </div>
+        );
+      },
+    },
+  ], []);
 
   return (
-    <div className="operational-stack">
-      <DashboardCards variant="ro" data={analytics} />
-      <section className="operational-panel">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-slate-800" />
-            <h3 className="text-[14px] font-semibold text-slate-900">Analisis Loyalty Stream</h3>
-          </div>
-          <div className="operational-input-wrap md:w-80">
-            <span className="operational-input-icon">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="search"
-              placeholder="Cari partner VIP / brand..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full table-fixed border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="w-[25%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Brand & Client</th>
-                <th className="w-[20%] px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Interest</th>
-                <th className="w-[10%] px-3 py-2 text-center text-[11px] font-medium uppercase tracking-wider text-slate-500">Orders</th>
-                <th className="w-[15%] px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wider text-slate-500">Total Spent</th>
-                <th className="w-[15%] px-3 py-2 text-center text-[11px] font-medium uppercase tracking-wider text-slate-500">Loyalty</th>
-                <th className="w-[15%] px-3 py-2 text-center text-[11px] font-medium uppercase tracking-wider text-slate-500">Follow Up</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                [...Array(3)].map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100">
-                    <td className="px-3 py-3">
-                      <div className="h-3 w-full rounded bg-slate-100 animate-pulse" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="h-3 w-full rounded bg-slate-100 animate-pulse" />
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <div className="mx-auto h-3 w-8 rounded bg-slate-100 animate-pulse" />
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <div className="ml-auto h-3 w-16 rounded bg-slate-100 animate-pulse" />
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <div className="mx-auto h-3 w-12 rounded bg-slate-100 animate-pulse" />
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <div className="mx-auto h-3 w-12 rounded bg-slate-100 animate-pulse" />
-                    </td>
-                  </tr>
-                ))
-              ) : filtered?.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-12 text-center text-[12px] text-slate-400">
-                    Tidak ada data repeat order
-                  </td>
-                </tr>
-              ) : (
-                filtered?.map((lead: any) => {
-                  const totalSpent = Number(lead.planOmset || lead.estimatedValue || 0);
-                  const orderCount = lead.orderCount || 0;
-                  const loyaltyLevel = orderCount >= 3 ? "GOLD" : orderCount >= 1 ? "SILVER" : "BRONZE";
-                  const fuStatus = lead.fuStatus || "NOT_FOLLOWED_UP";
-                  const fuConfig = FU_CONFIG[fuStatus] || FU_CONFIG.NOT_FOLLOWED_UP;
+    <div className="space-y-4">
+      <CanonicalMetricGrid>
+        <MetricCard label="Active RO Clients" value={activeRo} helper="Repeat Order" icon={<RefreshCw />} variant="success" />
+        <MetricCard label="Total Spent" value={formatCurrency(totalSpent)} helper="Akumulasi" icon={<DollarSign />} variant="info" />
+        <MetricCard label="Avg / Client" value={activeRo > 0 ? formatCurrency(totalSpent / activeRo) : "—"} helper="Per Client" icon={<Target />} variant="neutral" />
+      </CanonicalMetricGrid>
 
-                  return (
-                    <tr key={lead.id} className="border-b border-slate-100 transition hover:bg-blue-50/40">
-                      <td className="px-3 py-2.5">
-                        <div className="text-[12px] font-medium text-slate-900">{lead.clientName}</div>
-                        {lead.brandName && (
-                          <div className="text-[10px] text-slate-500">({lead.brandName})</div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-[11px] font-medium text-blue-600">
-                        {(lead.productInterest ?? "").toUpperCase()}
-                      </td>
-                      <td className="px-3 py-2.5 text-center text-[12px] font-medium text-slate-900">
-                        {orderCount}x
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-[12px] font-medium text-slate-900">
-                        {formatCurrency(totalSpent)}
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <span
-                          className={cn(
-                            "rounded-md border px-2 py-0.5 text-[10px] font-medium",
-                            loyaltyLevel === "GOLD"
-                              ? "border-amber-100 bg-amber-50 text-amber-700"
-                              : loyaltyLevel === "SILVER"
-                                ? "border-slate-200 bg-slate-100 text-slate-700"
-                                : "border-rose-100 bg-rose-50 text-rose-700",
-                          )}
-                        >
-                          <Star className="mr-1 inline h-2.5 w-2.5" />
-                          {loyaltyLevel}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <div className="relative inline-block">
-                          <button
-                            onClick={() => setFuDropdownOpen(fuDropdownOpen === lead.id ? null : lead.id)}
-                            className={cn(
-                              "rounded-md px-2 py-1 text-[10px] font-medium uppercase transition cursor-pointer",
-                              fuConfig.color,
-                            )}
-                          >
-                            {fuConfig.label} <ChevronDown className="ml-1 inline h-2.5 w-2.5" />
-                          </button>
-                          {fuDropdownOpen === lead.id && (
-                            <div className="absolute right-0 z-10 mt-1 w-36 rounded-md border border-slate-200 bg-white p-1 shadow-md">
-                              {Object.entries(FU_CONFIG).map(([key, config]) => (
-                                <button
-                                  key={key}
-                                  onClick={() => {
-                                    updateFuMutation.mutate({ leadId: lead.id, fuStatus: key });
-                                    setFuDropdownOpen(null);
-                                  }}
-                                  className={cn(
-                                    "w-full rounded-md px-2 py-1.5 text-left text-[10px] font-medium uppercase transition hover:bg-slate-50",
-                                    config.color,
-                                  )}
-                                >
-                                  {config.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section className="operational-panel">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-1 rounded-full bg-emerald-800" />
-          <h3 className="text-[14px] font-semibold text-slate-900">Retention Radar</h3>
-        </div>
-      </section>
+      <DataTable
+        title="Analisis Loyalty Stream"
+        searchPlaceholder="Cari partner VIP / brand..."
+        data={filtered}
+        columns={columns}
+        getRowId={(row) => row.id}
+        enableSearch={false}
+        emptyMessage="Belum ada repeat order"
+        emptyDescription="Lead yang sudah repeat order akan muncul di sini."
+      />
     </div>
   );
 }

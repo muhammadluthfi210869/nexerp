@@ -66,10 +66,10 @@ export default function BussdevMyPerformancePage() {
     >
       <div className="space-y-10">
         <CanonicalMetricGrid>
-          <MetricCard label="My Leads" value={String(myLeadCount)} subValue={`Target ${myLeadCount >= 10 ? "✓" : `${myLeadCount}/10`}`} icon={<Users />} />
-          <MetricCard label="Contact Rate" value={`${myContactRate}%`} subValue="Across my leads" icon={<Phone />} />
-          <MetricCard label="My Deals" value={String(myDeals)} subValue={`Goal ${myDeals >= 3 ? "✓" : `${myDeals}/3`}`} icon={<CheckCircle2 />} />
-          <MetricCard label="Deal Rate" value={`${myDealRate}%`} subValue="Won / contacted" icon={<TrendingUp />} />
+          <MetricCard label="My Leads" value={String(myLeadCount)} helper={`Target ${myLeadCount >= 10 ? "✓" : `${myLeadCount}/10`}`} icon={<Users />} variant="info" />
+          <MetricCard label="Contact Rate" value={`${myContactRate}%`} helper="Across my leads" icon={<Phone />} variant="neutral" />
+          <MetricCard label="My Deals" value={String(myDeals)} helper={`Goal ${myDeals >= 3 ? "✓" : `${myDeals}/3`}`} icon={<CheckCircle2 />} variant="success" />
+          <MetricCard label="Deal Rate" value={`${myDealRate}%`} helper="Won / contacted" icon={<TrendingUp />} variant="warning" />
         </CanonicalMetricGrid>
 
         <SectionCard>
@@ -83,7 +83,6 @@ export default function BussdevMyPerformancePage() {
               title="My Pipeline"
               searchPlaceholder="Search leads, brands, status..."
               pageSize={10}
-              pageSizeOptions={[10, 25, 50]}
             />
           </div>
         </SectionCard>

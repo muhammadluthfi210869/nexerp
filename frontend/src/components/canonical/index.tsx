@@ -1,5 +1,5 @@
 /**
- * NEX ERP Canonical UI System — Batch 1
+ * NEX ERP Canonical UI System — Batch 1 (visual gate pass 2)
  *
  * SINGLE SOURCE OF TRUTH for visual primitives.
  * PAGES MUST IMPORT FROM THIS FILE — no independent KPI/Table/Tabs/Form/Badge markup.
@@ -10,9 +10,13 @@
  * - 8px radius for controls
  * - typography scale: page 28-32 / section 16-20 / body 14 / helper 12 / kpi-value 24-30
  * - semantic colors only: neutral/info/success/warning/danger
- * - no decorative gradients, no shadow-2xl, no thick black borders, no glow
+ * - subtle 1px neutral border (#E2E8F0)
+ * - no decorative gradients, no shadow-2xl, no thick black borders, no glow, no decorative bg SVG
  */
-export { StatCard as MetricCard } from "@/components/dna/StatCard";
+export { MetricCard } from "./MetricCard";
+export type { MetricCardProps, MetricCardVariant } from "./MetricCard";
+export { DataTable } from "./DataTable";
+export type { DataTableProps } from "./DataTable";
 export { KPIGrid as MetricGrid } from "@/components/layout/KPIGrid";
 export {
   Card as SectionCard,
@@ -31,8 +35,6 @@ export {
   TabsTrigger as OperationalTabsTrigger,
   TabsContent as OperationalTabsContent,
 } from "@/components/ui/tabs";
-export { ErpDataTable as DataTable } from "@/components/dna/ErpDataTable";
-export type { ErpDataTableProps as DataTableProps } from "@/components/dna/ErpDataTable";
 export { FormShell as FormSection } from "@/components/layout/FormShell";
 export { EmptyState } from "@/components/empty-state";
 export { SegmentLoading as LoadingState } from "@/components/layout/SegmentLoading";
@@ -48,16 +50,13 @@ import type { VariantProps } from "class-variance-authority";
  */
 export type StatusVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
 
-/**
- * Map a domain status string to a canonical StatusBadge variant.
- */
 export function mapStatus(status: string | null | undefined): StatusVariant {
   if (!status) return "default";
   const s = status.toUpperCase();
-  if (["APPROVED", "VERIFIED", "PASSED", "PAID", "SUCCESS", "COMPLETED", "RECEIVED", "FINISHED_GOODS", "DELIVERED", "DONE"].includes(s)) return "success";
-  if (["PENDING", "PENDING_VALIDATION", "WAITING", "WAITING_APPROVAL", "WAITING_MATERIAL", "WAITING_PROCUREMENT", "SUBMITTED", "DRAFT"].includes(s)) return "warning";
-  if (["REJECTED", "CANCELLED", "FAILED", "LATE", "QC_HOLD", "PENDING_QC", "CRITICAL", "REWORK", "UNPAID"].includes(s)) return "destructive";
-  if (["ORDERED", "SHIPPED", "MIXING", "FILLING", "PACKING", "INFO"].includes(s)) return "info";
+  if (["APPROVED", "VERIFIED", "PASSED", "PAID", "SUCCESS", "COMPLETED", "RECEIVED", "FINISHED_GOODS", "DELIVERED", "DONE", "LUNAS", "AKTIF", "ACTIVE"].includes(s)) return "success";
+  if (["PENDING", "PENDING_VALIDATION", "WAITING", "WAITING_APPROVAL", "WAITING_MATERIAL", "WAITING_PROCUREMENT", "SUBMITTED", "DRAFT", "BELUM_LUNAS", "MENUNGGU"].includes(s)) return "warning";
+  if (["REJECTED", "CANCELLED", "FAILED", "LATE", "QC_HOLD", "PENDING_QC", "CRITICAL", "REWORK", "UNPAID", "DENIED", "BELUM_LUNAS"].includes(s)) return "destructive";
+  if (["ORDERED", "SHIPPED", "MIXING", "FILLING", "PACKING", "INFO", "IN_PROGRESS", "DALAM_PROSES"].includes(s)) return "info";
   return "default";
 }
 

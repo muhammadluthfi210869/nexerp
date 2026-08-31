@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
@@ -12,25 +12,20 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { OperationalPageShell, OperationalInput, OperationalPanel, OperationalMetricGrid, OperationalMetricCard } from "@/components/operational/OperationalUI";
 import {
-  OperationalMetricCard,
-  OperationalMetricGrid,
-  OperationalPageShell,
-  OperationalPanel,
-} from "@/components/operational";
-import { OperationalInput } from "@/components/operational/OperationalUI";
+  MetricCard,
+  CanonicalMetricGrid,
+  DataTable,
+  StatusBadge,
+  mapStatus,
+} from "@/components/canonical";
 import {
   ClipboardList,
   FlaskConical,
@@ -42,17 +37,17 @@ import {
   Send,
   Loader2,
   Factory,
-  Search,
   ArrowUpDown,
 } from "lucide-react";
 import Link from "next/link";
+import type { ColumnDef } from "@tanstack/react-table";
 import { WoDetailDrawer } from "@/components/production/WoDetailDrawer";
 import { toast } from "sonner";
 
-const STAGE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  NOT_STARTED: { label: "Not Started", color: "text-slate-600", bg: "bg-slate-100" },
-  IN_PROGRESS: { label: "In Progress", color: "text-amber-600", bg: "bg-amber-50" },
-  DONE: { label: "Done", color: "text-emerald-600", bg: "bg-emerald-50" },
+const STAGE_CONFIG: Record<string, { label: string; variant: "info" | "warning" | "success" | "default" }> = {
+  NOT_STARTED: { label: "Not Started", variant: "default" },
+  IN_PROGRESS: { label: "In Progress", variant: "warning" },
+  DONE: { label: "Done", variant: "success" },
 };
 
 const STAGE_OPTIONS = [
@@ -126,7 +121,7 @@ function OperationsContent() {
   const fillingList = Array.isArray(fillingSchedules) ? fillingSchedules : [];
   const packingList = Array.isArray(packingSchedules) ? packingSchedules : [];
 
-  const filteredWoList = React.useMemo(() => {
+  const filteredWoList = useMemo(() => {
     const q = woSearch.trim().toLowerCase();
     const base = q
       ? woList.filter((wo: any) =>
@@ -150,13 +145,6 @@ function OperationsContent() {
     return sorted;
   }, [woList, woSearch, woSort, woSortDir]);
 
-  const handleProgressClick = (item: any, stage: string) => {
-    setSelectedItem(item);
-    setTargetStage(stage);
-    setNotes("");
-    setConfirmOpen(true);
-  };
-
   const handleConfirmUpdate = () => {
     if (!selectedItem || !targetStage) return;
     updateStageMutation.mutate({
@@ -174,137 +162,128 @@ function OperationsContent() {
     return Math.floor((now - start) / (1000 * 60 * 60 * 24));
   };
 
-  const renderProgressTable = (items: any[], stageName: string, stageKey: string) => {
-    const iconMap: Record<string, any> = {
-      MIXING: FlaskConical,
-      FILLING: Droplets,
-      PACKING: Package,
-    };
-    const Icon = iconMap[stageKey] || Factory;
+  const woColumns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "wo",
+      header: "WO",
+      cell: ({ row }) => {
+        const wo = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center">
+              <Factory className="h-4 w-4" />
+            </div>
+            <span className="font-medium text-slate-900">{wo.woNumber || wo.id?.slice(0, 8)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "product",
+      header: "Produk",
+      cell: ({ row }) => <span className="text-slate-700">{row.original.productName || row.original.lead?.clientName || "—"}</span>,
+    },
+    {
+      id: "stage",
+      header: "Stage",
+      cell: ({ row }) => (
+        <StatusBadge variant={mapStatus(row.original.stage || row.original.status || "PLANNING")}>
+          {row.original.stage || row.original.status || "PLANNING"}
+        </StatusBadge>
+      ),
+    },
+    {
+      id: "progress",
+      header: () => <div className="text-center">Progress</div>,
+      cell: ({ row }) => {
+        const s = row.original.status;
+        const v: "success" | "warning" | "default" =
+          s === "DONE" || s === "COMPLETED" ? "success" :
+          s === "IN_PROGRESS" ? "warning" :
+          "default";
+        const lbl = s === "DONE" || s === "COMPLETED" ? "Done" :
+                     s === "IN_PROGRESS" ? "In Progress" :
+                     "Not Started";
+        return (
+          <div className="text-center">
+            <StatusBadge variant={v}>{lbl}</StatusBadge>
+          </div>
+        );
+      },
+    },
+    {
+      id: "target",
+      header: () => <div className="text-right">Target</div>,
+      cell: ({ row }) => <span className="tabular-nums text-slate-700">{row.original.targetQty || "—"}</span>,
+    },
+  ], []);
 
+  const stageColumns = useMemo<ColumnDef<any, any>[]>(() => [
+    {
+      id: "schedule",
+      header: "Schedule",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center">
+            <ClipboardList className="h-4 w-4" />
+          </div>
+          <span className="font-medium text-slate-900">{row.original.scheduleCode || row.original.scheduleNumber || row.original.id?.slice(0, 8)}</span>
+        </div>
+      ),
+    },
+    {
+      id: "wo",
+      header: "Work Order",
+      cell: ({ row }) => <span className="text-slate-700">{row.original.workOrder?.woNumber || row.original.woNumber || "—"}</span>,
+    },
+    {
+      id: "progress",
+      header: () => <div className="text-center">Progress</div>,
+      cell: ({ row }) => {
+        const s = row.original.status === "COMPLETED" || row.original.status === "DONE" ? "DONE"
+          : row.original.status === "IN_PROGRESS" ? "IN_PROGRESS" : "NOT_STARTED";
+        return (
+          <div className="text-center">
+            <StatusBadge variant={STAGE_CONFIG[s].variant}>{STAGE_CONFIG[s].label}</StatusBadge>
+          </div>
+        );
+      },
+    },
+    {
+      id: "aging",
+      header: () => <div className="text-center">Aging</div>,
+      cell: ({ row }) => {
+        const aging = getAgingDays(row.original.startTime);
+        return (
+          <div className="text-center">
+            <span className={cn("tabular-nums font-medium", aging > 3 ? "text-amber-600" : "text-slate-500")}>
+              {aging > 0 ? `${aging}d` : "—"}
+            </span>
+          </div>
+        );
+      },
+    },
+  ], []);
+
+  const renderProgressTable = (items: any[], stageName: string) => {
+    const inProgress = items.filter((i: any) => i.status === "IN_PROGRESS").length;
+    const done = items.filter((i: any) => i.status === "DONE" || i.status === "COMPLETED").length;
     return (
       <div className="space-y-4">
-        <OperationalMetricGrid>
-          <OperationalMetricCard
-            label={`Total ${stageName}`}
-            value={items.length}
-            icon={<ClipboardList className="h-4 w-4" />}
-            tone="blue"
-          />
-          <OperationalMetricCard
-            label="In Progress"
-            value={items.filter((i: any) => i.status === "IN_PROGRESS").length}
-            icon={<Clock className="h-4 w-4" />}
-            tone="amber"
-          />
-          <OperationalMetricCard
-            label="Done"
-            value={items.filter((i: any) => i.status === "DONE" || i.status === "COMPLETED").length}
-            icon={<ClipboardList className="h-4 w-4" />}
-            tone="green"
-          />
-        </OperationalMetricGrid>
-
-        <OperationalPanel>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Icon className="h-4 w-4 text-slate-400" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{stageName} Schedule</h3>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Schedule</th>
-                  <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Work Order</th>
-                  <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Progress</th>
-                  <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Aging</th>
-                  <th className="text-right py-3 px-4 text-[10px] font-black uppercase text-slate-400">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-xs text-slate-400">No {stageName.toLowerCase()} schedules</td>
-                  </tr>
-                ) : (
-                  items.map((item: any) => {
-                    const status = item.status === "COMPLETED" || item.status === "DONE" ? "DONE"
-                      : item.status === "IN_PROGRESS" ? "IN_PROGRESS" : "NOT_STARTED";
-                    const config = STAGE_CONFIG[status] || STAGE_CONFIG.NOT_STARTED;
-                    const aging = getAgingDays(item.startTime);
-
-                    return (
-                      <tr key={item.id} className="border-b border-slate-50 hover:bg-slate-50">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", config.bg)}>
-                              <Icon className={cn("h-4 w-4", config.color)} />
-                            </div>
-                            <span className="text-xs font-black text-slate-900">{item.scheduleCode || item.scheduleNumber || item.id?.slice(0, 8)}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-xs text-slate-600">
-                          {item.workOrder?.woNumber || item.woNumber || "—"}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                className={cn(
-                                  "rounded-lg px-3 py-1.5 font-black uppercase text-[9px] shadow-sm flex items-center gap-1.5 cursor-pointer mx-auto",
-                                  config.bg,
-                                  config.color
-                                )}
-                              >
-                                {config.label}
-                                <ChevronDown className="h-3 w-3" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="rounded-xl border-none shadow-sm p-2 bg-white min-w-[150px]">
-                              {STAGE_OPTIONS.map((opt) => (
-                                <DropdownMenuItem
-                                  key={opt.value}
-                                  onClick={() => handleProgressClick(item, opt.value)}
-                                  className={cn(
-                                    "rounded-lg h-9 px-3 font-black uppercase text-[8px] cursor-pointer flex justify-between",
-                                    status === opt.value ? "bg-slate-100" : "hover:bg-slate-50"
-                                  )}
-                                >
-                                  {opt.label}
-                                  {status !== opt.value && <ArrowRight className="h-3 w-3 text-blue-500" />}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Clock className={cn("h-3 w-3", aging > 3 ? "text-amber-500" : "text-slate-300")} />
-                            <span className={cn("text-xs font-black", aging > 3 ? "text-amber-600" : "text-slate-500")}>
-                              {aging > 0 ? `${aging}d` : "—"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          {status !== "DONE" && (
-                            <button
-                              onClick={() => handleProgressClick(item, status === "NOT_STARTED" ? "IN_PROGRESS" : "DONE")}
-                              className="operational-button is-primary h-8 px-4 text-[9px]"
-                            >
-                              {status === "NOT_STARTED" ? "Start" : "Complete"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </OperationalPanel>
+        <CanonicalMetricGrid>
+          <MetricCard label={`Total ${stageName}`} value={items.length} helper="All" icon={<ClipboardList />} variant="info" />
+          <MetricCard label="In Progress" value={inProgress} helper="Active" icon={<Clock />} variant="warning" />
+          <MetricCard label="Done" value={done} helper="Completed" icon={<ClipboardList />} variant="success" />
+        </CanonicalMetricGrid>
+        <DataTable
+          title={`${stageName} Schedule`}
+          data={items}
+          columns={stageColumns}
+          getRowId={(row) => row.id}
+          enableSearch={false}
+          emptyMessage={`No ${stageName.toLowerCase()} schedules`}
+          emptyDescription="Schedules will appear here as work orders progress."
+        />
       </div>
     );
   };
@@ -314,195 +293,109 @@ function OperationsContent() {
       title="Operasional Produksi"
       subtitle="Work orders & progress tracking"
     >
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-14 w-full bg-slate-100 rounded-2xl p-1 border border-slate-200">
-          <TabsTrigger value="work-orders" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <ClipboardList className="mr-2 h-4 w-4" />
-            Work Orders
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <TabsList className="h-auto p-1 bg-white border border-[#E2E8F0] rounded-lg w-fit">
+          <TabsTrigger value="work-orders" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-600 rounded-md px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-2">
+            <ClipboardList className="h-3.5 w-3.5" /> Work Orders
           </TabsTrigger>
-          <TabsTrigger value="mixing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <FlaskConical className="mr-2 h-4 w-4" />
-            Mixing
+          <TabsTrigger value="mixing" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-600 rounded-md px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-2">
+            <FlaskConical className="h-3.5 w-3.5" /> Mixing
           </TabsTrigger>
-          <TabsTrigger value="filling" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <Droplets className="mr-2 h-4 w-4" />
-            Filling
+          <TabsTrigger value="filling" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-600 rounded-md px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-2">
+            <Droplets className="h-3.5 w-3.5" /> Filling
           </TabsTrigger>
-          <TabsTrigger value="packing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <Package className="mr-2 h-4 w-4" />
-            Packing
+          <TabsTrigger value="packing" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-600 rounded-md px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-2">
+            <Package className="h-3.5 w-3.5" /> Packing
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="work-orders" className="mt-6 space-y-4">
-          <OperationalMetricGrid>
-            <OperationalMetricCard
-              label="Total WO"
-              value={woList.length}
-              icon={<ClipboardList className="h-4 w-4" />}
-              tone="blue"
-            />
-            <OperationalMetricCard
-              label="Active"
-              value={woList.filter((w: any) => w.status === "IN_PROGRESS").length}
-              icon={<Clock className="h-4 w-4" />}
-              tone="amber"
-            />
-            <OperationalMetricCard
-              label="Finished"
-              value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length}
-              icon={<ClipboardList className="h-4 w-4" />}
-              tone="green"
-            />
-          </OperationalMetricGrid>
-          <OperationalPanel>
-            <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Daftar Work Orders</h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="w-56">
-                  <OperationalInput
-                    placeholder="Cari WO / produk..."
-                    icon={<Search className="h-4 w-4" />}
-                    value={woSearch}
-                    onChange={(e) => setWoSearch(e.target.value)}
-                  />
-                </div>
-                <select
-                  value={woSort}
-                  onChange={(e) => setWoSort(e.target.value as typeof woSort)}
-                  className="h-9 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-black uppercase text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Sort Work Orders"
-                >
-                  <option value="woNumber">Sort: WO</option>
-                  <option value="product">Sort: Produk</option>
-                  <option value="stage">Sort: Stage</option>
-                  <option value="progress">Sort: Progress</option>
-                  <option value="target">Sort: Target</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={() => setWoSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-                  className="h-9 w-9 grid place-items-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                  aria-label="Toggle sort direction"
-                  title={`Sort ${woSortDir === "asc" ? "ascending" : "descending"} — click to toggle`}
-                >
-                  <ArrowUpDown className="h-3.5 w-3.5" />
-                </button>
-                <Link href="/production/work-orders" className="flex items-center gap-1 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800">
-                  Kelola WO <ArrowRight className="h-3 w-3" />
-                </Link>
+        <TabsContent value="work-orders" className="space-y-4">
+          <CanonicalMetricGrid>
+            <MetricCard label="Total WO" value={woList.length} helper="All" icon={<ClipboardList />} variant="info" />
+            <MetricCard label="Active" value={woList.filter((w: any) => w.status === "IN_PROGRESS").length} helper="In Progress" icon={<Clock />} variant="warning" />
+            <MetricCard label="Finished" value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length} helper="Done" icon={<ClipboardList />} variant="success" />
+          </CanonicalMetricGrid>
+
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-56">
+                <OperationalInput
+                  placeholder="Cari WO / produk..."
+                  icon={<ClipboardList className="h-4 w-4" />}
+                  value={woSearch}
+                  onChange={(e) => setWoSearch(e.target.value)}
+                />
               </div>
+              <select
+                value={woSort}
+                onChange={(e) => setWoSort(e.target.value as typeof woSort)}
+                className="h-9 rounded-md border border-[#E2E8F0] bg-white px-2 text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Sort Work Orders"
+              >
+                <option value="woNumber">Sort: WO</option>
+                <option value="product">Sort: Produk</option>
+                <option value="stage">Sort: Stage</option>
+                <option value="progress">Sort: Progress</option>
+                <option value="target">Sort: Target</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setWoSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+                className="h-9 w-9 grid place-items-center rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50"
+                aria-label="Toggle sort direction"
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+              </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">WO</th>
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Produk</th>
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Stage</th>
-                    <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Progress</th>
-                    <th className="text-right py-3 px-4 text-[10px] font-black uppercase text-slate-400">Target</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredWoList.slice(0, 15).map((wo: any) => (
-                    <tr key={wo.id} className="border-b border-slate-50 hover:bg-slate-50">
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                            <Factory className="h-4 w-4 text-slate-500" />
-                          </div>
-                          <span className="text-xs font-black text-slate-900">{wo.woNumber || wo.id?.slice(0, 8)}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-xs text-slate-600">{wo.productName || wo.lead?.clientName || "—"}</td>
-                      <td className="py-3 px-4">
-                        <span className={`operational-status-badge is-${wo.stage === "FINISHED_GOODS" ? "success" : wo.status === "IN_PROGRESS" ? "pending" : "neutral"}`}>
-                          {wo.stage || wo.status || "PLANNING"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {wo.stage === "FINISHED_GOODS" || wo.status === "DONE" ? (
-                          <span className="operational-status-badge is-success">Done</span>
-                        ) : wo.status === "IN_PROGRESS" ? (
-                          <span className="operational-status-badge is-pending">In Progress</span>
-                        ) : (
-                          <span className="operational-status-badge is-neutral">Not Started</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right text-xs text-slate-600">{wo.targetQty || "—"}</td>
-                    </tr>
-                  ))}
-                  {woList.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-slate-400">Belum ada work orders</td>
-                    </tr>
-                  )}
-                  {woList.length > 0 && filteredWoList.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-slate-400">Tidak ada WO yang cocok dengan "{woSearch}"</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {woList.length > 15 && (
-              <div className="mt-3 text-center text-[10px] font-bold uppercase text-slate-400">
-                Menampilkan 15 dari {filteredWoList.length} WO · kelola lengkap di halaman WO
-              </div>
-            )}
-          </OperationalPanel>
+            <Link href="/production/work-orders" className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-800">
+              Kelola WO <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <DataTable
+            title="Daftar Work Orders"
+            data={filteredWoList.slice(0, 15)}
+            columns={woColumns}
+            getRowId={(row) => row.id}
+            enableSearch={false}
+            emptyMessage="Belum ada work orders"
+            emptyDescription="Work orders akan muncul di sini setelah dibuat."
+          />
         </TabsContent>
 
-        <TabsContent value="mixing" className="mt-6">
-          {renderProgressTable(mixingList, "Mixing", "MIXING")}
-        </TabsContent>
-
-        <TabsContent value="filling" className="mt-6">
-          {renderProgressTable(fillingList, "Filling", "FILLING")}
-        </TabsContent>
-
-        <TabsContent value="packing" className="mt-6">
-          {renderProgressTable(packingList, "Packing", "PACKING")}
-        </TabsContent>
+        <TabsContent value="mixing">{renderProgressTable(mixingList, "Mixing")}</TabsContent>
+        <TabsContent value="filling">{renderProgressTable(fillingList, "Filling")}</TabsContent>
+        <TabsContent value="packing">{renderProgressTable(packingList, "Packing")}</TabsContent>
       </Tabs>
 
       <WoDetailDrawer woId={selectedWoId} onClose={() => setSelectedWoId(null)} />
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white border border-slate-200 shadow-sm rounded-2xl">
+        <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white border border-[#E2E8F0] rounded-[12px]">
           <div className="p-5 space-y-4">
-            <div className="space-y-1">
-              <DialogTitle className="text-base font-black text-slate-900 uppercase tracking-tight truncate">
-                Update Progress
-              </DialogTitle>
-            </div>
+            <DialogHeader>
+              <DialogTitle className="text-[14px] font-semibold text-slate-900">Update Progress</DialogTitle>
+            </DialogHeader>
 
-            <div className="flex items-center gap-3 py-3 px-4 bg-slate-50 rounded-xl">
-              <span className="text-[10px] font-black text-slate-500 uppercase bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-md">
+              <span className="text-[11px] font-medium text-slate-500 bg-white px-2 py-1 rounded border border-[#E2E8F0]">
                 {selectedItem?.scheduleCode || selectedItem?.woNumber || "—"}
               </span>
               <ArrowRight className="h-4 w-4 text-slate-300 shrink-0" />
-              <span
-                className={cn(
-                  "text-[10px] font-black uppercase px-2.5 py-1 rounded-lg",
-                  STAGE_CONFIG[targetStage]?.bg || "bg-blue-100",
-                  STAGE_CONFIG[targetStage]?.color || "text-blue-600"
-                )}
-              >
+              <StatusBadge variant={STAGE_CONFIG[targetStage]?.variant ?? "default"}>
                 {STAGE_CONFIG[targetStage]?.label || targetStage}
-              </span>
+              </StatusBadge>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                Notes <span className="text-slate-300">(optional)</span>
+              <label className="text-[11px] font-medium text-slate-500">
+                Notes <span className="text-slate-400">(optional)</span>
               </label>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add notes..."
-                className="min-h-[60px] rounded-xl border-slate-200 bg-slate-50 text-xs font-black p-3 focus:bg-white transition-all"
+                className="min-h-[60px] rounded-md border-[#E2E8F0] bg-slate-50 text-[12px] p-3 focus:bg-white"
               />
             </div>
           </div>
@@ -515,14 +408,14 @@ function OperationsContent() {
                 setSelectedItem(null);
                 setTargetStage("");
               }}
-              className="operational-button is-secondary h-10 px-5 text-[10px]"
+              className="h-9 px-4 rounded-md border border-[#E2E8F0] bg-white text-[12px] font-medium text-slate-700 hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmUpdate}
               disabled={updateStageMutation.isPending}
-              className="operational-button is-primary h-10 px-5 text-[10px] flex items-center gap-2"
+              className="h-9 px-4 rounded-md bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700 inline-flex items-center gap-2 disabled:opacity-50"
             >
               {updateStageMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <Send className="h-3.5 w-3.5" />

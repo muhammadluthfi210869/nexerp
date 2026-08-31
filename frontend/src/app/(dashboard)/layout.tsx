@@ -7,12 +7,15 @@ import { Search, Bell } from "lucide-react";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ThemeToggle } from "@/components/providers/ThemeToggle";
 
-// PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional.
+// PROTOTYPE MODE: tampilkan badge khusus supaya jelas bukan data operasional,
+// kecuali untuk bukti visual (BATCH 1 evidence) — di mana banner disembunyikan
+// lewat NEXT_PUBLIC_HIDE_PROTOTYPE_BANNER=true.
 const IS_PROTOTYPE_MODE =
-  process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
-  ["demo.nexerp.id", "compact.nexerp.id"].includes(
-    (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
-  );
+  process.env.NEXT_PUBLIC_HIDE_PROTOTYPE_BANNER !== "true" &&
+  (process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
+    ["demo.nexerp.id", "compact.nexerp.id"].includes(
+      (globalThis as typeof globalThis & { location?: Location }).location?.hostname ?? "",
+    ));
 
 export default function DashboardLayout({
   children,

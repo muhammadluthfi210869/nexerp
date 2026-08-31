@@ -1,6 +1,13 @@
 /**
- * Batch 1 visual verification — capture 5 representative pages after canonicalization.
- * Viewport: 1600x1000, light theme, 100% browser zoom.
+ * Batch 1 visual verification (gate pass 2) — capture 5 representative pages
+ * after canonicalization. Viewport: 1600x1000, light theme, 100% browser zoom.
+ *
+ * Pages:
+ *   01-busdev    /bussdev/client-manager      (BUSDEV   Pipeline: KPI + Tabs + Tables + Forms)
+ *   02-finance   /finance/jurnal              (FINANCE  Jurnal & COA: KPI + Tabs + DataTable)
+ *   03-scm       /scm/pembelian               (SCM      Pembelian: Tabs + KPI + DataTable)
+ *   04-production /production/operations      (PRODUCTION Operasional Produksi: KPI + Tabs + Dialog)
+ *   05-warehouse  /warehouse/stok             (WAREHOUSE Stok Gudang: KPI + Tabs + Filter + Table)
  */
 import { chromium } from "playwright";
 import path from "node:path";
@@ -19,16 +26,15 @@ const EMAIL = process.env.BATCH1_EMAIL || "superadmin@nexerp.id";
 const PASSWORD = process.env.BATCH1_PASSWORD || "password123";
 
 const PAGES = [
-  { id: "01-busdev", path: "/bussdev/my-performance" },
-  { id: "02-finance", path: "/finance/sales-orders" },
-  { id: "03-scm", path: "/scm/pembelian" },
-  { id: "04-production", path: "/production/work-orders" },
-  { id: "05-warehouse", path: "/warehouse/stok" },
+  { id: "01-busdev",     path: "/bussdev/client-manager" },
+  { id: "02-finance",    path: "/finance/jurnal" },
+  { id: "03-scm",        path: "/scm/pembelian" },
+  { id: "04-production", path: "/production/operations" },
+  { id: "05-warehouse",  path: "/warehouse/stok" },
 ];
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 30000 });
-  // try demo credentials
   const emailInput = page.locator('input[type="email"], input[name="email"]').first();
   const pwInput = page.locator('input[type="password"], input[name="password"]').first();
   if (await emailInput.count()) {
@@ -44,7 +50,7 @@ async function capture(page, target) {
   console.log(`capturing ${target.id} → ${target.path}`);
   await page.goto(`${BASE_URL}${target.path}`, { waitUntil: "domcontentloaded", timeout: 30000 });
   // Wait for either content or empty-state to appear
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(4500);
   const file = path.join(OUT_DIR, `${target.id}.png`);
   await page.screenshot({ path: file, fullPage: false });
   console.log(`  saved → ${file}`);
@@ -59,7 +65,7 @@ async function capture(page, target) {
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
-  // Force light theme
+  // Force light theme + hide prototype banner via the env-driven layout branch.
   await page.addInitScript(() => {
     try {
       localStorage.setItem("theme", "light");
