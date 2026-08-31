@@ -67,7 +67,7 @@ interface OrganicEntry {
 
 function getCriticalCardClass(isCritical: boolean) {
  return isCritical
- ? "border-[#FECDD3] shadow-[0_0_0_1px_rgba(220,38,38,0.08),0_18px_40px_-16px_rgba(220,38,38,0.34)]"
+ ? "border-[#FECDD3]"
  : "border-slate-200 shadow-sm";
 }
 

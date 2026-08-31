@@ -363,7 +363,7 @@ export default function ChecklistCategoryPrototype() {
  <div className="space-y-6 pt-6 border-t border-slate-100">
  <div className="flex gap-4 relative">
  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-100" />
- <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0 relative z-10 shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+ <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0 relative z-10">
  <CheckCircle2 className="h-4 w-4 text-white" />
  </div>
  <div className="flex flex-col gap-1">

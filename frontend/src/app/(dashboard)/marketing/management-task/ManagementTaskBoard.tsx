@@ -1055,7 +1055,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  return (
  <DashboardShell title={title} titleAccent="Hub" subtitle={subtitle}>
  <div data-marketing-page="management-task" className="space-y-6">
- <div data-marketing-surface="toolbar" className="flex flex-wrap items-end justify-between gap-4 rounded-[28px] border border-slate-200 bg-white/90 px-6 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)] backdrop-blur">
+ <div data-marketing-surface="toolbar" className="flex flex-wrap items-end justify-between gap-4 rounded-[28px] border border-slate-200 bg-white/90 px-6 py-4 backdrop-blur">
  <div className="space-y-1">
  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Marketing / Management Task</p>
  <h1 className="text-[18px] font-bold tracking-tight text-slate-900">{selectedMember?.label ?? "Overview"}</h1>
@@ -1115,7 +1115,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  </div>
 
  {selectedMember?.slug === "overview" ? (
- <section data-marketing-surface="panel" className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
+ <section data-marketing-surface="panel" className="rounded-[28px] border border-slate-200 bg-white">
  <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
  <div>
  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">KPI Timeliness</p>
@@ -1188,7 +1188,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  const brandColor = brandFilter === 'Dreamlab' ? 'border-blue-200 bg-blue-50 text-blue-700' : brandFilter === 'Toribio' ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white/80 text-slate-600';
  const brandDot = brandFilter === 'Dreamlab' ? 'bg-blue-500' : brandFilter === 'Toribio' ? 'bg-purple-500' : 'bg-slate-400';
  return (
- <section data-marketing-surface="member-summary" className={`rounded-[20px] border border-l-4 border-slate-200 ${colorMap[kpiColor]} shadow-[0_8px_24px_-18px_rgba(15,23,42,0.2)] p-4`}>
+ <section data-marketing-surface="member-summary" className={`rounded-[20px] border border-l-4 border-slate-200 ${colorMap[kpiColor]} p-4`}>
  <div className="flex items-center justify-between gap-3">
  <div className="min-w-0">
  <h3 className="text-[15px] font-bold tracking-tight text-slate-900">{selectedMember.label}</h3>
@@ -1252,7 +1252,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
  {/* ── Monthly KPI Chart ── */}
  {selectedMemberChart && (
- <section data-marketing-surface="chart-card" className="rounded-[20px] border border-slate-200 bg-white shadow-[0_8px_24px_-18px_rgba(15,23,42,0.2)] p-4">
+ <section data-marketing-surface="chart-card" className="rounded-[20px] border border-slate-200 bg-white p-4">
  <div className="flex items-center justify-between gap-3">
  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">KPI per Bulan</p>
  <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{chartMonths.length} bln</span>
@@ -1275,7 +1275,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
  {!isOverview ? (
  <>
- <div data-marketing-surface="quick-add" className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)] overflow-hidden">
+ <div data-marketing-surface="quick-add" className="rounded-[28px] border border-slate-200 bg-white overflow-hidden">
  <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-3">
  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Add Task</p>
  </div>
@@ -1358,7 +1358,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  const style = statusStyles[group.status];
 
  return (
- <div key={group.status} data-marketing-surface="task-group" className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]">
+ <div key={group.status} data-marketing-surface="task-group" className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
  <div className={`flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 ${style.soft}`}>
  <div className="flex items-center gap-3">
  <span className={`h-9 w-1.5 rounded-full ${style.accent}`} />

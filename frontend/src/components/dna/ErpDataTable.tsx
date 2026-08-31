@@ -127,7 +127,7 @@ export function ErpDataTable<TData>({
                 <Columns3 aria-hidden="true" className="h-4 w-4" /> Kolom
               </button>
               {showColumns && (
-                <div className="absolute right-0 top-10 z-10 min-w-[180px] rounded-lg border border-[#E2E8F0] bg-white p-2 shadow-md">
+                <div className="absolute right-0 top-10 z-10 min-w-[180px] rounded-lg border border-[#E2E8F0] bg-white p-2">
                   {table.getAllLeafColumns().filter((column) => column.getCanHide()).map((column) => (
                     <label key={column.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded text-[12px]">
                       <input

@@ -231,7 +231,7 @@ function SalesCard({
  : null;
 
  return (
- <div className="erp-data-card bg-white border border-[var(--border-color)] rounded-[16px] p-6 flex flex-col gap-5 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] animate-fade-slide-in">
+ <div className="erp-data-card bg-white border border-[var(--border-color)] rounded-[16px] p-6 flex flex-col gap-5 animate-fade-slide-in">
  <div className="flex items-start justify-between gap-3">
  <div className="space-y-1 min-w-0">
  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">

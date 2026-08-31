@@ -804,7 +804,7 @@ export default function ScmDashboardPage() {
  <div 
  key={i}
  style={{ border: "1px solid #e5e7eb", background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)", position: "relative" }}
- className="hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] transition-all duration-300"
+ className="hover:translate-y-[-4px]  transition-all duration-300"
  >
  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem" }}>
  <span style={{ background: rec.priority === "URGENT" ? "#fef2f2" : "#f1f5f9", color: rec.priority === "URGENT" ? "#dc2626" : "#64748B", textTransform: "uppercase", borderRadius: "8px", padding: "6px 12px", fontSize: "10px", fontWeight: 900 }}>

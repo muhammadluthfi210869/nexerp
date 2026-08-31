@@ -149,7 +149,7 @@ export default function WarehouseMapPage() {
  rack.utilization > 80 ? 'border-red-100 bg-red-50/30' : 
  rack.utilization > 50 ? 'border-amber-100 bg-amber-50/30' : 
  'border-blue-100 bg-blue-50/30'}
- hover:scale-105 active:scale-95 hover:shadow-lg
+ hover:scale-105 active:scale-95 
  `}
  >
  {rack.status === 'MAINTENANCE' && (
