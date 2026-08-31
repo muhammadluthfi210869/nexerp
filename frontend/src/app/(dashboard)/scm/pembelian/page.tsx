@@ -31,7 +31,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { EmptyState } from "@/components/empty-state";
 
 function usePembelianLists() {
   const requests = useQuery({
@@ -79,21 +78,6 @@ function usePembelianLists() {
   });
 
   return { requests, orders, inbounds, returns, invoices };
-}
-
-function LoadingCell({ colspan }: { colspan: number }) {
-  return (
-    <table className="w-full">
-      <tbody>
-        <tr>
-          <td colSpan={colspan} className="text-center py-10 text-[12px] text-slate-400">
-            <span className="inline-block h-4 w-4 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin align-middle mr-2" />
-            Memuat...
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  );
 }
 
 // ── PR Tab ──
@@ -156,23 +140,20 @@ function PRTab({ data, isLoading }: { data: any[]; isLoading: boolean }) {
         <MetricCard label="Menunggu Approve" value={pending} helper="Pending" icon={<Clock />} variant="warning" />
         <MetricCard label="Mendesak" value={urgent} helper="Priority" icon={<AlertTriangle />} variant="danger" />
       </CanonicalMetricGrid>
-      {isLoading ? (
-        <LoadingCell colspan={5} />
-      ) : (
-        <DataTable
-          title="Permintaan Pembelian"
-          data={(data || []).slice(0, 5)}
-          columns={columns}
-          enableSearch={false}
-          emptyMessage="Belum Ada PR"
-          emptyDescription="Belum ada permintaan pembelian."
-        />
-      )}
-      <div className="text-right">
-        <Link href="/scm/purchase-requests" className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-800">
-          <PlusCircle className="h-3 w-3" /> Tambah Baru
-        </Link>
-      </div>
+      <DataTable
+        title="Permintaan Pembelian"
+        data={data || []}
+        columns={columns}
+        loading={isLoading}
+        enableSearch={false}
+        emptyMessage="Belum Ada PR"
+        emptyDescription="Belum ada permintaan pembelian."
+        toolbarRight={
+          <Link href="/scm/purchase-requests" className="inline-flex items-center gap-1 h-9 px-3 rounded-md bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700">
+            <PlusCircle className="h-3 w-3" /> Tambah Baru
+          </Link>
+        }
+      />
     </div>
   );
 }
@@ -240,18 +221,15 @@ function POTab({ data, isLoading }: { data: any[]; isLoading: boolean }) {
         <MetricCard label="PO Aktif" value={active} helper="Active" icon={<Truck />} variant="success" />
         <MetricCard label="Total Nilai" value={`Rp ${(totalValue / 1_000_000).toFixed(1)}jt`} helper="Value" icon={<Wallet />} variant="warning" />
       </CanonicalMetricGrid>
-      {isLoading ? (
-        <LoadingCell colspan={5} />
-      ) : (
-        <DataTable
-          title="Buat Pembelian"
-          data={(data || []).slice(0, 5)}
-          columns={columns}
-          enableSearch={false}
-          emptyMessage="Belum Ada PO"
-          emptyDescription="Belum ada purchase order."
-        />
-      )}
+      <DataTable
+        title="Buat Pembelian"
+        data={data || []}
+        columns={columns}
+        loading={isLoading}
+        enableSearch={false}
+        emptyMessage="Belum Ada PO"
+        emptyDescription="Belum ada purchase order."
+      />
     </div>
   );
 }
@@ -296,18 +274,15 @@ function ReceivingTab({ data, isLoading }: { data: any[]; isLoading: boolean }) 
         <MetricCard label="Menunggu QC" value={awaitingQc} helper="Waiting" icon={<AlertCircle />} variant="warning" />
         <MetricCard label="Terverifikasi" value={verified} helper="Verified" icon={<PackageCheck />} variant="success" />
       </CanonicalMetricGrid>
-      {isLoading ? (
-        <LoadingCell colspan={4} />
-      ) : (
-        <DataTable
-          title="Pembelian Masuk"
-          data={(data || []).slice(0, 5)}
-          columns={columns}
-          enableSearch={false}
-          emptyMessage="Belum Ada Penerimaan"
-          emptyDescription="Belum ada barang yang diterima."
-        />
-      )}
+      <DataTable
+        title="Pembelian Masuk"
+        data={data || []}
+        columns={columns}
+        loading={isLoading}
+        enableSearch={false}
+        emptyMessage="Belum Ada Penerimaan"
+        emptyDescription="Belum ada barang yang diterima."
+      />
     </div>
   );
 }
@@ -372,18 +347,15 @@ function ReturnsTab({ data, isLoading }: { data: any[]; isLoading: boolean }) {
         <MetricCard label="Menunggu" value={pending} helper="Waiting" icon={<Clock />} variant="warning" />
         <MetricCard label="Selesai" value={completed} helper="Done" icon={<CheckCircle2 />} variant="success" />
       </CanonicalMetricGrid>
-      {isLoading ? (
-        <LoadingCell colspan={5} />
-      ) : (
-        <DataTable
-          title="Retur Pembelian"
-          data={(data || []).slice(0, 5)}
-          columns={columns}
-          enableSearch={false}
-          emptyMessage="Belum Ada Retur"
-          emptyDescription="Belum ada transaksi retur."
-        />
-      )}
+      <DataTable
+        title="Retur Pembelian"
+        data={data || []}
+        columns={columns}
+        loading={isLoading}
+        enableSearch={false}
+        emptyMessage="Belum Ada Retur"
+        emptyDescription="Belum ada transaksi retur."
+      />
     </div>
   );
 }
@@ -453,18 +425,15 @@ function PaymentsTab({ data, isLoading }: { data: any[]; isLoading: boolean }) {
         <MetricCard label="Lunas" value={paid} helper="Paid" icon={<CheckCircle2 />} variant="success" />
         <MetricCard label="Outstanding" value={`Rp ${totalOutstanding.toLocaleString()}`} helper="Outstanding" icon={<Wallet />} variant="warning" />
       </CanonicalMetricGrid>
-      {isLoading ? (
-        <LoadingCell colspan={5} />
-      ) : (
-        <DataTable
-          title="Bayar Pembelian"
-          data={(data || []).slice(0, 5)}
-          columns={columns}
-          enableSearch={false}
-          emptyMessage="Belum Ada Faktur"
-          emptyDescription="Belum ada faktur pembelian."
-        />
-      )}
+      <DataTable
+        title="Bayar Pembelian"
+        data={data || []}
+        columns={columns}
+        loading={isLoading}
+        enableSearch={false}
+        emptyMessage="Belum Ada Faktur"
+        emptyDescription="Belum ada faktur pembelian."
+      />
     </div>
   );
 }
@@ -529,18 +498,15 @@ function DPTab({ data, isLoading }: { data: any[]; isLoading: boolean }) {
         <MetricCard label="Belum Lunas" value={unpaid} helper="Unpaid" icon={<Clock />} variant="warning" />
         <MetricCard label="Lunas" value={paid} helper="Paid" icon={<CheckCircle2 />} variant="success" />
       </CanonicalMetricGrid>
-      {isLoading ? (
-        <LoadingCell colspan={4} />
-      ) : (
-        <DataTable
-          title="DP Pembelian"
-          data={dpList.slice(0, 5)}
-          columns={columns}
-          enableSearch={false}
-          emptyMessage="Belum Ada DP"
-          emptyDescription="Belum ada uang muka pembelian."
-        />
-      )}
+      <DataTable
+        title="DP Pembelian"
+        data={dpList}
+        columns={columns}
+        loading={isLoading}
+        enableSearch={false}
+        emptyMessage="Belum Ada DP"
+        emptyDescription="Belum ada uang muka pembelian."
+      />
     </div>
   );
 }
@@ -559,8 +525,7 @@ export default function PembelianPage() {
 
   return (
     <DashboardShell
-      title="Pembelian"
-      titleAccent="SCM"
+      title="Pembelian SCM"
       subtitle="Manajemen Pembelian — Purchase Requests, Orders, Receiving, Returns & Payments"
     >
       <Tabs defaultValue="pr" className="space-y-4">

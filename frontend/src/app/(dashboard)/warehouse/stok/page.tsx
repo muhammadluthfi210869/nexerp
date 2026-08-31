@@ -262,7 +262,7 @@ export default function StokPage() {
   ], []);
 
   return (
-    <DashboardShell title="Stok" titleAccent="Gudang" subtitle="Stock Inventory, Opname, Adjustment & Warehouse Map Terminal">
+    <DashboardShell title="Stok Gudang" subtitle="Stock Inventory, Opname, Adjustment & Warehouse Map Terminal">
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList className="h-auto p-1 bg-white border border-[#E2E8F0] rounded-lg w-fit">
           <TabsTrigger value="stok" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-600 rounded-md px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-2">
@@ -287,21 +287,6 @@ export default function StokPage() {
             <MetricCard label="Categories" value={uniqueCategories} helper="Material Types" icon={<Package />} variant="neutral" />
           </CanonicalMetricGrid>
 
-          <div className="flex items-center gap-3 px-4 py-3 rounded-[12px] border border-[#E2E8F0] bg-white">
-            <Warehouse className="w-4 h-4 text-slate-400" />
-            <Select value={warehouseFilter} onValueChange={(v) => v && setWarehouseFilter(v)}>
-              <SelectTrigger className="w-64 bg-slate-50 border-[#E2E8F0] rounded-md h-9 text-[12px] font-medium text-slate-700">
-                <SelectValue placeholder="Semua Gudang" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-[#E2E8F0] text-slate-900">
-                <SelectItem value="ALL">Semua Gudang</SelectItem>
-                {(warehouses as any[])?.map((wh: any) => (
-                  <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <DataTable
             title="Material Catalog"
             data={catalog ?? []}
@@ -310,6 +295,19 @@ export default function StokPage() {
             enableSearch={false}
             emptyMessage="Tidak ada material"
             emptyDescription="Material akan muncul di sini setelah didaftarkan."
+            toolbar={
+              <Select value={warehouseFilter} onValueChange={(v) => v && setWarehouseFilter(v)}>
+                <SelectTrigger className="w-64 bg-slate-50 border-[#E2E8F0] rounded-md h-9 text-[12px] font-medium text-slate-700">
+                  <SelectValue placeholder="Semua Gudang" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-[#E2E8F0] text-slate-900">
+                  <SelectItem value="ALL">Semua Gudang</SelectItem>
+                  {(warehouses as any[])?.map((wh: any) => (
+                    <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
           />
         </TabsContent>
 

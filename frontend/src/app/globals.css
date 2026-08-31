@@ -1176,8 +1176,6 @@
 
 .erp-page-shell {
   max-width: var(--max-content-width);
-  padding: var(--page-py) var(--page-px) var(--page-pb) !important;
-  border-radius: 16px 0 0 0 !important;
 }
 
 .erp-app-main {
@@ -1199,20 +1197,8 @@
 /* Compact dashboard card slots: metric cards stay readable and never stretch
    into a full-width banner when a page exposes only one or two metrics. */
 .erp-metric-card {
-  align-self: start;
-  justify-self: start;
-}
-
-/* Every metric row uses the same four desktop slots. The :has selector lets
-   existing page grids opt in automatically without rewriting each dashboard.
-   A page with two or three metrics therefore keeps the same left-to-right
-   positions as a page with four metrics instead of stretching its cards. */
-.erp-page-shell .grid:has(> .erp-metric-card) {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  justify-content: start;
-  column-gap: 20px;
-  width: 100%;
-  max-width: 1360px;
+  align-self: stretch;
+  justify-self: stretch;
 }
 
 /* BusDev and Digital Marketing still contain legacy inline card markup. These

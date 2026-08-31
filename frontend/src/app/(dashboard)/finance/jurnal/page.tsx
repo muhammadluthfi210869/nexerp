@@ -216,9 +216,8 @@ export default function JurnalPage() {
 
   return (
     <DashboardShell
-      title="JURNAL"
-      titleAccent="HUB"
-      subtitle="(Jurnal Umum • COA • Auto Journal — Consolidated View)"
+      title="Jurnal Hub"
+      subtitle="Jurnal Umum • COA • Auto Journal — Consolidated View"
     >
       <CanonicalMetricGrid>
         <MetricCard

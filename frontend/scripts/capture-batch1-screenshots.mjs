@@ -49,8 +49,23 @@ async function login(page) {
 async function capture(page, target) {
   console.log(`capturing ${target.id} → ${target.path}`);
   await page.goto(`${BASE_URL}${target.path}`, { waitUntil: "domcontentloaded", timeout: 30000 });
-  // Wait for either content or empty-state to appear
-  await page.waitForTimeout(4500);
+  // Wait for the data table's loading state to disappear (Memuat...) and
+  // the empty state or rows to render before screenshotting.
+  try {
+    await page.waitForFunction(
+      () => {
+        const body = document.body.innerText || "";
+        if (body.includes("Memuat")) return false;
+        const tbl = document.querySelector("[data-canonical-table]");
+        return !! tbl;
+      },
+      { timeout: 15000 },
+    );
+  } catch {
+    // fall back to a fixed wait if the wait condition never resolves.
+    await page.waitForTimeout(2000);
+  }
+  await page.waitForTimeout(1500);
   const file = path.join(OUT_DIR, `${target.id}.png`);
   await page.screenshot({ path: file, fullPage: false });
   console.log(`  saved → ${file}`);

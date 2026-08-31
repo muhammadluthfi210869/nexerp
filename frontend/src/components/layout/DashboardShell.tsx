@@ -1,9 +1,9 @@
 import React from "react";
 import { ModuleHeader } from "./ModuleHeader";
-import { PageTransition } from "./PageTransition";
 
 interface DashboardShellProps {
   title: string;
+  /** Optional legacy visual accent (kept for non-representative pages). */
   titleAccent?: string;
   subtitle?: string;
   actions?: React.ReactNode;
@@ -11,25 +11,30 @@ interface DashboardShellProps {
 }
 
 /**
- * Shell template for ALL dashboard/analytics pages.
- * Enforces consistent vertical rhythm via section-gap.
- * Pages fill content slots — they NEVER control their own spacing.
+ * Canonical PageShell — single source of truth for page composition.
+ *
+ * Contract:
+ *   - transparent container, no white sheet, no max-width
+ *   - width: 100%
+ *   - padding-inline: 24px, padding-block: 24px
+ *   - vertical rhythm: 24px between sections
+ *   - PageHeader always rendered with title/subtitle/actions.
+ *
+ * Representative pages (Batch 1 evidence) MUST render with title only —
+ * titleAccent is intentionally omitted so all five titles share the same
+ * 30px/36px/700 typography. Non-representative pages may still pass it.
  */
 export function DashboardShell({ title, titleAccent, subtitle, actions, children }: DashboardShellProps) {
+  const headerTitle = titleAccent ? `${title} ${titleAccent}` : title;
   return (
-    <PageTransition>
-      <div className="erp-dashboard-legacy min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
-        <ModuleHeader
-          title={title}
-          titleAccent={titleAccent}
-          subtitle={subtitle}
-          actions={actions}
-        />
-        <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
-          {children}
-        </div>
+    <div
+      className="w-full"
+      style={{ paddingInline: 24, paddingBlock: 24 }}
+    >
+      <ModuleHeader title={headerTitle} subtitle={subtitle} actions={actions} />
+      <div className="flex flex-col gap-6">
+        {children}
       </div>
-    </PageTransition>
+    </div>
   );
 }
-

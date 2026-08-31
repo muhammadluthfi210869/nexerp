@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { OperationalPageShell, OperationalInput, OperationalPanel, OperationalMetricGrid, OperationalMetricCard } from "@/components/operational/OperationalUI";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
   MetricCard,
   CanonicalMetricGrid,
@@ -67,7 +67,6 @@ function OperationsContent() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [targetStage, setTargetStage] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [woSearch, setWoSearch] = useState("");
   const [woSort, setWoSort] = useState<"woNumber" | "product" | "stage" | "progress" | "target">("woNumber");
   const [woSortDir, setWoSortDir] = useState<"asc" | "desc">("asc");
 
@@ -122,15 +121,8 @@ function OperationsContent() {
   const packingList = Array.isArray(packingSchedules) ? packingSchedules : [];
 
   const filteredWoList = useMemo(() => {
-    const q = woSearch.trim().toLowerCase();
-    const base = q
-      ? woList.filter((wo: any) =>
-          String(wo.woNumber || "").toLowerCase().includes(q) ||
-          String(wo.productName || wo.lead?.clientName || "").toLowerCase().includes(q)
-        )
-      : woList;
     const progressRank = (s: string) => (s === "DONE" || s === "COMPLETED" ? 2 : s === "IN_PROGRESS" ? 1 : 0);
-    const sorted = [...base].sort((a: any, b: any) => {
+    const sorted = [...woList].sort((a: any, b: any) => {
       let av: any = "";
       let bv: any = "";
       if (woSort === "woNumber") { av = a.woNumber || ""; bv = b.woNumber || ""; }
@@ -143,7 +135,7 @@ function OperationsContent() {
       return 0;
     });
     return sorted;
-  }, [woList, woSearch, woSort, woSortDir]);
+  }, [woList, woSort, woSortDir]);
 
   const handleConfirmUpdate = () => {
     if (!selectedItem || !targetStage) return;
@@ -289,7 +281,7 @@ function OperationsContent() {
   };
 
   return (
-    <OperationalPageShell
+    <DashboardShell
       title="Operasional Produksi"
       subtitle="Work orders & progress tracking"
     >
@@ -316,50 +308,44 @@ function OperationsContent() {
             <MetricCard label="Finished" value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length} helper="Done" icon={<ClipboardList />} variant="success" />
           </CanonicalMetricGrid>
 
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="w-56">
-                <OperationalInput
-                  placeholder="Cari WO / produk..."
-                  icon={<ClipboardList className="h-4 w-4" />}
-                  value={woSearch}
-                  onChange={(e) => setWoSearch(e.target.value)}
-                />
-              </div>
-              <select
-                value={woSort}
-                onChange={(e) => setWoSort(e.target.value as typeof woSort)}
-                className="h-9 rounded-md border border-[#E2E8F0] bg-white px-2 text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Sort Work Orders"
-              >
-                <option value="woNumber">Sort: WO</option>
-                <option value="product">Sort: Produk</option>
-                <option value="stage">Sort: Stage</option>
-                <option value="progress">Sort: Progress</option>
-                <option value="target">Sort: Target</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => setWoSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-                className="h-9 w-9 grid place-items-center rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50"
-                aria-label="Toggle sort direction"
-              >
-                <ArrowUpDown className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <Link href="/production/work-orders" className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-800">
-              Kelola WO <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-
           <DataTable
             title="Daftar Work Orders"
-            data={filteredWoList.slice(0, 15)}
+            data={filteredWoList}
             columns={woColumns}
             getRowId={(row) => row.id}
-            enableSearch={false}
+            searchPlaceholder="Cari WO / produk..."
+            pageSize={15}
             emptyMessage="Belum ada work orders"
             emptyDescription="Work orders akan muncul di sini setelah dibuat."
+            toolbar={
+              <>
+                <select
+                  value={woSort}
+                  onChange={(e) => setWoSort(e.target.value as typeof woSort)}
+                  className="h-9 rounded-md border border-[#E2E8F0] bg-white px-2 text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Sort Work Orders"
+                >
+                  <option value="woNumber">Sort: WO</option>
+                  <option value="product">Sort: Produk</option>
+                  <option value="stage">Sort: Stage</option>
+                  <option value="progress">Sort: Progress</option>
+                  <option value="target">Sort: Target</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setWoSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+                  className="h-9 w-9 grid place-items-center rounded-md border border-[#E2E8F0] bg-white text-slate-500 hover:bg-slate-50"
+                  aria-label="Toggle sort direction"
+                >
+                  <ArrowUpDown className="h-3.5 w-3.5" />
+                </button>
+              </>
+            }
+            toolbarRight={
+              <Link href="/production/work-orders" className="inline-flex items-center gap-1 h-9 px-3 rounded-md bg-blue-600 text-white text-[12px] font-medium hover:bg-blue-700">
+                Kelola WO <ArrowRight className="h-3 w-3" />
+              </Link>
+            }
           />
         </TabsContent>
 
@@ -424,7 +410,7 @@ function OperationsContent() {
           </div>
         </DialogContent>
       </Dialog>
-    </OperationalPageShell>
+    </DashboardShell>
   );
 }
 

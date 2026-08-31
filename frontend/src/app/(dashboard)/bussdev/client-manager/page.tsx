@@ -26,7 +26,7 @@ import {
   OperationalTabsList,
   OperationalTabsTrigger,
 } from "@/components/operational";
-import { OperationalPageShell } from "@/components/operational/OperationalUI";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
   MetricCard,
   CanonicalMetricGrid,
@@ -556,7 +556,7 @@ export default function ClientManagerPage() {
   const [tab, setTab] = useState("buku-tamu");
 
   return (
-    <OperationalPageShell
+    <DashboardShell
       title="Client Manager"
       subtitle="Pipeline per fase: Buku Tamu → Sample → Produksi → Repeat Order"
     >
@@ -592,6 +592,6 @@ export default function ClientManagerPage() {
           <ROContent />
         </OperationalTabsContent>
       </OperationalTabs>
-    </OperationalPageShell>
+    </DashboardShell>
   );
 }

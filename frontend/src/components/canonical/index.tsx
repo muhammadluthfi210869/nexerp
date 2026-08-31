@@ -61,19 +61,22 @@ export function mapStatus(status: string | null | undefined): StatusVariant {
 }
 
 /**
- * Anti-orphan MetricGrid: enforces the grid rule by row shape.
- * 1->1, 2->2, 3->3, 4->4, 5->3+2, 6->3+3, 7->4+3, 8->4+4.
+ * Canonical MetricGrid — single source of truth for KPI placement.
+ *
+ * Contract:
+ *   - 3 cards → repeat(3, minmax(0, 1fr))
+ *   - 4 cards → repeat(4, minmax(0, 1fr))
+ *   - gap 16px
+ *   - every MetricCard stretches to fill its grid cell (no justify-between,
+ *     no max-content columns, no fixed narrow card width).
  */
-const ANTI_ORPHAN_ROWS: Record<number, number[]> = {
-  1: [1],
-  2: [2],
-  3: [3],
-  4: [4],
-  5: [3, 2],
-  6: [3, 3],
-  7: [4, 3],
-  8: [4, 4],
-};
+function columnsFor(count: number): number {
+  if (count <= 1) return 1;
+  if (count === 2) return 2;
+  if (count <= 4) return count;
+  // 5+ cards: cap at 4 per row.
+  return 4;
+}
 
 export interface CanonicalMetricGridProps {
   children: React.ReactNode;
@@ -82,41 +85,17 @@ export interface CanonicalMetricGridProps {
 
 export function CanonicalMetricGrid({ children, className }: CanonicalMetricGridProps) {
   const arr = React.Children.toArray(children);
-  const total = Math.min(arr.length, 8);
-  const rows = ANTI_ORPHAN_ROWS[total] ?? [total];
-  const slices: React.ReactNode[][] = [];
-  let cursor = 0;
-  for (const cols of rows) {
-    slices.push(arr.slice(cursor, cursor + cols));
-    cursor += cols;
-  }
+  const cols = columnsFor(arr.length);
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
-      {slices.map((row, ri) => {
-        const cols = rows[ri];
-        return (
-          <div
-            key={ri}
-            className="grid gap-3"
-            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-          >
-            {row.map((child, ci) => (
-              <div key={ci} className="min-w-0">
-                {child}
-              </div>
-            ))}
-          </div>
-        );
-      })}
-      {arr.length > 8 && (
-        <div className="grid grid-cols-4 gap-3">
-          {arr.slice(8).map((child, ci) => (
-            <div key={`o-${ci}`} className="min-w-0">
-              {child}
-            </div>
-          ))}
+    <div
+      className={cn("grid w-full", className)}
+      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "16px" }}
+    >
+      {arr.map((child, ci) => (
+        <div key={ci} className="min-w-0">
+          {child}
         </div>
-      )}
+      ))}
     </div>
   );
 }

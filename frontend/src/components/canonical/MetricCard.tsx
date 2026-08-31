@@ -63,7 +63,7 @@ const VARIANT_TONE: Record<MetricCardVariant, {
   },
   danger: {
     surface: "bg-white",
-    border: "border-[#FCA5A5]",
+    border: "border-[#E2E8F0]",
     iconBg: "bg-rose-50",
     iconFg: "text-rose-600",
     value: "text-rose-600",
