@@ -214,11 +214,12 @@ function mergeMarketingAnalytics(source?: Partial<typeof DASHBOARD_DUMMY_DATA> |
 }
 
 function getCriticalCardStyle(isCritical: boolean): React.CSSProperties | undefined {
+ // Semantic danger is communicated via text + icon color only.
+ // No strong red border, no glow, no colored drop shadow — the wrapper
+ // keeps the canonical subtle neutral border. This preserves the canonical
+ // ERP visual system while still allowing the dashboard to flag risk.
  if (!isCritical) return undefined;
- return {
- border: "1px solid rgba(220,38,38,0.28)",
- boxShadow: "0 0 0 1px rgba(220,38,38,0.08), 0 18px 40px -16px rgba(220,38,38,0.34), inset 0 1px 0 rgba(255,255,255,0.7)",
- };
+ return undefined;
 }
 
 export default function MarketingDashboardClient() {
