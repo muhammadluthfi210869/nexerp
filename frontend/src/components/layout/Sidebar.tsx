@@ -92,7 +92,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     roles: ["SUPER_ADMIN", "COMMERCIAL", "MARKETING", "DIRECTOR"],
     items: [
       { name: "Dasbor BusDev", href: "/bussdev/dashboard", type: "dashboard" },
-      { name: "Pipeline Penjualan", href: "/bussdev/pipeline", type: "action" },
+      { name: "Pipeline Penjualan", href: "/bussdev/client-manager", type: "action" },
       { name: "Form Intake Lead", href: "/bussdev/intake", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
     ]

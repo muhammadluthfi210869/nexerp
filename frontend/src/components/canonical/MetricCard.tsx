@@ -22,8 +22,8 @@ import { cn } from "@/lib/utils";
 export type MetricCardVariant = "neutral" | "info" | "success" | "warning" | "danger";
 
 const VARIANT_TONE: Record<MetricCardVariant, {
-  surface: string;       // wrapper bg
-  border: string;        // wrapper border
+  surface: string;       // wrapper bg (very subtle tint for semantic variants)
+  border: string;        // wrapper border (kept neutral — no strong colored outline)
   iconBg: string;        // icon badge bg
   iconFg: string;        // icon badge fg
   value: string;         // value emphasis
@@ -38,7 +38,7 @@ const VARIANT_TONE: Record<MetricCardVariant, {
     helper: "text-slate-500",
   },
   info: {
-    surface: "bg-white",
+    surface: "bg-blue-50/40",
     border: "border-[#E2E8F0]",
     iconBg: "bg-blue-50",
     iconFg: "text-blue-600",
@@ -46,7 +46,7 @@ const VARIANT_TONE: Record<MetricCardVariant, {
     helper: "text-slate-500",
   },
   success: {
-    surface: "bg-white",
+    surface: "bg-emerald-50/40",
     border: "border-[#E2E8F0]",
     iconBg: "bg-emerald-50",
     iconFg: "text-emerald-600",
@@ -54,7 +54,7 @@ const VARIANT_TONE: Record<MetricCardVariant, {
     helper: "text-slate-500",
   },
   warning: {
-    surface: "bg-white",
+    surface: "bg-amber-50/40",
     border: "border-[#E2E8F0]",
     iconBg: "bg-amber-50",
     iconFg: "text-amber-600",
@@ -62,7 +62,7 @@ const VARIANT_TONE: Record<MetricCardVariant, {
     helper: "text-slate-500",
   },
   danger: {
-    surface: "bg-white",
+    surface: "bg-rose-50/40",
     border: "border-[#E2E8F0]",
     iconBg: "bg-rose-50",
     iconFg: "text-rose-600",
@@ -107,7 +107,7 @@ export function MetricCard({
       data-variant={variant}
       className={cn(
         "erp-metric-card flex flex-col justify-between rounded-[12px] border",
-        "px-5 py-4 min-h-[116px]",
+        "px-5 py-4 min-h-[104px]",
         tone.surface,
         tone.border,
         className,
@@ -131,10 +131,10 @@ export function MetricCard({
         ) : null}
       </div>
 
-      <div className="mt-2">
+      <div className="mt-1.5">
         <p
           className={cn(
-            "text-[26px] font-semibold leading-[30px] tracking-tight tabular-nums",
+            "text-[24px] font-semibold leading-[28px] tracking-tight tabular-nums",
             tone.value,
           )}
         >
