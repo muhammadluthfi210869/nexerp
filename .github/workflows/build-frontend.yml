@@ -2,14 +2,28 @@ name: Build Production Frontend
 
 # Builds the production-light-frontend Docker image on GitHub runners (NVMe,
 # 16 GB) and uploads the result as an artifact for transfer to Biznet.
-# Triggered on push to production-light, release/r4-candidate, or manual.
+# Triggered on push to production-light, deploy/management-task-f6fd559,
+# or manual dispatch with optional inputs for API URL.
 
 on:
   push:
     branches:
       - production-light
-      - release/r4-candidate
+      - deploy/management-task-f6fd559
   workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'NEXT_PUBLIC_API_URL'
+        required: false
+        default: 'https://nexerp.id/api'
+      wa_phone:
+        description: 'NEXT_PUBLIC_WA_PHONE'
+        required: false
+        default: '6287793032556'
+      tag:
+        description: 'Image tag (production / staging)'
+        required: false
+        default: 'production'
 
 permissions:
   contents: read
@@ -34,14 +48,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build production-light-frontend image
+      - name: Resolve build args
+        id: args
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "api_url=${{ inputs.api_url }}" >> $GITHUB_OUTPUT
+            echo "wa_phone=${{ inputs.wa_phone }}" >> $GITHUB_OUTPUT
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "api_url=https://nexerp.id/api" >> $GITHUB_OUTPUT
+            echo "wa_phone=6287793032556" >> $GITHUB_OUTPUT
+            echo "tag=production" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build ${{ steps.args.outputs.tag }} frontend image
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
           build-args: |
-            NEXT_PUBLIC_API_URL=https://nexerp.id/api
-            NEXT_PUBLIC_WA_PHONE=6287793032556
+            NEXT_PUBLIC_API_URL=${{ steps.args.outputs.api_url }}
+            NEXT_PUBLIC_WA_PHONE=${{ steps.args.outputs.wa_phone }}
           tags: production-light-frontend:latest
           outputs: type=docker,dest=/tmp/frontend-image.tar
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -58,7 +85,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: production-light-frontend
+          name: production-light-frontend-${{ steps.args.outputs.tag }}
           path: /tmp/frontend-image.tar
           retention-days: 7
           if-no-files-found: error
