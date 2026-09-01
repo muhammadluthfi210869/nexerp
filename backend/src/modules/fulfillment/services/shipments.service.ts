@@ -191,9 +191,15 @@ export class ShipmentsService {
       // (uniqueness on workOrderId per delivery_orders schema).
       if (dto.status === ShipStatus.DELIVERED) {
         // Only create when the shipment links to a SO that has a WO.
-        const wo = await tx.workOrder.findFirst({
-          where: { soId: shipment.soId },
+        const so = await tx.salesOrder.findUnique({
+          where: { id: shipment.soId },
+          select: { leadId: true },
         });
+        const wo = so
+          ? await tx.workOrder.findFirst({
+              where: { leadId: so.leadId },
+            })
+          : null;
         if (wo) {
           const existingDo = await tx.deliveryOrder.findFirst({
             where: { workOrderId: wo.id },
