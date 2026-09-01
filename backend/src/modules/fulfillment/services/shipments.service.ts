@@ -184,8 +184,32 @@ export class ShipmentsService {
         },
       });
 
-      // Retention engine remains triggered on DELIVERED.
+      // R4-BUSINESS-READY: on DELIVERED, auto-create the canonical
+      // DeliveryOrder so downstream Finance invoice generation
+      // (POST /api/finance/invoice/generate/:deliveryOrderId) has a row
+      // to bind to. Idempotent: skip if a DO already exists for this SO
+      // (uniqueness on workOrderId per delivery_orders schema).
       if (dto.status === ShipStatus.DELIVERED) {
+        // Only create when the shipment links to a SO that has a WO.
+        const wo = await tx.workOrder.findFirst({
+          where: { soId: shipment.soId },
+        });
+        if (wo) {
+          const existingDo = await tx.deliveryOrder.findFirst({
+            where: { workOrderId: wo.id },
+          });
+          if (!existingDo) {
+            await tx.deliveryOrder.create({
+              data: {
+                workOrderId: wo.id,
+                courierName: 'R4-LOGISTICS',
+                trackingNumber: shipment.trackingNo,
+                status: 'DELIVERED',
+              },
+            });
+          }
+        }
+
         const sixtyDaysLater = new Date();
         sixtyDaysLater.setDate(sixtyDaysLater.getDate() + 60);
         // retention_engine.leadId FK targets SalesLead(id), not SalesOrder(id).
