@@ -19,7 +19,6 @@ import {
  FileImage,
  FileSpreadsheet,
  FileText,
- Folder,
  Pencil,
  Plus,
  Save,
@@ -431,12 +430,8 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  const [selectedMonth, setSelectedMonth] = useState("all");
  const [selectedCampaign, setSelectedCampaign] = useState("all");
  const [localProjects, setLocalProjects] = useState<string[]>([]);
- const [isProjectManagerOpen, setIsProjectManagerOpen] = useState(false);
- const [newProjectName, setNewProjectName] = useState("");
  const [quickAddSaving, setQuickAddSaving] = useState(false);
  const [drawerSaving, setDrawerSaving] = useState(false);
- const [editingProjectIndex, setEditingProjectIndex] = useState<number | null>(null);
- const [editingProjectName, setEditingProjectName] = useState("");
  // Timer debounce untuk edit inline (title/date) — mencegah request beruntun
  // per keystroke (BUG-U1/P5.1).
  const inlineEditTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -622,9 +617,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  const chartMonths = useMemo(() => getRecentMonthKeys(6, today), [today]);
 
  const monthlyPerformance = useMemo(
- () =>
- visibleMembers.map((member) => {
- const memberRows = localTasks.filter((task) => matchMember(task, member.slug));
+ () => {
+ // Chart tetap tren historis 6 bulan — TIDAK ikut selectedMonth (agar tidak
+ // collapse jadi satu titik). Tapi sumber data harus konsisten dengan
+ // filter projek/brand yang sedang aktif agar tidak kontradiksi dengan
+ // KPI summary dan task list.
+ const chartPool = localTasks.filter(
+ (task) =>
+ (selectedCampaign === "all" || task.project === selectedCampaign) &&
+ (brandFilter === "all" || task.brand === brandFilter),
+ );
+ return visibleMembers.map((member) => {
+ const memberRows = chartPool.filter((task) => matchMember(task, member.slug));
  const data = chartMonths.map((month) => {
  const rows = memberRows.filter((task) => task.dueDate.slice(0, 7) === month);
  // Done dikelompokkan berdasarkan bulan SELESAI (completedAt), bukan
@@ -650,14 +654,17 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  profileKpi: profile?.monthKpi ?? 0,
  data,
  };
- }),
- [chartMonths, localTasks, profiles, visibleMembers],
+ });
+ },
+ [chartMonths, localTasks, profiles, visibleMembers, selectedCampaign, brandFilter],
  );
 
  const snapshots = useMemo(
  () =>
  visibleMembers.map((member) => {
- const rows = localTasks.filter((task) => matchMember(task, member.slug));
+ // boardTasks sudah memfilter bulan/projek/brand; KPI summary harus
+ // konsisten dengan populasi task yang sedang ditampilkan (BUG-FILTER-MONTH).
+ const rows = boardTasks.filter((task) => matchMember(task, member.slug));
  const done = rows.filter((task) => task.status === "Done").length;
  const open = rows.filter((task) => task.status !== "Done").length;
  // "Overdue" = task aktif (belum Done) yang due-nya sudah lewat — dihitung
@@ -679,7 +686,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  kpi: profile?.monthKpi ?? 0,
  };
  }),
- [localTasks, profiles, today, visibleMembers],
+ [boardTasks, profiles, today, visibleMembers],
  );
 
  const selectedMemberSnapshot = useMemo(
@@ -708,8 +715,10 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  };
  }
 
- // Fallback: compute from local tasks
- const memberTasks = localTasks.filter((task) => matchMember(task, selectedMember.slug) && task.brand === brand);
+ // Fallback: compute from month/brand/project-filtered population (boardTasks)
+ // — konsisten dengan task list dan KPI summary agar Month filter memengaruhi
+ // semua metrik turunan task (BUG-FILTER-MONTH).
+ const memberTasks = boardTasks;
  const total = memberTasks.length;
  const done = memberTasks.filter((task) => task.status === "Done").length;
  const open = memberTasks.filter((task) => task.status !== "Done").length;
@@ -722,7 +731,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  const onTime = Math.max(done - lateDone, 0);
  const progress = total ? Math.round((done / total) * 100) : 0;
  return { ...base, total, done, open, late, progress, onTime };
- }, [selectedMemberSnapshot, brandFilter, profiles, selectedMember.slug, localTasks, today]);
+ }, [selectedMemberSnapshot, brandFilter, profiles, selectedMember.slug, boardTasks, today]);
 
  const selectedMemberChart = useMemo(
  () => monthlyPerformance.find(m => m.slug === selectedMember.slug) ?? null,
@@ -818,21 +827,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  alert(`Gagal menyimpan perubahan! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
  });
  }, 400);
- }
-
- function openCreateDrawer() {
- const member = selectedMember?.slug === "overview" ? memberLookup.aurel : selectedMember;
- const pic = member?.slug === "overview"
- ? (viewerName ?? "Aurel")
- : member.label;
- setDrawerMode("create");
- setSelectedTaskId(null);
- setDraft({
- ...defaultDraft(activeMember, viewerName),
- status: "Not started",
- pic,
- });
- setDrawerOpen(true);
  }
 
  function openEditDrawer(task: TaskRow) {
@@ -1105,12 +1099,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  ))}
  </select>
  </div>
- <DnaButton variant="outline" icon={<Folder />} onClick={() => setIsProjectManagerOpen(true)}>
- Projects
- </DnaButton>
- <DnaButton variant="primary" icon={<Plus />} onClick={() => openCreateDrawer()}>
- New Task
- </DnaButton>
  </div>
  </div>
 
@@ -1843,143 +1831,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
  </div>
  </SheetContent>
  </Sheet>
-
- {/* Project Manager Modal */}
- {isProjectManagerOpen && (
- <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsProjectManagerOpen(false)}>
- <div data-marketing-surface="modal" className="w-full max-w-[450px] rounded-[28px] border border-slate-200 bg-white p-6 animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
- <div className="flex items-center justify-between border-b border-slate-100 pb-4">
- <div>
- <h2 className="text-[16px] font-bold tracking-tight text-slate-900">Manage Projects</h2>
- <p className="text-[11px] font-medium text-slate-400">Add, edit, or delete marketing projects</p>
- </div>
- <button
- type="button"
- onClick={() => setIsProjectManagerOpen(false)}
- className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
- >
- <X className="h-4 w-4" />
- </button>
- </div>
-
- {/* Add New Project */}
- <div className="mt-4 flex gap-2">
- <DnaInput
- value={newProjectName}
- onChange={(e) => setNewProjectName(e.target.value)}
- placeholder="New project name"
- className="flex-1 h-9 text-[12px] rounded-xl border-slate-200 focus:ring-blue-500"
- />
- <button
- type="button"
- onClick={() => {
- const trimmed = newProjectName.trim();
- if (!trimmed || localProjects.includes(trimmed)) return;
- // Tambah project via API backend (P3.3) supaya tetap ada
- // setelah refresh — bukan hanya state lokal.
- api.post("/marketing/prototype/projects", { name: trimmed })
- .then(() => {
- queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
- setNewProjectName("");
- })
- .catch((err) => {
- console.error("[ProjectManager] Add failed:", err?.response?.status, err?.response?.data);
- alert(`Gagal tambah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
- });
- }}
- className="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-4 text-[11px] font-bold uppercase tracking-wider text-white hover:bg-blue-700 transition"
- >
- Add
- </button>
- </div>
-
- {/* Project List */}
- <div className="mt-5 max-h-[250px] overflow-y-auto divide-y divide-slate-100 pr-1">
- {localProjects.length === 0 ? (
- <p className="py-6 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider">No projects added yet</p>
- ) : (
- localProjects.map((projectName, index) => (
- <div key={projectName} className="flex items-center justify-between py-3">
- {editingProjectIndex === index ? (
- <div className="flex flex-1 gap-2 items-center">
- <DnaInput
- value={editingProjectName}
- onChange={(e) => setEditingProjectName(e.target.value)}
- className="flex-1 h-8 text-[11px] rounded-lg border-slate-200 focus:ring-blue-500"
- autoFocus
- />
- <button
- type="button"
- onClick={() => {
- const trimmed = editingProjectName.trim();
- setEditingProjectIndex(null);
- if (!trimmed || trimmed === projectName) return;
- const project = projects.find((p) => p.name === projectName);
- if (!project) return;
- // Ubah project via API backend (P3.3); task yang
- // ber-project lama ikut di-reassign oleh backend.
- api.patch(`/marketing/prototype/projects/${project.id}`, { name: trimmed })
- .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
- .catch((err) => {
- console.error("[ProjectManager] Edit failed:", err?.response?.status, err?.response?.data);
- alert(`Gagal ubah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
- });
- }}
- className="text-emerald-600 hover:text-emerald-700 font-bold text-[11px] px-2 py-1"
- >
- Save
- </button>
- <button
- type="button"
- onClick={() => setEditingProjectIndex(null)}
- className="text-slate-400 hover:text-slate-600 font-bold text-[11px] px-2 py-1"
- >
- Cancel
- </button>
- </div>
- ) : (
- <>
- <span className="text-[12px] font-semibold text-slate-750">{projectName}</span>
- <div className="flex items-center gap-1">
- <button
- type="button"
- onClick={() => {
- setEditingProjectIndex(index);
- setEditingProjectName(projectName);
- }}
- className="text-slate-400 hover:text-blue-600 p-1 hover:bg-slate-50 rounded"
- >
- <Pencil className="h-3.5 w-3.5" />
- </button>
- <button
- type="button"
- onClick={() => {
- const project = projects.find((p) => p.name === projectName);
- if (!project) return;
- if (!window.confirm(`Hapus project "${projectName}"? Task di dalamnya dipindah ke project lain.`)) return;
- // Hapus project via API backend (P3.3) — task di
- // dalamnya otomatis di-reassign oleh backend.
- api.delete(`/marketing/prototype/projects/${project.id}`)
- .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
- .catch((err) => {
- console.error("[ProjectManager] Delete failed:", err?.response?.status, err?.response?.data);
- alert(`Gagal hapus project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
- });
- }}
- className="text-slate-400 hover:text-rose-600 p-1 hover:bg-slate-50 rounded"
- >
- <Trash2 className="h-3.5 w-3.5" />
- </button>
- </div>
- </>
- )}
- </div>
- ))
- )}
- </div>
- </div>
- </div>
- )}
  </DashboardShell>
  );
 }
