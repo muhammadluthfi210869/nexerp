@@ -1,37 +1,44 @@
 # Stage 1: Build
 # node:20-slim (Debian/glibc) — bukan Alpine/musl. Turbopack + lightningcss
 # butuh binary native glibc; di Alpine/musl build Next 16 sering gagal.
+#
+# Build context: REPO ROOT. The workflow invokes this with:
+#   docker build --no-cache -f frontend/Dockerfile .
+# so we can reference backend/prisma/* directly without pre-build tricks.
 FROM node:20-slim AS builder
 
 WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WA_PHONE
+ENV NEXT_PUBLIC_WA_PHONE=$NEXT_PUBLIC_WA_PHONE
 ARG NEXT_PUBLIC_PROTOTYPE_MODE
 ENV NEXT_PUBLIC_PROTOTYPE_MODE=$NEXT_PUBLIC_PROTOTYPE_MODE
 
-# Copy package files first for caching
-COPY package*.json ./
-RUN npm install
+# Copy ONLY the frontend package files for installation
+COPY frontend/package.json frontend/package-lock.json* ./
 
-# Lighteningcss native binary workaround
+# Install frontend deps — @prisma/client package + others
+RUN npm install --no-audit --no-fund
+
+# Lighteningcss native binary workaround (Windows package-lock missing Linux binary)
 RUN npm install lightningcss-linux-x64-gnu --no-save 2>/dev/null || true
 
-# Bring in Prisma schema + config for `prisma generate`. Restored main-branch
-# pages import enums (ActivityType, WorkflowStatus, ProductCategory,
-# LostReason) directly from @prisma/client, so generated client must have
-# these. Prisma looks up the schema via prisma.config.ts which references
-# ./prisma/schema. We expect the workflow to have copied backend/prisma to
-# ./prisma already (see build-unified-staging.yml pre-step).
-COPY prisma ./prisma
-COPY prisma.config.ts ./prisma.config.ts
-# Set a placeholder DATABASE_URL — `prisma generate` does NOT need a real DB
-# connection; it only reads schema files. The placeholder satisfies the
-# config's `process.env["DATABASE_URL"]` lookup.
+# Copy Prisma schema + config (NOW accessible because build context = repo root)
+COPY backend/prisma ./prisma
+COPY backend/prisma.config.ts ./prisma.config.ts
+
+# Generate Prisma client. `prisma generate` reads schema from prisma.config.ts
+# (schema: "prisma/schema"). DATABASE_URL placeholder satisfies config.
+# This MUST come before `npm run build` because restored main-branch pages
+# import enum values directly from @prisma/client.
 RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public" npx prisma generate
 
-# Copy frontend source
-COPY . .
+# Copy frontend source (includes the schema files we already copied)
+COPY frontend/. .
+
+# Now build Next.js — @prisma/client is fully populated with enums
 RUN npm run build
 
 # Stage 2: Runtime

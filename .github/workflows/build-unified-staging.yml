@@ -1,13 +1,111 @@
-name: Test Unified Staging
+name: Build Unified Staging
+
+# Builds Docker images (frontend + backend) for integration/unified
+# on GitHub runners. Saves as artifacts for transfer to Biznet.
+#
+# Triggers on push to integration/unified. The pre-build step ensures the
+# generated Prisma client is built from the exact integration/unified
+# schema before `next build` runs (no cache reliance).
 
 on:
   push:
     branches:
       - integration/unified
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'NEXT_PUBLIC_API_URL'
+        required: false
+        default: 'http://localhost:3701/api'
+      wa_phone:
+        description: 'NEXT_PUBLIC_WA_PHONE'
+        required: false
+        default: '6287793032556'
+
+permissions:
+  contents: read
 
 jobs:
-  test-job:
+  build-frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - name: Hello
-        run: echo "Hello from test workflow"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Pre-build (no cache) - install + generate + copy to frontend
+        working-directory: ./frontend
+        env:
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public"
+        run: |
+          set -eux
+          cd ..
+          mkdir -p frontend/prisma
+          rm -rf frontend/prisma/schema
+          cp -r backend/prisma/schema frontend/prisma/schema
+          ls frontend/prisma/schema | head
+          cd frontend
+          npm install --no-audit --no-fund --silent
+          cd ..
+          npx --prefix frontend prisma generate --schema=frontend/prisma/schema/schema.prisma || true
+          npx --prefix frontend prisma generate --schema=frontend/prisma/schema
+          echo "Generated client:"
+          ls frontend/node_modules/.prisma/client/ | head -3 || true
+
+      - name: Build frontend Docker image
+        env:
+          NEXT_PUBLIC_API_URL: ${{ inputs.api_url || 'http://localhost:3701/api' }}
+          NEXT_PUBLIC_WA_PHONE: ${{ inputs.wa_phone || '6287793032556' }}
+        run: |
+          docker build \
+            --no-cache \
+            --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+            --build-arg NEXT_PUBLIC_WA_PHONE="${NEXT_PUBLIC_WA_PHONE}" \
+            -f frontend/Dockerfile \
+            -t staging-unified-frontend:latest \
+            .
+
+      - name: Save frontend image
+        run: |
+          docker save -o /tmp/staging-unified-frontend.tar staging-unified-frontend:latest
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-unified-frontend
+          path: /tmp/staging-unified-frontend.tar
+          retention-days: 7
+          if-no-files-found: error
+
+  build-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            --no-cache \
+            -f backend/Dockerfile \
+            -t staging-unified-backend:latest \
+            .
+
+      - name: Save backend image
+        run: |
+          docker save -o /tmp/staging-unified-backend.tar staging-unified-backend:latest
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-unified-backend
+          path: /tmp/staging-unified-backend.tar
+          retention-days: 7
+          if-no-files-found: error
