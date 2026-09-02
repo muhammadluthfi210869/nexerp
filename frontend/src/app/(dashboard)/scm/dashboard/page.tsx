@@ -370,8 +370,7 @@ export default function ScmDashboardPage() {
           </div>
         </div>
 
-        {/* Prototype Styled Table Card */}
-        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+        <TableWrapper>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", minWidth: "1400px", borderCollapse: "collapse" }}>
               <thead>
@@ -388,9 +387,9 @@ export default function ScmDashboardPage() {
                 {filteredWOs.map((wo) => {
                   const isReady = wo.boStatus === "READY";
                   return (
-                    <tr 
-                      key={wo.id} 
-                      onClick={() => setSelectedWO(wo)} 
+                    <tr
+                      key={wo.id}
+                      onClick={() => setSelectedWO(wo)}
                       style={{ borderBottom: "1px solid #F1F5F9", cursor: "pointer" }}
                       className="hover:bg-slate-50/50 transition-colors"
                     >
@@ -415,9 +414,9 @@ export default function ScmDashboardPage() {
                         )}
                       </td>
                       <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                        <span style={{ background: isReady ? "#10B981" : "#EF4444", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "8px", fontWeight: 950 }}>
+                        <DnaBadge status={isReady ? "success" : "critical"}>
                           {isReady ? "READY" : "DELAYED"}
-                        </span>
+                        </DnaBadge>
                       </td>
                       <td style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
                         {wo.supplierScore}/5
@@ -428,7 +427,7 @@ export default function ScmDashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </TableWrapper>
       </div>
 
       {/* 🤝 III. SCM-PRODUCTION BRIDGE (COMMUNICATION PROTOCOL) */}
@@ -484,8 +483,7 @@ export default function ScmDashboardPage() {
           ))}
         </div>
 
-        {/* MASSIVE WO TRACKING TABLE */}
-        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+        <TableWrapper>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", minWidth: "1400px", borderCollapse: "collapse" }}>
               <thead>
@@ -519,9 +517,9 @@ export default function ScmDashboardPage() {
                         {wo.estArrival ? new Date(wo.estArrival).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                       </td>
                       <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                        <span style={{ background: isReady ? "#10B981" : "#EF4444", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "8px", fontWeight: 950 }}>
+                        <DnaBadge status={isReady ? "success" : "critical"}>
                           {isReady ? "READY" : "DELAYED"}
-                        </span>
+                        </DnaBadge>
                       </td>
                       <td style={{ padding: "1rem 1.5rem", textAlign: "right", fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{wo.supplierScore}/5</td>
                     </tr>
@@ -530,13 +528,13 @@ export default function ScmDashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </TableWrapper>
       </div>
 
       {/* 🔴 IV. MATERIAL MASTER & STOCK AUDIT (UNIFIED REPOSITORY) */}
       <div style={{ marginBottom: "5rem" }}>
         <h3 className="section-label">🔴 III. MATERIAL MASTER & STOCK AUDIT (UNIFIED REPOSITORY)</h3>
-        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+        <TableWrapper>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", minWidth: "1800px", borderCollapse: "collapse" }}>
               <thead>
@@ -557,8 +555,8 @@ export default function ScmDashboardPage() {
                   { name: "Box Acne Serum", type: "BOX", cat: "Printing", u: "Pcs", curr: "45k", res: "5k", avail: "40k", price: "1.2k", total: "54M", levels: "5k / 40k / 10k", usage: "500 Pcs/d", lt: "5d", status: "EXCESS" },
                   { name: "Dead Sample Kemasan", type: "PACKAGING", cat: "N/A", u: "Pcs", curr: "120", res: "0", avail: "120", price: "5k", total: "0.6M", levels: "0 / 0 / 0", usage: "0", lt: "-", status: "DEAD STOCK" },
                 ].map((row, i) => (
-                  <tr 
-                    key={i} 
+                  <tr
+                    key={i}
                     style={{ borderBottom: "1px solid #F1F5F9", background: row.status === "SHORTAGE" ? "#FFF1F2" : "transparent" }}
                   >
                     <td style={{ padding: "1.25rem 1.5rem", textAlign: "left" }}>
@@ -581,16 +579,16 @@ export default function ScmDashboardPage() {
                       <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>Lead: {row.lt}</div>
                     </td>
                     <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <span style={{ background: row.status === "SHORTAGE" ? "#EF4444" : row.status === "EXCESS" ? "#F59E0B" : row.status === "HEALTHY" ? "#10B981" : "#64748B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                      <DnaBadge status={row.status === "SHORTAGE" ? "critical" : row.status === "EXCESS" ? "warning" : row.status === "HEALTHY" ? "success" : "default"}>
                         {row.status}
-                      </span>
+                      </DnaBadge>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </TableWrapper>
         {/* V. CATEGORY-SPECIFIC PERFORMANCE AUDIT */}
       <div style={{ marginTop: "5rem", marginBottom: "3rem" }}>
         <h3 style={{ margin: "5rem 0 2rem 0", fontSize: "16px", fontWeight: 950, color: "#1E293B", borderBottom: "2px solid #1E293B", display: "inline-block", paddingBottom: "8px" }}>
@@ -606,7 +604,7 @@ export default function ScmDashboardPage() {
                 A. RAW MATERIAL PERFORMANCE (QUALITY & CONTINUITY)
               </h4>
             </div>
-            <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+            <TableWrapper>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
                   <thead>
@@ -647,16 +645,16 @@ export default function ScmDashboardPage() {
                         </td>
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                          <DnaBadge status={s.risk === "LOW" ? "success" : "warning"}>
                             {s.risk}
-                          </span>
+                          </DnaBadge>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </TableWrapper>
           </div>
 
           {/* B. PACKAGING PERFORMANCE */}
@@ -667,7 +665,7 @@ export default function ScmDashboardPage() {
                 B. PACKAGING PERFORMANCE (MOQ & OVERSTOCK FOCUS)
               </h4>
             </div>
-            <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+            <TableWrapper>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
                   <thead>
@@ -694,16 +692,16 @@ export default function ScmDashboardPage() {
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#64748B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center" }}>
-                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                          <DnaBadge status={s.risk === "LOW" ? "success" : "warning"}>
                             {s.risk}
-                          </span>
+                          </DnaBadge>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </TableWrapper>
           </div>
 
           {/* C. BOX PERFORMANCE */}
@@ -714,7 +712,7 @@ export default function ScmDashboardPage() {
                 C. BOX PERFORMANCE (VOLUME & COST EFFICIENCY)
               </h4>
             </div>
-            <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+            <TableWrapper>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
                   <thead>
@@ -739,14 +737,16 @@ export default function ScmDashboardPage() {
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#3B82F6" }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "right" }}>
-                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>{s.risk}</span>
+                          <DnaBadge status={s.risk === "LOW" ? "success" : "warning"}>
+                            {s.risk}
+                          </DnaBadge>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </TableWrapper>
           </div>
 
           {/* D. LABEL PERFORMANCE */}
@@ -757,7 +757,7 @@ export default function ScmDashboardPage() {
                 D. LABEL PERFORMANCE (ACCURACY & REVISION FOCUS)
               </h4>
             </div>
-            <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+            <TableWrapper>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
                   <thead>
@@ -782,16 +782,16 @@ export default function ScmDashboardPage() {
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{s.otd}%</td>
                         <td style={{ padding: "1.25rem", textAlign: "center", fontSize: "12px", fontWeight: 950 }}>—</td>
                         <td style={{ padding: "1.25rem", textAlign: "right" }}>
-                          <span style={{ background: s.risk === "LOW" ? "#10B981" : "#F59E0B", color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950 }}>
+                          <DnaBadge status={s.risk === "LOW" ? "success" : "warning"}>
                             {s.risk}
-                          </span>
+                          </DnaBadge>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </TableWrapper>
           </div>
         </div>
       </div>
@@ -801,15 +801,13 @@ export default function ScmDashboardPage() {
         <h3 className="section-label">VI. SMART PROCUREMENT RECOMMENDATIONS</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2rem" }} className="macro-grid-procurement">
           {dashStats?.procurementSuggestions.slice(0, 6).map((rec, i) => (
-             <div 
+             <DataCard
                 key={i}
-                style={{ border: "1px solid #e5e7eb", background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)", position: "relative" }}
-                className="hover:translate-y-[-4px] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] transition-all duration-300"
              >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem" }}>
-                   <span style={{ background: rec.priority === "URGENT" ? "#fef2f2" : "#f1f5f9", color: rec.priority === "URGENT" ? "#dc2626" : "#64748B", textTransform: "uppercase", borderRadius: "8px", padding: "6px 12px", fontSize: "10px", fontWeight: 900 }}>
+                   <DnaBadge status={rec.priority === "URGENT" ? "critical" : rec.priority === "MEDIUM" ? "warning" : "default"}>
                       {rec.priority} PRIORITY
-                   </span>
+                   </DnaBadge>
                    <span style={{ fontSize: "9px", fontWeight: 900, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.1em" }}>STOCK: {rec.currentStock}</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -827,7 +825,7 @@ export default function ScmDashboardPage() {
                         <p style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#10B981" }}>{rec.expectedOtd}%</p>
                       </div>
                    </div>
-                   <DnaButton 
+                   <DnaButton
                       variant="primary"
                       onClick={() => initPurchaseMutation.mutate(rec.materialId)}
                       disabled={initPurchaseMutation.isPending}
@@ -835,7 +833,7 @@ export default function ScmDashboardPage() {
                    >
                       {initPurchaseMutation.isPending ? "INITIALIZING..." : "INITIALIZE PURCHASE"}
                    </DnaButton>
-                   <button 
+                   <button
                       onClick={() => setViewingCommitment(rec)}
                       style={{ background: "none", border: "none", cursor: "pointer", width: "full", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.1em", textAlign: "center" }}
                       className="hover:text-blue-600 transition-colors"
@@ -843,7 +841,7 @@ export default function ScmDashboardPage() {
                       VIEW GLOBAL SUMMARY BREAKDOWN
                    </button>
                 </div>
-             </div>
+             </DataCard>
           ))}
         </div>
       </div>
@@ -851,7 +849,7 @@ export default function ScmDashboardPage() {
       {/* VII. CONSOLIDATED PROCUREMENT SUMMARY */}
       <div style={{ marginBottom: "4rem" }}>
         <h3 className="section-label">VII. CONSOLIDATED PROCUREMENT SUMMARY (GLOBAL)</h3>
-        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+        <TableWrapper>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -874,22 +872,14 @@ export default function ScmDashboardPage() {
                       {rec.suggestedQty.toLocaleString()} Pcs
                     </td>
                     <td style={{ padding: "1.5rem", textAlign: "center" }}>
-                      <span style={{ 
-                        background: rec.currentStock < rec.suggestedQty ? "#FFF1F2" : "#ECFDF5", 
-                        color: rec.currentStock < rec.suggestedQty ? "#E11D48" : "#059669", 
-                        padding: "6px 12px", 
-                        borderRadius: "8px", 
-                        fontSize: "11px", 
-                        fontWeight: 950,
-                        border: rec.currentStock < rec.suggestedQty ? "1px solid #FECDD3" : "1px solid #A7F3D0"
-                      }}>
-                         {rec.currentStock < rec.suggestedQty ? `-${(rec.suggestedQty - rec.currentStock).toLocaleString()}` : "SURPLUS"}
-                      </span>
+                      <DnaBadge status={rec.currentStock < rec.suggestedQty ? "critical" : "success"}>
+                        {rec.currentStock < rec.suggestedQty ? `-${(rec.suggestedQty - rec.currentStock).toLocaleString()}` : "SURPLUS"}
+                      </DnaBadge>
                     </td>
                     <td style={{ padding: "1.5rem", textAlign: "center" }}>
                       <div className="flex justify-center -space-x-3 overflow-hidden">
                         {rec.commitmentsBreakdown?.slice(0, 5).map((cb: any, idx: number) => (
-                          <div key={idx} className={cn("inline-block h-8 w-8 rounded-full ring-2 ring-white flex items-center justify-center text-[10px] font-black", 
+                          <div key={idx} className={cn("inline-block h-8 w-8 rounded-full ring-2 ring-white flex items-center justify-center text-[10px] font-black",
                             idx % 2 === 0 ? "bg-blue-600 text-white" : "bg-white text-slate-900 border border-slate-200"
                           )} title={`${cb.woNumber} - ${cb.clientName}`}>
                             {cb.clientName[0]}
@@ -903,7 +893,7 @@ export default function ScmDashboardPage() {
                       </div>
                     </td>
                     <td style={{ padding: "1.5rem", textAlign: "right" }}>
-                      <DnaButton 
+                      <DnaButton
                         variant="outline"
                         size="sm"
                         onClick={() => initPurchaseMutation.mutate(rec.materialId)}
@@ -916,7 +906,7 @@ export default function ScmDashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </TableWrapper>
       </div>
 
       {/* VIII. VELOCITY & DEMAND AUDIT */}
@@ -1027,17 +1017,9 @@ export default function ScmDashboardPage() {
                         <td style={{ padding: "10px 12px", textAlign: "right", fontSize: "11px", fontWeight: 950, color: "#64748B" }}>{s.volume.toLocaleString()}</td>
                         <td style={{ padding: "10px 12px", textAlign: "center", fontSize: "11px", fontWeight: 950, color: "#10B981" }}>{s.otd}%</td>
                         <td style={{ padding: "10px 12px", textAlign: "right" }}>
-                           <span style={{ 
-                             background: s.risk === "LOW" ? "#ECFDF5" : "#FEF2F2", 
-                             color: s.risk === "LOW" ? "#059669" : "#DC2626", 
-                             padding: "4px 8px", 
-                             borderRadius: "6px", 
-                             fontSize: "9px", 
-                             fontWeight: 950,
-                             border: s.risk === "LOW" ? "1px solid #A7F3D0" : "1px solid #FCA5A5"
-                           }}>
+                           <DnaBadge status={s.risk === "LOW" ? "success" : "critical"}>
                              {s.risk}
-                           </span>
+                           </DnaBadge>
                         </td>
                      </tr>
                    ))}
