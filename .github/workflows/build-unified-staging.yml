@@ -4,13 +4,11 @@ name: Build Unified Staging (integration/unified)
 # GitHub runners (16GB RAM, NVMe), saves as artifacts ready for transfer
 # to Biznet via gh CLI or direct download.
 #
-# Triggered on push to integration/unified or manual dispatch.
+# Frontend build context: repo root (not ./frontend) so it can access
+# backend/prisma/schema for `prisma generate`. Build context is set via
+# `context: .` in build-push-action step.
 #
-# Usage:
-#   1. gh workflow run build-unified-staging.yml --ref integration/unified
-#   2. gh run download <run-id> (saves tar.gz artifacts locally)
-#   3. On Biznet: docker load < artifacts/*.tar
-#   4. Update docker-compose.staging-unified.yml to use loaded images
+# Triggered on push to integration/unified or manual dispatch.
 
 on:
   push:
@@ -46,7 +44,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
+      - name: Cache Docker layers (frontend)
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-frontend
@@ -70,7 +68,7 @@ jobs:
       - name: Build unified frontend image
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          context: .
           file: ./frontend/Dockerfile
           build-args: |
             NEXT_PUBLIC_API_URL=${{ steps.fe_args.outputs.api_url }}
@@ -107,7 +105,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
+      - name: Cache Docker layers (backend)
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-backend
