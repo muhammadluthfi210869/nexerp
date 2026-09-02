@@ -1,0 +1,92 @@
+name: Build Preview-KIL
+
+# Builds Docker images (frontend + backend) for preview/kil-frontend
+# branch on GitHub runners. Saves as artifacts for transfer to Biznet
+# via scp (no public registry needed).
+#
+# Used by kil.nexerp.id preview stack. Production-light at nexerp.id
+# tetap untouched.
+
+on:
+  push:
+    branches:
+      - preview/kil-frontend
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'NEXT_PUBLIC_API_URL'
+        required: false
+        default: 'http://localhost:3801/api'
+      wa_phone:
+        description: 'NEXT_PUBLIC_WA_PHONE'
+        required: false
+        default: '6287793032556'
+
+permissions:
+  contents: read
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend Docker image
+        env:
+          NEXT_PUBLIC_API_URL: ${{ inputs.api_url || 'http://localhost:3801/api' }}
+          NEXT_PUBLIC_WA_PHONE: ${{ inputs.wa_phone || '6287793032556' }}
+        run: |
+          docker build \
+            --no-cache \
+            --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+            --build-arg NEXT_PUBLIC_WA_PHONE="${NEXT_PUBLIC_WA_PHONE}" \
+            -f frontend/Dockerfile \
+            -t preview-kil-frontend:latest \
+            .
+
+      - name: Save frontend image
+        run: |
+          docker save -o /tmp/preview-kil-frontend.tar preview-kil-frontend:latest
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-kil-frontend
+          path: /tmp/preview-kil-frontend.tar
+          retention-days: 7
+          if-no-files-found: error
+
+  build-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            --no-cache \
+            -f backend/Dockerfile \
+            -t preview-kil-backend:latest \
+            .
+
+      - name: Save backend image
+        run: |
+          docker save -o /tmp/preview-kil-backend.tar preview-kil-backend:latest
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-kil-backend
+          path: /tmp/preview-kil-backend.tar
+          retention-days: 7
+          if-no-files-found: error

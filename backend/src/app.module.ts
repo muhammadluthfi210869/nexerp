@@ -8,7 +8,9 @@ import { MarketingModule } from './modules/marketing/marketing.module';
 import { RndModule } from './modules/rnd/rnd.module';
 import { DigimarModule } from './modules/digimar/digimar.module';
 import { LeadCaptureModule } from './modules/lead-capture/lead-capture.module';
+import { MarketingCommandModule } from './modules/marketing-command/marketing-command.module';
 import { WaWebhookModule } from './modules/wa-webhook/wa-webhook.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 // import { HrModule } from './modules/hr/hr.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -63,7 +65,9 @@ import * as path from 'path';
     RndModule,
     DigimarModule,
     LeadCaptureModule,
+    MarketingCommandModule,
     WaWebhookModule,
+    CatalogModule, // generic CRUD for kil.nexerp.id preview
     // HrModule,
 
     // ── Global ──
