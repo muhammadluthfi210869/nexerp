@@ -7,6 +7,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { GuestsModule } from './modules/guests/guests.module';
 import { RndModule } from './modules/rnd/rnd.module';
+import { DigimarModule } from './modules/digimar/digimar.module';
+import { LeadCaptureModule } from './modules/lead-capture/lead-capture.module';
+import { WaWebhookModule } from './modules/wa-webhook/wa-webhook.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { CommercialModule } from './modules/commercial/commercial.module';
 import { ScmModule } from './modules/scm/scm.module';
@@ -50,6 +53,9 @@ import { join } from 'path';
     MarketingModule,
     GuestsModule,
     RndModule,
+    DigimarModule,
+    LeadCaptureModule,
+    WaWebhookModule,
     CrmModule,
     CommercialModule,
     ScmModule,

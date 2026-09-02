@@ -1,96 +1,148 @@
-model DailyAdsMetric {
-  id             String        @id @default(uuid()) @db.Uuid
-  date           DateTime      @db.Date
-  platform       TrafficSource
-  spend          Decimal       @db.Decimal(15, 2)
-  impressions    Int           @default(0)
-  reach          Int           @default(0)
-  clicks         Int           @default(0)
-  leadsGenerated Int           @default(0)
-  campaignName   String?
-  isAudited      Boolean       @default(false)
-  auditedById    String?       @db.Uuid
-  auditedAt      DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  verifier       User?         @relation("AdsVerifier", fields: [auditedById], references: [id])
+// ⚠️ PRODUCTION-LIGHT: Model marketing lama dihapus.
+// Lead Capture untuk DreamLab.id — sistem zero-friction WA lead capture.
 
-  @@unique([date, platform, campaignName])
-  @@map("daily_ads_metrics")
+model LeadCapture {
+  id            String   @id @default(uuid()) @db.Uuid
+  trackingCode  String   @unique @db.VarChar(20)
+
+  // ── Website Tracking (invisible, captured before WA redirect) ──
+  sessionId     String?  @db.VarChar(100)
+  intent        String?  @db.Text          // "Konsultasi Produk", "Beli Bahan Baku", dll
+  pageUrl       String?  @db.Text
+  pageTitle     String?  @db.VarChar(255)
+  referrer      String?  @db.Text
+  utmSource     String?  @db.VarChar(100)
+  utmMedium     String?  @db.VarChar(100)
+  utmCampaign   String?  @db.VarChar(100)
+  utmContent    String?  @db.VarChar(100)
+  utmTerm       String?  @db.VarChar(100)
+  deviceType    String?  @db.VarChar(50)   // mobile / desktop / tablet
+  browser       String?  @db.VarChar(100)
+  ipAddress     String?  @db.VarChar(45)
+  city          String?  @db.VarChar(100)
+  country       String?  @db.VarChar(100)
+
+  // ── WhatsApp Data (captured when user messages) ──
+  phone         String?  @db.VarChar(20)   // extracted from WA
+  waName        String?  @db.VarChar(255)  // WhatsApp profile name
+  waMessage     String?  @db.Text          // first message content
+  contactedAt   DateTime?
+
+  // ── CRM Fields ──
+  fullName      String?  @db.VarChar(255)
+  company       String?  @db.VarChar(255)
+  email         String?  @db.VarChar(255)
+  notes         String?  @db.Text
+
+  // ── AI Extraction metadata (Fase 3.1) — saran atribut ada di tabel LeadAttribute ──
+  aiExtractedAt DateTime?
+  aiStatus      String? @db.VarChar(20)  // NONE / SUGGESTED / CONFIRMED / REJECTED / ERROR
+  aiStage       Json?   // saran pipeline stage (Fase 3.3): { stage, confidence, reason, source }
+
+  // ── Atribut lead extensible (Option B) — key-value, scalable ──
+  attributes    LeadAttribute[]
+
+  status        LeadStatus @default(PENDING)
+  source        LeadSource?  // Linktree, Instagram, Google, dll
+
+  assignedTo    String?  @db.Uuid
+  assignedUser  User?    @relation(fields: [assignedTo], references: [id])
+
+  // ── Round Robin Tracking (captured before WA redirect) ──
+  assignedName  String?  @db.VarChar(100)  // Nama agent round-robin yang ditugaskan
+  assignedPhone String?  @db.VarChar(20)   // No. WA agent round-robin yang ditugaskan
+
+  // ── Kommo CRM metadata (Kommo is the third-party system, not the marketing source) ──
+  kommoLeadId              Int?
+  kommoResponsibleUserId   Int?
+  kommoResponsibleUserName String? @db.VarChar(255)
+  kommoPipelineId          Int?
+  kommoPipelineName        String? @db.VarChar(255)
+  kommoStatusId            Int?
+  kommoStatusName          String? @db.VarChar(255)
+  kommoSourceName          String? @db.VarChar(255)
+  kommoTags                String? @db.Text
+  kommoTalkStatus          String? @db.VarChar(50)
+  kommoTalkOrigin          String? @db.VarChar(100)
+  kommoTalkIsRead          Boolean?
+  kommoTalkIsInWork        Boolean?
+  kommoFirstResponseSec    Int?
+
+  // ── Sales Pipeline ──
+  workflowStatus WorkflowStatus @default(NEW_LEAD)
+  lostReason     LostReason?
+  lostAt         DateTime?
+  wonAt          DateTime?
+
+  // ── Log percakapan (Fase 2.2) ──
+  messages    LeadMessage[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("lead_captures")
 }
 
-model MarketingTarget {
-  id              String   @id @default(uuid()) @db.Uuid
-  month           Int
-  year            Int
-  leadTarget      Int      @default(0)
-  postTarget      Int      @default(0)
-  revenueTarget   Decimal  @default(0) @db.Decimal(15, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  clientAcqTarget Int      @default(0)
-  sampleTarget    Int      @default(0)
-  spendTarget     Decimal  @default(0) @db.Decimal(15, 2)
+// ── Log percakapan WhatsApp — setiap pesan = 1 baris (Fase 2.2) ──
+// Bahan baku untuk LLM extraction (nama asli, perusahaan, niche, MOQ, dst).
 
-  @@unique([month, year])
-  @@map("marketing_targets")
+model LeadMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @db.Uuid
+  direction String   @default("INBOUND") @db.VarChar(10)  // INBOUND / OUTBOUND
+  phone     String?  @db.VarChar(20)   // nomor pengirim (INBOUND) / tujuan (OUTBOUND)
+  waName    String?  @db.VarChar(255)  // nama profil pengirim
+  body      String   @db.Text          // isi pesan
+  msgId     String?  @unique @db.VarChar(100)  // WhatsApp message id (anti-duplikat redelivery webhook)
+  createdAt DateTime @default(now())
+
+  lead      LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_messages")
 }
 
-model ContentAsset {
-  id             String          @id @default(uuid()) @db.Uuid
-  publishDate    DateTime        @db.Date
-  platform       TrafficSource
-  contentPillar  ContentCategory
-  title          String
-  url            String?
-  views          Int             @default(0)
-  likes          Int             @default(0)
-  comments       Int             @default(0)
-  shares         Int             @default(0)
-  saves          Int             @default(0)
-  engagementRate Decimal         @default(0) @db.Decimal(5, 2)
-  auditStatus    String          @default("PENDING")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+// ── Atribut lead extensible (Option B) — satu field = satu baris ──
+// Scalable: nambah field (brand, domisili, dst.) tanpa migrasi.
+// `confirmed=false` = saran AI (belum disetujui sales); `true` = sudah masuk data lead.
 
-  @@map("content_assets")
+model LeadAttribute {
+  id         String   @id @default(uuid()) @db.Uuid
+  leadId     String   @db.Uuid
+  key        String   @db.VarChar(50)   // niche, brand, domisili, moq, budget, dst.
+  value      String?  @db.VarChar(255)
+  confidence Float    @default(0)        // 0-1 dari AI
+  source     String?  @db.Text           // kutipan asli dari percakapan
+  confirmed  Boolean  @default(false)    // sudah disetujui sales?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lead       LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, key])
+  @@index([leadId])
+  @@map("lead_attributes")
 }
 
-model SearchVisibilityMetric {
+// ── Round Robin untuk distribusi lead ke 3 nomor WA ──
+
+model RoundRobinAgent {
   id          String   @id @default(uuid()) @db.Uuid
-  month       Int
-  year        Int
-  impressions BigInt   @default(0)
-  clicks      BigInt   @default(0)
-  avgCtr      Decimal  @default(0) @db.Decimal(5, 2)
-  avgPosition Decimal  @default(0) @db.Decimal(3, 1)
+  name        String   @db.VarChar(100)
+  phoneNumber String   @db.VarChar(20)
+  orderIndex  Int      // urutan: 0, 1, 2
+  isActive    Boolean  @default(true)
+  totalLeads  Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([month, year])
-  @@map("search_visibility_metrics")
+  @@map("round_robin_agents")
 }
 
-model AccountHealthLog {
-  id             String        @id @default(uuid()) @db.Uuid
-  platform       TrafficSource
-  totalFollowers Int           @default(0)
-  followerGrowth Int           @default(0)
-  unfollows      Int           @default(0)
-  totalReach     Int           @default(0)
-  profileVisits  Int           @default(0)
-  postsCount     Int           @default(0)
-  storiesCount   Int           @default(0)
-  avgStoryViews  Int           @default(0)
-  likesCount     Int           @default(0)
-  commentsCount  Int           @default(0)
-  savesCount     Int           @default(0)
-  sharesCount    Int           @default(0)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  weekNumber     Int
-  year           Int
+model RoundRobinState {
+  id           String   @id @default("singleton")
+  currentIndex Int      @default(0)
+  updatedAt    DateTime @updatedAt
 
-  @@unique([year, weekNumber, platform])
-  @@map("account_health_logs")
+  @@map("round_robin_state")
 }

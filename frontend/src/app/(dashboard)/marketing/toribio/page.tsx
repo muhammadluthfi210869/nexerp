@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { ToribioDashboardClient } from './ToribioDashboardClient';
 
 export default function ToribioDashboardPage() {
-  redirect('/marketing/digital');
+  return <ToribioDashboardClient />;
 }

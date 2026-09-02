@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { MarketingService } from './marketing/marketing.service';
-import { MarketingController } from './marketing/marketing.controller';
-import { FinanceModule } from '../finance/finance.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MarketingPrototypeController } from './prototype/marketing-prototype.controller';
 import { MarketingPrototypeService } from './prototype/marketing-prototype.service';
 
+// ⚠️ PRODUCTION-LIGHT: Hanya menyisakan prototype module
+// untuk Management Task. MarketingService, LandingTracker,
+// VercelTracker di-archive. Lihat PRODUCTION_LIGHT.md.
+
 @Module({
-  imports: [PrismaModule, FinanceModule],
-  providers: [MarketingService, MarketingPrototypeService],
-  controllers: [MarketingController, MarketingPrototypeController],
-  exports: [MarketingService, MarketingPrototypeService],
+  imports: [PrismaModule],
+  providers: [MarketingPrototypeService],
+  controllers: [MarketingPrototypeController],
+  exports: [MarketingPrototypeService],
 })
 export class MarketingModule {}
