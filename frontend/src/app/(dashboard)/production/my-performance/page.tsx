@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { KpiCard } from "@/components/dna/KpiCard";
-import { SectionLabel } from "@/components/dna/SectionLabel";
+import { TableWrapper } from "@/components/dna/TableWrapper";
+import { PageSection } from "@/components/dna/PageSection";
 import { Factory, TrendingUp, AlertTriangle, ClipboardCheck, Clock, Gauge } from "lucide-react";
 
 export default function ProductionMyPerformancePage() {
@@ -41,7 +42,7 @@ export default function ProductionMyPerformancePage() {
           <KpiCard label="Quality" value={String(completedWO || 0)} targetPct={50} icon={<Gauge />} />
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-3xl p-8">
+        <TableWrapper>
           <SectionLabel>My Work Orders</SectionLabel>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left">
@@ -72,40 +73,42 @@ export default function ProductionMyPerformancePage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </TableWrapper>
 
         <div className="grid grid-cols-2 gap-8">
-          <div className="bg-white border border-slate-200 rounded-3xl p-8">
-            <SectionLabel>Activity Summary</SectionLabel>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-[11px] font-bold text-slate-600">Active WOs</span>
-                <span className="text-[11px] font-black text-blue-600 tabular">{activeWO}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-[11px] font-bold text-slate-600">Pending Audits</span>
-                <span className="text-[11px] font-black text-amber-600 tabular">{stats?.pendingAudits || 0}</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-[11px] font-bold text-slate-600">Completed</span>
-                <span className="text-[11px] font-black text-emerald-600 tabular">{completedWO}</span>
+          <PageSection title="Activity Summary">
+            <div className="bg-white border border-slate-200 rounded-3xl p-8">
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-600">Active WOs</span>
+                  <span className="text-[11px] font-black text-blue-600 tabular">{activeWO}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-600">Pending Audits</span>
+                  <span className="text-[11px] font-black text-amber-600 tabular">{stats?.pendingAudits || 0}</span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-[11px] font-bold text-slate-600">Completed</span>
+                  <span className="text-[11px] font-black text-emerald-600 tabular">{completedWO}</span>
+                </div>
               </div>
             </div>
-          </div>
+          </PageSection>
 
-          <div className="bg-white border border-slate-200 rounded-3xl p-8">
-            <SectionLabel>Tips</SectionLabel>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-[#EFF6FF] border border-[#DBEAFE] rounded-[16px] text-[10px] font-bold text-[#1E40AF]">
-                <TrendingUp className="w-4 h-4 flex-shrink-0" />
-                Target output: 100% of planned quantity per WO
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-[#FEF9C3] border border-[#FEF08A] rounded-[16px] text-[10px] font-bold text-[#854D0E]">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                Report breakdowns immediately to minimize downtime
+          <PageSection title="Tips">
+            <div className="bg-white border border-slate-200 rounded-3xl p-8">
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-[#EFF6FF] border border-[#DBEAFE] rounded-[16px] text-[10px] font-bold text-[#1E40AF]">
+                  <TrendingUp className="w-4 h-4 flex-shrink-0" />
+                  Target output: 100% of planned quantity per WO
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-[#FEF9C3] border border-[#FEF08A] rounded-[16px] text-[10px] font-bold text-[#854D0E]">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  Report breakdowns immediately to minimize downtime
+                </div>
               </div>
             </div>
-          </div>
+          </PageSection>
         </div>
       </div>
     </DashboardShell>
