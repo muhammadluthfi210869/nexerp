@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone, CalendarDays, BarChart3 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -43,11 +44,12 @@ type TaskRow = {
   pic: string;
 };
 
-export default function MarketingProfilePage({ params }: { params: { id: string } }) {
+export default function MarketingProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { data: prototype } = useMarketingPrototypeBundle();
   const profiles = (prototype?.profiles ?? marketingProfiles) as ProfileRow[];
   const tasksSource = (prototype?.tasks ?? marketingTasks) as TaskRow[];
-  const profile = profiles.find((item: ProfileRow) => item.id === params.id);
+  const profile = profiles.find((item: ProfileRow) => item.id === id);
   if (!profile) {
     return (
       <DashboardShell
