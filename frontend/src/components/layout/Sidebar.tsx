@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
   ChevronDown,
@@ -79,9 +79,9 @@ const MODULE_STRUCTURE: NavGroup[] = [
     roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
       { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
-      { name: "Campaign Input", href: "/marketing/input", type: "input" },
+      { name: "Social Media Tracker", href: "/marketing/social-tracker", type: "action" },
+      { name: "Omni CRM", href: "/marketing/omni-crm", type: "action" },
       { name: "Management Task", href: "/marketing/management-task", type: "action" },
-      { name: "Lead Logs", href: "/marketing/logs", type: "history" },
     ]
   },
   {
@@ -93,66 +93,6 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
       { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
       { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
-    ]
-  },
-  {
-    label: "FINANCE",
-    icon: Landmark,
-    roles: ["SUPER_ADMIN", "FINANCE", "DIRECTOR"],
-    items: [
-      { name: "Pusat Komando", href: "/finance/dashboard", type: "dashboard" },
-      { name: "Kas & Bank", href: "/finance/kas", type: "input" },
-      { name: "Jurnal & COA", href: "/finance/jurnal", type: "history" },
-      { name: "Uang Muka (DP)", href: "/finance/dp", type: "input" },
-      { name: "Pembayaran", href: "/finance/bayar", type: "input" },
-      { name: "Piutang & Hutang", href: "/finance/piutang", type: "action", badge: "3" },
-      { name: "Fund & Approval", href: "/finance/fund", type: "action" },
-      { name: "Laporan", href: "/finance/reports", type: "history" },
-    ]
-  },
-  {
-    label: "LEGALITAS / APJ",
-    icon: Scale,
-    roles: ["SUPER_ADMIN", "COMPLIANCE", "DIRECTOR"],
-    items: [
-      { name: "Watchdog Hub", href: "/legality/dashboard", type: "dashboard" },
-      { name: "Regulatory Pipeline", href: "/legality/pipeline", type: "action" },
-      { name: "Compliance Inbox", href: "/legality/inbox", type: "input" },
-    ]
-  },
-  {
-    label: "RESEARCH & DEV",
-    icon: Beaker,
-    roles: ["SUPER_ADMIN", "RND", "DIRECTOR"],
-    items: [
-      { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
-      { name: "Formula Repository", href: "/rnd/repository", type: "history" },
-      { name: "Sample Inbox", href: "/rnd/inbox", type: "input", badge: "New" },
-      { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
-    ]
-  },
-  {
-    label: "SUPPLY CHAIN",
-    icon: Truck,
-    roles: ["SUPER_ADMIN", "SCM", "PURCHASING", "DIRECTOR"],
-    items: [
-      { name: "Dashboard", href: "/scm/dashboard", type: "dashboard" },
-      { name: "Pembelian", href: "/scm/pembelian", type: "action", badge: "5", badgeVariant: "warning" },
-      { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", type: "action" },
-      { name: "Barang", href: "/master/goods", type: "input" },
-      { name: "Supplier", href: "/master/suppliers", type: "input" },
-    ]
-  },
-  {
-    label: "PRODUCTION",
-    icon: Factory,
-    roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
-    items: [
-      { name: "Dashboard", href: "/production", type: "dashboard" },
-      { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
-      { name: "Operasional", href: "/production/operations", type: "dashboard" },
-      { name: "Pipeline", href: "/production/operations?tab=pipeline", type: "history" },
-      { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
     ]
   },
   {
@@ -225,6 +165,18 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "System", href: "/automation", type: "action" },
       { name: "Legality", href: "/automation", type: "action" },
     ]
+  },
+  {
+    label: "DIRECTOR CRM",
+    icon: Briefcase,
+    roles: ["DIRECTOR"],
+    items: [
+      { name: "Buku Tamu",       href: "/bussdev/guest-book",         type: "bussdev_sample" },
+      { name: "Client Sample",   href: "/bussdev/sample-tracking",    type: "bussdev_sample" },
+      { name: "Client Produksi", href: "/bussdev/sales-orders",       type: "bussdev_prod" },
+      { name: "Client RO",       href: "/bussdev/clients/repeat",     type: "bussdev_ro" },
+      { name: "Lost",            href: "/bussdev/lost",               type: "bussdev_lost" },
+    ]
   }
 ];
 
@@ -244,6 +196,10 @@ const TIER_STRUCTURE = [
   {
     tier: "AUTOMATION ENGINE",
     groups: ["AUTOMATION ENGINE"]
+  },
+  {
+    tier: "DIRECTOR CRM",
+    groups: ["DIRECTOR CRM"]
   }
 ];
 
@@ -262,6 +218,7 @@ const getIconByType = (type: string) => {
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -282,6 +239,12 @@ export function Sidebar() {
 
   const isExecutive = user?.roles?.includes("DIRECTOR");
   const isRevitaMarketingOnly = user?.email?.toLowerCase?.() === "revita@nexerp.id";
+  const isNavActive = (href: string) => {
+    const [targetPath, targetQuery] = href.split("?");
+    if (targetPath !== pathname) return false;
+    if (!targetQuery) return !searchParams.toString();
+    return new URLSearchParams(targetQuery).toString() === searchParams.toString();
+  };
 
   const toggleGroup = (label: string) => {
     setOpenGroups(prev =>
@@ -325,8 +288,8 @@ export function Sidebar() {
       {/* Navigation Space */}
       <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
         {TIER_STRUCTURE.map((tier) => {
-          const tierGroups = MODULE_STRUCTURE.filter(group => 
-            tier.groups.includes(group.label) && 
+          const tierGroups = MODULE_STRUCTURE.filter(group =>
+            tier.groups.includes(group.label) &&
             (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
             (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
           );
@@ -347,6 +310,50 @@ export function Sidebar() {
                 {tierGroups.map((group) => {
                   const dashItems = group.items.filter(i => i.type === "dashboard");
                   const isGroupActive = group.items.some(i => i.href === pathname);
+
+                  // --- EXECUTIVE MODE for DIRECTOR CRM: render all items, not only dashboards ---
+                  if (isExecutive && group.label === "DIRECTOR CRM") {
+                    return (
+                      <div key={group.label} className="space-y-1">
+                        <div className="flex items-center gap-3 px-3 mb-2">
+                          <div className="h-[1px] flex-1 bg-slate-100"></div>
+                          <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase whitespace-nowrap">
+                            CRM
+                          </span>
+                          <div className="h-[1px] flex-1 bg-slate-100"></div>
+                        </div>
+                        {group.items.map((item) => {
+                          const isItemActive = pathname === item.href;
+                          return (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              onMouseEnter={() => router.prefetch(item.href)}
+                              className={cn(
+                                "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                isItemActive
+                                  ? "bg-slate-50 text-brand-black font-bold"
+                                  : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Briefcase className={cn(
+                                  "w-3.5 h-3.5 transition-colors",
+                                  isItemActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
+                                )} />
+                                <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                  {item.name}
+                                </span>
+                              </div>
+                              {isItemActive && (
+                                <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
 
                   // --- EXECUTIVE MODE (DIRECTOR role) ---
                   if (isExecutive) {
@@ -471,7 +478,7 @@ export function Sidebar() {
                         {isOpen && (
                           <div className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
                             {group.items.map((item) => {
-                              const isActive = pathname === item.href;
+                              const isActive = isNavActive(item.href);
                               const IconType = getIconByType(item.type);
                               return (
                                 <Link
