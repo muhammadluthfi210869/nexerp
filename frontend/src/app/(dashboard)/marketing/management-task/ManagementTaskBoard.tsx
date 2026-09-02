@@ -1053,8 +1053,8 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   };
 
   return (
-    <DashboardShell title={title} titleAccent="Hub" subtitle={subtitle}>
-      <div data-marketing-page="management-task" className="space-y-6">
+    <>
+      <div data-marketing-page="management-task" className="space-y-6 px-4 py-6 sm:px-6 lg:px-10">
         <div data-marketing-surface="toolbar" className="flex flex-wrap items-end justify-between gap-4 rounded-[28px] border border-slate-200 bg-white/90 px-6 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)] backdrop-blur">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Marketing / Management Task</p>
@@ -1980,7 +1980,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
           </div>
         </div>
       )}
-    </DashboardShell>
+    </>
   );
 }
 

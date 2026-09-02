@@ -48,7 +48,7 @@ export function ConnectionsTab({
             <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">{detail}</p>
             <div className="mt-6 border-t border-[var(--gray-100)] pt-4">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--gray-500)]">Terakhir diperbarui</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--gray-900)]">{formatDate(connection.refreshedAt, true)}</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--gray-900)]">{formatDate(connection.refreshedAt || null, true)}</p>
               <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">{connection.message}</p>
             </div>
           </DashboardCard>

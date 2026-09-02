@@ -113,6 +113,23 @@ export class MarketingController {
     return this.marketingService.getContentAssetLogs();
   }
 
+  @Get('content-assets')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.MARKETING,
+    UserRole.DIGIMAR,
+    UserRole.COMMERCIAL,
+  )
+  listContentAssets(
+    @Query('cursor') cursor?: string,
+    @Query('take') take?: string,
+  ) {
+    return this.marketingService.listContentAssets({
+      take: take ? Math.min(Math.max(parseInt(take, 10) || 20, 1), 100) : 20,
+      cursor,
+    });
+  }
+
   @Get('analytics')
   @Roles(
     UserRole.SUPER_ADMIN,

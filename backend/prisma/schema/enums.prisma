@@ -44,6 +44,14 @@ enum LeadSource {
   OFFLINE
 }
 
+enum LeadStatus {
+  PENDING
+  WA_CONTACTED
+  QUALIFIED
+  DISQUALIFIED
+  CONVERTED
+}
+
 enum WorkflowStatus {
   NEW_LEAD
   CONTACTED

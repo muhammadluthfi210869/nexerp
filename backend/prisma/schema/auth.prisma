@@ -11,6 +11,7 @@ model User {
   deletedAt           DateTime?
   stateTransitionLogs StateTransitionLog[]        @relation("StateChanger")
   bussdevProfile      BussdevStaff?
+  assignedLeads       LeadCapture[]               @relation("LeadAssignee")
   verifiedAds         DailyAdsMetric[]            @relation("AdsVerifier")
   lockedFormulas      Formula[]                   @relation("FormulaLockedBy")
   approvedFunds       FundRequest[]               @relation("FundApprover")

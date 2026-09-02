@@ -287,6 +287,37 @@
         ]
       }
     },
+    "/marketing/content-assets": {
+      "get": {
+        "operationId": "MarketingController_listContentAssets",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "take",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Marketing"
+        ]
+      }
+    },
     "/marketing/analytics": {
       "get": {
         "operationId": "MarketingController_getAnalytics",
@@ -642,6 +673,16 @@
       "post": {
         "operationId": "MarketingPrototypeController_createProject",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -665,6 +706,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -712,6 +763,16 @@
       "post": {
         "operationId": "MarketingPrototypeController_createTask",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -735,6 +796,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -779,6 +850,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -802,8 +883,103 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskCommentDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks/{id}/attachments": {
+      "post": {
+        "operationId": "MarketingPrototypeController_addAttachment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks/{id}/attachments/{attachmentId}": {
+      "delete": {
+        "operationId": "MarketingPrototypeController_deleteAttachment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/tasks/{id}/attachments/{attachmentId}/content": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getAttachmentContent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -880,6 +1056,46 @@
         ]
       }
     },
+    "/marketing/prototype/ui-theme": {
+      "get": {
+        "operationId": "MarketingPrototypeController_getUiTheme",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      },
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateUiTheme",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
+    "/marketing/prototype/ui-theme/default": {
+      "patch": {
+        "operationId": "MarketingPrototypeController_updateUiThemeDefault",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPrototype"
+        ]
+      }
+    },
     "/marketing/prototype/profile/{id}": {
       "get": {
         "operationId": "MarketingPrototypeController_getProfile",
@@ -903,1313 +1119,9 @@
         ]
       }
     },
-    "/finance/cash/disburse": {
-      "post": {
-        "operationId": "FinanceController_disburseCash",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CashDisburseDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Kas Keluar — unified cash disbursement",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/cash/receive": {
-      "post": {
-        "operationId": "FinanceController_receiveCash",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CashReceiveDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Kas Masuk — unified cash receipt",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/dashboard": {
+    "/marketing/omni-crm/state": {
       "get": {
-        "operationId": "FinanceController_getDashboard",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Return metrics for dashboard."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get finance dashboard metrics",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/journal": {
-      "get": {
-        "operationId": "FinanceController_getJournalAlias",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/verify-payment": {
-      "post": {
-        "operationId": "FinanceController_verifyPaymentFromSales",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/bills": {
-      "post": {
-        "operationId": "FinanceController_createBill",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      },
-      "get": {
-        "operationId": "FinanceController_getBills",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-requests": {
-      "get": {
-        "operationId": "FinanceController_getAllFundRequests",
-        "parameters": [
-          {
-            "name": "mine",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/project-budgeting": {
-      "get": {
-        "operationId": "FinanceController_getProjectBudgeting",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/accounts": {
-      "get": {
-        "operationId": "FinanceController_getAccounts",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      },
-      "post": {
-        "operationId": "FinanceController_createAccount",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new COA account",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/accounts/seed": {
-      "post": {
-        "operationId": "FinanceController_seedAccounts",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/journals": {
-      "get": {
-        "operationId": "FinanceController_getLedger",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all journal entries",
-        "tags": [
-          "finance"
-        ]
-      },
-      "post": {
-        "operationId": "FinanceController_createEntry",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateJournalDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new manual journal entry",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/ledger": {
-      "get": {
-        "operationId": "FinanceController_getLedgerAlias",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/ledger/recent": {
-      "get": {
-        "operationId": "FinanceController_getRecentLedger",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/journals/{id}/reverse": {
-      "post": {
-        "operationId": "FinanceController_reverseEntry",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/invoices": {
-      "get": {
-        "operationId": "FinanceController_getInvoices",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/dashboard/advanced": {
-      "get": {
-        "operationId": "FinanceController_getAdvancedStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/deliveries": {
-      "get": {
-        "operationId": "FinanceController_getDeliveries",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/invoice/generate/{deliveryOrderId}": {
-      "post": {
-        "operationId": "FinanceController_generateInvoice",
-        "parameters": [
-          {
-            "name": "deliveryOrderId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/invoices/final": {
-      "get": {
-        "operationId": "FinanceController_getFinalInvoices",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/invoices/final/active": {
-      "get": {
-        "operationId": "FinanceController_getActiveInvoices",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/invoice/validate/{invoiceId}": {
-      "post": {
-        "operationId": "FinanceController_validateInvoice",
-        "parameters": [
-          {
-            "name": "invoiceId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/sales-orders": {
-      "get": {
-        "operationId": "FinanceController_getSalesOrders",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/validate-payment/{activityId}": {
-      "patch": {
-        "operationId": "FinanceController_validateBussdevPayment",
-        "parameters": [
-          {
-            "name": "activityId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-request": {
-      "post": {
-        "operationId": "FinanceController_createFundRequest",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateFundRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-requests/me": {
-      "get": {
-        "operationId": "FinanceController_getMyFundRequests",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-request/{id}/approve": {
-      "patch": {
-        "operationId": "FinanceController_approveFundRequest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveFundRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-request/{id}/disburse": {
-      "post": {
-        "operationId": "FinanceController_disburseFundRequest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DisburseFundRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-request/{id}/director-approve": {
-      "post": {
-        "operationId": "FinanceController_directorApproveFundRequest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DirectorApproveFundRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/fund-request/{id}/reject": {
-      "patch": {
-        "operationId": "FinanceController_rejectFundRequest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RejectFundRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/ar-hub/pending": {
-      "get": {
-        "operationId": "FinanceController_getArHubPending",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/ar-hub/verify": {
-      "post": {
-        "operationId": "FinanceController_verifyArHubPayment",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyArPaymentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/trial-balance": {
-      "get": {
-        "operationId": "FinanceController_getTrialBalance",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/trial-balance/detailed": {
-      "get": {
-        "operationId": "FinanceController_getDetailedTrialBalance",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/balance-sheet": {
-      "get": {
-        "operationId": "FinanceController_getBalanceSheet",
-        "parameters": [
-          {
-            "name": "date",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/profit-loss": {
-      "get": {
-        "operationId": "FinanceController_getProfitLoss",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/cash-flow": {
-      "get": {
-        "operationId": "FinanceController_getCashFlow",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/reports/general-ledger/{accountId}": {
-      "get": {
-        "operationId": "FinanceController_getGeneralLedger",
-        "parameters": [
-          {
-            "name": "accountId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "startDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/taxes": {
-      "get": {
-        "operationId": "FinanceController_getTaxes",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/currencies": {
-      "get": {
-        "operationId": "FinanceController_getCurrencies",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/accounts/{id}": {
-      "patch": {
-        "operationId": "FinanceController_updateAccount",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a COA account",
-        "tags": [
-          "finance"
-        ]
-      },
-      "delete": {
-        "operationId": "FinanceController_softDeleteAccount",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Soft-delete a COA account (set isActive=false)",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/finance/payment/verify": {
-      "post": {
-        "operationId": "FinanceController_verifyPaymentAlias",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Alias for POST /finance/verify-payment",
-        "tags": [
-          "finance"
-        ]
-      }
-    },
-    "/scm/purchase-orders": {
-      "post": {
-        "operationId": "PurchaseOrdersController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePurchaseOrderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "PO created successfully"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new Purchase Order",
-        "tags": [
-          "scm"
-        ]
-      },
-      "get": {
-        "operationId": "PurchaseOrdersController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all Purchase Orders",
-        "tags": [
-          "scm"
-        ]
-      }
-    },
-    "/scm/purchase-orders/{id}": {
-      "get": {
-        "operationId": "PurchaseOrdersController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get a single Purchase Order by ID",
-        "tags": [
-          "scm"
-        ]
-      }
-    },
-    "/scm/purchase-orders/{id}/status": {
-      "patch": {
-        "operationId": "PurchaseOrdersController_updateStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update PO status (approve/reject)",
-        "tags": [
-          "scm"
-        ]
-      }
-    },
-    "/scm/purchase-orders/{id}/down-payment": {
-      "post": {
-        "operationId": "PurchaseOrdersController_createDP",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a Down Payment for a PO",
-        "tags": [
-          "scm"
-        ]
-      }
-    },
-    "/scm/inbounds": {
-      "post": {
-        "operationId": "InboundsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInboundDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Inbounds"
-        ]
-      },
-      "get": {
-        "operationId": "InboundsController_findAll",
+        "operationId": "OmniCrmStateController_getState",
         "parameters": [],
         "responses": {
           "200": {
@@ -2217,149 +1129,76 @@
           }
         },
         "tags": [
-          "Inbounds"
-        ]
-      }
-    },
-    "/scm/inbounds/{id}/status": {
-      "patch": {
-        "operationId": "InboundsController_updateStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateInboundStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Inbounds"
-        ]
-      }
-    },
-    "/scm/inbounds/{id}/qc-validate": {
-      "post": {
-        "operationId": "InboundsController_qcValidate",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Inbounds"
-        ]
-      }
-    },
-    "/scm/inbounds/{id}/reject": {
-      "post": {
-        "operationId": "InboundsController_reject",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Inbounds"
-        ]
-      }
-    },
-    "/scm/materials": {
-      "get": {
-        "operationId": "MaterialsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Materials"
-        ]
-      },
-      "post": {
-        "operationId": "MaterialsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateMaterialDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Materials"
-        ]
-      }
-    },
-    "/scm/materials/{id}": {
-      "get": {
-        "operationId": "MaterialsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Materials"
+          "OmniCrmState"
         ]
       },
       "put": {
-        "operationId": "MaterialsController_update",
+        "operationId": "OmniCrmStateController_putState",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OmniCrmState"
+        ]
+      }
+    },
+    "/marketing/tasks": {
+      "get": {
+        "operationId": "MarketingTasksController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigneeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingTasks"
+        ]
+      },
+      "post": {
+        "operationId": "MarketingTasksController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingTasks"
+        ]
+      }
+    },
+    "/marketing/tasks/{id}": {
+      "patch": {
+        "operationId": "MarketingTasksController_update",
         "parameters": [
           {
             "name": "id",
@@ -2370,27 +1209,17 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateMaterialDto"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": ""
           }
         },
         "tags": [
-          "Materials"
+          "MarketingTasks"
         ]
       },
       "delete": {
-        "operationId": "MaterialsController_remove",
+        "operationId": "MarketingTasksController_delete",
         "parameters": [
           {
             "name": "id",
@@ -2407,173 +1236,20 @@
           }
         },
         "tags": [
-          "Materials"
+          "MarketingTasks"
         ]
       }
     },
-    "/scm/vendors": {
-      "get": {
-        "operationId": "ScmController_getVendors",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/dashboard": {
-      "get": {
-        "operationId": "ScmController_getDashboardStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/work-orders/active": {
-      "get": {
-        "operationId": "ScmController_getActiveWorkOrders",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/work-orders/{id}/readiness": {
-      "get": {
-        "operationId": "ScmController_checkMaterialReadiness",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/purchase-orders/initialize": {
+    "/guests": {
       "post": {
-        "operationId": "ScmController_initializePurchase",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/purchase-requests/{id}/approve": {
-      "post": {
-        "operationId": "ScmController_approvePurchaseRequest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/purchase-requests/{id}/reject": {
-      "post": {
-        "operationId": "ScmController_rejectPurchaseRequest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/purchase-requests": {
-      "get": {
-        "operationId": "ScmController_getPurchaseRequests",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/purchase-request": {
-      "post": {
-        "operationId": "ScmController_createPurchaseRequest",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Scm"
-        ]
-      }
-    },
-    "/scm/purchase-returns": {
-      "post": {
-        "operationId": "PurchaseReturnsController_create",
+        "operationId": "GuestsController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePurchaseReturnDto"
+                "$ref": "#/components/schemas/CreateGuestDto"
               }
             }
           }
@@ -2584,11 +1260,11 @@
           }
         },
         "tags": [
-          "PurchaseReturns"
+          "Guests"
         ]
       },
       "get": {
-        "operationId": "PurchaseReturnsController_findAll",
+        "operationId": "GuestsController_findAll",
         "parameters": [],
         "responses": {
           "200": {
@@ -2596,13 +1272,13 @@
           }
         },
         "tags": [
-          "PurchaseReturns"
+          "Guests"
         ]
       }
     },
-    "/scm/purchase-returns/{id}": {
+    "/guests/{id}": {
       "get": {
-        "operationId": "PurchaseReturnsController_findOne",
+        "operationId": "GuestsController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -2619,13 +1295,194 @@
           }
         },
         "tags": [
-          "PurchaseReturns"
+          "Guests"
         ]
       }
     },
-    "/scm/purchase-returns/{id}/status": {
+    "/rnd/npf": {
+      "post": {
+        "operationId": "NpfController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNPFDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Npf"
+        ]
+      },
+      "get": {
+        "operationId": "NpfController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Npf"
+        ]
+      }
+    },
+    "/rnd/npf/{id}": {
+      "get": {
+        "operationId": "NpfController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Npf"
+        ]
+      }
+    },
+    "/rnd/formulations": {
+      "post": {
+        "operationId": "SamplesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSampleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Samples"
+        ]
+      },
+      "get": {
+        "operationId": "SamplesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Samples"
+        ]
+      }
+    },
+    "/rnd/formulations/{id}": {
+      "get": {
+        "operationId": "SamplesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Samples"
+        ]
+      }
+    },
+    "/rnd/formulas": {
+      "post": {
+        "operationId": "FormulasController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFormulaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Formulas"
+        ]
+      },
+      "get": {
+        "operationId": "RndController_getFormulas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all formulas",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/formulas/{id}": {
+      "get": {
+        "operationId": "FormulasController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Formulas"
+        ]
+      },
       "patch": {
-        "operationId": "PurchaseReturnsController_updateStatus",
+        "operationId": "FormulasController_update",
         "parameters": [
           {
             "name": "id",
@@ -2641,7 +1498,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdatePurchaseReturnStatusDto"
+                "$ref": "#/components/schemas/UpdateFormulaV4Dto"
               }
             }
           }
@@ -2652,49 +1509,82 @@
           }
         },
         "tags": [
-          "PurchaseReturns"
+          "Formulas"
         ]
       }
     },
-    "/scm/purchase-invoices": {
+    "/rnd/formulas/{id}/revision": {
       "post": {
-        "operationId": "PurchaseInvoicesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePurchaseInvoiceDto"
-              }
+        "operationId": "FormulasController_createRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "201": {
             "description": ""
           }
         },
         "tags": [
-          "PurchaseInvoices"
+          "Formulas"
         ]
-      },
-      "get": {
-        "operationId": "PurchaseInvoicesController_findAll",
-        "parameters": [],
+      }
+    },
+    "/rnd/formulas/{id}/request-approval": {
+      "post": {
+        "operationId": "FormulasController_requestApproval",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
-          "200": {
+          "201": {
             "description": ""
           }
         },
         "tags": [
-          "PurchaseInvoices"
+          "Formulas"
         ]
       }
     },
-    "/scm/purchase-invoices/{id}": {
-      "get": {
-        "operationId": "PurchaseInvoicesController_findOne",
+    "/rnd/formulas/{id}/approve": {
+      "post": {
+        "operationId": "FormulasController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Formulas"
+        ]
+      }
+    },
+    "/rnd/formulas/{id}/lock-production": {
+      "patch": {
+        "operationId": "FormulasController_lockProduction",
         "parameters": [
           {
             "name": "id",
@@ -2711,20 +1601,87 @@
           }
         },
         "tags": [
-          "PurchaseInvoices"
+          "Formulas"
         ]
       }
     },
-    "/scm/purchase-payments": {
+    "/rnd/formulas/{id}/lab-tests": {
       "post": {
-        "operationId": "PurchasePaymentsController_pay",
+        "operationId": "FormulasController_recordLabTest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Formulas"
+        ]
+      },
+      "get": {
+        "operationId": "FormulasController_getLabTests",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Formulas"
+        ]
+      }
+    },
+    "/rnd/formulas/{id}/inci": {
+      "get": {
+        "operationId": "FormulasController_getInci",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Formulas"
+        ]
+      }
+    },
+    "/rnd/samples": {
+      "post": {
+        "operationId": "RndController_createSample",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePurchasePaymentDto"
+                "$ref": "#/components/schemas/CreateSampleRequestDto"
               }
             }
           }
@@ -2734,20 +1691,488 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new sample request",
         "tags": [
-          "PurchasePayments"
+          "rnd"
         ]
       },
       "get": {
-        "operationId": "PurchasePaymentsController_findAll",
+        "operationId": "RndController_getSamples",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
-          "PurchasePayments"
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/sample/{id}/advance": {
+      "patch": {
+        "operationId": "RndController_advanceSample",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvanceSampleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/sample/{id}/accept": {
+      "post": {
+        "operationId": "RndController_acceptSample",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/dashboard": {
+      "get": {
+        "operationId": "RndController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get R&D dashboard metrics",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/samples/{id}": {
+      "get": {
+        "operationId": "RndController_getSample",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/inbox": {
+      "get": {
+        "operationId": "RndController_getInbox",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/staffs": {
+      "get": {
+        "operationId": "RndController_getStaffs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/sample/{id}/assign": {
+      "patch": {
+        "operationId": "RndController_assignPIC",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/samples/{id}/versions": {
+      "get": {
+        "operationId": "RndController_getVersions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/samples/{id}/feedback": {
+      "get": {
+        "operationId": "RndController_getFeedback",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revisions": {
+      "get": {
+        "operationId": "RndController_getRevisions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get active revisions (NOT_STARTED + IN_PROGRESS)",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revisions/history": {
+      "get": {
+        "operationId": "RndController_getRevisionHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get completed revision history",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revision/{id}/start": {
+      "post": {
+        "operationId": "RndController_startRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a revision (set IN_PROGRESS)",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/revision/{id}/complete": {
+      "post": {
+        "operationId": "RndController_completeRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Complete a revision (set DONE)",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/lab-test-results": {
+      "get": {
+        "operationId": "RndController_getAllLabTestResults",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all lab test results (supports ?type=stability)",
+        "tags": [
+          "rnd"
+        ]
+      },
+      "post": {
+        "operationId": "RndController_createLabTestResult",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/lab-test-results/{formulaId}": {
+      "get": {
+        "operationId": "RndController_getLabTestResults",
+        "parameters": [
+          {
+            "name": "formulaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/qc-parameters/{formulaId}": {
+      "post": {
+        "operationId": "RndController_setQcParameters",
+        "parameters": [
+          {
+            "name": "formulaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set QC target parameters for a formula",
+        "tags": [
+          "rnd"
+        ]
+      }
+    },
+    "/rnd/pipeline": {
+      "get": {
+        "operationId": "RndController_getPipeline",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get R&D pipeline (all samples with phases)",
+        "tags": [
+          "rnd"
         ]
       }
     },
@@ -4161,92 +3586,151 @@
         ]
       }
     },
-    "/creative/board": {
-      "get": {
-        "operationId": "CreativeController_getBoard",
-        "parameters": [
-          {
-            "name": "page",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Creative"
-        ]
-      }
-    },
-    "/creative/tasks": {
-      "get": {
-        "operationId": "CreativeController_getAllTasks",
-        "parameters": [
-          {
-            "name": "page",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Creative"
-        ]
-      }
-    },
-    "/creative/available-sales-orders": {
-      "get": {
-        "operationId": "CreativeController_getAvailableSalesOrders",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Creative"
-        ]
-      }
-    },
-    "/creative/task": {
+    "/scm/purchase-orders": {
       "post": {
-        "operationId": "CreativeController_createTask",
+        "operationId": "PurchaseOrdersController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskDto"
+                "$ref": "#/components/schemas/CreatePurchaseOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "PO created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new Purchase Order",
+        "tags": [
+          "scm"
+        ]
+      },
+      "get": {
+        "operationId": "PurchaseOrdersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all Purchase Orders",
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/scm/purchase-orders/{id}": {
+      "get": {
+        "operationId": "PurchaseOrdersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single Purchase Order by ID",
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/scm/purchase-orders/{id}/status": {
+      "patch": {
+        "operationId": "PurchaseOrdersController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update PO status (approve/reject)",
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/scm/purchase-orders/{id}/down-payment": {
+      "post": {
+        "operationId": "PurchaseOrdersController_createDP",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a Down Payment for a PO",
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/scm/inbounds": {
+      "post": {
+        "operationId": "InboundsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInboundDto"
               }
             }
           }
@@ -4257,13 +3741,25 @@
           }
         },
         "tags": [
-          "Creative"
+          "Inbounds"
+        ]
+      },
+      "get": {
+        "operationId": "InboundsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Inbounds"
         ]
       }
     },
-    "/creative/task/{id}/version": {
+    "/scm/inbounds/{id}/status": {
       "patch": {
-        "operationId": "CreativeController_uploadVersion",
+        "operationId": "InboundsController_updateStatus",
         "parameters": [
           {
             "name": "id",
@@ -4279,7 +3775,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UploadVersionDto"
+                "$ref": "#/components/schemas/UpdateInboundStatusDto"
               }
             }
           }
@@ -4290,13 +3786,95 @@
           }
         },
         "tags": [
-          "Creative"
+          "Inbounds"
         ]
       }
     },
-    "/creative/task/{id}/submit": {
-      "patch": {
-        "operationId": "CreativeController_submitToApj",
+    "/scm/inbounds/{id}/qc-validate": {
+      "post": {
+        "operationId": "InboundsController_qcValidate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Inbounds"
+        ]
+      }
+    },
+    "/scm/inbounds/{id}/reject": {
+      "post": {
+        "operationId": "InboundsController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Inbounds"
+        ]
+      }
+    },
+    "/scm/materials": {
+      "get": {
+        "operationId": "MaterialsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Materials"
+        ]
+      },
+      "post": {
+        "operationId": "MaterialsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Materials"
+        ]
+      }
+    },
+    "/scm/materials/{id}": {
+      "get": {
+        "operationId": "MaterialsController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -4313,13 +3891,11 @@
           }
         },
         "tags": [
-          "Creative"
+          "Materials"
         ]
-      }
-    },
-    "/creative/task/{id}/apj-review": {
-      "patch": {
-        "operationId": "CreativeController_apjReview",
+      },
+      "put": {
+        "operationId": "MaterialsController_update",
         "parameters": [
           {
             "name": "id",
@@ -4335,7 +3911,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApjReviewDto"
+                "$ref": "#/components/schemas/UpdateMaterialDto"
               }
             }
           }
@@ -4346,13 +3922,246 @@
           }
         },
         "tags": [
-          "Creative"
+          "Materials"
+        ]
+      },
+      "delete": {
+        "operationId": "MaterialsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Materials"
         ]
       }
     },
-    "/creative/task/{id}/client-review": {
+    "/scm/vendors": {
+      "get": {
+        "operationId": "ScmController_getVendors",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/dashboard": {
+      "get": {
+        "operationId": "ScmController_getDashboardStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/work-orders/active": {
+      "get": {
+        "operationId": "ScmController_getActiveWorkOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/work-orders/{id}/readiness": {
+      "get": {
+        "operationId": "ScmController_checkMaterialReadiness",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/purchase-orders/initialize": {
+      "post": {
+        "operationId": "ScmController_initializePurchase",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/purchase-requests/{id}/approve": {
+      "post": {
+        "operationId": "ScmController_approvePurchaseRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/purchase-requests/{id}/reject": {
+      "post": {
+        "operationId": "ScmController_rejectPurchaseRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/purchase-requests": {
+      "get": {
+        "operationId": "ScmController_getPurchaseRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/purchase-request": {
+      "post": {
+        "operationId": "ScmController_createPurchaseRequest",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Scm"
+        ]
+      }
+    },
+    "/scm/purchase-returns": {
+      "post": {
+        "operationId": "PurchaseReturnsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseReturns"
+        ]
+      },
+      "get": {
+        "operationId": "PurchaseReturnsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseReturns"
+        ]
+      }
+    },
+    "/scm/purchase-returns/{id}": {
+      "get": {
+        "operationId": "PurchaseReturnsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseReturns"
+        ]
+      }
+    },
+    "/scm/purchase-returns/{id}/status": {
       "patch": {
-        "operationId": "CreativeController_clientReview",
+        "operationId": "PurchaseReturnsController_updateStatus",
         "parameters": [
           {
             "name": "id",
@@ -4368,7 +4177,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ClientReviewDto"
+                "$ref": "#/components/schemas/UpdatePurchaseReturnStatusDto"
               }
             }
           }
@@ -4379,13 +4188,319 @@
           }
         },
         "tags": [
-          "Creative"
+          "PurchaseReturns"
         ]
       }
     },
-    "/creative/task/{id}/unlock": {
+    "/scm/purchase-invoices": {
+      "post": {
+        "operationId": "PurchaseInvoicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseInvoices"
+        ]
+      },
+      "get": {
+        "operationId": "PurchaseInvoicesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseInvoices"
+        ]
+      }
+    },
+    "/scm/purchase-invoices/{id}": {
+      "get": {
+        "operationId": "PurchaseInvoicesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchaseInvoices"
+        ]
+      }
+    },
+    "/scm/purchase-payments": {
+      "post": {
+        "operationId": "PurchasePaymentsController_pay",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchasePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchasePayments"
+        ]
+      },
+      "get": {
+        "operationId": "PurchasePaymentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PurchasePayments"
+        ]
+      }
+    },
+    "/digimar/summary": {
+      "get": {
+        "operationId": "DigimarController_getSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/weekly": {
+      "get": {
+        "operationId": "DigimarController_getWeekly",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/paid-ads": {
+      "get": {
+        "operationId": "DigimarController_getPaidAds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/content": {
+      "get": {
+        "operationId": "DigimarController_getContent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/months": {
+      "get": {
+        "operationId": "DigimarController_getMonths",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/all": {
+      "get": {
+        "operationId": "DigimarController_getAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/sheet-names": {
+      "get": {
+        "operationId": "DigimarController_getSheetNames",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/digimar/cache/invalidate": {
+      "get": {
+        "operationId": "DigimarController_invalidateCache",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/lead-capture/track": {
+      "post": {
+        "operationId": "LeadCaptureController_track",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/whatsapp/{trackingCode}": {
+      "put": {
+        "operationId": "LeadCaptureController_updateFromWhatsApp",
+        "parameters": [
+          {
+            "name": "trackingCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsAppUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture": {
+      "get": {
+        "operationId": "LeadCaptureController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/stats": {
+      "get": {
+        "operationId": "LeadCaptureController_stats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/dashboard": {
+      "get": {
+        "operationId": "LeadCaptureController_dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}": {
       "patch": {
-        "operationId": "CreativeController_unlockTask",
+        "operationId": "LeadCaptureController_update",
         "parameters": [
           {
             "name": "id",
@@ -4401,7 +4516,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UnlockTaskDto"
+                "$ref": "#/components/schemas/UpdateLeadDto"
               }
             }
           }
@@ -4412,7 +4527,855 @@
           }
         },
         "tags": [
-          "Creative"
+          "LeadCapture"
+        ]
+      },
+      "get": {
+        "operationId": "LeadCaptureController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      },
+      "delete": {
+        "operationId": "LeadCaptureController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/bulk-update": {
+      "post": {
+        "operationId": "LeadCaptureController_bulkUpdate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-webhook": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoWebhook",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-sync": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoSync",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-status": {
+      "get": {
+        "operationId": "LeadCaptureController_kommoStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-pull": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoPull",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/import-csv": {
+      "post": {
+        "operationId": "LeadCaptureController_importCsv",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/next": {
+      "get": {
+        "operationId": "LeadCaptureController_getNextAgent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/status": {
+      "get": {
+        "operationId": "LeadCaptureController_getRoundRobinStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/agents": {
+      "post": {
+        "operationId": "LeadCaptureController_upsertAgent",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/agents/{id}": {
+      "delete": {
+        "operationId": "LeadCaptureController_deleteAgent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/ai-extract": {
+      "post": {
+        "operationId": "LeadCaptureController_aiExtract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/ai-stage-confirm": {
+      "post": {
+        "operationId": "LeadCaptureController_confirmAiStage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/attributes": {
+      "get": {
+        "operationId": "LeadCaptureController_getAttributes",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/attributes/{attrId}": {
+      "patch": {
+        "operationId": "LeadCaptureController_confirmAttr",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attrId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAttributeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/wa-webhook": {
+      "get": {
+        "operationId": "WaWebhookController_verify",
+        "parameters": [
+          {
+            "name": "hub.mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaWebhook"
+        ]
+      },
+      "post": {
+        "operationId": "WaWebhookController_incoming",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaWebhook"
+        ]
+      }
+    },
+    "/wa-gateway/webhook": {
+      "post": {
+        "operationId": "WaGatewayController_gateway",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaGateway"
+        ]
+      }
+    },
+    "/crm/lost-deals": {
+      "post": {
+        "operationId": "LostDealsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLostDealDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LostDeals"
+        ]
+      },
+      "get": {
+        "operationId": "LostDealsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LostDeals"
+        ]
+      }
+    },
+    "/commercial/sales-orders": {
+      "post": {
+        "operationId": "SalesOrdersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSalesOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      },
+      "get": {
+        "operationId": "SalesOrdersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/commercial/sales-orders/{id}": {
+      "patch": {
+        "operationId": "SalesOrdersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSalesOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/commercial/invoices": {
+      "post": {
+        "operationId": "InvoicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Invoices"
+        ]
+      },
+      "get": {
+        "operationId": "InvoicesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/commercial/invoices/{id}": {
+      "get": {
+        "operationId": "InvoicesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/commercial/payments": {
+      "post": {
+        "operationId": "PaymentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      },
+      "get": {
+        "operationId": "PaymentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/commercial/retention/radar": {
+      "get": {
+        "operationId": "RetentionController_getRadar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Retention"
+        ]
+      }
+    },
+    "/production-plans": {
+      "post": {
+        "operationId": "ProductionPlansController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductionPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProductionPlans"
+        ]
+      },
+      "get": {
+        "operationId": "ProductionPlansController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProductionPlans"
+        ]
+      }
+    },
+    "/production-plans/{id}/status": {
+      "patch": {
+        "operationId": "ProductionPlansController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlanStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProductionPlans"
+        ]
+      }
+    },
+    "/production-plans/{id}/issue-materials": {
+      "patch": {
+        "operationId": "ProductionPlansController_issueMaterials",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProductionPlans"
+        ]
+      }
+    },
+    "/production-plans/log-step": {
+      "post": {
+        "operationId": "ProductionPlansController_logStep",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStepLogDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProductionPlans"
+        ]
+      }
+    },
+    "/material-requisitions": {
+      "post": {
+        "operationId": "RequisitionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequisitionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requisitions"
+        ]
+      },
+      "get": {
+        "operationId": "RequisitionsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requisitions"
+        ]
+      }
+    },
+    "/material-requisitions/{id}/issue": {
+      "patch": {
+        "operationId": "RequisitionsController_issue",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRequisitionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requisitions"
+        ]
+      }
+    },
+    "/material-requisitions/aggregated": {
+      "get": {
+        "operationId": "RequisitionsController_getAggregated",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requisitions"
+        ]
+      }
+    },
+    "/production/step-logs": {
+      "post": {
+        "operationId": "StepLogsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStepLogDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "StepLogs"
+        ]
+      },
+      "get": {
+        "operationId": "ProductionController_getStepLogs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
+    "/production/step-logs/wo/{woId}": {
+      "get": {
+        "operationId": "StepLogsController_findByPlan",
+        "parameters": [
+          {
+            "name": "woId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "StepLogs"
         ]
       }
     },
@@ -5042,448 +6005,16 @@
         ]
       }
     },
-    "/guests": {
+    "/finance/cash/disburse": {
       "post": {
-        "operationId": "GuestsController_create",
+        "operationId": "FinanceController_disburseCash",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateGuestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Guests"
-        ]
-      },
-      "get": {
-        "operationId": "GuestsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Guests"
-        ]
-      }
-    },
-    "/guests/{id}": {
-      "get": {
-        "operationId": "GuestsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Guests"
-        ]
-      }
-    },
-    "/rnd/npf": {
-      "post": {
-        "operationId": "NpfController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateNPFDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Npf"
-        ]
-      },
-      "get": {
-        "operationId": "NpfController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Npf"
-        ]
-      }
-    },
-    "/rnd/npf/{id}": {
-      "get": {
-        "operationId": "NpfController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Npf"
-        ]
-      }
-    },
-    "/rnd/formulations": {
-      "post": {
-        "operationId": "SamplesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSampleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Samples"
-        ]
-      },
-      "get": {
-        "operationId": "SamplesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Samples"
-        ]
-      }
-    },
-    "/rnd/formulations/{id}": {
-      "get": {
-        "operationId": "SamplesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Samples"
-        ]
-      }
-    },
-    "/rnd/formulas": {
-      "post": {
-        "operationId": "FormulasController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateFormulaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      },
-      "get": {
-        "operationId": "RndController_getFormulas",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all formulas",
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}": {
-      "get": {
-        "operationId": "FormulasController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      },
-      "patch": {
-        "operationId": "FormulasController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFormulaV4Dto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}/revision": {
-      "post": {
-        "operationId": "FormulasController_createRevision",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}/request-approval": {
-      "post": {
-        "operationId": "FormulasController_requestApproval",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}/approve": {
-      "post": {
-        "operationId": "FormulasController_approve",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}/lock-production": {
-      "patch": {
-        "operationId": "FormulasController_lockProduction",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}/lab-tests": {
-      "post": {
-        "operationId": "FormulasController_recordLabTest",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      },
-      "get": {
-        "operationId": "FormulasController_getLabTests",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/formulas/{id}/inci": {
-      "get": {
-        "operationId": "FormulasController_getInci",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Formulas"
-        ]
-      }
-    },
-    "/rnd/samples": {
-      "post": {
-        "operationId": "RndController_createSample",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSampleRequestDto"
+                "$ref": "#/components/schemas/CashDisburseDto"
               }
             }
           }
@@ -5498,53 +6029,67 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new sample request",
+        "summary": "Kas Keluar — unified cash disbursement",
         "tags": [
-          "rnd"
-        ]
-      },
-      "get": {
-        "operationId": "RndController_getSamples",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/sample/{id}/advance": {
-      "patch": {
-        "operationId": "RndController_advanceSample",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+    "/finance/cash/receive": {
+      "post": {
+        "operationId": "FinanceController_receiveCash",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AdvanceSampleDto"
+                "$ref": "#/components/schemas/CashReceiveDto"
               }
             }
           }
         },
         "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kas Masuk — unified cash receipt",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/dashboard": {
+      "get": {
+        "operationId": "FinanceController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Return metrics for dashboard."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get finance dashboard metrics",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/journal": {
+      "get": {
+        "operationId": "FinanceController_getJournalAlias",
+        "parameters": [],
+        "responses": {
           "200": {
             "description": ""
           }
@@ -5555,23 +6100,14 @@
           }
         ],
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/sample/{id}/accept": {
+    "/finance/verify-payment": {
       "post": {
-        "operationId": "RndController_acceptSample",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "FinanceController_verifyPaymentFromSales",
+        "parameters": [],
         "responses": {
           "201": {
             "description": ""
@@ -5583,233 +6119,14 @@
           }
         ],
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/dashboard": {
-      "get": {
-        "operationId": "RndController_getDashboard",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get R&D dashboard metrics",
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/samples/{id}": {
-      "get": {
-        "operationId": "RndController_getSample",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/inbox": {
-      "get": {
-        "operationId": "RndController_getInbox",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/staffs": {
-      "get": {
-        "operationId": "RndController_getStaffs",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/sample/{id}/assign": {
-      "patch": {
-        "operationId": "RndController_assignPIC",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/samples/{id}/versions": {
-      "get": {
-        "operationId": "RndController_getVersions",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/samples/{id}/feedback": {
-      "get": {
-        "operationId": "RndController_getFeedback",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/revisions": {
-      "get": {
-        "operationId": "RndController_getRevisions",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get active revisions (NOT_STARTED + IN_PROGRESS)",
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/revisions/history": {
-      "get": {
-        "operationId": "RndController_getRevisionHistory",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get completed revision history",
-        "tags": [
-          "rnd"
-        ]
-      }
-    },
-    "/rnd/revision/{id}/start": {
+    "/finance/bills": {
       "post": {
-        "operationId": "RndController_startRevision",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "FinanceController_createBill",
+        "parameters": [],
         "responses": {
           "201": {
             "description": ""
@@ -5820,27 +6137,15 @@
             "bearer": []
           }
         ],
-        "summary": "Start a revision (set IN_PROGRESS)",
         "tags": [
-          "rnd"
+          "finance"
         ]
-      }
-    },
-    "/rnd/revision/{id}/complete": {
-      "post": {
-        "operationId": "RndController_completeRevision",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+      },
+      "get": {
+        "operationId": "FinanceController_getBills",
+        "parameters": [],
         "responses": {
-          "201": {
+          "200": {
             "description": ""
           }
         },
@@ -5849,18 +6154,17 @@
             "bearer": []
           }
         ],
-        "summary": "Complete a revision (set DONE)",
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/lab-test-results": {
+    "/finance/fund-requests": {
       "get": {
-        "operationId": "RndController_getAllLabTestResults",
+        "operationId": "FinanceController_getAllFundRequests",
         "parameters": [
           {
-            "name": "type",
+            "name": "mine",
             "required": true,
             "in": "query",
             "schema": {
@@ -5878,13 +6182,70 @@
             "bearer": []
           }
         ],
-        "summary": "Get all lab test results (supports ?type=stability)",
         "tags": [
-          "rnd"
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/project-budgeting": {
+      "get": {
+        "operationId": "FinanceController_getProjectBudgeting",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/accounts": {
+      "get": {
+        "operationId": "FinanceController_getAccounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
         ]
       },
       "post": {
-        "operationId": "RndController_createLabTestResult",
+        "operationId": "FinanceController_createAccount",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new COA account",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/accounts/seed": {
+      "post": {
+        "operationId": "FinanceController_seedAccounts",
         "parameters": [],
         "responses": {
           "201": {
@@ -5897,16 +6258,300 @@
           }
         ],
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/lab-test-results/{formulaId}": {
+    "/finance/journals": {
       "get": {
-        "operationId": "RndController_getLabTestResults",
+        "operationId": "FinanceController_getLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all journal entries",
+        "tags": [
+          "finance"
+        ]
+      },
+      "post": {
+        "operationId": "FinanceController_createEntry",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJournalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new manual journal entry",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ledger": {
+      "get": {
+        "operationId": "FinanceController_getLedgerAlias",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ledger/recent": {
+      "get": {
+        "operationId": "FinanceController_getRecentLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/journals/{id}/reverse": {
+      "post": {
+        "operationId": "FinanceController_reverseEntry",
         "parameters": [
           {
-            "name": "formulaId",
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/invoices": {
+      "get": {
+        "operationId": "FinanceController_getInvoices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/dashboard/advanced": {
+      "get": {
+        "operationId": "FinanceController_getAdvancedStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/deliveries": {
+      "get": {
+        "operationId": "FinanceController_getDeliveries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/invoice/generate/{deliveryOrderId}": {
+      "post": {
+        "operationId": "FinanceController_generateInvoice",
+        "parameters": [
+          {
+            "name": "deliveryOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/invoices/final": {
+      "get": {
+        "operationId": "FinanceController_getFinalInvoices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/invoices/final/active": {
+      "get": {
+        "operationId": "FinanceController_getActiveInvoices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/invoice/validate/{invoiceId}": {
+      "post": {
+        "operationId": "FinanceController_validateInvoice",
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sales-orders": {
+      "get": {
+        "operationId": "FinanceController_getSalesOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/validate-payment/{activityId}": {
+      "patch": {
+        "operationId": "FinanceController_validateBussdevPayment",
+        "parameters": [
+          {
+            "name": "activityId",
             "required": true,
             "in": "path",
             "schema": {
@@ -5925,23 +6570,24 @@
           }
         ],
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/qc-parameters/{formulaId}": {
+    "/finance/fund-request": {
       "post": {
-        "operationId": "RndController_setQcParameters",
-        "parameters": [
-          {
-            "name": "formulaId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
+        "operationId": "FinanceController_createFundRequest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFundRequestDto"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "201": {
             "description": ""
@@ -5952,15 +6598,14 @@
             "bearer": []
           }
         ],
-        "summary": "Set QC target parameters for a formula",
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/rnd/pipeline": {
+    "/finance/fund-requests/me": {
       "get": {
-        "operationId": "RndController_getPipeline",
+        "operationId": "FinanceController_getMyFundRequests",
         "parameters": [],
         "responses": {
           "200": {
@@ -5972,87 +6617,14 @@
             "bearer": []
           }
         ],
-        "summary": "Get R&D pipeline (all samples with phases)",
         "tags": [
-          "rnd"
+          "finance"
         ]
       }
     },
-    "/crm/lost-deals": {
-      "post": {
-        "operationId": "LostDealsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLostDealDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LostDeals"
-        ]
-      },
-      "get": {
-        "operationId": "LostDealsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LostDeals"
-        ]
-      }
-    },
-    "/commercial/sales-orders": {
-      "post": {
-        "operationId": "SalesOrdersController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSalesOrderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      },
-      "get": {
-        "operationId": "SalesOrdersController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      }
-    },
-    "/commercial/sales-orders/{id}": {
+    "/finance/fund-request/{id}/approve": {
       "patch": {
-        "operationId": "SalesOrdersController_update",
+        "operationId": "FinanceController_approveFundRequest",
         "parameters": [
           {
             "name": "id",
@@ -6068,7 +6640,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateSalesOrderDto"
+                "$ref": "#/components/schemas/ApproveFundRequestDto"
               }
             }
           }
@@ -6078,50 +6650,19 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
-          "SalesOrders"
+          "finance"
         ]
       }
     },
-    "/commercial/invoices": {
+    "/finance/fund-request/{id}/disburse": {
       "post": {
-        "operationId": "InvoicesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInvoiceDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      },
-      "get": {
-        "operationId": "InvoicesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      }
-    },
-    "/commercial/invoices/{id}": {
-      "get": {
-        "operationId": "InvoicesController_findOne",
+        "operationId": "FinanceController_disburseFundRequest",
         "parameters": [
           {
             "name": "id",
@@ -6132,26 +6673,12 @@
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      }
-    },
-    "/commercial/payments": {
-      "post": {
-        "operationId": "PaymentsController_create",
-        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePaymentDto"
+                "$ref": "#/components/schemas/DisburseFundRequestDto"
               }
             }
           }
@@ -6161,47 +6688,35 @@
             "description": ""
           }
         },
-        "tags": [
-          "Payments"
-        ]
-      },
-      "get": {
-        "operationId": "PaymentsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
+        "security": [
+          {
+            "bearer": []
           }
-        },
+        ],
         "tags": [
-          "Payments"
+          "finance"
         ]
       }
     },
-    "/commercial/retention/radar": {
-      "get": {
-        "operationId": "RetentionController_getRadar",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Retention"
-        ]
-      }
-    },
-    "/production-plans": {
+    "/finance/fund-request/{id}/director-approve": {
       "post": {
-        "operationId": "ProductionPlansController_create",
-        "parameters": [],
+        "operationId": "FinanceController_directorApproveFundRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateProductionPlanDto"
+                "$ref": "#/components/schemas/DirectorApproveFundRequestDto"
               }
             }
           }
@@ -6211,26 +6726,19 @@
             "description": ""
           }
         },
-        "tags": [
-          "ProductionPlans"
-        ]
-      },
-      "get": {
-        "operationId": "ProductionPlansController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
+        "security": [
+          {
+            "bearer": []
           }
-        },
+        ],
         "tags": [
-          "ProductionPlans"
+          "finance"
         ]
       }
     },
-    "/production-plans/{id}/status": {
+    "/finance/fund-request/{id}/reject": {
       "patch": {
-        "operationId": "ProductionPlansController_updateStatus",
+        "operationId": "FinanceController_rejectFundRequest",
         "parameters": [
           {
             "name": "id",
@@ -6246,7 +6754,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdatePlanStatusDto"
+                "$ref": "#/components/schemas/RejectFundRequestDto"
               }
             }
           }
@@ -6256,14 +6764,321 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
-          "ProductionPlans"
+          "finance"
         ]
       }
     },
-    "/production-plans/{id}/issue-materials": {
+    "/finance/ar-hub/pending": {
+      "get": {
+        "operationId": "FinanceController_getArHubPending",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ar-hub/verify": {
+      "post": {
+        "operationId": "FinanceController_verifyArHubPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyArPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/trial-balance": {
+      "get": {
+        "operationId": "FinanceController_getTrialBalance",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/trial-balance/detailed": {
+      "get": {
+        "operationId": "FinanceController_getDetailedTrialBalance",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/balance-sheet": {
+      "get": {
+        "operationId": "FinanceController_getBalanceSheet",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/profit-loss": {
+      "get": {
+        "operationId": "FinanceController_getProfitLoss",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/cash-flow": {
+      "get": {
+        "operationId": "FinanceController_getCashFlow",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/reports/general-ledger/{accountId}": {
+      "get": {
+        "operationId": "FinanceController_getGeneralLedger",
+        "parameters": [
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/taxes": {
+      "get": {
+        "operationId": "FinanceController_getTaxes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/currencies": {
+      "get": {
+        "operationId": "FinanceController_getCurrencies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/accounts/{id}": {
       "patch": {
-        "operationId": "ProductionPlansController_issueMaterials",
+        "operationId": "FinanceController_updateAccount",
         "parameters": [
           {
             "name": "id",
@@ -6279,60 +7094,129 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a COA account",
         "tags": [
-          "ProductionPlans"
-        ]
-      }
-    },
-    "/production-plans/log-step": {
-      "post": {
-        "operationId": "ProductionPlansController_logStep",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateStepLogDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "ProductionPlans"
-        ]
-      }
-    },
-    "/material-requisitions": {
-      "post": {
-        "operationId": "RequisitionsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRequisitionDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Requisitions"
+          "finance"
         ]
       },
+      "delete": {
+        "operationId": "FinanceController_softDeleteAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a COA account (set isActive=false)",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/payment/verify": {
+      "post": {
+        "operationId": "FinanceController_verifyPaymentAlias",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Alias for POST /finance/verify-payment",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/creative/board": {
       "get": {
-        "operationId": "RequisitionsController_findAll",
+        "operationId": "CreativeController_getBoard",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Creative"
+        ]
+      }
+    },
+    "/creative/tasks": {
+      "get": {
+        "operationId": "CreativeController_getAllTasks",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Creative"
+        ]
+      }
+    },
+    "/creative/available-sales-orders": {
+      "get": {
+        "operationId": "CreativeController_getAvailableSalesOrders",
         "parameters": [],
         "responses": {
           "200": {
@@ -6340,13 +7224,37 @@
           }
         },
         "tags": [
-          "Requisitions"
+          "Creative"
         ]
       }
     },
-    "/material-requisitions/{id}/issue": {
+    "/creative/task": {
+      "post": {
+        "operationId": "CreativeController_createTask",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Creative"
+        ]
+      }
+    },
+    "/creative/task/{id}/version": {
       "patch": {
-        "operationId": "RequisitionsController_issue",
+        "operationId": "CreativeController_uploadVersion",
         "parameters": [
           {
             "name": "id",
@@ -6362,7 +7270,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IssueRequisitionDto"
+                "$ref": "#/components/schemas/UploadVersionDto"
               }
             }
           }
@@ -6373,66 +7281,16 @@
           }
         },
         "tags": [
-          "Requisitions"
+          "Creative"
         ]
       }
     },
-    "/material-requisitions/aggregated": {
-      "get": {
-        "operationId": "RequisitionsController_getAggregated",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Requisitions"
-        ]
-      }
-    },
-    "/production/step-logs": {
-      "post": {
-        "operationId": "StepLogsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateStepLogDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "StepLogs"
-        ]
-      },
-      "get": {
-        "operationId": "ProductionController_getStepLogs",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Production"
-        ]
-      }
-    },
-    "/production/step-logs/wo/{woId}": {
-      "get": {
-        "operationId": "StepLogsController_findByPlan",
+    "/creative/task/{id}/submit": {
+      "patch": {
+        "operationId": "CreativeController_submitToApj",
         "parameters": [
           {
-            "name": "woId",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -6446,7 +7304,106 @@
           }
         },
         "tags": [
-          "StepLogs"
+          "Creative"
+        ]
+      }
+    },
+    "/creative/task/{id}/apj-review": {
+      "patch": {
+        "operationId": "CreativeController_apjReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApjReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Creative"
+        ]
+      }
+    },
+    "/creative/task/{id}/client-review": {
+      "patch": {
+        "operationId": "CreativeController_clientReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Creative"
+        ]
+      }
+    },
+    "/creative/task/{id}/unlock": {
+      "patch": {
+        "operationId": "CreativeController_unlockTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnlockTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Creative"
         ]
       }
     },
@@ -9301,338 +10258,27 @@
         "type": "object",
         "properties": {}
       },
-      "CashDisburseDto": {
+      "CreateProjectDto": {
         "type": "object",
         "properties": {}
       },
-      "CashReceiveDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "JournalLineDto": {
-        "type": "object",
-        "properties": {
-          "accountId": {
-            "type": "string",
-            "example": "uuid-acc-123",
-            "description": "COA Account ID"
-          },
-          "debit": {
-            "type": "number",
-            "example": 1000000,
-            "description": "Debit amount"
-          },
-          "credit": {
-            "type": "number",
-            "example": 0,
-            "description": "Credit amount"
-          },
-          "taxRate": {
-            "type": "number",
-            "example": 0.1,
-            "description": "Tax rate (0.1 = 10%)"
-          },
-          "taxAccountId": {
-            "type": "string",
-            "example": "uuid-tax-456"
-          }
-        },
-        "required": [
-          "accountId",
-          "debit",
-          "credit"
-        ]
-      },
-      "CreateJournalDto": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "example": "2024-05-01"
-          },
-          "reference": {
-            "type": "string",
-            "example": "REF-001"
-          },
-          "description": {
-            "type": "string",
-            "example": "Manual Journal Entry"
-          },
-          "attachmentUrls": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "sourceDocumentType": {
-            "type": "string",
-            "example": "PURCHASE_ORDER"
-          },
-          "sourceDocumentId": {
-            "type": "string",
-            "example": "uuid-doc-789"
-          },
-          "lines": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/JournalLineDto"
-            }
-          }
-        },
-        "required": [
-          "date",
-          "description",
-          "lines"
-        ]
-      },
-      "CreateFundRequestDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "ApproveFundRequestDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "DisburseFundRequestDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "DirectorApproveFundRequestDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "RejectFundRequestDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "VerifyArPaymentDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreatePurchaseOrderDto": {
-        "type": "object",
-        "properties": {
-          "supplierId": {
-            "type": "string",
-            "example": "uuid-supplier-123"
-          },
-          "warehouseId": {
-            "type": "string",
-            "example": "uuid-warehouse-456"
-          },
-          "leadId": {
-            "type": "string",
-            "example": "uuid-lead-456"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          },
-          "totalAmount": {
-            "type": "number",
-            "example": 1500000
-          },
-          "taxPercent": {
-            "type": "number"
-          },
-          "estArrival": {
-            "type": "string",
-            "example": "2024-12-31"
-          },
-          "dueDate": {
-            "type": "string",
-            "example": "2024-12-31"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "escalationPin": {
-            "type": "string"
-          },
-          "escalationReason": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "supplierId"
-        ]
-      },
-      "CreateInboundDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateInboundStatusDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateMaterialDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateMaterialDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreatePurchaseReturnDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdatePurchaseReturnStatusDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreatePurchaseInvoiceDto": {
-        "type": "object",
-        "properties": {
-          "inboundId": {
-            "type": "string"
-          },
-          "dueDate": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "inboundId"
-        ]
-      },
-      "CreatePurchasePaymentDto": {
-        "type": "object",
-        "properties": {
-          "invoiceId": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "paymentDate": {
-            "type": "string"
-          },
-          "receivingAccountId": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "invoiceId",
-          "amount"
-        ]
-      },
-      "CreateLeadDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "AdvanceLeadDto": {
+      "UpdateProjectDto": {
         "type": "object",
         "properties": {}
       },
       "CreateTaskDto": {
         "type": "object",
-        "properties": {
-          "leadId": {
-            "type": "string"
-          },
-          "brief": {
-            "type": "string",
-            "example": "Design brief description"
-          },
-          "soId": {
-            "type": "string"
-          },
-          "taskType": {
-            "type": "string",
-            "example": "PACKAGING_DESIGN"
-          }
-        },
-        "required": [
-          "leadId",
-          "brief"
-        ]
+        "properties": {}
       },
-      "UploadVersionDto": {
-        "type": "object",
-        "properties": {
-          "printSpecs": {
-            "type": "string"
-          },
-          "uploadedBy": {
-            "type": "string"
-          }
-        }
-      },
-      "ApjReviewDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "WAITING",
-              "APPROVED",
-              "REJECTED"
-            ]
-          },
-          "notes": {
-            "type": "string",
-            "example": "Wrong logo placement"
-          },
-          "pin": {
-            "type": "string",
-            "example": "123456"
-          }
-        },
-        "required": [
-          "status",
-          "pin"
-        ]
-      },
-      "ClientReviewDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "WAITING",
-              "APPROVED",
-              "REJECTED"
-            ]
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "UnlockTaskDto": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "type": "string",
-            "enum": [
-              "CHARGE",
-              "WAIVE"
-            ]
-          },
-          "managerPin": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "action"
-        ]
-      },
-      "CreateRequisitionDto": {
+      "UpdateTaskDto": {
         "type": "object",
         "properties": {}
       },
-      "UpdateRequisitionStatusDto": {
+      "UpdateTaskStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateTaskCommentDto": {
         "type": "object",
         "properties": {}
       },
@@ -9856,6 +10502,149 @@
         "type": "object",
         "properties": {}
       },
+      "CreateLeadDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdvanceLeadDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePurchaseOrderDto": {
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "string",
+            "example": "uuid-supplier-123"
+          },
+          "warehouseId": {
+            "type": "string",
+            "example": "uuid-warehouse-456"
+          },
+          "leadId": {
+            "type": "string",
+            "example": "uuid-lead-456"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "totalAmount": {
+            "type": "number",
+            "example": 1500000
+          },
+          "taxPercent": {
+            "type": "number"
+          },
+          "estArrival": {
+            "type": "string",
+            "example": "2024-12-31"
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2024-12-31"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "escalationPin": {
+            "type": "string"
+          },
+          "escalationReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplierId"
+        ]
+      },
+      "CreateInboundDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateInboundStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateMaterialDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateMaterialDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePurchaseReturnDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdatePurchaseReturnStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePurchaseInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "inboundId": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "inboundId"
+        ]
+      },
+      "CreatePurchasePaymentDto": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "paymentDate": {
+            "type": "string"
+          },
+          "receivingAccountId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceId",
+          "amount"
+        ]
+      },
+      "TrackDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WhatsAppUpdateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLeadDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BulkUpdateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateAttributeDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateLostDealDto": {
         "type": "object",
         "properties": {}
@@ -9888,7 +10677,139 @@
         "type": "object",
         "properties": {}
       },
+      "CreateRequisitionDto": {
+        "type": "object",
+        "properties": {}
+      },
       "IssueRequisitionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRequisitionStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CashDisburseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CashReceiveDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "JournalLineDto": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "example": "uuid-acc-123",
+            "description": "COA Account ID"
+          },
+          "debit": {
+            "type": "number",
+            "example": 1000000,
+            "description": "Debit amount"
+          },
+          "credit": {
+            "type": "number",
+            "example": 0,
+            "description": "Credit amount"
+          },
+          "taxRate": {
+            "type": "number",
+            "example": 0.1,
+            "description": "Tax rate (0.1 = 10%)"
+          },
+          "taxAccountId": {
+            "type": "string",
+            "example": "uuid-tax-456"
+          }
+        },
+        "required": [
+          "accountId",
+          "debit",
+          "credit"
+        ]
+      },
+      "CreateJournalDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2024-05-01"
+          },
+          "reference": {
+            "type": "string",
+            "example": "REF-001"
+          },
+          "description": {
+            "type": "string",
+            "example": "Manual Journal Entry"
+          },
+          "attachmentUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceDocumentType": {
+            "type": "string",
+            "example": "PURCHASE_ORDER"
+          },
+          "sourceDocumentId": {
+            "type": "string",
+            "example": "uuid-doc-789"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalLineDto"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "description",
+          "lines"
+        ]
+      },
+      "CreateFundRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApproveFundRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DisburseFundRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DirectorApproveFundRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RejectFundRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyArPaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UploadVersionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApjReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ClientReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UnlockTaskDto": {
         "type": "object",
         "properties": {}
       },

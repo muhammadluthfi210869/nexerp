@@ -17,7 +17,7 @@ export function AttributionPanel({ attribution, sources }: { attribution: Attrib
         <div className="flex items-center gap-2">
           <span
             className="inline-flex items-center gap-1.5 rounded-full bg-[var(--insight-action-bg)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--status-action)]"
-            title={`${attribution.attributedLeads} attributed / ${attribution.attributedLeads + attribution.unattributedLeads} total`}
+            title={`${attribution.attributedLeads ?? 0} attributed / ${(attribution.attributedLeads ?? 0) + (attribution.unattributedLeads ?? 0)} total`}
           >
             <Database className="h-3 w-3" aria-hidden="true" />
             Coverage {formatPercent(attribution.coverage)}

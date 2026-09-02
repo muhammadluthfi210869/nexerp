@@ -70,6 +70,8 @@ const MODULE_STRUCTURE: NavGroup[] = [
     roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
     items: [
       { name: "Dashboard Eksekutif", href: "/executive/dashboard", type: "dashboard" },
+      { name: "Project Control", href: "/project-control", type: "dashboard" },
+      { name: "KPI Management", href: "/kpi-management/department", type: "dashboard" },
       { name: "Dashboard Notifikasi", href: "/executive/dashboard?tab=notifications", type: "action", badge: "12" },
     ]
   },
@@ -142,6 +144,8 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: Zap,
     roles: ["SUPER_ADMIN", "MANAGEMENT", "DIRECTOR"],
     items: [
+      { name: "Visual DNA Specs", href: "/dna-visual", type: "action" },
+      { name: "Golden Reference", href: "/dna-visual/golden-reference", type: "dashboard", badge: "REAL" },
       { name: "Audit Ledger", href: "/system/audit-ledger", type: "history" },
       { name: "Event Protocol", href: "/system/protocol", type: "dashboard" },
       { name: "System Health", href: "/system/health", type: "dashboard" },

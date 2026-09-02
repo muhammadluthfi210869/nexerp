@@ -421,7 +421,7 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
 }
 
 export function ExecutiveFunnelOverview({ data }: { data: MarketingOverview }) {
-  const apiRows = (data.channels ?? []).map((source): PlatformChannel | null => {
+  const apiRows = (data.channels ?? []).map((source: any): PlatformChannel | null => {
     const m = source.metrics;
     const views = metric(m.views ?? m.impressions);
     const clicks = metric(m.clicks ?? m.engagement);
@@ -454,10 +454,10 @@ export function ExecutiveFunnelOverview({ data }: { data: MarketingOverview }) {
 
   const platforms = apiRows.length >= 3 ? apiRows : DEFAULT_PLATFORMS;
 
-  const totalViews = platforms.reduce((acc, p) => acc + p.views, 0);
-  const totalSample = platforms.reduce((acc, p) => acc + p.sample, 0);
-  const totalDeal = platforms.reduce((acc, p) => acc + p.deal, 0);
-  const totalLeads = platforms.reduce((acc, p) => acc + p.leads, 0);
+  const totalViews = platforms.reduce((acc: number, p: PlatformChannel) => acc + p.views, 0);
+  const totalSample = platforms.reduce((acc: number, p: PlatformChannel) => acc + p.sample, 0);
+  const totalDeal = platforms.reduce((acc: number, p: PlatformChannel) => acc + p.deal, 0);
+  const totalLeads = platforms.reduce((acc: number, p: PlatformChannel) => acc + p.leads, 0);
 
   const bestPlatform = [...platforms].sort((a, b) => rate(b.deal, b.leads) - rate(a.deal, a.leads))[0];
 
@@ -493,8 +493,8 @@ export function ExecutiveFunnelOverview({ data }: { data: MarketingOverview }) {
   ];
 
   const ranking = platforms
-    .map((p) => ({ channel: p.name, conversion: Number((rate(p.deal, p.leads) * 100).toFixed(1)), isAds: p.category.includes('Paid') }))
-    .sort((a, b) => b.conversion - a.conversion);
+    .map((p: PlatformChannel) => ({ channel: p.name, conversion: Number((rate(p.deal, p.leads) * 100).toFixed(1)), isAds: p.category.includes('Paid') }))
+    .sort((a: { conversion: number }, b: { conversion: number }) => b.conversion - a.conversion);
 
   return (
     <div className="space-y-[var(--section-gap)]">
@@ -564,7 +564,7 @@ export function ExecutiveFunnelOverview({ data }: { data: MarketingOverview }) {
                 <YAxis type="category" dataKey="channel" width={140} tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--gray-500)' }} />
                 <Tooltip formatter={(value) => [`${value}%`, 'Lead → Deal Rate']} contentStyle={{ borderRadius: 14, borderColor: 'var(--border-color)', fontSize: 12 }} />
                 <Bar dataKey="conversion" radius={[0, 5, 5, 0]}>
-                  {ranking.map((row) => (
+                  {ranking.map((row: { channel: string; isAds: boolean }) => (
                     <Cell key={row.channel} fill={row.isAds ? COLORS.Ads : COLORS.Organic} />
                   ))}
                 </Bar>

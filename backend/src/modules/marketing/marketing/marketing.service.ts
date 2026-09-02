@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { FinanceService } from '../../finance/finance.service';
 
 @Injectable()
 export class MarketingService {
@@ -18,7 +17,6 @@ export class MarketingService {
 
   constructor(
     private prisma: PrismaService,
-    private finance: FinanceService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -738,6 +736,28 @@ export class MarketingService {
       orderBy: { date: 'desc' },
       take: 100,
     });
+  }
+
+  /**
+   * Cursor-paginated list of ContentAsset rows for the Social Media Tracker page.
+   */
+  async listContentAssets({
+    take = 20,
+    cursor,
+  }: {
+    take?: number;
+    cursor?: string;
+  }) {
+    const rows = await this.prisma.contentAsset.findMany({
+      where: {},
+      orderBy: { publishDate: 'desc' },
+      take: take + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    });
+    const hasMore = rows.length > take;
+    const items = hasMore ? rows.slice(0, take) : rows;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+    return { items, nextCursor };
   }
 
   async getWeeklyOrganicLogs() {

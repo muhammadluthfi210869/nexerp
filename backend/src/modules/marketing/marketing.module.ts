@@ -1,16 +1,28 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { MarketingService } from './marketing/marketing.service';
+import { MarketingController } from './marketing/marketing.controller';
 import { MarketingPrototypeController } from './prototype/marketing-prototype.controller';
 import { MarketingPrototypeService } from './prototype/marketing-prototype.service';
-
-// ⚠️ PRODUCTION-LIGHT: Hanya menyisakan prototype module
-// untuk Management Task. MarketingService, LandingTracker,
-// VercelTracker di-archive. Lihat PRODUCTION_LIGHT.md.
+import { OmniCrmStateController } from './omni-crm/omni-crm-state.controller';
+import { OmniCrmStateService } from './omni-crm/omni-crm-state.service';
+import { MarketingTasksController } from './tasks/marketing-tasks.controller';
+import { MarketingTasksService } from './tasks/marketing-tasks.service';
 
 @Module({
   imports: [PrismaModule],
-  providers: [MarketingPrototypeService],
-  controllers: [MarketingPrototypeController],
-  exports: [MarketingPrototypeService],
+  providers: [
+    MarketingService,
+    MarketingPrototypeService,
+    OmniCrmStateService,
+    MarketingTasksService,
+  ],
+  controllers: [
+    MarketingController,
+    MarketingPrototypeController,
+    OmniCrmStateController,
+    MarketingTasksController,
+  ],
+  exports: [MarketingService, MarketingPrototypeService],
 })
 export class MarketingModule {}

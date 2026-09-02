@@ -110,12 +110,12 @@ export function ClientDrawer({ client, onClose }: { client: Client | null; onClo
   if (!client) return null;
   const items: Array<[string, string]> = [
     ['Perusahaan', client.company || '—'],
-    ['Source', client.source],
+    ['Source', client.source || '—'],
     ['Campaign', client.campaign || 'Belum teratribusi'],
-    ['Tahap CRM', client.stage],
-    ['PIC', client.owner],
-    ['Lead masuk', formatDate(client.createdAt, true)],
-    ['Terakhir diperbarui', formatDate(client.updatedAt, true)],
+    ['Tahap CRM', client.stage || '—'],
+    ['PIC', client.owner || '—'],
+    ['Lead masuk', formatDate(client.createdAt || null, true)],
+    ['Terakhir diperbarui', formatDate(client.updatedAt || null, true)],
   ];
   return (
     <div className="fixed inset-0 z-[70] flex justify-end" role="dialog" aria-modal="true" aria-labelledby="client-drawer-title">

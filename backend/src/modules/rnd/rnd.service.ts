@@ -92,6 +92,12 @@ export class RndService {
       select: { leadId: true },
     });
 
+    if (!npf || !npf.leadId) {
+      throw new BadRequestException(
+        `NPF ${dto.npfId} not found or has no associated lead. Cannot create sample without a valid lead.`,
+      );
+    }
+
     const sampleCode = await this.idGenerator.generateId('SMP');
 
     return this.prisma.sampleRequest.create({
@@ -100,11 +106,6 @@ export class RndService {
         npfId: dto.npfId,
         rndId: dto.rndId,
         version: dto.version || 1,
-    if (!npf || !npf.leadId) {
-      throw new BadRequestException(
-        `NPF ${dto.npfId} not found or has no associated lead. Cannot create sample without a valid lead.`,
-      );
-    }
         leadId: npf.leadId,
         productName: 'Sample from NPF',
         targetFunction: 'General',

@@ -31,7 +31,7 @@ export function MarketingDigitalClient() {
   // is only the sourceFilter, applied to the overview's client preview.
   const filteredClients = useMemo(() => {
     if (!data) return [];
-    return data.crm.recentClients.filter((c) => sourceFilter === 'all' || c.source === sourceFilter);
+    return data.crm.recentClients.filter((c: any) => sourceFilter === 'all' || c.source === sourceFilter);
   }, [data, sourceFilter]);
 
   if (isPending) {
@@ -65,7 +65,7 @@ export function MarketingDigitalClient() {
   // Type guard: preview always has data; live mode returned above on failure.
   if (!data) return null;
 
-  const latest = formatDate(data.refreshedAt, true);
+  const latest = formatDate(data.refreshedAt || null, true);
 
   return (
     <DashboardShell
