@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { Card } from "@/components/ui/card";
+import { StatCard, TableWrapper, DnaBadge } from "@/components/dna";
 
 function formatRupiah(value: number): string {
   if (!value) return "—";
@@ -113,42 +115,34 @@ export default function ExecutiveDashboardClient() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* I. SYSTEM ALERT BANNER */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1.25rem",
-          background: "#FFF1F2",
-          border: "1px solid #FECDD3",
-          padding: "1rem 1.5rem",
-          borderRadius: "16px",
-        }}
-      >
-        <div
-          style={{
-            width: "28px",
-            height: "28px",
-            background: "#DC2626",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          <AlertTriangle size={14} color="white" />
+      <Card className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+          <div
+            style={{
+              width: "28px",
+              height: "28px",
+              background: "#DC2626",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <AlertTriangle size={14} color="white" />
+          </div>
+          <span style={{ fontSize: "11px", fontWeight: 950, color: "#9F1239", letterSpacing: "0.05em" }}>
+            SYSTEM ALERT
+          </span>
+          <div style={{ width: "1px", height: "16px", background: "#FECDD3" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", fontSize: "11px", fontWeight: 900 }}>
+            <span style={{ color: "#DC2626" }}>{isLoading ? "—" : `${overdueAlerts} ORDER TELAT PRODUKSI`}</span>
+            <span style={{ color: "#94A3B8" }}>•</span>
+            <span style={{ color: "#DC2626" }}>{isLoading ? "—" : `${overdueInvoices} CLIENT BELUM BAYAR (OVERDUE)`}</span>
+            <span style={{ color: "#94A3B8" }}>•</span>
+            <span style={{ color: "#D97706" }}>{isLoading ? "—" : `${unfollowedLeads} LEADS BELUM FOLLOW UP`}</span>
+          </div>
         </div>
-        <span style={{ fontSize: "11px", fontWeight: 950, color: "#9F1239", letterSpacing: "0.05em" }}>
-          SYSTEM ALERT
-        </span>
-        <div style={{ width: "1px", height: "16px", background: "#FECDD3" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", fontSize: "11px", fontWeight: 900 }}>
-          <span style={{ color: "#DC2626" }}>{isLoading ? "—" : `${overdueAlerts} ORDER TELAT PRODUKSI`}</span>
-          <span style={{ color: "#94A3B8" }}>•</span>
-          <span style={{ color: "#DC2626" }}>{isLoading ? "—" : `${overdueInvoices} CLIENT BELUM BAYAR (OVERDUE)`}</span>
-          <span style={{ color: "#94A3B8" }}>•</span>
-          <span style={{ color: "#D97706" }}>{isLoading ? "—" : `${unfollowedLeads} LEADS BELUM FOLLOW UP`}</span>
-        </div>
-      </div>
+      </Card>
 
       {/* II. 2x3 DASHBOARD GRID */}
       <div
@@ -160,19 +154,8 @@ export default function ExecutiveDashboardClient() {
         }}
       >
         {/* Card 1: REVENUE & TARGET */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "32px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Card className="rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", background: "#10B981", borderRadius: "50%" }} />
               <h3 style={{ margin: 0, fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
@@ -182,7 +165,7 @@ export default function ExecutiveDashboardClient() {
             <TrendingUp size={16} color="#10B981" />
           </div>
 
-          <div>
+          <div style={{ marginBottom: "1.5rem" }}>
             <p style={{ margin: 0, fontSize: "9px", fontWeight: 900, color: "#94A3B8", letterSpacing: "0.05em" }}>
               OMSET BULAN INI (MTD)
             </p>
@@ -194,7 +177,7 @@ export default function ExecutiveDashboardClient() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>TARGET</p>
               <p style={{ margin: "2px 0 0 0", fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{metrics ? formatRupiah(target) : "—"}</p>
@@ -205,7 +188,7 @@ export default function ExecutiveDashboardClient() {
             </div>
           </div>
 
-          <div>
+          <div style={{ marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
               <span style={{ fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>PROYEKSI AKHIR BULAN</span>
               <span style={{ fontSize: "8px", fontWeight: 900, color: "#1E293B" }}>{metrics ? formatRupiah(projection) : "—"}</span>
@@ -229,22 +212,11 @@ export default function ExecutiveDashboardClient() {
           >
             💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {revenueInsight}
           </div>
-        </div>
+        </Card>
 
         {/* Card 2: SALES PIPELINE */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "32px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Card className="rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", background: "#2563EB", borderRadius: "50%" }} />
               <h3 style={{ margin: 0, fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
@@ -254,7 +226,7 @@ export default function ExecutiveDashboardClient() {
             <BarChart3 size={16} color="#2563EB" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ background: "#EFF6FF", padding: "12px 16px", borderRadius: "16px" }}>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#2563EB" }}>TOTAL LEADS</p>
               <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B" }}>{metrics ? pipeTotal : "—"}</p>
@@ -265,7 +237,7 @@ export default function ExecutiveDashboardClient() {
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "1.5rem" }}>
             {[
               { label: "Leads In", value: pipeTotal, pct: 100, color: "#64748B" },
               { label: "Sample Process", value: pipeHot, pct: pipeTotal > 0 ? (pipeHot / pipeTotal) * 100 : 0, color: "#3B82F6" },
@@ -296,22 +268,11 @@ export default function ExecutiveDashboardClient() {
           >
             💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {pipelineInsight}
           </div>
-        </div>
+        </Card>
 
         {/* Card 3: PRODUCTION STATUS */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "32px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Card className="rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", background: "#EAB308", borderRadius: "50%" }} />
               <h3 style={{ margin: 0, fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
@@ -321,7 +282,7 @@ export default function ExecutiveDashboardClient() {
             <Factory size={16} color="#EAB308" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>TOTAL ORDER AKTIF</p>
               <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#1E293B" }}>{metrics ? prodActive : "—"}</p>
@@ -332,7 +293,7 @@ export default function ExecutiveDashboardClient() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginBottom: "1.5rem" }}>
             {[
               { label: "ON PROD", value: metrics ? String(prodOnProd) : "—" },
               { label: "QC FLOW", value: metrics ? String(prodQcFlow) : "—" },
@@ -345,7 +306,7 @@ export default function ExecutiveDashboardClient() {
             ))}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>Avg Prod. Time</span>
             <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>—</span>
           </div>
@@ -364,22 +325,11 @@ export default function ExecutiveDashboardClient() {
           >
             💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {productionInsight}
           </div>
-        </div>
+        </Card>
 
         {/* Card 4: CASHFLOW & PAYMENT */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "32px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Card className="rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", background: "#8B5CF6", borderRadius: "50%" }} />
               <h3 style={{ margin: 0, fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
@@ -389,7 +339,7 @@ export default function ExecutiveDashboardClient() {
             <Wallet size={16} color="#8B5CF6" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ background: "#F5F3FF", padding: "12px 16px", borderRadius: "16px" }}>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#8B5CF6" }}>CASH IN (MTD)</p>
               <p style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: 950, color: "#1E293B" }}>{metrics ? formatRupiah(mtd) : "—"}</p>
@@ -400,7 +350,7 @@ export default function ExecutiveDashboardClient() {
             </div>
           </div>
 
-          <div>
+          <div style={{ marginBottom: "1.5rem" }}>
             <p style={{ margin: "0 0 8px 0", fontSize: "8px", fontWeight: 900, color: "#94A3B8", letterSpacing: "0.05em" }}>
               AGING RECEIVABLE (DRY CASH RISK)
             </p>
@@ -430,22 +380,11 @@ export default function ExecutiveDashboardClient() {
           >
             💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {cashflowInsight}
           </div>
-        </div>
+        </Card>
 
         {/* Card 5: LOST & PROBLEMS */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "32px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Card className="rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", background: "#EF4444", borderRadius: "50%" }} />
               <h3 style={{ margin: 0, fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
@@ -455,7 +394,7 @@ export default function ExecutiveDashboardClient() {
             <ThumbsDown size={16} color="#EF4444" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>LOST DEAL (VAL)</p>
               <p style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: 950, color: "#EF4444" }}>{metrics ? formatRupiah(lostVal) : "—"}</p>
@@ -466,7 +405,7 @@ export default function ExecutiveDashboardClient() {
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "1.5rem" }}>
             <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8", letterSpacing: "0.05em" }}>
               TOP REASON FOR LOST DEAL
             </p>
@@ -499,22 +438,11 @@ export default function ExecutiveDashboardClient() {
           >
             💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {lostInsight}
           </div>
-        </div>
+        </Card>
 
         {/* Card 6: REPEAT ORDER ENGINE */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "32px",
-            border: "1px solid #E2E8F0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Card className="rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", background: "#10B981", borderRadius: "50%" }} />
               <h3 style={{ margin: 0, fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>
@@ -524,7 +452,7 @@ export default function ExecutiveDashboardClient() {
             <RefreshCw size={16} color="#10B981" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
               <p style={{ margin: 0, fontSize: "8px", fontWeight: 900, color: "#94A3B8" }}>REPEAT RATE</p>
               <p style={{ margin: "2px 0 0 0", fontSize: "28px", fontWeight: 950, color: "#10B981" }}>{metrics ? `${roRate.toFixed(1)}%` : "—"}</p>
@@ -535,7 +463,7 @@ export default function ExecutiveDashboardClient() {
             </div>
           </div>
 
-          <div style={{ background: "#F0FDF4", padding: "12px 16px", borderRadius: "16px", border: "1px solid #DCFCE7" }}>
+          <div style={{ background: "#F0FDF4", padding: "12px 16px", borderRadius: "16px", border: "1px solid #DCFCE7", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
               <div style={{ width: "6px", height: "6px", background: "#10B981", borderRadius: "50%" }} />
               <span style={{ fontSize: "8px", fontWeight: 950, color: "#166534" }}>CLIENT SIAP REPEAT (MTD)</span>
@@ -560,7 +488,7 @@ export default function ExecutiveDashboardClient() {
           >
             💡 <span style={{ fontWeight: 950 }}>OWNER INSIGHT:</span> {roInsight}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
