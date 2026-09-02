@@ -5,29 +5,32 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Add Build Arguments
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_PROTOTYPE_MODE
 ENV NEXT_PUBLIC_PROTOTYPE_MODE=$NEXT_PUBLIC_PROTOTYPE_MODE
 
+# Copy package files first for caching
 COPY package*.json ./
 RUN npm install
 
-# package-lock.json dibuat di Windows → binary native lightningcss untuk
-# Linux tidak tercatat. Install eksplisit supaya Turbopack bisa resolve
-# (tanpa ini: Cannot find module '../lightningcss.linux-x64-gnu.node').
+# Lighteningcss native binary workaround
 RUN npm install lightningcss-linux-x64-gnu --no-save 2>/dev/null || true
 
-# Copy Prisma schema from backend so `prisma generate` produces client
-# with enums (ActivityType, WorkflowStatus, ProductCategory, LostReason,
-# dll) needed by restored main-branch pages that import them from
-# @prisma/client. Build context expected to be repo root (workflow uses
-# context: .).
-COPY backend/prisma ./prisma
-COPY backend/prisma.config.ts ./prisma.config.ts
+# Bring in Prisma schema + config for `prisma generate`. Restored main-branch
+# pages import enums (ActivityType, WorkflowStatus, ProductCategory,
+# LostReason) directly from @prisma/client, so generated client must have
+# these. Prisma looks up the schema via prisma.config.ts which references
+# ./prisma/schema. We expect the workflow to have copied backend/prisma to
+# ./prisma already (see build-unified-staging.yml pre-step).
+COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
+# Set a placeholder DATABASE_URL — `prisma generate` does NOT need a real DB
+# connection; it only reads schema files. The placeholder satisfies the
+# config's `process.env["DATABASE_URL"]` lookup.
 RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public" npx prisma generate
 
+# Copy frontend source
 COPY . .
 RUN npm run build
 
@@ -38,7 +41,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Automatically leverage standalone output
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

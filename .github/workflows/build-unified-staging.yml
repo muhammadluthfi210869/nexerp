@@ -4,9 +4,10 @@ name: Build Unified Staging (integration/unified)
 # GitHub runners (16GB RAM, NVMe), saves as artifacts ready for transfer
 # to Biznet via gh CLI or direct download.
 #
-# Frontend build context: repo root (not ./frontend) so it can access
-# backend/prisma/schema for `prisma generate`. Build context is set via
-# `context: .` in build-push-action step.
+# Prisma schema is in backend/prisma but frontend imports enums from
+# @prisma/client. Pre-step copies backend/prisma + backend/prisma.config.ts
+# into frontend/ so the frontend Dockerfile's `COPY prisma ./prisma` step
+# finds them. This avoids needing repo-root build context.
 #
 # Triggered on push to integration/unified or manual dispatch.
 
@@ -65,10 +66,23 @@ jobs:
             echo "tag=unified-staging" >> $GITHUB_OUTPUT
           fi
 
+      # Copy Prisma schema + config into frontend/ so the Dockerfile step
+      # `COPY prisma ./prisma` finds them. frontend/.dockerignore (if any)
+      # may exclude them; we copy AFTER gitignore check.
+      - name: Pre-build: copy backend Prisma into frontend/
+        run: |
+          mkdir -p frontend/prisma
+          cp -r backend/prisma/schema frontend/prisma/schema
+          cp backend/prisma.config.ts frontend/prisma.config.ts
+          echo "Copied backend/prisma/schema + prisma.config.ts to frontend/"
+          ls -la frontend/prisma/ | head -5
+          echo "frontend/ now has:"
+          ls frontend/ | head -20
+
       - name: Build unified frontend image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./frontend
           file: ./frontend/Dockerfile
           build-args: |
             NEXT_PUBLIC_API_URL=${{ steps.fe_args.outputs.api_url }}
