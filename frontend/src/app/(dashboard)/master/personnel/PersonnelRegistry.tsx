@@ -178,7 +178,6 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
           </div>
         }
       >
-        <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
@@ -252,7 +251,6 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
               ))}
             </TableBody>
           </Table>
-        </div>
       </TableWrapper>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
