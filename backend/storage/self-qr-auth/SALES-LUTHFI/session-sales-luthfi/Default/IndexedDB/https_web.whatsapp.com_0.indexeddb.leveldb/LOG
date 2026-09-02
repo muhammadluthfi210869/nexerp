@@ -1,0 +1,5 @@
+2026/08/22-07:59:35.488 5b5c Creating DB C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\storage\self-qr-auth\SALES-LUTHFI\session-sales-luthfi\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/08/22-07:59:35.493 5b5c Reusing MANIFEST C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\storage\self-qr-auth\SALES-LUTHFI\session-sales-luthfi\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/08/22-09:13:53.375 124c Level-0 table #5: started
+2026/08/22-09:13:53.449 124c Level-0 table #5: 1043771 bytes OK
+2026/08/22-09:13:53.453 124c Delete type=0 #3

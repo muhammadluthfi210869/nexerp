@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const page = await ctx.newPage();
+const url = 'https://kil.nexerp.id';
+console.log('Navigating to', url);
+const resp = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+console.log('HTTP', resp.status());
+console.log('Final URL:', page.url());
+console.log('Title:', await page.title());
+await page.waitForTimeout(2000);
+await page.screenshot({ path: 'C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/artifacts/kil-nexerp-id-login.png', fullPage: false });
+console.log('Screenshot saved');
+await browser.close();

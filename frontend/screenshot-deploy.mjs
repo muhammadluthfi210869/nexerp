@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const page = await ctx.newPage();
+console.log('Navigating to https://nexerp.id ...');
+const resp = await page.goto('https://nexerp.id', { waitUntil: 'networkidle', timeout: 30000 });
+console.log('HTTP', resp.status());
+console.log('Final URL:', page.url());
+await page.waitForTimeout(2000);
+await page.screenshot({ path: 'C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/artifacts/nexerp-prod-management-task-deploy-login.png', fullPage: false });
+console.log('Login page screenshot saved');
+await browser.close();

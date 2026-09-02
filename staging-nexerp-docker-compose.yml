@@ -1,0 +1,55 @@
+# Minimal staging compose - just backend + frontend.
+# Connects to the existing production-light-db-1 Postgres container via external network.
+# Run with: cd staging-nexerp && docker compose -p staging -f staging-nexerp-docker-compose.yml up -d
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: staging-backend
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@production-light-db-1:5432/${DB_NAME:-erp_database_staging}?schema=public
+      PORT: 3001
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
+      AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://103.93.134.215:3500}
+      WA_WEBHOOK_VERIFY_TOKEN: ${WA_WEBHOOK_VERIFY_TOKEN}
+    networks:
+      - production-light_default
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3001/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: staging-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://103.93.134.215:3501/api}
+      NODE_ENV: production
+    ports:
+      - "${FRONTEND_PORT:-3500}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - production-light_default
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3000 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+networks:
+  production-light_default:
+    external: true
+    name: production-light_default
