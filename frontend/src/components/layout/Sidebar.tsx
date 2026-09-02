@@ -78,8 +78,7 @@ const MODULE_STRUCTURE: NavGroup[] = [
     icon: BarChart3,
     roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
-      { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
-      { name: "Campaign Input", href: "/marketing/input", type: "input" },
+      { name: "Marketing Analytics", href: "/marketing/digital", type: "dashboard" },
       { name: "Management Task", href: "/marketing/management-task", type: "action" },
       { name: "Lead Logs", href: "/marketing/logs", type: "history" },
     ]
@@ -325,9 +324,14 @@ export function Sidebar() {
       {/* Navigation Space */}
       <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
         {TIER_STRUCTURE.map((tier) => {
-          const tierGroups = MODULE_STRUCTURE.filter(group => 
-            tier.groups.includes(group.label) && 
-            (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
+          // zaki@nexerp.id is a director-level user that should see ALL modules
+          // regardless of the per-group role gate. Admin sees everything because
+          // we added SUPER_ADMIN to every group. This carve-out mirrors the demo
+          // dashboard at erp-dreamlab-dashboard-fix.netlify.app.
+          const isZakiOverride = user?.email === 'zaki@nexerp.id';
+          const tierGroups = MODULE_STRUCTURE.filter(group =>
+            tier.groups.includes(group.label) &&
+            (!user || !group.roles || isZakiOverride || group.roles.some(role => user.roles.includes(role))) &&
             (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
           );
 
