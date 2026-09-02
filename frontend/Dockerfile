@@ -25,8 +25,10 @@ RUN npm install --no-audit --no-fund
 # Lighteningcss native binary workaround (Windows package-lock missing Linux binary)
 RUN npm install lightningcss-linux-x64-gnu --no-save 2>/dev/null || true
 
-# Copy Prisma schema + config (NOW accessible because build context = repo root)
-COPY backend/prisma ./prisma
+# Copy ONLY Prisma schema folder (prisma.config.ts -> schema: "prisma/schema").
+# Skip backend/prisma/*.ts scripts — they import bcrypt which isn't a
+# frontend dep and would break the Next.js type-checker.
+COPY backend/prisma/schema ./prisma/schema
 COPY backend/prisma.config.ts ./prisma.config.ts
 
 # Generate Prisma client. `prisma generate` reads schema from prisma.config.ts
