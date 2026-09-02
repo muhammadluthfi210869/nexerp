@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ActivityType, WorkflowStatus, ProductCategory, LostReason } from "@prisma/client";
+// WorkflowStatus enum — mirrored from backend/prisma/schema/enums.prisma via
+// frontend/src/lib/prisma-enums.ts so this file builds without needing
+// `prisma generate` to have produced @prisma/client types.
+import { WorkflowStatus } from "@/lib/prisma-enums";
 import { 
   Send, 
   Loader2,
