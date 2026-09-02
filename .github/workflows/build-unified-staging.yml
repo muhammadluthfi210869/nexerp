@@ -1,0 +1,142 @@
+name: Build Unified Staging (integration/unified)
+
+# Builds frontend AND backend Docker images for integration/unified on
+# GitHub runners (16GB RAM, NVMe), saves as artifacts ready for transfer
+# to Biznet via gh CLI or direct download.
+#
+# Triggered on push to integration/unified or manual dispatch.
+#
+# Usage:
+#   1. gh workflow run build-unified-staging.yml --ref integration/unified
+#   2. gh run download <run-id> (saves tar.gz artifacts locally)
+#   3. On Biznet: docker load < artifacts/*.tar
+#   4. Update docker-compose.staging-unified.yml to use loaded images
+
+on:
+  push:
+    branches:
+      - integration/unified
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'NEXT_PUBLIC_API_URL'
+        required: false
+        default: 'http://localhost:3701/api'
+      wa_phone:
+        description: 'NEXT_PUBLIC_WA_PHONE'
+        required: false
+        default: '6287793032556'
+      tag:
+        description: 'Image tag (unified-staging)'
+        required: false
+        default: 'unified-staging'
+
+permissions:
+  contents: read
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache-frontend
+          key: ${{ runner.os }}-buildx-frontend-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-frontend-
+
+      - name: Resolve frontend build args
+        id: fe_args
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "api_url=${{ inputs.api_url }}" >> $GITHUB_OUTPUT
+            echo "wa_phone=${{ inputs.wa_phone }}" >> $GITHUB_OUTPUT
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "api_url=http://localhost:3701/api" >> $GITHUB_OUTPUT
+            echo "wa_phone=6287793032556" >> $GITHUB_OUTPUT
+            echo "tag=unified-staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build unified frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ steps.fe_args.outputs.api_url }}
+            NEXT_PUBLIC_WA_PHONE=${{ steps.fe_args.outputs.wa_phone }}
+          tags: staging-unified-frontend:latest
+          outputs: type=docker,dest=/tmp/staging-unified-frontend.tar
+          cache-from: type=local,src=/tmp/.buildx-cache-frontend
+          cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
+
+      - name: Move frontend cache
+        run: |
+          rm -rf /tmp/.buildx-cache-frontend
+          mv /tmp/.buildx-cache-frontend-new /tmp/.buildx-cache-frontend
+
+      - name: Show frontend image size
+        run: ls -lh /tmp/staging-unified-frontend.tar
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-unified-frontend-${{ steps.fe_args.outputs.tag }}
+          path: /tmp/staging-unified-frontend.tar
+          retention-days: 7
+          if-no-files-found: error
+
+  build-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache-backend
+          key: ${{ runner.os }}-buildx-backend-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-backend-
+
+      - name: Build unified backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          tags: staging-unified-backend:latest
+          outputs: type=docker,dest=/tmp/staging-unified-backend.tar
+          cache-from: type=local,src=/tmp/.buildx-cache-backend
+          cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
+
+      - name: Move backend cache
+        run: |
+          rm -rf /tmp/.buildx-cache-backend
+          mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend
+
+      - name: Show backend image size
+        run: ls -lh /tmp/staging-unified-backend.tar
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-unified-backend
+          path: /tmp/staging-unified-backend.tar
+          retention-days: 7
+          if-no-files-found: error
