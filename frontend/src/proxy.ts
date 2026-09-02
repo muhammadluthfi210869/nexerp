@@ -3,8 +3,9 @@ import type { NextRequest } from 'next/server'
 import { jwtVerify, decodeJwt } from 'jose'
 import { isRndLockedAccount } from '@/lib/rnd-access'
 
+// Must match backend fallback in backend/src/modules/auth/auth.module.ts
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'DREAMLAB_SECRET_KEY_2026'
+  process.env.JWT_SECRET || 'ERP_SECRET_DEV_ONLY'
 )
 
 type UserRole =
@@ -150,7 +151,7 @@ function getDivisionPath(roles: UserRole[]): string {
   if (roles.includes('PRODUCTION' as UserRole) || roles.includes('PRODUCTION_OP' as UserRole) || roles.includes('PPIC' as UserRole)) return '/production'
   if (roles.includes('QC_LAB' as UserRole)) return '/qc'
   if (roles.includes('HR' as UserRole)) return '/hr'
-  if (roles.includes('MARKETING' as UserRole) || roles.includes('DIGIMAR' as UserRole)) return '/marketing/dashboard'
+  if (roles.includes('MARKETING' as UserRole) || roles.includes('DIGIMAR' as UserRole)) return '/marketing/digital'
   if (roles.includes('COMMERCIAL' as UserRole)) return '/bussdev/dashboard'
   if (roles.includes('COMPLIANCE' as UserRole) || roles.includes('APJ' as UserRole)) return '/legality'
   if (roles.includes('IT_SYS' as UserRole) || roles.includes('ADMIN' as UserRole)) return '/system/audit-ledger'

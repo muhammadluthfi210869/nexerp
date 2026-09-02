@@ -224,6 +224,18 @@ const MODULE_STRUCTURE: NavGroup[] = [
       { name: "System", href: "/automation", type: "action" },
       { name: "Legality", href: "/automation", type: "action" },
     ]
+  },
+  {
+    label: "DIRECTOR CRM",
+    icon: Briefcase,
+    roles: ["DIRECTOR"],
+    items: [
+      { name: "Buku Tamu",       href: "/bussdev/guest-book",         type: "bussdev_sample" },
+      { name: "Client Sample",   href: "/bussdev/sample-tracking",    type: "bussdev_sample" },
+      { name: "Client Produksi", href: "/bussdev/sales-orders",       type: "bussdev_prod" },
+      { name: "Client RO",       href: "/bussdev/clients/repeat",     type: "bussdev_ro" },
+      { name: "Lost",            href: "/bussdev/lost",               type: "bussdev_lost" },
+    ]
   }
 ];
 
@@ -243,6 +255,10 @@ const TIER_STRUCTURE = [
   {
     tier: "AUTOMATION ENGINE",
     groups: ["AUTOMATION ENGINE"]
+  },
+  {
+    tier: "DIRECTOR CRM",
+    groups: ["DIRECTOR CRM"]
   }
 ];
 
@@ -324,14 +340,9 @@ export function Sidebar() {
       {/* Navigation Space */}
       <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
         {TIER_STRUCTURE.map((tier) => {
-          // zaki@nexerp.id is a director-level user that should see ALL modules
-          // regardless of the per-group role gate. Admin sees everything because
-          // we added SUPER_ADMIN to every group. This carve-out mirrors the demo
-          // dashboard at erp-dreamlab-dashboard-fix.netlify.app.
-          const isZakiOverride = user?.email === 'zaki@nexerp.id';
           const tierGroups = MODULE_STRUCTURE.filter(group =>
             tier.groups.includes(group.label) &&
-            (!user || !group.roles || isZakiOverride || group.roles.some(role => user.roles.includes(role))) &&
+            (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
             (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
           );
 
@@ -351,6 +362,50 @@ export function Sidebar() {
                 {tierGroups.map((group) => {
                   const dashItems = group.items.filter(i => i.type === "dashboard");
                   const isGroupActive = group.items.some(i => i.href === pathname);
+
+                  // --- EXECUTIVE MODE for DIRECTOR CRM: render all items, not only dashboards ---
+                  if (isExecutive && group.label === "DIRECTOR CRM") {
+                    return (
+                      <div key={group.label} className="space-y-1">
+                        <div className="flex items-center gap-3 px-3 mb-2">
+                          <div className="h-[1px] flex-1 bg-slate-100"></div>
+                          <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase whitespace-nowrap">
+                            CRM
+                          </span>
+                          <div className="h-[1px] flex-1 bg-slate-100"></div>
+                        </div>
+                        {group.items.map((item) => {
+                          const isItemActive = pathname === item.href;
+                          return (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              onMouseEnter={() => router.prefetch(item.href)}
+                              className={cn(
+                                "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                isItemActive
+                                  ? "bg-slate-50 text-brand-black font-bold"
+                                  : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Briefcase className={cn(
+                                  "w-3.5 h-3.5 transition-colors",
+                                  isItemActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
+                                )} />
+                                <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                  {item.name}
+                                </span>
+                              </div>
+                              {isItemActive && (
+                                <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
 
                   // --- EXECUTIVE MODE (DIRECTOR role) ---
                   if (isExecutive) {

@@ -46,11 +46,13 @@ export function LoginForm() {
       toast.success(`Welcome back, ${user.fullName || user.email}!`);
 
       const roleRedirect = (roles: string[]): string => {
-        if (roles.some((r) => ["RND", "SUPER_ADMIN", "HEAD_OPS"].includes(r)))
+        if (roles.some((r) => ["SUPER_ADMIN", "HEAD_OPS", "DIRECTOR"].includes(r)))
+          return "/executive/dashboard";
+        if (roles.some((r) => ["RND"].includes(r)))
           return "/rnd/analytics";
         if (roles.some((r) => ["DIGIMAR", "MARKETING"].includes(r)))
-          return "/marketing/management-task";
-        return "/rnd/analytics";
+          return "/marketing/digital";
+        return "/executive/dashboard";
       };
       router.push(roleRedirect(user.roles || []));
     } catch (error: unknown) {

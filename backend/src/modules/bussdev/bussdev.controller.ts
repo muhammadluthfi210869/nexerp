@@ -144,7 +144,7 @@ export class BussdevController {
   }
 
   @Get('leads/group/:group')
-  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
   getLeadsByGroup(
     @Param('group') group: 'guest' | 'sample' | 'production' | 'ro' | 'lost',
   ) {
