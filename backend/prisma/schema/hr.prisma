@@ -1,48 +1,51 @@
-// ⚠️ PRODUCTION-LIGHT: HR models simplified — removed cross-schema
-//    relations to SalesOrder, ProductionPlan, QCAudit, FinancialPeriod
-//    since those modules are archived. Restore via PRODUCTION_LIGHT.md.
-
 model Employee {
-  id              String       @id @default(uuid()) @db.Uuid
-  userId          String?      @unique @db.Uuid
-  name            String
-  nik             String?      @unique
-  birthDate       DateTime?
-  gender          String?
-  religion        String?
-  maritalStatus   String?
-  phone           String?
-  address         String?
-  emergencyContact  String?
-  emergencyPhone    String?
-  npwp            String?
-  bpjsKesehatan   String?
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String?      @unique @db.Uuid
+  name                String
+  // Identity & Demographics
+  nik                 String?      @unique
+  birthDate           DateTime?
+  gender              String? // L / P
+  religion            String?
+  maritalStatus       String? // SINGLE / MARRIED / DIVORCED / WIDOWED
+  // Contact
+  phone               String?
+  address             String?
+  emergencyContact    String?
+  emergencyPhone      String?
+  // Legal & Finance
+  npwp                String?
+  bpjsKesehatan       String?
   bpjsKetenagakerjaan String?
-  bankName        String?
-  bankAccount     String?
-  bankHolder      String?
-  education       String?
-  major           String?
-  baseSalary      String?
-  joinedAt        DateTime
-  contractEnd     DateTime?
-  contractType    ContractType @default(CONTRACT)
-  resignDate      DateTime?
-  resignReason    String?
-  isActive        Boolean      @default(true)
-  managerId       String?      @db.Uuid
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  bankName            String?
+  bankAccount         String?
+  bankHolder          String?
+  // Education
+  education           String? // SD / SMP / SMA / D3 / S1 / S2
+  major               String?
+  // Salary & Contract
+  baseSalary          String? // Encrypted (AES-256-GCM)
+  joinedAt            DateTime
+  contractEnd         DateTime?
+  contractType        ContractType @default(CONTRACT)
+  resignDate          DateTime?
+  resignReason        String?
+  isActive            Boolean      @default(true)
+  // Reporting structure
+  managerId           String?      @db.Uuid
+  // Timestamps
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
-  user            User?                 @relation(fields: [userId], references: [id])
-  manager         Employee?             @relation("EmployeeManagerRelation", fields: [managerId], references: [id])
-  subordinates    Employee[]            @relation("EmployeeManagerRelation")
-  roles           EmployeeRoleMapping[]
-  kpiScores       KpiScore[]
-  kpiPointLogs    KpiPointLog[]
-  attendances     Attendance[]
-  tickets         Ticket[]
-  payrollItems    PayrollItem[]
+  user         User?                 @relation(fields: [userId], references: [id])
+  manager      Employee?             @relation("EmployeeManagerRelation", fields: [managerId], references: [id])
+  subordinates Employee[]            @relation("EmployeeManagerRelation")
+  roles        EmployeeRoleMapping[]
+  kpiScores    KpiScore[]
+  kpiPointLogs KpiPointLog[]
+  attendances  Attendance[]
+  tickets      Ticket[]
+  payrollItems PayrollItem[]
 
   @@map("employees")
 }
@@ -52,7 +55,7 @@ model EmployeeRoleMapping {
   employeeId String   @db.Uuid
   division   Division
   roleName   String
-  weight     Decimal  @db.Decimal(3, 2)
+  weight     Decimal  @db.Decimal(3, 2) // e.g., 0.80 for 80%
   isPrimary  Boolean  @default(false)
   createdAt  DateTime @default(now())
 
@@ -63,9 +66,9 @@ model EmployeeRoleMapping {
 
 model KpiMetricDefinition {
   id          String   @id @default(uuid()) @db.Uuid
-  eventCode   String   @unique
+  eventCode   String   @unique // e.g., SO_PAID, QC_REJECT
   label       String
-  points      Float
+  points      Float // e.g., 10 or -5
   division    Division
   description String?
   isActive    Boolean  @default(true)
@@ -81,16 +84,16 @@ model KpiPointLog {
   metricCode String
   points     Float
 
+  // Explicit Foreign Keys for standard relational integrity
   soId      String? @db.Uuid
   planId    String? @db.Uuid
   qcAuditId String? @db.Uuid
 
-  // ⚠️ Relations removed in production-light (SalesOrder, ProductionPlan, QCAudit archived)
-  // salesOrder SalesOrder?     @relation(fields: [soId], references: [id])
-  // prodPlan   ProductionPlan? @relation(fields: [planId], references: [id])
-  // qcAudit    QCAudit?        @relation(fields: [qcAuditId], references: [id])
+  salesOrder SalesOrder?     @relation(fields: [soId], references: [id])
+  prodPlan   ProductionPlan? @relation(fields: [planId], references: [id])
+  qcAudit    QCAudit?        @relation(fields: [qcAuditId], references: [id])
 
-  metadata  Json?
+  metadata  Json? // Contextual data
   createdAt DateTime @default(now())
 
   employee Employee @relation(fields: [employeeId], references: [id])
@@ -99,15 +102,15 @@ model KpiPointLog {
 }
 
 model KpiScore {
-  id              String   @id @default(uuid()) @db.Uuid
-  employeeId      String   @db.Uuid
-  periodId        String   @db.Uuid
-  // ⚠️ period FinancialPeriod @relation(fields: [periodId], references: [id]) — removed
+  id              String          @id @default(uuid()) @db.Uuid
+  employeeId      String          @db.Uuid
+  periodId        String          @db.Uuid
+  period          FinancialPeriod @relation(fields: [periodId], references: [id])
   finalScore      Float
-  subjectiveScore Float?
-  objectiveScore  Float?
+  subjectiveScore Float? // The 30% part
+  objectiveScore  Float? // The 70% part
   metricsData     Json
-  createdAt       DateTime @default(now())
+  createdAt       DateTime        @default(now())
 
   employee Employee @relation(fields: [employeeId], references: [id])
 
@@ -122,7 +125,7 @@ model Attendance {
   clockOut            DateTime?
   lat                 Float
   lng                 Float
-  distanceFromFactory Float
+  distanceFromFactory Float // In meters
   photoPath           String?
   status              AttendanceStatus @default(ON_TIME)
   createdAt           DateTime         @default(now())
@@ -140,7 +143,7 @@ model Ticket {
   reason         String
   startDate      DateTime
   endDate        DateTime?
-  amount         String?
+  amount         String? // Encrypted (for Reimbursement)
   attachmentPath String?
   authorizedById String?      @db.Uuid
   createdAt      DateTime     @default(now())
@@ -155,9 +158,9 @@ model Ticket {
 model Payroll {
   id                String          @id @default(uuid()) @db.Uuid
   periodId          String          @db.Uuid
-  // ⚠️ period FinancialPeriod @relation(fields: [periodId], references: [id]) — removed
+  period            FinancialPeriod @relation(fields: [periodId], references: [id])
   status            PayrollStatus   @default(DRAFT)
-  totalDisbursement String?
+  totalDisbursement String? // Encrypted total
   authorizedById    String?         @db.Uuid
   authorizedAt      DateTime?
   createdAt         DateTime        @default(now())
@@ -173,24 +176,14 @@ model PayrollItem {
   id           String   @id @default(uuid()) @db.Uuid
   payrollId    String   @db.Uuid
   employeeId   String   @db.Uuid
-  baseSalary   String
-  kpiIncentive String
-  deductions   String
-  netSalary    String
+  baseSalary   String // Encrypted
+  kpiIncentive String // Encrypted
+  deductions   String // Encrypted
+  netSalary    String // Encrypted
   createdAt    DateTime @default(now())
 
   payroll  Payroll  @relation(fields: [payrollId], references: [id])
   employee Employee @relation(fields: [employeeId], references: [id])
 
   @@map("payroll_items")
-}
-
-model FinancialPeriod {
-  id         String       @id @default(uuid()) @db.Uuid
-  label      String       @unique
-  startDate  DateTime
-  endDate    DateTime
-  status     PeriodStatus @default(OPEN)
-
-  @@map("financial_periods")
 }

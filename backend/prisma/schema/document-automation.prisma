@@ -1,0 +1,52 @@
+model DocumentDraft {
+  id              String              @id @default(uuid()) @db.Uuid
+  draftNumber     String              @unique
+  documentType    DocumentType
+  sourceType      SourceDocumentType
+  sourceId        String              @db.Uuid
+  status          DocumentDraftStatus @default(DRAFT)
+  payload         Json // The auto-generated document data
+  originalPayload Json? // Snapshot before any edits
+  autoApproveAt   DateTime? // When to auto-approve if not edited
+  approvedAt      DateTime?
+  approvedById    String?             @db.Uuid
+  rejectedAt      DateTime?
+  rejectedById    String?             @db.Uuid
+  rejectReason    String?
+  finalDocumentId String? // ID of the converted final document
+  notes           String?
+  createdById     String?             @db.Uuid
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  approver User? @relation("DocumentDraftApprover", fields: [approvedById], references: [id])
+  rejecter User? @relation("DocumentDraftRejecter", fields: [rejectedById], references: [id])
+  creator  User? @relation("DraftCreator", fields: [createdById], references: [id])
+
+  @@index([documentType, status])
+  @@index([sourceType, sourceId])
+  @@map("document_drafts")
+}
+
+enum DocumentType {
+  SALES_ORDER
+  PURCHASE_ORDER
+  INVOICE_DP
+  INVOICE_FINAL
+  DELIVERY_ORDER
+  SURAT_JALAN
+  JOURNAL_ENTRY
+  GOODS_REQUIREMENT
+  WORK_ORDER
+  PURCHASE_REQUEST
+  QUOTATION
+}
+
+enum DocumentDraftStatus {
+  DRAFT
+  REVIEWING
+  APPROVED
+  REJECTED
+  CONVERTED
+  EXPIRED
+}

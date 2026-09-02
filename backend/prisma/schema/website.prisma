@@ -1,0 +1,70 @@
+model Article {
+  id              String   @id @default(uuid()) @db.Uuid
+  title           String
+  slug            String   @unique
+  content         String
+  publishedAt     DateTime @default(now())
+  metaDescription String?  @db.VarChar(255)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@map("articles")
+}
+
+model WebsiteProduct {
+  id              String   @id @default(uuid()) @db.Uuid
+  title           String
+  slug            String   @unique
+  content         String
+  category        String
+  publishedAt     DateTime @default(now())
+  metaDescription String?  @db.VarChar(255)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@map("website_products")
+}
+
+model LandingPageVisit {
+  id          String   @id @default(uuid()) @db.Uuid
+  pageUrl     String
+  pageTitle   String?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+  visitorId   String?
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+
+  @@index([timestamp])
+  @@map("landing_page_visits")
+}
+
+model LandingPageConversion {
+  id            String   @id @default(uuid()) @db.Uuid
+  visitId       String?
+  pageUrl       String
+  pageTitle     String?
+  source        String   @default("DIRECT_FORM")
+  nama          String?
+  perusahaan    String?
+  hp            String?
+  produk        String?
+  trafficSource String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  assignedTo    String?
+  assignedPhone String?
+  status        String   @default("NEW")
+  timestamp     DateTime @default(now())
+
+  @@map("landing_page_conversions")
+}

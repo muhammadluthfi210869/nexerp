@@ -1,0 +1,67 @@
+    return {
+      totalEstimated,
+      totalPaid: totalValidated,
+      balance: totalEstimated - totalValidated,
+      percentagePaid:
+        totalEstimated > 0 ? (totalValidated / totalEstimated) * 100 : 0,
+    };
+  }
+
+  /**
+   * PHASE 5: Automated Production Handover Readiness Checker
+   * Monitors Legal, Design, and SCM status to unlock Production stage.
+   */
+  async checkSalesOrderReadiness(leadId: string) {
+    const lead = await this.prisma.salesLead.findUnique({
+      where: { id: leadId },
+      include: {
+        registrations: true,
+        designTasks: true,
+        salesOrders: {
+          where: { status: SOStatus.LOCKED_ACTIVE }
+        }
+      }
+    });
+
+    if (!lead || lead.salesOrders.length === 0) return;
+
+    const so = lead.salesOrders[0];
+
+    // 1. Check Legal Readiness (BPOM/HKI must be PUBLISHED)
+    const legalReady = lead.registrations.length > 0 && 
+      lead.registrations.every(r => r.currentStage === 'PUBLISHED');
+
+    // 2. Check Design Readiness (All tasks LOCKED)
+    const designReady = lead.designTasks.length > 0 && 
+      lead.designTasks.every(t => t.kanbanState === 'LOCKED');
+
+    // 3. Check SCM Readiness (Check if WorkOrder could theoretically be fulfilled)
+    const scmReady = await this.scmService.checkMaterialReadinessForSo(so.id);
+
+    console.log(`[PROD_HANDOVER] Readiness for Lead ${lead.brandName}:`, {
+      legalReady,
+      designReady,
+      scmReady: scmReady.status === 'READY'
+    });
+
+    if (legalReady && designReady && scmReady.status === 'READY') {
+      await this.prisma.$transaction(async (tx) => {
+        // A. Update SO Status
+        await tx.salesOrder.update({
+          where: { id: so.id },
+          data: { status: SOStatus.READY_TO_PRODUCE }
+        });
+
+        // B. Emit Activity
+        this.eventEmitter.emit(ACTIVITY_EVENT, {
+          leadId: leadId,
+          senderDivision: Division.SYSTEM,
+          eventType: StreamEventType.STATE_CHANGE,
+          notes: `AUTOMATED HANDOVER: Semua jalur paralel (Legal, Design, SCM) telah OK. Order siap diproduksi.`,
+          loggedBy: 'SYSTEM_ORCHESTRATOR',
+        });
+      });
+    }
+  }
+}
+

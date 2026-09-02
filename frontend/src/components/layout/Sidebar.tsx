@@ -1,614 +1,560 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  Activity,
   ChevronDown,
+  ShieldAlert,
   BarChart3,
   Beaker,
+  Layers,
+  Factory,
+  CreditCard,
+  LogOut,
+  UserCircle,
   LayoutDashboard,
-  PlusCircle,
   Zap,
   History,
-  LogOut,
+  Scale,
+  Truck,
+  Warehouse,
   FileSearch,
-  SearchX,
-  PhoneCall,
-  X,
+  Users,
+  FlaskConical,
+  XCircle,
+  PlusCircle,
+  ClipboardCheck,
+  Archive,
+  Palette,
+  Box,
+  Landmark,
+  Cog,
+  Heart,
+  AlertOctagon,
+  Bell,
+  BookOpen,
+  TrendingDown,
+  DollarSign,
+  Package,
+  ClipboardList,
+  Star,
+  Wallet,
+  Briefcase,
+  Barcode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface SubMenuItem {
   name: string;
   href: string;
-  type: "dashboard" | "input" | "action" | "history";
+  type: "dashboard" | "input" | "action" | "history" | "bussdev_sample" | "bussdev_prod" | "bussdev_ro" | "bussdev_lost" | "settings";
+  roles?: string[];
   badge?: string;
   badgeVariant?: "default" | "warning" | "critical";
-  children?: SubMenuItem[];
-  /** Slug marketing member (aurel, revi, zarka, gusti, edy) — untuk filtering per-member */
-  memberSlug?: string;
 }
 
 interface NavGroup {
   label: string;
   icon: any;
   items: SubMenuItem[];
-  roles?: string[];     // role yang bisa lihat module ini
+  roles?: string[];
 }
-
-interface TierGroup {
-  tier: string;
-  groups: string[];
-}
-
-/* ─── MODULE REGISTRY ─────────────────────────────────── */
 
 const MODULE_STRUCTURE: NavGroup[] = [
   {
+    label: "EXECUTIVE",
+    icon: ShieldAlert,
+    roles: ["SUPER_ADMIN", "HEAD_OPS", "MANAGEMENT", "DIRECTOR"],
+    items: [
+      { name: "Dashboard Eksekutif", href: "/executive/dashboard", type: "dashboard" },
+      { name: "Dashboard Notifikasi", href: "/executive/dashboard?tab=notifications", type: "action", badge: "12" },
+    ]
+  },
+  {
     label: "DIGITAL MARKETING",
     icon: BarChart3,
-    roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "HEAD_OPS"],
+    roles: ["SUPER_ADMIN", "MARKETING", "DIGIMAR", "DIRECTOR"],
     items: [
-      {
-        name: "Management Task",
-        href: "/marketing/management-task",
-        type: "action",
-        children: [
-          { name: "Aurel", href: "/marketing/management-task/aurel", type: "action", memberSlug: "aurel" },
-          { name: "Revita", href: "/marketing/management-task/revi", type: "action", memberSlug: "revi" },
-          { name: "Zarkasi", href: "/marketing/management-task/zarka", type: "action", memberSlug: "zarka" },
-          { name: "Gusti", href: "/marketing/management-task/gusti", type: "action", memberSlug: "gusti" },
-          { name: "Luthfi", href: "/marketing/management-task/luthfi", type: "action", memberSlug: "luthfi" },
-          { name: "Rahmat", href: "/marketing/management-task/rahmat", type: "action", memberSlug: "rahmat" },
-        ],
-      },
-      { name: "Toribio Dashboard", href: "/marketing/toribio", type: "dashboard" },
-      { name: "Lead Capture", href: "/marketing/lead-capture", type: "dashboard", badge: "NEW", badgeVariant: "default" },
+      { name: "Marketing Analytics", href: "/marketing/dashboard", type: "dashboard" },
+      { name: "Campaign Input", href: "/marketing/input", type: "input" },
+      { name: "Management Task", href: "/marketing/management-task", type: "action" },
+      { name: "Lead Logs", href: "/marketing/logs", type: "history" },
+    ]
+  },
+  {
+    label: "BUSSDEV",
+    icon: Activity,
+    roles: ["SUPER_ADMIN", "COMMERCIAL", "MARKETING", "DIRECTOR"],
+    items: [
+      { name: "Command Center", href: "/bussdev/dashboard", type: "dashboard" },
+      { name: "Sales Pipeline", href: "/bussdev/pipeline", type: "action" },
+      { name: "Lead Intake Form", href: "/bussdev/intake", type: "input" },
+      { name: "Lost", href: "/bussdev/lost", type: "bussdev_lost" },
+    ]
+  },
+  {
+    label: "FINANCE",
+    icon: Landmark,
+    roles: ["SUPER_ADMIN", "FINANCE", "DIRECTOR"],
+    items: [
+      { name: "Pusat Komando", href: "/finance/dashboard", type: "dashboard" },
+      { name: "Kas & Bank", href: "/finance/kas", type: "input" },
+      { name: "Jurnal & COA", href: "/finance/jurnal", type: "history" },
+      { name: "Uang Muka (DP)", href: "/finance/dp", type: "input" },
+      { name: "Pembayaran", href: "/finance/bayar", type: "input" },
+      { name: "Piutang & Hutang", href: "/finance/piutang", type: "action", badge: "3" },
+      { name: "Fund & Approval", href: "/finance/fund", type: "action" },
+      { name: "Laporan", href: "/finance/reports", type: "history" },
+    ]
+  },
+  {
+    label: "LEGALITAS / APJ",
+    icon: Scale,
+    roles: ["SUPER_ADMIN", "COMPLIANCE", "DIRECTOR"],
+    items: [
+      { name: "Watchdog Hub", href: "/legality/dashboard", type: "dashboard" },
+      { name: "Regulatory Pipeline", href: "/legality/pipeline", type: "action" },
+      { name: "Compliance Inbox", href: "/legality/inbox", type: "input" },
     ]
   },
   {
     label: "RESEARCH & DEV",
     icon: Beaker,
-    roles: ["SUPER_ADMIN", "RND", "HEAD_OPS"],
+    roles: ["SUPER_ADMIN", "RND", "DIRECTOR"],
     items: [
-      { name: "Analytics Trend", href: "/rnd/analytics", type: "dashboard" },
-      { name: "Daily Tracking", href: "/rnd/daily-tracking", type: "action" },
-      { name: "Project Monitoring", href: "/rnd/project-monitoring", type: "action" },
+      { name: "Active Pipeline", href: "/rnd/pipeline", type: "action" },
+      { name: "Formula Repository", href: "/rnd/repository", type: "history" },
+      { name: "Sample Inbox", href: "/rnd/inbox", type: "input", badge: "New" },
+      { name: "Formula Analytics", href: "/rnd/dashboard", type: "dashboard" },
     ]
   },
+  {
+    label: "SUPPLY CHAIN",
+    icon: Truck,
+    roles: ["SUPER_ADMIN", "SCM", "PURCHASING", "DIRECTOR"],
+    items: [
+      { name: "Dashboard", href: "/scm/dashboard", type: "dashboard" },
+      { name: "Pembelian", href: "/scm/pembelian", type: "action", badge: "5", badgeVariant: "warning" },
+      { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", type: "action" },
+      { name: "Barang", href: "/master/goods", type: "input" },
+      { name: "Supplier", href: "/master/suppliers", type: "input" },
+    ]
+  },
+  {
+    label: "PRODUCTION",
+    icon: Factory,
+    roles: ["SUPER_ADMIN", "PRODUCTION", "PRODUCTION_OP", "PPIC", "DIRECTOR"],
+    items: [
+      { name: "Dashboard", href: "/production", type: "dashboard" },
+      { name: "Penjadwalan", href: "/production/schedule", type: "dashboard" },
+      { name: "Operasional", href: "/production/operations", type: "dashboard" },
+      { name: "Pipeline", href: "/production/operations?tab=pipeline", type: "history" },
+      { name: "Leakage", href: "/production/leakage", type: "history", badge: "!", badgeVariant: "critical" },
+    ]
+  },
+  {
+    label: "QUALITY CONTROL",
+    icon: FlaskConical,
+    roles: ["SUPER_ADMIN", "QC_LAB", "DIRECTOR"],
+    items: [
+      { name: "Quality Analytics", href: "/qc/dashboard", type: "dashboard" },
+      { name: "Lab Inspections", href: "/qc/inspections", type: "action" },
+      { name: "Stability Tests", href: "/qc/stability", type: "action" },
+      { name: "CoA Center", href: "/qc/coa", type: "history" },
+      { name: "Audit Trail", href: "/executive/audit", type: "history" },
+    ]
+  },
+  {
+    label: "GUDANG",
+    icon: Warehouse,
+    roles: ["SUPER_ADMIN", "WAREHOUSE", "SCM", "DIRECTOR"],
+    items: [
+      { name: "Dashboard", href: "/warehouse", type: "dashboard" },
+      { name: "Gudang", href: "/warehouse/gudang", type: "action" },
+      { name: "Stok", href: "/warehouse/stok", type: "history" },
+      { name: "Data Gudang", href: "/master/warehouses", type: "input" },
+    ]
+  },
+  {
+    label: "CREATIVE HUB",
+    icon: Palette,
+    roles: ["SUPER_ADMIN", "CREATIVE", "DIRECTOR"],
+    items: [
+      { name: "Design Board", href: "/creative/board", type: "dashboard" },
+    ]
+  },
+  {
+    label: "HUMAN RESOURCES",
+    icon: Users,
+    roles: ["SUPER_ADMIN", "HR", "DIRECTOR"],
+    items: [
+      { name: "Dashboard", href: "/hr/dashboard", type: "dashboard" },
+      { name: "Personnel", href: "/master/personnel", type: "input" },
+      { name: "Attendance", href: "/hr/attendance", type: "action" },
+      { name: "Payroll", href: "/hr/payroll", type: "history" },
+    ]
+  },
+  {
+    label: "SYSTEM CONTROL",
+    icon: Zap,
+    roles: ["SUPER_ADMIN", "MANAGEMENT", "DIRECTOR"],
+    items: [
+      { name: "Audit Ledger", href: "/system/audit-ledger", type: "history" },
+      { name: "Event Protocol", href: "/system/protocol", type: "dashboard" },
+      { name: "System Health", href: "/system/health", type: "dashboard" },
+      { name: "Global Categories", href: "/master/categories", type: "action" },
+    ]
+  },
+  {
+    label: "AUTOMATION ENGINE",
+    icon: Cog,
+    items: [
+      { name: "Document Center", href: "/documents/drafts", type: "action", badge: "NEW" },
+      { name: "Overview", href: "/automation", type: "dashboard" },
+      { name: "Foundation", href: "/automation", type: "action" },
+      { name: "BussDev", href: "/automation", type: "action" },
+      { name: "Finance", href: "/automation", type: "action" },
+      { name: "Warehouse", href: "/automation", type: "action" },
+      { name: "Production", href: "/automation", type: "action" },
+      { name: "SCM", href: "/automation", type: "action" },
+      { name: "HR & All Divisions", href: "/automation", type: "action" },
+      { name: "Executive", href: "/automation", type: "action" },
+      { name: "System", href: "/automation", type: "action" },
+      { name: "Legality", href: "/automation", type: "action" },
+    ]
+  }
 ];
 
-/* ─── TIER HIERARCHY ──────────────────────────────────── */
-const TIER_STRUCTURE: TierGroup[] = [
-  { tier: "CORE INTELLIGENCE",   groups: ["DIGITAL MARKETING"] },
-  { tier: "OPERATIONAL EXCELLENCE", groups: ["RESEARCH & DEV"] },
+const TIER_STRUCTURE = [
+  {
+    tier: "CORE INTELLIGENCE",
+    groups: ["EXECUTIVE", "DIGITAL MARKETING", "BUSSDEV"]
+  },
+  {
+    tier: "OPERATIONAL EXCELLENCE",
+    groups: ["FINANCE", "SUPPLY CHAIN", "PRODUCTION", "QUALITY CONTROL", "GUDANG", "RESEARCH & DEV"]
+  },
+  {
+    tier: "STRATEGIC SUPPORT",
+    groups: ["LEGALITAS / APJ", "HUMAN RESOURCES", "CREATIVE HUB", "SYSTEM CONTROL"]
+  },
+  {
+    tier: "AUTOMATION ENGINE",
+    groups: ["AUTOMATION ENGINE"]
+  }
 ];
 
-/* ─── HELPERS ─────────────────────────────────────────── */
 const getIconByType = (type: string) => {
   switch (type) {
     case "dashboard": return LayoutDashboard;
-    case "input":    return PlusCircle;
-    case "action":   return Zap;
-    case "history":  return History;
-    default:         return LayoutDashboard;
+    case "input": return PlusCircle;
+    case "action": return Zap;
+    case "history": return History;
+    case "settings": return Cog;
+    case "bussdev_lost": return XCircle;
+    default: return Activity;
   }
 };
 
-const getBadgeStyle = (variant?: string) => {
-  switch (variant) {
-    case "warning":  return "bg-amber-50 text-amber-600";
-    case "critical": return "bg-red-50 text-red-600";
-    default:         return "bg-sidebar-accent text-sidebar-accent-foreground";
-  }
-};
-
-/* ─── MARKETING VIEWER ─────────────────────────────── */
-// Mirror backend resolveViewer logic agar sidebar bisa filter per-member.
-const managerRoleSet = new Set(['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING']);
-
-const marketingAliases: Record<string, string[]> = {
-  revi: ['revita', 'revi', 'fadhilah', 'nisa'],
-  zarka: ['zarkasi', 'zarka'],
-  gusti: ['gusti'],
-  aurel: ['aurel'],
-  edy: ['edy'],
-  luthfi: ['luthfi'],
-  rahmat: ['rahmat'],
-};
-
-// Mirror backend DELEGATED_MANAGER_SCOPE (PLAN-RAHMAT): Rahmat (bukan global
-// manager) berhak mengelola Gusti & Zarkasi → sidebar menampilkan halaman itu.
-const delegatedManagerScope: Record<string, string[]> = {
-  rahmat: ['gusti', 'zarka'],
-};
-
-// Semua slug member yang punya halaman di Management Task (children sidebar).
-const ALL_MEMBER_SLUGS = ['aurel', 'revi', 'zarka', 'gusti', 'luthfi', 'rahmat'];
-
-function computeMarketingViewer(user: any): {
-  slug: string | null;
-  isManager: boolean;
-  managedMembers: string[];
-} {
-  const email = ((user?.email ?? '') as string).toLowerCase().trim();
-  const fullName = ((user?.fullName ?? '') as string).toLowerCase().trim();
-  const roles: string[] = user?.roles ?? [];
-
-  // Determine member slug from email or fullName
-  let slug: string | null = null;
-  for (const [aliasSlug, aliases] of Object.entries(marketingAliases)) {
-    if (aliases.includes(fullName) || aliases.some((a) => email.startsWith(a + '@'))) {
-      slug = aliasSlug;
-      break;
-    }
-  }
-
-  const isManager =
-    email.startsWith('revita@') ||
-    email.startsWith('zaki@') ||
-    email.startsWith('admin@') ||
-    email.startsWith('nisa@') ||
-    roles.some((r) => managerRoleSet.has(r));
-
-  // Delegated manager: manager lihat semua; member biasa lihat scope delegasinya.
-  const managedMembers = isManager
-    ? ALL_MEMBER_SLUGS
-    : (slug ? (delegatedManagerScope[slug] ?? []) : []);
-
-  return { slug, isManager, managedMembers };
-}
-
-/* ─── COMPONENT ───────────────────────────────────────── */
-type SidebarProps = {
-  isOpen?: boolean;
-  onClose?: () => void;
-};
-
-export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
-  const [openItems, setOpenItems] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const normalizedQuery = searchQuery.toLowerCase().trim();
-  const isSearching = normalizedQuery.length > 0;
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  /* ── Filter module by user role + marketing member scope ── */
-  const visibleModules = useMemo(() => {
-    if (!user) return MODULE_STRUCTURE; // belum login, show all
-    const userRoles: string[] = user.roles ?? [];
-    const { slug, isManager, managedMembers } = computeMarketingViewer(user);
-
-    // Step 1: filter by module-level roles
-    const modules = MODULE_STRUCTURE.filter(g => {
-      if (!g.roles) return true;
-      return g.roles.some(r => userRoles.includes(r));
-    });
-
-    // Step 2: within DIGITAL MARKETING, filter Management Task children
-    //         untuk non-manager -> halaman sendiri + halaman yang ia kelola
-    //         (delegated manager: Rahmat → Gusti & Zarkasi)
-    return modules.map(mod => {
-      if (mod.label !== 'DIGITAL MARKETING') return mod;
-      if (isManager) return mod; // manager sees all
-
-      const filteredItems = mod.items.map(item => {
-        // Hanya Management Task yang perlu filtering children-nya
-        if (item.name !== 'Management Task' || !item.children) return item;
-
-        const filteredChildren = item.children.filter((child) => {
-          if (!child.memberSlug) return false;
-          // halaman sendiri ATAU halaman dalam scope delegasi
-          return child.memberSlug === slug || managedMembers.includes(child.memberSlug);
-        });
-
-        return { ...item, children: filteredChildren };
-      }).filter(item => {
-        // Management Task tanpa children yang relevan -> hidden
-        if (item.name === 'Management Task' && item.children && item.children.length === 0) return false;
-        return true;
-      });
-
-      return { ...mod, items: filteredItems };
-    });
-  }, [user]);
-
-  /* ── Normal: pastikan grup aktif tetap terbuka — tanpa nutup grup lain ── */
   useEffect(() => {
-    if (isSearching) return;
-    const activeGroup = visibleModules.find(group =>
-      group.items.some(item =>
-        item.href === pathname ||
-        item.children?.some(c => c.href === pathname)
-      )
+    const activeGroup = MODULE_STRUCTURE.find(group =>
+      group.items.some(item => item.href === pathname)
     );
     if (activeGroup) {
-      setOpenGroups(prev =>
-        prev.includes(activeGroup.label) ? prev : [...prev, activeGroup.label]
-      );
+      setOpenGroups([activeGroup.label]);
     }
-    // Auto-open parent item whose child is active
-    const activeParent = visibleModules
-      .flatMap(g => g.items)
-      .find(item => item.children?.some(c => c.href === pathname));
-    if (activeParent) {
-      setOpenItems(prev =>
-        prev.includes(activeParent.href) ? prev : [...prev, activeParent.href]
-      );
-    }
-  }, [pathname, isSearching, visibleModules]);
+  }, [pathname]);
 
-  /* ── Search: auto-open matching groups ── */
-  useEffect(() => {
-    if (!isSearching) return; // normal effect already handles openGroups additively
-    const matchingLabels = visibleModules
-      .filter(g =>
-        g.label.toLowerCase().includes(normalizedQuery) ||
-        g.items.some(item =>
-          item.name.toLowerCase().includes(normalizedQuery) ||
-          item.children?.some(c => c.name.toLowerCase().includes(normalizedQuery))
-        )
-      )
-      .map(g => g.label);
-    setOpenGroups(matchingLabels);
-  }, [normalizedQuery, isSearching, visibleModules, pathname]);
+  const isExecutive = user?.roles?.includes("DIRECTOR");
+  const isRevitaMarketingOnly = user?.email?.toLowerCase?.() === "revita@nexerp.id";
 
   const toggleGroup = (label: string) => {
-    if (isSearching) return;
     setOpenGroups(prev =>
       prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
     );
   };
 
-  const toggleItem = (href: string) => {
-    setOpenItems(prev =>
-      prev.includes(href) ? prev.filter(h => h !== href) : [...prev, href]
-    );
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    document.cookie = "token=; path=/; max-age=0; SameSite=Lax;";
-    window.location.href = "/login";
-  };
-
-  const clearSearch = () => setSearchQuery("");
-
-  /* ── Build filtered tier tree ── */
-  const filteredTiers = useMemo(() => {
-    return TIER_STRUCTURE
-      .map(tier => {
-        const tierGroups = visibleModules
-          .filter(g => tier.groups.includes(g.label))
-          .map(g => {
-            if (!isSearching) return g;
-            const filteredItems = g.items.filter(item =>
-              g.label.toLowerCase().includes(normalizedQuery) ||
-              item.name.toLowerCase().includes(normalizedQuery) ||
-              item.children?.some(c => c.name.toLowerCase().includes(normalizedQuery))
-            ).map(item => {
-              if (!item.children || isSearching) return item;
-              const filteredChildren = item.children.filter(c =>
-                c.name.toLowerCase().includes(normalizedQuery)
-              );
-              return filteredChildren.length < item.children.length
-                ? { ...item, children: filteredChildren }
-                : item;
-            });
-            return { ...g, items: filteredItems };
-          })
-          .filter(g => !isSearching || g.items.length > 0);
-        return { ...tier, groups: tierGroups };
-      })
-      .filter(t => t.groups.length > 0);
-  }, [isSearching, normalizedQuery, visibleModules]);
-
-  const totalFilteredItems = filteredTiers.reduce(
-    (sum, t) => sum + t.groups.reduce((s, g) => s + g.items.length, 0), 0
-  );
-
-  /* ── Get display role ── */
-  const displayRole = user?.roles?.includes("RND") ? "R&D Staff"
-    : user?.roles?.includes("SUPER_ADMIN") ? "Super Admin"
-    : user?.roles?.includes("MARKETING") || user?.roles?.includes("DIGIMAR") ? "Marketing"
-    : user?.roles?.includes("HR") ? "HR"
-    : "Staff";
-
-  const handleNavigate = () => {
-    if (isSearching) clearSearch();
-    onClose?.();
-  };
-
   return (
-    <>
-    {isOpen && (
-      <button
-        type="button"
-        aria-label="Close navigation menu"
-        className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] lg:hidden"
-        onClick={onClose}
-      />
-    )}
-    <aside
-      className={cn(
-        "sidebar-root bg-white border-r border-gray-100 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-200 ease-out",
-        "lg:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      )}
-      style={{ width: "var(--sidebar-width)" }}
-    >
-      {/* ═══ BRAND — VISUAL_DNA §1 dashboard-title ═══ */}
-      <div className="px-7 pt-7 pb-4">
-        <div className="flex items-center gap-4">
-          <div className="w-[46px] h-[46px] rounded-[16px] overflow-hidden shadow-lg shadow-slate-200/60 ring-[3px] ring-gray-50 flex items-center justify-center bg-white shrink-0">
+    <aside className="w-72 border-r border-slate-200 bg-white h-screen fixed left-0 top-0 flex flex-col z-50 font-sans shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      {/* Brand Section */}
+      <div className="p-7 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-slate-200 ring-4 ring-slate-50 flex items-center justify-center bg-white">
             <img src="/nexerp-logo.jpeg" alt="NEX ERP Logo" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[18px] tracking-[-0.05em] text-gray-900 uppercase leading-none" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}>
-              NEX <span style={{ fontWeight: 700 }} className="text-gray-400">ERP</span>
+            <span className="text-[15px] font-black tracking-[-0.03em] text-brand-black uppercase leading-tight">
+              NEX <span className="text-slate-400 font-bold">ERP</span>
             </span>
-            <span className="text-[9px] uppercase tracking-[0.1em] text-gray-400 mt-1.5" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}>
-              Production Light
-            </span>
+            <span className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase">Intelligence Hub</span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-100 text-gray-400 transition hover:bg-gray-50 hover:text-gray-700 lg:hidden"
-            aria-label="Close navigation menu"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
-      {/* ═══ COMMAND SEARCH — VISUAL_DNA body text ═══ */}
-      <div className="px-6 pb-5">
+      {/* Command Search */}
+      <div className="px-6 py-4">
         <div className="relative group">
-          <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-            <FileSearch className="w-[15px] h-[15px] text-gray-300 group-focus-within:text-gray-500 transition-colors duration-150" />
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <FileSearch className="w-4 h-4 text-slate-300 group-focus-within:text-brand-black transition-colors" />
           </div>
           <input
             type="text"
-            placeholder="Cari menu..."
-            className="w-full bg-gray-50 border border-gray-100 rounded-[14px] py-2.5 pl-10 pr-9 text-[13px] tracking-[-0.01em] text-gray-700 focus:outline-none focus:ring-[3px] focus:ring-gray-100 focus:bg-white focus:border-gray-200 transition-all duration-150 placeholder:text-gray-300"
-            style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 600 }}
+            placeholder="Command + K..."
+            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition-all placeholder:text-slate-300 placeholder:font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-3 flex items-center text-gray-300 hover:text-gray-500 transition-colors duration-150"
-              aria-label="Clear search"
-            >
-              <SearchX className="w-[15px] h-[15px]" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* ═══ NAVIGATION — TIER STRUCTURE ═══ */}
-      <nav className="flex-1 overflow-y-auto px-5 pb-4 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
-        {isSearching && totalFilteredItems === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-            <SearchX className="w-10 h-10 text-gray-300 mb-4" />
-            <p className="text-[13px] tracking-[-0.01em] text-gray-400" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 600 }}>
-              Tidak ada menu untuk &ldquo;{searchQuery}&rdquo;
-            </p>
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="mt-4 px-5 py-2.5 rounded-[12px] text-[10px] uppercase tracking-[0.1em] text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-150"
-              style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}
-            >
-              Hapus pencarian
-            </button>
-          </div>
-        ) : (
-          filteredTiers.map((tier) => (
-            <div key={tier.tier} className="space-y-3">
-              {/* Tier separator — VISUAL_DNA §1 micro-label */}
-              <div className="flex items-center gap-3 px-1">
-                <div className="h-[1px] flex-1 bg-gray-100" />
-                <span className="text-[9px] uppercase tracking-[0.1em] text-gray-400 shrink-0" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}>
+      {/* Navigation Space */}
+      <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
+        {TIER_STRUCTURE.map((tier) => {
+          const tierGroups = MODULE_STRUCTURE.filter(group => 
+            tier.groups.includes(group.label) && 
+            (!user || !group.roles || group.roles.some(role => user.roles.includes(role))) &&
+            (!isRevitaMarketingOnly || group.label === "DIGITAL MARKETING")
+          );
+
+          if (tierGroups.length === 0) return null;
+
+          return (
+            <div key={tier.tier} className="space-y-4">
+              <div className="flex items-center gap-3 px-3">
+                <div className="h-[1px] flex-1 bg-slate-100"></div>
+                <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase whitespace-nowrap">
                   {tier.tier}
                 </span>
-                <div className="h-[1px] flex-1 bg-gray-100" />
+                <div className="h-[1px] flex-1 bg-slate-100"></div>
               </div>
 
-              {/* Module groups */}
-              <div className="space-y-1">
-                {tier.groups.map((group) => {
-                  const Icon = group.icon;
-                  const isGroupActive = group.items.some(i =>
-                    i.href === pathname || i.children?.some(child => child.href === pathname)
-                  );
-                  const isOpen = openGroups.includes(group.label);
+              <div className="space-y-1.5">
+                {tierGroups.map((group) => {
+                  const dashItems = group.items.filter(i => i.type === "dashboard");
+                  const isGroupActive = group.items.some(i => i.href === pathname);
 
-                  return (
-                    <div key={group.label}>
-                      <button
-                        onClick={() => toggleGroup(group.label)}
-                        className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-[14px] transition-all duration-150",
-                          "text-[13.5px] tracking-[-0.01em]",
-                          isGroupActive
-                            ? "bg-slate-900 text-white shadow-md shadow-slate-200/50"
-                            : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                        )}
-                        style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 600 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className={cn(
-                            "w-[18px] h-[18px]",
-                            isGroupActive ? "text-white" : "text-slate-400"
-                          )} />
-                          <span style={{ fontWeight: 600 }}>{group.label}</span>
-                        </div>
-                        <ChevronDown className={cn(
-                          "w-4 h-4 transition-transform duration-150",
-                          isOpen && "rotate-180",
-                          isGroupActive ? "text-white/60" : "text-slate-300"
-                        )} />
-                      </button>
+                  // --- EXECUTIVE MODE (DIRECTOR role) ---
+                  if (isExecutive) {
+                    if (dashItems.length === 0) return null;
+                    const primaryHref = dashItems[0].href;
+                    const isPrimaryActive = pathname === primaryHref;
+                    const extraItems = dashItems.slice(1);
 
-                      {isOpen && group.items.length > 0 && (
-                        <div className="ml-4 mt-0.5 space-y-0.5 border-l-[1.5px] border-gray-100 pl-4">
-                          {group.items.map((item) => {
-                            const ItemIcon = getIconByType(item.type);
-                            const isActive = pathname === item.href;
-                            const hasChildren = item.children && item.children.length > 0;
-                            const isItemOpen = openItems.includes(item.href);
+                    return (
+                      <div key={group.label} className="space-y-1">
+                        <Link
+                          href={primaryHref}
+                          onMouseEnter={() => router.prefetch(primaryHref)}
+                          className={cn(
+                            "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                            isPrimaryActive
+                              ? "bg-brand-black text-white shadow-md shadow-slate-200"
+                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
+                              isPrimaryActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
+                            )}>
+                              <group.icon className={cn(
+                                "w-4 h-4",
+                                isPrimaryActive ? "text-white" : "text-slate-400 group-hover:text-brand-black"
+                              )} />
+                            </div>
+                            <span className={cn(
+                              "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
+                              isPrimaryActive ? "text-white" : "text-inherit"
+                            )}>
+                              {group.label}
+                            </span>
+                          </div>
+                        </Link>
 
-                            // If has children → render as collapsible parent
-                            if (hasChildren) {
-                              const anyChildActive = item.children!.some(c => c.href === pathname);
+                        {extraItems.length > 0 && (
+                          <div className="ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
+                            {extraItems.map((item) => {
+                              const isExtraActive = pathname === item.href;
                               return (
-                                <div key={item.href}>
-                                  <button
-                                    onClick={() => {
-                                      if (isSearching) return;
-                                      toggleItem(item.href);
-                                    }}
-                                    className={cn(
-                                      "w-full flex items-center justify-between px-4 py-2.5 rounded-[12px] transition-all duration-150",
-                                      "text-[12px] tracking-[-0.01em]",
-                                      anyChildActive
-                                        ? "text-slate-900 bg-slate-100"
-                                        : "text-slate-400 hover:text-slate-600"
-                                    )}
-                                    style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: anyChildActive ? 700 : 600 }}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <span style={{ fontWeight: anyChildActive ? 700 : 600 }}>{item.name}</span>
-                                    </div>
-                                    <ChevronDown className={cn(
-                                      "w-3.5 h-3.5 transition-transform duration-150",
-                                      isItemOpen && "rotate-180",
-                                      "text-slate-300"
-                                    )} />
-                                  </button>
-                                  {isItemOpen && (
-                                    <div className="ml-3 mt-0.5 space-y-0.5 border-l-[1.5px] border-gray-100 pl-3">
-                                      {item.children!.map((child) => {
-                                        const ChildIcon = getIconByType(child.type);
-                                        const isChildActive = pathname === child.href;
-                                        return (
-                                          <Link key={child.href} href={child.href} onClick={handleNavigate}>
-                                            <div className={cn(
-                                              "flex items-center gap-3 px-4 py-2 rounded-[10px] transition-all duration-150",
-                                              "text-[11.5px] tracking-[-0.01em]",
-                                              isChildActive
-                                                ? "text-slate-900 bg-slate-100"
-                                                : "text-slate-400 hover:text-slate-600"
-                                            )}
-                                              style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: isChildActive ? 700 : 500 }}
-                                            >
-                                              <ChildIcon className={cn(
-                                                "w-[13px] h-[13px]",
-                                                isChildActive ? "text-slate-900" : "text-slate-300"
-                                              )} />
-                                              <span style={{ fontWeight: isChildActive ? 700 : 500 }}>{child.name}</span>
-                                            </div>
-                                          </Link>
-                                        );
-                                      })}
-                                    </div>
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  onMouseEnter={() => router.prefetch(item.href)}
+                                  className={cn(
+                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                    isExtraActive
+                                      ? "bg-slate-50 text-brand-black font-bold"
+                                      : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
                                   )}
-                                </div>
-                              );
-                            }
-
-                            // Regular item (no children) — render as link
-                            return (
-                              <Link key={item.href} href={item.href} onClick={handleNavigate}>
-                                <div className={cn(
-                                  "flex items-center gap-3 px-4 py-2.5 rounded-[12px] transition-all duration-150",
-                                  "text-[12px] tracking-[-0.01em]",
-                                  isActive
-                                    ? "text-slate-900 bg-slate-100"
-                                    : "text-slate-400 hover:text-slate-600"
-                                )}
-                                  style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: isActive ? 700 : 600 }}
                                 >
-                                  <ItemIcon className={cn(
-                                    "w-[15px] h-[15px]",
-                                    isActive ? "text-slate-900" : "text-slate-300"
-                                  )} />
-                                  <span className="flex-1" style={{ fontWeight: isActive ? 700 : 600 }}>{item.name}</span>
+                                  <div className="flex items-center gap-3">
+                                    <Zap className={cn(
+                                      "w-3.5 h-3.5 transition-colors",
+                                      isExtraActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
+                                    )} />
+                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                      {item.name}
+                                    </span>
+                                  </div>
                                   {item.badge && (
                                     <span className={cn(
-                                      "text-[9px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-[8px]",
-                                      getBadgeStyle(item.badgeVariant)
-                                    )}
-                                      style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}
-                                    >
+                                      "px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider",
+                                      item.badgeVariant === "critical" ? "bg-rose-100 text-rose-600" :
+                                      item.badgeVariant === "warning" ? "bg-amber-100 text-amber-600" :
+                                      "bg-slate-100 text-slate-500"
+                                    )}>
                                       {item.badge}
                                     </span>
                                   )}
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {isOpen && group.items.length === 0 && isSearching && (
-                        <div className="ml-4 mt-1 pl-4 border-l-[1.5px] border-gray-100">
-                          <div className="px-4 py-3 text-[10px] text-gray-400 tracking-[-0.01em]" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 500 }}>
-                            Tidak ada menu yang cocok
+                                  {isExtraActive && (
+                                    <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
+                                  )}
+                                </Link>
+                              );
+                            })}
                           </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // --- NORMAL MODE (non-DIRECTOR) ---
+                  const isOpen = openGroups.includes(group.label);
+                  return (
+                    <div key={group.label} className="space-y-1">
+                      <button
+                        onClick={() => toggleGroup(group.label)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group",
+                          isGroupActive
+                            ? "bg-brand-black text-white shadow-md shadow-slate-200"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                        )}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
+                            isGroupActive ? "bg-white/10" : "bg-slate-50 group-hover:bg-white shadow-sm border border-slate-100 group-hover:border-slate-200"
+                          )}>
+                            <group.icon className={cn(
+                              "w-4 h-4",
+                              isGroupActive ? "text-white" : "text-slate-400 group-hover:text-brand-black"
+                            )} />
+                          </div>
+                          <span className={cn(
+                            "text-[12px] font-bold tracking-tight whitespace-nowrap truncate",
+                            isGroupActive ? "text-white" : "text-inherit"
+                          )}>
+                            {group.label}
+                          </span>
                         </div>
-                      )}
+                        <ChevronDown className={cn(
+                          "w-3.5 h-3.5 transition-transform duration-500",
+                          isOpen ? "rotate-180" : "text-slate-300"
+                        )} />
+                      </button>
+                        {isOpen && (
+                          <div className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ml-6 border-l-2 border-slate-100 pl-4 space-y-1 mt-1.5">
+                            {group.items.map((item) => {
+                              const isActive = pathname === item.href;
+                              const IconType = getIconByType(item.type);
+                              return (
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  onMouseEnter={() => router.prefetch(item.href)}
+                                  className={cn(
+                                    "flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group relative",
+                                    isActive
+                                      ? "bg-slate-50 text-brand-black font-bold"
+                                      : "text-slate-400 hover:text-brand-black hover:bg-slate-50/50 hover:translate-x-[4px]"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <IconType className={cn(
+                                      "w-3.5 h-3.5 transition-colors",
+                                      isActive ? "text-brand-black" : "text-slate-300 group-hover:text-brand-black"
+                                    )} />
+                                    <span className="text-[11px] font-bold tracking-tight whitespace-nowrap truncate">
+                                      {item.name}
+                                    </span>
+                                  </div>
+                                  {item.badge && (
+                                    <span className={cn(
+                                      "px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider",
+                                      item.badgeVariant === "critical" ? "bg-rose-100 text-rose-600" :
+                                      item.badgeVariant === "warning" ? "bg-amber-100 text-amber-600" :
+                                      "bg-slate-100 text-slate-500"
+                                    )}>
+                                      {item.badge}
+                                    </span>
+                                  )}
+                                  {isActive && (
+                                    <div className="absolute -left-[18px] w-1 h-4 bg-brand-black rounded-full" />
+                                  )}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
                     </div>
                   );
                 })}
               </div>
             </div>
-          ))
-        )}
+          );
+        })}
       </nav>
 
-      {/* ═══ USER INFO + LOGOUT — VISUAL_DNA §1 ═══ */}
-      <div className="px-5 py-4 border-t border-gray-100 space-y-2">
-        {user && (
-          <div className="flex items-center gap-3 px-3 py-3 rounded-[16px] bg-gray-50">
-            <div className="w-9 h-9 rounded-[12px] bg-gray-200 flex items-center justify-center shrink-0">
-              <span className="text-[13px] text-gray-600 uppercase" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}>
-                {(user.fullName || user.email || "?").charAt(0)}
-              </span>
+      {/* Footer Profile */}
+      <div className="p-6 bg-slate-50/50 border-t border-slate-100 mt-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden group">
+              <UserCircle className="w-6 h-6 text-slate-300 group-hover:text-brand-black transition-colors" />
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] tracking-[-0.01em] text-gray-700 truncate leading-tight" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 600 }}>
-                {user.fullName || user.email}
+            <div className="flex flex-col">
+              <p className="text-[12px] font-black text-brand-black line-clamp-1 leading-none mb-1">
+                {user?.full_name || "Authorized"}
               </p>
-              <p className="text-[9px] uppercase tracking-[0.1em] text-gray-400 mt-0.5" style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 900 }}>
-                {displayRole}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                  {user?.roles?.[0] || "Active Session"}
+                </p>
+              </div>
             </div>
           </div>
-        )}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[14px] text-[12px] text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
-          style={{ fontFamily: "var(--font-inter, 'Inter'), system-ui, sans-serif", fontWeight: 600 }}
-        >
-          <LogOut className="w-[15px] h-[15px]" />
-          <span style={{ fontWeight: 600 }}>Logout</span>
-        </button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-xl hover:bg-rose-50 text-slate-300 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-none"
+            onClick={() => {
+              localStorage.removeItem('token');
+              window.location.href = '/login';
+            }}
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </aside>
-    </>
   );
 }
+
