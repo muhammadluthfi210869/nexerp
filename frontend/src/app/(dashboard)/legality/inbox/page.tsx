@@ -29,6 +29,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { TableWrapper, DataCard, DnaBadge, DnaButton } from "@/components/dna";
+import { Card } from "@/components/ui/card";
 
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();
@@ -90,7 +91,7 @@ export default function ComplianceInboxPage() {
       titleAccent="INBOX"
       subtitle="Regulatory curation task inbox and AI verification center"
     >
-      <div className="flex h-[calc(100vh-180px)] bg-white overflow-hidden rounded-2xl border border-slate-200 shadow-card animate-fade-slide-in">
+      <Card className="flex h-[calc(100vh-180px)] rounded-2xl border border-slate-200 shadow-sm p-0">
         {/* Left Sidebar: Task List */}
         <aside className="w-[360px] border-r border-slate-100 flex flex-col bg-slate-50/30 shrink-0">
           <div className="p-5 pb-3">
@@ -137,9 +138,9 @@ export default function ComplianceInboxPage() {
             
             {!isLoading && !isError && (!tasks || tasks.length === 0) && (
               <div className="p-8 text-center space-y-4">
-                <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-slate-100">
+                <Card className="h-14 w-14 rounded-2xl border border-slate-200 shadow-sm p-0 flex items-center justify-center mx-auto">
                   <Sparkles className="w-7 h-7 text-blue-400" />
-                </div>
+                </Card>
                 <div>
                   <p className="text-[10px] font-black text-slate-900 uppercase italic tracking-wider">System is Clean</p>
                   <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wide mt-1">No pending regulatory tasks detected.</p>
@@ -227,10 +228,10 @@ export default function ComplianceInboxPage() {
                 {activeTask.type === "ARTWORK_REVIEW" && (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                     <div className="col-span-12 lg:col-span-8 space-y-6">
-                      <div className="aspect-video bg-slate-100 border border-slate-200 rounded-2xl relative overflow-hidden group flex items-center justify-center shadow-inner">
+                      <Card className="aspect-video rounded-2xl border border-slate-200 shadow-sm p-0 relative overflow-hidden group flex items-center justify-center">
                         <ImageIcon className="w-12 h-12 text-slate-300 absolute pointer-events-none" />
-                        <Image 
-                          src="https://placehold.co/1200x800/f8fafc/cbd5e1?text=ARTWORK+PREVIEW" 
+                        <Image
+                          src="https://placehold.co/1200x800/f8fafc/cbd5e1?text=ARTWORK+PREVIEW"
                           alt="Artwork Preview"
                           width={1200}
                           height={800}
@@ -242,7 +243,7 @@ export default function ComplianceInboxPage() {
                           <button className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Maximize2 className="w-4 h-4" /></button>
                           <button className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Download className="w-4 h-4" /></button>
                         </div>
-                      </div>
+                      </Card>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <DataCard
                           dotColor="bg-blue-500"
@@ -491,7 +492,7 @@ export default function ComplianceInboxPage() {
           )}
         </AnimatePresence>
       </main>
-      </div>
+      </Card>
     </DashboardShell>
   );
 }
