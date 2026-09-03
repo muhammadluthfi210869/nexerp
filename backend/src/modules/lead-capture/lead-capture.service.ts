@@ -120,6 +120,7 @@ export class LeadCaptureService {
           waMessage: data.waMessage,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
+          kommoFirstResponseSec: 0,
         },
       });
     } else {
@@ -131,6 +132,9 @@ export class LeadCaptureService {
           waMessage: data.waMessage,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
+          kommoFirstResponseSec: lead.createdAt && !lead.kommoFirstResponseSec
+            ? Math.round((Date.now() - new Date(lead.createdAt).getTime()) / 1000)
+            : lead.kommoFirstResponseSec ?? null,
         },
       });
     }
