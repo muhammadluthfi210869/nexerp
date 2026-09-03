@@ -70,6 +70,9 @@ enum WorkflowStatus {
   WON_DEAL
   LOST
   ABORTED
+  COLD
+  WARM
+  HOT
 }
 
 enum ActivityType {
@@ -144,6 +147,15 @@ enum ContentCategory {
   ENTERTAINMENT
   BEHIND_THE_SCENES
   OTHER
+}
+
+enum PostStatus {
+  IDEA
+  SCRIPTING
+  REVIEW
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
 }
 
 enum GuestCategory {
