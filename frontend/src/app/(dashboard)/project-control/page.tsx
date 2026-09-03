@@ -18,12 +18,15 @@ import {
   ChevronRight,
   Layers,
   Sparkles,
-  Calendar
+  Calendar,
+  ShieldAlert,
+  Zap,
+  Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MOCK_PROJECTS, MOCK_PROJECT_HEALTH } from "@/components/project-control/mock-data";
-import { ProjectStatusBadge, ProjectHealthMeter } from "@/components/project-control/ProjectControlComponents";
-import { Project, ProjectStatus } from "@/types/project-control";
+import { MOCK_PROJECTS } from "@/components/project-control/mock-data";
+import { ProjectStatusBadge } from "@/components/project-control/ProjectControlComponents";
+import { Project } from "@/types/project-control";
 
 export default function ProjectControlDashboardPage() {
   const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
@@ -69,7 +72,6 @@ export default function ProjectControlDashboardPage() {
 
       return matchSearch && matchStatus && matchDept;
     }).sort((a, b) => {
-      // Default Sort Order: Need Decision -> Off Track -> At Risk -> Not Updated -> On Track
       const priorityOrder: Record<string, number> = {
         NEED_DECISION: 0,
         OFF_TRACK: 1,
@@ -84,6 +86,8 @@ export default function ProjectControlDashboardPage() {
       return scoreA - scoreB;
     });
   }, [projects, searchQuery, statusFilter, deptFilter]);
+
+  const onTrackPct = Math.round((summary.onTrack / (summary.totalActive || 1)) * 100);
 
   return (
     <div className="space-y-6 px-6 py-6 bg-[#F8FAFC] min-h-screen text-slate-900">
@@ -113,66 +117,149 @@ export default function ProjectControlDashboardPage() {
         </Link>
       </div>
 
-      {/* ── 2. TOP SUMMARY CARDS (3-LAYER COMPACT STRUCTURE) ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        {/* Card 1 — Need Decision (HIGH PRIORITY) */}
+      {/* ── 2. RICH BIG KPI CARDS WITH PROGRESS LINE BARS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* BIG CARD 1: Status Eksekusi Proyek */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Status Eksekusi Proyek</span>
+            <span className="p-2 rounded-xl bg-blue-50 text-blue-600">
+              <FolderOpen className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-slate-900 leading-tight">{summary.totalActive}</h3>
+              <span className="text-[13px] font-bold text-slate-500">Proyek Aktif</span>
+            </div>
+
+            {/* Progress Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold">
+                <span className="text-emerald-600">On Track: {summary.onTrack}</span>
+                <span className="text-slate-700">{onTrackPct}%</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                <div style={{ width: `${onTrackPct}%` }} className="bg-emerald-500 h-full rounded-full transition-all" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+            <span>⚡ {summary.atRisk} Risk</span>
+            <span>🚨 {summary.offTrack} Off Track</span>
+            <span>🕒 {summary.notUpdated} Stale</span>
+          </div>
+        </div>
+
+        {/* BIG CARD 2: Need Director Decision */}
         <div className={cn(
-          "bg-white border rounded-xl p-4 shadow-2xs transition-all relative overflow-hidden",
+          "bg-white border rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden transition-all",
           summary.needDecision > 0 ? "border-purple-300 bg-purple-50/20" : "border-slate-200"
         )}>
-          <p className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Need Decision</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.needDecision}</h3>
-          <p className="text-[11px] font-semibold text-purple-600 mt-0.5">Membutuhkan Direksi</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-purple-700 uppercase tracking-wider">Need Decision</span>
+            <span className="p-2 rounded-xl bg-purple-100 text-purple-700">
+              <ShieldAlert className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-purple-950 leading-tight">{summary.needDecision}</h3>
+              <span className="text-[12px] font-bold text-purple-700">Menunggu Direksi</span>
+            </div>
+
+            {/* Warning Progress Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-purple-700">
+                <span>Perlu Keputusan Direktur</span>
+                <span>100% Action Required</span>
+              </div>
+              <div className="w-full h-2 bg-purple-100 rounded-full overflow-hidden">
+                <div className="bg-purple-600 h-full rounded-full w-full animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-purple-100 text-[11px] font-semibold text-purple-800 truncate">
+            📌 Blocker: Supplier MOQ & Power Panel Listrik
+          </div>
         </div>
 
-        {/* Card 2 — Off Track */}
+        {/* BIG CARD 3: Proyek Off Track & Critical Risk */}
         <div className={cn(
-          "bg-white border rounded-xl p-4 shadow-2xs transition-all",
+          "bg-white border rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden",
           summary.offTrack > 0 ? "border-rose-300 bg-rose-50/20" : "border-slate-200"
         )}>
-          <p className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Off Track</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.offTrack}</h3>
-          <p className="text-[11px] font-semibold text-rose-600 mt-0.5">Kritis / Keterlambatan</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-rose-600 uppercase tracking-wider">Critical & Off Track</span>
+            <span className="p-2 rounded-xl bg-rose-100 text-rose-600">
+              <AlertTriangle className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-rose-950 leading-tight">{summary.offTrack + summary.atRisk}</h3>
+              <span className="text-[12px] font-bold text-rose-700">Proyek Terkendala</span>
+            </div>
+
+            {/* Red Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-rose-700">
+                <span>{summary.offTrack} Off Track • {summary.atRisk} At Risk</span>
+                <span>Critical</span>
+              </div>
+              <div className="w-full h-2 bg-rose-100 rounded-full overflow-hidden flex">
+                <div style={{ width: `${Math.round((summary.offTrack / (summary.totalActive || 1)) * 100)}%` }} className="bg-rose-600 h-full" />
+                <div style={{ width: `${Math.round((summary.atRisk / (summary.totalActive || 1)) * 100)}%` }} className="bg-amber-400 h-full" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-rose-100 text-[11px] font-semibold text-rose-800 truncate">
+            ⚠️ Terlambat: Webhooks SCM API & Tank 03
+          </div>
         </div>
 
-        {/* Card 3 — At Risk */}
-        <div className={cn(
-          "bg-white border rounded-xl p-4 shadow-2xs transition-all",
-          summary.atRisk > 0 ? "border-amber-300 bg-amber-50/20" : "border-slate-200"
-        )}>
-          <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">At Risk</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.atRisk}</h3>
-          <p className="text-[11px] font-semibold text-amber-600 mt-0.5">Potensi Kendala</p>
+        {/* BIG CARD 4: Target Milestone & Done */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider">Milestone Achievement</span>
+            <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+              <Target className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-slate-900 leading-tight">{summary.completedThisMonth}</h3>
+              <span className="text-[12px] font-bold text-emerald-700">Proyek Selesai Bulan Ini</span>
+            </div>
+
+            {/* Emerald Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-emerald-700">
+                <span>Rata-Rata Progress Portfolio</span>
+                <span>65.0%</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full w-[65%]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 text-[11px] font-semibold text-emerald-700 truncate">
+            ✅ Catalog Packaging (75%) • CPKB BPOM (80%)
+          </div>
         </div>
 
-        {/* Card 4 — Not Updated */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Not Updated</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.notUpdated}</h3>
-          <p className="text-[11px] font-medium text-slate-500 mt-0.5">&gt; 2 Hari Stale</p>
-        </div>
-
-        {/* Card 5 — On Track */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">On Track</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.onTrack}</h3>
-          <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">
-            {Math.round((summary.onTrack / (summary.totalActive || 1)) * 100)}% dari aktif
-          </p>
-        </div>
-
-        {/* Card 6 — Active Projects */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Active</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.totalActive}</h3>
-          <p className="text-[11px] font-medium text-slate-500 mt-0.5">Proyek Berjalan</p>
-        </div>
       </div>
 
-      {/* ── 3. HEALTH DISTRIBUTION BAR ── */}
-      <ProjectHealthMeter summary={summary} />
-
-      {/* ── 4. DIRECTOR ATTENTION TABLE (PERHATIAN DIREKSI) ── */}
+      {/* ── 3. DIRECTOR ATTENTION TABLE (PERHATIAN DIREKSI) ── */}
       {attentionProjects.length > 0 && (
         <div className="bg-white border border-rose-200 rounded-xl p-4 shadow-2xs">
           <div className="flex items-center justify-between mb-3">
@@ -245,10 +332,9 @@ export default function ProjectControlDashboardPage() {
         </div>
       )}
 
-      {/* ── 5. FILTER BAR & SINGLE PRIMARY CTA ── */}
+      {/* ── 4. FILTER BAR & SINGLE PRIMARY CTA ── */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          {/* Search */}
           <div className="relative flex-1 sm:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -260,7 +346,6 @@ export default function ProjectControlDashboardPage() {
             />
           </div>
 
-          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -274,7 +359,6 @@ export default function ProjectControlDashboardPage() {
             <option value="ON_TRACK">✅ On Track</option>
           </select>
 
-          {/* Department Filter */}
           <select
             value={deptFilter}
             onChange={(e) => setDeptFilter(e.target.value)}
@@ -289,7 +373,6 @@ export default function ProjectControlDashboardPage() {
           </select>
         </div>
 
-        {/* Single Primary Action Button */}
         <button
           onClick={() => alert("Modal Tambah Proyek Baru dapat dikoneksikan ke backend API.")}
           className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold rounded-xl flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
@@ -299,7 +382,7 @@ export default function ProjectControlDashboardPage() {
         </button>
       </div>
 
-      {/* ── 6. MAIN PROJECT PORTFOLIO TABLE ── */}
+      {/* ── 5. MAIN PROJECT PORTFOLIO TABLE ── */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
           <h3 className="text-[13px] font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">

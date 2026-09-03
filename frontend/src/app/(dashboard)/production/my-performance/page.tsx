@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { KpiCard } from "@/components/dna/KpiCard";
 import { TableWrapper } from "@/components/dna/TableWrapper";
-import { PageSection } from "@/components/dna/PageSection";
+import { PageSection, SectionLabel } from "@/components/dna";
 import { Factory, TrendingUp, AlertTriangle, ClipboardCheck, Clock, Gauge } from "lucide-react";
 
 export default function ProductionMyPerformancePage() {

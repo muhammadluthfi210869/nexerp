@@ -11,7 +11,9 @@ import {
   ArrowUpRight,
   TrendingUp,
   Award,
-  Filter
+  Filter,
+  BarChart3,
+  Target
 } from "lucide-react";
 import { MOCK_DEPARTMENT_KPIS } from "@/components/kpi-management/mock-data";
 import { KPIStatusBadge, KPITrendIndicator, KpiNavTabs } from "@/components/kpi-management/KpiManagementComponents";
@@ -75,43 +77,140 @@ export default function DepartmentKpiPage() {
       {/* ── 2. ROUTE TABS ── */}
       <KpiNavTabs />
 
-      {/* ── 3. TOP SUMMARY CARDS ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Avg Department KPI</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.avgScore}%</h3>
-          <p className="text-[11px] font-semibold text-blue-600 mt-0.5">Rata-rata Perusahaan</p>
+      {/* ── 3. RICH BIG KPI CARDS WITH PROGRESS LINE BARS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* BIG CARD 1: Rata-Rata Performa Departemen */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Rata-Rata Performa Perusahaan</span>
+            <span className="p-2 rounded-xl bg-blue-50 text-blue-600">
+              <Building2 className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-slate-900 leading-tight">{summary.avgScore}%</h3>
+              <span className="text-[12px] font-bold text-blue-600">Target 90.0%</span>
+            </div>
+
+            {/* Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold">
+                <span className="text-slate-600">Skor Terbobot Saat Ini</span>
+                <span className="text-blue-600">{summary.avgScore}%</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div style={{ width: `${Math.min(summary.avgScore, 100)}%` }} className="bg-blue-600 h-full rounded-full transition-all" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600 font-medium">
+            <span>✅ {summary.excellentOrOnTrack} On Track</span>
+            <span>⚡ {summary.atRisk} Risk</span>
+            <span>🚨 {summary.offTrack} Off Track</span>
+          </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">On Track Depts</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.excellentOrOnTrack} / {summary.totalDepts}</h3>
-          <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">Mencapai Target</p>
+        {/* BIG CARD 2: Departemen Kritis & Risk */}
+        <div className="bg-white border border-amber-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden bg-amber-50/20">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-amber-800 uppercase tracking-wider">Departemen Perlu Perhatian</span>
+            <span className="p-2 rounded-xl bg-amber-100 text-amber-700">
+              <AlertTriangle className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-slate-900 leading-tight">{summary.atRisk + summary.offTrack}</h3>
+              <span className="text-[12px] font-bold text-amber-700">Divisi Belum Target</span>
+            </div>
+
+            {/* Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-amber-800">
+                <span>Pass Rate Divisi ({summary.excellentOrOnTrack}/{summary.totalDepts})</span>
+                <span>{Math.round((summary.excellentOrOnTrack / summary.totalDepts) * 100)}%</span>
+              </div>
+              <div className="w-full h-2 bg-amber-100 rounded-full overflow-hidden flex">
+                <div style={{ width: `${Math.round((summary.excellentOrOnTrack / summary.totalDepts) * 100)}%` }} className="bg-emerald-500 h-full" />
+                <div style={{ width: `${Math.round(((summary.atRisk + summary.offTrack) / summary.totalDepts) * 100)}%` }} className="bg-amber-500 h-full" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-amber-100 text-[11px] font-semibold text-amber-900 truncate">
+            ⚠️ Terendah: R&D (78.5%) • BusDev (88.0%)
+          </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">At Risk Depts</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.atRisk}</h3>
-          <p className="text-[11px] font-semibold text-amber-600 mt-0.5">Mendekati Batas Bawah</p>
+        {/* BIG CARD 3: Kesehatan Komponen KPI */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Komponen KPI Merah</span>
+            <span className="p-2 rounded-xl bg-rose-50 text-rose-600">
+              <TrendingDown className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-rose-600 leading-tight">{summary.belowTargetCount}</h3>
+              <span className="text-[12px] font-bold text-slate-500">Indikator Di Bawah Target</span>
+            </div>
+
+            {/* Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-rose-600">
+                <span>Lowest Drag: R&D Revision Rate</span>
+                <span>56.0%</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="bg-rose-500 h-full rounded-full w-[56%]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 text-[11px] font-medium text-slate-500 truncate">
+            📌 Perlu evaluasi proses teknis lab & supplier lead time
+          </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Off Track Depts</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.offTrack}</h3>
-          <p className="text-[11px] font-semibold text-rose-600 mt-0.5">Di Bawah Threshold</p>
+        {/* BIG CARD 4: Tren Pergerakan Bulanan */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider">Tren Performa Bulanan</span>
+            <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+              <TrendingUp className="w-4 h-4" />
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[32px] font-black text-emerald-600 leading-tight">+2.4 pts</h3>
+              <span className="text-[12px] font-bold text-slate-500">Rata-Rata Pergerakan</span>
+            </div>
+
+            {/* Line Bar */}
+            <div className="space-y-1 mt-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-emerald-700">
+                <span>Peningkatan Kualitas Departemen</span>
+                <span>Positive Trend</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full w-[80%]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 text-[11px] font-semibold text-slate-600 truncate">
+            📈 Kenaikan: R&D (+4.0) • Penurunan: SCM (-2.0)
+          </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">KPI Below Target</p>
-          <h3 className="text-[26px] font-black text-slate-900 mt-1">{summary.belowTargetCount}</h3>
-          <p className="text-[11px] font-medium text-slate-500 mt-0.5">Komponen Merah</p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-          <p className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Biggest Decline</p>
-          <h3 className="text-[16px] font-extrabold text-slate-900 mt-1 truncate">{summary.biggestDecline}</h3>
-          <p className="text-[11px] font-medium text-rose-600 mt-0.5">Penurunan Terbesar</p>
-        </div>
       </div>
 
       {/* ── 4. FILTER BAR ── */}

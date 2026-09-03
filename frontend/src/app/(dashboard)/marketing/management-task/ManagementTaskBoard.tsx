@@ -36,7 +36,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toLocalDateString, parseLocalDate, calendarDayDiff } from "@/lib/utils";
 import { canonicalMember, sameMember } from "@/lib/marketing-members";
 
-type TaskStatus = "Not started" | "Working on it" | "Revision" | "Done";
+type TaskStatus = "Not started" | "Progress" | "Revision" | "Done";
 
 type TaskAttachment = {
   id: string;
@@ -151,18 +151,18 @@ const memberLookup = memberConfigs.reduce<Record<string, MemberConfig>>((acc, me
   return acc;
 }, {});
 
-const statusGroups: TaskStatus[] = ["Not started", "Working on it", "Revision", "Done"];
+const statusGroups: TaskStatus[] = ["Not started", "Progress", "Revision", "Done"];
 
 const statusLabels: Record<TaskStatus, string> = {
   "Not started": "Not started",
-  "Working on it": "Working on it",
+  Progress: "Progress",
   Revision: "Revision",
   Done: "Done",
 };
 
 const statusStyles: Record<TaskStatus, { accent: string; pill: string; soft: string }> = {
   "Not started": { accent: "bg-slate-400", pill: "bg-slate-50 text-slate-600 border-slate-200", soft: "bg-slate-50/70" },
-  "Working on it": { accent: "bg-blue-500", pill: "bg-blue-50 text-blue-700 border-blue-100", soft: "bg-blue-50/70" },
+  Progress: { accent: "bg-blue-500", pill: "bg-blue-50 text-blue-700 border-blue-100", soft: "bg-blue-50/70" },
   Revision: { accent: "bg-rose-500", pill: "bg-rose-50 text-rose-700 border-rose-100", soft: "bg-rose-50/70" },
   Done: { accent: "bg-emerald-500", pill: "bg-emerald-50 text-emerald-700 border-emerald-100", soft: "bg-emerald-50/70" },
 };
@@ -1491,7 +1491,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   className={`h-9 w-full rounded-full border px-3 text-[10px] font-bold uppercase tracking-wider outline-none ${
                                     task.status === "Done" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                                     task.status === "Revision" ? "bg-rose-50 text-rose-700 border-rose-200" :
-                                    task.status === "Working on it" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                    task.status === "Progress" ? "bg-blue-50 text-blue-700 border-blue-200" :
                                     "bg-slate-100 text-slate-600 border-slate-200"
                                   }`}
                                 >
@@ -1582,7 +1582,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   <span className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
                     draft.status === "Done" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                     draft.status === "Revision" ? "bg-rose-50 text-rose-700 border-rose-200" :
-                    draft.status === "Working on it" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                    draft.status === "Progress" ? "bg-blue-50 text-blue-700 border-blue-200" :
                     "bg-slate-100 text-slate-600 border-slate-200"
                   }`}>
                     {statusLabels[draft.status]}
