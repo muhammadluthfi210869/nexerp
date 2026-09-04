@@ -48,5 +48,20 @@ model User {
   approvedDrafts      DocumentDraft[]             @relation("DocumentDraftApprover")
   rejectedDrafts      DocumentDraft[]             @relation("DocumentDraftRejecter")
 
+  // Marketing prototype relations
+  // NOTE: relations to MarketingProject, MarketingTaskAttachment,
+  // MarketingTaskComment, MarketingTaskHistory, and MarketingTask sub-relations
+  // commented out — local marketing.prisma does not define these models/
+  // back-references (DB tables exist from production-light sync but model
+  // definitions are tracked elsewhere). Uncomment once models + back-refs are
+  // defined in marketing.prisma. Confirmed dead in src/ — no TS code references them.
+  // marketingProjects MarketingProject[]
+  // tasksAssignedBy  MarketingTask[]              @relation("TaskAssignedBy")
+  // tasksPic        MarketingTask[]              @relation("TaskPic")
+  // tasksReviewer   MarketingTask[]              @relation("TaskReviewer")
+  // taskAttachments MarketingTaskAttachment[]
+  // taskComments    MarketingTaskComment[]
+  // taskHistories   MarketingTaskHistory[]
+
   @@map("users")
 }

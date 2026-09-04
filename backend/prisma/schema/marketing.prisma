@@ -23,10 +23,19 @@ model LeadCapture {
   country       String?  @db.VarChar(100)
 
   // ── WhatsApp Data (captured when user messages) ──
-  phone         String?  @db.VarChar(20)   // extracted from WA
-  waName        String?  @db.VarChar(255)  // WhatsApp profile name
-  waMessage     String?  @db.Text          // first message content
-  contactedAt   DateTime?
+  phone           String?  @db.VarChar(20)   // extracted from WA
+  waProfileName   String?  @db.VarChar(255)  // WhatsApp profile name (renamed from waName)
+  waMessage       String?  @db.Text          // first message content
+  contactedAt     DateTime?
+
+  // ── AI Validation fields (Omni Lead Validation) ──
+  extractedFullName  String?   @db.VarChar(255) // name extracted from conversation
+  nameConfidence     Float?
+  nameMatch          Boolean?                   // waProfileName matches extractedFullName?
+  approvalNeeded     Boolean   @default(false)  // low-confidence name needs human approval
+  aiIntent           String?   @db.VarChar(50)  // PROSPEK | SPAM | JUNK | UNCLEAR
+  outboundReplyCount Int       @default(0)     // busdev reply count for stage transitions
+  firstValidatedAt   DateTime?
 
   // ── CRM Fields ──
   fullName      String?  @db.VarChar(255)
@@ -74,6 +83,9 @@ model LeadCapture {
   lostAt         DateTime?
   wonAt          DateTime?
 
+  // ── AI Validation Log (Omni Lead Validation) ──
+  validationLogs LeadValidationLog[]
+
   // ── Log percakapan (Fase 2.2) ──
   messages    LeadMessage[]
 
@@ -81,6 +93,23 @@ model LeadCapture {
   updatedAt     DateTime @updatedAt
 
   @@map("lead_captures")
+}
+
+// ── AI Validation Log — every LLM call logged (Omni Lead Validation) ──
+model LeadValidationLog {
+  id         String   @id @default(cuid())
+  leadId     String   @db.Uuid
+  type       String   @db.VarChar(50)  // INTENT | NAME_EXTRACT | APPROVAL
+  input      String   @db.Text
+  output     String   @db.Text
+  confidence Float?
+  action     String   @db.VarChar(50)  // SAVED | FLAGGED | REJECTED
+  createdAt  DateTime @default(now())
+
+  lead       LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_validation_logs")
 }
 
 // ── Log percakapan WhatsApp — setiap pesan = 1 baris (Fase 2.2) ──

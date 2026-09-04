@@ -116,7 +116,7 @@ export class LeadCaptureService {
         data: {
           trackingCode,
           phone: data.phone,
-          waName: data.waName,
+          waProfileName: data.waName,
           waMessage: data.waMessage,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
@@ -128,7 +128,7 @@ export class LeadCaptureService {
         where: { trackingCode },
         data: {
           phone: data.phone,
-          waName: data.waName,
+          waProfileName: data.waName,
           waMessage: data.waMessage,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
@@ -856,7 +856,7 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       }),
       this.prisma.leadCapture.count({ where: { ...where, assignedTo: null } }),
       this.prisma.leadCapture.count({ where: { ...where, phone: null } }),
-      this.prisma.leadCapture.count({ where: { ...where, fullName: null, waName: null } }),
+      this.prisma.leadCapture.count({ where: { ...where, fullName: null, waProfileName: null } }),
       this.prisma.leadCapture.count({
         where: {
           ...where,
@@ -1189,7 +1189,7 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     return this.prisma.leadCapture.findMany({
       where: {
         phone: { not: null },
-        waName: null,
+        waProfileName: null,
       },
       take: limit,
       orderBy: { createdAt: 'desc' },
@@ -1518,7 +1518,7 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     const lead = await this.prisma.leadCapture.findFirst({
       where: {
         OR: variants.map((p) => ({ phone: { contains: p.slice(-10) } })),
-        waName: null,
+        waProfileName: null,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -1531,7 +1531,7 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     const updated = await this.prisma.leadCapture.update({
       where: { id: lead.id },
       data: {
-        waName: name,
+        waProfileName: name,
         fullName: lead.fullName || name,
       },
     });

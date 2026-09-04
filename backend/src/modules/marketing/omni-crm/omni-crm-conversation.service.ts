@@ -51,7 +51,7 @@ export class OmniCrmConversationService {
     return leads.map((l) => ({
       id: l.id,
       trackingCode: l.trackingCode,
-      name: l.fullName || l.waName || 'Tanpa Nama',
+      name: l.fullName || l.waProfileName || 'Tanpa Nama',
       phone: l.phone,
       source: l.source,
       status: l.status,
@@ -73,7 +73,7 @@ export class OmniCrmConversationService {
         id: true,
         trackingCode: true,
         fullName: true,
-        waName: true,
+        waProfileName: true,
         phone: true,
         source: true,
         status: true,
@@ -124,7 +124,7 @@ export class OmniCrmConversationService {
         data: {
           trackingCode,
           phone,
-          waName: 'Outbound Initiated',
+          waProfileName: 'Outbound Initiated',
           status: 'WA_CONTACTED',
           contactedAt: new Date(),
         },
