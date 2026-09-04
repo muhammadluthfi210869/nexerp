@@ -272,6 +272,109 @@ export class LeadCaptureService {
 
     // Fase 3.1: auto-extraction dengan throttle (tidak memblokir webhook)
     void this.maybeAutoExtract(leadId);
+
+    // T3: fire-and-forget name extraction
+    void this.maybeExtractAndUpdateName(leadId);
+  }
+
+  // ──────────────────────────────────────────────
+  //  NAME EXTRACTION (T3)
+  // ──────────────────────────────────────────────
+
+  async extractName(conversationText: string): Promise<{
+    name: string | null;
+    confidence: number;
+  }> {
+    const baseUrl = process.env.MINIMAX_BASE_URL;
+    const apiKey = process.env.MINIMAX_API_KEY;
+    const model = process.env.MINIMAX_MODEL || 'MiniMax-M3';
+
+    const systemPrompt = `Kamu adalah asisten ekstraksi nama dari percakapan WhatsApp customer service.
+
+Ekstrak nama asli customer dari teks. Hanya nama orang, bukan nama perusahaan atau produk.
+
+Balas JSON:
+- {"name": "Nama Customer", "confidence": 0.0-1.0} jika ada
+- {"name": null, "confidence": 0.0} jika tidak ada
+
+Gunakan confidence 0.85+ hanya jika nama jelas disebutkan sendiri (contoh: "nama saya Ahmad").`;
+
+    try {
+      const resp = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: conversationText },
+          ],
+          temperature: 0.1,
+          max_tokens: 100,
+        }),
+      });
+
+      if (!resp.ok) throw new Error(`MiniMax API error ${resp.status}`);
+
+      const data: any = await resp.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) throw new Error('MiniMax returned empty content');
+
+      const parsed = JSON.parse(content);
+      return {
+        name: parsed.name ?? null,
+        confidence: Number(parsed.confidence) || 0,
+      };
+    } catch (err: any) {
+      this.logger.warn(`⚠️ extractName error: ${err.message}`);
+      return { name: null, confidence: 0 };
+    }
+  }
+
+  private async maybeExtractAndUpdateName(leadId: string): Promise<void> {
+    try {
+      const messages = await this.prisma.leadMessage.findMany({
+        where: { leadId, direction: 'INBOUND' },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+      if (!messages.length) return;
+
+      const conversationText = messages.reverse().map(m => m.body).join('\n');
+      const { name, confidence } = await this.extractName(conversationText);
+      if (!name || confidence < 0.5) return;
+
+      const lead = await this.prisma.leadCapture.findUnique({ where: { id: leadId } });
+      if (!lead) return;
+
+      if (lead.extractedFullName && (lead.nameConfidence ?? 0) >= confidence) return;
+
+      await this.prisma.leadCapture.update({
+        where: { id: leadId },
+        data: {
+          extractedFullName: name,
+          nameConfidence: confidence,
+          nameMatch: lead.waProfileName ? lead.waProfileName.toLowerCase() === name.toLowerCase() : null,
+          approvalNeeded: confidence < 0.85,
+        },
+      });
+
+      await this.prisma.leadValidationLog.create({
+        data: {
+          leadId,
+          type: 'NAME_EXTRACT',
+          input: conversationText,
+          output: JSON.stringify({ name, confidence }),
+          confidence,
+          action: confidence >= 0.85 ? 'SAVED' : 'FLAGGED',
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(`maybeExtractAndUpdateName failed for ${leadId}: ${err.message}`);
+    }
   }
 
   /** Normalisasi nomor: buang karakter non-digit (+ / spasi / tanda hubung) */
@@ -1194,6 +1297,67 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // ──────────────────────────────────────────────
+  //  INTENT CLASSIFICATION (MiniMax-M3)
+  // ──────────────────────────────────────────────
+
+  async classifyIntent(text: string): Promise<{
+    intent: 'PROSPEK' | 'SPAM' | 'JUNK' | 'UNCLEAR';
+    confidence: number;
+    reasoning?: string;
+  }> {
+    const baseUrl = process.env.MINIMAX_BASE_URL;
+    const apiKey = process.env.MINIMAX_API_KEY;
+    const model = process.env.MINIMAX_MODEL || 'MiniMax-M3';
+
+    const systemPrompt = `Kamu adalah filter spam untuk chat WhatsApp customer service perusahaan manufaktur kosmetik.
+
+Klasifikasikan pesan berikut ke salah satu:
+- PROSPEK: calon customer nyata (bertanya produk, minta sample, minta penawaran)
+- SPAM: pinjol/slot/gacor/iklan tidak relevan
+- JUNK: pesan tidak bermakna (test, abc, emoji saja, <2 kata)
+- UNCLEAR: tidak yakin, butuh review manusia
+
+Balas JSON: {"intent": "...", "confidence": 0.0-1.0, "reasoning": "..."}`;
+
+    try {
+      const resp = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: text },
+          ],
+          temperature: 0.1,
+          max_tokens: 150,
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`MiniMax API error ${resp.status}`);
+      }
+
+      const data: any = await resp.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) throw new Error('MiniMax returned empty content');
+
+      const parsed = JSON.parse(content);
+      return {
+        intent: parsed.intent,
+        confidence: Number(parsed.confidence) || 0,
+        reasoning: parsed.reasoning,
+      };
+    } catch (err: any) {
+      this.logger.warn(`⚠️ classifyIntent error: ${err.message}`);
+      return { intent: 'UNCLEAR', confidence: 0, reasoning: err.message };
+    }
   }
 
   // ──────────────────────────────────────────────
