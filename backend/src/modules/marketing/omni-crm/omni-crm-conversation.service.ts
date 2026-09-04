@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { OutboundCounterService } from '../../lead-capture/outbound-counter.service';
 
 /**
  * Omni CRM Conversation service — bridge between the dashboard Inbox UI and
@@ -15,7 +16,10 @@ import { PrismaService } from '../../../prisma/prisma/prisma.service';
 export class OmniCrmConversationService {
   private readonly logger = new Logger(OmniCrmConversationService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private outboundCounter: OutboundCounterService,
+  ) {}
 
   /** Normalisasi nomor: buang karakter non-digit, pastikan prefix 62 */
   private normalizePhone(phone: string): string {
@@ -216,6 +220,9 @@ export class OmniCrmConversationService {
       where: { id: leadId },
       data: { contactedAt: new Date(), status: 'WA_CONTACTED' },
     });
+
+    // T4: outbound counter — fire-and-forget stage transition
+    void this.outboundCounter.recordBusdevReply(leadId);
 
     return {
       ok: !dispatchError,

@@ -233,7 +233,7 @@ export class LeadCaptureService {
       }
     }
 
-    const saved = await this.prisma.leadMessage.create({
+    await this.prisma.leadMessage.create({
       data: {
         leadId,
         direction: 'INBOUND',
@@ -243,32 +243,6 @@ export class LeadCaptureService {
         msgId: data.msgId || null,
       },
     });
-
-    // Auto-stage based on message count (inbound only)
-    if (saved.direction === 'INBOUND') {
-      const msgCount = await this.prisma.leadMessage.count({ where: { leadId } });
-      const lead = await this.prisma.leadCapture.findUnique({ where: { id: leadId } });
-
-      if (lead) {
-        let newStatus: WorkflowStatus | undefined;
-
-        const current = lead.workflowStatus;
-        if ((!current || current === 'NEW_LEAD') && msgCount >= 1) {
-          newStatus = 'COLD';
-        } else if (current === 'COLD' && msgCount >= 5) {
-          newStatus = 'WARM';
-        } else if (current === 'WARM' && msgCount >= 10) {
-          newStatus = 'HOT';
-        }
-
-        if (newStatus) {
-          await this.prisma.leadCapture.update({
-            where: { id: leadId },
-            data: { workflowStatus: newStatus },
-          });
-        }
-      }
-    }
 
     // Fase 3.1: auto-extraction dengan throttle (tidak memblokir webhook)
     void this.maybeAutoExtract(leadId);
