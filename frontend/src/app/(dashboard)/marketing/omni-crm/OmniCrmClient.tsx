@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Activity,
   AlertCircle,
@@ -10,6 +11,7 @@ import {
   ChevronRight,
   Clock,
   Filter,
+  Inbox,
   Layers,
   MessageSquare,
   Phone,
@@ -47,6 +49,14 @@ import {
   generateUniqueId,
   IntakeGuestbookParams,
 } from './crmEngine';
+import {
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useIntakeGuestbook,
+} from '@/hooks/useOmniCrmConversations';
+import { useLeadCapture } from '@/hooks/useLeadCapture';
+import { LeadCaptureTable } from '@/components/marketing/omni-crm/LeadCaptureTable';
 
 const STORAGE_KEY = 'erp_omnicrm_state_v1';
 
@@ -66,8 +76,9 @@ export default function OmniCrmClient() {
   });
 
   const [activeTab, setActiveTab] = useState<
-    'bento' | 'kanban' | 'whatsapp' | 'busdev' | 'broadcast' | 'console'
+    'bento' | 'kanban' | 'whatsapp' | 'busdev' | 'lead-capture' | 'broadcast' | 'console'
   >('bento');
+  const router = useRouter();
 
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(
     state.leads[0]?.id || null
@@ -101,6 +112,13 @@ export default function OmniCrmClient() {
     setTimeout(() => setToastMsg(null), 3500);
   };
 
+  // ── Backend-driven WhatsApp Inbox (real LeadCapture + LeadMessage rows) ──
+  const { data: apiConversations = [], isLoading: isConversationsLoading, isError: isConversationsError } =
+    useConversations();
+  const { data: apiThread, isLoading: isMessagesLoading } = useMessages(selectedLeadId);
+  const sendMutation = useSendMessage();
+  const intakeMutation = useIntakeGuestbook();
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -123,25 +141,57 @@ export default function OmniCrmClient() {
       showToast('⚠️ Nama dan Nomor HP wajib diisi!');
       return;
     }
-    const result = intakeGuestbook(state, intakeForm);
-    setState(result.newState);
-    setSelectedLeadId(result.newLead.id);
-    setIsIntakeOpen(false);
-    setIntakeForm({ name: '', phone: '', source: 'Meta Ads', notes: '', value: 30000000 });
-    showToast(result.log.resultSummary);
+    intakeMutation.mutate(
+      {
+        name: intakeForm.name,
+        phone: intakeForm.phone,
+        source: intakeForm.source,
+        notes: intakeForm.notes,
+      },
+      {
+        onSuccess: (res) => {
+          setIsIntakeOpen(false);
+          setIntakeForm({ name: '', phone: '', source: 'Meta Ads', notes: '', value: 30000000 });
+          showToast(
+            `✅ Lead "${res.assignedName}" terdaftar di buku tamu → assigned ke ${res.assignedName} (${res.assignedPhone}). Kode: ${res.trackingCode}`,
+          );
+        },
+        onError: (err: any) => {
+          showToast(`❌ Gagal intake: ${err?.message || 'unknown'}`);
+        },
+      },
+    );
   };
 
   const handleSendMessage = () => {
     if (!selectedLeadId || !chatInput.trim()) return;
-    const result = syncWhatsappMessage(state, {
-      lead_id: selectedLeadId,
-      message: chatInput,
-      direction: 'OUTBOUND',
-      channel: 'WHATSAPP_HP',
-    });
-    setState(result.newState);
-    setChatInput('');
-    showToast('Pesan WhatsApp terkirim & tersinkronisasi!');
+    const target = apiConversations.find((c) => c.id === selectedLeadId);
+    if (!target?.phone) {
+      showToast('⚠️ Lead ini belum punya nomor WhatsApp.');
+      return;
+    }
+    sendMutation.mutate(
+      {
+        leadId: selectedLeadId,
+        phone: target.phone,
+        message: chatInput,
+      },
+      {
+        onSuccess: (res) => {
+          setChatInput('');
+          if (res.ok) {
+            showToast('✅ Pesan WhatsApp terkirim & tersinkronisasi.');
+          } else {
+            showToast(
+              `⚠️ Tersimpan di inbox, tapi Meta API gagal: ${res.dispatchError || 'unknown'}`,
+            );
+          }
+        },
+        onError: (err: any) => {
+          showToast(`❌ Gagal kirim: ${err?.message || 'unknown'}`);
+        },
+      },
+    );
   };
 
   const handleMoveStage = (leadId: string, newStageId: string) => {
@@ -171,9 +221,6 @@ export default function OmniCrmClient() {
     setState(result.newState);
     showToast(result.log.resultSummary);
   };
-
-  const selectedLead = state.leads.find((l) => l.id === selectedLeadId) || state.leads[0];
-  const selectedLeadMessages = state.messages.filter((m) => m.leadId === selectedLeadId);
 
   return (
     <DashboardShell
@@ -244,6 +291,7 @@ export default function OmniCrmClient() {
               { id: 'kanban', label: 'Pipeline Kanban', icon: BarChart3 },
               { id: 'whatsapp', label: 'WhatsApp Inbox', icon: MessageSquare },
               { id: 'busdev', label: 'BusDev Manager', icon: Users },
+              { id: 'lead-capture', label: 'Lead Capture', icon: Inbox },
               { id: 'broadcast', label: 'Broadcast Simulator', icon: Zap },
               { id: 'console', label: 'Engine Audit Log', icon: Terminal },
             ].map((tab) => {
@@ -426,13 +474,20 @@ export default function OmniCrmClient() {
           </div>
         )}
 
-        {/* 3. WHATSAPP COEXISTENCE INBOX */}
+        {/* 3. WHATSAPP COEXISTENCE INBOX — Backend-driven (real LeadCapture + LeadMessage) */}
         {activeTab === 'whatsapp' && (
           <Card className="p-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden flex flex-col md:flex-row h-[560px] shadow-sm">
             {/* Left Conversations List */}
             <div className="w-full md:w-72 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-900/40">
               <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2">
-                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">WhatsApp Coexistence Inbox</span>
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    WhatsApp Coexistence Inbox
+                  </span>
+                  <span className="text-[9px] font-bold text-emerald-600 uppercase">
+                    {apiConversations.length} Kontak
+                  </span>
+                </div>
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                   <Input type="text" placeholder="Cari percakapan..." className="pl-8 h-8 text-xs rounded-xl" />
@@ -440,13 +495,23 @@ export default function OmniCrmClient() {
               </div>
 
               <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                {state.leads.map((lead) => {
-                  const lastMsg = state.messages.filter((m) => m.leadId === lead.id).slice(-1)[0];
-                  const isSelected = lead.id === selectedLeadId;
+                {isConversationsLoading && (
+                  <div className="p-4 text-[10px] text-slate-400">Memuat percakapan…</div>
+                )}
+                {isConversationsError && (
+                  <div className="p-4 text-[10px] text-rose-600">Gagal memuat inbox.</div>
+                )}
+                {!isConversationsLoading && apiConversations.length === 0 && (
+                  <div className="p-4 text-[10px] text-slate-400">
+                    Belum ada kontak WA. Pesan masuk akan muncul di sini.
+                  </div>
+                )}
+                {apiConversations.map((conv) => {
+                  const isSelected = conv.id === selectedLeadId;
                   return (
                     <div
-                      key={lead.id}
-                      onClick={() => setSelectedLeadId(lead.id)}
+                      key={conv.id}
+                      onClick={() => setSelectedLeadId(conv.id)}
                       className={`p-3 cursor-pointer transition-colors space-y-1 ${
                         isSelected
                           ? 'bg-blue-50/80 dark:bg-blue-950/60 border-l-4 border-blue-600'
@@ -454,12 +519,29 @@ export default function OmniCrmClient() {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{lead.name}</span>
-                        <span className="text-[9px] text-slate-400 font-semibold">{lead.source}</span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                          {conv.name}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-semibold shrink-0 ml-2">
+                          {conv.source || 'DIRECT'}
+                        </span>
                       </div>
                       <p className="text-[10px] text-slate-500 line-clamp-1">
-                        {lastMsg ? lastMsg.message : 'Belum ada obrolan'}
+                        {conv.lastMessage ? (
+                          <>
+                            {conv.lastDirection === 'OUTBOUND' && (
+                              <span className="text-blue-600 font-bold">↗ </span>
+                            )}
+                            {conv.lastMessage}
+                          </>
+                        ) : (
+                          <span className="italic">Belum ada obrolan</span>
+                        )}
                       </p>
+                      <div className="flex items-center justify-between text-[9px] text-slate-400">
+                        <span>{conv.phone}</span>
+                        <span>{conv.messageCount} msg</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -468,37 +550,34 @@ export default function OmniCrmClient() {
 
             {/* Right Chat Thread & Actions */}
             <div className="flex-1 flex flex-col bg-white dark:bg-slate-900">
-              {selectedLead ? (
+              {selectedLeadId && apiThread ? (
                 <>
                   {/* Chat Header */}
                   <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900">
                     <div>
-                      <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">{selectedLead.name}</h4>
-                      <p className="text-[10px] text-slate-400">Phone: {selectedLead.phone} • Source: {selectedLead.source}</p>
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        {apiThread.lead.fullName || apiThread.lead.waName || 'Tanpa Nama'}
+                        {apiThread.lead.nameMatch === false && <AlertTriangle className="w-4 h-4 text-yellow-400" title="Profile ≠ extracted" />}
+                        {apiThread.lead.nameMatch === true && <Check className="w-4 h-4 text-green-400" title="Names match" />}
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        Phone: {apiThread.lead.phone || '-'} • Tracking: {apiThread.lead.trackingCode} • Status: {apiThread.lead.status}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <select
-                        value={selectedLead.stageId}
-                        onChange={(e) => handleMoveStage(selectedLead.id, e.target.value)}
-                        className="h-8 px-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 font-bold bg-white dark:bg-slate-800"
-                      >
-                        {activePipeline.stages.map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => setActiveLeadForDetail(selectedLead)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300"
-                      >
-                        Detail Lead
-                      </button>
+                      <span className="text-[10px] text-emerald-600 font-bold uppercase">
+                        ● Live ({apiThread.messages.length})
+                      </span>
                     </div>
                   </div>
 
                   {/* Chat Messages Body */}
                   <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/30 dark:bg-slate-950/20">
-                    {selectedLeadMessages.length > 0 ? (
-                      selectedLeadMessages.map((msg) => {
+                    {isMessagesLoading && (
+                      <div className="text-center text-[10px] text-slate-400 py-6">Memuat pesan…</div>
+                    )}
+                    {apiThread.messages.length > 0 ? (
+                      apiThread.messages.map((msg) => {
                         const isOutbound = msg.direction === 'OUTBOUND';
                         return (
                           <div
@@ -512,10 +591,15 @@ export default function OmniCrmClient() {
                                   : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-bl-none shadow-sm'
                               }`}
                             >
-                              <div className="text-[9px] opacity-75 font-extrabold">{msg.senderName}</div>
-                              <div className="text-xs">{msg.message}</div>
+                              <div className="text-[9px] opacity-75 font-extrabold">
+                                {isOutbound ? 'BusDev (Anda)' : msg.waName || 'Lead'}
+                              </div>
+                              <div className="text-xs whitespace-pre-wrap break-words">{msg.body}</div>
                               <div className="text-[9px] opacity-60 text-right">
-                                {new Date(msg.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(msg.createdAt).toLocaleTimeString('id-ID', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </div>
                             </div>
                           </div>
@@ -536,26 +620,53 @@ export default function OmniCrmClient() {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                      disabled={sendMutation.isPending}
                       className="flex-1 text-xs rounded-xl"
                     />
                     <button
                       onClick={handleSendMessage}
-                      className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                      disabled={sendMutation.isPending || !chatInput.trim()}
+                      className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
                     >
                       <Send className="w-4 h-4" />
                     </button>
                   </div>
                 </>
+              ) : isMessagesLoading ? (
+                <div className="flex-1 flex items-center justify-center text-xs text-slate-400">
+                  Memuat percakapan…
+                </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-xs text-slate-400">
-                  Pilih lead dari panel kiri untuk membuka percakapan.
+                  Pilih kontak dari panel kiri untuk membuka percakapan.
                 </div>
               )}
             </div>
           </Card>
         )}
 
-        {/* 4. BUSDEV MANAGER */}
+        {/* 4. LEAD CAPTURE INBOX */}
+        {activeTab === 'lead-capture' && (
+          <div className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <Inbox className="w-6 h-6 text-cyan-400" />
+              <h1 className="text-2xl font-bold">Lead Capture — Validated Inbox</h1>
+            </div>
+            <div className="flex gap-2">
+              {(['all', 'approval', 'junk'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => router.push(`/marketing/omni-crm/lead-capture?filter=${f}`)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700"
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. BUSDEV MANAGER */}
         {activeTab === 'busdev' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {state.busDevs.map((busdev) => (
@@ -592,7 +703,7 @@ export default function OmniCrmClient() {
           </div>
         )}
 
-        {/* 5. BROADCAST SIMULATOR */}
+        {/* 6. BROADCAST SIMULATOR */}
         {activeTab === 'broadcast' && (
           <Card className="p-5 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4 shadow-sm">
             <div className="space-y-0.5">
@@ -648,7 +759,7 @@ export default function OmniCrmClient() {
           </Card>
         )}
 
-        {/* 6. ENGINE AUDIT LOG */}
+        {/* 7. ENGINE AUDIT LOG */}
         {activeTab === 'console' && (
           <Card className="p-4 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 shadow-sm">
             <div className="flex items-center justify-between border-b pb-2.5 border-slate-200 dark:border-slate-800">
@@ -766,9 +877,10 @@ export default function OmniCrmClient() {
                 </button>
                 <button
                   type="submit"
-                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors"
+                  disabled={intakeMutation.isPending}
+                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors disabled:opacity-50"
                 >
-                  Daftarkan Lead (Auto Rotate)
+                  {intakeMutation.isPending ? 'Membuat…' : 'Daftarkan Lead (Auto Rotate)'}
                 </button>
               </div>
             </form>
