@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LeadCaptureService } from '../lead-capture/lead-capture.service';
+import { AutoGreetService } from '../lead-capture/auto-greet.service';
 
 @Injectable()
 export class WaWebhookService {
   private readonly logger = new Logger(WaWebhookService.name);
 
-  constructor(private readonly leadCapture: LeadCaptureService) {}
+  constructor(
+    private readonly leadCapture: LeadCaptureService,
+    private readonly autoGreet: AutoGreetService,
+  ) {}
 
   /**
    * Verify webhook — dipanggil Meta saat setup webhook
@@ -66,7 +70,10 @@ export class WaWebhookService {
             // Tracking code gak ketemu — upsert orphan lead dengan dedup
             this.logger.warn(`⚠️ No tracking code in message from ${phone}`);
             try {
-              await this.leadCapture.upsertOrphanLead(phone, profileName, text, msgId);
+              const orphan = await this.leadCapture.upsertOrphanLead(phone, profileName, text, msgId);
+              if (orphan?.id) {
+                void this.autoGreet.sendAutoGreeting(orphan.id, 'Tim Dreamlab');
+              }
             } catch (err) {
               this.logger.error(`❌ Failed to process orphan lead for ${phone}:`, err);
             }
@@ -152,7 +159,10 @@ export class WaWebhookService {
           msgId: msgId || undefined,
         });
       } else {
-        await this.leadCapture.upsertOrphanLead(phone62, name || 'Unknown', text, msgId || undefined);
+        const orphan = await this.leadCapture.upsertOrphanLead(phone62, name || 'Unknown', text, msgId || undefined);
+        if (orphan?.id) {
+          void this.autoGreet.sendAutoGreeting(orphan.id, 'Tim Dreamlab');
+        }
       }
 
       return { status: 'ok' };
