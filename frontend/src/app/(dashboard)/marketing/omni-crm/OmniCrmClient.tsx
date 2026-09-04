@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   Activity,
   AlertCircle,
+  AlertTriangle,
   BarChart3,
   Bot,
+  Check,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -557,8 +559,8 @@ export default function OmniCrmClient() {
                     <div>
                       <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         {apiThread.lead.fullName || apiThread.lead.waName || 'Tanpa Nama'}
-                        {apiThread.lead.nameMatch === false && <AlertTriangle className="w-4 h-4 text-yellow-400" title="Profile ≠ extracted" />}
-                        {apiThread.lead.nameMatch === true && <Check className="w-4 h-4 text-green-400" title="Names match" />}
+                        {apiThread.lead.nameMatch === false && <AlertTriangle className="w-4 h-4 text-yellow-400" />}
+                        {apiThread.lead.nameMatch === true && <Check className="w-4 h-4 text-green-400" />}
                       </h4>
                       <p className="text-[10px] text-slate-400">
                         Phone: {apiThread.lead.phone || '-'} • Tracking: {apiThread.lead.trackingCode} • Status: {apiThread.lead.status}
