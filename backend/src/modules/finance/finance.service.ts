@@ -1,4 +1,4 @@
-import {
+﻿import {
   Injectable,
   BadRequestException,
   NotFoundException,
@@ -61,46 +61,88 @@ export class FinanceService {
 
     const initialAccounts = [
       {
-        code: '1100',
-        name: 'Kas/Bank BCA',
+        code: '1121',
+        name: 'Bank BCA (2640351589)',
         type: AccountType.ASSET,
         normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.CURRENT_ASSET,
       },
       {
-        code: '1200',
-        name: 'Piutang Dagang',
+        code: '1132',
+        name: 'Piutang Dagang - kosmetik',
         type: AccountType.ASSET,
         normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.CURRENT_ASSET,
       },
       {
-        code: '1300',
+        code: '1151',
         name: 'Persediaan Bahan Baku',
         type: AccountType.ASSET,
         normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.CURRENT_ASSET,
       },
       {
-        code: '4100',
-        name: 'Pendapatan Maklon',
-        type: AccountType.REVENUE,
-        normalBalance: NormalBalance.CREDIT,
-      },
-      {
-        code: '5101',
-        name: 'Beban Marketing (Ads)',
-        type: AccountType.EXPENSE,
-        normalBalance: NormalBalance.DEBIT,
-      },
-      {
-        code: '1401',
-        name: 'Persediaan WIP (Work In Progress)',
+        code: '1153',
+        name: 'Persediaan Dalam Proses/ Barang Setengah Jadi',
         type: AccountType.ASSET,
         normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.CURRENT_ASSET,
       },
       {
-        code: '6102',
-        name: 'Biaya Selisih Persediaan (Loss)',
+        code: '1154',
+        name: 'Persediaan Barang Jadi',
+        type: AccountType.ASSET,
+        normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.CURRENT_ASSET,
+      },
+      {
+        code: '2101',
+        name: 'Hutang Dagang',
+        type: AccountType.LIABILITY,
+        normalBalance: NormalBalance.CREDIT,
+        reportGroup: ReportGroup.CURRENT_LIABILITY,
+      },
+      {
+        code: '2102',
+        name: 'Penjualan di terima di muka',
+        type: AccountType.LIABILITY,
+        normalBalance: NormalBalance.CREDIT,
+        reportGroup: ReportGroup.CURRENT_LIABILITY,
+      },
+      {
+        code: '4101',
+        name: 'Penjualan - sample',
+        type: AccountType.REVENUE,
+        normalBalance: NormalBalance.CREDIT,
+        reportGroup: ReportGroup.OPERATING_REVENUE,
+      },
+      {
+        code: '4102',
+        name: 'Penjualan - kosmetik',
+        type: AccountType.REVENUE,
+        normalBalance: NormalBalance.CREDIT,
+        reportGroup: ReportGroup.OPERATING_REVENUE,
+      },
+      {
+        code: '6101',
+        name: 'Beban Iklan dan Promosi Penjualan',
         type: AccountType.EXPENSE,
         normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.OPEX,
+      },
+      {
+        code: '6224',
+        name: 'Beban Administrasi Bank',
+        type: AccountType.EXPENSE,
+        normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.OPEX,
+      },
+      {
+        code: '6232',
+        name: 'Beban Operasional Perusahaan',
+        type: AccountType.EXPENSE,
+        normalBalance: NormalBalance.DEBIT,
+        reportGroup: ReportGroup.OPEX,
       },
     ];
 
@@ -144,7 +186,7 @@ export class FinanceService {
     const accountMap = new Map(accounts.map((a) => [a.id, a]));
     const expenseLines = dto.lines.map((l) => {
       const acc = accountMap.get(l.accountId);
-      return acc && (acc.code.startsWith('6') || acc.code.startsWith('15'));
+      return acc && (acc.code.startsWith('6') || acc.code.startsWith('12') || acc.code.startsWith('15'));
     });
 
     if (
@@ -249,10 +291,10 @@ export class FinanceService {
 
     // Accounts
     const wipAcc = await this.prisma.account.findFirst({
-      where: { code: '1401' },
+      where: { OR: [{ code: '1153' }, { code: '1401' }] },
     }); // WIP
     const rmAcc = await this.prisma.account.findFirst({
-      where: { code: '1300' },
+      where: { OR: [{ code: '1151' }, { code: '1300' }] },
     }); // Raw Materials
 
     if (wipAcc && rmAcc) {
@@ -320,11 +362,11 @@ export class FinanceService {
     // Multiply by batch size if needed, but usually formula is per batch/unit
     // Post Journal: Debit Finished Goods / Credit Raw Materials
     const fgAcc = await this.prisma.account.findFirst({
-      where: { code: '1400' },
-    }); // Finished Goods (Assuming 1400)
+      where: { OR: [{ code: '1154' }, { code: '1400' }] },
+    }); // Finished Goods (1154)
     const wipAcc = await this.prisma.account.findFirst({
-      where: { code: '1401' },
-    }); // WIP
+      where: { OR: [{ code: '1153' }, { code: '1401' }] },
+    }); // WIP (1153)
 
     if (fgAcc && wipAcc && totalHpp > 0) {
       await this.prisma.journalEntry.create({
@@ -353,15 +395,15 @@ export class FinanceService {
     notes: string;
   }) {
     const inventoryAcc = await this.prisma.account.findFirst({
-      where: { code: '1300' },
+      where: { OR: [{ code: '1151' }, { code: '1300' }] },
     });
     const lossAcc = await this.prisma.account.findFirst({
-      where: { code: '6102' },
+      where: { OR: [{ code: '1157' }, { code: '6232' }, { code: '6102' }] },
     });
 
     if (!inventoryAcc || !lossAcc) {
       throw new BadRequestException(
-        'Finance Accounts (1300/6102) not configured for inventory adjustment.',
+        'Finance Accounts (1151/1157/6232) not configured for inventory adjustment.',
       );
     }
 
@@ -390,15 +432,15 @@ export class FinanceService {
     description: string;
   }) {
     const inventoryAcc = await this.prisma.account.findFirst({
-      where: { code: '1300' },
+      where: { OR: [{ code: '1151' }, { code: '1300' }] },
     });
     const wipAcc = await this.prisma.account.findFirst({
-      where: { code: '1401' },
+      where: { OR: [{ code: '1153' }, { code: '1401' }] },
     });
 
     if (!inventoryAcc || !wipAcc) {
       throw new BadRequestException(
-        'Finance Accounts (1300/1401) not configured for material handover.',
+        'Finance Accounts (1151/1153) not configured for material handover.',
       );
     }
 
@@ -428,14 +470,14 @@ export class FinanceService {
     refId: string;
   }) {
     const bankAcc = await this.prisma.account.findFirst({
-      where: { code: '1100' },
+      where: { OR: [{ code: '1121' }, { code: '1120' }, { code: '1100' }] },
     });
     const marketingAcc = await this.prisma.account.findFirst({
-      where: { code: '5101' },
+      where: { OR: [{ code: '6101' }, { code: '5101' }] },
     });
 
     if (!bankAcc || !marketingAcc) {
-      throw new Error('Finance Accounts (1100 or 5101) not configured.');
+      throw new Error('Finance Accounts (1121 or 6101) not configured.');
     }
 
     return this.createJournalEntry({
@@ -516,41 +558,144 @@ export class FinanceService {
     });
   }
 
+  async getSamplePayments() {
+    return this.prisma.sampleRequest.findMany({
+      include: {
+        lead: {
+          include: { pic: true },
+        },
+        pic: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async verifyOrderPayment(dto: {
     type: string;
     id: string;
     verifiedBy: string;
+    isFoc?: boolean;
+    bankAccount?: string;
+    notes?: string;
   }) {
-    const so = await this.prisma.salesOrder.findUnique({
-      where: { id: dto.id },
-      include: { lead: true },
-      });
-      if (!so) throw new NotFoundException('Sales Order not found');
-      if (so.status === 'LOCKED_ACTIVE' || so.status === 'COMPLETED') {
-        throw new BadRequestException('Sales Order already verified');
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.id);
+
+    if (dto.type === 'SAMPLE') {
+      let lead: any = null;
+      let sample: any = null;
+
+      if (isUuid) {
+        lead = await this.prisma.salesLead.findUnique({
+          where: { id: dto.id },
+        });
+        sample = await this.prisma.sampleRequest.findUnique({
+          where: { id: dto.id },
+          include: { lead: true },
+        });
+        if (sample && !lead && sample.lead) {
+          lead = sample.lead;
+        }
       }
 
-      // Create a lead activity to track payment verification
+      if (!lead && !sample) {
+        sample = await this.prisma.sampleRequest.findFirst({
+          where: { sampleCode: dto.id },
+          include: { lead: true },
+        });
+        if (sample && sample.lead) {
+          lead = sample.lead;
+        }
+      }
+
+      if (!lead && !sample) {
+        throw new NotFoundException(`Sample or Lead '${dto.id}' not found`);
+      }
+
+      if (sample) {
+        await this.prisma.sampleRequest.update({
+          where: { id: sample.id },
+          data: {
+            paymentApprovedAt: new Date(),
+            stage: 'QUEUE',
+          },
+        });
+      }
+
+      if (lead) {
+        await this.prisma.leadActivity.create({
+          data: {
+            leadId: lead.id,
+            activityType: 'SAMPLE_PAYMENT',
+            amount: lead.estimatedValue || 0,
+            isValidated: true,
+            validatedBy: dto.verifiedBy,
+            notes: dto.notes || `Sample payment verified for lead ${lead.clientName} (${lead.brandName || ''})`,
+            metadata: {
+              sampleId: sample?.id || lead.id,
+              isFoc: !!dto.isFoc,
+              bankAccount: dto.bankAccount,
+            },
+          },
+        });
+
+        await this.prisma.salesLead.update({
+          where: { id: lead.id },
+          data: {
+            status: 'SAMPLE_REQUESTED' as any,
+            convertedToSampleAt: new Date(),
+          },
+        });
+      }
+
+      return {
+        success: true,
+        leadId: lead?.id,
+        sampleId: sample?.id,
+        status: 'SAMPLE_REQUESTED',
+      };
+    }
+
+    let so: any = null;
+    if (isUuid) {
+      so = await this.prisma.salesOrder.findUnique({
+        where: { id: dto.id },
+        include: { lead: true },
+      });
+    } else {
+      so = await this.prisma.salesOrder.findFirst({
+        where: { orderNumber: dto.id },
+        include: { lead: true },
+      });
+    }
+
+    if (!so) throw new NotFoundException(`Sales Order '${dto.id}' not found`);
+    if (so.status === 'LOCKED_ACTIVE' || so.status === 'COMPLETED') {
+      throw new BadRequestException('Sales Order already verified');
+    }
+
+    // Create a lead activity to track payment verification
+    if (so.leadId) {
       await this.prisma.leadActivity.create({
         data: {
-        leadId: so.leadId,
-        activityType: 'DOWN_PAYMENT',
-        amount: so.totalAmount,
-        isValidated: true,
-        validatedBy: dto.verifiedBy,
-        notes: `Payment verified for SO ${so.orderNumber}`,
-        metadata: { salesOrderId: so.id },
-      },
-    });
+          leadId: so.leadId,
+          activityType: 'DOWN_PAYMENT',
+          amount: so.totalAmount,
+          isValidated: true,
+          validatedBy: dto.verifiedBy,
+          notes: dto.notes || `Payment verified for SO ${so.orderNumber}`,
+          metadata: { salesOrderId: so.id, bankAccount: dto.bankAccount },
+        },
+      });
+
+      await this.prisma.salesLead.update({
+        where: { id: so.leadId },
+        data: { status: 'DP_PAID' as any },
+      });
+    }
 
     await this.prisma.salesOrder.update({
       where: { id: so.id },
       data: { status: 'LOCKED_ACTIVE' as any },
-    });
-
-    await this.prisma.salesLead.update({
-      where: { id: so.leadId },
-      data: { status: 'DP_PAID' as any },
     });
 
     return { success: true, orderId: so.id };
@@ -1194,7 +1339,7 @@ export class FinanceService {
             data: {
               date: new Date(),
               reference: `FUND-DISB-${req.id.substring(0, 8)}`,
-              description: `Disbursement for Fund Request: ${req.reason} [Dept: ${req.departmentId}] — No specific expense account found, used General`,
+              description: `Disbursement for Fund Request: ${req.reason} [Dept: ${req.departmentId}] â€” No specific expense account found, used General`,
               lines: {
                 create: [
                   {
@@ -1467,7 +1612,7 @@ export class FinanceService {
             ];
             if (bankAdminFee > 0) {
               const adminAcc = await tx.account.findFirst({
-                where: { code: '8100' },
+                where: { OR: [{ code: '6224' }, { code: '8100' }] },
               });
               if (adminAcc)
                 lines.push({
@@ -1494,7 +1639,7 @@ export class FinanceService {
               data: {
                 date: new Date(),
                 reference: `PELUNASAN-${so.orderNumber}`,
-                description: `Pelunasan Sales Order ${so.orderNumber} — ${so.lead?.clientName || 'Unknown'}`,
+                description: `Pelunasan Sales Order ${so.orderNumber} â€” ${so.lead?.clientName || 'Unknown'}`,
                 soId: salesOrderId,
                 sourceDocumentType: 'SALES_ORDER',
                 lines: { create: lines },
@@ -1557,25 +1702,25 @@ export class FinanceService {
       }
 
       // 1. Determine Credit Account by type
-      // SAMPLE → Unearned Revenue (2300), DP_ORDER → DP Produksi Klien (2301)
+      // SAMPLE â†’ Penjualan - sample (4101) or Unearned Revenue (2102), DP_ORDER â†’ Penjualan di terima di muka (2102)
       let creditAccountId = '';
       if (type === ArPaymentType.SAMPLE) {
-        const acc = await tx.account.findFirst({ where: { code: '2300' } });
+        const acc = await tx.account.findFirst({ where: { OR: [{ code: '4101' }, { code: '2102' }, { code: '2300' }] } });
         creditAccountId = acc?.id || '';
       } else {
-        const acc = await tx.account.findFirst({ where: { code: '2301' } });
+        const acc = await tx.account.findFirst({ where: { OR: [{ code: '2102' }, { code: '2301' }] } });
         creditAccountId = acc?.id || '';
       }
 
       // 2. Determine Supporting Accounts
-      // 8100 = Admin Fee Income, 2201 = PPN Output Payable
-      const adminAcc = await tx.account.findFirst({ where: { code: '8100' } });
-      const ppnAcc = await tx.account.findFirst({ where: { code: '2201' } });
+      // 6224 = Bank Admin Fee, 2301 = PPN / Hutang Pajak
+      const adminAcc = await tx.account.findFirst({ where: { OR: [{ code: '6224' }, { code: '8100' }] } });
+      const ppnAcc = await tx.account.findFirst({ where: { OR: [{ code: '2301' }, { code: '2201' }, { code: '2105' }] } });
 
       if (bankAdminFee > 0 && !adminAcc)
-        throw new BadRequestException('Account 8100 (Admin Fee) not found');
+        throw new BadRequestException('Account 6224/8100 (Admin Fee) not found');
       if (taxAmount > 0 && !ppnAcc)
-        throw new BadRequestException('Account 2201 (PPN Output) not found');
+        throw new BadRequestException('Account 2301/2201 (Tax Account) not found');
 
       // 3. Calculate Base Amount
       const baseAmount = actualAmount + bankAdminFee - taxAmount;
@@ -1952,7 +2097,8 @@ export class FinanceService {
       j.lines.forEach((l) => {
         const acc = l.account;
         const isCashAccount =
-          acc.type === AccountType.ASSET && acc.code.startsWith('11');
+          acc.type === AccountType.ASSET &&
+          (acc.code.startsWith('111') || acc.code.startsWith('112') || acc.code.startsWith('11'));
 
         if (isCashAccount) {
           // This line is a movement in cash
@@ -1969,7 +2115,7 @@ export class FinanceService {
           } else {
             // Cash Out
             const absAmount = Math.abs(amount);
-            if (acc.code.startsWith('15'))
+            if (acc.code.startsWith('12') || acc.code.startsWith('15'))
               cf.investingOut += absAmount; // Fixed Assets
             else cf.operatingOut += absAmount;
           }
@@ -2138,4 +2284,55 @@ export class FinanceService {
       data: { isActive: false },
     });
   }
-}
+
+  // Item 54: Calculate payable amount for a PO - only qtyBagus counts
+  // payableAmount = sum(qtyBagus * hargaSatuan) - discountManual - discountRounding + shippingCost
+  async calculatePayable(poId: string): Promise<{
+    payableAmount: number;
+    breakdown: {
+      subtotal: number;
+      discountManual: number;
+      discountRounding: number;
+      shippingCost: number;
+      rejectAmount: number;
+    };
+  }> {
+    const po = await this.prisma.purchaseOrder.findUnique({
+      where: { id: poId },
+      include: {
+        items: { include: { material: true } },
+      },
+    });
+
+    if (!po) throw new NotFoundException('Purchase Order not found');
+
+    const discountManual = po.discountManual || 0;
+    const discountRounding = po.discountRounding || 0;
+    const shippingCost = po.shippingCost || 0;
+
+    let subtotal = 0;
+    let rejectAmount = 0;
+
+    // For each PO item, we would ideally have qtyBagus/qtyReject from inbound QC
+    // Since those fields don't exist on POItem yet, we use quantity as proxy
+    // and note that this should be updated when QC confirmation happens
+    for (const item of po.items) {
+      const itemTotal = Number(item.quantity) * Number(item.unitPrice);
+      // TODO: When qtyBagus/qtyReject fields are added to POItem/inbound QC integration,
+      // replace item.quantity with actual qtyBagus from QC-confirmed inbound
+      subtotal += itemTotal;
+    }
+
+    const payableAmount = subtotal - discountManual - discountRounding + shippingCost;
+
+    return {
+      payableAmount: Math.max(0, payableAmount),
+      breakdown: {
+        subtotal,
+        discountManual,
+        discountRounding,
+        shippingCost,
+        rejectAmount,
+      },
+    };
+  }}

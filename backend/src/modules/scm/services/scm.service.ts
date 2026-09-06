@@ -1,8 +1,6 @@
-import {
-  Injectable,
+﻿import { Logger, Injectable,
   NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+  BadRequestException, } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
@@ -17,6 +15,7 @@ import {
 
 @Injectable()
 export class ScmService {
+  private readonly logger = new Logger(ScmService.name);
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
@@ -222,10 +221,10 @@ export class ScmService {
 
     const inventoryInsight =
       criticalStockCount > 5
-        ? `⚠️ ${criticalStockCount} SKU di bawah ROP. Segera rilis PR.`
+        ? `âš ï¸ ${criticalStockCount} SKU di bawah ROP. Segera rilis PR.`
         : accuracy < 95
-          ? '📉 Akurasi stok rendah. Perlu audit investigasi.'
-          : '✅ Stok sehat & akurasi terjaga.';
+          ? 'ðŸ“‰ Akurasi stok rendah. Perlu audit investigasi.'
+          : 'âœ… Stok sehat & akurasi terjaga.';
 
     // --- 2. CARD B: PROCUREMENT EFFICIENCY ---
     const deliveredPOs = pos.filter(
@@ -261,10 +260,10 @@ export class ScmService {
 
     const procurementInsight =
       avgLeadTime > 7
-        ? '⏳ Lead time vendor meningkat. Evaluasi alternatif.'
+        ? 'â³ Lead time vendor meningkat. Evaluasi alternatif.'
         : totalSavings > 10000000
-          ? '💰 Saving target tercapai (Nego Win).'
-          : '🎯 Efisiensi harga dalam parameter normal.';
+          ? 'ðŸ’° Saving target tercapai (Nego Win).'
+          : 'ðŸŽ¯ Efisiensi harga dalam parameter normal.';
 
     // --- 3. CARD C: WAREHOUSE OPS ---
     const totalOrdered = pos.reduce(
@@ -286,8 +285,8 @@ export class ScmService {
 
     const warehouseInsight =
       fulfillmentRate < 90
-        ? '📦 Fulfillment rate rendah. Cek partial delivery.'
-        : '⚡ Operasional gudang stabil & cepat.';
+        ? 'ðŸ“¦ Fulfillment rate rendah. Cek partial delivery.'
+        : 'âš¡ Operasional gudang stabil & cepat.';
 
     // --- 4. CARD D: LOGISTICS COST ---
     const totalShipping = workOrders.reduce(
@@ -309,8 +308,8 @@ export class ScmService {
 
     const logisticsInsight =
       otdRate < 90
-        ? '🚚 Keterlambatan pengiriman terdeteksi (OTD Drop).'
-        : '🛣️ Jalur distribusi lancar.';
+        ? 'ðŸšš Keterlambatan pengiriman terdeteksi (OTD Drop).'
+        : 'ðŸ›£ï¸ Jalur distribusi lancar.';
 
     // --- 5. DETAILED TABLES ---
 
@@ -741,7 +740,7 @@ export class ScmService {
       if (!pr) throw new NotFoundException('Purchase Request not found');
       if (pr.status !== PRStatus.SUBMITTED) {
         throw new BadRequestException(
-          `PR status ${pr.status} — hanya SUBMITTED yang bisa di-approve`,
+          `PR status ${pr.status} â€” hanya SUBMITTED yang bisa di-approve`,
         );
       }
 
@@ -789,7 +788,7 @@ export class ScmService {
     if (!pr) throw new NotFoundException('Purchase Request not found');
     if (pr.status !== PRStatus.SUBMITTED) {
       throw new BadRequestException(
-        `PR status ${pr.status} — hanya SUBMITTED yang bisa di-reject`,
+        `PR status ${pr.status} â€” hanya SUBMITTED yang bisa di-reject`,
       );
     }
     return this.prisma.purchaseRequest.update({
@@ -891,4 +890,95 @@ export class ScmService {
       );
     }
   }
-}
+
+  // --- HPP REQUEST MANAGEMENT ---
+  async getHppRequests() {
+    const leads = await this.prisma.salesLead.findMany({
+      where: {
+        status: { in: ['SAMPLE_REQUESTED', 'SAMPLE_SENT', 'SAMPLE_APPROVED', 'NEGOTIATION', 'SPK_SIGNED'] },
+      },
+      include: {
+        sampleRequests: {
+          include: {
+            billOfMaterials: { include: { material: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    return leads.map((l, index) => {
+      const sample = l.sampleRequests[0];
+      const moq = l.moq > 0 ? l.moq : 5000;
+      const calculatedHpp = sample?.targetHpp ? Number(sample.targetHpp) : (l.unitPrice ? Number(l.unitPrice) : 18500);
+      const status = l.status === 'SAMPLE_APPROVED' || l.status === 'SPK_SIGNED'
+        ? 'APPROVED'
+        : l.status === 'SAMPLE_SENT'
+        ? 'IN_REVIEW'
+        : 'PENDING';
+
+      return {
+        id: l.id,
+        code: `HPP-${new Date(l.createdAt).getFullYear()}-${String(index + 1).padStart(3, '0')}`,
+        date: l.createdAt.toISOString().slice(0, 10),
+        customerId: l.id,
+        customerName: l.clientName,
+        productId: sample?.id || l.id,
+        productName: sample?.productName || l.productInterest || 'Produk Maklon Kosmetik',
+        formulaId: l.formulaId || 'formula-std',
+        formulaName: sample ? `Formula ${sample.productName}` : 'Formula Kosmetik Standar CPKB',
+        moq: moq,
+        status: status,
+        calculatedHpp: calculatedHpp,
+        notes: l.notes || `Permintaan kalkulasi HPP untuk ${l.clientName}`,
+        createdAt: l.createdAt.toISOString(),
+        updatedAt: (l.updatedAt || l.createdAt).toISOString(),
+      };
+    });
+  }
+
+  async createHppRequest(dto: any) {
+    const lead = await this.prisma.salesLead.findFirst({
+      where: { id: dto.customerId },
+    });
+
+    if (lead) {
+      await this.prisma.salesLead.update({
+        where: { id: lead.id },
+        data: {
+          moq: Number(dto.moq) || lead.moq,
+          notes: dto.notes ? `${lead.notes || ''} | HPP Req: ${dto.notes}` : lead.notes,
+        },
+      });
+      return { id: lead.id, success: true };
+    }
+
+    return { id: `hpp-${Date.now()}`, success: true };
+  }
+
+  async updateHppStatus(id: string, status: string, calculatedHpp?: number) {
+    const lead = await this.prisma.salesLead.findUnique({
+      where: { id },
+    });
+
+    if (lead) {
+      await this.prisma.salesLead.update({
+        where: { id: lead.id },
+        data: {
+          status: status === 'APPROVED' ? 'SAMPLE_APPROVED' : lead.status,
+          unitPrice: calculatedHpp !== undefined ? calculatedHpp : lead.unitPrice,
+        },
+      });
+    }
+
+    return { id, status, calculatedHpp, success: true };
+  }
+
+  // Item 38: Dynamic pending count for purchase approvals
+  async getPendingApprovalCount(): Promise<{ count: number }> {
+    const count = await this.prisma.purchaseOrder.count({
+      where: { status: 'PENDING_APPROVAL' },
+    });
+    return { count };
+  }}

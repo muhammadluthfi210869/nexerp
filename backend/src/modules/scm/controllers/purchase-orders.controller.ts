@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -24,7 +24,7 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 @ApiTags('scm')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('scm/purchase-orders')
+@Controller('v1/scm/purchase-orders')
 export class PurchaseOrdersController {
   constructor(private readonly poService: PurchaseOrdersService) {}
 
@@ -37,21 +37,21 @@ export class PurchaseOrdersController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
   @ApiOperation({ summary: 'Get all Purchase Orders' })
   findAll() {
     return this.poService.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
   @ApiOperation({ summary: 'Get a single Purchase Order by ID' })
   findOne(@Param('id') id: string) {
     return this.poService.findOne(id);
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.DIRECTOR)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.DIRECTOR, UserRole.FINANCE)
   @ApiOperation({ summary: 'Update PO status (approve/reject)' })
   updateStatus(
     @Param('id') id: string,
@@ -61,7 +61,7 @@ export class PurchaseOrdersController {
   }
 
   @Post(':id/down-payment')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
   @ApiOperation({ summary: 'Create a Down Payment for a PO' })
   createDP(
     @Param('id') id: string,
@@ -69,4 +69,10 @@ export class PurchaseOrdersController {
   ) {
     return this.poService.createDownPayment(id, dto.amount, dto.notes);
   }
-}
+
+  @Get(':id/hpp-breakdown')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE, UserRole.RND)
+  @ApiOperation({ summary: 'Get HPP breakdown for a material' })
+  getHppBreakdown(@Param('id') id: string) {
+    return this.poService.getHppBreakdown(id);
+  }}

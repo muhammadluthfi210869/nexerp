@@ -70,6 +70,11 @@ model MaterialItem {
   isHalalValidated     Boolean                   @default(false)
   halalCertUrl         String?
   deletedAt            DateTime?
+  bahanType            String?
+  physicalForm         String?
+  conditionNotes       String?
+  autoCalculatedHpp    Float?
+  manualOverrideHpp    Float?
   boms                 BillOfMaterial[]
   formulaItems         FormulaItem[]
   inboundItems         InboundItem[]
@@ -94,7 +99,10 @@ model MaterialItem {
   returns              MaterialReturn[]
   requisitionItems     MaterialRequisitionItem[]
   rejectExecutions     RejectExecution[]
+  emergencyRequests    EmergencyPurchaseRequest[]
 
+  
+  supplierHistory      ProductSupplierHistory[]
   @@index([type])
   @@map("material_items")
 }
@@ -136,6 +144,7 @@ model Supplier {
   invoices         Invoice[]
   returns          PurchaseReturn[]
   category         MasterCategory?     @relation("SupplierToCategory", fields: [categoryId], references: [id])
+  supplierHistory ProductSupplierHistory[]
 
   @@map("suppliers")
 }
@@ -167,6 +176,8 @@ model PurchaseRequestItem {
   material       MaterialItem    @relation(fields: [materialId], references: [id])
   request        PurchaseRequest @relation(fields: [requestId], references: [id])
 
+  @@index([requestId])
+  @@index([materialId])
   @@map("purchase_request_items")
 }
 
@@ -186,6 +197,10 @@ model PurchaseOrder {
   createdAt      DateTime            @default(now())
   updatedAt      DateTime?           @updatedAt
   leadId         String?             @db.Uuid
+  version        Int                 @default(1)
+  discountManual Float               @default(0)
+  discountRounding Float             @default(0)
+  shippingCost   Float               @default(0)
   items          PurchaseOrderItem[]
   currency       Currency?           @relation(fields: [currencyId], references: [id])
   lead           SalesLead?          @relation(fields: [leadId], references: [id])
@@ -195,6 +210,9 @@ model PurchaseOrder {
   invoices       Invoice[]
   journalEntries JournalEntry[]
 
+  @@index([supplierId, status])
+  @@index([createdAt(sort: Desc)])
+  @@index([leadId])
   @@map("purchase_orders")
 }
 
@@ -207,10 +225,14 @@ model PurchaseOrderItem {
   totalPrice  Decimal       @db.Decimal(15, 2)
   receivedQty Decimal       @default(0) @db.Decimal(15, 2)
   taxId       String?       @db.Uuid
+  source         String              @default("PO")
+  qtyRounded     Float?
   material    MaterialItem  @relation(fields: [materialId], references: [id])
   po          PurchaseOrder @relation(fields: [poId], references: [id])
   tax         TaxRate?      @relation(fields: [taxId], references: [id])
 
+  @@index([poId])
+  @@index([materialId])
   @@map("purchase_order_items")
 }
 
@@ -226,6 +248,8 @@ model WarehouseInbound {
   returns       PurchaseReturn[]
   warehouse     Warehouse        @relation(fields: [warehouseId], references: [id])
 
+  @@index([poId])
+  @@index([receivedAt(sort: Desc)])
   @@map("warehouse_inbounds")
 }
 
@@ -411,4 +435,44 @@ model StockOpnameItem {
   opname     StockOpname  @relation(fields: [opnameId], references: [id])
 
   @@map("stock_opname_items")
+}
+
+/// Emergency Purchase Request (EPR Cito) Ã¢â‚¬â€ Shortage reporting & critical stock bypass
+model EmergencyPurchaseRequest {
+  id            String       @id @default(uuid()) @db.Uuid
+  eprNumber     String       @unique
+  materialId    String       @db.Uuid
+  shortageQty   Decimal      @db.Decimal(15, 2)
+  currentStock  Decimal      @db.Decimal(15, 2)
+  requiredQty   Decimal      @db.Decimal(15, 2)
+  urgencyLevel  String       @default("CITO_CRITICAL")
+  reason        String
+  status        String       @default("PENDING_PO")
+  targetPoId   String?      @db.Uuid
+  notes         String?
+  requestedById String?      @db.Uuid
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  material      MaterialItem @relation(fields: [materialId], references: [id])
+  requestedBy   User?        @relation("EprRequester", fields: [requestedById], references: [id])
+
+  @@index([materialId])
+  @@index([status])
+  @@map("emergency_purchase_requests")
+}
+
+
+model ProductSupplierHistory {
+  id                  String   @id @default(uuid()) @db.Uuid
+  productId           String
+  supplierId          String
+  firstSeenAt         DateTime @default(now())
+  lastPurchaseAt      DateTime?
+  totalQtyPurchased   Float    @default(0)
+  product             MaterialItem @relation(fields: [productId], references: [id])
+  supplier            Supplier @relation(fields: [supplierId], references: [id])
+
+  @@unique([productId, supplierId])
+  @@map("product_supplier_history")
 }
