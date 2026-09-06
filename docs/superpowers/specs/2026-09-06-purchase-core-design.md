@@ -1,7 +1,7 @@
 # Fase 1: Purchase Core — Design Spec
 
 **Tanggal:** 2026-09-06
-**Scope:** 17 item Purchase Core (dari total 91 perubahan ERP)
+**Scope:** 16 item Purchase Core (dari total 91 perubahan ERP)
 **Strategi:** Fase per Modul — fase ini adalah yang pertama
 **Status:** Draft — menunggu user review
 
@@ -10,14 +10,15 @@
 ## 1. Tujuan & Non-Tujuan
 
 ### 1.1 Tujuan
-Implementasi 17 item Purchase Core yang belum selesai, dengan fokus pada:
+Implementasi 16 item Purchase Core yang belum selesai, dengan fokus pada:
 - **Diskon/Ongkir PO** (46, 47) — kalkulasi Rupiah, pembulatan packing
-- **Sumber barang** (71) — PO Pembelian vs Stok Gudang
-- **HPP link ke Purchase** (72) — auto-calc + allow override
-- **SOP range harga** (69) — threshold + approval workflow
+- **Sumber barang** (71) — PO Pembelian vs Stok Gudang, **override butuh approval supervisor**
+- **HPP link ke Purchase** (72) — auto-calc per product/SKU + allow override
 - **Conflict resolution** (68) — optimistic lock + versioning
 - **Kondisi barang** (49, 50-56) — free, reject, bagus, Real Stok, jenis bahan
 - **Purchase flow polish** (38, 39, 41, 63, 73) — notifikasi, history, search, validasi
+
+> **Catatan revisi:** Item 69 (SOP range harga) di-drop dari Fase 1 — di-defer ke fase lain atas permintaan user. Total item Fase 1 = **16** (dari sebelumnya 17).
 
 ### 1.2 Non-Tujuan (eksplisit)
 - **Pajak & e-Faktur** (37) — di-skip dari scope, konfirmasi sudah benar
@@ -28,7 +29,7 @@ Implementasi 17 item Purchase Core yang belum selesai, dengan fokus pada:
 - **Modul Design & BusDev** (82, 87, 88, 89, 90, 91) — fase terpisah (Fase 6-7)
 
 ### 1.3 Success Criteria
-- Semua 17 item berstatus ✅ (implemented)
+- Semua 16 item berstatus ✅ (implemented)
 - Tidak ada regression di item yang sudah ✅
 - Tests passing untuk flow baru
 - Migration script aman untuk data existing
@@ -44,34 +45,34 @@ Implementasi 17 item Purchase Core yang belum selesai, dengan fokus pada:
 - Frontend: saat dapat 409, tampilkan modal "Data sudah diubah user lain, refresh dulu"
 - Audit log: simpan `previousVersion` + `updatedBy` untuk forensik
 
-### 2.2 HPP Link ke Purchase (item 72) — Auto-calc dari PO + Allow Override
-- Field `hpp` di tabel `Product` menjadi: `autoCalculatedHpp` (derived) + `manualOverrideHpp` (nullable)
+### 2.2 HPP Link ke Purchase (item 72) — Auto-calc per Product + Allow Override
+- HPP dihitung **per product/SKU** (bukan agregat total). Tiap `productId` punya HPP sendiri-sendiri.
+- Field di tabel `Product`: `autoCalculatedHpp` (derived per product) + `manualOverrideHpp` (nullable)
 - `effectiveHpp = manualOverrideHpp ?? autoCalculatedHpp`
-- `autoCalculatedHpp` dihitung dari rata-rata tertimbang PO: `sum(qtyDiterima * hargaSatuan) / sum(qtyDiterima)` per (product, supplier, last 90 days)
+- `autoCalculatedHpp` dihitung dari rata-rata tertimbang PO untuk product tersebut: `sum(qtyDiterima * hargaSatuan) / sum(qtyDiterima)` per productId (90 hari terakhir)
 - Hanya `qtyBagus` (exclude reject & free) yang masuk hitungan
 - Trigger: recalc setiap PO di-approve atau Penerimaan Barang di-confirm
-- UI: di product master, tampilkan breakdown `autoCalculatedHpp` + form override
+- UI: di product master, tampilkan breakdown `autoCalculatedHpp` per product + form override per product
 
-### 2.3 Sumber Barang (item 71) — Dropdown Pilihan + Default Smart
+### 2.3 Sumber Barang (item 71) — Dropdown Pilihan + Default Smart + Approval Override
 - PO line item tambah field `source: 'PO' | 'STOCK'`
 - Default logic di frontend saat create PO:
   - Cek stok gudang tersedia untuk product
   - Jika `currentStock >= qtyNeeded` → default `'STOCK'`
   - Else → default `'PO'`
-- Admin bisa override via dropdown
+- **Override butuh approval supervisor:**
+  - Jika admin **tetap di default** → submit langsung (tidak perlu approval tambahan)
+  - Jika admin **override dari default** (mis. default STOCK tapi pilih PO, atau sebaliknya) → wajib dapat approval supervisor sebelum PO bisa disubmit
+  - Alasan: keputusan override = keputusan non-standar, perlu persetujuan atasan
+- Approval flow: supervisor approve via `ApprovalRequest` table existing (sama seperti approval PO biasa, tapi dengan type=`SOURCE_OVERRIDE`)
 - Backend: validasi source matches — kalau `'STOCK'` tapi stok tidak cukup → reject
 - Inventory mutation:
   - `'PO'` → tunggu Penerimaan Barang untuk tambah stok
   - `'STOCK'` → kurangi stok langsung saat PO approved (booking system)
 
-### 2.4 SOP Range Harga (item 69) — Threshold + Approval Workflow
-- Tabel `ProductPriceRange`: `productId`, `minPrice`, `maxPrice`, `lastPurchasePrice`, `currency`
-- Default: `minPrice = lastPurchasePrice * 0.8`, `maxPrice = lastPurchasePrice * 1.3`
-- Saat input PO, validasi:
-  - Jika `hargaSatuan` di dalam range → OK
-  - Jika di luar range → flag + require approval Head sebelum submit
-- Approval flow: Head dari divisi pengaju, via `ApprovalRequest` table yang sudah ada
-- Audit: log semua override + alasan
+### 2.4 ~~SOP Range Harga (item 69)~~ — DI-DROP DARI FASE 1
+- Atas permintaan user, item 69 (SOP range harga dengan threshold + approval) di-defer ke fase lain.
+- Tidak ada perubahan data model atau flow di Fase 1 untuk item ini.
 
 ### 2.5 Diskon/Ongkir PO (item 46, 47) — 2 Field Diskon + Ongkir
 - PO header tambah field:
@@ -270,9 +271,9 @@ Tidak ada module baru. Semua extend di module existing:
    - Else → default source = PO
 3. Admin bisa override via dropdown
 4. Submit → backend validate:
-   - price range (item 69)
    - version conflict (item 68)
    - stock availability untuk source=STOCK (item 71)
+   - approval untuk override source (jika override dari default)
 5. If OK → create PO + (if STOCK) book inventory
 ```
 
@@ -333,8 +334,8 @@ Tidak ada module baru. Semua extend di module existing:
 - Payment calculation with reject items
 
 ### 9.3 E2E Tests (Playwright)
-- Create PO with source=STOCK, verify inventory booked
-- Create PO with out-of-range price, verify approval flow
+- Create PO with source=STOCK (default), verify inventory booked
+- Create PO with override source, verify supervisor approval flow
 - Trigger conflict modal, verify recovery path
 
 ### 9.4 Regression
@@ -398,6 +399,7 @@ Tidak ada module baru. Semua extend di module existing:
 - BusDev card persistence (89) → Fase 7
 - BusDev month filter (90) → Fase 7
 - BusDev auto-save (91) → Fase 7
+- **SOP range harga (69) → di-defer per revisi user**
 
 ---
 
@@ -407,7 +409,7 @@ Tidak ada module baru. Semua extend di module existing:
 - [ ] Semua backend tests passing
 - [ ] Semua frontend tests passing
 - [ ] E2E tests passing
-- [ ] 17 item Purchase Core berstatus ✅
+- [ ] 16 item Purchase Core berstatus ✅
 - [ ] No regression di item existing
 - [ ] Documentation updated
 - [ ] Code review passed
@@ -417,7 +419,7 @@ Tidak ada module baru. Semua extend di module existing:
 
 **Spec ditulis oleh brainstorming process dengan konfirmasi:**
 - Strategi scope: **Fase per Modul**
-- Fase 1: **Purchase Core (17 item)**
+- Fase 1: **Purchase Core (16 item)**
 - Conflict resolution: **Optimistic Lock + Versioning**
 - HPP link: **Auto-calc dari PO + Allow Override**
 - Sumber barang: **Dropdown + Default Smart**
