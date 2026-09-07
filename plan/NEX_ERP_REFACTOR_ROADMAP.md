@@ -29,6 +29,7 @@
 15. **[🔗 REQUIREMENT_TRACEABILITY](#15--requirement-traceability)** ← matrix approach
 16. **[🏭 PRODUCTION_READINESS](#16--production-readiness)** ← non-functional requirements
 17. **[⚖️ KONTRADIKSI_RESOLUTION](#17--kontradiksi-resolution)** ← source of truth rules
+18. **[🚀 PHASE 2: CROSS-DEPARTMENT](#18--phase-2-cross-department)** ← Batch 6-15 + 4 test flows
 
 ---
 
@@ -608,6 +609,449 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - [ ] Apply Sprint 9 DNA Compliance Pass ke semua finance pages
 
 **Dependencies:** Batch 3A/3B/3C/4A/4B/5A
+
+---
+
+## 🚀 PHASE 2: CROSS-DEPARTMENT (setelah Finance Production-Ready)
+
+> **Setelah Finance production-ready (Phase 1 complete), lanjut ke departemen lain dengan urutan:**
+> 1. **Master Data Foundation** (Batch 6) — WAJIB sebelum departemen lain (semua butuh shared master data)
+> 2. **Purchase/SCM** (Batch 7) — closest ke Finance (PO/GR trigger AP invoices)
+> 3. **BusDev/CRM** (Batch 8) — feeds Finance via AR invoices (Lead → Sample → Quotation → SO)
+> 4. **Warehouse** (Batch 9) — inventory, stock opname, mutasi
+> 5. **Production** (Batch 10) — 3-tahap CPKB (Mixing → Filling → Packaging)
+> 6. **QC** (Batch 11) — In-process inspection, COA, reject handling
+> 7. **R&D** (Batch 12) — Formula, Sample, HPP
+> 8. **HR** (Batch 13) — Employee, Payroll, Attendance, KPI
+> 9. **Legality** (Batch 14) — BPOM, Halal, ISO documents
+> 10. **Executive** (Batch 15) — Consolidated dashboard
+>
+> **Excluded:** Marketing (live, separate module)
+>
+> **Ordering rationale:**
+> - Master Data = foundational (semua butuh)
+> - Purchase/SCM = next karena feed ke Finance AP (PO → GR → Bill)
+> - BusDev = next karena feed ke Finance AR (Lead → SO → Invoice)
+> - Warehouse + Production + QC = trio (kalau salah satu down, sisanya ikut)
+> - R&D = anteseden BusDev (formula → sample → commercial)
+> - HR + Legality = supporting (relatively independent)
+> - Executive = last (consolidates all departments)
+
+---
+
+### 📦 Batch 6: MASTER DATA FOUNDATION (1-2 minggu) — *WAJIB FIRST, blocks semua departemen*
+
+**Tujuan:** Shared master data layer yang dipakai SEMUA departemen. Tanpa ini, departemen lain ga bisa jalan.
+
+**Backend (Prisma + NestJS):**
+- [ ] **`MasterCategory`** — kategori barang (Bahan Baku, Kemasan, Finished Goods, dll) — sudah ada di legacy, validasi
+- [ ] **`MasterUnit`** — units of measure (pcs, kg, gr, ml, dll)
+- [ ] **`MaterialItem`** — master barang (210+ items dari `BARANG.csv`) — validasi kategori + unit
+- [ ] **`Warehouse`** — master gudang (dengan alamat, PIC, location) — sudah ada
+- [ ] **`WarehouseAccess`** — RBAC per gudang (siapa bisa akses gudang mana)
+- [ ] **`Supplier`** — master vendor (dengan NPWP, payment terms, kategori COA) — udah ada, extend
+- [ ] **`Customer`** — master customer (dengan brand, PIC, credit limit) — sudah ada
+- [ ] **`User` + `Role` + `UserRole`** — RBAC matrix — sudah ada, extend
+- [ ] **`MasterKode`** — auto-numbering sequences (per `MASTER_KODE.xlsx`) — auto-gen all document numbers
+- [ ] **`Currency`** — multi-currency support (currently IDR only) — sudah ada
+
+**Frontend (DNA pattern):**
+- [ ] `/master/barang` — list barang dengan filter + search + import Excel
+- [ ] `/master/kategori` — list kategori barang
+- [ ] `/master/gudang` — list gudang + warehouse access matrix
+- [ ] `/master/vendor` — list vendor dengan payment terms + COA mapping
+- [ ] `/master/customer` — list customer dengan credit limit
+- [ ] `/master/user` + `/master/role` — RBAC management
+- [ ] `/master/unit` — list units of measure
+
+**Testing (Phase T1):**
+- [ ] Unit tests: validation rules (e.g., NPWP format, email format)
+- [ ] Integration tests: CRUD + auto-numbering
+- [ ] E2E: import CSV → validate → save flow
+
+**Success Criteria:**
+- ✅ All 209 operational pages have working master data layer
+- ✅ Auto-numbering works (no manual input for document numbers)
+- ✅ RBAC matrix enforced (user X can't access warehouse Y if not assigned)
+- ✅ Import Excel works for bulk master data
+
+**Dependencies:** Phase 0 (DNA), Sprint 1 (schema extension)
+
+---
+
+### 🛒 Batch 7: PURCHASE / SCM (3-4 minggu) — *PARALLEL dengan Batch 8 setelah Batch 6 selesai*
+
+**Tujuan:** Full Purchase-to-Pay cycle. Purchase Request → PO → Goods Receipt → Quality Check → Bill → Payment.
+
+**Backend:**
+- [ ] **`PurchaseRequest`** — request barang dari internal (dari warehouse/BOM) — extend existing
+- [ ] **`PurchaseRequestItem`** — line items request
+- [ ] **`PurchaseOrder`** — PO yang dikirim ke vendor — extend existing
+- [ ] **`PurchaseOrderItem`** — line items PO (qty, harga, diskon, ongkir) — extend existing
+- [ ] **`GoodsReceipt`** (Penerimaan Barang) — actual barang yang datang dari vendor
+- [ ] **`GoodsReceiptItem`** — line items GR dengan qty diterima, qty reject, qty bonus
+- [ ] **`QCInspection`** — hasil inspeksi QC (pass/fail/conditional)
+- [ ] **`PurchaseReturn`** — retur ke vendor (kalau barang reject)
+- [ ] **Event emission**: PO created → emit ke Finance → Bill reference PO; GR completed + QC pass → emit ke Finance → ready for Bill
+
+**Frontend:**
+- [ ] `/scm/permintaan-barang` — PR list + create
+- [ ] `/scm/pembelian` — PO list + create + send to vendor
+- [ ] `/scm/penerimaan-barang` — GR list + create (dengan qty reject + bonus)
+- [ ] `/scm/retur-pembelian` — retur ke vendor
+- [ ] `/scm/report-pembelian` — laporan pembelian
+- [ ] All using DNA pattern (DnaStatCard + floating window detail)
+
+**Integration:**
+- [ ] PO created di SCM → emit event → Finance bisa reference di Bill (Phase 1 Batch 3A)
+- [ ] GR completed + QC pass → emit event → Finance ready for Bill creation
+- [ ] Goods receipt dengan qty reject → trigger Debit Note / Pending Retur AP
+
+**Testing (Phase T1 + T-Cross):**
+- [ ] Unit tests: PO validation, GR tolerance checking
+- [ ] Integration: PR → PO → GR → Bill event chain
+- [ ] E2E: full purchase flow (PR → PO → GR → Bill ready)
+
+**Success Criteria:**
+- ✅ PR → PO → GR → AP Bill chain works end-to-end
+- ✅ QC pass required before Bill can be created
+- ✅ Reject handling generates Debit Note correctly
+- ✅ All financial integrations work
+
+**Dependencies:** Batch 6 (master data)
+
+---
+
+### 💼 Batch 8: BUSDEV / CRM (3-4 minggu) — *PARALLEL dengan Batch 7 setelah Batch 6 selesai*
+
+**Tujuan:** Full Lead-to-Cash cycle. Lead capture → Sample → Quotation → Sales Order → Delivery → Invoice → Payment.
+
+**Backend:**
+- [ ] **`Lead`** — lead dari marketing/referral — extend existing
+- [ ] **`LeadActivity`** — touchpoint tracking (call, meeting, follow-up)
+- [ ] **`SampleRequest`** — permintaan sample oleh lead
+- [ ] **`SampleResult`** — hasil sample (formula, harga, approval)
+- [ ] **`Quotation`** —报价 ke customer
+- [ ] **`SalesOrder`** (SO) — order yang confirmed — extend existing
+- [ ] **`SalesOrderItem`** — line items SO
+- [ ] **`DeliveryOrder`** (DO / Surat Jalan) — actual barang keluar
+- [ ] **`SalesReturn`** — retur dari customer
+- [ ] **Event emission**: SO confirmed → emit ke Finance → AR Invoice; DO created → emit ke Warehouse → picking; DO delivered → emit ke Finance → Invoice
+
+**Frontend:**
+- [ ] `/bussdev/lead` — pipeline kanban (drag-drop Lead → Qualified → Proposal → Won)
+- [ ] `/bussdev/sample-tracking` — track status sample per lead
+- [ ] `/bussdev/quotation` — buat报价 ke customer
+- [ ] `/bussdev/sales-order` — SO list + detail
+- [ ] `/bussdev/delivery-order` — DO / Surat Jalan
+- [ ] `/bussdev/follow-up-pelanggan` — collection + reminder
+- [ ] `/bussdev/lost-deals` — kenapa deal hilang
+- [ ] All using DNA pattern
+
+**Integration:**
+- [ ] SO confirmed → emit ke Finance (AR Invoice creation)
+- [ ] DO created → emit ke Warehouse (picking list)
+- [ ] DO delivered → emit ke Finance (Invoice finalized)
+- [ ] Customer payment → emit ke Finance (AR Receipt)
+
+**Testing:**
+- [ ] Unit tests: Lead scoring, quotation calculation
+- [ ] Integration: Lead → SO → DO → AR event chain
+- [ ] E2E: full sales flow (Lead → Sample → Quotation → SO → DO → Invoice)
+
+**Success Criteria:**
+- ✅ Lead → SO → DO → AR Invoice chain works
+- ✅ Pipeline kanban with drag-drop works
+- ✅ Sample tracking shows lifecycle (Request → Lab Test → Approved/Rejected)
+- ✅ Lost-deal analytics correct
+
+**Dependencies:** Batch 6 (master data)
+
+---
+
+### 🏭 Batch 9: WAREHOUSE (2-3 minggu)
+
+**Tujuan:** Full inventory management — stock movements, opname, transfer.
+
+**Backend:**
+- [ ] **`MaterialInventory`** — stock per material per warehouse (extend existing)
+- [ ] **`StockMovement`** — mutasi barang (in/out/transfer) — extend existing
+- [ ] **`StockAdjustment`** — adjustment stok (selisih opname) — already exists
+- [ ] **`StockOpname`** — opname V1 (running) + V2 (finalization) — already exists
+- [ ] **`StockTransfer`** — transfer antar gudang
+- [ ] **`MaterialRequisition`** — request barang keluar (untuk produksi, sales, dll)
+- [ ] **`GoodsIssueNote`** — bukti barang keluar
+- [ ] **Event emission**: Stock low → alert; Stock opname diff → Adjustment Journal
+
+**Frontend:**
+- [ ] `/warehouse/stok` — list stock by warehouse
+- [ ] `/warehouse/mutasi-stok` — history mutasi (filter by date, material, warehouse)
+- [ ] `/warehouse/stock-opname` — opname V1 (running count) + V2 (finalization with diff)
+- [ ] `/warehouse/pindah-gudang` — transfer barang antar gudang
+- [ ] `/warehouse/permintaan-barang` — request barang keluar
+- [ ] `/warehouse/retur-penjualan` — retur dari customer (goods receipt reverse)
+- [ ] All using DNA pattern
+
+**Integration:**
+- [ ] DO delivered (Batch 8) → emit ke Warehouse → stock out otomatis
+- [ ] Goods Receipt (Batch 7) → emit ke Warehouse → stock in otomatis
+- [ ] Stock low → emit alert ke purchaser
+
+**Testing:**
+- [ ] Unit tests: stock calculation, FIFO/LIFO
+- [ ] Integration: GR → stock in → AR
+- [ ] E2E: full warehouse flow
+
+**Dependencies:** Batch 6 (master data), Batch 7 (untuk Goods Receipt integration)
+
+---
+
+### 🏭 Batch 10: PRODUCTION (3-4 minggu) — *3-tahap CPKB*
+
+**Tujuan:** Full Production cycle — Mixing → Filling → Packaging dengan traceability.
+
+**Backend:**
+- [ ] **`BatchRecord`** — record batch produksi (extend existing)
+- [ ] **`Formula`** — master formula (BOM) — extend existing
+- [ ] **`FormulaRevision`** — history revisi formula
+- [ ] **`ScheduleMixing`** — jadwal mixing
+- [ ] **`ScheduleFilling`** — jadwal filling
+- [ ] **`SchedulePackaging`** — jadwal packaging
+- [ ] **`ProductionMixing`** — eksekusi mixing (output: bulk)
+- [ ] **`ProductionFilling`** — eksekusi filling (output: filled goods)
+- [ ] **`ProductionPackaging`** — eksekusi packaging (output: finished goods)
+- [ ] **`JobOrder`** — job order cost tracking
+- [ ] **`ProductionPlan`** — production planning
+- [ ] **Event emission**: Production complete → emit ke Warehouse → stock in (Finished Goods); Production cost → emit ke Finance → Job Order Costing
+
+**Frontend:**
+- [ ] `/production/batch-record` — list + create batch record
+- [ ] `/production/formula` — master formula + revision history
+- [ ] `/production/mixing` — schedule + eksekusi mixing
+- [ ] `/production/filling` — schedule + eksekusi filling
+- [ ] `/production/packing` — schedule + eksekusi packaging
+- [ ] `/production/work-orders` — job order tracking
+- [ ] All using DNA pattern
+
+**Integration:**
+- [ ] SO confirmed (Batch 8) → Production Plan
+- [ ] Production complete → Warehouse stock in (Batch 9)
+- [ ] Production cost → Finance Job Order Costing (Batch 5A)
+
+**Testing:**
+- [ ] Unit tests: yield calculation, cost rollup
+- [ ] Integration: BOM → Production → Stock → Finance
+- [ ] E2E: full production flow
+
+**Dependencies:** Batch 6, Batch 7 (untuk material), Batch 8 (untuk SO trigger), Batch 9 (untuk stock)
+
+---
+
+### 🔬 Batch 11: QC (1-2 minggu)
+
+**Tujuan:** Quality Control — In-process inspection + COA + reject handling.
+
+**Backend:**
+- [ ] **`QCChecklist`** — checklist template per material/product
+- [ ] **`QCAudit`** — audit record (extend existing)
+- [ ] **`QCInspection`** — hasil inspection (link to Goods Receipt)
+- [ ] **`COPQRecord`** — Cost of Poor Quality tracking (extend existing)
+- [ ] **`RejectExecution`** — handling barang reject
+- [ ] **`COA`** — Certificate of Analysis per batch
+- [ ] **Event emission**: QC fail → trigger Retur/Pending AP; QC pass → ready for Bill (Batch 7)
+
+**Frontend:**
+- [ ] `/qc/checklist` — list + manage checklist template
+- [ ] `/qc/inspections` — inspection form (mobile-friendly)
+- [ ] `/qc/audit` — audit records
+- [ ] `/qc/coa` — Certificate of Analysis
+- [ ] All using DNA pattern
+
+**Integration:**
+- [ ] Goods Receipt (Batch 7) → trigger QC Inspection
+- [ ] QC fail → trigger Purchase Return + Bill exception (Batch 7)
+
+**Dependencies:** Batch 7
+
+---
+
+### 🧪 Batch 12: R&D (2-3 minggu)
+
+**Tujuan:** Research & Development — Formula, Sample testing, HPP calculation.
+
+**Backend:**
+- [ ] **`SampleRequest`** — sample dari BusDev (cross-ref)
+- [ ] **`Formula`** + **`FormulaRevision`** — formula master + history
+- [ ] **`FormulaAdjustment`** — adjustment formula (saat revisi)
+- [ ] **`LabTest`** — lab test result (pH, viscosity, dll)
+- [ ] **`HPPRequest`** — HPP calculation request
+- [ ] **`HPPDetail`** — breakdown HPP per material + process
+- [ ] **Event emission**: HPP approved → emit ke BusDev → Quotation reference
+
+**Frontend:**
+- [ ] `/rnd/formula` — list + detail formula + revision history
+- [ ] `/rnd/sample-tracking` — track status sample
+- [ ] `/rnd/permintaan-hpp` — HPP request + calculation
+- [ ] All using DNA pattern
+
+**Integration:**
+- [ ] HPP approved → BusDev Quotation (Batch 8)
+
+**Dependencies:** Batch 6
+
+---
+
+### 👥 Batch 13: HR (2 minggu)
+
+**Tujuan:** Employee management, Payroll, Attendance, KPI.
+
+**Backend:**
+- [ ] **`Employee`** + **`EmployeeProfile`** — master employee (extend existing)
+- [ ] **`Attendance`** — absensi harian
+- [ ] **`Payroll`** — gaji bulanan (extend existing)
+- [ ] **`LaborGrade`** — grade karyawan (extend existing)
+- [ ] **`Ticket`** — tiket internal HR (extend existing)
+- [ ] **`InternalAudit`** — audit internal (extend existing)
+
+**Frontend:**
+- [ ] `/hr/employee` — list employee + profile
+- [ ] `/hr/attendance` — absensi (mobile-friendly)
+- [ ] `/hr/payroll` — gaji + slip
+- [ ] `/hr/tickets` — tiket HR
+- [ ] All using DNA pattern
+
+**Dependencies:** Batch 6
+
+---
+
+### ⚖️ Batch 14: LEGALITY (1-2 minggu)
+
+**Tujuan:** Legal document management — BPOM, Halal, ISO certification.
+
+**Backend:**
+- [ ] **`RegulatoryPipeline`** — pipeline dokumen (extend existing)
+- [ ] **`DocumentDraft`** — draft dokumen (extend existing)
+- [ ] **`LegalEntity`** — master badan hukum
+- [ ] **`Permit`** — perizinan (BPOM, Halal, ISO, dll)
+
+**Frontend:**
+- [ ] `/legality/pipeline` — list pipeline dokumen
+- [ ] `/legality/documents` — draft management
+- [ ] `/legality/permits` — list perizinan + expiry tracking
+- [ ] All using DNA pattern
+
+**Dependencies:** Batch 6
+
+---
+
+### 🏛️ Batch 15: EXECUTIVE (1-2 minggu)
+
+**Tujuan:** Consolidated executive dashboard — pulls data dari semua departemen.
+
+**Backend:**
+- [ ] **`ExecutiveDashboard`** — aggregated KPIs (extend existing)
+- [ ] **Data aggregator service** — pulls from Finance, BusDev, Production, HR, dll
+- [ ] **Real-time event streaming** — via NestJS event emitter → dashboard updates
+
+**Frontend:**
+- [ ] `/executive/dashboard` — consolidated view
+- [ ] `/executive/notifications` — critical alerts (overdue AP, missed production targets, dll)
+- [ ] `/executive/kpi-accountability` — KPI per department
+- [ ] All using DNA pattern
+
+**Dependencies:** Batch 3A/3B/3C + Batch 6-14 (semua departemen production-ready)
+
+---
+
+## 🔄 PHASE T-CROSS: CROSS-DIVISIONAL TESTING (2 minggu, setelah Phase 2 selesai)
+
+> **🔴 WAJIB** — Test per fase dengan flow lintas departemen. Bukan test per departemen sendiri-sendiri.
+
+### Test Flow 1: BusDev → R&D → Production → Deal
+
+**Skenario**: Lead tertarik produk → minta sample → R&D develop formula → customer deal → Production → Finance invoice
+
+**Steps:**
+1. Lead capture (BusDev) → create Lead
+2. Sample request → R&D develops formula → lab test → approved
+3. Quotation (BusDev) → customer signs → SO created
+4. Production Plan → Mixing → Filling → Packaging → Finished Goods
+5. Warehouse stock in → DO created → delivered
+6. Finance AR Invoice → customer payment → AR Receipt
+7. Executive dashboard updated with all KPIs
+
+**Pass criteria:** All 6 departments' data flows correctly through the chain. Audit trail complete.
+
+---
+
+### Test Flow 2: Purchase → GR → QC → AP
+
+**Skenario**: Internal butuh barang → Purchase Order → vendor kirim → QC check → Bill → Payment
+
+**Steps:**
+1. Material Requisition (Warehouse/Production) → Purchase Request (SCM)
+2. PO created → sent to vendor
+3. Goods Receipt → qty received, qty reject, qty bonus
+4. QC Inspection → pass/fail
+5. If pass → Finance Bill created (auto-link to PO + GR)
+6. AP Payment → journal balanced
+7. Vendor rating updated
+
+**Pass criteria:** 3-way matching (PO ↔ GR ↔ QC ↔ Bill) works. Reject handling creates correct journal entries.
+
+---
+
+### Test Flow 3: SO → DO → AR → Receipt
+
+**Skenario**: Customer order → Production → Delivery → Invoice → Payment
+
+**Steps:**
+1. Sales Order confirmed (BusDev)
+2. Production Plan triggered → Finished Goods
+3. DO created → Warehouse picking
+4. DO delivered → AR Invoice (Finance)
+5. AR Delivery Gatekeeper cleared
+6. Customer payment → AR Receipt → bank reconcile
+7. Executive dashboard updated
+
+**Pass criteria:** AR Delivery Gatekeeper prevents DO from going to customer until finance approves.
+
+---
+
+### Test Flow 4: Closing Period → Reporting → Executive
+
+**Skenario**: End of month — closing all subledgers → generating reports → executive review
+
+**Steps:**
+1. All subledgers closed for period
+2. Period Lock applied
+3. Adjustment Journal for known discrepancies
+4. Closing Checklist completed (per department sign-off)
+5. Financial Reports generated (Neraca, Laba Rugi, Cash Flow)
+6. Department-specific reports (Sales Report, Purchase Report, Production Report)
+7. Executive Dashboard updated
+8. Period marked as Closed
+
+**Pass criteria:** Period Lock prevents further transactions. All reports balance. Executive sees consolidated view.
+
+---
+
+## 📊 Updated Timeline (Cross-Department Full)
+
+| Phase | Scope | Solo Estimate | 3-Dev Estimate |
+|---|---|---|---|
+| **Phase 1 (Finance)** | Sprint 0-9 (DNA, Schema, AP/AR/Cash/Tax/Assets/Cost/Closing/Compliance) | 14-18 weeks | 5-7 weeks |
+| **Phase 2 (Cross-Department)** | Batch 6-15 (Master Data, SCM, BusDev, Warehouse, Production, QC, R&D, HR, Legality, Executive) | 14-18 weeks | 5-7 weeks |
+| **Phase T (Testing)** | Phase T1 + T2 (unit + integration + E2E) | 3-4 weeks | 1-2 weeks |
+| **Phase T-Cross (Cross-Divisional)** | 4 cross-divisional test flows | 2 weeks | 1 week |
+| **Phase U (UAT)** | Per-module UAT + UAT per department | 3-4 weeks | 1-2 weeks |
+| **Phase Go-Live** | Cutover + Hypercare | 2-3 weeks | 1-2 weeks |
+| **TOTAL** | Full ERP excluding Marketing | **38-47 weeks solo** | **14-21 weeks (3 devs)** |
+
+**For 3-dev realistic timeline:** 14-21 weeks (3.5-5 months)
+**For solo realistic timeline:** 38-47 weeks (9-11 months)
+
+**Marketing module is EXCLUDED** (live, separate team).
 
 ---
 
