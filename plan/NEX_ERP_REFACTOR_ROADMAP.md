@@ -1289,6 +1289,39 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 | **Legality** | `docs/legacy-erp/legalitas.md` | BPOM, Halal, ISO |
 | **Cross-departemen** | `docs/legacy-erp/kil_erp_full_inventory_v2.csv` + `NEX_FINANCE_FINAL_SPEC.md` | URL inventory + business process |
 
+### 6.3 🛡️ SINGLE-TRUTH RULE (CSV Inventory)
+
+> **🔴 HARD RULE — CSV `kil_erp_full_inventory_v2.csv` adalah SINGLE SOURCE OF TRUTH untuk inventory ERP.**
+
+**Aturan utama:**
+
+1. **Setiap page baru** WAJIB ditambahkan ke CSV sebelum coding dimulai
+2. **Setiap requirement/input/output change** WAJIB di-update di CSV row yang relevan (kolom `Cards`, `Table Columns`, `Inputs`, `View/Detail`, `Actions`)
+3. **Kolom di page = kolom di CSV** (no inventing columns). Kalau mau nambah kolom baru → update CSV dulu + note di Section 15 (REQUIREMENT_TRACEABILITY)
+4. **Setiap CSV update WAJIB di-commit ke Git** dengan message jelas
+5. **Conflict resolution**: CSV > REQUIREMENT.md > PRD > existing code (lihat Section 17)
+
+**Workflow setiap ada perubahan requirement:**
+
+```
+1. Update docs/legacy-erp/kil_erp_full_inventory_v2.csv
+   (tambah row baru ATAU update row existing)
+   ↓
+2. Update docs/legacy-erp/REQUIREMENT.md (kalau poin baru)
+   ↓
+3. Update plan/NEX_ERP_REFACTOR_ROADMAP.md
+   (requirement traceability + batch deliverables)
+   ↓
+4. git commit dengan message jelas per step
+```
+
+**Contoh sudah dilakukan:**
+- ✅ Daily Tracking R&D (`/rnd/daily-tracking`) — 14 kolom dari `Daily_tracking_RND.csv`
+- ✅ Project Monitoring R&D (`/rnd/project-monitoring`) — 11 kolom dari `Project_Monitoring_RND.csv`
+- ⚠️ Client Sample (`/bussdev/client-sample`) — existing row punya abbreviated columns, perlu update ke full 28 kolom dari `Client_Sample_Busdev.csv` (TODO saat Batch 8)
+
+**Audit CSV periodic** (Phase T-Cross): setiap sprint, verify CSV entries match actual implemented pages. Drift detected → update CSV.
+
 **Cara pakai references:**
 1. Sebelum bikin page baru, READ CSV/spec terkait dulu
 2. Kolom tabel = kolom di CSV (TIDAK boleh nambah/hapus sembarangan)
