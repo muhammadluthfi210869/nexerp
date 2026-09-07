@@ -1145,6 +1145,74 @@
         ]
       }
     },
+    "/v1/marketing/omni-crm/conversations": {
+      "get": {
+        "operationId": "OmniCrmConversationController_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignedTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OmniCrmConversation"
+        ]
+      }
+    },
+    "/v1/marketing/omni-crm/conversations/{leadId}/messages": {
+      "get": {
+        "operationId": "OmniCrmConversationController_messages",
+        "parameters": [
+          {
+            "name": "leadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OmniCrmConversation"
+        ]
+      }
+    },
+    "/v1/marketing/omni-crm/conversations/send": {
+      "post": {
+        "operationId": "OmniCrmConversationController_send",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OmniCrmConversation"
+        ]
+      }
+    },
     "/marketing/tasks": {
       "get": {
         "operationId": "MarketingTasksController_list",
@@ -1237,6 +1305,690 @@
         },
         "tags": [
           "MarketingTasks"
+        ]
+      }
+    },
+    "/v1/marketing/posts": {
+      "get": {
+        "operationId": "MarketingPostsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pillar",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "take",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPosts"
+        ]
+      },
+      "post": {
+        "operationId": "MarketingPostsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPosts"
+        ]
+      }
+    },
+    "/v1/marketing/posts/counts": {
+      "get": {
+        "operationId": "MarketingPostsController_counts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPosts"
+        ]
+      }
+    },
+    "/v1/marketing/posts/{id}": {
+      "get": {
+        "operationId": "MarketingPostsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPosts"
+        ]
+      },
+      "patch": {
+        "operationId": "MarketingPostsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPosts"
+        ]
+      },
+      "delete": {
+        "operationId": "MarketingPostsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingPosts"
+        ]
+      }
+    },
+    "/v1/marketing/campaign-okrs": {
+      "get": {
+        "operationId": "CampaignOkrsController_compute",
+        "parameters": [
+          {
+            "name": "month",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CampaignOkrs"
+        ]
+      }
+    },
+    "/v1/marketing/meta/insights": {
+      "get": {
+        "operationId": "MetaGraphController_insights",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MetaGraph"
+        ]
+      }
+    },
+    "/v1/marketing/meta/demographics": {
+      "get": {
+        "operationId": "MetaGraphController_demographics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MetaGraph"
+        ]
+      }
+    },
+    "/v1/marketing/meta/best-times": {
+      "get": {
+        "operationId": "MetaGraphController_bestTimes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MetaGraph"
+        ]
+      }
+    },
+    "/v1/marketing/meta/status": {
+      "get": {
+        "operationId": "MetaGraphController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MetaGraph"
+        ]
+      }
+    },
+    "/lead-capture/track": {
+      "post": {
+        "operationId": "LeadCaptureController_track",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/whatsapp/{trackingCode}": {
+      "put": {
+        "operationId": "LeadCaptureController_updateFromWhatsApp",
+        "parameters": [
+          {
+            "name": "trackingCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsAppUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture": {
+      "get": {
+        "operationId": "LeadCaptureController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/stats": {
+      "get": {
+        "operationId": "LeadCaptureController_stats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/dashboard": {
+      "get": {
+        "operationId": "LeadCaptureController_dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}": {
+      "patch": {
+        "operationId": "LeadCaptureController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLeadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      },
+      "get": {
+        "operationId": "LeadCaptureController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      },
+      "delete": {
+        "operationId": "LeadCaptureController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/bulk-update": {
+      "post": {
+        "operationId": "LeadCaptureController_bulkUpdate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-webhook": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoWebhook",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-sync": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoSync",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-status": {
+      "get": {
+        "operationId": "LeadCaptureController_kommoStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/kommo-pull": {
+      "post": {
+        "operationId": "LeadCaptureController_kommoPull",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/import-csv": {
+      "post": {
+        "operationId": "LeadCaptureController_importCsv",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/next": {
+      "get": {
+        "operationId": "LeadCaptureController_getNextAgent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/status": {
+      "get": {
+        "operationId": "LeadCaptureController_getRoundRobinStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/agents": {
+      "post": {
+        "operationId": "LeadCaptureController_upsertAgent",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/round-robin/agents/{id}": {
+      "delete": {
+        "operationId": "LeadCaptureController_deleteAgent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/ai-extract": {
+      "post": {
+        "operationId": "LeadCaptureController_aiExtract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/ai-stage-confirm": {
+      "post": {
+        "operationId": "LeadCaptureController_confirmAiStage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/attributes": {
+      "get": {
+        "operationId": "LeadCaptureController_getAttributes",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
+        ]
+      }
+    },
+    "/lead-capture/{id}/attributes/{attrId}": {
+      "patch": {
+        "operationId": "LeadCaptureController_confirmAttr",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attrId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAttributeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LeadCapture"
         ]
       }
     },
@@ -3586,7 +4338,7 @@
         ]
       }
     },
-    "/scm/purchase-orders": {
+    "/v1/scm/purchase-orders": {
       "post": {
         "operationId": "PurchaseOrdersController_create",
         "parameters": [],
@@ -3634,7 +4386,7 @@
         ]
       }
     },
-    "/scm/purchase-orders/{id}": {
+    "/v1/scm/purchase-orders/{id}": {
       "get": {
         "operationId": "PurchaseOrdersController_findOne",
         "parameters": [
@@ -3663,7 +4415,7 @@
         ]
       }
     },
-    "/scm/purchase-orders/{id}/status": {
+    "/v1/scm/purchase-orders/{id}/status": {
       "patch": {
         "operationId": "PurchaseOrdersController_updateStatus",
         "parameters": [
@@ -3692,7 +4444,7 @@
         ]
       }
     },
-    "/scm/purchase-orders/{id}/down-payment": {
+    "/v1/scm/purchase-orders/{id}/down-payment": {
       "post": {
         "operationId": "PurchaseOrdersController_createDP",
         "parameters": [
@@ -3716,6 +4468,35 @@
           }
         ],
         "summary": "Create a Down Payment for a PO",
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/v1/scm/purchase-orders/{id}/hpp-breakdown": {
+      "get": {
+        "operationId": "PurchaseOrdersController_getHppBreakdown",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get HPP breakdown for a material",
         "tags": [
           "scm"
         ]
@@ -3947,7 +4728,7 @@
         ]
       }
     },
-    "/scm/vendors": {
+    "/v1/scm/vendors": {
       "get": {
         "operationId": "ScmController_getVendors",
         "parameters": [],
@@ -3957,11 +4738,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/dashboard": {
+    "/v1/scm/dashboard": {
       "get": {
         "operationId": "ScmController_getDashboardStats",
         "parameters": [],
@@ -3971,11 +4752,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/work-orders/active": {
+    "/v1/scm/work-orders/active": {
       "get": {
         "operationId": "ScmController_getActiveWorkOrders",
         "parameters": [],
@@ -3985,11 +4766,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/work-orders/{id}/readiness": {
+    "/v1/scm/work-orders/{id}/readiness": {
       "get": {
         "operationId": "ScmController_checkMaterialReadiness",
         "parameters": [
@@ -4008,11 +4789,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/purchase-orders/initialize": {
+    "/v1/scm/purchase-orders/initialize": {
       "post": {
         "operationId": "ScmController_initializePurchase",
         "parameters": [],
@@ -4022,11 +4803,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/purchase-requests/{id}/approve": {
+    "/v1/scm/purchase-requests/{id}/approve": {
       "post": {
         "operationId": "ScmController_approvePurchaseRequest",
         "parameters": [
@@ -4045,11 +4826,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/purchase-requests/{id}/reject": {
+    "/v1/scm/purchase-requests/{id}/reject": {
       "post": {
         "operationId": "ScmController_rejectPurchaseRequest",
         "parameters": [
@@ -4068,11 +4849,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/purchase-requests": {
+    "/v1/scm/purchase-requests": {
       "get": {
         "operationId": "ScmController_getPurchaseRequests",
         "parameters": [],
@@ -4082,11 +4863,11 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
         ]
       }
     },
-    "/scm/purchase-request": {
+    "/v1/scm/purchase-request": {
       "post": {
         "operationId": "ScmController_createPurchaseRequest",
         "parameters": [],
@@ -4096,7 +4877,71 @@
           }
         },
         "tags": [
-          "Scm"
+          "scm"
+        ]
+      }
+    },
+    "/v1/scm/hpp-requests": {
+      "get": {
+        "operationId": "ScmController_getHppRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "scm"
+        ]
+      },
+      "post": {
+        "operationId": "ScmController_createHppRequest",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/v1/scm/hpp-requests/{id}": {
+      "patch": {
+        "operationId": "ScmController_updateHppStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "scm"
+        ]
+      }
+    },
+    "/v1/scm/purchase-approval/pending-count": {
+      "get": {
+        "operationId": "ScmController_getPendingApprovalCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get pending purchase approval count",
+        "tags": [
+          "scm"
         ]
       }
     },
@@ -4396,449 +5241,6 @@
         },
         "tags": [
           "Digimar"
-        ]
-      }
-    },
-    "/lead-capture/track": {
-      "post": {
-        "operationId": "LeadCaptureController_track",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TrackDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/whatsapp/{trackingCode}": {
-      "put": {
-        "operationId": "LeadCaptureController_updateFromWhatsApp",
-        "parameters": [
-          {
-            "name": "trackingCode",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WhatsAppUpdateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture": {
-      "get": {
-        "operationId": "LeadCaptureController_list",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/stats": {
-      "get": {
-        "operationId": "LeadCaptureController_stats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/dashboard": {
-      "get": {
-        "operationId": "LeadCaptureController_dashboard",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/{id}": {
-      "patch": {
-        "operationId": "LeadCaptureController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLeadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      },
-      "get": {
-        "operationId": "LeadCaptureController_get",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      },
-      "delete": {
-        "operationId": "LeadCaptureController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/bulk-update": {
-      "post": {
-        "operationId": "LeadCaptureController_bulkUpdate",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkUpdateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/kommo-webhook": {
-      "post": {
-        "operationId": "LeadCaptureController_kommoWebhook",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/kommo-sync": {
-      "post": {
-        "operationId": "LeadCaptureController_kommoSync",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/kommo-status": {
-      "get": {
-        "operationId": "LeadCaptureController_kommoStatus",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/kommo-pull": {
-      "post": {
-        "operationId": "LeadCaptureController_kommoPull",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/import-csv": {
-      "post": {
-        "operationId": "LeadCaptureController_importCsv",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/round-robin/next": {
-      "get": {
-        "operationId": "LeadCaptureController_getNextAgent",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/round-robin/status": {
-      "get": {
-        "operationId": "LeadCaptureController_getRoundRobinStatus",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/round-robin/agents": {
-      "post": {
-        "operationId": "LeadCaptureController_upsertAgent",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/round-robin/agents/{id}": {
-      "delete": {
-        "operationId": "LeadCaptureController_deleteAgent",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/{id}/ai-extract": {
-      "post": {
-        "operationId": "LeadCaptureController_aiExtract",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/{id}/ai-stage-confirm": {
-      "post": {
-        "operationId": "LeadCaptureController_confirmAiStage",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/{id}/attributes": {
-      "get": {
-        "operationId": "LeadCaptureController_getAttributes",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
-        ]
-      }
-    },
-    "/lead-capture/{id}/attributes/{attrId}": {
-      "patch": {
-        "operationId": "LeadCaptureController_confirmAttr",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "attrId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAttributeDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LeadCapture"
         ]
       }
     },
@@ -5379,7 +5781,7 @@
         ]
       }
     },
-    "/warehouse/stats": {
+    "/v1/warehouse/stats": {
       "get": {
         "operationId": "WarehouseController_getStats",
         "parameters": [],
@@ -5393,7 +5795,7 @@
         ]
       }
     },
-    "/warehouse/audit": {
+    "/v1/warehouse/audit": {
       "get": {
         "operationId": "WarehouseController_getAudit",
         "parameters": [],
@@ -5407,7 +5809,7 @@
         ]
       }
     },
-    "/warehouse/catalog": {
+    "/v1/warehouse/catalog": {
       "get": {
         "operationId": "WarehouseController_getCatalog",
         "parameters": [
@@ -5430,7 +5832,7 @@
         ]
       }
     },
-    "/warehouse/warehouses": {
+    "/v1/warehouse/warehouses": {
       "get": {
         "operationId": "WarehouseController_getWarehouses",
         "parameters": [],
@@ -5444,7 +5846,7 @@
         ]
       }
     },
-    "/warehouse/history/{materialId}": {
+    "/v1/warehouse/history/{materialId}": {
       "get": {
         "operationId": "WarehouseController_getHistory",
         "parameters": [
@@ -5467,7 +5869,7 @@
         ]
       }
     },
-    "/warehouse/check-thresholds": {
+    "/v1/warehouse/check-thresholds": {
       "get": {
         "operationId": "WarehouseController_checkThresholds",
         "parameters": [],
@@ -5481,7 +5883,7 @@
         ]
       }
     },
-    "/warehouse/locations": {
+    "/v1/warehouse/locations": {
       "get": {
         "operationId": "WarehouseController_getLocations",
         "parameters": [],
@@ -5495,7 +5897,7 @@
         ]
       }
     },
-    "/warehouse/suggest-batch/{materialId}": {
+    "/v1/warehouse/suggest-batch/{materialId}": {
       "get": {
         "operationId": "WarehouseController_getSuggestedBatch",
         "parameters": [
@@ -5518,7 +5920,7 @@
         ]
       }
     },
-    "/warehouse/validate-handover": {
+    "/v1/warehouse/validate-handover": {
       "post": {
         "operationId": "WarehouseController_validateHandover",
         "parameters": [],
@@ -5532,7 +5934,7 @@
         ]
       }
     },
-    "/warehouse/opname/{id}/approve": {
+    "/v1/warehouse/opname/{id}/approve": {
       "post": {
         "operationId": "WarehouseController_approveOpname",
         "parameters": [
@@ -5555,7 +5957,7 @@
         ]
       }
     },
-    "/warehouse/release/{workOrderId}": {
+    "/v1/warehouse/release/{workOrderId}": {
       "post": {
         "operationId": "WarehouseController_releaseMaterial",
         "parameters": [
@@ -5578,7 +5980,7 @@
         ]
       }
     },
-    "/warehouse/batches/{id}/status": {
+    "/v1/warehouse/batches/{id}/status": {
       "post": {
         "operationId": "WarehouseController_updateBatchStatus",
         "parameters": [
@@ -5601,7 +6003,7 @@
         ]
       }
     },
-    "/warehouse/transfers": {
+    "/v1/warehouse/transfers": {
       "post": {
         "operationId": "WarehouseController_createTransfer",
         "parameters": [],
@@ -5627,7 +6029,7 @@
         ]
       }
     },
-    "/warehouse/transfers/{id}/execute": {
+    "/v1/warehouse/transfers/{id}/execute": {
       "post": {
         "operationId": "WarehouseController_executeTransfer",
         "parameters": [
@@ -5650,7 +6052,7 @@
         ]
       }
     },
-    "/warehouse/opname": {
+    "/v1/warehouse/opname": {
       "post": {
         "operationId": "WarehouseController_createOpname",
         "parameters": [],
@@ -5676,7 +6078,7 @@
         ]
       }
     },
-    "/warehouse/opname/{id}/approve-pin": {
+    "/v1/warehouse/opname/{id}/approve-pin": {
       "post": {
         "operationId": "WarehouseController_approveOpnameWithPin",
         "parameters": [
@@ -5699,7 +6101,7 @@
         ]
       }
     },
-    "/warehouse/inbounds": {
+    "/v1/warehouse/inbounds": {
       "get": {
         "operationId": "WarehouseController_getInbounds",
         "parameters": [],
@@ -5725,7 +6127,7 @@
         ]
       }
     },
-    "/warehouse/adjustments": {
+    "/v1/warehouse/adjustments": {
       "get": {
         "operationId": "WarehouseController_getAdjustments",
         "parameters": [],
@@ -5751,7 +6153,7 @@
         ]
       }
     },
-    "/warehouse/adjustments/{id}/approve": {
+    "/v1/warehouse/adjustments/{id}/approve": {
       "post": {
         "operationId": "WarehouseController_approveAdjustment",
         "parameters": [
@@ -5774,7 +6176,7 @@
         ]
       }
     },
-    "/warehouse/release-requests": {
+    "/v1/warehouse/release-requests": {
       "get": {
         "operationId": "WarehouseController_getReleaseRequests",
         "parameters": [],
@@ -5788,7 +6190,7 @@
         ]
       }
     },
-    "/warehouse/inbounds/{id}/release": {
+    "/v1/warehouse/inbounds/{id}/release": {
       "post": {
         "operationId": "WarehouseController_releaseFromQuarantine",
         "parameters": [
@@ -5811,7 +6213,7 @@
         ]
       }
     },
-    "/warehouse/stock-intelligence/abc": {
+    "/v1/warehouse/stock-intelligence/abc": {
       "get": {
         "operationId": "WarehouseController_getABCAnalysis",
         "parameters": [],
@@ -5825,7 +6227,7 @@
         ]
       }
     },
-    "/warehouse/stock-intelligence/dead-stock": {
+    "/v1/warehouse/stock-intelligence/dead-stock": {
       "get": {
         "operationId": "WarehouseController_getDeadStock",
         "parameters": [],
@@ -5839,7 +6241,7 @@
         ]
       }
     },
-    "/warehouse/stock-intelligence/fast-movers": {
+    "/v1/warehouse/stock-intelligence/fast-movers": {
       "get": {
         "operationId": "WarehouseController_getFastMovers",
         "parameters": [
@@ -5862,7 +6264,7 @@
         ]
       }
     },
-    "/warehouse/stock-intelligence/slow-movers": {
+    "/v1/warehouse/stock-intelligence/slow-movers": {
       "get": {
         "operationId": "WarehouseController_getSlowMovers",
         "parameters": [
@@ -5885,7 +6287,7 @@
         ]
       }
     },
-    "/warehouse/stock-intelligence/reorder-suggestions": {
+    "/v1/warehouse/stock-intelligence/reorder-suggestions": {
       "get": {
         "operationId": "WarehouseController_getReorderSuggestions",
         "parameters": [],
@@ -5899,7 +6301,7 @@
         ]
       }
     },
-    "/warehouse/stock-intelligence/critical": {
+    "/v1/warehouse/stock-intelligence/critical": {
       "get": {
         "operationId": "WarehouseController_getCriticalItems",
         "parameters": [],
@@ -5913,7 +6315,7 @@
         ]
       }
     },
-    "/warehouse/requisitions": {
+    "/v1/warehouse/requisitions": {
       "post": {
         "operationId": "WarehouseController_createRequisition",
         "parameters": [],
@@ -5949,7 +6351,7 @@
         ]
       }
     },
-    "/warehouse/requisitions/{id}": {
+    "/v1/warehouse/requisitions/{id}": {
       "get": {
         "operationId": "WarehouseController_getRequisition",
         "parameters": [
@@ -5972,7 +6374,7 @@
         ]
       }
     },
-    "/warehouse/requisitions/{id}/status": {
+    "/v1/warehouse/requisitions/{id}/status": {
       "patch": {
         "operationId": "WarehouseController_updateRequisitionStatus",
         "parameters": [
@@ -5995,6 +6397,29 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-summary": {
+      "get": {
+        "operationId": "WarehouseController_getStockSummary",
+        "parameters": [
+          {
+            "name": "groupBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -9176,17 +9601,272 @@
         ]
       }
     },
-    "/master/materials": {
+    "/v1/master/materials": {
       "get": {
         "operationId": "MaterialsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List materials with search, category filter, and pagination",
         "tags": [
-          "Materials"
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "post": {
+        "operationId": "MaterialsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/v1/master/materials/active": {
+      "get": {
+        "operationId": "MaterialsController_findActive",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List active materials for quick dropdown/searchable select",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/v1/master/materials/{id}": {
+      "get": {
+        "operationId": "MaterialsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get material detail by ID",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "patch": {
+        "operationId": "MaterialsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an existing material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "delete": {
+        "operationId": "MaterialsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete (soft delete) a material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/v1/master/materials/{id}/supplier-history": {
+      "get": {
+        "operationId": "MaterialsController_getSupplierHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get supplier purchase history for a product",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/v1/master/materials/{id}/hpp-breakdown": {
+      "get": {
+        "operationId": "MaterialsController_getHppBreakdown",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get HPP calculation breakdown for a product",
+        "tags": [
+          "Master Data - Materials / Barang"
         ]
       }
     },
@@ -10229,6 +10909,291 @@
           "DocumentAutomation"
         ]
       }
+    },
+    "/v1/todo/boards": {
+      "post": {
+        "operationId": "TodoController_createBoard",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBoardDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a task board",
+        "tags": [
+          "todo"
+        ]
+      },
+      "get": {
+        "operationId": "TodoController_getBoards",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all boards",
+        "tags": [
+          "todo"
+        ]
+      }
+    },
+    "/v1/todo/boards/{id}": {
+      "get": {
+        "operationId": "TodoController_getBoard",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get board with tasks",
+        "tags": [
+          "todo"
+        ]
+      },
+      "patch": {
+        "operationId": "TodoController_updateBoard",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBoardDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update board",
+        "tags": [
+          "todo"
+        ]
+      },
+      "delete": {
+        "operationId": "TodoController_deleteBoard",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete board",
+        "tags": [
+          "todo"
+        ]
+      }
+    },
+    "/v1/todo/boards/{id}/tasks": {
+      "post": {
+        "operationId": "TodoController_createTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a task in board",
+        "tags": [
+          "todo"
+        ]
+      }
+    },
+    "/v1/todo/tasks/{id}/status": {
+      "patch": {
+        "operationId": "TodoController_updateTaskStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update task status (drag & drop)",
+        "tags": [
+          "todo"
+        ]
+      }
+    },
+    "/v1/todo/tasks/{id}": {
+      "patch": {
+        "operationId": "TodoController_updateTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update task (title/description/assignee/labels/status)",
+        "tags": [
+          "todo"
+        ]
+      },
+      "delete": {
+        "operationId": "TodoController_deleteTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete task",
+        "tags": [
+          "todo"
+        ]
+      }
     }
   },
   "info": {
@@ -10279,6 +11244,26 @@
         "properties": {}
       },
       "CreateTaskCommentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "TrackDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WhatsAppUpdateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLeadDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BulkUpdateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateAttributeDto": {
         "type": "object",
         "properties": {}
       },
@@ -10570,11 +11555,90 @@
       },
       "CreateMaterialDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "BBK00001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Hydro Marine Collagen"
+          },
+          "type": {
+            "type": "string",
+            "example": "RAW_MATERIAL"
+          },
+          "unit": {
+            "type": "string",
+            "example": "gr"
+          },
+          "unitPrice": {
+            "type": "number",
+            "example": 1650
+          },
+          "minLevel": {
+            "type": "number",
+            "example": 0
+          },
+          "maxLevel": {
+            "type": "number",
+            "example": 100000
+          },
+          "reorderPoint": {
+            "type": "number",
+            "example": 10
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "inciName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
       },
       "UpdateMaterialDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "minLevel": {
+            "type": "number"
+          },
+          "maxLevel": {
+            "type": "number"
+          },
+          "reorderPoint": {
+            "type": "number"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "inciName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
       },
       "CreatePurchaseReturnDto": {
         "type": "object",
@@ -10624,26 +11688,6 @@
           "invoiceId",
           "amount"
         ]
-      },
-      "TrackDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "WhatsAppUpdateDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateLeadDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "BulkUpdateDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateAttributeDto": {
-        "type": "object",
-        "properties": {}
       },
       "CreateLostDealDto": {
         "type": "object",
@@ -10886,6 +11930,14 @@
         "properties": {}
       },
       "RejectDraftDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateBoardDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateBoardDto": {
         "type": "object",
         "properties": {}
       }

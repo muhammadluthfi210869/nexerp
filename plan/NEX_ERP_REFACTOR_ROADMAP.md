@@ -442,8 +442,8 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - [ ] Generate migration: `npx prisma migrate dev --name add-finance-foundation`
 - [ ] Seed data: master COA, sample vendor/customer, sample bank account
 - [ ] Module skeleton: stub controllers + services untuk setiap new entity (return `[]` atau throw `NotImplemented`)
-- [ ] **OpenAPI/Swagger setup** — generate spec dari NestJS decorators, expose di `/api/docs`
-- [ ] **Type-gen script** — `npm run sync-api` di frontend untuk auto-generate types dari OpenAPI spec
+- [ ] ✅ **OpenAPI/Swagger setup** — generate spec dari NestJS decorators, expose di `/api/docs` (done di Sprint 1.5)
+- [ ] ✅ **Type-gen script** — `npm run sync-api` di frontend untuk auto-generate types dari OpenAPI spec (done di Sprint 1.5)
 
 **Success Criteria:**
 - ✅ `prisma migrate` success tanpa error
@@ -459,6 +459,61 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - `backend/prisma/seed.ts` (extend)
 - 24 new `*.service.ts` stubs di `backend/src/modules/finance/`
 - 24 new `*.controller.ts` stubs
+
+---
+
+### 🧬 Sprint 1.5: OPENAPI + TYPE-GEN (0.5 hari) — *Setelah Sprint 1, sebelum Batch 3A*
+
+**Tujuan:** Setup OpenAPI infrastructure + auto-generated types untuk ADR-006 (Type Safety end-to-end).
+
+**Status:** ✅ **COMPLETE**
+
+**Backend (NestJS Swagger):**
+- ✅ `@nestjs/swagger` installed (v11.4.1)
+- ✅ `SwaggerModule.setup('api/docs', app, document)` di `backend/src/main.ts`
+- ✅ `DocumentBuilder` config: title "NexERP API", version 4.0, tags (rnd, finance, bussdev, dll)
+- ✅ Auto-export ke `backend/swagger-spec.json` setiap backend boot
+- ✅ Swagger UI accessible di `http://localhost:3002/api/docs`
+
+**Frontend (Type-gen):**
+- ✅ `openapi-typescript` installed (v7.13.0)
+- ✅ Script di `frontend/package.json`: `"sync-api": "openapi-typescript ../backend/swagger-spec.json -o ./src/types/api-schema.d.ts"`
+- ✅ Generated file: `frontend/src/types/api-schema.d.ts` (16,663 lines)
+
+**Workflow saat ini:**
+```bash
+# 1. Start backend (Swagger auto-generates spec)
+cd backend && npm run start:dev
+# → swagger-spec.json updated automatically
+
+# 2. Regenerate frontend types dari spec
+cd frontend && npm run sync-api
+# → api-schema.d.ts updated automatically
+
+# 3. Import di component:
+import type { paths } from "@/types/api-schema";
+type Bill = paths["/finance/bills"]["get"]["responses"]["200"]["content"]["application/json"];
+```
+
+**Deliverables remaining (future):**
+- [ ] **Add `@ApiProperty` decorators** ke DTOs secara bertahap (saat Batch 3A+ build controllers)
+- [ ] **CI/CD pipeline** yang auto-run `sync-api` setiap backend PR (auto-update types)
+- [ ] **Type-check gate** di PR (`tsc --noEmit` harus 0 errors sebelum merge)
+
+**Files Modified:**
+- `backend/src/main.ts` (Swagger setup — already done)
+- `backend/package.json` (`@nestjs/swagger` — already installed)
+- `frontend/package.json` (`openapi-typescript` + `sync-api` script — already done)
+- `backend/swagger-spec.json` (auto-generated, 256KB)
+- `frontend/src/types/api-schema.d.ts` (auto-generated, 16K lines)
+
+**Per ADR-006:** Type Safety End-to-End — Prisma schema → backend DTOs (via @ApiProperty) → frontend types (via openapi-typescript). Tidak ada hand-written mirror types.
+
+**Success Criteria:**
+- ✅ Swagger UI accessible
+- ✅ Type-gen script produces valid TypeScript
+- ✅ End-to-end types flowing from backend → frontend
+- ⏳ All DTOs annotated with `@ApiProperty` (will be added as controllers are built)
 
 ---
 
