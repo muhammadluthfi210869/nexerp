@@ -12,7 +12,7 @@
  * Tabs reduce sidebar menu items + clarify user intent.
  */
 
-import React, { useState, useEffect, useMemo, type FormEvent } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import {
   Plus,
   Search,
@@ -35,7 +35,6 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { DnaButton } from "@/components/dna/DnaButton";
 import { DnaBadge } from "@/components/dna/DnaBadge";
-import { DnaInput } from "@/components/dna/DnaInput";
 import { DnaStatCard } from "@/components/dna/DnaStatCard";
 import { DnaPageHeader } from "@/components/dna/layout/DnaPageHeader";
 import { TableShell } from "@/components/layout/TableShell";
@@ -73,13 +72,10 @@ export default function MasterWarehousesPage() {
 
   const fetchWarehouses = async () => {
     try {
-      setLoading(true);
       const res = await api.get("/master/warehouses");
       setWarehouses(res.data);
     } catch (err) {
       toast.error("Failed to fetch warehouses");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -106,7 +102,7 @@ export default function MasterWarehousesPage() {
     0
   );
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     setShowConfirm(true);
   };
