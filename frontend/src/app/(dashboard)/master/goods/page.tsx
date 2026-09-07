@@ -97,6 +97,7 @@ type Good = {
   halalCertNo?: string | null;
   halalExpDate?: string | null;
   isHalalValidated: boolean;
+  physicalForm?: "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS";
   inventories?: InventoryBatch[];
 };
 
@@ -130,6 +131,7 @@ export default function MasterGoodsPage() {
     halalCertNo: "",
     halalExpDate: "",
     isHalalValidated: false,
+    physicalForm: "PADAT" as "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS",
   });
 
   const fetchData = async () => {
@@ -174,6 +176,7 @@ export default function MasterGoodsPage() {
         halalCertNo: good.halalCertNo || "",
         halalExpDate: good.halalExpDate ? new Date(good.halalExpDate).toISOString().split('T')[0] : "",
         isHalalValidated: good.isHalalValidated,
+        physicalForm: good.physicalForm as "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS" || "PADAT",
       });
     } catch (err) {
       toast.error("Failure in retrieval of material intelligence");
@@ -249,7 +252,7 @@ export default function MasterGoodsPage() {
                 outMethod: "FIFO", leadTime: 0, isDummy: false, unitPrice: 0,
                 minLevel: 0, maxLevel: 0, reorderPoint: 0, categoryId: "",
                 inventoryAccountId: "", salesAccountId: "", halalCertNo: "",
-                halalExpDate: "", isHalalValidated: false,
+                halalExpDate: "", isHalalValidated: false, physicalForm: "PADAT",
               });
               setIsPanelOpen(true);
             }}
@@ -436,6 +439,23 @@ export default function MasterGoodsPage() {
                         <SelectItem value="KG" className="text-xs font-bold uppercase">KG</SelectItem>
                         <SelectItem value="LITER" className="text-xs font-bold uppercase">Liter</SelectItem>
                         <SelectItem value="PCS" className="text-xs font-bold uppercase">PCS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Item 52: physicalForm field */}
+                <div className="grid grid-cols-5 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Physical Form</Label>
+                    <Select value={formData.physicalForm} onValueChange={(v) => setFormData({ ...formData, physicalForm: v as any })}>
+                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent className="border-none shadow-xl rounded-xl">
+                        <SelectItem value="CAIR" className="text-xs font-bold uppercase">Cair</SelectItem>
+                        <SelectItem value="SERBUK" className="text-xs font-bold uppercase">Serbuk</SelectItem>
+                        <SelectItem value="BUTIRAN" className="text-xs font-bold uppercase">Butiran</SelectItem>
+                        <SelectItem value="PADAT" className="text-xs font-bold uppercase">Padat</SelectItem>
+                        <SelectItem value="GAS" className="text-xs font-bold uppercase">Gas</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -52,6 +52,11 @@ export default function PurchaseApprovalPage() {
   const [rejectReason, setRejectReason] = useState("");
   // Item 68: conflict detection
   const [conflict, setConflict] = useState<{ open: boolean; lastModifiedAt?: string; lastModifiedBy?: string }>({ open: false });
+  // Item 46, 71: PO detail modal with diskon & source dropdown
+  const [selectedPO, setSelectedPO] = useState<any | null>(null);
+  const [poDiscount, setPoDiscount] = useState(0);
+  const [poShippingCost, setPoShippingCost] = useState(0);
+  const [lineSources, setLineSources] = useState<Record<string, "PO" | "STOCK">>({});
 
   const { data: purchaseOrders, isLoading, refetch } = useQuery({
     queryKey: ["purchase-orders"],
@@ -272,7 +277,18 @@ export default function PurchaseApprovalPage() {
                           </DnaButton>
                         </>
                       )}
-                      <DnaButton variant="ghost" size="sm" className="h-7">
+                      <DnaButton variant="ghost" size="sm" className="h-7" onClick={() => {
+                        setSelectedPO(po);
+                        setPoDiscount(Number(po.discountAmount || po.discountManual || 0));
+                        setPoShippingCost(Number(po.shippingCost || 0));
+                        // Item 71: default source = STOCK if currentStock >= qty, else PO
+                        const sources: Record<string, "PO" | "STOCK"> = {};
+                        (po.items || []).forEach((it: any) => {
+                          sources[it.id || it.materialId || idx] =
+                            Number(it.currentStock || 0) >= Number(it.quantity || it.qty || 0) ? "STOCK" : "PO";
+                        });
+                        setLineSources(sources);
+                      }}>
                         <Eye className="w-3.5 h-3.5" />
                       </DnaButton>
                     </div>
@@ -292,6 +308,73 @@ export default function PurchaseApprovalPage() {
         onRefresh={() => { setConflict({ open: false }); refetch(); }}
         onCancel={() => setConflict({ open: false })}
       />
+
+      {/* Item 46, 71: PO Detail Modal — diskon, shipping cost, line-item source dropdown */}
+      <Dialog open={!!selectedPO} onOpenChange={(o) => { if (!o) setSelectedPO(null); }}>
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-black uppercase">Detail PO: {selectedPO?.poNumber}</DialogTitle>
+          </DialogHeader>
+          {selectedPO && (
+            <div className="space-y-4">
+              {/* Diskon & Ongkos Kirim — Item 46 */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Diskon (Rp)</label>
+                  <DnaInput
+                    type="number"
+                    min="0"
+                    value={poDiscount}
+                    onChange={(e) => setPoDiscount(Number(e.target.value))}
+                    className="h-9 text-xs font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Ongkos Kirim (Rp)</label>
+                  <DnaInput
+                    type="number"
+                    min="0"
+                    value={poShippingCost}
+                    onChange={(e) => setPoShippingCost(Number(e.target.value))}
+                    className="h-9 text-xs font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Line Items with Source Dropdown — Item 71 */}
+              <div className="space-y-2">
+                <div className="text-[10px] font-black text-slate-400 uppercase">Item PO & Sumber</div>
+                {(selectedPO.items || []).map((it: any, idx: number) => {
+                  const key = it.id || it.materialId || `item-${idx}`;
+                  const defaultSource = Number(it.currentStock || 0) >= Number(it.quantity || it.qty || 0) ? "STOCK" : "PO";
+                  return (
+                    <div key={key} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black text-slate-900 truncate">{it.itemName || it.name || "—"}</p>
+                        <p className="text-[10px] text-slate-400">Qty: {Number(it.quantity || it.qty || 0)} {it.unit || ""}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[9px] font-bold text-slate-500 uppercase">Sumber</label>
+                        <select
+                          value={lineSources[key] || defaultSource}
+                          onChange={(e) => setLineSources({ ...lineSources, [key]: e.target.value as "PO" | "STOCK" })}
+                          className="h-8 px-2 border border-slate-200 rounded-lg text-[10px] font-bold bg-white"
+                        >
+                          <option value="PO">PO</option>
+                          <option value="STOCK">STOCK</option>
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setSelectedPO(null)}>Tutup</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

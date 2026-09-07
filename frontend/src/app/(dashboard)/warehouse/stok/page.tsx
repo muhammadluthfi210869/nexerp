@@ -85,6 +85,19 @@ export default function StokPage() {
 
   const criticalItems = catalog?.filter((item: any) => Number(item.stockQty) <= Number(item.minLevel)).length || 0;
 
+  // Item 53: Summary per jenis bahan
+  const jenisBahanKeys = ["BAHAN_BAKU", "PRIMER", "SEKUNDER", "PEMBANTU"];
+  const jenisBahanSummary = jenisBahanKeys.map((key) => {
+    const items = catalog?.filter((item: any) =>
+      item.category?.name?.toUpperCase().replace(/\s+/g, "_") === key ||
+      item.category?.name?.toUpperCase() === key
+    ) || [];
+    const total = items.reduce((s: number, i: any) => s + Number(i.stockQty || 0), 0);
+    const good = items.filter((i: any) => i.qcStatus !== "REJECT").reduce((s: number, i: any) => s + Number(i.stockQty || 0), 0);
+    const reject = items.filter((i: any) => i.qcStatus === "REJECT").reduce((s: number, i: any) => s + Number(i.stockQty || 0), 0);
+    return { key, total, good, reject, count: items.length };
+  });
+
   return (
     <DashboardShell title="Stok" titleAccent="Gudang" subtitle="Stock Inventory, Opname, Adjustment & Warehouse Map Terminal">
       <Tabs value={tab} onValueChange={setTab} className="space-y-8">
@@ -125,6 +138,30 @@ export default function StokPage() {
               </SelectContent>
             </Select>
           </DashboardCard>
+
+          {/* Item 53: Summary per jenis bahan */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {jenisBahanSummary.map(({ key, total, good, reject, count }) => (
+              <DashboardCard key={key} className="!p-5 !rounded-2xl">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{key.replace(/_/g, " ")}</p>
+                <p className="text-xl font-black text-slate-900 tabular-nums">{count} SKU</p>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-[10px]">
+                    <span className="text-emerald-600 font-bold">Bagus</span>
+                    <span className="font-black text-slate-700">{good.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-[10px]">
+                    <span className="text-rose-600 font-bold">Reject</span>
+                    <span className="font-black text-slate-700">{reject.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] border-t border-slate-100 pt-1 mt-1">
+                    <span className="text-slate-500 font-bold">Total</span>
+                    <span className="font-black text-slate-900">{total.toLocaleString()}</span>
+                  </div>
+                </div>
+              </DashboardCard>
+            ))}
+          </div>
 
           <TableWrapper>
             <div className="overflow-x-auto">
