@@ -17,6 +17,7 @@ import {
   Users,
   Hash,
   MapPin,
+  CalendarDays,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,7 @@ type UserOption = {
 export default function GuestBookPage() {
   const [view, setView] = useState<"list" | "form">("list");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
   const [guests, setGuests] = useState<GuestLog[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,10 +120,15 @@ export default function GuestBookPage() {
     fetchUsers();
   }, [fetchGuests, fetchUsers]);
 
-  const filteredGuests = guests.filter(g =>
-    g.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (g.instansi?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-  );
+  const filteredGuests = guests.filter(g => {
+    const matchSearch =
+      g.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (g.instansi?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    const matchMonth = selectedMonth
+      ? g.visitDate.startsWith(selectedMonth)
+      : true;
+    return matchSearch && matchMonth;
+  });
 
   const handleSubmit = () => {
     if (!formData.clientName) {
@@ -198,15 +205,35 @@ export default function GuestBookPage() {
               {/* List Table */}
               <TableWrapper
                 filters={
-                  <div className="flex justify-between items-center bg-white w-full">
-                    <div className="relative w-72">
-                      <DnaInput
-                        placeholder="Search nama / instansi..."
-                        icon={<Search className="h-4 w-4" />}
-                        className="text-xs font-black"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
+                  <div className="flex justify-between items-center bg-white w-full gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-72">
+                        <DnaInput
+                          placeholder="Search nama / instansi..."
+                          icon={<Search className="h-4 w-4" />}
+                          className="text-xs font-black"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3">
+                        <CalendarDays className="h-4 w-4 text-slate-400" />
+                        <input
+                          type="month"
+                          value={selectedMonth}
+                          onChange={(e) => setSelectedMonth(e.target.value)}
+                          className="bg-transparent text-xs font-bold text-slate-600 outline-none"
+                        />
+                        {selectedMonth && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedMonth("")}
+                            className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-700"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <span className="bg-slate-50 text-slate-500 font-black text-[9px] uppercase px-4 py-2 rounded-lg border border-slate-100">
                       {filteredGuests.length} Records

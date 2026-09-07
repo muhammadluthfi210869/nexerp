@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DnaInput, DnaButton, SectionLabel, DnaBadge } from "@/components/dna";
@@ -34,6 +34,8 @@ import { FormShell } from "@/components/layout/FormShell";
 import { SectionDivider } from "@/components/layout/SectionDivider";
 import { useAuth } from "@/hooks/useAuth";
 
+const DRAFT_KEY = "bussdev-intake-draft";
+
 const SOURCES = ["Instagram", "TikTok", "TikTok Ads", "Referral", "Website", "Offline Event", "WhatsApp"];
 
 export default function LeadIntakePage() {
@@ -44,6 +46,7 @@ export default function LeadIntakePage() {
   const [unitPrice, setUnitPrice] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<any>(null);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdmin = user?.roles?.includes("SUPER_ADMIN");
 
@@ -63,6 +66,38 @@ export default function LeadIntakePage() {
       }
     }
   }, [staffs, user, isAdmin]);
+
+  // ── Auto-save draft to localStorage on form blur ──
+  const saveDraft = useCallback((form: HTMLFormElement) => {
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(() => {
+      const data = Object.fromEntries(new FormData(form));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    }, 800);
+  }, []);
+
+  // Restore draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        const el = document.getElementById("intake-form") as HTMLFormElement | null;
+        if (el) {
+          Object.entries(draft).forEach(([key, value]) => {
+            const input = el.elements.namedItem(key) as HTMLInputElement | null;
+            if (input) input.value = String(value ?? "");
+          });
+        }
+        toast.info("Draft restored from previous session");
+      }
+    } catch {}
+    return () => {
+      // Save draft on unmount (navigation away)
+      const el = document.getElementById("intake-form") as HTMLFormElement | null;
+      if (el) saveDraft(el);
+    };
+  }, [saveDraft]);
 
   const createLeadMutation = useMutation({
     mutationFn: async (newLead: any) => {
@@ -106,6 +141,7 @@ export default function LeadIntakePage() {
   const confirmSubmit = () => {
     setShowConfirm(false);
     if (pendingFormData) {
+      localStorage.removeItem(DRAFT_KEY);
       createLeadMutation.mutate(pendingFormData);
     }
   };
@@ -171,7 +207,7 @@ export default function LeadIntakePage() {
         </div>
       }
     >
-      <form id="intake-form" onSubmit={handleSubmit} className="animate-fade-slide-in space-y-6">
+      <form id="intake-form" onSubmit={handleSubmit} onBlur={(e) => saveDraft(e.currentTarget)} className="animate-fade-slide-in space-y-6">
         {/* Section 1: Client Identity */}
         <div>
           <SectionDivider number={1} title="CLIENT IDENTITY" accentColor="primary" />
