@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { ConflictModal } from "@/components/scm/ConflictModal";
 import {
   Dialog,
   DialogContent,
@@ -49,12 +50,28 @@ export default function PurchaseApprovalPage() {
   const [approveDialog, setApproveDialog] = useState<string | null>(null);
   const [rejectDialog, setRejectDialog] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  // Item 68: conflict detection
+  const [conflict, setConflict] = useState<{ open: boolean; lastModifiedAt?: string; lastModifiedBy?: string }>({ open: false });
 
-  const { data: purchaseOrders, isLoading } = useQuery({
+  const { data: purchaseOrders, isLoading, refetch } = useQuery({
     queryKey: ["purchase-orders"],
     queryFn: async () => {
-      const res = await api.get("/scm/purchase-orders");
-      return unwrapResponse(res) || [];
+      try {
+        const res = await api.get("/scm/purchase-orders");
+        return unwrapResponse(res) || [];
+      } catch (err: any) {
+        // Item 68: intercept 409 conflict
+        if (err?.response?.status === 409) {
+          const data = err.response?.data;
+          setConflict({
+            open: true,
+            lastModifiedAt: data?.timestamp || data?.lastModifiedAt || new Date().toISOString(),
+            lastModifiedBy: data?.modifiedBy || data?.lastModifiedBy || "user lain",
+          });
+          return [];
+        }
+        throw err;
+      }
     }
   });
 
@@ -192,7 +209,6 @@ export default function PurchaseApprovalPage() {
               <TableRow>
                 <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">No. PO</TableHead>
                 <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Supplier</TableHead>
-                <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Gudang</TableHead>
                 <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Item</TableHead>
                 <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Qty</TableHead>
                 <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-right">Harga</TableHead>
@@ -204,7 +220,7 @@ export default function PurchaseApprovalPage() {
             <TableBody>
               {filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-16 text-center">
+                  <TableCell colSpan={8} className="py-16 text-center">
                     <FileText className="w-8 h-8 text-slate-200 mx-auto mb-2" />
                     <p className="text-slate-400 font-medium text-sm">Tidak ada purchase order ditemukan.</p>
                   </TableCell>
@@ -216,9 +232,6 @@ export default function PurchaseApprovalPage() {
                   </TableCell>
                   <TableCell className="py-3 px-4 font-medium text-xs text-slate-700">
                     {po.supplier?.name || po.supplierName || '-'}
-                  </TableCell>
-                  <TableCell className="py-3 px-4 text-xs text-slate-500">
-                    {po.warehouse?.name || '-'}
                   </TableCell>
                   <TableCell className="py-3 px-4">
                     <div className="flex items-center gap-1.5">
@@ -270,6 +283,15 @@ export default function PurchaseApprovalPage() {
           </Table>
         </TableWrapper>
       )}
+
+      {/* Item 68: ConflictModal — shown when API returns 409 */}
+      <ConflictModal
+        open={conflict.open}
+        lastModifiedAt={conflict.lastModifiedAt}
+        lastModifiedBy={conflict.lastModifiedBy}
+        onRefresh={() => { setConflict({ open: false }); refetch(); }}
+        onCancel={() => setConflict({ open: false })}
+      />
     </DashboardShell>
   );
 }
