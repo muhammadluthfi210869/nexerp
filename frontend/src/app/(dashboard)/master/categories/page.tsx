@@ -355,6 +355,98 @@ export default function MasterCategoriesPage() {
           </div>
         </>
       }
-    />
+
+      {/* Modal: Add/Edit Category */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? "Edit Kategori" : "Tambah Kategori"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+                Kode *
+              </label>
+              <input
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                required
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+                Nama *
+              </label>
+              <input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+                Deskripsi
+              </label>
+              <input
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <DialogFooter>
+              <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>
+                Batal
+              </DnaButton>
+              <DnaButton type="submit" variant="primary">
+                {editingCategory ? "Simpan" : "Tambah"}
+              </DnaButton>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Submit */}
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi</DialogTitle>
+          </DialogHeader>
+          <p>Yakin ingin menyimpan?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={confirmSubmit}>
+              Ya, Simpan
+            </DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Delete */}
+      <Dialog
+        open={!!deletingId}
+        onOpenChange={(o) => !o && setDeletingId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Kategori</DialogTitle>
+          </DialogHeader>
+          <p>Yakin ingin menghapus?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setDeletingId(null)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={() => deletingId && handleDelete(deletingId)}>
+              Ya, Hapus
+            </DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
