@@ -298,6 +298,7 @@ export default function ArtworkApprovalPage() {
           projectCode: `ART-${so.code.replace(/[^0-9]/g, "").slice(-4)}`,
           clientName: so.customerName,
           productName: so.productName,
+          soCategory: so.category || "Skincare",
           packagingType: "Botol Dropper 30ml + Soft Box",
           assignedDesigner: "Edi (Creative)",
           activeVersionId: "v1",
