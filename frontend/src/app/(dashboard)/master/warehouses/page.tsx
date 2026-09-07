@@ -12,13 +12,11 @@
  * Tabs reduce sidebar menu items + clarify user intent.
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, type FormEvent } from "react";
 import {
   Plus,
   Search,
   MapPin,
-  Phone,
-  User,
   Warehouse as WarehouseIcon,
   Edit2,
   Trash2,
@@ -39,7 +37,7 @@ import { DnaButton } from "@/components/dna/DnaButton";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { DnaInput } from "@/components/dna/DnaInput";
 import { DnaStatCard } from "@/components/dna/DnaStatCard";
-import { DnaPageHeader } from "@/components/dna/DnaPageHeader";
+import { DnaPageHeader } from "@/components/dna/layout/DnaPageHeader";
 import { TableShell } from "@/components/layout/TableShell";
 
 type Warehouse = {
@@ -58,7 +56,6 @@ type Warehouse = {
 export default function MasterWarehousesPage() {
   const [activeTab, setActiveTab] = useState<"DAFTAR" | "KELOLA">("DAFTAR");
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
@@ -109,7 +106,7 @@ export default function MasterWarehousesPage() {
     0
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setShowConfirm(true);
   };
