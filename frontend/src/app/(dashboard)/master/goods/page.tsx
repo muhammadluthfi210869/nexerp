@@ -57,6 +57,8 @@ import { TableWrapper } from "@/components/dna/TableWrapper";
 import { StatCard } from "@/components/dna/StatCard";
 import { TableShell } from "@/components/layout/TableShell";
 import { SectionDivider } from "@/components/layout/SectionDivider";
+import { SupplierHistorySection } from "@/components/scm/SupplierHistorySection";
+import { HppBreakdownCard } from "@/components/scm/HppBreakdownCard";
 
 type Category = { id: string; name: string };
 type Account = { id: string; name: string; code: string };
@@ -530,6 +532,15 @@ export default function MasterGoodsPage() {
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Item 39: Supplier History + Item 72: HPP Breakdown */}
+              {editingGood && (
+                <div className="px-8 pb-4 space-y-4">
+                  <SectionDivider number={7} title="Supplier & HPP" />
+                  <SupplierHistorySection materialId={editingGood.id} />
+                  <HppBreakdownCard productId={editingGood.id} />
                 </div>
               )}
             </form>
