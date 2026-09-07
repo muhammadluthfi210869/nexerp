@@ -12,7 +12,7 @@
  * Tabs reduce sidebar menu items + clarify user intent.
  */
 
-import { useState, useEffect, useMemo, type FormEvent } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -102,7 +102,7 @@ export default function MasterWarehousesPage() {
     0
   );
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     setShowConfirm(true);
   };
