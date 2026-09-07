@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { ArrowDownCircle, Save, RotateCcw, Building2, User, Package, Hash, FileText, Upload, X } from "lucide-react";
+import { ArrowDownCircle, Save, RotateCcw, Building2, User, Package, Hash, FileText, Upload, X, ReceiptText, ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
@@ -24,11 +24,13 @@ export default function DPPenjualanPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [soId, setSoId] = useState("");
+  const [selectedTab, setSelectedTab] = useState<"ALL" | "PRODUKSI" | "SAMPLE" | "LEGALITAS">("PRODUKSI");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [coaId, setCoaId] = useState("");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showPPh, setShowPPh] = useState(false);
   const [buktiFile, setBuktiFile] = useState<{ name: string; url: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -46,11 +48,18 @@ export default function DPPenjualanPage() {
   });
 
   const cashAccounts = accounts?.filter((a: any) => a.code?.startsWith('11')) || [];
-  const unpaidOrders = orders?.filter((o: any) => {
+  const unpaidOrders = (orders?.filter((o: any) => {
     const total = Number(o.totalAmount) || 0;
     const paid = Number(o.amountPaid) || 0;
-    return paid < total;
-  }) || [];
+    const isUnpaid = paid < total;
+    if (!isUnpaid) return false;
+
+    if (selectedTab === "ALL") return true;
+    const title = (o.orderNumber || "" + o.lead?.clientName || "").toLowerCase();
+    if (selectedTab === "SAMPLE") return title.includes("sample") || title.includes("trial") || o.category === "SAMPLE";
+    if (selectedTab === "LEGALITAS") return title.includes("bpom") || title.includes("legal") || title.includes("hki") || o.category === "LEGALITAS";
+    return !title.includes("sample") && !title.includes("bpom") && !title.includes("legal");
+  }) || []);
 
   const selectedSO = orders?.find((o: any) => o.id === soId);
   const selectedSOTotal = selectedSO ? Number(selectedSO.totalAmount) : 0;
@@ -136,6 +145,117 @@ export default function DPPenjualanPage() {
         <DnaBadge status="info">Sales DP</DnaBadge>
       }
     >
+      {/* PPh 21 & PPh 23 Tax Report Section */}
+      <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+        <button
+          onClick={() => setShowPPh(!showPPh)}
+          className="w-full flex items-center justify-between px-8 py-5 hover:bg-slate-50 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <ReceiptText className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-black uppercase tracking-tight text-slate-700">Laporan Pajak PPh</p>
+              <p className="text-[10px] text-slate-400">PPh 21 (fee/honor) & PPh 23 (bunga/dividen/royalty)</p>
+            </div>
+          </div>
+          {showPPh ? (
+            <ChevronUp className="w-4 h-4 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400" />
+          )}
+        </button>
+
+        {showPPh && (
+          <div className="px-8 pb-8 border-t border-slate-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+              {/* PPh 21 */}
+              <div className="border border-slate-200 rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <DnaBadge status="warning">PPh 21</DnaBadge>
+                  <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">Pajak Fee / Honor Karyawan</p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Total Fee / Honor Bruto</span>
+                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Pengurangan (PTKP)</span>
+                    <span className="font-bold text-slate-700 font-mono">- Rp 0</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">PKP (Penghasilan Kena Pajak)</span>
+                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                  </div>
+                  <div className="border-t border-slate-100 pt-1.5 mt-1.5 flex justify-between">
+                    <span className="text-[10px] font-black uppercase text-slate-400">PPh 21 Terutang (5%)</span>
+                    <span className="font-black text-amber-600 font-mono">Rp 0</span>
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 italic">Tarif PPh 21: 5% dari PKP (s.d. Rp 60 juta/thn)</p>
+              </div>
+
+              {/* PPh 23 */}
+              <div className="border border-slate-200 rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <DnaBadge status="purple">PPh 23</DnaBadge>
+                  <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">Pajak Bunga / Dividen / Royalty</p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Total Pembayaran Bunga/Dividen/Royalty</span>
+                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Objek PPh 23 (15%)</span>
+                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Tidak Objek PPh 23</span>
+                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                  </div>
+                  <div className="border-t border-slate-100 pt-1.5 mt-1.5 flex justify-between">
+                    <span className="text-[10px] font-black uppercase text-slate-400">PPh 23 Terutang (15%)</span>
+                    <span className="font-black text-purple-600 font-mono">Rp 0</span>
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 italic">Tarif PPh 23: 15% dari bruto (bunga, dividen, royalty)</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sub-Navbar Tabs: Sample, Legalitas, Produksi */}
+      <div className="flex items-center gap-2 mb-6 bg-slate-100 p-1.5 rounded-2xl w-fit">
+        {[
+          { id: "PRODUKSI", label: "DP Produksi (Maklon)" },
+          { id: "SAMPLE", label: "DP Sample (R&D)" },
+          { id: "LEGALITAS", label: "DP Legalitas (BPOM/HKI)" },
+          { id: "ALL", label: "Semua SO" },
+        ].map((tab) => {
+          const isActive = selectedTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setSelectedTab(tab.id as any);
+                setSoId("");
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                isActive
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-blue-600">
           <ArrowDownCircle size={180} />

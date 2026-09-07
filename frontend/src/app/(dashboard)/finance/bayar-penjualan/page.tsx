@@ -125,9 +125,9 @@ export default function BayarPenjualanPage() {
 
   return (
     <DashboardShell
-      title="BAYAR"
+      title="REPORT"
       titleAccent="PENJUALAN"
-      subtitle="Penerimaan Pembayaran Piutang — Customer Payment Terminal"
+      subtitle="Laporan Penerimaan Piutang — Sales Receivables Report Terminal"
       actions={
         <div className="flex gap-3">
           <DnaButton
