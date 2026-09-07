@@ -738,15 +738,24 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - [ ] **`SalesReturn`** — retur dari customer
 - [ ] **Event emission**: SO confirmed → emit ke Finance → AR Invoice; DO created → emit ke Warehouse → picking; DO delivered → emit ke Finance → Invoice
 
-**Frontend:**
+**Frontend (kolom & format refer to `docs/legacy-erp/Client_Sample_Busdev.csv`):**
+
 - [ ] `/bussdev/lead` — pipeline kanban (drag-drop Lead → Qualified → Proposal → Won)
-- [ ] `/bussdev/sample-tracking` — track status sample per lead
+- [ ] `/bussdev/client-sample` — **Client Sample Tracker** — kolom dari CSV:
+  - TANGGAL/BULAN, NO, NAMA CLIENT, NAMA BRAND/MERK, DOMISILI, NO TELP, PRIO/STANDAR, SAMPLE PRODUCT
+  - RENCANA MOQ, RENCANA BUDGET CLOSING (Rp)
+  - SAMPLE 1 (NPF, Delivery), REVISI 1 (NPF, Delivery), REVISI 2 (NPF, Delivery)
+  - STATUS PROGRESS, TERAKHIR FU, NEXT FU, FIX FORMULA
+  - HKI, KEMASAN PRIMER, KEMASAN SEKUNDER
+  - TGL PERMINTAAN, TGL DIKASIH, TGL TARGET DP, STATUS AKHIR, LOST REASON
+  - SOURCE, ARAHAN HEAD BD, PROFIL KLIEN, Rekomendasi BD
+- [ ] `/bussdev/sample-tracking` — track status sample per lead (compact view)
 - [ ] `/bussdev/quotation` — buat报价 ke customer
 - [ ] `/bussdev/sales-order` — SO list + detail
 - [ ] `/bussdev/delivery-order` — DO / Surat Jalan
 - [ ] `/bussdev/follow-up-pelanggan` — collection + reminder
 - [ ] `/bussdev/lost-deals` — kenapa deal hilang
-- [ ] All using DNA pattern
+- [ ] All using DNA pattern (DnaStatCard + floating window detail)
 
 **Integration:**
 - [ ] SO confirmed → emit ke Finance (AR Invoice creation)
@@ -764,6 +773,7 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - ✅ Pipeline kanban with drag-drop works
 - ✅ Sample tracking shows lifecycle (Request → Lab Test → Approved/Rejected)
 - ✅ Lost-deal analytics correct
+- ✅ Client Sample page uses **all 28 columns from `Client_Sample_Busdev.csv`** (no missing/extra)
 
 **Dependencies:** Batch 6 (master data)
 
@@ -875,7 +885,7 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 
 ---
 
-### 🧪 Batch 12: R&D (2-3 minggu)
+### 🧪 Batch 12: R&D (2-3 minggu) — *PARALLEL dengan Batch 13-15 setelah Batch 6 selesai*
 
 **Tujuan:** Research & Development — Formula, Sample testing, HPP calculation.
 
@@ -888,7 +898,16 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - [ ] **`HPPDetail`** — breakdown HPP per material + process
 - [ ] **Event emission**: HPP approved → emit ke BusDev → Quotation reference
 
-**Frontend:**
+**Frontend (kolom & format refer to CSV files di `docs/legacy-erp/`):**
+
+- [ ] `/rnd/daily-tracking` — **Daily Tracking** — kolom dari `Daily_tracking_RND.csv`:
+  - No., Date, PIC, No.NPF, Project/Sample, Category, Busdev
+  - Task Hari Ini, Berapa Target Sample hari ini
+  - Status, Progress %, Kendala, Next Action, Deadline
+- [ ] `/rnd/project-monitoring` — **Project Monitoring** — kolom dari `Project_Monitoring_RND.csv`:
+  - No., project name, PIC, Client, Status
+  - Tgl NPF masuk, Tgl Selesai, Tgl Pengiriman
+  - Total pengerjaan sample, Folder Formula, Notes
 - [ ] `/rnd/formula` — list + detail formula + revision history
 - [ ] `/rnd/sample-tracking` — track status sample
 - [ ] `/rnd/permintaan-hpp` — HPP request + calculation
@@ -896,6 +915,17 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 
 **Integration:**
 - [ ] HPP approved → BusDev Quotation (Batch 8)
+
+**Testing:**
+- [ ] Unit tests: progress calculation, formula revision chain
+- [ ] Integration: Sample → Formula → HPP → Quotation event chain
+- [ ] E2E: full R&D workflow (sample request → lab test → formula → HPP)
+
+**Success Criteria:**
+- ✅ Daily Tracking page uses **all 14 columns from `Daily_tracking_RND.csv`**
+- ✅ Project Monitoring page uses **all 11 columns from `Project_Monitoring_RND.csv`**
+- ✅ HPP approved → BusDev Quotation integration works
+- ✅ Formula revision history tracked correctly
 
 **Dependencies:** Batch 6
 
@@ -1211,7 +1241,61 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 
 ## 6. Parallelization Strategy (THE BATCHES)
 
-> **Kunci:** Phase 0-1 sequential (fondasi). Sprint 2-9 bisa diparallel-kan per domain.
+> **Kunci:** Phase 0-1 sequential (fondasi). Phase 2 batches bisa diparallel-kan per domain (tergantung dependency).
+
+### 6.1 Parallelism Rules
+
+**WAJIB SEQUENTIAL (ga bisa paralel):**
+- Batch 6 (Master Data) → WAJIB sebelum Batch 7-15 (semua butuh master data)
+
+**BISA PARALEL (per division, 1 dev per batch):**
+- Batch 7 (Purchase/SCM) ↔ Batch 8 (BusDev/CRM) — beda domain
+- Batch 9 (Warehouse) ↔ Batch 10 (Production) — beda domain (tapi Batch 10 butuh Batch 9)
+- Batch 11 (QC) ↔ Batch 12 (R&D) — beda domain
+- Batch 13 (HR) ↔ Batch 14 (Legality) — independent
+
+**DEPENDENCIES antar batch (harus sequential):**
+- Batch 7 (Purchase/SCM) → Batch 8 (BusDev) butuh reference Vendor
+- Batch 9 (Warehouse) → Batch 10 (Production) butuh Material + Gudang
+- Batch 10 (Production) → Batch 11 (QC) butuh hasil produksi
+- Batch 8 (BusDev) → Batch 12 (R&D) — feedback loop sample
+
+**Cross-Divisional Testing (Phase T-Cross):**
+- Bisa paralel per flow setelah semua batch di flow tersebut production-ready
+- Flow 1 (BusDev → R&D → Production) bisa mulai setelah Batch 8, 12, 10 done
+- Flow 2 (Purchase → GR → QC → AP) bisa mulai setelah Batch 7, 11 done
+
+### 6.2 Reference Inventory (CSV + Files Yang Digunakan PRD Ini)
+
+> **🔴 Setiap page di PRD WAJIB refer ke file legacy yang relevan.** Kalau CSV ada, kolom di page = kolom di CSV (no inventing columns).
+
+| Departemen | CSV/Source File | Digunakan Untuk |
+|---|---|---|
+| **Finance (AP)** | `docs/legacy-erp/REQUIREMENT.md` Poin 1-7 | Faktur Pembelian, DP, Bayar, AP Aging |
+| **Finance (AR)** | `docs/legacy-erp/REQUIREMENT.md` Poin 24-30 | Faktur Penjualan, DP Penjualan, Bayar, AR Aging |
+| **Finance (Kas/Bank)** | `docs/legacy-erp/REQUIREMENT.md` Poin 31-37 | Kas Bank Masuk/Keluar, Rekonsiliasi |
+| **Finance (Aset)** | `docs/legacy-erp/REQUIREMENT.md` Poin 62-71 | Aset Tetap, Master Useful Life |
+| **Finance (Pajak)** | `docs/legacy-erp/REQUIREMENT.md` Poin 80 | Tax module = SKIP (e-Faktur) |
+| **Finance (Laporan)** | `docs/legacy-erp/REQUIREMENT.md` Poin 72-77 | Buku Besar, Laba Rugi, dll |
+| **Master Data** | `docs/legacy-erp/kil_erp_full_inventory_v2.csv` | Master barang, vendor, customer (semua departemen) |
+| **Purchase/SCM** | `docs/legacy-erp/REQUIREMENT.md` Poin 84-156 | PR, PO, GR, QC, Retur, Approval |
+| **BusDev/CRM** | `docs/legacy-erp/Client_Sample_Busdev.csv` | Client Sample (28 kolom) |
+| **R&D** | `docs/legacy-erp/Daily_tracking_RND.csv` | Daily Tracking (14 kolom) |
+| **R&D** | `docs/legacy-erp/Project_Monitoring_RND.csv` | Project Monitoring (11 kolom) |
+| **Production** | `docs/legacy-erp/LEGACY_ERP_SPEC.md` + `production.md` | Batch record, 3-tahap CPKB |
+| **Warehouse** | `docs/legacy-erp/warehouse.md` | Stok, mutasi, opname |
+| **QC** | `docs/legacy-erp/quality_control.md` | Checklist, COA |
+| **HR** | `docs/legacy-erp/HR.md` | Employee, payroll, attendance |
+| **Legality** | `docs/legacy-erp/legalitas.md` | BPOM, Halal, ISO |
+| **Cross-departemen** | `docs/legacy-erp/kil_erp_full_inventory_v2.csv` + `NEX_FINANCE_FINAL_SPEC.md` | URL inventory + business process |
+
+**Cara pakai references:**
+1. Sebelum bikin page baru, READ CSV/spec terkait dulu
+2. Kolom tabel = kolom di CSV (TIDAK boleh nambah/hapus sembarangan)
+3. Kalau ada kolom baru yang ditambahkan → note di Section 15 (REQUIREMENT_TRACEABILITY)
+4. Kalau CSV vs REQUIREMENT bertentangan → apply Section 17 (KONTRADIKSI_RESOLUTION) priority
+
+
 
 ### Batch Diagram
 
