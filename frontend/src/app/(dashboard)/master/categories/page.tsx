@@ -169,6 +169,7 @@ export default function MasterCategoriesPage() {
   };
 
   return (
+    <>
     <MasterPageShell
       title="KATEGORI"
       badge={<DnaBadge status="info">CATEGORY</DnaBadge>}
@@ -447,6 +448,6 @@ export default function MasterCategoriesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
