@@ -116,6 +116,7 @@ model JournalEntry {
   planId           String? @db.Uuid
   requisitionId    String? @db.Uuid
   invoiceId        String? @db.Uuid
+  billId           String? @db.Uuid
 
   salesOrder      SalesOrder?          @relation(fields: [soId], references: [id])
   purchaseOrder   PurchaseOrder?       @relation(fields: [poId], references: [id])
@@ -126,8 +127,10 @@ model JournalEntry {
   productionPlan  ProductionPlan?      @relation(fields: [planId], references: [id])
   requisition     MaterialRequisition? @relation(fields: [requisitionId], references: [id])
   invoice         Invoice?             @relation(fields: [invoiceId], references: [id])
+  bill            Bill?                @relation("BillJournalEntries", fields: [billId], references: [id])
   stockOpnames    StockOpname[]
   copqRecords     COPQRecord[]
+  bankTransactions BankTransaction[]
   lines           JournalLine[]
 
   @@map("journal_entries")
@@ -201,6 +204,7 @@ model TaxRate {
   soEntries     SalesOrder[]
   soItemEntries SalesOrderItem[]
   poItemEntries PurchaseOrderItem[]
+  taxTransactions TaxTransaction[]
 
   @@map("master_tax_rates")
 }

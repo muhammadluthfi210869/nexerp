@@ -142,6 +142,9 @@ model Supplier {
   pos              PurchaseOrder[]
   prs              PurchaseRequest[]
   invoices         Invoice[]
+  bills            Bill[]            @relation("SupplierBills")
+  downPayments     DownPayment[]     @relation("SupplierDownPayments")
+  apPayments       APPayment[]       @relation("SupplierAPPayments")
   returns          PurchaseReturn[]
   category         MasterCategory?     @relation("SupplierToCategory", fields: [categoryId], references: [id])
   supplierHistory ProductSupplierHistory[]

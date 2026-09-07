@@ -21,6 +21,9 @@ model User {
   labTests            LabTestResult[]
   lostDeals           LostDeal[]
   verifiedPayments    Payment[]                   @relation("FinanceVerifier")
+  verifiedAPPayments  APPayment[]                 @relation("APVerifier")
+  reconciliations     BankReconciliation[]        @relation("Reconciler")
+  eprRequests         EmergencyPurchaseRequest[]  @relation("EprRequester")
   prodPlans           ProductionPlan[]            @relation("ProdAdmin")
   scmPO               PurchaseOrder[]             @relation("SCMProcessor")
   registrations       RegulatoryPipeline[]        @relation("LegalPIC")

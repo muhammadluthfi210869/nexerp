@@ -8,6 +8,52 @@
 
 ---
 
+## 🎯 Scope of This DNA (WAJIB BACA SEBELUM EDIT)
+
+> Dokumen ini **HANYA** mengatur **operational pages** (list, form, detail, create, edit) di SEMUA divisi **KECUALI** Digital Marketing.
+
+### ✅ IN SCOPE — Pakai DNA ini
+
+| Tipe | Contoh | Catatan |
+|---|---|---|
+| List pages | `/finance/faktur-pembelian`, `/scm/pembelian` | Tabel + toolbar + filter |
+| Form pages | `/finance/faktur-pembelian/create` | Input fields + form layout |
+| Detail pages | `/finance/faktur-pembelian/[id]` | Modal + draw + display |
+| Master data | `/master/vendors`, `/master/customers` | CRUD lists |
+| Project Control | `/project-control/*` | ✅ INCLUDE |
+| KPI Management | `/kpi-management/*` (non-dashboard) | ✅ INCLUDE |
+
+### 🚫 OUT OF SCOPE — JANGAN PAKAI DNA ini
+
+| Tipe | Contoh | Pakai apa |
+|---|---|---|
+| **Dashboard pages** | `/dashboard/*`, `/dashboard-*`, `/finance/dashboard`, `/bussdev/dashboard` | **Dashboard DNA**: `old_erp/ACUAN_DASHBOARD/` (Aureon Matrix style — `rounded-[24px]`, CSS vars, Inter font) |
+| **Module Digital Marketing** | `/marketing/*` (semua page termasuk dashboard-nya) | Module excluded — jangan edit, sedang berjalan |
+| **DNA-visual reference pages** | `/dna-visual/*`, `/dna-preview/*` | Reference only — bukan operational |
+
+### Dashboard DNA Contract (untuk dashboard pages)
+
+> File: `old_erp/ACUAN_DASHBOARD/VISUAL_DNA.md` (Vue + Vite project)
+> Style: "Aureon Matrix" — `rounded-[24px]` macro cards, CSS vars (`var(--border-color)`), Inter font, big `32px` KPI numbers
+> **JANGAN** refactor dashboard jadi operational style. Direksi sudah set preferensinya.
+
+### Dashboard Exceptions (Pertahankan, JANGAN Hapus)
+
+| Dashboard | Widget | Aksi |
+|---|---|---|
+| Finance Dashboard | Trend chart (di bawah cards) | Keep existing |
+| Bussdev Dashboard | Existing widget (sudah match reference) | Keep existing |
+| Digital Marketing Dashboard | Funnel per Channel | Keep existing (module excluded anyway) |
+
+### Refactor Plan Reference
+
+Lokasi: `plan/NEX_ERP_REFACTOR_ROADMAP.md`
+- Section 0 = Scope Definisi (baca setiap edit)
+- Appendix D = Dashboard Reference Index
+- Appendix E = Module-Level Scope Matrix
+
+---
+
 ## 🏛️ Anatomi Baku 5 Layer (Urutan Vertikal Halaman)
 
 Setiap halaman operasional di NEX ERP memiliki struktur hirarki vertikal seragam dengan ritme ruang (*vertical rhythm*) berikut:
