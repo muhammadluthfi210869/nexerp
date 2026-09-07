@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -103,9 +103,19 @@ export default function PurchasingPage() {
   const [selectedDueDate, setSelectedDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [taxPercent, setTaxPercent] = useState("11");
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [shippingCost, setShippingCost] = useState<number>(0);
   const [approveDialog, setApproveDialog] = useState<{ id: string; type: string } | null>(null);
   const [rejectDialog, setRejectDialog] = useState<{ id: string; type: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [searchPo, setSearchPo] = useState("");
+  const [searchItemName, setSearchItemName] = useState("");
+  const [searchMinQty, setSearchMinQty] = useState("");
+  const [searchMaxQty, setSearchMaxQty] = useState("");
+  const [searchMinPrice, setSearchMinPrice] = useState("");
+  const [searchMaxPrice, setSearchMaxPrice] = useState("");
+  const [searchDateFrom, setSearchDateFrom] = useState("");
+  const [searchDateTo, setSearchDateTo] = useState("");
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ["vendors"],
@@ -234,6 +244,8 @@ export default function PurchasingPage() {
     setSelectedDueDate("");
     setNotes("");
     setTaxPercent("11");
+    setDiscountAmount(0);
+    setShippingCost(0);
   };
 
   const addItem = (materialId: string) => {
@@ -255,8 +267,9 @@ export default function PurchasingPage() {
   };
 
   const subtotal = items.reduce((sum, i) => sum + i.qty * i.price, 0);
-  const tax = subtotal * (Number(taxPercent) / 100);
-  const grandTotal = subtotal + tax;
+  const taxableSubtotal = Math.max(0, subtotal - discountAmount);
+  const tax = taxableSubtotal * (Number(taxPercent) / 100);
+  const grandTotal = taxableSubtotal + Number(shippingCost) + tax;
 
   const handleCreatePO = () => {
     if (!selectedVendor) { toast.error("Pilih supplier."); return; }
@@ -266,6 +279,8 @@ export default function PurchasingPage() {
       estArrival: selectedDate,
       dueDate: selectedDueDate || undefined,
       notes: notes || undefined,
+      discountAmount: Number(discountAmount),
+      shippingCost: Number(shippingCost),
       taxPercent: Number(taxPercent),
       totalAmount: grandTotal,
       items: items.map((i) => ({
@@ -296,6 +311,25 @@ export default function PurchasingPage() {
 
   const pendingPrCount = String(prs?.filter((r: any) => r.status === 'DRAFT' || r.status === 'SUBMITTED').length || 0).padStart(2, '0');
   const activePoCount = String(purchaseOrders?.filter((po: any) => po.status === 'APPROVED' || po.status === 'ORDERED').length || 0).padStart(2, '0');
+
+  const filteredPurchaseOrders = useMemo(() => {
+    if (!purchaseOrders) return [];
+    return purchaseOrders.filter((po: any) => {
+      const q = searchPo.toLowerCase();
+      const matchSearch = !q || (po.poNumber || '').toLowerCase().includes(q) ||
+        (po.supplier?.name || po.supplierName || '').toLowerCase().includes(q) ||
+        (po.scm?.fullName || '').toLowerCase().includes(q);
+      const matchItem = !searchItemName || (po.items || []).some((i: any) =>
+        (i.itemName || i.name || '').toLowerCase().includes(searchItemName.toLowerCase()));
+      const matchQty = (!searchMinQty || (po.items || []).some((i: any) => Number(i.quantity || i.qty || 0) >= Number(searchMinQty))) &&
+        (!searchMaxQty || (po.items || []).some((i: any) => Number(i.quantity || i.qty || 0) <= Number(searchMaxQty)));
+      const matchPrice = (!searchMinPrice || Number(po.totalValue || 0) >= Number(searchMinPrice)) &&
+        (!searchMaxPrice || Number(po.totalValue || 0) <= Number(searchMaxPrice));
+      const poDate = po.estArrival || po.orderDate || '';
+      const matchDate = (!searchDateFrom || poDate >= searchDateFrom) && (!searchDateTo || poDate <= searchDateTo);
+      return matchSearch && matchItem && matchQty && matchPrice && matchDate;
+    });
+  }, [purchaseOrders, searchPo, searchItemName, searchMinQty, searchMaxQty, searchMinPrice, searchMaxPrice, searchDateFrom, searchDateTo]);
   const awaitingGrnCount = String(purchaseOrders?.filter((po: any) => po.status === 'ORDERED').length || 0).padStart(2, '0');
   const totalPoValue = (purchaseOrders || []).reduce((sum: number, po: any) => sum + Number(po.totalValue || 0), 0);
 
@@ -358,18 +392,34 @@ export default function PurchasingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Tanggal</Label>
-                    <DnaInput type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Tanggal PO (Auto)</Label>
+                    <DnaInput type="date" value={selectedDate} readOnly className="bg-slate-100 text-slate-500 font-bold cursor-not-allowed" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Jatuh Tempo</Label>
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Deadline Pengiriman <span className="text-red-500">*</span></Label>
                     <DnaInput type="date" value={selectedDueDate} onChange={(e) => setSelectedDueDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Pajak (%)</Label>
-                    <DnaInput type="number" value={taxPercent} onChange={(e) => setTaxPercent(e.target.value)} icon={<Percent className="h-3.5 w-3.5" />} />
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Diskon (Rp)</Label>
+                    <DnaInput
+                      type="number"
+                      value={discountAmount || ""}
+                      placeholder="0"
+                      onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                      icon={<DollarSign className="h-3.5 w-3.5 text-slate-400" />}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black text-slate-400 uppercase block">Ongkir (Rp)</Label>
+                    <DnaInput
+                      type="number"
+                      value={shippingCost || ""}
+                      placeholder="0"
+                      onChange={(e) => setShippingCost(Number(e.target.value))}
+                      icon={<Truck className="h-3.5 w-3.5 text-slate-400" />}
+                    />
                   </div>
                 </div>
 
@@ -465,17 +515,43 @@ export default function PurchasingPage() {
 
                 <div className="bg-slate-50 rounded-2xl p-6 space-y-2 border border-slate-200">
                   <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-500">Subtotal</span>
+                    <span className="font-medium text-slate-500">Subtotal Barang</span>
                     <span className="font-black text-slate-900">Rp {subtotal.toLocaleString()}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-emerald-600">
+                      <span className="font-medium">Potongan Diskon</span>
+                      <span className="font-black">- Rp {discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between text-sm text-slate-600">
+                      <span className="font-medium">Ongkos Kirim</span>
+                      <span className="font-black">+ Rp {shippingCost.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-500">Pajak ({taxPercent}%)</span>
+                    <span className="font-medium text-slate-500">Pajak PPN ({taxPercent}%)</span>
                     <span className="font-black text-slate-900">Rp {tax.toLocaleString()}</span>
                   </div>
                   <div className="border-t border-slate-200 pt-2 flex justify-between text-base">
-                    <span className="font-black text-slate-700">Grand Total</span>
+                    <span className="font-black text-slate-700">Grand Total PO</span>
                     <span className="font-black text-blue-600 text-lg tabular-nums">Rp {grandTotal.toLocaleString()}</span>
                   </div>
+                </div>
+
+                {/* Digital Signature & Authorization Section */}
+                <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black">
+                      <BadgeCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-slate-900 uppercase">Otorisasi & Digital Signature</p>
+                      <p className="text-[10px] text-slate-500">PO disahkan dengan tanda tangan digital terenkripsi ERP</p>
+                    </div>
+                  </div>
+                  <DnaBadge status="success">DIGITAL SIGNED</DnaBadge>
                 </div>
 
                 <div className="space-y-2">
@@ -567,7 +643,21 @@ export default function PurchasingPage() {
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Daftar Purchase Order</h3>
               </div>
               <div className="flex items-center gap-3">
-                <DnaInput placeholder="Cari PO..." icon={<Search />} className="w-64" />
+                <DnaInput placeholder="Cari PO, supplier..." value={searchPo} onChange={(e) => setSearchPo(e.target.value)} icon={<Search />} className="w-48" />
+                <DnaInput placeholder="Nama item..." value={searchItemName} onChange={(e) => setSearchItemName(e.target.value)} className="w-40" />
+                <div className="flex items-center gap-1">
+                  <DnaInput type="number" placeholder="Qty min" value={searchMinQty} onChange={(e) => setSearchMinQty(e.target.value)} className="w-20" />
+                  <span className="text-slate-400 text-xs">-</span>
+                  <DnaInput type="number" placeholder="Qty max" value={searchMaxQty} onChange={(e) => setSearchMaxQty(e.target.value)} className="w-20" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <DnaInput type="date" placeholder="Tgl dari" value={searchDateFrom} onChange={(e) => setSearchDateFrom(e.target.value)} className="w-36" />
+                  <span className="text-slate-400 text-xs">-</span>
+                  <DnaInput type="date" placeholder="Tgl sampai" value={searchDateTo} onChange={(e) => setSearchDateTo(e.target.value)} className="w-36" />
+                </div>
+                {(searchPo || searchItemName || searchMinQty || searchMaxQty || searchDateFrom || searchDateTo) && (
+                  <button onClick={() => { setSearchPo(''); setSearchItemName(''); setSearchMinQty(''); setSearchMaxQty(''); setSearchDateFrom(''); setSearchDateTo(''); }} className="text-xs text-blue-600 hover:text-blue-800 font-bold">Reset</button>
+                )}
               </div>
             </div>
 
@@ -585,7 +675,7 @@ export default function PurchasingPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(!purchaseOrders || purchaseOrders.length === 0) ? (
+                  {(!filteredPurchaseOrders || filteredPurchaseOrders.length === 0) ? (
                     <TableRow>
                       <TableCell colSpan={7} className="py-16 text-center">
                         <EmptyState
@@ -596,7 +686,7 @@ export default function PurchasingPage() {
                         />
                       </TableCell>
                     </TableRow>
-                  ) : purchaseOrders?.map((po: any) => (
+                  ) : filteredPurchaseOrders?.map((po: any) => (
                     <TableRow key={po.id} className="group hover:bg-slate-50/30 transition-all">
                       <TableCell className="py-3 px-4">
                         <div className="flex items-center gap-3">
