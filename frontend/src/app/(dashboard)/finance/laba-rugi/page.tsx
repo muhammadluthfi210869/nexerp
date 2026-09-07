@@ -177,16 +177,16 @@ export default function LabaRugiReportPage() {
           variant="emerald"
         />
         <KpiCard
-          label="Laba Operasional Bersih"
-          value={`Rp ${formatRupiah(netOperatingIncome).split(",")[0]}`}
-          subtext="Gross profit dikurangi beban opersional"
-          variant="blue"
-        />
-        <KpiCard
           label="Total Beban HPP (COGS)"
           value={`Rp ${formatRupiah(costOfGoodsSold.totalAmount).split(",")[0]}`}
           subtext="Bahan baku, kemasan & pabrikasi"
           variant="amber"
+        />
+        <KpiCard
+          label="Laba Operasional Bersih"
+          value={`Rp ${formatRupiah(netOperatingIncome).split(",")[0]}`}
+          subtext="Gross profit dikurangi beban opersional"
+          variant="blue"
         />
         <KpiCard
           label="Total Pendapatan Operasional"
@@ -252,7 +252,7 @@ export default function LabaRugiReportPage() {
           <DnaTableBody>
             {/* 1. OPERATING REVENUE */}
             <tr className="bg-slate-100/90 font-black text-slate-800 text-xs border-y border-slate-200">
-              <td colSpan={2} className="py-2.5 px-3.5 uppercase tracking-wide">
+              <td colSpan={2} className="py-1.5 px-3 uppercase tracking-wide text-xs">
                 {operatingRevenue.groupTitle}
               </td>
             </tr>
@@ -261,16 +261,16 @@ export default function LabaRugiReportPage() {
               <React.Fragment key={sIdx}>
                 {/* SubGroup Title */}
                 <tr className="bg-slate-50/60 font-bold text-slate-700 text-xs">
-                  <td className="py-2 px-6 font-bold">{sub.subTitle}</td>
-                  <td className="py-2 px-3.5 text-right font-bold text-slate-900">
+                  <td className="py-1 px-3 font-bold">{sub.subTitle}</td>
+                  <td className="py-1 px-3 text-right font-bold text-slate-900 text-xs">
                     {sub.subTotal < 0 ? `-${formatRupiah(Math.abs(sub.subTotal))}` : formatRupiah(sub.subTotal)}
                   </td>
                 </tr>
                 {/* Line Items */}
                 {sub.items.map((it) => (
                   <tr key={it.id} className="hover:bg-slate-50/50 text-xs">
-                    <td className="py-1.5 px-10 text-slate-600 font-medium">{it.name}</td>
-                    <td className="py-1.5 px-3.5 text-right text-slate-700 tabular-nums">
+                    <td className="py-1 px-6 text-slate-600 font-medium">{it.name}</td>
+                    <td className="py-1 px-3 text-right text-slate-700 tabular-nums text-xs">
                       {it.isNegative ? `-${formatRupiah(it.amount)}` : formatRupiah(it.amount)}
                     </td>
                   </tr>
@@ -280,15 +280,15 @@ export default function LabaRugiReportPage() {
 
             {/* Total Operating Revenue */}
             <tr className="bg-slate-100 font-black text-slate-900 text-xs border-t border-b-2 border-slate-300">
-              <td className="py-2.5 px-3.5">{operatingRevenue.totalLabel}</td>
-              <td className="py-2.5 px-3.5 text-right text-blue-800 font-black">
+              <td className="py-1.5 px-3">{operatingRevenue.totalLabel}</td>
+              <td className="py-1.5 px-3 text-right text-blue-800 font-black">
                 {formatRupiah(operatingRevenue.totalAmount)}
               </td>
             </tr>
 
             {/* 2. COST OF GOODS SOLD */}
             <tr className="bg-slate-100/90 font-black text-slate-800 text-xs border-y border-slate-200">
-              <td colSpan={2} className="py-2.5 px-3.5 uppercase tracking-wide">
+              <td colSpan={2} className="py-1.5 px-3 uppercase tracking-wide text-xs">
                 {costOfGoodsSold.groupTitle}
               </td>
             </tr>
@@ -296,15 +296,15 @@ export default function LabaRugiReportPage() {
             {costOfGoodsSold.subGroups.map((sub, sIdx) => (
               <React.Fragment key={sIdx}>
                 <tr className="bg-slate-50/60 font-bold text-slate-700 text-xs">
-                  <td className="py-2 px-6 font-bold">{sub.subTitle}</td>
-                  <td className="py-2 px-3.5 text-right font-bold text-slate-900">
+                  <td className="py-1 px-3 font-bold">{sub.subTitle}</td>
+                  <td className="py-1 px-3 text-right font-bold text-slate-900 text-xs">
                     {formatRupiah(sub.subTotal)}
                   </td>
                 </tr>
                 {sub.items.map((it) => (
                   <tr key={it.id} className="hover:bg-slate-50/50 text-xs">
-                    <td className="py-1.5 px-10 text-slate-600 font-medium">{it.name}</td>
-                    <td className="py-1.5 px-3.5 text-right text-slate-700 tabular-nums">
+                    <td className="py-1 px-6 text-slate-600 font-medium">{it.name}</td>
+                    <td className="py-1 px-3 text-right text-slate-700 tabular-nums text-xs">
                       {formatRupiah(it.amount)}
                     </td>
                   </tr>
@@ -314,23 +314,23 @@ export default function LabaRugiReportPage() {
 
             {/* Total Cost of Goods Sold */}
             <tr className="bg-slate-100 font-black text-slate-900 text-xs border-t border-b border-slate-300">
-              <td className="py-2.5 px-3.5">{costOfGoodsSold.totalLabel}</td>
-              <td className="py-2.5 px-3.5 text-right text-rose-800 font-black">
+              <td className="py-1.5 px-3">{costOfGoodsSold.totalLabel}</td>
+              <td className="py-1.5 px-3 text-right text-rose-800 font-black">
                 {formatRupiah(costOfGoodsSold.totalAmount)}
               </td>
             </tr>
 
             {/* Gross Profit (Laba Kotor) */}
             <tr className="bg-blue-50/80 font-black text-blue-950 text-xs border-y-2 border-blue-200">
-              <td className="py-3 px-3.5 uppercase">GROSS PROFIT (LABA KOTOR)</td>
-              <td className="py-3 px-3.5 text-right font-black text-blue-900 text-sm">
+              <td className="py-2 px-3 uppercase">GROSS PROFIT (LABA KOTOR)</td>
+              <td className="py-2 px-3 text-right font-black text-blue-900 text-xs">
                 Rp {formatRupiah(grossProfit)}
               </td>
             </tr>
 
             {/* 3. OPERATING EXPENSES */}
             <tr className="bg-slate-100/90 font-black text-slate-800 text-xs border-y border-slate-200">
-              <td colSpan={2} className="py-2.5 px-3.5 uppercase tracking-wide">
+              <td colSpan={2} className="py-1.5 px-3 uppercase tracking-wide">
                 {operatingExpenses.groupTitle}
               </td>
             </tr>
@@ -338,15 +338,15 @@ export default function LabaRugiReportPage() {
             {operatingExpenses.subGroups.map((sub, sIdx) => (
               <React.Fragment key={sIdx}>
                 <tr className="bg-slate-50/60 font-bold text-slate-700 text-xs">
-                  <td className="py-2 px-6 font-bold">{sub.subTitle}</td>
-                  <td className="py-2 px-3.5 text-right font-bold text-slate-900">
+                  <td className="py-1 px-3 font-bold">{sub.subTitle}</td>
+                  <td className="py-1 px-3 text-right font-bold text-slate-900 text-xs">
                     {formatRupiah(sub.subTotal)}
                   </td>
                 </tr>
                 {sub.items.map((it) => (
                   <tr key={it.id} className="hover:bg-slate-50/50 text-xs">
-                    <td className="py-1.5 px-10 text-slate-600 font-medium">{it.name}</td>
-                    <td className="py-1.5 px-3.5 text-right text-slate-700 tabular-nums">
+                    <td className="py-1 px-6 text-slate-600 font-medium">{it.name}</td>
+                    <td className="py-1 px-3 text-right text-slate-700 tabular-nums text-xs">
                       {formatRupiah(it.amount)}
                     </td>
                   </tr>
@@ -356,26 +356,26 @@ export default function LabaRugiReportPage() {
 
             {/* Total Operating Expenses */}
             <tr className="bg-slate-100 font-black text-slate-900 text-xs border-t border-b border-slate-300">
-              <td className="py-2.5 px-3.5">{operatingExpenses.totalLabel}</td>
-              <td className="py-2.5 px-3.5 text-right text-rose-800 font-black">
+              <td className="py-1.5 px-3">{operatingExpenses.totalLabel}</td>
+              <td className="py-1.5 px-3 text-right text-rose-800 font-black">
                 {formatRupiah(operatingExpenses.totalAmount)}
               </td>
             </tr>
 
             {/* Net Operating Income (Laba Operasional Bersih) */}
             <tr className="bg-slate-100/90 font-black text-slate-900 text-xs border-y-2 border-slate-300">
-              <td className="py-3 px-3.5 uppercase">OPERATING INCOME (LABA OPERASIONAL BERSIH)</td>
-              <td className="py-3 px-3.5 text-right font-black text-slate-900 text-sm">
+              <td className="py-2 px-3 uppercase">OPERATING INCOME (LABA OPERASIONAL BERSIH)</td>
+              <td className="py-2 px-3 text-right font-black text-slate-900 text-xs">
                 Rp {formatRupiah(netOperatingIncome)}
               </td>
             </tr>
 
             {/* Final Highlight: NET PROFIT / NET INCOME */}
-            <tr className="bg-emerald-500 text-white font-black text-sm border-t-2 border-emerald-600 shadow-xs">
-              <td className="py-3.5 px-4 uppercase tracking-wider">
+            <tr className="bg-emerald-500 text-white font-black text-xs border-t-2 border-emerald-600 shadow-xs">
+              <td className="py-2 px-3 uppercase tracking-wider">
                 NET INCOME (LABA BERSIH TAHUN BERJALAN)
               </td>
-              <td className="py-3.5 px-4 text-right font-black text-white text-base tabular-nums">
+              <td className="py-2 px-3 text-right font-black text-white text-sm tabular-nums">
                 Rp {formatRupiah(netIncome)}
               </td>
             </tr>

@@ -116,9 +116,9 @@ export default function BayarConsolidatedPage() {
 
   return (
     <DashboardShell
-      title="BAYAR"
-      titleAccent="HUB"
-      subtitle="Pembayaran Pembelian, Penjualan & Sample — Payment Hub"
+      title="Report"
+      titleAccent="PENJUALAN"
+      subtitle="Penerimaan piutang penjualan, pelunasan, dan rekonsiliasi payments."
     >
       <Tabs defaultValue="pembelian" className="space-y-6">
         <div className="relative">
