@@ -1,14 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Logger, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import {
   CreateBoardDto,
   UpdateBoardDto,
   CreateTaskDto,
   UpdateTaskStatusDto,
+  UpdateTaskDto,
 } from './dto/todo.dto';
 
 @Injectable()
 export class TodoService {
+  private readonly logger = new Logger(TodoService.name);
   constructor(private prisma: PrismaService) {}
 
   async createBoard(dto: CreateBoardDto, createdById?: string) {
@@ -87,5 +89,11 @@ export class TodoService {
 
   async deleteTask(taskId: string) {
     return this.prisma.taskItem.delete({ where: { id: taskId } });
+  }
+
+  async updateTask(taskId: string, dto: UpdateTaskDto) {
+    const task = await this.prisma.taskItem.findUnique({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Task not found');
+    return this.prisma.taskItem.update({ where: { id: taskId }, data: dto });
   }
 }

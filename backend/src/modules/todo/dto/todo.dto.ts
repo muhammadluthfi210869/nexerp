@@ -1,11 +1,18 @@
 import {
   IsString,
   IsOptional,
-  IsNumber,
   IsUUID,
   IsArray,
+  IsIn,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+
+export const ALLOWED_TASK_STATUSES = [
+  'TODO',
+  'IN_PROGRESS',
+  'IN_REVIEW',
+  'DONE',
+  'BLOCKED',
+] as const;
 
 export class CreateBoardDto {
   @IsString()
@@ -35,7 +42,7 @@ export class CreateTaskDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(ALLOWED_TASK_STATUSES)
   status?: string;
 
   @IsOptional()
@@ -44,10 +51,34 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
   labels?: string[];
 }
 
 export class UpdateTaskStatusDto {
-  @IsString()
+  @IsIn(ALLOWED_TASK_STATUSES)
   status!: string;
+}
+
+export class UpdateTaskDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsIn(ALLOWED_TASK_STATUSES)
+  status?: string;
+
+  @IsOptional()
+  @IsUUID()
+  assigneeId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  labels?: string[];
 }
