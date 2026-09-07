@@ -102,7 +102,7 @@ export default function MasterWarehousesPage() {
     0
   );
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = (e: { preventDefault: () => void }): void => {
     e.preventDefault();
     setShowConfirm(true);
   };
