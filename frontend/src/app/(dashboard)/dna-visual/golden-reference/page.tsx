@@ -1,978 +1,1258 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
 import {
-  Search,
-  Plus,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  AlertCircle,
-  X,
-  ArrowLeft,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   FileText,
-  FlaskConical,
-  Droplet,
-  Package,
-  History,
   BarChart3,
+  CheckCircle2,
+  AlertTriangle,
   Sparkles,
-  MoreHorizontal,
   Download,
-  Trash2,
-  Eye,
+  Printer,
   Edit3,
-  CheckSquare,
-  Layers,
-  RotateCcw,
-  TrendingUp,
-  Activity,
-  Cpu,
-  FolderOpen,
-  RefreshCw,
+  Trash2,
+  X,
   SlidersHorizontal,
-  Check
+  ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaDateMode,
+  DnaCell,
+} from "@/components/dna";
 
-// ── FULL REAL OPERATIONAL DATASET ──
+// ── Types & Interfaces ──
 interface WorkOrder {
   id: string;
   wo: string;
+  refPo: string;
   produk: string;
   klien: string;
   category: string;
-  stage: string;
-  stageStyle: string;
-  progress: string;
+  stage: "Finished Goods" | "Mixing" | "Waiting Material" | "Pending Review";
   progressPercent: number;
-  progressStyle: string;
+  progressColor: string;
+  pic: string;
+  picInitial: string;
   target: number;
   hpp: number;
   totalNilai: number;
   updatedAt: string;
-  pic: string;
   line: string;
   notes: string;
 }
 
+// ── INITIAL MOCK DATA ──
 const INITIAL_WORK_ORDERS: WorkOrder[] = [
-  { id: "1", wo: "WO-2608-002", produk: "Golden Customer R4G1787709618256", klien: "PT Aurora Beauty", category: "Skincare", stage: "FINISHED_GOODS", stageStyle: "bg-emerald-100 text-emerald-700 border border-emerald-200", progress: "Done", progressPercent: 100, progressStyle: "bg-emerald-50 text-emerald-600 border border-emerald-200", target: 50, hpp: 120000, totalNilai: 6000000, updatedAt: "25/08/2026 10:30", pic: "Budi Santoso", line: "Line A — Main Packaging", notes: "Lulus QC rilis tanpa revisi." },
-  { id: "2", wo: "WO-2608-004", produk: "R4G-002 Customer Body Wash", klien: "CV Lumiere Personal Care", category: "Personal Care", stage: "MIXING", stageStyle: "bg-blue-100 text-blue-700 border border-blue-200", progress: "In Progress", progressPercent: 65, progressStyle: "bg-blue-50 text-blue-600 border border-blue-200", target: 50, hpp: 45000, totalNilai: 2250000, updatedAt: "24/08/2026 09:15", pic: "Rian Hidayat", line: "Line B — Tank 02", notes: "Proses homogenisasi kecepatan 1500 RPM." },
-  { id: "3", wo: "WO-AUR-001", produk: "Brightening Serum 20 ml", klien: "PT Aurora Beauty", category: "Skincare", stage: "MIXING", stageStyle: "bg-blue-100 text-blue-700 border border-blue-200", progress: "Not Started", progressPercent: 10, progressStyle: "bg-slate-100 text-slate-600 border border-slate-200", target: 1500, hpp: 150000, totalNilai: 225000000, updatedAt: "23/08/2026 14:20", pic: "Siti Aminah", line: "Line B — Tank 01", notes: "Menunggu penimbangan bahan aktif." },
-  { id: "4", wo: "WO-AUR-002", produk: "Body Lotion Premium 100ml", klien: "R4G-002 Customer", category: "Personal Care", stage: "WAITING_MATERIAL", stageStyle: "bg-amber-100 text-amber-800 border border-amber-200", progress: "Waiting", progressPercent: 25, progressStyle: "bg-amber-50 text-amber-700 border border-amber-200", target: 500, hpp: 85000, totalNilai: 42500000, updatedAt: "22/08/2026 11:05", pic: "Dewi Kartika", line: "Line C — Filling Semi-Auto", notes: "Bahan pengemas botol dropper tertunda di gudang." },
-  { id: "5", wo: "WO-2508-010", produk: "AQUA DM RM-AQUA-100", klien: "PT Sejahtera Abadi", category: "Raw Material", stage: "PENDING_REVIEW", stageStyle: "bg-orange-100 text-orange-800 border border-orange-200", progress: "Waiting", progressPercent: 40, progressStyle: "bg-amber-50 text-amber-700 border border-amber-200", target: 200, hpp: 15000, totalNilai: 3000000, updatedAt: "21/08/2026 16:40", pic: "Agus Pratama", line: "Line D — Purified Water System", notes: "Review CoA mikrobiologi oleh APJ." },
+  {
+    id: "1",
+    wo: "WO-2608-01",
+    refPo: "PO-2026-081",
+    produk: "Acne Clarifying Serum 30ml",
+    klien: "PT Glow Skin Global",
+    category: "Skincare",
+    stage: "Finished Goods",
+    progressPercent: 100,
+    progressColor: "bg-emerald-500",
+    pic: "Budi Santoso",
+    picInitial: "B",
+    target: 5000,
+    hpp: 18500,
+    totalNilai: 92500000,
+    updatedAt: "25/08/2026 14:32",
+    line: "Line A — Packaging",
+    notes: "Batch dirilis QC setelah uji stabilitas & mikrobiologi lulus tanpa catatan.",
+  },
+  {
+    id: "2",
+    wo: "WO-2608-02",
+    refPo: "PO-2026-082",
+    produk: "Hydrating Barrier Toner 100ml",
+    klien: "CV Cantika Ayu",
+    category: "Skincare",
+    stage: "Mixing",
+    progressPercent: 65,
+    progressColor: "bg-sky-500",
+    pic: "Siti Rahma",
+    picInitial: "S",
+    target: 3000,
+    hpp: 14200,
+    totalNilai: 42600000,
+    updatedAt: "25/08/2026 11:15",
+    line: "Line B — Homogenizer",
+    notes: "Fase pendinginan tangki pendingin sedang berlangsung; target suhu 28°C.",
+  },
+  {
+    id: "3",
+    wo: "WO-2608-03",
+    refPo: "PO-2026-083",
+    produk: "Sunscreen Gel SPF 50 50ml",
+    klien: "PT Derma Solusi",
+    category: "Suncare",
+    stage: "Waiting Material",
+    progressPercent: 20,
+    progressColor: "bg-amber-500",
+    pic: "Agus Tri",
+    picInitial: "A",
+    target: 10000,
+    hpp: 21000,
+    totalNilai: 210000000,
+    updatedAt: "24/08/2026 16:45",
+    line: "Line A — Staging Area",
+    notes: "Menunggu pasokan UV Filter Zinc Oxide dari distributor tiba sore hari.",
+  },
+  {
+    id: "4",
+    wo: "WO-2608-04",
+    refPo: "PO-2026-084",
+    produk: "Brightening Day Cream 25g",
+    klien: "PT Glow Skin Global",
+    category: "Skincare",
+    stage: "Pending Review",
+    progressPercent: 0,
+    progressColor: "bg-slate-400",
+    pic: "Dewi Lestari",
+    picInitial: "D",
+    target: 2500,
+    hpp: 16800,
+    totalNilai: 42000000,
+    updatedAt: "24/08/2026 09:20",
+    line: "RnD Pilot Plant",
+    notes: "Permintaan modifikasi formula parfum dari pihak klien masih ditelaah QC.",
+  },
+  {
+    id: "5",
+    wo: "WO-2608-05",
+    refPo: "PO-2026-085",
+    produk: "Gentle Cleanser Oat 120ml",
+    klien: "PT Natura Indah",
+    category: "Cleanser",
+    stage: "Finished Goods",
+    progressPercent: 100,
+    progressColor: "bg-emerald-500",
+    pic: "Budi Santoso",
+    picInitial: "B",
+    target: 4000,
+    hpp: 12500,
+    totalNilai: 50000000,
+    updatedAt: "23/08/2026 17:00",
+    line: "Warehouse FG",
+    notes: "Karantina 24 jam selesai, siap dikirimkan ke gudang pusat logistik.",
+  },
+  {
+    id: "6",
+    wo: "WO-2608-06",
+    refPo: "PO-2026-086",
+    produk: "Lip Tint Serum Peach 5ml",
+    klien: "CV Cantika Ayu",
+    category: "Decorative",
+    stage: "Mixing",
+    progressPercent: 45,
+    progressColor: "bg-sky-500",
+    pic: "Hendra Wijaya",
+    picInitial: "H",
+    target: 8000,
+    hpp: 9800,
+    totalNilai: 78400000,
+    updatedAt: "23/08/2026 13:30",
+    line: "Line C — Color Matching",
+    notes: "Penyesuaian shade merah muda pastel ronde kedua telah disetujui internal.",
+  },
+  {
+    id: "7",
+    wo: "WO-2608-07",
+    refPo: "PO-2026-087",
+    produk: "Peeling Solution BHA 2% 30ml",
+    klien: "PT Derma Solusi",
+    category: "Exfoliator",
+    stage: "Waiting Material",
+    progressPercent: 15,
+    progressColor: "bg-amber-500",
+    pic: "Agus Tri",
+    picInitial: "A",
+    target: 6000,
+    hpp: 15400,
+    totalNilai: 92400000,
+    updatedAt: "22/08/2026 10:00",
+    line: "Warehouse Raw Material",
+    notes: "Botol droper amber 30ml sedang proses sterilisasi di clean room.",
+  },
+  {
+    id: "8",
+    wo: "WO-2608-08",
+    refPo: "PO-2026-088",
+    produk: "Eye Cream Peptide Complex 15g",
+    klien: "PT Natura Indah",
+    category: "Special Treatment",
+    stage: "Mixing",
+    progressPercent: 80,
+    progressColor: "bg-sky-500",
+    pic: "Siti Rahma",
+    picInitial: "S",
+    target: 2000,
+    hpp: 28500,
+    totalNilai: 57000000,
+    updatedAt: "22/08/2026 08:45",
+    line: "Line B — Homogenizer",
+    notes: "Viskositas emulsi tercapai sempurna; siap dipindahkan ke tangki penampung.",
+  },
+  {
+    id: "9",
+    wo: "WO-2608-09",
+    refPo: "PO-2026-089",
+    produk: "Soothing Cica Calming Mist 60ml",
+    klien: "CV Cantika Ayu",
+    category: "Face Mist",
+    stage: "Pending Review",
+    progressPercent: 0,
+    progressColor: "bg-slate-400",
+    pic: "Dewi Lestari",
+    picInitial: "D",
+    target: 5000,
+    hpp: 11000,
+    totalNilai: 55000000,
+    updatedAt: "21/08/2026 15:10",
+    line: "RnD Lab",
+    notes: "Menunggu approval penambahan persentase extract Centella dari Brand Owner.",
+  },
+  {
+    id: "10",
+    wo: "WO-2608-10",
+    refPo: "PO-2026-090",
+    produk: "Charcoal Clay Mask Detox 50g",
+    klien: "PT Glow Skin Global",
+    category: "Wash-off Mask",
+    stage: "Finished Goods",
+    progressPercent: 100,
+    progressColor: "bg-emerald-500",
+    pic: "Budi Santoso",
+    picInitial: "B",
+    target: 3500,
+    hpp: 17200,
+    totalNilai: 60200000,
+    updatedAt: "21/08/2026 12:00",
+    line: "Warehouse FG",
+    notes: "COA (Certificate of Analysis) lengkap, siap terbit surat jalan ekspedisi.",
+  },
 ];
 
-const TABS_CONFIG = [
-  { id: "WORK ORDERS", label: "WORK ORDERS", icon: FileText, filterStage: null },
-  { id: "MIXING", label: "MIXING", icon: FlaskConical, filterStage: "MIXING" },
-  { id: "FILLING", label: "FILLING", icon: Droplet, filterStage: "WAITING_MATERIAL" },
-  { id: "PACKING", label: "PACKING", icon: Package, filterStage: "PENDING_REVIEW" },
-  { id: "HISTORY", label: "HISTORY", icon: History, filterStage: "FINISHED_GOODS" },
-  { id: "ANALYTICS", label: "ANALYTICS", icon: BarChart3, filterStage: null },
-];
+type FilterColumnType = "stage" | "klien" | "produk" | "pic" | "target" | "totalNilai";
 
 export default function GoldenReferencePage() {
-  // Alerts State
-  const [isAlertOpen, setIsAlertOpen] = useState(true);
+  // Main Data State
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
 
-  // Tabs & Filter States
-  const [activeTab, setActiveTab] = useState("WORK ORDERS");
+  // Tabs & Global Search States
+  const [activeTab, setActiveTab] = useState<"WORK_ORDERS" | "ANALYTICS">("WORK_ORDERS");
   const [searchQuery, setSearchQuery] = useState("");
-  const [stageFilter, setStageFilter] = useState("ALL");
   const [selectedKpiFilter, setSelectedKpiFilter] = useState<string | null>(null);
 
-  // Checkbox Selection & Bulk Actions
+  // 2-Level Filter Toolbar States
+  const [selectedFilterColumn, setSelectedFilterColumn] = useState<FilterColumnType>("stage");
+  const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
+
+  // Date Range Mode & Custom Range (From Date to Date) States
+  const [dateMode, setDateMode] = useState<DnaDateMode>("1_MONTH");
+  const [startDate, setStartDate] = useState<string>("2026-08-02");
+  const [endDate, setEndDate] = useState<string>("2026-09-10");
+
+  // Table Sorter States
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Checkbox Selection
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+
+  // Interactive UI State Demo State
+  const [showStateDemo, setShowStateDemo] = useState<"NONE" | "EMPTY" | "LOADING" | "ERROR">("NONE");
+
+  // Inspection Drawer State
+  const [inspectingWo, setInspectingWo] = useState<WorkOrder | null>(null);
 
   // Create WO Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newClientName, setNewClientName] = useState("PT. Aurora Beauty");
+  const [newClientName, setNewClientName] = useState("PT Aurora Beauty");
   const [newBrandName, setNewBrandName] = useState("Aurora Glow");
   const [newContact, setNewContact] = useState("08123456789");
   const [newMoq, setNewMoq] = useState<number>(1000);
   const [newHpp, setNewHpp] = useState<number>(150000);
   const calculatedNilai = newMoq * newHpp;
 
-  // Detail Inspection Slide-over Drawer State
-  const [inspectingWo, setInspectingWo] = useState<WorkOrder | null>(null);
-  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  // Edit WO Modal State (CRUD)
+  const [editingWo, setEditingWo] = useState<WorkOrder | null>(null);
 
-  // Spec References Demo States (Below Main Flow)
-  const [showStateDemo, setShowStateDemo] = useState<"NONE" | "EMPTY" | "LOADING" | "ERROR">("NONE");
+  // Unique lists for categorization
+  const uniqueClients = useMemo(() => {
+    return Array.from(new Set(workOrders.map((item) => item.klien)));
+  }, [workOrders]);
 
-  // Dynamic Dataset Filtering
-  const filteredData = useMemo(() => {
-    return INITIAL_WORK_ORDERS.filter((item) => {
-      // Tab filter
-      const currentTabConfig = TABS_CONFIG.find((t) => t.id === activeTab);
-      if (currentTabConfig?.filterStage && item.stage !== currentTabConfig.filterStage) {
-        return false;
+  const uniquePics = useMemo(() => {
+    return Array.from(new Set(workOrders.map((item) => item.pic)));
+  }, [workOrders]);
+
+  // Helper date parser
+  const parseItemDate = (dateStr: string): Date | null => {
+    try {
+      const parts = dateStr.split(" ");
+      const dmy = parts[0].split("/");
+      if (dmy.length === 3) {
+        return new Date(Number(dmy[2]), Number(dmy[1]) - 1, Number(dmy[0]));
       }
-      // KPI filter
-      if (selectedKpiFilter === "APPROVED" && item.stage !== "FINISHED_GOODS") return false;
-      if (selectedKpiFilter === "PENDING" && item.stage !== "PENDING_REVIEW" && item.stage !== "WAITING_MATERIAL") return false;
-      if (selectedKpiFilter === "DISPATCH" && item.stage !== "MIXING") return false;
+    } catch {
+      return null;
+    }
+    return null;
+  };
 
-      // Dropdown filter
-      if (stageFilter !== "ALL" && item.stage !== stageFilter) return false;
+  // Filter & Sorter Pipeline
+  const filteredAndSortedData = useMemo(() => {
+    return workOrders
+      .filter((item) => {
+        // 1. KPI Card Filter
+        if (selectedKpiFilter === "OMSET") {
+          if (item.stage !== "Finished Goods") return false;
+        } else if (selectedKpiFilter === "APPROVED") {
+          if (item.stage !== "Finished Goods") return false;
+        } else if (selectedKpiFilter === "PENDING") {
+          if (item.stage !== "Pending Review") return false;
+        } else if (selectedKpiFilter === "EFFICIENCY") {
+          if (item.progressPercent < 50) return false;
+        }
 
-      // Search query
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        return (
-          item.wo.toLowerCase().includes(q) ||
-          item.produk.toLowerCase().includes(q) ||
-          item.klien.toLowerCase().includes(q)
-        );
+        // 2. Global Search
+        if (searchQuery.trim() !== "") {
+          const q = searchQuery.toLowerCase();
+          const matchWo = item.wo.toLowerCase().includes(q);
+          const matchProduk = item.produk.toLowerCase().includes(q);
+          const matchKlien = item.klien.toLowerCase().includes(q);
+          const matchPic = item.pic.toLowerCase().includes(q);
+          if (!matchWo && !matchProduk && !matchKlien && !matchPic) return false;
+        }
+
+        // 3. 2-Level Column & Value Filter
+        if (filterColumnValue !== "ALL") {
+          if (selectedFilterColumn === "stage" && item.stage !== filterColumnValue) return false;
+          if (selectedFilterColumn === "klien" && item.klien !== filterColumnValue) return false;
+          if (selectedFilterColumn === "pic" && item.pic !== filterColumnValue) return false;
+        }
+
+        // 4. Date Filter
+        if (dateMode !== "ALL") {
+          const itemDate = parseItemDate(item.updatedAt);
+          if (itemDate) {
+            if (dateMode === "CUSTOM" && startDate && endDate) {
+              const start = new Date(startDate);
+              const end = new Date(endDate);
+              end.setHours(23, 59, 59, 999);
+              if (itemDate < start || itemDate > end) return false;
+            } else {
+              const anchorDate = new Date(2026, 7, 25); // 25 Aug 2026
+              const diffMs = anchorDate.getTime() - itemDate.getTime();
+              const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+              if (dateMode === "1_DAY" && diffDays > 1) return false;
+              if (dateMode === "1_WEEK" && diffDays > 7) return false;
+              if (dateMode === "1_MONTH" && diffDays > 30) return false;
+              if (dateMode === "1_YEAR" && diffDays > 365) return false;
+            }
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        // Handle sorting from 2-Level Filter Pill
+        if (selectedFilterColumn === "produk") {
+          if (filterColumnValue === "ASC") return a.produk.localeCompare(b.produk);
+          if (filterColumnValue === "DESC") return b.produk.localeCompare(a.produk);
+        }
+        if (selectedFilterColumn === "target") {
+          if (filterColumnValue === "NUM_DESC") return b.target - a.target;
+          if (filterColumnValue === "NUM_ASC") return a.target - b.target;
+        }
+        if (selectedFilterColumn === "totalNilai") {
+          if (filterColumnValue === "NUM_DESC") return b.totalNilai - a.totalNilai;
+          if (filterColumnValue === "NUM_ASC") return a.totalNilai - b.totalNilai;
+        }
+
+        // Handle Header Click Sorting
+        if (!sortColumn) return 0;
+        const dir = sortDirection === "asc" ? 1 : -1;
+
+        switch (sortColumn) {
+          case "wo":
+            return dir * a.wo.localeCompare(b.wo);
+          case "produk":
+            return dir * a.produk.localeCompare(b.produk);
+          case "klien":
+            return dir * a.klien.localeCompare(b.klien);
+          case "stage":
+            return dir * a.stage.localeCompare(b.stage);
+          case "pic":
+            return dir * a.pic.localeCompare(b.pic);
+          case "target":
+            return dir * (a.target - b.target);
+          case "totalNilai":
+            return dir * (a.totalNilai - b.totalNilai);
+          case "updatedAt":
+            return dir * a.updatedAt.localeCompare(b.updatedAt);
+          default:
+            return 0;
+        }
+      });
+  }, [
+    workOrders,
+    selectedKpiFilter,
+    searchQuery,
+    selectedFilterColumn,
+    filterColumnValue,
+    dateMode,
+    startDate,
+    endDate,
+    sortColumn,
+    sortDirection,
+  ]);
+
+  // Header sort toggle handler
+  const handleHeaderSortToggle = (colKey: string) => {
+    if (sortColumn === colKey) {
+      if (sortDirection === "asc") setSortDirection("desc");
+      else {
+        setSortColumn(null);
+        setSortDirection("asc");
       }
-      return true;
-    });
-  }, [activeTab, stageFilter, searchQuery, selectedKpiFilter]);
+    } else {
+      setSortColumn(colKey);
+      setSortDirection("asc");
+    }
+  };
 
-  // Bulk Select Toggle
+  // Row selection handler
   const toggleSelectAll = () => {
-    if (selectedRowIds.length === filteredData.length) {
+    if (selectedRowIds.length === filteredAndSortedData.length) {
       setSelectedRowIds([]);
     } else {
-      setSelectedRowIds(filteredData.map((item) => item.id));
+      setSelectedRowIds(filteredAndSortedData.map((item) => item.id));
     }
   };
 
   const toggleSelectRow = (id: string) => {
     setSelectedRowIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const resetAllFilters = () => {
-    setActiveTab("WORK ORDERS");
-    setSearchQuery("");
-    setStageFilter("ALL");
-    setSelectedKpiFilter(null);
+  // CRUD Operations
+  const handleDeleteWo = (id: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus Work Order ini?")) {
+      setWorkOrders((prev) => prev.filter((item) => item.id !== id));
+      if (inspectingWo?.id === id) setInspectingWo(null);
+    }
   };
 
-  const isFilterActive = searchQuery !== "" || stageFilter !== "ALL" || selectedKpiFilter !== null || activeTab !== "WORK ORDERS";
+  const handleOpenEditModal = (wo: WorkOrder) => {
+    setEditingWo({ ...wo });
+  };
+
+  const handleSaveEditedWo = () => {
+    if (!editingWo) return;
+    setWorkOrders((prev) =>
+      prev.map((item) => (item.id === editingWo.id ? editingWo : item))
+    );
+    setEditingWo(null);
+  };
+
+  const handleCreateNewWo = () => {
+    const newWoItem: WorkOrder = {
+      id: String(Date.now()),
+      wo: `WO-${new Date().getFullYear().toString().slice(-2)}08-0${workOrders.length + 1}`,
+      refPo: "-",
+      produk: `${newBrandName} Special Formula`,
+      klien: newClientName,
+      category: "Skincare",
+      stage: "Pending Review",
+      progressPercent: 0,
+      progressColor: "bg-slate-400",
+      pic: "Budi Santoso",
+      picInitial: "B",
+      target: newMoq,
+      hpp: newHpp,
+      totalNilai: calculatedNilai,
+      updatedAt: `${new Date().toLocaleDateString("id-ID")} ${new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`,
+      line: "Line A — Main Packaging",
+      notes: "Work order baru terdaftar.",
+    };
+    setWorkOrders((prev) => [newWoItem, ...prev]);
+    setIsCreateModalOpen(false);
+  };
 
   return (
     <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
-      {/* ── TOP SYSTEM ALERT BANNER ── */}
-      {isAlertOpen && (
-        <div className="bg-[#FEF9C3] border border-[#FEF08A] rounded-xl px-4 py-3 flex justify-between items-center gap-3 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <span className="p-1.5 bg-[#FEF08A] text-[#854D0E] rounded-lg font-bold flex items-center justify-center shrink-0">
-              <AlertCircle className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-[10px] font-bold text-[#854D0E] uppercase tracking-wider leading-none">SYSTEM SYNC ALERT</p>
-              <p className="text-[12px] text-[#854D0E]/90 leading-tight font-medium mt-0.5">
-                Attention: SCM database undergoing indexing sync. Table records might lag up to 5 seconds.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsAlertOpen(false)}
-            className="p-1 hover:bg-amber-100/50 text-[#854D0E] rounded-lg transition-all border-none bg-transparent cursor-pointer shrink-0"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      {/* ── 01. MODULAR PAGE HEADER ── */}
+      <DnaPageHeader
+        backLink={{ href: "/dna-visual", label: "Kembali ke Visual DNA Specs" }}
+        title="WORK ORDERS & PRODUCTION"
+        tabs={[
+          {
+            key: "WORK_ORDERS",
+            label: "Work Orders",
+            count: workOrders.length,
+            icon: <FileText className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "ANALYTICS",
+            label: "Analytics",
+            icon: <BarChart3 className="w-3.5 h-3.5" />,
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(k) => setActiveTab(k as "WORK_ORDERS" | "ANALYTICS")}
+      />
 
-      {/* ── ULTRA-CLEAN OPERATIONAL HEADER (UN-BOXED) ── */}
-      <div>
-        <Link
-          href="/dna-visual"
-          className="text-[12px] font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1.5 text-decoration-none mb-1 w-fit transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Visual DNA Specs
-        </Link>
-        <h1 className="text-[32px] leading-[40px] font-bold text-slate-900 tracking-tight">
-          WORK ORDERS & PRODUCTION
-        </h1>
-      </div>
+      {/* ── 02. MODULAR 4 KPI METRIC CARDS ── */}
+      <DnaKpiGrid
+        cards={[
+          {
+            key: "OMSET",
+            title: "TOTAL OMSET",
+            value: "Rp 278,75 Jt",
+            deltaText: "+14% vs minggu lalu",
+            isDeltaPositive: true,
+            icon: "$",
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: selectedKpiFilter === "OMSET",
+            onClick: () => setSelectedKpiFilter(selectedKpiFilter === "OMSET" ? null : "OMSET"),
+          },
+          {
+            key: "APPROVED",
+            title: "SAMPLE APPROVED",
+            value: "148 Batch",
+            deltaText: "+9.2% vs target",
+            isDeltaPositive: true,
+            icon: <CheckCircle2 className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+            isSelected: selectedKpiFilter === "APPROVED",
+            onClick: () => setSelectedKpiFilter(selectedKpiFilter === "APPROVED" ? null : "APPROVED"),
+          },
+          {
+            key: "PENDING",
+            title: "PENDING REVIEW",
+            value: "12 Formulasi",
+            deltaText: "3 butuh revisi",
+            isDeltaPositive: false,
+            icon: <AlertTriangle className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
+            isSelected: selectedKpiFilter === "PENDING",
+            onClick: () => setSelectedKpiFilter(selectedKpiFilter === "PENDING" ? null : "PENDING"),
+          },
+          {
+            key: "EFFICIENCY",
+            title: "RATA-RATA EFISIENSI",
+            value: "94.2%",
+            deltaText: "+2.1% dari kuartal lalu",
+            isDeltaPositive: true,
+            icon: <Sparkles className="w-4 h-4" />,
+            iconBg: "bg-sky-50",
+            iconColor: "text-sky-600",
+            isSelected: selectedKpiFilter === "EFFICIENCY",
+            onClick: () => setSelectedKpiFilter(selectedKpiFilter === "EFFICIENCY" ? null : "EFFICIENCY"),
+          },
+        ]}
+      />
 
-      {/* ── 05. SIMPLIFIED 3-LAYER KPI METRIC CARDS (Exact Rhythm: 24px Gap from Header) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
-        {/* Card 1: Omset (1 Label + 1 Value + 1 Supporting Micro-Metric) */}
-        <div
-          onClick={() => setSelectedKpiFilter(selectedKpiFilter === "OMSET" ? null : "OMSET")}
-          className={cn(
-            "border rounded-xl p-3.5 bg-blue-50/20 shadow-2xs flex flex-col justify-between h-[104px] cursor-pointer transition-all hover:border-blue-300",
-            selectedKpiFilter === "OMSET" ? "ring-2 ring-blue-500 border-blue-400 bg-blue-50/50" : "border-blue-100/80"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-normal text-slate-600">Total Omset</span>
-            <div className="w-6.5 h-6.5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[12px] font-bold">
-              $
-            </div>
-          </div>
-          <div>
-            <p className="text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums">Rp 279 Jt</p>
-            <p className="text-[11px] font-semibold text-emerald-600 flex items-center gap-0.5">
-              <TrendingUp className="w-3 h-3" /> +14% vs minggu lalu
-            </p>
-          </div>
-        </div>
-
-        {/* Card 2: Sample Approved */}
-        <div
-          onClick={() => setSelectedKpiFilter(selectedKpiFilter === "APPROVED" ? null : "APPROVED")}
-          className={cn(
-            "border rounded-xl p-3.5 bg-emerald-50/30 shadow-2xs flex flex-col justify-between h-[104px] cursor-pointer transition-all hover:border-emerald-300",
-            selectedKpiFilter === "APPROVED" ? "ring-2 ring-emerald-500 border-emerald-400 bg-emerald-50/60" : "border-emerald-100/80"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-normal text-slate-600">Sample Approved</span>
-            <div className="w-6.5 h-6.5 rounded-full bg-emerald-100/70 text-emerald-700 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <p className="text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums">1</p>
-            <p className="text-[11px] text-slate-500 font-normal">Yield 94% • Rilis APJ</p>
-          </div>
-        </div>
-
-        {/* Card 3: Pending Review */}
-        <div
-          onClick={() => setSelectedKpiFilter(selectedKpiFilter === "PENDING" ? null : "PENDING")}
-          className={cn(
-            "border rounded-xl p-3.5 bg-amber-50/30 shadow-2xs flex flex-col justify-between h-[104px] cursor-pointer transition-all hover:border-amber-300",
-            selectedKpiFilter === "PENDING" ? "ring-2 ring-amber-500 border-amber-400 bg-amber-50/60" : "border-amber-100/80"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-normal text-slate-600">Pending Review</span>
-            <div className="w-6.5 h-6.5 rounded-full bg-amber-100/70 text-amber-700 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <p className="text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums">2</p>
-            <p className="text-[11px] text-slate-500 font-normal">Dalam Antrean Review</p>
-          </div>
-        </div>
-
-        {/* Card 4: Aktif Mixing */}
-        <div
-          onClick={() => setSelectedKpiFilter(selectedKpiFilter === "DISPATCH" ? null : "DISPATCH")}
-          className={cn(
-            "border rounded-xl p-3.5 bg-rose-50/30 shadow-2xs flex flex-col justify-between h-[104px] cursor-pointer transition-all hover:border-rose-300",
-            selectedKpiFilter === "DISPATCH" ? "ring-2 ring-rose-500 border-rose-400 bg-rose-50/60" : "border-rose-100/80"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium text-rose-700">Aktif Mixing</span>
-            <div className="w-6.5 h-6.5 rounded-full bg-rose-100/70 text-rose-700 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <p className="text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums">2</p>
-            <p className="text-[11px] text-rose-600 font-medium">Lini Tank 01 & 02 Running</p>
-          </div>
+      {/* ── 03. INTERACTIVE STATE DEMO SELECTOR (Preview states) ── */}
+      <div className="flex items-center gap-2 text-[12px] text-slate-500 bg-white border border-slate-200/90 rounded-xl p-2.5 shadow-2xs">
+        <SlidersHorizontal className="w-4 h-4 text-blue-600 shrink-0" />
+        <span className="font-semibold text-slate-700">Preview State Tabel:</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {(["NONE", "EMPTY", "LOADING", "ERROR"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setShowStateDemo(mode)}
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer",
+                showStateDemo === mode
+                  ? "bg-blue-50 text-blue-700 border-blue-300"
+                  : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+              )}
+            >
+              {mode === "NONE" && "Normal (Live Data)"}
+              {mode === "EMPTY" && "Empty State"}
+              {mode === "LOADING" && "Loading State"}
+              {mode === "ERROR" && "Error State"}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ── 3-LAYER STRUCTURAL HIERARCHY (Exact Rhythm: 22px Gap from KPI) ── */}
-      <div className="space-y-[18px] mt-[22px]">
-        {/* LAYER 1: BORDERED TAB NAV CONTAINER */}
-        <div className="bg-white border border-slate-200 rounded-xl p-1 shadow-2xs h-[46px] flex items-center gap-1 overflow-x-auto">
-          {TABS_CONFIG.map((tab) => {
-            const IconComponent = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "h-[38px] px-4 rounded-lg text-[12px] font-semibold transition-all shrink-0 cursor-pointer border-none flex items-center gap-2",
-                  isActive
-                    ? "bg-blue-600 text-white shadow-2xs"
-                    : "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                )}
-              >
-                <IconComponent className={cn("w-4 h-4", isActive ? "text-white" : "text-slate-400")} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── SPECIAL ANALYTICS DASHBOARD VIEW (WHEN ANALYTICS TAB IS ACTIVE) ── */}
-        {activeTab === "ANALYTICS" ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-5 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-[18px] font-bold text-slate-900">Production Yield & Operational Analytics</h3>
-                <p className="text-[12px] text-slate-500">Real-time batch yield, OEE machine efficiency, and stage distribution</p>
-              </div>
-              <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                <Activity className="w-3.5 h-3.5 text-emerald-600" /> LIVE OEE 94.2%
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              {/* Yield Line / Bar Chart */}
-              <div className="lg:col-span-8 border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="font-bold text-[13px] text-slate-900">Tren Daily Target vs Actual Yield (Pcs x 1000)</p>
-                  <span className="text-[11px] text-slate-400 font-mono">Minggu 34 — Agustus 2026</span>
-                </div>
-
-                {/* SVG Visual Chart */}
-                <div className="h-44 w-full pt-4 relative">
-                  <svg className="w-full h-full overflow-visible" viewBox="0 0 500 120">
-                    <line x1="0" y1="20" x2="500" y2="20" stroke="#E2E8F0" strokeDasharray="3 3" />
-                    <line x1="0" y1="60" x2="500" y2="60" stroke="#E2E8F0" strokeDasharray="3 3" />
-                    <line x1="0" y1="100" x2="500" y2="100" stroke="#E2E8F0" strokeDasharray="3 3" />
-
-                    <polyline fill="none" stroke="#94A3B8" strokeWidth="2" strokeDasharray="4 4" points="10,40 80,35 150,50 220,30 290,25 360,45 430,30 490,20" />
-                    <polyline fill="none" stroke="#2563EB" strokeWidth="3" points="10,45 80,30 150,42 220,25 290,15 360,35 430,22 490,12" />
-
-                    {[[10, 45], [80, 30], [150, 42], [220, 25], [290, 15], [360, 35], [430, 22], [490, 12]].map(([x, y], idx) => (
-                      <circle key={idx} cx={x} cy={y} r="4" fill="#2563EB" stroke="#FFFFFF" strokeWidth="2" />
-                    ))}
-                  </svg>
-
-                  <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-2">
-                    <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Ming</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 text-[11px] pt-2 border-t border-slate-200">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 bg-blue-600 rounded-sm inline-block" />
-                    <span className="font-semibold text-slate-800">Actual Output Yield</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-slate-400 inline-block" />
-                    <span className="text-slate-500">Target Plan (MOQ)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Machine OEE */}
-              <div className="lg:col-span-4 space-y-3">
-                <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 space-y-2.5">
-                  <p className="font-bold text-[12px] text-slate-900 uppercase">Machine OEE Gauges</p>
-                  <div className="space-y-2 text-[12px]">
-                    <div>
-                      <div className="flex justify-between text-[11px] mb-1">
-                        <span className="text-slate-600 font-medium">Overall Availability</span>
-                        <span className="font-bold text-slate-900">98.4%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full rounded-full w-[98.4%]" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-[11px] mb-1">
-                        <span className="text-slate-600 font-medium">Performance Efficiency</span>
-                        <span className="font-bold text-slate-900">94.1%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div className="bg-blue-600 h-full rounded-full w-[94.1%]" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-[11px] mb-1">
-                        <span className="text-slate-600 font-medium">Quality Release Rate</span>
-                        <span className="font-bold text-slate-900">99.2%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div className="bg-teal-500 h-full rounded-full w-[99.2%]" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-blue-600" />
-                    <span className="text-[12px] font-bold text-slate-900">Lini Tank 01 & 02</span>
-                  </div>
-                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold">OPERATIONAL</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* LAYER 2: TOOLBAR FILTER & SINGLE ACTION BUTTON (Exact Rhythm: 16px Gap from Tabs) */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
-              <div className="flex flex-wrap items-center gap-2.5 flex-1">
-                <div className="relative min-w-[220px] flex-1 max-w-[280px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari WO / Produk / Klien..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 h-9 text-[12px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                  />
-                </div>
-
-                <select
-                  value={stageFilter}
-                  onChange={(e) => setStageFilter(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-[12px] text-slate-700 cursor-pointer focus:outline-none focus:bg-white"
-                >
-                  <option value="ALL">Semua Stage</option>
-                  <option value="FINISHED_GOODS">FINISHED_GOODS</option>
-                  <option value="MIXING">MIXING</option>
-                  <option value="WAITING_MATERIAL">WAITING_MATERIAL</option>
-                  <option value="PENDING_REVIEW">PENDING_REVIEW</option>
-                </select>
-
-                <div className="relative">
-                  <input
-                    type="text"
-                    defaultValue="01/08/2026 - 31/08/2026"
-                    className="bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 h-9 text-[12px] text-slate-700"
-                  />
-                  <Calendar className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                </div>
-
-                {/* RESET FILTER INDICATOR */}
-                {isFilterActive && (
-                  <button
-                    onClick={resetAllFilters}
-                    className="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 border-none cursor-pointer transition-all"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> Reset Filter
-                  </button>
-                )}
-              </div>
-
-              {/* SINGLE PRIMARY ACTION BUTTON FOR ENTIRE PAGE */}
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all border-none"
-              >
-                <Plus className="w-4 h-4" /> Tambah Work Order
-              </button>
-            </div>
-
-            {/* STICKY BULK ACTIONS BAR */}
-            {selectedRowIds.length > 0 && (
-              <div className="bg-slate-900 text-white rounded-xl p-3 px-4 flex items-center justify-between shadow-md text-[12px] animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-blue-400" />
-                  <span className="font-semibold">{selectedRowIds.length} Work Order terpilih</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="h-8 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium flex items-center gap-1.5 border border-slate-700 cursor-pointer">
-                    <Download className="w-3.5 h-3.5" /> Export PDF
-                  </button>
-                  <button className="h-8 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium flex items-center gap-1.5 border border-slate-700 cursor-pointer">
-                    <Layers className="w-3.5 h-3.5" /> Ubah Stage Batch
-                  </button>
-                  <button className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium flex items-center gap-1.5 border-none cursor-pointer">
-                    <Trash2 className="w-3.5 h-3.5" /> Hapus
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* LAYER 3: CANONICAL DATA TABLE WITH VISUAL PROGRESS BARS (Exact Rhythm: 18px Gap from Toolbar) */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/90 border-b border-slate-200 text-[12px] leading-[16px] font-semibold text-slate-700 h-[40px]">
-                      <th className="py-2.5 px-3 w-10 text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedRowIds.length === filteredData.length && filteredData.length > 0}
-                          onChange={toggleSelectAll}
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                      </th>
-                      <th className="py-2.5 px-3.5">WO</th>
-                      <th className="py-2.5 px-3.5">PRODUK</th>
-                      <th className="py-2.5 px-3.5">KLIEN</th>
-                      <th className="py-2.5 px-3.5">STAGE</th>
-                      <th className="py-2.5 px-3.5">PROGRESS BATCH</th>
-                      <th className="py-2.5 px-3.5 text-right">TARGET (PCS)</th>
-                      <th className="py-2.5 px-3.5 text-right">NILAI (RP)</th>
-                      <th className="py-2.5 px-3.5">UPDATED AT</th>
-                      <th className="py-2.5 px-3.5 text-center w-12">AKSI</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-[12px] leading-[18px]">
-                    {filteredData.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="py-12 text-center text-slate-400">
-                          <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="font-semibold text-slate-600">Tidak ada Work Order yang sesuai filter</p>
-                          <p className="text-[11px] mt-0.5">Coba ubah kata kunci pencarian atau reset filter</p>
-                          <button
-                            onClick={resetAllFilters}
-                            className="mt-3 h-8 px-3 bg-blue-50 text-blue-600 rounded-lg text-[12px] font-semibold border-none cursor-pointer"
-                          >
-                            Reset Filter
-                          </button>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredData.map((item) => (
-                        <tr
-                          key={item.id}
-                          className={cn(
-                            "hover:bg-slate-50/80 transition-colors h-[42px]",
-                            selectedRowIds.includes(item.id) && "bg-blue-50/30"
-                          )}
-                        >
-                          <td className="py-2 px-3 text-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedRowIds.includes(item.id)}
-                              onChange={() => toggleSelectRow(item.id)}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            />
-                          </td>
-
-                          {/* WO Identifier: Click opens Inspection Drawer */}
-                          <td className="py-2 px-3.5">
-                            <button
-                              onClick={() => setInspectingWo(item)}
-                              className="font-semibold text-blue-600 hover:text-blue-800 text-left border-none bg-transparent cursor-pointer"
-                            >
-                              {item.wo}
-                            </button>
-                          </td>
-
-                          <td className="py-2 px-3.5 text-slate-800 font-medium">{item.produk}</td>
-                          <td className="py-2 px-3.5 text-slate-600 font-normal">{item.klien}</td>
-                          <td className="py-2 px-3.5">
-                            <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider", item.stageStyle)}>
-                              {item.stage}
-                            </span>
-                          </td>
-
-                          {/* VISUAL PROGRESS METER */}
-                          <td className="py-2 px-3.5 min-w-[140px]">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div
-                                  className={cn(
-                                    "h-full rounded-full transition-all",
-                                    item.progressPercent === 100 ? "bg-emerald-500" : item.progressPercent > 50 ? "bg-blue-600" : "bg-amber-500"
-                                  )}
-                                  style={{ width: `${item.progressPercent}%` }}
-                                />
-                              </div>
-                              <span className="text-[11px] font-mono text-slate-500 w-8 text-right">{item.progressPercent}%</span>
-                            </div>
-                          </td>
-
-                          <td className="py-2 px-3.5 text-right font-medium text-slate-900 tabular-nums">
-                            {item.target.toLocaleString("id-ID")}
-                          </td>
-                          <td className="py-2 px-3.5 text-right font-medium text-slate-900 tabular-nums">
-                            Rp {item.totalNilai.toLocaleString("id-ID")}
-                          </td>
-                          <td className="py-2 px-3.5 text-slate-500 font-normal text-[12px]">{item.updatedAt}</td>
-
-                          {/* ROW ACTION MENU */}
-                          <td className="py-2 px-3.5 text-center relative">
-                            <button
-                              onClick={() => setOpenActionMenuId(openActionMenuId === item.id ? null : item.id)}
-                              className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md border-none bg-transparent cursor-pointer transition-colors"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-
-                            {/* Action Menu Dropdown */}
-                            {openActionMenuId === item.id && (
-                              <div className="absolute right-3 top-9 z-30 bg-white border border-slate-200 rounded-xl shadow-lg w-40 p-1 text-left text-[12px] space-y-0.5">
-                                <button
-                                  onClick={() => {
-                                    setInspectingWo(item);
-                                    setOpenActionMenuId(null);
-                                  }}
-                                  className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 border-none bg-transparent cursor-pointer"
-                                >
-                                  <Eye className="w-3.5 h-3.5 text-slate-400" /> Inspeksi Detail
-                                </button>
-                                <button
-                                  onClick={() => setOpenActionMenuId(null)}
-                                  className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 border-none bg-transparent cursor-pointer"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5 text-slate-400" /> Edit Batch
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* PAGINATION FOOTER */}
-              <div className="flex flex-wrap items-center justify-between gap-3 text-[12px] text-slate-500 pt-0.5">
-                <span>Menampilkan 1–{filteredData.length} dari {INITIAL_WORK_ORDERS.length} data</span>
-                <div className="flex items-center gap-3">
-                  <select className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-[12px] text-slate-700">
-                    <option>10 / page</option>
-                    <option>25 / page</option>
-                    <option>50 / page</option>
-                  </select>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 border-none bg-transparent cursor-pointer"><ChevronsLeft className="w-4 h-4" /></button>
-                    <button className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 border-none bg-transparent cursor-pointer"><ChevronLeft className="w-4 h-4" /></button>
-                    <button className="w-7 h-7 rounded-lg bg-blue-600 text-white font-semibold text-[12px] flex items-center justify-center border-none">1</button>
-                    <button className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-700 text-[12px] flex items-center justify-center border-none bg-transparent">2</button>
-                    <button className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 border-none bg-transparent cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
-                    <button className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 border-none bg-transparent cursor-pointer"><ChevronsRight className="w-4 h-4" /></button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* ── OWNER INSIGHT & OPERATIONAL RELEASE CALLOUT ── */}
-      <div className="p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-start gap-2.5 text-[12px] text-emerald-950 mt-6">
-        <Sparkles className="w-4.5 h-4.5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-bold text-emerald-800 text-[11px] uppercase tracking-wider">💡 OWNER INSIGHT & OPERATIONAL RELEASE</p>
-          <p className="text-emerald-900 mt-0.5 font-medium">
-            Progress finished goods bulan ini mencatatkan efisiensi 94% pada lini produksi utama. Sebanyak 12 batch sample disetujui tanpa revisi teknis oleh APJ.
-          </p>
-        </div>
-      </div>
-
-      {/* ════════════════════════════════════════════════════════════════════
-          TECHNICAL SPECIFICATIONS REFERENCE SECTIONS (RENDERED BELOW MAIN VIEW)
-          For Developers & Designers to benchmark UI Patterns & Complex States
-      ════════════════════════════════════════════════════════════════════ */}
-      <div className="pt-10 border-t-2 border-slate-200/80 mt-12 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="px-2.5 py-0.5 bg-slate-900 text-white rounded text-[10px] font-bold uppercase tracking-wider">
-              TECHNICAL BENCHMARK SPECIFICATIONS
-            </span>
-            <h2 className="text-[20px] font-bold text-slate-900 mt-1">
-              Operational UI Patterns & UI States Reference
-            </h2>
-            <p className="text-[12px] text-slate-500">
-              Interactive reference for developer implementations: Form drawers, empty states, loading skeletons, and error retry patterns.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {(["NONE", "EMPTY", "LOADING", "ERROR"] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setShowStateDemo(mode)}
-                className={cn(
-                  "h-8 px-3 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer",
-                  showStateDemo === mode
-                    ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                )}
-              >
-                {mode === "NONE" ? "Standard View" : `${mode} State`}
-              </button>
+      {/* ── 04. MODULAR DATA TABLE CARD (Toolbar + Table + Pagination) ── */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari WO / Produk / Klien...",
+          filterColumns: [
+            {
+              key: "stage",
+              label: "Stage (Status)",
+              type: "select",
+              options: ["Finished Goods", "Mixing", "Waiting Material", "Pending Review"],
+            },
+            {
+              key: "klien",
+              label: "Klien",
+              type: "select",
+              options: uniqueClients,
+            },
+            {
+              key: "produk",
+              label: "Produk",
+              type: "sort_alpha",
+            },
+            {
+              key: "pic",
+              label: "PIC Produksi",
+              type: "select",
+              options: uniquePics,
+            },
+            {
+              key: "target",
+              label: "Target (Pcs)",
+              type: "sort_numeric",
+            },
+            {
+              key: "totalNilai",
+              label: "Nilai (Rp)",
+              type: "sort_numeric",
+            },
+          ],
+          selectedColumn: selectedFilterColumn,
+          onSelectColumn: (col) => setSelectedFilterColumn(col as FilterColumnType),
+          filterValue: filterColumnValue,
+          onFilterValueChange: setFilterColumnValue,
+          enableDateFilter: true,
+          dateMode,
+          onDateModeChange: setDateMode,
+          startDate,
+          onStartDateChange: setStartDate,
+          endDate,
+          onEndDateChange: setEndDate,
+          actionButton: {
+            label: "Tambah Work Order",
+            onClick: () => setIsCreateModalOpen(true),
+          },
+        }}
+        paginationProps={{
+          currentPage: 1,
+          totalPages: 1,
+          totalEntries: filteredAndSortedData.length,
+          pageSize: 10,
+          onPageChange: () => {},
+        }}
+      >
+        {showStateDemo === "LOADING" ? (
+          <div className="p-8 space-y-3">
+            {[1, 2, 3, 4, 5].map((idx) => (
+              <div key={idx} className="h-10 bg-slate-100 rounded-xl animate-pulse" />
             ))}
           </div>
-        </div>
-
-        {/* DEMO INTERACTIVE STATE CONTAINERS */}
-        {showStateDemo === "EMPTY" && (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center space-y-3 shadow-2xs animate-in fade-in duration-150">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-              <FolderOpen className="w-6 h-6" />
+        ) : showStateDemo === "ERROR" ? (
+          <div className="p-12 text-center space-y-3">
+            <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
             </div>
-            <h4 className="font-bold text-[16px] text-slate-900">Belum Ada Data Work Order</h4>
-            <p className="text-[12px] text-slate-500 max-w-sm mx-auto">
-              Sistem tidak menemukan catatan Work Order di lini produksi ini. Buat Work Order baru untuk memulai alur kerja.
+            <p className="font-bold text-slate-800 text-[14px]">Gagal Memuat Data Work Order</p>
+            <p className="text-slate-500 text-[12px] max-w-md mx-auto">
+              Terjadi kendala saat menyinkronkan data dengan ERP Core. Silakan coba muat ulang.
             </p>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-semibold shadow-2xs border-none cursor-pointer"
-            >
-              + Tambah Work Order Pertama
-            </button>
-          </div>
-        )}
-
-        {showStateDemo === "LOADING" && (
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-2xs animate-pulse">
-            <div className="h-4 bg-slate-200 rounded w-1/4 mb-4" />
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-10 bg-slate-100 rounded-lg w-full" />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showStateDemo === "ERROR" && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 flex items-start justify-between gap-4 text-rose-900 shadow-2xs">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-[14px]">Gagal Memuat Data Production Ledger</h4>
-                <p className="text-[12px] text-rose-700 mt-0.5">
-                  Koneksi ke node SCM terputus (HTTP 504 Gateway Timeout). Silakan periksa jaringan internal dan coba lagi.
-                </p>
-              </div>
-            </div>
             <button
               onClick={() => setShowStateDemo("NONE")}
-              className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[12px] font-semibold border-none cursor-pointer shrink-0 flex items-center gap-1.5"
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl text-[12px] font-semibold border-none cursor-pointer"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Coba Lagi
+              Coba Lagi
             </button>
           </div>
+        ) : (
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                {/* Select All Checkbox */}
+                <th className="p-3.5 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      filteredAndSortedData.length > 0 &&
+                      selectedRowIds.length === filteredAndSortedData.length
+                    }
+                    onChange={toggleSelectAll}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
+
+                {/* # */}
+                <th className="p-3.5 w-10 text-slate-400">#</th>
+
+                {/* WO ↕ */}
+                <th
+                  className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                  onClick={() => handleHeaderSortToggle("wo")}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span>WO #</span>
+                    {sortColumn === "wo" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* REF. PO */}
+                <th className="p-3.5 min-w-[110px]">REF. PO</th>
+
+                {/* PRODUK ↕ */}
+                <th
+                  className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[190px]"
+                  onClick={() => handleHeaderSortToggle("produk")}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span>PRODUK</span>
+                    {sortColumn === "produk" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* KLIEN ↕ */}
+                <th
+                  className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
+                  onClick={() => handleHeaderSortToggle("klien")}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span>KLIEN</span>
+                    {sortColumn === "klien" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* STAGE ↕ */}
+                <th
+                  className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[110px]"
+                  onClick={() => handleHeaderSortToggle("stage")}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span>STAGE</span>
+                    {sortColumn === "stage" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* PROGRESS BATCH */}
+                <th className="p-3.5 min-w-[120px]">PROGRESS BATCH</th>
+
+                {/* PIC ↕ */}
+                <th
+                  className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                  onClick={() => handleHeaderSortToggle("pic")}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span>PIC</span>
+                    {sortColumn === "pic" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* TARGET (PCS) */}
+                <th
+                  className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap"
+                  onClick={() => handleHeaderSortToggle("target")}
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <span>TARGET (PCS)</span>
+                    {sortColumn === "target" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-blue-600" /> : <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* NILAI (RP) */}
+                <th
+                  className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap min-w-[130px]"
+                  onClick={() => handleHeaderSortToggle("totalNilai")}
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <span>NILAI (RP)</span>
+                    {sortColumn === "totalNilai" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-blue-600" /> : <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* UPDATED AT */}
+                <th
+                  className="p-3.5 cursor-pointer hover:bg-slate-100/60 whitespace-nowrap"
+                  onClick={() => handleHeaderSortToggle("updatedAt")}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span>UPDATED AT</span>
+                    {sortColumn === "updatedAt" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-blue-600" /> : <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                    ) : (
+                      <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </div>
+                </th>
+
+                {/* CATATAN */}
+                <th className="p-3.5 font-bold min-w-[140px]">CATATAN</th>
+
+                {/* AKSI */}
+                <th className="p-3.5 text-center font-bold w-20 whitespace-nowrap">AKSI</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {showStateDemo === "EMPTY" || filteredAndSortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={14} className="p-10 text-center text-slate-400">
+                    Tidak ada Work Order yang sesuai dengan kriteria filter saat ini.
+                  </td>
+                </tr>
+              ) : (
+                filteredAndSortedData.map((wo, index) => {
+                  const isSelected = selectedRowIds.includes(wo.id);
+                  return (
+                    <tr
+                      key={wo.id}
+                      className={cn(
+                        "hover:bg-slate-50/80 transition-colors group",
+                        isSelected && "bg-blue-50/30"
+                      )}
+                    >
+                      {/* Checkbox */}
+                      <td className="p-3.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectRow(wo.id)}
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </td>
+
+                      {/* # */}
+                      <td className="p-3.5 text-slate-400 tabular-nums">{index + 1}</td>
+
+                      {/* WO # (DnaCell.Code) */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <DnaCell.Code
+                          value={wo.wo}
+                          onClick={() => setInspectingWo(wo)}
+                        />
+                      </td>
+
+                      {/* REF. PO */}
+                      <td className="p-3.5 text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                        {wo.refPo}
+                      </td>
+
+                      {/* PRODUK (DnaCell.Text - wraps downwards naturally, no dots) */}
+                      <td className="p-3.5">
+                        <DnaCell.Text primary={wo.produk} />
+                      </td>
+
+                      {/* KLIEN (DnaCell.Text - wraps downwards naturally) */}
+                      <td className="p-3.5">
+                        <DnaCell.Text primary={wo.klien} />
+                      </td>
+
+                      {/* STAGE (DnaCell.Badge - Soft Pill, Title Case, No Underscore) */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <DnaCell.Badge status={wo.stage} />
+                      </td>
+
+                      {/* PROGRESS BATCH (DnaCell.Progress - Bar and % only) */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <DnaCell.Progress
+                          value={wo.progressPercent}
+                          colorClass={wo.progressColor}
+                        />
+                      </td>
+
+                      {/* PIC (DnaCell.Avatar) */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <DnaCell.Avatar
+                          name={wo.pic}
+                          initial={wo.picInitial}
+                          avatarBg="bg-blue-50 text-blue-700"
+                        />
+                      </td>
+
+                      {/* TARGET (DnaCell.Number - tabular-nums text-right) */}
+                      <td className="p-3.5">
+                        <DnaCell.Number value={wo.target} />
+                      </td>
+
+                      {/* NILAI (DnaCell.Currency - Guaranteed 1 single line) */}
+                      <td className="p-3.5">
+                        <DnaCell.Currency value={wo.totalNilai} />
+                      </td>
+
+                      {/* UPDATED AT (DnaCell.Date) */}
+                      <td className="p-3.5">
+                        <DnaCell.Date value={wo.updatedAt} />
+                      </td>
+
+                      {/* CATATAN */}
+                      <td className="p-3.5 text-slate-500 break-words whitespace-normal max-w-[180px] text-[11px] leading-snug">
+                        {wo.notes}
+                      </td>
+
+                      {/* AKSI (DnaCell.Actions - CRUD View, Edit, Delete) */}
+                      <td className="p-3.5 text-center whitespace-nowrap">
+                        <DnaCell.Actions
+                          onView={() => setInspectingWo(wo)}
+                          onEdit={() => handleOpenEditModal(wo)}
+                          onDelete={() => handleDeleteWo(wo.id)}
+                          viewTitle="Lihat Detail Inspeksi"
+                          editTitle="Edit Work Order"
+                          deleteTitle="Hapus Work Order"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         )}
+      </DnaDataTableCard>
 
-        {/* SPACING & RADIUS DEMONSTRATION WIDGET */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="font-bold text-[12px] text-slate-900 uppercase tracking-wider">
-              Live Spacing & Radius Scale Applied On Page
-            </p>
-            <span className="text-[11px] font-mono text-slate-400">Canonical Main Radius: 12px | Base Rhythm: 4px</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px] text-slate-600">
-            <div className="p-2 border border-slate-200 rounded-[12px] bg-slate-50 text-center">
-              <span className="font-semibold text-slate-800">12px Main Radius:</span> Cards, Inputs, Tables
-            </div>
-            <div className="p-2 border border-slate-200 rounded-[8px] bg-slate-50 text-center">
-              <span className="font-semibold text-slate-800">8-10px Radius:</span> Inner Active Tabs
-            </div>
-            <div className="p-2 border border-slate-200 rounded-[6px] bg-slate-50 text-center">
-              <span className="font-semibold text-slate-800">6px Radius:</span> Status Badges & Pills
-            </div>
-            <div className="p-2 border border-slate-200 rounded-[16px] bg-slate-50 text-center">
-              <span className="font-semibold text-slate-800">16px Radius:</span> Modal & Drawer Containers
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 10. DETAIL INSPECTION SLIDE-OVER DRAWER ── */}
+      {/* ── 05. INSPECTION DRAWER (VIEW) ── */}
       {inspectingWo && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex justify-end animate-in fade-in duration-150">
-          <div className="bg-white border-l border-slate-200 w-full max-w-md h-full p-6 shadow-2xl overflow-y-auto space-y-5 animate-in slide-in-from-right duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase">
-                  WORK ORDER INSPECTION
-                </span>
-                <h3 className="text-[20px] font-bold text-slate-900 mt-1">{inspectingWo.wo}</h3>
-              </div>
-              <button
-                onClick={() => setInspectingWo(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg border-none bg-transparent cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-[12px]">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase">Informasi Produk</p>
-                <p className="text-[14px] font-bold text-slate-900">{inspectingWo.produk}</p>
-                <p className="text-slate-600">Klien: <span className="font-medium text-slate-800">{inspectingWo.klien}</span></p>
-                <p className="text-slate-600">Kategori: <span className="font-medium text-slate-800">{inspectingWo.category}</span></p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 border border-slate-200 rounded-xl">
-                  <p className="text-[11px] font-medium text-slate-500">Stage</p>
-                  <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-1 inline-block", inspectingWo.stageStyle)}>
-                    {inspectingWo.stage}
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/30 backdrop-blur-2xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-blue-600 text-[14px]">
+                    {inspectingWo.wo}
                   </span>
+                  <DnaCell.Badge status={inspectingWo.stage} />
                 </div>
-                <div className="p-3 border border-slate-200 rounded-xl">
-                  <p className="text-[11px] font-medium text-slate-500">Status Progress</p>
-                  <p className="font-bold text-slate-900 mt-1">{inspectingWo.progress} ({inspectingWo.progressPercent}%)</p>
-                </div>
+                <button
+                  onClick={() => setInspectingWo(null)}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-none bg-transparent cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 border border-slate-200 rounded-xl">
-                  <p className="text-[11px] font-medium text-slate-500">Target Produksi</p>
-                  <p className="text-[16px] font-bold text-slate-900 mt-0.5">{inspectingWo.target.toLocaleString("id-ID")} Pcs</p>
+              <div className="mt-5 space-y-4 text-[12px]">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Produk & Klien
+                  </label>
+                  <p className="font-bold text-slate-900 text-[14px] mt-0.5">
+                    {inspectingWo.produk}
+                  </p>
+                  <p className="text-slate-600">{inspectingWo.klien}</p>
                 </div>
-                <div className="p-3 border border-slate-200 rounded-xl">
-                  <p className="text-[11px] font-medium text-slate-500">Nilai Estimasi</p>
-                  <p className="text-[16px] font-bold text-blue-600 mt-0.5">Rp {inspectingWo.totalNilai.toLocaleString("id-ID")}</p>
+
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Target Produksi</span>
+                    <span className="font-bold text-slate-800 text-[13px] tabular-nums">
+                      {inspectingWo.target.toLocaleString("id-ID")} Pcs
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Total Nilai WO</span>
+                    <span className="font-bold text-blue-600 text-[13px] tabular-nums">
+                      Rp {inspectingWo.totalNilai.toLocaleString("id-ID")}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-3 border border-slate-200 rounded-xl space-y-1">
-                <p className="text-[11px] font-medium text-slate-500">Lini & PIC Produksi</p>
-                <p className="font-semibold text-slate-800">{inspectingWo.line}</p>
-                <p className="text-slate-600">PIC: {inspectingWo.pic}</p>
-              </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Progres Produksi
+                  </label>
+                  <div className="mt-1.5">
+                    <DnaCell.Progress
+                      value={inspectingWo.progressPercent}
+                      colorClass={inspectingWo.progressColor}
+                    />
+                  </div>
+                </div>
 
-              <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl space-y-1">
-                <p className="text-[11px] font-bold text-amber-800 uppercase">Catatan Technical QC</p>
-                <p className="text-amber-900 font-medium">{inspectingWo.notes}</p>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    PIC Penanggung Jawab
+                  </label>
+                  <div className="mt-1.5">
+                    <DnaCell.Avatar
+                      name={inspectingWo.pic}
+                      initial={inspectingWo.picInitial}
+                      avatarBg="bg-blue-50 text-blue-700"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Catatan Produksi
+                  </label>
+                  <p className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 mt-1 leading-relaxed">
+                    {inspectingWo.notes}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  handleOpenEditModal(inspectingWo);
+                }}
+                className="flex-1 h-9 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-xl text-[12px] border-none cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Ubah Data
+              </button>
               <button
                 onClick={() => setInspectingWo(null)}
-                className="h-9 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[12px] font-semibold border-none cursor-pointer"
+                className="h-9 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] border-none cursor-pointer"
               >
-                Tutup Inspection
+                Tutup
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── 08. WORK ORDER INTAKE MODAL / DRAWER WITH REAL INPUTS & LIVE MATH ── */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xl max-w-lg w-full p-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3.5">
+      {/* ── 06. EDIT WO MODAL (CRUD EDIT) ── */}
+      {editingWo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-2xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-[16px] text-slate-900">Tambah Work Order Baru</h3>
-                <p className="text-[12px] text-slate-500">Standard form component dengan kalkulasi nilai estimasi otomatis</p>
+                <h3 className="font-bold text-slate-900 text-[15px]">Ubah Data Work Order</h3>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">{editingWo.wo}</p>
               </div>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer border-none bg-transparent"
+                onClick={() => setEditingWo(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-none bg-transparent cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-[12px]">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">Nama Klien <span className="text-rose-500">*</span></label>
-                  <input
-                    type="text"
-                    value={newClientName}
-                    onChange={(e) => setNewClientName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-slate-900 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">Identitas Brand</label>
-                  <input
-                    type="text"
-                    value={newBrandName}
-                    onChange={(e) => setNewBrandName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-slate-900 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">Kontak <span className="text-rose-500">*</span></label>
-                  <input
-                    type="text"
-                    value={newContact}
-                    onChange={(e) => setNewContact(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-slate-900 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">PIC Produksi</label>
-                  <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-slate-700">
-                    <option>Budi Santoso (Production)</option>
-                    <option>Rian Hidayat (QC Lead)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">Kategori Produk</label>
-                  <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-slate-700">
-                    <option>Skincare / Serum</option>
-                    <option>Personal Care</option>
-                    <option>Raw Material</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">Target Line</label>
-                  <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-slate-700">
-                    <option>Line A — Mixing & Filling</option>
-                    <option>Line B — Tank 02</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">Estimasi Target (Pcs) <span className="text-rose-500">*</span></label>
-                  <input
-                    type="number"
-                    value={newMoq}
-                    onChange={(e) => setNewMoq(Number(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 h-9 text-slate-900 font-medium focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-medium mb-1">HPP / Satuan (Rp) <span className="text-rose-500">*</span></label>
-                  <input
-                    type="number"
-                    value={newHpp}
-                    onChange={(e) => setNewHpp(Number(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3 h-9 text-slate-900 font-medium focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
+            <div className="p-5 space-y-3.5 text-[12px]">
               <div>
-                <label className="block text-slate-700 font-medium mb-1">Nilai Estimasi Production (Target x HPP)</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Produk</label>
                 <input
                   type="text"
-                  disabled
-                  value={`Rp ${calculatedNilai.toLocaleString("id-ID")}`}
-                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 h-9 text-slate-900 font-bold cursor-not-allowed"
+                  value={editingWo.produk}
+                  onChange={(e) => setEditingWo({ ...editingWo, produk: e.target.value })}
+                  className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Klien</label>
+                  <input
+                    type="text"
+                    value={editingWo.klien}
+                    onChange={(e) => setEditingWo({ ...editingWo, klien: e.target.value })}
+                    className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Stage</label>
+                  <select
+                    value={editingWo.stage}
+                    onChange={(e) => setEditingWo({ ...editingWo, stage: e.target.value as any })}
+                    className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                  >
+                    <option value="Finished Goods">Finished Goods</option>
+                    <option value="Mixing">Mixing</option>
+                    <option value="Waiting Material">Waiting Material</option>
+                    <option value="Pending Review">Pending Review</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Target (Pcs)</label>
+                  <input
+                    type="number"
+                    value={editingWo.target}
+                    onChange={(e) => {
+                      const t = Number(e.target.value);
+                      setEditingWo({
+                        ...editingWo,
+                        target: t,
+                        totalNilai: t * editingWo.hpp,
+                      });
+                    }}
+                    className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Progres (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editingWo.progressPercent}
+                    onChange={(e) =>
+                      setEditingWo({
+                        ...editingWo,
+                        progressPercent: Number(e.target.value),
+                      })
+                    }
+                    className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-slate-700 font-medium mb-1">Catatan Produksi / Brief</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Catatan</label>
                 <textarea
                   rows={2}
-                  defaultValue="Serum brightening 20ml kemasan botol dropper bening..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-blue-500 resize-none"
+                  value={editingWo.notes}
+                  onChange={(e) => setEditingWo({ ...editingWo, notes: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
                 />
               </div>
             </div>
 
-            <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="h-9 px-4 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-[12px] font-semibold cursor-pointer"
+                type="button"
+                onClick={() => setEditingWo(null)}
+                className="h-9 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl text-[12px] font-semibold hover:bg-slate-50 cursor-pointer"
               >
                 Batal
               </button>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-semibold shadow-2xs cursor-pointer border-none"
+                type="button"
+                onClick={handleSaveEditedWo}
+                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-semibold border-none cursor-pointer shadow-2xs"
               >
-                Simpan Work Order
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 07. CREATE WO MODAL ── */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-2xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-[15px]">Buat Work Order Baru</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Daftarkan batch produksi baru ke sistem</p>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-none bg-transparent cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3.5 text-[12px]">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Brand / Produk</label>
+                <input
+                  type="text"
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                  className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Perusahaan / Klien</label>
+                <input
+                  type="text"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Target MOQ (Pcs)</label>
+                  <input
+                    type="number"
+                    value={newMoq}
+                    onChange={(e) => setNewMoq(Number(e.target.value))}
+                    className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">HPP per Unit (Rp)</label>
+                  <input
+                    type="number"
+                    value={newHpp}
+                    onChange={(e) => setNewHpp(Number(e.target.value))}
+                    className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-[12px] focus:outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 flex items-center justify-between">
+                <span className="font-semibold text-blue-900 text-[11px]">Total Nilai Estimasi:</span>
+                <span className="font-black text-blue-700 text-[13px] tabular-nums">
+                  Rp {calculatedNilai.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="h-9 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl text-[12px] font-semibold hover:bg-slate-50 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateNewWo}
+                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-semibold border-none cursor-pointer shadow-2xs"
+              >
+                Simpan & Terbitkan WO
               </button>
             </div>
           </div>

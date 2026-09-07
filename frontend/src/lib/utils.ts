@@ -39,4 +39,6 @@ export function calendarDayDiff(from: Date, to: Date): number {
   return Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-
+export function formatRupiah(value: number): string {
+  return `Rp ${Number(value || 0).toLocaleString("id-ID")}`
+}

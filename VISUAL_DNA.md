@@ -1,104 +1,237 @@
 # 🧬 NEX ERP Unified Design System (Visual DNA)
-*One card, one table, one navbar, one form, one tab system for all divisions*
+*Canonical Standard & Master Architecture from Golden Reference*
 
-This document defines the core visual identity, design tokens, typography, and structural guidelines for **NEX ERP System**. All frontend modules **MUST** strictly comply with these canonical standards.
-
----
-
-## 🏆 Architectural Hierarchy & Single Source of Truth
-
-- **Foundations & Design Tokens Board**: 👉 **`/dna-visual`**
-  - Contains **ONLY**:
-    1. `01. Color Tokens` (Primary, Neutral, Semantic, Surface)
-    2. `02. Typography Scale` (Page Title, Section Title, Body, Table Header, Caption, KPI Value)
-    3. `03. Canonical Top Navbar` (Preview & Component Legend)
-
-- **Canonical Operational UI Benchmark (Source of Truth)**: 👉 **`/dna-visual/golden-reference`**
-  - Clean operational happy path view + supporting developer benchmark section below:
-    - **Header**: Small back link (`← Kembali ke Visual DNA Specs`) + `32px/40px Bold` Page Title.
-    - **05. KPI / Metric Card System**: 4 compact cards with 2–4% status tints, simplified 3-layer structure (`1 Label + 1 Value + 1 Supporting Line`), and micro-metrics.
-    - **06. System Alerts**: Real-time system sync alert notification banner with dismiss action.
-    - **07. Section Navigation Tabs, Toolbar & Data Table**: Bordered tab container with icons (`WORK ORDERS`, `MIXING`, `FILLING`, `PACKING`, `HISTORY`, `ANALYTICS`), search & stage filters, active filter reset button, visual progress meters (`[██████░░░░] 65%`), 42px row height data table, pagination, and row action menu (`...`).
-    - **07. Operational Analytics View**: Clicking `ANALYTICS` tab renders a live Production Yield Line/Bar Trend Chart (Senin–Minggu target vs actual) & Machine OEE Efficiency Gauges (98.4% Availability, 94.1% Performance, 99.2% Quality).
-    - **Supporting Developer Spec Section (Rendered Below Main Flow)**:
-      - `Canonical Form Pattern` (Work Order Form Modal with live auto-calculation `Target x HPP = Nilai Estimasi`).
-      - `Operational UI States Reference` (Interactive switcher for Empty State, Loading Skeleton, Error State, and Sticky Bulk Actions Bar).
-      - `Live Spacing & Radius Scale Indicator` (4px rhythm & 12px main radius guide).
+> **SINGLE SOURCE OF TRUTH**:  
+> Seluruh halaman ERP **WAJIB 100% MENIRU** pola visual yang diimplementasikan pada:  
+> 👉 [`frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx`](file:///c:/GAWE/Web%20Dev/Porto%20Aureon/ERP%20FROM%20ZERO/frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx)  
+> Dilarang menciptakan abstraksi wrapper baru atau mengikuti aturan lama yang bertentangan dengan file master ini.
 
 ---
 
-## 🎯 Global Core Layout & Density Standards
+## 🏛️ Anatomi Baku 5 Layer (Urutan Vertikal Halaman)
 
-- **Target Desktop**: `1440px+`, `zoom 100%`
-- **Base Spacing Rhythm**: `4px`
-- **Page Horizontal Padding**: `20px – 24px` (`px-5` / `px-6`)
-- **Page Vertical Spacing Rhythm ("Napas")**:
-  - Header → KPI Cards: **`24px`** (`mt-6`)
-  - KPI Cards → Section Tabs: **`20–24px`** (`mt-[22px]`)
-  - Section Tabs → Toolbar Filter: **`16px`** (`mt-4`)
-  - Toolbar Filter → Data Table: **`16–20px`** (`mt-[18px]`)
-- **Section Gap**: `16px – 24px` (`gap-4` / `gap-5`)
-- **Grid Gap**: `12px – 16px` (`gap-3` / `gap-3.5`)
-- **Standard Card Padding**: `14px – 18px` (`p-3.5` / `p-4`)
-- **Canonical Main Radius**: `10px – 12px` (`rounded-xl`) — *Frozen standard across all cards and controls*
-- **Default Border Color**: `#E2E8F0` (`border-slate-200`)
-- **Header Clean Policy**: Operational page headers are **un-boxed** (no heavy card container, no presentation badges, no marketing subtitles). Consists strictly of optional small back link + `32px/40px Bold` Page Title.
-- **Single Primary Action Button Policy**: Pages carry **ONLY ONE** primary action button located on the right side of the **Toolbar filter bar** (e.g. `+ Tambah Work Order`).
-- **KPI Card Structure (3 Layers Maximum)**:
-  - `1 Label` (13px Slate 600) + `1 Value` (24px Bold Slate 900) + `1 Supporting Line` (11px micro-metric). No second competing headlines.
-  - Card 1: `Total Omset` → `Rp 279 Jt` → `+14% vs mggu lalu`
-  - Card 2: `Sample Approved` → `1` → `Yield 94% • Rilis APJ`
-  - Card 3: `Pending Review` → `2` → `Dalam Antrean Review`
-  - Card 4: `Aktif Mixing` → `2` → `Lini Tank 01 & 02 Running`
-- **Desktop KPI Limit**: Maximum `4 cards / row` (Prevents orphan 4+1 layout)
-- **Bordered Tab Nav Container**: Section tabs are wrapped in a single structural container:
-  - Wrapper: `border border-slate-200` (`1px #E2E8F0`), `rounded-xl` (`10–12px`), height `44–48px` (`h-[46px]`), background `white`, inner padding `4px` (`p-1`).
-  - Active Tab: Blue fill (`#2563EB`), text `12px`, weight `600`, radius `8px–10px`, icon + text.
-  - Inactive Tab: Transparent background, text `Slate 600`, hover light fill.
-  - Icons per tab: `WORK ORDERS` (`FileText`), `MIXING` (`FlaskConical`), `FILLING` (`Droplet`), `PACKING` (`Package`), `HISTORY` (`History`), `ANALYTICS` (`BarChart3`).
+Setiap halaman operasional di NEX ERP memiliki struktur hirarki vertikal seragam dengan ritme ruang (*vertical rhythm*) berikut:
+
+```
+[00. System Alert Banner]         (Opsional, jika ada notifikasi sinkronisasi)
+        ↓ (gap 24px)
+[01. Ultra-Clean Un-boxed Header] (Link Kembali + Judul Halaman 32px Bold)
+        ↓ (gap 24px: mt-6)
+[02. 4 KPI Metric Cards]          (Grid 4 kolom, tinggi 104px, 3 layer data)
+        ↓ (gap 22px: mt-[22px])
+[03. Bordered Tab Nav Container]  (Container tunggal h-[46px], p-1, active blue)
+        ↓ (gap 18px: mt-[18px])
+[04. Toolbar Filter Bar]          (Search h-9 + Dropdown + Reset + 1 Primary Button)
+        ↓ (gap 18px: mt-[18px])
+[05. Clean Data Table]            (Thead 40px, Row 42px, tabular-nums, ghost actions)
+```
 
 ---
 
-## 01. Color Tokens
+## 📐 Spesifikasi & Kode Baku per Layer
 
-### Primary
-- **Primary 600**: `#2563EB` | **Primary Light**: `#EFF6FF`
-
-### Neutral
-- **Slate 900**: `#0F172A` | **Slate 700**: `#334155` | **Slate 500**: `#64748B` | **Slate 300**: `#CBD5E1` | **Slate 200**: `#E2E8F0` | **Slate 100**: `#F1F5F9` | **White**: `#FFFFFF`
-
-### Semantic
-- **Success 600**: `#16A34A` | **Success Light**: `#DCFCE7`
-- **Warning 600**: `#D97706` | **Warning Light**: `#FEF3C7`
-- **Danger 600**: `#DC2626` | **Danger Light**: `#FEF2F2`
-
----
-
-## 02. Typography Scale
-
-| Token Name | Font Size / Line Height | Font Weight | Description | Usage Example |
-| :--- | :--- | :--- | :--- | :--- |
-| **Page Title** | 32px / 40px | Bold (700) | Untuk judul halaman utama | *Work Orders & Production*, *Client Manager* |
-| **Section Title** | 20px / 28px | Semibold (600) | Untuk judul section / modul | *Intake Klien*, *Pipeline Overview* |
-| **Body / Regular** | 14px / 20px | Regular (400) | Teks utama untuk konten | Deskripsi, label umum |
-| **Body / Medium** | 14px / 20px | Medium (500) | Teks penting / emphasized | Nilai data, highlight |
-| **Table Header** | 12px / 16px | Semibold (600) | Digunakan di header tabel | Kolom data (*WO*, *PRODUK*, *KLIEN*) |
-| **Helper / Caption** | 12px / 16px | Regular (400) | Teks bantu, catatan, hint | Helper text, sub-captions |
-| **KPI Value** | 24px / 32px | Bold (700) | Nilai utama pada KPI card | *Rp 450 Jt*, *64%* |
+### Layer 01: Ultra-Clean Un-boxed Header
+Header bersifat bersih, tidak dibungkus card/box, tanpa badge dekoratif yang ramai.
+```tsx
+<div>
+  {/* Back link opsional jika halaman detail/sub-modul */}
+  <Link
+    href="/parent-path"
+    className="text-[12px] font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1.5 text-decoration-none mb-1 w-fit transition-colors"
+  >
+    <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke ...
+  </Link>
+  <h1 className="text-[32px] leading-[40px] font-bold text-slate-900 tracking-tight uppercase">
+    NAMA MODUL & HALAMAN
+  </h1>
+</div>
+```
 
 ---
 
-## 12. Enforced Design Rules
+### Layer 02: KPI Metric Cards Grid (Maksimal 4 Kartu)
+* Grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6`
+* Tinggi Baku: `h-[104px]`
+* Border & Radius: `border rounded-xl p-3.5 shadow-2xs`
+* Struktur 3 Layer Maksimum:
+  1. `1 Label` (`text-[13px] font-normal text-slate-600`) + Icon badge kecil (`w-6.5 h-6.5 rounded-full`)
+  2. `1 Value` (`text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums`)
+  3. `1 Supporting Metric` (`text-[11px] font-semibold` atau `text-slate-500 font-normal`)
 
-1. ✔️ **Single shared component per primitive**: Build once in `@/components/dna` or `@/components/ui`.
-2. ✔️ **No custom card per division**: All divisions use standard `10-12px` radius cards.
-3. ✔️ **No decorative glow or heavy gradient**: Clean flat white surfaces with neutral borders.
-4. ✔️ **Unified spacing scale (4px base)**: All margins, paddings, and gaps align to 4px multiples.
-5. ✔️ **Light-mode first**: System is optimized for high-visibility light surface default.
-6. ✔️ **Accessibility**: Minimum WCAG AA contrast ratio across all text and UI elements.
-7. ✔️ **Consistent radius**: Main card radius frozen strictly at **10–12px**.
-8. ✔️ **Consistent icon style**: Outline icons with uniform `2px` stroke width (Lucide React).
-9. ✔️ **Data first, clarity over decoration**: Pure functional elegance, high data density.
+```tsx
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
+  {/* Contoh Kartu 1 (Primary Tint) */}
+  <div className="border border-blue-100/80 rounded-xl p-3.5 bg-blue-50/20 shadow-2xs flex flex-col justify-between h-[104px]">
+    <div className="flex items-center justify-between">
+      <span className="text-[13px] font-normal text-slate-600">Total Omset</span>
+      <div className="w-6.5 h-6.5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[12px] font-bold">
+        $
+      </div>
+    </div>
+    <div>
+      <p className="text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums">Rp 279 Jt</p>
+      <p className="text-[11px] font-semibold text-emerald-600 flex items-center gap-0.5">
+        <TrendingUp className="w-3 h-3" /> +14% vs minggu lalu
+      </p>
+    </div>
+  </div>
+
+  {/* Contoh Kartu 2 (Success Tint) */}
+  <div className="border border-emerald-100/80 rounded-xl p-3.5 bg-emerald-50/30 shadow-2xs flex flex-col justify-between h-[104px]">
+    <div className="flex items-center justify-between">
+      <span className="text-[13px] font-normal text-slate-600">Sample Approved</span>
+      <div className="w-6.5 h-6.5 rounded-full bg-emerald-100/70 text-emerald-700 flex items-center justify-center">
+        <CheckCircle2 className="w-4 h-4" />
+      </div>
+    </div>
+    <div>
+      <p className="text-[24px] leading-[32px] font-bold text-slate-900 tabular-nums">1</p>
+      <p className="text-[11px] text-slate-500 font-normal">Yield 94% • Rilis APJ</p>
+    </div>
+  </div>
+</div>
+```
 
 ---
-*Maintained & Frozen by NEX ERP Engineering Team.*
+
+### Layer 03: Bordered Tab Nav Container
+Seluruh tab modul dibungkus dalam **1 container kapsul terpadu** (bukan tab melayang atau garis bawah):
+* Container: `bg-white border border-slate-200 rounded-xl p-1 shadow-2xs h-[46px] flex items-center gap-1 overflow-x-auto mt-[22px]`
+* Active Tab: `bg-blue-600 text-white shadow-2xs h-[38px] px-4 rounded-lg text-[12px] font-semibold flex items-center gap-2`
+* Inactive Tab: `text-slate-600 hover:bg-slate-50 hover:text-slate-900 h-[38px] px-4 rounded-lg text-[12px] font-medium flex items-center gap-2 transition-colors`
+
+```tsx
+<div className="bg-white border border-slate-200 rounded-xl p-1 shadow-2xs h-[46px] flex items-center gap-1 overflow-x-auto mt-[22px]">
+  {TABS.map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={cn(
+        "h-[38px] px-4 rounded-lg text-[12px] transition-all shrink-0 cursor-pointer border-none flex items-center gap-2",
+        activeTab === tab.id
+          ? "bg-blue-600 text-white font-semibold shadow-2xs"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium"
+      )}
+    >
+      <tab.icon className="w-3.5 h-3.5" />
+      {tab.label}
+    </button>
+  ))}
+</div>
+```
+
+---
+
+### Layer 04: Toolbar Filter Bar
+Toolbar menampung pencarian, filter status, reset, dan **SATU-SATUNYA TOMBOL PRIMARY**:
+* Container: `bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3 mt-[18px]`
+* Kiri: Input Search `h-9` + Select Dropdown `h-9` + Tombol Reset (jika filter aktif)
+* Kanan: Single Primary Button (`bg-blue-600 hover:bg-blue-700 text-white h-9 px-4 rounded-xl text-[12px] font-semibold`)
+
+```tsx
+<div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3 mt-[18px]">
+  <div className="flex items-center gap-2 w-full md:w-auto">
+    <div className="relative flex-1 md:w-64">
+      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <input
+        type="text"
+        placeholder="Cari kode, nama..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 h-9 text-[12px] text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+      />
+    </div>
+
+    <select
+      value={statusFilter}
+      onChange={(e) => setStatusFilter(e.target.value)}
+      className="bg-slate-50 border border-slate-200 rounded-xl px-3 h-9 text-[12px] text-slate-700 font-medium focus:outline-none focus:border-blue-500"
+    >
+      <option value="ALL">Semua Status</option>
+      <option value="ACTIVE">Aktif</option>
+      <option value="COMPLETED">Selesai</option>
+    </select>
+
+    {isFilterActive && (
+      <button
+        onClick={resetAllFilters}
+        className="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[11px] font-semibold transition-all border-none cursor-pointer flex items-center gap-1 shrink-0"
+      >
+        <RotateCcw className="w-3 h-3" /> Reset
+      </button>
+    )}
+  </div>
+
+  {/* SATU-SATUNYA TOMBOL AKSI UTAMA HALAMAN */}
+  <button
+    onClick={() => setIsCreateModalOpen(true)}
+    className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[12px] font-semibold shadow-2xs transition-all flex items-center gap-1.5 shrink-0 border-none cursor-pointer"
+  >
+    <Plus className="w-4 h-4" /> Tambah Data
+  </button>
+</div>
+```
+
+---
+
+### Layer 05: Clean Data Table
+* Table Container: `bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden mt-[18px]`
+* Table Head: `h-10 bg-slate-50/75 border-b border-slate-200 text-slate-500 text-[11px] font-semibold uppercase tracking-wider`
+* Table Row: `h-[42px] hover:bg-slate-50/60 border-b border-slate-100 transition-colors`
+* Font Data: `text-[12px] text-slate-700 font-medium`
+* Angka & Finansial: Wajib `tabular-nums` dan `text-right`
+* Row Actions: Subtle Ghost Button (`p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg`) dengan dropdown `...`
+
+```tsx
+<div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden mt-[18px]">
+  <table className="w-full text-left border-collapse text-[12px]">
+    <thead>
+      <tr className="bg-slate-50/75 border-b border-slate-200 text-slate-500 text-[11px] font-semibold uppercase tracking-wider h-10">
+        <th className="w-10 text-center px-3">#</th>
+        <th className="px-4">KODE DOKUMEN</th>
+        <th className="px-4">NAMA UTAMA</th>
+        <th className="px-4">STATUS</th>
+        <th className="px-4 text-right">KUANTITAS</th>
+        <th className="px-4 text-right">NILAI TOTAL</th>
+        <th className="w-16 text-center px-3">AKSI</th>
+      </tr>
+    </thead>
+    <tbody className="divide-y divide-slate-100">
+      {data.map((item, idx) => (
+        <tr key={item.id} className="h-[42px] hover:bg-slate-50/60 transition-colors">
+          <td className="text-center text-[11px] text-slate-400 font-medium select-none px-3">{idx + 1}</td>
+          <td className="px-4 font-bold font-mono text-blue-600 hover:underline cursor-pointer">{item.code}</td>
+          <td className="px-4 font-bold text-slate-900">{item.name}</td>
+          <td className="px-4">
+            <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">
+              {item.status}
+            </span>
+          </td>
+          <td className="px-4 text-right font-semibold text-slate-800 tabular-nums">{item.qty.toLocaleString("id-ID")}</td>
+          <td className="px-4 text-right font-bold text-slate-900 tabular-nums">Rp {item.total.toLocaleString("id-ID")}</td>
+          <td className="px-3 text-center">
+            <button className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-lg border-none bg-transparent cursor-pointer">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+```
+
+---
+
+## 🚫 Larangan Keras (Anti-Patterns)
+1. **Dilarang membungkus seluruh halaman ke dalam 1 card raksasa** yang menelan tabs dan toolbar.
+2. **Dilarang membuat tombol aksi warna-warni kontras di setiap baris tabel** (hindari "efek lampu lalu lintas"). Gunakan tombol halus / ghost icon / titik tiga `...`.
+3. **Dilarang menaruh tombol primer acak di dalam card tabel**. Satu-satunya tombol aksi utama berada di sebelah kanan Toolbar Filter Bar.
+4. **Dilarang menggabungkan 2 informasi berbeda ke dalam 1 kolom tabel**. Pisahkan tanggal, status, dan kode ke kolom mandiri yang rapi.
+5. **Dilarang hardcode warna atau ukuran font di luar skala baku**:
+   - Judul Halaman: `text-[32px] leading-[40px] font-bold`
+   - KPI Value: `text-[24px] leading-[32px] font-bold`
+   - Data Tabel: `text-[12px] font-semibold / font-medium`
+   - Header Tabel & Badge: `text-[10px] / text-[11px] uppercase font-bold`
+   - Radius: `rounded-xl` (10–12px) untuk semua cards dan inputs.
+
