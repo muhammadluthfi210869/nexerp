@@ -24,6 +24,8 @@ model User {
   verifiedAPPayments  APPayment[]                 @relation("APVerifier")
   reconciliations     BankReconciliation[]        @relation("Reconciler")
   eprRequests         EmergencyPurchaseRequest[]  @relation("EprRequester")
+  warehouseAccess     WarehouseAccess[]          @relation("WarehouseAccessUser")
+  grantedAccess       WarehouseAccess[]          @relation("WarehouseAccessGranter")
   prodPlans           ProductionPlan[]            @relation("ProdAdmin")
   scmPO               PurchaseOrder[]             @relation("SCMProcessor")
   registrations       RegulatoryPipeline[]        @relation("LegalPIC")

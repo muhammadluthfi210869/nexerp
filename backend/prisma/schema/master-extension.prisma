@@ -1,0 +1,67 @@
+// ==========================================
+// MASTER DATA EXTENSION — Batch 6 additions
+// Per /plan/NEX_ERP_REFACTOR_ROADMAP.md Batch 6
+// ==========================================
+// Adds 3 missing models + 5 field additions to existing models.
+
+// ==========================================
+// NEW MODELS
+// ==========================================
+
+/// MasterUnit — Units of Measure (UoM)
+/// e.g., pcs, kg, gr, ml, liter, box, pack
+model MasterUnit {
+  id          String         @id @default(uuid()) @db.Uuid
+  code        String         @unique  // e.g., "PCS", "KG", "GR"
+  name        String         // e.g., "Pieces", "Kilogram", "Gram"
+  symbol      String?        // Display symbol, e.g., "kg", "ml"
+  isActive    Boolean        @default(true)
+  description String?
+  materials   MaterialItem[] @relation("MaterialUnit")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("master_units")
+}
+
+/// WarehouseAccess — RBAC per warehouse (user X can access warehouse Y?)
+/// Many-to-many between User and Warehouse
+model WarehouseAccess {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  warehouseId String    @db.Uuid
+  canRead     Boolean   @default(true)
+  canWrite    Boolean   @default(false)
+  canApprove  Boolean   @default(false)
+  grantedBy   String?   @db.Uuid
+  grantedAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  user        User      @relation("WarehouseAccessUser", fields: [userId], references: [id])
+  warehouse   Warehouse @relation("WarehouseAccessWarehouse", fields: [warehouseId], references: [id])
+  granter     User?     @relation("WarehouseAccessGranter", fields: [grantedBy], references: [id])
+
+  @@unique([userId, warehouseId])
+  @@index([userId])
+  @@index([warehouseId])
+  @@map("warehouse_access")
+}
+
+/// MasterKode — Auto-numbering sequences per document type
+/// Per REQUIREMENT Poin 56 (Format Kode Universal)
+/// Tersedia 2 versi:
+///   - Versi lengkap: DL-DIV-PRD-DDMMYYYY-XXXX
+///   - Versi ringkas: PRD-DDMMYYYY-XXXX
+model MasterKode {
+  id            String   @id @default(uuid()) @db.Uuid
+  documentType  String   @unique // e.g., "BILL", "SO", "PO", "DP", "JOURNAL", "BILL_PAYMENT"
+  format        String   // "DL-DIV-PRD-DDMMYYYY-XXXX" or "PRD-DDMMYYYY-XXXX"
+  exampleFormat String?  // Sample format for reference
+  currentSequence Int    @default(0)  // Last sequence used
+  resetCycle    String   @default("YEARLY") // YEARLY, MONTHLY, NEVER
+  isActive      Boolean  @default(true)
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("master_kodes")
+}

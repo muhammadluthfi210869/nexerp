@@ -22,6 +22,7 @@ model Warehouse {
   locations             WarehouseLocation[]
   fromRequisitions      MaterialRequisitionHeader[] @relation("FromWarehouse")
   toRequisitions        MaterialRequisitionHeader[] @relation("ToWarehouse")
+  warehouseAccess       WarehouseAccess[]        @relation("WarehouseAccessWarehouse")
 
   @@map("warehouses")
 }
@@ -73,6 +74,9 @@ model MaterialItem {
   bahanType            String?
   physicalForm         String?
   conditionNotes       String?
+  primaryUnitId        String?                   @db.Uuid  // Reference to MasterUnit (added Batch 6)
+  unitMaster           MasterUnit?               @relation("MaterialUnit", fields: [primaryUnitId], references: [id])
+  imageUrl             String?  // Photo URL (per BARANG.csv)
   autoCalculatedHpp    Float?
   manualOverrideHpp    Float?
   boms                 BillOfMaterial[]
@@ -309,6 +313,7 @@ model InboundItem {
 
 model MasterCategory {
   id          String         @id @default(uuid()) @db.Uuid
+  code        String         @unique  // BBK, BRU, dll (added per CSV ref)
   name        String
   description String?
   type        String
