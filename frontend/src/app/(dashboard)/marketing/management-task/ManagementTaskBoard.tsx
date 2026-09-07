@@ -240,12 +240,12 @@ function taskToDraft(task: TaskRow): TaskDraft {
   };
 }
 
-function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | null): TaskRow {
+function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | null, projectId?: string): TaskRow {
   const viewer = viewerName?.trim() || "System";
   return {
     id: taskId,
     title: draft.title.trim(),
-    projectId: "local",
+    projectId: projectId || "",
     project: draft.project.trim() || "Marketing",
     brand: draft.brand,
     // assignedBy/reviewer diisi viewer (manager) — bukan "System"/"" supaya
@@ -582,9 +582,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   const projectOptions = useMemo(() => {
     const fromTasks = localTasks.map((task) => task.project);
-    return Array.from(new Set([...localProjects, ...fromTasks].map((value) => value.trim()).filter(Boolean))).sort((left, right) =>
-      left.localeCompare(right),
-    );
+    return Array.from(
+      new Set(
+        [...localProjects, ...fromTasks]
+          .filter((value): value is string => typeof value === 'string' && value.length > 0)
+          .map((value) => value.trim())
+          .filter(Boolean)
+      )
+    ).sort((left, right) => left.localeCompare(right));
   }, [localTasks, localProjects]);
 
   const monthOptions = useMemo(() => {
@@ -856,11 +861,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
     const pic = globalQuickAdd.pic.trim() || "Aurel";
     const viewer = viewerName?.trim() || "System";
+    const matchedProject = projects.find(
+      (p) => p.name.trim().toLowerCase() === globalQuickAdd.project.trim().toLowerCase()
+    );
 
     const newTask = {
       id: `local-${Date.now()}`,
       title: globalQuickAdd.title.trim(),
-      projectId: "local",
+      projectId: matchedProject?.id || "",
       project: globalQuickAdd.project.trim() || "Marketing",
       brand: globalQuickAdd.brand,
       assignedBy: viewer,
@@ -881,7 +889,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // Persist to backend so other users see it. Setelah sukses, id lokal
     // diganti id server dari respons (BUG-S3/P4.3) supaya status berikutnya
     // (edit/delete) memakai id yang benar.
-    api.post("/marketing/prototype/tasks", newTask).then((res) => {
+    const payload = {
+      ...newTask,
+      projectId: matchedProject?.id || undefined,
+    };
+    api.post("/marketing/prototype/tasks", payload).then((res) => {
       const savedId = res?.data?.id;
       if (savedId && savedId !== newTask.id) {
         setLocalTasks((current) => current.map((t) => (t.id === newTask.id ? { ...t, id: savedId } : t)));
@@ -918,11 +930,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // Resolusi target EDIT difresh dari localTasks (bukan snapshot `selectedTask`
     // yang bisa stale): jika id task lokal sudah diganti id server saat drawer
     // terbuka, kita tetap menemukan task-nya dan PATCH (bukan POST duplikat).
+    const matchedProject = projects.find(
+      (p) => p.name.trim().toLowerCase() === draft.project.trim().toLowerCase()
+    );
     const isEdit = drawerMode === "edit" && Boolean(selectedTaskId);
     const editBase = isEdit ? localTasks.find((task) => task.id === selectedTaskId) : undefined;
     const nextTask = editBase
-      ? { ...editBase, ...draftToTask(editBase.id, draft, viewerName) }
-      : draftToTask(`local-${Date.now()}`, draft, viewerName);
+      ? { ...editBase, ...draftToTask(editBase.id, draft, viewerName, matchedProject?.id || editBase.projectId) }
+      : draftToTask(`local-${Date.now()}`, draft, viewerName, matchedProject?.id);
 
     setLocalTasks((current) => {
       if (editBase) {
@@ -936,8 +951,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // Persist to backend. Rollback gagal = invalidate/refetch dari server,
     // BUKAN snapshot closure yang stale (BUG-U2/P5.1).
     const persistPromise = editBase
-      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, draft)
-      : api.post("/marketing/prototype/tasks", nextTask);
+      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, {
+          ...draft,
+          projectId: matchedProject?.id || undefined,
+        })
+      : api.post("/marketing/prototype/tasks", {
+          ...nextTask,
+          projectId: matchedProject?.id || undefined,
+        });
 
     persistPromise
       .then((res) => {
