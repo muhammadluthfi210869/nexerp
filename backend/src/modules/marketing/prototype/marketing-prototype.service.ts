@@ -659,8 +659,10 @@ export class MarketingPrototypeService {
       updateData.completedAt = null;
     }
 
-    await this.prisma.marketingTaskHistory.create({ data: historyEntry });
-    const updated = await this.prisma.marketingTask.update({ where: { id }, data: updateData });
+    const [_, updated] = await this.prisma.$transaction([
+      this.prisma.marketingTaskHistory.create({ data: historyEntry }),
+      this.prisma.marketingTask.update({ where: { id }, data: updateData }),
+    ]);
     return updated;
   }
 
@@ -716,12 +718,18 @@ export class MarketingPrototypeService {
         updateData.brief = input.notes;
       }
     } else {
+      const disallowed = Object.keys(input).filter(k => k !== 'startDate' && k !== 'status');
+      if (disallowed.length > 0) {
+        console.warn(`[updateTask] Member ${viewer?.id ?? 'anon'} tried to edit disallowed fields: ${disallowed.join(', ')}`);
+      }
       if (input.startDate !== undefined) updateData.startDate = new Date(input.startDate);
       if (input.status !== undefined && input.status !== task.status) {
         const canonical = (LEGACY_STATUS_MAP[input.status] ?? input.status) as TaskStatus;
         if (isCanonicalStatus(canonical)) updateData.status = canonical;
       }
-      if (Object.keys(updateData).length === 0) return task;
+      if (Object.keys(updateData).length === 0) {
+        throw new ForbiddenException('No fields you can edit on this task');
+      }
     }
 
     if (updateData.status === 'Done' || (updateData.status === undefined && task.status === 'Done')) {
@@ -739,11 +747,14 @@ export class MarketingPrototypeService {
     updateData.sla = deriveSla(mergedForSla);
 
     const byId = viewer?.id ?? null;
-    await this.prisma.marketingTaskHistory.create({
-      data: { taskId: task.id, byId, fromStatus: task.status, toStatus: updateData.status ?? task.status, note: 'Task updated', at: new Date() },
+    const changedKeys = Object.keys(updateData).filter(k => k !== 'sla' && k !== 'completedAt' && k !== 'checklistDone');
+    const note = changedKeys.length ? `Task updated (${changedKeys.join(', ')})` : 'Task updated';
+    return this.prisma.$transaction(async (tx) => {
+      await tx.marketingTaskHistory.create({
+        data: { taskId: task.id, byId, fromStatus: task.status, toStatus: updateData.status ?? task.status, note, at: new Date() },
+      });
+      return tx.marketingTask.update({ where: { id }, data: updateData });
     });
-
-    return this.prisma.marketingTask.update({ where: { id }, data: updateData });
   }
 
   async deleteTask(viewer: ViewerContext | undefined, id: string) {
@@ -757,8 +768,9 @@ export class MarketingPrototypeService {
       throw new ForbiddenException('Only the manager or delegated manager of this task can delete it');
     }
     await this.prisma.marketingTask.delete({ where: { id } });
-    // Clean up attachment files
-    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true }).catch(() => undefined);
+    // Clean up attachment files — order: DB delete first, then rm; on failure file orphans but DB is clean
+    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true })
+      .catch((err) => console.warn(`[deleteTask] orphan cleanup failed for task ${id}:`, err));
     return true;
   }
 
@@ -781,31 +793,9 @@ export class MarketingPrototypeService {
 
     let id = input.id;
     if (!id) {
-      // ponytail: legacy non-numeric codes (TSK-REV-01, TSK-NSA-07) and pre-existing rows
-      // like TSK-NaN poisoned parseInt/uniq logic. Use UUID fallback if any existing row
-      // already owns the next numeric slot, else atomic counter.
-      const allCodes = await this.prisma.marketingTask.findMany({
-        where: { taskCode: { startsWith: 'TSK-' } },
-        select: { taskCode: true },
-      });
-      const occupied = new Set(allCodes.map((t) => t.taskCode));
-      const numericMax = allCodes
-        .map((t) => parseInt((t.taskCode.match(/^TSK-(\d+)$/) || [])[1] || '0', 10))
-        .filter((n) => Number.isFinite(n) && n > 0)
-        .reduce((a, b) => Math.max(a, b), 3100);
-      let candidate = `TSK-${numericMax + 1}`;
-      // Walk forward until we find an unoccupied numeric slot (cap to avoid infinite loop).
-      let tries = 0;
-      while (occupied.has(candidate) && tries < 50) {
-        const n = parseInt(candidate.slice(4), 10) + 1;
-        candidate = `TSK-${n}`;
-        tries++;
-      }
-      if (occupied.has(candidate)) {
-        // ponytail: ceiling reached; safe fallback so we don't 500 again.
-        candidate = `TSK-${randomUUID().slice(0, 8).toUpperCase()}`;
-      }
-      id = candidate;
+      // ponytail: race-free UUID-derived code; legacy numeric TSK-XXXX codes are
+      // preserved when input.id is provided, new tasks get a UUID-based id.
+      id = `TSK-${randomUUID().slice(0, 8).toUpperCase()}`;
     }
 
     const project = input.projectId
@@ -838,46 +828,48 @@ export class MarketingPrototypeService {
       assignedByUserId = actorUser?.id ?? null;
     }
 
-    const task = await this.prisma.marketingTask.create({
-      data: {
-        taskCode: id,
-        title: input.title ?? 'Untitled task',
-        projectId: input.projectId ?? project?.id,
-        channel: input.channel ?? 'General',
-        category: input.category ?? (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
-        brand: (input.brand ?? 'Dreamlab') as 'Dreamlab' | 'Toribio',
-        assignedById: assignedByUserId,
-        picId: picUserId,
-        priority: (input.priority ?? 'Medium') as TaskPriority,
-        startDate: input.startDate ? new Date(input.startDate) : now,
-        dueDate: input.dueDate ? new Date(input.dueDate) : now,
-        status,
-        sla: deriveSla({
+    return this.prisma.$transaction(async (tx) => {
+      const task = await tx.marketingTask.create({
+        data: {
+          taskCode: id,
+          title: input.title ?? 'Untitled task',
+          projectId: input.projectId ?? project?.id,
+          channel: input.channel ?? 'General',
+          category: input.category ?? (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
+          brand: (input.brand ?? 'Dreamlab') as 'Dreamlab' | 'Toribio',
+          assignedById: assignedByUserId,
+          picId: picUserId,
+          priority: (input.priority ?? 'Medium') as TaskPriority,
+          startDate: input.startDate ? new Date(input.startDate) : now,
+          dueDate: input.dueDate ? new Date(input.dueDate) : now,
           status,
-          dueDate: input.dueDate ?? '',
-          completedAt: status === 'Done' ? now.toISOString() : undefined,
-        }),
-        estimatedHours: input.estimatedHours ?? 4,
-        actualHours: input.actualHours ?? 0,
-        revisionCount: input.revisionCount ?? 0,
-        checklistDone: input.checklistDone ?? 0,
-        checklistTotal: input.checklistTotal ?? 4,
-        brief: input.brief ?? input.notes ?? '',
-        link: input.link ?? '',
-        tags: input.tags?.join(',') ?? '',
-      },
-    });
+          sla: deriveSla({
+            status,
+            dueDate: input.dueDate ?? '',
+            completedAt: status === 'Done' ? now.toISOString() : undefined,
+          }),
+          estimatedHours: input.estimatedHours ?? 4,
+          actualHours: input.actualHours ?? 0,
+          revisionCount: input.revisionCount ?? 0,
+          checklistDone: input.checklistDone ?? 0,
+          checklistTotal: input.checklistTotal ?? 4,
+          brief: input.brief ?? input.notes ?? '',
+          link: input.link ?? '',
+          tags: input.tags?.join(',') ?? '',
+        },
+      });
 
-    await this.prisma.marketingTaskHistory.create({
-      data: { taskId: task.id, byId: assignedByUserId, fromStatus: null, toStatus: status, note: 'Task created', at: now },
-    });
+      await tx.marketingTaskHistory.create({
+        data: { taskId: task.id, byId: assignedByUserId, fromStatus: null, toStatus: status, note: 'Task created', at: now },
+      });
 
-    return task;
+      return task;
+    });
   }
 
   async addAttachment(viewer: ViewerContext | undefined, taskId: string, file: any) {
     const scope = this.resolveViewer(viewer);
-    const actor = scope.prototypeName ?? headOfMarketing;
+    const uploaderId = viewer?.id ?? null;
     const ext = extname(file.originalname).toLowerCase().slice(1);
 
     if (IMAGE_EXTENSIONS.has(ext)) {
@@ -894,19 +886,33 @@ export class MarketingPrototypeService {
       } catch { /* file may not exist in test */ }
     }
 
-    const attachment = await this.prisma.marketingTaskAttachment.create({
-      data: {
-        taskId,
-        name: file.originalname,
-        type: EXT_TO_MIME[ext] ?? 'application/octet-stream',
-        sizeKb: Math.max(Math.round(file.size / 1024), 0),
-        path: relative(resolve(UPLOADS_ROOT), resolve(file.path)).split(sep).join('/'),
-        uploadedById: null,
-      },
+    // Snapshot current task status so history.toStatus stays valid (NOT NULL column).
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id: taskId },
+      select: { id: true, status: true },
     });
+    if (!task) {
+      await rm(file.path, { force: true }).catch(() => undefined);
+      throw new NotFoundException('Task tidak ditemukan');
+    }
 
-    await this.prisma.marketingTaskHistory.create({
-      data: { taskId, byId: null, fromStatus: null, toStatus: '', note: `Attachment added: ${file.originalname}`, at: new Date() },
+    const attachment = await this.prisma.$transaction(async (tx) => {
+      const a = await tx.marketingTaskAttachment.create({
+        data: {
+          taskId,
+          name: file.originalname,
+          type: EXT_TO_MIME[ext] ?? 'application/octet-stream',
+          sizeKb: Math.max(Math.round(file.size / 1024), 0),
+          path: relative(resolve(UPLOADS_ROOT), resolve(file.path)).split(sep).join('/'),
+          uploadedById: uploaderId,
+        },
+      });
+
+      await tx.marketingTaskHistory.create({
+        data: { taskId, byId: uploaderId, fromStatus: null, toStatus: task.status ?? 'Not started', note: `Attachment added: ${file.originalname}`, at: new Date() },
+      });
+
+      return a;
     });
 
     return attachment;
@@ -917,10 +923,15 @@ export class MarketingPrototypeService {
     const task = await this.prisma.marketingTask.findUnique({ where: { id: taskId }, include: { pic: true } });
     if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
 
-    const att = await this.prisma.marketingTaskAttachment.findUnique({ where: { id: attachmentId } });
+    const att = await this.prisma.marketingTaskAttachment.findUnique({
+      where: { id: attachmentId },
+      include: { uploadedBy: true },
+    });
     if (!att) return true;
 
-    const isUploader = normalizeIdentity(att.uploadedById ?? '') === normalizeIdentity(scope.prototypeName ?? '');
+    const isUploader =
+      att.uploadedById === (viewer?.id ?? null) ||
+      normalizeIdentity(att.uploadedBy?.fullName ?? '') === normalizeIdentity(scope.prototypeName ?? '');
     const managedOk = scope.managedMembers.includes(memberIdForName(task.pic?.fullName ?? ''));
     if (!scope.isManager && !isUploader && !managedOk) {
       throw new ForbiddenException('Hanya pengunggah, manager, atau delegated manager task ini yang dapat menghapus file');
@@ -962,14 +973,15 @@ export class MarketingPrototypeService {
     });
     if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
 
-    const actor = scope.prototypeName ?? author;
     const authorId = viewer?.id ?? null;
-    await this.prisma.marketingTaskComment.create({
-      data: { taskId: id, authorId, body, createdAt: new Date() },
-    });
-    await this.prisma.marketingTaskHistory.create({
-      data: { taskId: id, byId: authorId, fromStatus: null, toStatus: '', note: 'Comment added', at: new Date() },
-    });
+    await this.prisma.$transaction([
+      this.prisma.marketingTaskComment.create({
+        data: { taskId: id, authorId, body, createdAt: new Date() },
+      }),
+      this.prisma.marketingTaskHistory.create({
+        data: { taskId: id, byId: authorId, fromStatus: null, toStatus: task.status ?? 'Not started', note: 'Comment added', at: new Date() },
+      }),
+    ]);
     return this.prisma.marketingTask.findUnique({
       where: { id },
       include: { pic: true, reviewer: true, assignedBy: true, comments: { include: { author: true } } },
@@ -977,24 +989,27 @@ export class MarketingPrototypeService {
   }
 
   async markAllNotificationsRead(viewer?: ViewerContext) {
+    // TODO: implement once marketingNotification model is confirmed in schema
+    console.warn('[markAllNotificationsRead] not yet implemented — marketingNotification model needs verification');
     return [];
   }
 
   async resetState(viewer?: ViewerContext) {
     this.ensureManager(viewer);
+    // ponytail: intentionally a no-op for prod; use prisma studio for real resets
     return { message: 'Reset not needed — data is in database' };
   }
 
   async createProject(viewer: ViewerContext | undefined, input: any) {
     const scope = this.ensureManager(viewer);
-    const id = input.id ?? `PRJ-${Math.floor(Math.random() * 9000) + 1000}`;
+    const id = input.id ?? `PRJ-${randomUUID().slice(0, 8).toUpperCase()}`;
     return this.prisma.marketingProject.create({
       data: {
         projectCode: id,
         name: input.name ?? 'Untitled project',
         channel: input.channel ?? 'General',
         category: input.category ?? 'general_operations',
-        ownerId: undefined,
+        ownerId: input.ownerId ?? null,
         startDate: input.start ? new Date(input.start) : new Date(),
         deadline: input.deadline ? new Date(input.deadline) : new Date(),
         progress: clamp(Number(input.progress ?? 0), 0, 100),

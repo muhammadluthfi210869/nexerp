@@ -9,8 +9,6 @@ import { OmniCrmStateController } from './omni-crm/omni-crm-state.controller';
 import { OmniCrmStateService } from './omni-crm/omni-crm-state.service';
 import { OmniCrmConversationController } from './omni-crm/omni-crm-conversation.controller';
 import { OmniCrmConversationService } from './omni-crm/omni-crm-conversation.service';
-import { MarketingTasksController } from './tasks/marketing-tasks.controller';
-import { MarketingTasksService } from './tasks/marketing-tasks.service';
 import { MarketingPostsController } from './posts/marketing-posts.controller';
 import { MarketingPostsService } from './posts/marketing-posts.service';
 import { CampaignOkrsController } from './posts/campaign-okrs.controller';
@@ -25,7 +23,6 @@ import { MetaGraphController } from './meta/meta-graph.controller';
     MarketingPrototypeService,
     OmniCrmStateService,
     OmniCrmConversationService,
-    MarketingTasksService,
     MarketingPostsService,
     CampaignOkrsService,
     MetaGraphService,
@@ -35,7 +32,6 @@ import { MetaGraphController } from './meta/meta-graph.controller';
     MarketingPrototypeController,
     OmniCrmStateController,
     OmniCrmConversationController,
-    MarketingTasksController,
     MarketingPostsController,
     CampaignOkrsController,
     MetaGraphController,
