@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,7 +34,6 @@ import { Card } from "@/components/ui/card";
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [activeTask, setActiveTask] = useState<any>(null);
 
   const { data: tasks, isLoading, isError, refetch } = useQuery({
     queryKey: ["compliance-tasks"],
@@ -45,7 +44,7 @@ export default function ComplianceInboxPage() {
   });
 
   const submitReviewMutation = useMutation({
-    mutationFn: ({ pipelineId, isApproved, notes }: any) => 
+    mutationFn: ({ pipelineId, isApproved, notes }: any) =>
       api.post(`/legality/pipeline/${pipelineId}/artwork-review`, { isApproved, notes }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["compliance-tasks"] });
@@ -53,6 +52,13 @@ export default function ComplianceInboxPage() {
       setSelectedTaskId(null);
     }
   });
+
+  // Derive activeTask from tasks + selectedTaskId during render (no useEffect needed).
+  // Auto-select first task when no selection and tasks available.
+  const effectiveSelectedId =
+    selectedTaskId ?? tasks?.[0]?.id ?? null;
+  const activeTask =
+    tasks?.find((t: any) => t.id === effectiveSelectedId) ?? null;
 
   const { data: validationResult, isLoading: isValidating } = useQuery({
     queryKey: ["formula-validation", activeTask?.formulaId],
@@ -62,20 +68,6 @@ export default function ComplianceInboxPage() {
     },
     enabled: !!activeTask && activeTask.type === "FORMULA_VALIDATION" && !!activeTask.formulaId,
   });
-
-  useEffect(() => {
-    if (tasks && tasks.length > 0) {
-      if (!selectedTaskId) {
-        setSelectedTaskId(tasks[0].id);
-        setActiveTask(tasks[0]);
-      } else {
-        const current = tasks.find((t: any) => t.id === selectedTaskId);
-        if (current) setActiveTask(current);
-      }
-    } else {
-      setActiveTask(null);
-    }
-  }, [tasks, selectedTaskId]);
 
   const getDnaPriority = (priority: string) => {
     switch (priority) {
@@ -156,7 +148,7 @@ export default function ComplianceInboxPage() {
             {tasks?.map((task: any) => (
               <button
                 key={task.id}
-                onClick={() => { setSelectedTaskId(task.id); setActiveTask(task); }}
+                onClick={() => { setSelectedTaskId(task.id); }}
                 className={cn(
                   "w-full text-left p-4 rounded-xl transition-all border relative overflow-hidden group cursor-pointer",
                   selectedTaskId === task.id 

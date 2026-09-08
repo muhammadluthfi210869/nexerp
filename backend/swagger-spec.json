@@ -6567,18 +6567,14 @@
         ]
       },
       "get": {
-        "operationId": "FinanceController_getBills",
+        "operationId": "BillsController_findAll",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
+        "summary": "List all bills",
         "tags": [
           "finance"
         ]
@@ -7829,6 +7825,1005 @@
         },
         "tags": [
           "Creative"
+        ]
+      }
+    },
+    "/finance/bills/{id}": {
+      "get": {
+        "operationId": "BillsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get bills by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bill-line-items": {
+      "get": {
+        "operationId": "BillLineItemsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all bill-line-items",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bill-line-items/{id}": {
+      "get": {
+        "operationId": "BillLineItemsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get bill-line-items by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/down-payments": {
+      "get": {
+        "operationId": "DownPaymentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all down-payments",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/down-payments/{id}": {
+      "get": {
+        "operationId": "DownPaymentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get down-payments by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ap-payments": {
+      "get": {
+        "operationId": "APPaymentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all ap-payments",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ap-payments/{id}": {
+      "get": {
+        "operationId": "APPaymentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get ap-payments by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sales-invoices": {
+      "get": {
+        "operationId": "SalesInvoicesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all sales-invoices",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sales-invoices/{id}": {
+      "get": {
+        "operationId": "SalesInvoicesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sales-invoices by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sales-invoice-line-items": {
+      "get": {
+        "operationId": "SalesInvoiceLineItemsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all sales-invoice-line-items",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sales-invoice-line-items/{id}": {
+      "get": {
+        "operationId": "SalesInvoiceLineItemsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sales-invoice-line-items by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ar-receipts": {
+      "get": {
+        "operationId": "ARReceiptsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all ar-receipts",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/ar-receipts/{id}": {
+      "get": {
+        "operationId": "ARReceiptsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get ar-receipts by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sample-fees": {
+      "get": {
+        "operationId": "SampleFeesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all sample-fees",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/sample-fees/{id}": {
+      "get": {
+        "operationId": "SampleFeesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sample-fees by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bank-accounts": {
+      "get": {
+        "operationId": "BankAccountsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all bank-accounts",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bank-accounts/{id}": {
+      "get": {
+        "operationId": "BankAccountsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get bank-accounts by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bank-transactions": {
+      "get": {
+        "operationId": "BankTransactionsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all bank-transactions",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bank-transactions/{id}": {
+      "get": {
+        "operationId": "BankTransactionsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get bank-transactions by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bank-reconciliations": {
+      "get": {
+        "operationId": "BankReconciliationsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all bank-reconciliations",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/bank-reconciliations/{id}": {
+      "get": {
+        "operationId": "BankReconciliationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get bank-reconciliations by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/tax-transactions": {
+      "get": {
+        "operationId": "TaxTransactionsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all tax-transactions",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/tax-transactions/{id}": {
+      "get": {
+        "operationId": "TaxTransactionsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get tax-transactions by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/fixed-assets": {
+      "get": {
+        "operationId": "FixedAssetsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all fixed-assets",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/fixed-assets/{id}": {
+      "get": {
+        "operationId": "FixedAssetsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get fixed-assets by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/depreciation-schedules": {
+      "get": {
+        "operationId": "DepreciationSchedulesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all depreciation-schedules",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/depreciation-schedules/{id}": {
+      "get": {
+        "operationId": "DepreciationSchedulesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get depreciation-schedules by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/asset-transfers": {
+      "get": {
+        "operationId": "AssetTransfersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all asset-transfers",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/asset-transfers/{id}": {
+      "get": {
+        "operationId": "AssetTransfersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get asset-transfers by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/asset-disposals": {
+      "get": {
+        "operationId": "AssetDisposalsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all asset-disposals",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/asset-disposals/{id}": {
+      "get": {
+        "operationId": "AssetDisposalsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get asset-disposals by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/intangible-assets": {
+      "get": {
+        "operationId": "IntangibleAssetsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all intangible-assets",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/intangible-assets/{id}": {
+      "get": {
+        "operationId": "IntangibleAssetsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get intangible-assets by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/period-locks": {
+      "get": {
+        "operationId": "PeriodLocksController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all period-locks",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/period-locks/{id}": {
+      "get": {
+        "operationId": "PeriodLocksController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get period-locks by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/closing-checklists": {
+      "get": {
+        "operationId": "ClosingChecklistsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all closing-checklists",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/closing-checklists/{id}": {
+      "get": {
+        "operationId": "ClosingChecklistsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get closing-checklists by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/adjustment-journals": {
+      "get": {
+        "operationId": "AdjustmentJournalsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all adjustment-journals",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/adjustment-journals/{id}": {
+      "get": {
+        "operationId": "AdjustmentJournalsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get adjustment-journals by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/job-order-costings": {
+      "get": {
+        "operationId": "JobOrderCostingsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all job-order-costings",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/job-order-costings/{id}": {
+      "get": {
+        "operationId": "JobOrderCostingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get job-order-costings by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/cost-variances": {
+      "get": {
+        "operationId": "CostVariancesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all cost-variances",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/cost-variances/{id}": {
+      "get": {
+        "operationId": "CostVariancesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get cost-variances by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/product-profitabilities": {
+      "get": {
+        "operationId": "ProductProfitabilitiesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all product-profitabilities",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/product-profitabilities/{id}": {
+      "get": {
+        "operationId": "ProductProfitabilitiesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get product-profitabilities by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/cost-allocations": {
+      "get": {
+        "operationId": "CostAllocationsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all cost-allocations",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/cost-allocations/{id}": {
+      "get": {
+        "operationId": "CostAllocationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get cost-allocations by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/client-escrows": {
+      "get": {
+        "operationId": "ClientEscrowsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all client-escrows",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/client-escrows/{id}": {
+      "get": {
+        "operationId": "ClientEscrowsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get client-escrows by ID",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/inventory-ownerships": {
+      "get": {
+        "operationId": "InventoryOwnershipsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all inventory-ownerships",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/finance/inventory-ownerships/{id}": {
+      "get": {
+        "operationId": "InventoryOwnershipsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get inventory-ownerships by ID",
+        "tags": [
+          "finance"
         ]
       }
     },
@@ -9601,9 +10596,9 @@
         ]
       }
     },
-    "/v1/master/materials": {
+    "/master/materials": {
       "get": {
-        "operationId": "MaterialsController_findAll",
+        "operationId": "MaterialsController_findAll[0]",
         "parameters": [
           {
             "name": "search",
@@ -9662,7 +10657,7 @@
         ]
       },
       "post": {
-        "operationId": "MaterialsController_create",
+        "operationId": "MaterialsController_create[0]",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -9690,9 +10685,98 @@
         ]
       }
     },
-    "/v1/master/materials/active": {
+    "/v1/master/materials": {
       "get": {
-        "operationId": "MaterialsController_findActive",
+        "operationId": "MaterialsController_findAll[1]",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List materials with search, category filter, and pagination",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "post": {
+        "operationId": "MaterialsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/master/materials/active": {
+      "get": {
+        "operationId": "MaterialsController_findActive[0]",
         "parameters": [
           {
             "name": "search",
@@ -9719,9 +10803,38 @@
         ]
       }
     },
-    "/v1/master/materials/{id}": {
+    "/v1/master/materials/active": {
       "get": {
-        "operationId": "MaterialsController_findOne",
+        "operationId": "MaterialsController_findActive[1]",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List active materials for quick dropdown/searchable select",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/master/materials/{id}": {
+      "get": {
+        "operationId": "MaterialsController_findOne[0]",
         "parameters": [
           {
             "name": "id",
@@ -9747,8 +10860,45 @@
           "Master Data - Materials / Barang"
         ]
       },
+      "put": {
+        "operationId": "MaterialsController_replace[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace an existing material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
       "patch": {
-        "operationId": "MaterialsController_update",
+        "operationId": "MaterialsController_update[0]",
         "parameters": [
           {
             "name": "id",
@@ -9785,7 +10935,7 @@
         ]
       },
       "delete": {
-        "operationId": "MaterialsController_remove",
+        "operationId": "MaterialsController_remove[0]",
         "parameters": [
           {
             "name": "id",
@@ -9812,9 +10962,139 @@
         ]
       }
     },
-    "/v1/master/materials/{id}/supplier-history": {
+    "/v1/master/materials/{id}": {
       "get": {
-        "operationId": "MaterialsController_getSupplierHistory",
+        "operationId": "MaterialsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get material detail by ID",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "put": {
+        "operationId": "MaterialsController_replace[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace an existing material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "patch": {
+        "operationId": "MaterialsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaterialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an existing material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      },
+      "delete": {
+        "operationId": "MaterialsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete (soft delete) a material / goods item",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/master/materials/{id}/supplier-history": {
+      "get": {
+        "operationId": "MaterialsController_getSupplierHistory[0]",
         "parameters": [
           {
             "name": "id",
@@ -9841,9 +11121,67 @@
         ]
       }
     },
+    "/v1/master/materials/{id}/supplier-history": {
+      "get": {
+        "operationId": "MaterialsController_getSupplierHistory[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get supplier purchase history for a product",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
+    "/master/materials/{id}/hpp-breakdown": {
+      "get": {
+        "operationId": "MaterialsController_getHppBreakdown[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get HPP calculation breakdown for a product",
+        "tags": [
+          "Master Data - Materials / Barang"
+        ]
+      }
+    },
     "/v1/master/materials/{id}/hpp-breakdown": {
       "get": {
-        "operationId": "MaterialsController_getHppBreakdown",
+        "operationId": "MaterialsController_getHppBreakdown[1]",
         "parameters": [
           {
             "name": "id",
@@ -11596,6 +12934,39 @@
           },
           "status": {
             "type": "string"
+          },
+          "usageUnit": {
+            "type": "string"
+          },
+          "physicalForm": {
+            "type": "string"
+          },
+          "outMethod": {
+            "type": "string"
+          },
+          "leadTime": {
+            "type": "number"
+          },
+          "isDummy": {
+            "type": "boolean"
+          },
+          "stockQty": {
+            "type": "number"
+          },
+          "inventoryAccountId": {
+            "type": "string"
+          },
+          "salesAccountId": {
+            "type": "string"
+          },
+          "halalCertNo": {
+            "type": "string"
+          },
+          "halalExpDate": {
+            "type": "string"
+          },
+          "isHalalValidated": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -11637,6 +13008,39 @@
           },
           "status": {
             "type": "string"
+          },
+          "usageUnit": {
+            "type": "string"
+          },
+          "physicalForm": {
+            "type": "string"
+          },
+          "outMethod": {
+            "type": "string"
+          },
+          "leadTime": {
+            "type": "number"
+          },
+          "isDummy": {
+            "type": "boolean"
+          },
+          "stockQty": {
+            "type": "number"
+          },
+          "inventoryAccountId": {
+            "type": "string"
+          },
+          "salesAccountId": {
+            "type": "string"
+          },
+          "halalCertNo": {
+            "type": "string"
+          },
+          "halalExpDate": {
+            "type": "string"
+          },
+          "isHalalValidated": {
+            "type": "boolean"
           }
         }
       },

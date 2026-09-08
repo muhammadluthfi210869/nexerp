@@ -3,6 +3,20 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * DnaPageContainer — Root page wrapper for operational pages.
+ *
+ * @example
+ * <DnaPageContainer>
+ *   <DnaPageHeader title="Faktur Pembelian" />
+ *   <DnaKpiGrid>...</DnaKpiGrid>
+ *   <DnaToolbar>...</DnaToolbar>
+ *   <DnaTable>...</DnaTable>
+ * </DnaPageContainer>
+ *
+ * @see DNA_CHEATSHEET.md for usage patterns
+ * @see /dna-visual/golden-reference/page.tsx for live reference
+ */
 export interface DnaPageContainerProps {
   children: React.ReactNode;
   alert?: React.ReactNode;

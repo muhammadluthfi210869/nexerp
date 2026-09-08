@@ -1,3 +1,31 @@
+/**
+ * DnaDataTable — DEPRECATED
+ *
+ * ⚠️ DEPRECATED (Sprint 9 removal target)
+ * This component is a 930-line "everything bagel" that couples page structure,
+ * KPI grid, search, column filtering, date filtering, sorting, and pagination
+ * into one prop interface. It does not appear in the Golden Reference.
+ *
+ * Migration path — use compositional pattern instead:
+ *   <DnaPageContainer>
+ *     <DnaPageHeader title="..." />
+ *     <DnaKpiGrid><KpiCard .../></DnaKpiGrid>
+ *     <TableWrapper filters={...} pagination={...}>
+ *       <DnaTable>...</DnaTable>
+ *     </TableWrapper>
+ *   </DnaPageContainer>
+ *
+ * Rationale:
+ *   - Golden Reference (dna-visual/golden-reference) uses compositional pattern
+ *   - This component cannot be incrementally styled or partially used
+ *   - Every prop it adds couples more concerns
+ *   - Sprint 9: will be removed once all pages migrate to compositional pattern
+ *
+ * @deprecated Sprint 9 — use compositional DnaPageContainer + DnaKpiGrid + DnaTable pattern
+ * @see /frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx
+ * @see /plan/NEX_ERP_REFACTOR_ROADMAP.md Sprint 0.5
+ */
+
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -11,11 +39,12 @@ import {
   ChevronRight,
   Check,
   FileText,
+  RotateCcw,
 } from "lucide-react";
 import { DnaPageContainer } from "./DnaPageContainer";
-import { DnaPageHeader } from "./DnaPageHeader";
+import { DnaPageHeader } from "./layout/DnaPageHeader";
 import { DnaTabNav, DnaTabItem } from "./DnaTabNav";
-import { DnaKpiGrid } from "./DnaKpiGrid";
+import { DnaKpiGrid } from "./layout/DnaKpiGrid";
 import { KpiCard } from "./KpiCard";
 import { TableWrapper } from "./TableWrapper";
 import {
@@ -413,7 +442,7 @@ export function DnaDataTable<T extends Record<string, any>>({
                     value={searchVal}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder={searchPlaceholder}
-                    className="w-full bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 h-9 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full bg-slate-50 dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 h-9 text-[12px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-[#101726] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
               </div>
@@ -447,9 +476,10 @@ export function DnaDataTable<T extends Record<string, any>>({
                 <button
                   type="button"
                   onClick={onResetFilters}
-                  className="text-xs font-bold text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:underline px-2 py-1 cursor-pointer flex items-center gap-1 border-none bg-transparent transition-colors"
+                  className="h-9 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-[11px] font-semibold transition-all border-none cursor-pointer flex items-center gap-1.5 shrink-0"
                 >
-                  Reset Filter ✕
+                  <RotateCcw className="w-3 h-3 text-slate-500" />
+                  <span>Reset</span>
                 </button>
               )}
 
@@ -462,7 +492,7 @@ export function DnaDataTable<T extends Record<string, any>>({
                 <button
                   type="button"
                   onClick={primaryAction.onClick}
-                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs dark:shadow-[0_0_12px_rgba(37,99,235,0.3)] h-9 border-none"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs dark:shadow-[0_0_12px_rgba(37,99,235,0.3)] h-9 border-none"
                 >
                   <PrimaryIcon className="w-4 h-4" />
                   <span>{primaryAction.label}</span>

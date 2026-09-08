@@ -1,5 +1,14 @@
 import { cn } from "@/lib/utils"
 
+/**
+ * DataCard — Data section card with optional dot/title
+ *
+ * @deprecated — use `DnaStatCard` from `@/components/dna/DnaStatCard.tsx` instead.
+ *   DataCard serves as a generic card container with a dot+title header pattern.
+ *   This overlaps with DnaStatCard's purpose. Migrate to DnaStatCard or inline
+ *   containers and remove this file in Sprint 9.
+ */
+
 interface DataCardProps {
   dotColor?: string
   title?: string

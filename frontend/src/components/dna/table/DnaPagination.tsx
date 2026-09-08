@@ -4,6 +4,22 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * DnaPagination — Table pagination with page size selector.
+ *
+ * @example
+ * <DnaPagination
+ *   currentPage={page}
+ *   totalPages={10}
+ *   totalEntries={250}
+ *   pageSize={25}
+ *   onPageChange={setPage}
+ *   onPageSizeChange={setPageSize}
+ * />
+ *
+ * @see DNA_CHEATSHEET.md for usage patterns
+ * @see /dna-visual/golden-reference/page.tsx for live reference
+ */
 export interface DnaPaginationProps {
   currentPage: number;
   totalPages: number;

@@ -1,14 +1,46 @@
 import React from "react"
 import { cn } from "@/lib/utils"
 
+/**
+ * StatCard — Dashboard DNA Card
+ *
+ * @scope DASHBOARD ONLY
+ * @see /old_erp/ACUAN_DASHBOARD/VISUAL_DNA.md (Dashboard DNA contract)
+ * @see /plan/NEX_ERP_REFACTOR_ROADMAP.md Section 0.2 (Two-DNA-System)
+ *
+ * @deprecated — use `DnaStatCard` from `@/components/dna/DnaStatCard.tsx` instead.
+ *   DnaStatCard is the canonical KPI card for operational pages and supports the
+ *   same subtle semantic tint pattern. StatCard (Aureon Matrix 24px rounded, CSS var
+ *   borders) is Dashboard-DNA-specific and will be removed in Sprint 9 once all
+ *   dashboard pages migrate. Prefer DnaStatCard for cross-DNA use.
+ *
+ * @example
+ * ```tsx
+ * <StatCard
+ *   label="Total Omset"
+ *   value="Rp 279 Jt"
+ *   subValue="+14% vs minggu lalu"
+ *   icon={<TrendingUp />}
+ * />
+ * ```
+ */
 interface StatCardProps {
+  /** Card label (small uppercase text above value) */
   label: string
+  /** Main KPI value (large number/text) */
   value: string | number
+  /** Optional supporting metric below value */
   subValue?: string | React.ReactNode
+  /** Optional icon (Lucide React icon recommended) */
   icon?: React.ReactNode
+  /** Additional CSS classes to merge */
   className?: string
 }
 
+/**
+ * @note Will be consolidated with KpiCard via variant prop in Sprint 0.5.
+ * For now, use `StatCard` for DASHBOARD pages and `KpiCard` for OPERATIONAL pages.
+ */
 export function StatCard({ label, value, subValue, icon, className }: StatCardProps) {
   const iconEl = React.isValidElement(icon) ? icon : null
   const bgIcon = React.isValidElement(icon)

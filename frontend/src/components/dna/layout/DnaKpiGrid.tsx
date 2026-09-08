@@ -4,6 +4,17 @@ import React from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * DnaKpiGrid — KPI card grid with 4-column responsive layout.
+ *
+ * @example
+ * <DnaKpiGrid>
+ *   <DnaKpiCard title="Total" value="Rp 100Jt" deltaText="+14%" isDeltaPositive />
+ * </DnaKpiGrid>
+ *
+ * @see DNA_CHEATSHEET.md for usage patterns
+ * @see /dna-visual/golden-reference/page.tsx for live reference
+ */
 export interface DnaKpiCardItem {
   key: string;
   title: string;

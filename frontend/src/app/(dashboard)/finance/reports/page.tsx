@@ -1,24 +1,18 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  BarChart3,
   Calendar,
-  Download,
   CheckCircle2,
   XCircle,
   ShieldCheck,
   TrendingUp,
   BookOpen,
   Search,
-  Filter,
   ArrowRight,
   Target,
   PieChart,
-  ArrowRightLeft,
-  ChevronRight,
-  Info
 } from "lucide-react";
 
 import { DnaButton, DnaInput, DnaBadge, StatCard, DataCard, TableWrapper } from "@/components/dna";
@@ -51,17 +45,15 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
   const [data, setData] = useState<any[]>([]);
   const [totals, setTotals] = useState<any>({});
   const [isBalanced, setIsBalanced] = useState(true);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     api.get("/finance/reports/trial-balance/detailed", { params: { startDate, endDate } })
       .then(res => {
         setData(res.data.data);
         setTotals(res.data.totals);
         setIsBalanced(res.data.isBalanced);
       })
-      .finally(() => setLoading(false));
+      .catch((err) => console.error("Failed to fetch trial balance", err));
   }, [startDate, endDate]);
 
   const diff = Math.abs((totals.akhirDebit || 0) - (totals.akhirCredit || 0));
@@ -517,15 +509,12 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    api.get("/finance/accounts").then(res => setAccounts(res.data));
+    api.get("/finance/accounts").then(res => {
+      setAccounts(res.data);
+      // Set initial selection only when accounts first arrive
+      setSelectedAccId((current) => current || (res.data[0]?.id ?? ""));
+    });
   }, []);
-
-  useEffect(() => {
-    if (accounts.length > 0 && !selectedAccId) {
-      setSelectedAccId(accounts[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accounts]);
 
   const fetchLedger = useCallback(() => {
     if (!selectedAccId) return;

@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, formatCurrency } from "@/lib/utils";
-import { Loader2, XCircle, Search, AlertTriangle, TrendingDown } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { Loader2, XCircle, Search, AlertTriangle } from "lucide-react";
 import { DashboardCards } from "@/components/bussdev/DashboardCards";
-import { DnaInput, TableWrapper, DnaBadge } from "@/components/dna";
+import { DnaInput, DnaBadge } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 const LOST_REASON_LABELS: Record<string, { label: string; status: "success" | "info" | "warning" | "critical" | "purple" | "default" }> = {
@@ -36,8 +35,6 @@ const STAGE_LABELS: Record<string, string> = {
 
 export default function LostPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [section, setSection] = useState<"prospect" | "churn">("prospect");
-  const [renderTimestamp] = useState(() => Date.now());
 
   const { data: analytics } = useQuery({
     queryKey: ["bussdev-analytics", "lost"],
