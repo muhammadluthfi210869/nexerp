@@ -369,11 +369,17 @@ export class MarketingPrototypeService {
     return scope;
   }
 
-  async getBundle(viewer?: ViewerContext) {
+  async getBundle(viewer?: ViewerContext, options: { page?: number; limit?: number } = {}) {
     const scope = this.resolveViewer(viewer);
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(200, Math.max(1, options.limit ?? 50));
+    const skip = (page - 1) * limit;
 
-    const rawTasks = await this.prisma.marketingTask.findMany({
-      select: {
+    const [rawTasks, totalCount] = await Promise.all([
+      this.prisma.marketingTask.findMany({
+        skip,
+        take: limit,
+        select: {
         id: true,
         taskCode: true,
         title: true,
@@ -417,7 +423,9 @@ export class MarketingPrototypeService {
           },
         },
       },
-    });
+    }),
+      this.prisma.marketingTask.count(),
+    ]);
 
     const visibleTasks = rawTasks.filter(task => this.isVisibleToViewer(task, scope));
     const tasks = visibleTasks.map(mapTaskRow);
@@ -590,6 +598,7 @@ export class MarketingPrototypeService {
         kpiHistory: performance.filter(Boolean).map(m => ({ name: m!.name, history: m!.history })),
         monthlyPerformance,
       },
+      pagination: { page, limit, total: totalCount, hasMore: skip + rawTasks.length < totalCount },
     };
   }
 
@@ -691,6 +700,10 @@ export class MarketingPrototypeService {
       at: now,
     };
     const updateData: any = { status: canonicalStatus, sla: deriveSla({ ...toSlaShape(task), status: canonicalStatus }) };
+    // F3: auto-increment revisionCount when transitioning TO Revision
+    if (canonicalStatus === 'Revision' && task.status !== 'Revision') {
+      updateData.revisionCount = (task.revisionCount ?? 0) + 1;
+    }
     if (canonicalStatus === 'Done') {
       updateData.completedAt = now;
       updateData.checklistDone = task.checklistTotal;
@@ -810,6 +823,16 @@ export class MarketingPrototypeService {
     if (!this.canManageTask(task, scope)) {
       throw new ForbiddenException('Only the manager or delegated manager of this task can delete it');
     }
+    await this.prisma.marketingTaskHistory.create({
+      data: {
+        taskId: task.id,
+        byId: viewer?.id ?? null,
+        fromStatus: task.status,
+        toStatus: 'DELETED',
+        note: `Task deleted: ${task.title}`,
+        at: new Date(),
+      },
+    });
     await this.prisma.marketingTask.delete({ where: { id } });
     // Clean up attachment files — order: DB delete first, then rm; on failure file orphans but DB is clean
     rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true })
@@ -921,6 +944,27 @@ export class MarketingPrototypeService {
     const scope = this.resolveViewer(viewer);
     const uploaderId = viewer?.id ?? null;
     const ext = extname(file.originalname).toLowerCase().slice(1);
+
+    // D3: per-user 500 MB / 24 h upload quota
+    if (uploaderId) {
+      const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+      const MAX_USER_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB
+      const recentUploads = await this.prisma.marketingTaskAttachment.aggregate({
+        where: {
+          uploadedById: uploaderId,
+          createdAt: { gte: new Date(Date.now() - TWENTY_FOUR_HOURS_MS) },
+        },
+        _sum: { sizeKb: true },
+      });
+      const usedKb = recentUploads._sum.sizeKb ?? 0;
+      const newTotalKb = usedKb + Math.ceil(file.size / 1024);
+      if (newTotalKb * 1024 > MAX_USER_UPLOAD_BYTES) {
+        await rm(file.path, { force: true }).catch(() => undefined);
+        throw new BadRequestException(
+          `Batas upload harian tercapai (500 MB). Coba lagi besok.`,
+        );
+      }
+    }
 
     if (IMAGE_EXTENSIONS.has(ext)) {
       const full = resolve(file.path);

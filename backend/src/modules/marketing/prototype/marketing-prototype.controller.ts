@@ -4,6 +4,7 @@
 // runtime works fine. Add explicit Promise<unknown> annotations if you want
 // strict emission.
 import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Req, Res, UploadedFile, UseFilters, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
@@ -71,6 +72,7 @@ export class MarketingPrototypeController {
 
   @Post('reset')
   @Roles(...MANAGER_WRITE_ROLES)
+  @Throttle({ default: { limit: 5, ttl: 3600000 } })
   reset(@Req() req: any) {
     return this.service.resetState(req.user);
   }
@@ -89,6 +91,7 @@ export class MarketingPrototypeController {
 
   @Post('projects')
   @Roles(...MANAGER_WRITE_ROLES)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   createProject(@Req() req: any, @Body() body: CreateProjectDto) {
     return this.service.createProject(req.user, body);
   }
@@ -113,6 +116,7 @@ export class MarketingPrototypeController {
 
   @Post('tasks')
   @Roles(...MEMBER_ROLES)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   createTask(
     @Req() req: any,
     @Body() body: CreateTaskDto,
@@ -148,6 +152,7 @@ export class MarketingPrototypeController {
 
   @Post('tasks/:id/comment')
   @Roles(...MEMBER_ROLES)
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   comment(
     @Req() req: any,
     @Param('id') id: string,
@@ -163,6 +168,7 @@ export class MarketingPrototypeController {
 
   @Post('tasks/:id/attachments')
   @Roles(...MEMBER_ROLES)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseFilters(MulterErrorFilter)
   @UseInterceptors(
     FileInterceptor('file', {
