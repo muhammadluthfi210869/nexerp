@@ -2,77 +2,77 @@
 // Lead Capture untuk DreamLab.id — sistem zero-friction WA lead capture.
 
 model LeadCapture {
-  id            String   @id @default(uuid()) @db.Uuid
-  trackingCode  String   @unique @db.VarChar(20)
+  id           String @id @default(uuid()) @db.Uuid
+  trackingCode String @unique @db.VarChar(20)
 
   // ── Website Tracking (invisible, captured before WA redirect) ──
-  sessionId     String?  @db.VarChar(100)
-  intent        String?  @db.Text          // "Konsultasi Produk", "Beli Bahan Baku", dll
-  pageUrl       String?  @db.Text
-  pageTitle     String?  @db.VarChar(255)
-  referrer      String?  @db.Text
-  utmSource     String?  @db.VarChar(100)
-  utmMedium     String?  @db.VarChar(100)
-  utmCampaign   String?  @db.VarChar(100)
-  utmContent    String?  @db.VarChar(100)
-  utmTerm       String?  @db.VarChar(100)
-  deviceType    String?  @db.VarChar(50)   // mobile / desktop / tablet
-  browser       String?  @db.VarChar(100)
-  ipAddress     String?  @db.VarChar(45)
-  city          String?  @db.VarChar(100)
-  country       String?  @db.VarChar(100)
+  sessionId   String? @db.VarChar(100)
+  intent      String? @db.Text // "Konsultasi Produk", "Beli Bahan Baku", dll
+  pageUrl     String? @db.Text
+  pageTitle   String? @db.VarChar(255)
+  referrer    String? @db.Text
+  utmSource   String? @db.VarChar(100)
+  utmMedium   String? @db.VarChar(100)
+  utmCampaign String? @db.VarChar(100)
+  utmContent  String? @db.VarChar(100)
+  utmTerm     String? @db.VarChar(100)
+  deviceType  String? @db.VarChar(50) // mobile / desktop / tablet
+  browser     String? @db.VarChar(100)
+  ipAddress   String? @db.VarChar(45)
+  city        String? @db.VarChar(100)
+  country     String? @db.VarChar(100)
 
   // ── WhatsApp Data (captured when user messages) ──
-  phone           String?  @db.VarChar(20)   // extracted from WA
-  waProfileName   String?  @db.VarChar(255)  // WhatsApp profile name (renamed from waName)
-  waMessage       String?  @db.Text          // first message content
-  contactedAt     DateTime?
+  phone         String?   @db.VarChar(20) // extracted from WA
+  waProfileName String?   @db.VarChar(255) // WhatsApp profile name (renamed from waName)
+  waMessage     String?   @db.Text // first message content
+  contactedAt   DateTime?
 
   // ── AI Validation fields (Omni Lead Validation) ──
   extractedFullName  String?   @db.VarChar(255) // name extracted from conversation
   nameConfidence     Float?
-  nameMatch          Boolean?                   // waProfileName matches extractedFullName?
-  approvalNeeded     Boolean   @default(false)  // low-confidence name needs human approval
-  aiIntent           String?   @db.VarChar(50)  // PROSPEK | SPAM | JUNK | UNCLEAR
-  outboundReplyCount Int       @default(0)     // busdev reply count for stage transitions
+  nameMatch          Boolean? // waProfileName matches extractedFullName?
+  approvalNeeded     Boolean   @default(false) // low-confidence name needs human approval
+  aiIntent           String?   @db.VarChar(50) // PROSPEK | SPAM | JUNK | UNCLEAR
+  outboundReplyCount Int       @default(0) // busdev reply count for stage transitions
   firstValidatedAt   DateTime?
 
   // ── CRM Fields ──
-  fullName      String?  @db.VarChar(255)
-  company       String?  @db.VarChar(255)
-  email         String?  @db.VarChar(255)
-  notes         String?  @db.Text
+  fullName String? @db.VarChar(255)
+  company  String? @db.VarChar(255)
+  email    String? @db.VarChar(255)
+  notes    String? @db.Text
 
   // ── AI Extraction metadata (Fase 3.1) — saran atribut ada di tabel LeadAttribute ──
   aiExtractedAt DateTime?
-  aiStatus      String? @db.VarChar(20)  // NONE / SUGGESTED / CONFIRMED / REJECTED / ERROR
-  aiStage       Json?   // saran pipeline stage (Fase 3.3): { stage, confidence, reason, source }
+  aiStatus      String?   @db.VarChar(20) // NONE / SUGGESTED / CONFIRMED / REJECTED / ERROR
+  aiStage       Json? // saran pipeline stage (Fase 3.3): { stage, confidence, reason, source }
 
   // ── Atribut lead extensible (Option B) — key-value, scalable ──
-  attributes    LeadAttribute[]
+  attributes LeadAttribute[]
 
-  status        LeadStatus @default(PENDING)
-  source        LeadSource?  // Linktree, Instagram, Google, dll
+  status LeadStatus  @default(PENDING)
+  source LeadSource? // Linktree, Instagram, Google, dll
 
-  assignedTo    String?  @db.Uuid
-  assignedUser  User?    @relation("LeadAssignee", fields: [assignedTo], references: [id])
+  assignedTo   String? @db.Uuid
+  assignedUser User?   @relation("LeadAssignee", fields: [assignedTo], references: [id])
 
   // ── Round Robin Tracking (captured before WA redirect) ──
-  assignedName  String?  @db.VarChar(100)  // Nama agent round-robin yang ditugaskan
-  assignedPhone String?  @db.VarChar(20)   // No. WA agent round-robin yang ditugaskan
+  assignedName  String? @db.VarChar(100) // Nama agent round-robin yang ditugaskan
+  assignedPhone String? @db.VarChar(20) // No. WA agent round-robin yang ditugaskan
 
   // ── Kommo CRM metadata (Kommo is the third-party system, not the marketing source) ──
   kommoLeadId              Int?
   kommoResponsibleUserId   Int?
-  kommoResponsibleUserName String? @db.VarChar(255)
+  kommoResponsibleUserName String?  @db.VarChar(255)
   kommoPipelineId          Int?
-  kommoPipelineName        String? @db.VarChar(255)
+  kommoPipelineName        String?  @db.VarChar(255)
   kommoStatusId            Int?
-  kommoStatusName          String? @db.VarChar(255)
-  kommoSourceName          String? @db.VarChar(255)
-  kommoTags                String? @db.Text
-  kommoTalkStatus          String? @db.VarChar(50)
-  kommoTalkOrigin          String? @db.VarChar(100)
+  kommoStatusName          String?  @db.VarChar(255)
+  kommoSourceName          String?  @db.VarChar(255)
+  kommoTags                String?  @db.Text
+  kommoTalkStatus          String?  @db.VarChar(50)
+  kommoTalkOrigin          String?  @db.VarChar(100)
   kommoTalkIsRead          Boolean?
   kommoTalkIsInWork        Boolean?
   kommoFirstResponseSec    Int?
@@ -87,10 +87,10 @@ model LeadCapture {
   validationLogs LeadValidationLog[]
 
   // ── Log percakapan (Fase 2.2) ──
-  messages    LeadMessage[]
+  messages LeadMessage[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("lead_captures")
 }
@@ -99,14 +99,14 @@ model LeadCapture {
 model LeadValidationLog {
   id         String   @id @default(cuid())
   leadId     String   @db.Uuid
-  type       String   @db.VarChar(50)  // INTENT | NAME_EXTRACT | APPROVAL
+  type       String   @db.VarChar(50) // INTENT | NAME_EXTRACT | APPROVAL
   input      String   @db.Text
   output     String   @db.Text
   confidence Float?
-  action     String   @db.VarChar(50)  // SAVED | FLAGGED | REJECTED
+  action     String   @db.VarChar(50) // SAVED | FLAGGED | REJECTED
   createdAt  DateTime @default(now())
 
-  lead       LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId])
   @@map("lead_validation_logs")
@@ -118,14 +118,14 @@ model LeadValidationLog {
 model LeadMessage {
   id        String   @id @default(uuid()) @db.Uuid
   leadId    String   @db.Uuid
-  direction String   @default("INBOUND") @db.VarChar(10)  // INBOUND / OUTBOUND
-  phone     String?  @db.VarChar(20)   // nomor pengirim (INBOUND) / tujuan (OUTBOUND)
-  waName    String?  @db.VarChar(255)  // nama profil pengirim
-  body      String   @db.Text          // isi pesan
-  msgId     String?  @unique @db.VarChar(100)  // WhatsApp message id (anti-duplikat redelivery webhook)
+  direction String   @default("INBOUND") @db.VarChar(10) // INBOUND / OUTBOUND
+  phone     String?  @db.VarChar(20) // nomor pengirim (INBOUND) / tujuan (OUTBOUND)
+  waName    String?  @db.VarChar(255) // nama profil pengirim
+  body      String   @db.Text // isi pesan
+  msgId     String?  @unique @db.VarChar(100) // WhatsApp message id (anti-duplikat redelivery webhook)
   createdAt DateTime @default(now())
 
-  lead      LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId])
   @@map("lead_messages")
@@ -138,15 +138,15 @@ model LeadMessage {
 model LeadAttribute {
   id         String   @id @default(uuid()) @db.Uuid
   leadId     String   @db.Uuid
-  key        String   @db.VarChar(50)   // niche, brand, domisili, moq, budget, dst.
+  key        String   @db.VarChar(50) // niche, brand, domisili, moq, budget, dst.
   value      String?  @db.VarChar(255)
-  confidence Float    @default(0)        // 0-1 dari AI
-  source     String?  @db.Text           // kutipan asli dari percakapan
-  confirmed  Boolean  @default(false)    // sudah disetujui sales?
+  confidence Float    @default(0) // 0-1 dari AI
+  source     String?  @db.Text // kutipan asli dari percakapan
+  confirmed  Boolean  @default(false) // sudah disetujui sales?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  lead       LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead LeadCapture @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@unique([leadId, key])
   @@index([leadId])
@@ -159,7 +159,7 @@ model RoundRobinAgent {
   id          String   @id @default(uuid()) @db.Uuid
   name        String   @db.VarChar(100)
   phoneNumber String   @db.VarChar(20)
-  orderIndex  Int      // urutan: 0, 1, 2
+  orderIndex  Int // urutan: 0, 1, 2
   isActive    Boolean  @default(true)
   totalLeads  Int      @default(0)
   createdAt   DateTime @default(now())
@@ -189,16 +189,29 @@ model OmniCrmState {
 }
 
 model MarketingTask {
-  id          String    @id @default(uuid()) @db.Uuid
-  ownerId     String    @db.Uuid
-  assigneeId  String?   @db.Uuid
+  id          String  @id @default(uuid()) @db.Uuid
+  ownerId     String  @db.Uuid
+  assigneeId  String? @db.Uuid
   title       String
   description String?
-  status      String    @default("OPEN")
-  priority    String    @default("MEDIUM")
+  status      String  @default("OPEN")
+  priority    String  @default("MEDIUM")
   dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations restored for the marketing task subsystem
+  projectId   String?                       @db.Uuid
+  project     MarketingProject?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  picId       String?                       @db.Uuid
+  pic         User?                         @relation("MarketingTaskPic", fields: [picId], references: [id], onDelete: SetNull)
+  reviewerId  String?                       @db.Uuid
+  reviewer    User?                         @relation("MarketingTaskReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  assignedById String?                      @db.Uuid
+  assignedBy   User?                        @relation("MarketingTaskAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  history       MarketingTaskHistory[]
+  attachments   MarketingTaskAttachment[]
+  comments      MarketingTaskComment[]
 
   @@index([ownerId])
   @@index([assigneeId])
@@ -209,20 +222,20 @@ model MarketingTask {
 // Stub models — referenced by auth.prisma.bussdevStaff.verifiedAds relation
 // (User model). Restored from production-light removal so Prisma generate succeeds.
 model DailyAdsMetric {
-  id            String   @id @default(uuid()) @db.Uuid
-  date          DateTime @db.Date
-  platform      TrafficSource
-  campaignName  String   @default("General")
-  spend         Decimal  @db.Decimal(15, 2)
-  impressions   Int      @default(0)
-  reach         Int      @default(0)
-  clicks        Int      @default(0)
-  leadsGenerated Int     @default(0)
-  isAudited     Boolean  @default(false)
-  auditedById   String?  @db.Uuid
-  auditedAt     DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String        @id @default(uuid()) @db.Uuid
+  date           DateTime      @db.Date
+  platform       TrafficSource
+  campaignName   String        @default("General")
+  spend          Decimal       @db.Decimal(15, 2)
+  impressions    Int           @default(0)
+  reach          Int           @default(0)
+  clicks         Int           @default(0)
+  leadsGenerated Int           @default(0)
+  isAudited      Boolean       @default(false)
+  auditedById    String?       @db.Uuid
+  auditedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   verifier User? @relation("AdsVerifier", fields: [auditedById], references: [id])
 
@@ -248,21 +261,21 @@ model MarketingTarget {
 }
 
 model ContentAsset {
-  id              String    @id @default(uuid()) @db.Uuid
-  publishDate     DateTime  @db.Date
-  platform        TrafficSource
-  contentPillar   ContentCategory
-  title           String
-  url             String?
-  views           Int       @default(0)
-  likes           Int       @default(0)
-  comments        Int       @default(0)
-  shares          Int       @default(0)
-  saves           Int       @default(0)
-  engagementRate  Decimal   @default(0) @db.Decimal(5, 2)
-  auditStatus     String    @default("PENDING")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String          @id @default(uuid()) @db.Uuid
+  publishDate    DateTime        @db.Date
+  platform       TrafficSource
+  contentPillar  ContentCategory
+  title          String
+  url            String?
+  views          Int             @default(0)
+  likes          Int             @default(0)
+  comments       Int             @default(0)
+  shares         Int             @default(0)
+  saves          Int             @default(0)
+  engagementRate Decimal         @default(0) @db.Decimal(5, 2)
+  auditStatus    String          @default("PENDING")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@map("content_assets")
 }
@@ -283,25 +296,94 @@ model SearchVisibilityMetric {
 }
 
 model AccountHealthLog {
-  id              String        @id @default(uuid()) @db.Uuid
-  platform        TrafficSource
-  totalFollowers  Int           @default(0)
-  followerGrowth  Int           @default(0)
-  unfollows       Int           @default(0)
-  totalReach      Int           @default(0)
-  profileVisits   Int           @default(0)
-  postsCount      Int           @default(0)
-  storiesCount    Int           @default(0)
-  avgStoryViews   Int           @default(0)
-  likesCount      Int           @default(0)
-  commentsCount   Int           @default(0)
-  savesCount      Int           @default(0)
-  sharesCount     Int           @default(0)
-  weekNumber      Int
-  year            Int
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id             String        @id @default(uuid()) @db.Uuid
+  platform       TrafficSource
+  totalFollowers Int           @default(0)
+  followerGrowth Int           @default(0)
+  unfollows      Int           @default(0)
+  totalReach     Int           @default(0)
+  profileVisits  Int           @default(0)
+  postsCount     Int           @default(0)
+  storiesCount   Int           @default(0)
+  avgStoryViews  Int           @default(0)
+  likesCount     Int           @default(0)
+  commentsCount  Int           @default(0)
+  savesCount     Int           @default(0)
+  sharesCount    Int           @default(0)
+  weekNumber     Int
+  year           Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@unique([year, weekNumber, platform])
   @@map("account_health_logs")
+}
+
+// ── Marketing Task Sub-models ──────────────────────────────────────
+// Added back to fix schema/code mismatch — see
+// docs/REFACTOR-MANAGEMENT-TASK-SCHEMA.md
+
+model MarketingTaskHistory {
+  id         String        @id @default(uuid()) @db.Uuid
+  taskId     String        @db.Uuid
+  task       MarketingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  at         DateTime      @default(now())
+  byId       String?       @db.Uuid
+  by         User?         @relation("MarketingTaskHistoryActor", fields: [byId], references: [id], onDelete: SetNull)
+  fromStatus String?       @db.VarChar(50)
+  toStatus   String        @db.VarChar(50)
+  note       String?       @db.Text
+
+  @@index([taskId])
+  @@map("marketing_task_histories")
+}
+
+model MarketingTaskAttachment {
+  id           String        @id @default(uuid()) @db.Uuid
+  taskId       String        @db.Uuid
+  task         MarketingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  name         String        @db.VarChar(255)
+  type         String        @db.VarChar(100)
+  sizeKb       Int           @default(0)
+  path         String?       @db.Text
+  uploadedById String?       @db.Uuid
+  uploadedBy   User?         @relation("MarketingTaskAttachmentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+
+  @@index([taskId])
+  @@map("marketing_task_attachments")
+}
+
+model MarketingTaskComment {
+  id        String        @id @default(uuid()) @db.Uuid
+  taskId    String        @db.Uuid
+  task      MarketingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String?       @db.Uuid
+  author    User?         @relation("MarketingTaskCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  body      String        @db.Text
+  createdAt DateTime      @default(now())
+
+  @@index([taskId])
+  @@map("marketing_task_comments")
+}
+
+model MarketingProject {
+  id          String        @id @default(uuid()) @db.Uuid
+  projectCode String        @unique @db.VarChar(100)
+  name        String        @db.VarChar(255)
+  channel     String        @db.VarChar(100)
+  category    String        @db.VarChar(100)
+  ownerId     String?       @db.Uuid
+  owner       User?         @relation("MarketingProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  startDate   DateTime?
+  deadline    DateTime?
+  progress    Int           @default(0)
+  status      String        @default("On Track") @db.VarChar(50)
+  summary     String?       @db.Text
+  blockers    String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tasks       MarketingTask[]
+
+  @@map("marketing_projects")
 }
