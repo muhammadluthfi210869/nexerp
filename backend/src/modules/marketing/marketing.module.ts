@@ -9,13 +9,6 @@ import { OmniCrmStateController } from './omni-crm/omni-crm-state.controller';
 import { OmniCrmStateService } from './omni-crm/omni-crm-state.service';
 import { OmniCrmConversationController } from './omni-crm/omni-crm-conversation.controller';
 import { OmniCrmConversationService } from './omni-crm/omni-crm-conversation.service';
-import { MarketingPostsController } from './posts/marketing-posts.controller';
-import { MarketingPostsService } from './posts/marketing-posts.service';
-import { CampaignOkrsController } from './posts/campaign-okrs.controller';
-import { CampaignOkrsService } from './posts/campaign-okrs.service';
-import { MetaGraphService } from './meta/meta-graph.service';
-import { MetaGraphController } from './meta/meta-graph.controller';
-
 @Module({
   imports: [PrismaModule, LeadCaptureModule],
   providers: [
@@ -23,19 +16,13 @@ import { MetaGraphController } from './meta/meta-graph.controller';
     MarketingPrototypeService,
     OmniCrmStateService,
     OmniCrmConversationService,
-    MarketingPostsService,
-    CampaignOkrsService,
-    MetaGraphService,
   ],
   controllers: [
     MarketingController,
     MarketingPrototypeController,
     OmniCrmStateController,
     OmniCrmConversationController,
-    MarketingPostsController,
-    CampaignOkrsController,
-    MetaGraphController,
   ],
-  exports: [MarketingService, MarketingPrototypeService, MarketingPostsService, CampaignOkrsService],
+  exports: [MarketingService, MarketingPrototypeService],
 })
 export class MarketingModule {}

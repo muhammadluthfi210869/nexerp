@@ -10,6 +10,7 @@
  *
  * Safe-by-default: dry-run mode is on unless --apply is passed.
  */
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { existsSync, readdirSync, rmSync, statSync } from 'fs';
 import { join } from 'path';
@@ -17,6 +18,7 @@ import { join } from 'path';
 const UPLOADS_ROOT = join(process.cwd(), 'uploads');
 const TASKS_DIR = join(UPLOADS_ROOT, 'tasks');
 const APPLY = process.argv.includes('--apply');
+// DATABASE_URL loaded from .env via dotenv/config (or env in prod).
 const prisma = new PrismaClient();
 
 async function main() {

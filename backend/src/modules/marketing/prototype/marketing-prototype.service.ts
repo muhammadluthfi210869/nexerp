@@ -426,9 +426,16 @@ export class MarketingPrototypeService {
       return { total: brandTotal, done: brandDone, late: brandLate, inProgress: brandInProgress, onTime: brandOnTime, progress: brandProgress };
     };
 
-    // Performance per member
-    const memberNames = [...new Set([...tasks.map(t => t.pic), ...tasks.map(t => t.reviewer)].filter(Boolean))];
-    const performance = memberNames.map(name => {
+    // Performance per member — scoped to viewer so non-managers never see other members' KPIs
+    const allMemberNames = [...new Set([...tasks.map(t => t.pic), ...tasks.map(t => t.reviewer)].filter(Boolean))];
+    const visibleMemberNames = allMemberNames.filter((name): name is string => {
+      if (!name) return false;
+      if (scope.isManager) return true;
+      const canonical = canonicalMember(name);
+      if (scope.aliases.includes(canonical.toLowerCase())) return true;
+      return scope.managedMembers.includes(canonical.toLowerCase());
+    });
+    const performance = visibleMemberNames.map(name => {
       if (!name) return null;
       const memberTasks = tasks.filter(t => canonicalMember(t.pic ?? '') === canonicalMember(name));
       const taskCount = memberTasks.length;
@@ -585,6 +592,7 @@ export class MarketingPrototypeService {
   }
 
   async getNotifications(viewer?: ViewerContext) {
+    // TODO: implement once MarketingNotification schema is verified
     return [];
   }
 
