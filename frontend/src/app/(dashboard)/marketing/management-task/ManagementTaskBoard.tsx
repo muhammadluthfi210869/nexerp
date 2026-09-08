@@ -422,7 +422,7 @@ function MetricMini({ label, value, tone = "default" }: { label: string; value: 
 
 export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) {
   const router = useRouter();
-  const { data: prototype } = useMarketingPrototypeBundle();
+  const { data: prototype, isLoading, isError } = useMarketingPrototypeBundle();
 
   // --- useConfirm hook ---
   const [confirmPending, setConfirmPending] = useState<{
@@ -1145,6 +1145,64 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const navigateToMember = (memberSlug: string) => {
     router.push(`/marketing/management-task/${memberSlug}`);
   };
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center space-y-3" data-testid="board-error" role="alert">
+        <div className="text-4xl">⚠️</div>
+        <h3 className="text-lg font-semibold">Gagal memuat data</h3>
+        <p className="text-sm text-slate-400">Periksa koneksi dan coba lagi.</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium"
+        >
+          Muat Ulang
+        </button>
+      </div>
+    );
+  }
+
+  // Loading state — show skeleton until real data arrives
+  if (isLoading) {
+    return (
+      <div className="space-y-4 p-6" data-testid="board-loading" aria-busy="true">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {['Not started', 'Working on it', 'Revision', 'Done'].map((status) => (
+            <div key={status} className="rounded-2xl border border-white/10 p-4 space-y-3">
+              <div className="h-5 w-24 rounded bg-white/10 animate-pulse" />
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 rounded-xl bg-white/5 animate-pulse" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state — no tasks yet
+  if (!isLoading && localTasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center space-y-4" data-testid="board-empty">
+        <div className="text-4xl">📋</div>
+        <h3 className="text-lg font-semibold">Belum ada task</h3>
+        <p className="text-sm text-slate-400 max-w-sm">
+          Klik tombol <span className="font-mono">+ Tambah Task</span> di header untuk membuat task pertama.
+        </p>
+        {isManager && (
+          <button
+            type="button"
+            onClick={() => openCreateDrawer()}
+            className="mt-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium"
+          >
+            + Tambah Task
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>

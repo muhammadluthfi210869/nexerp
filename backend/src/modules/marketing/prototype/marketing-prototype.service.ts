@@ -210,7 +210,7 @@ function memberIdForName(name: string): string {
 function fmtDate(d: Date | string | null | undefined): string {
   if (!d) return '';
   if (typeof d === 'string') return d.slice(0, 10);
-  return d.toISOString().slice(0, 10);
+  return toLocalDateString(d);
 }
 
 /** Convert Prisma task row (dueDate: Date|null) → SlaTaskShape (dueDate: string) */
@@ -238,8 +238,8 @@ function mapTaskRow(task: any): MarketingTask {
     pic: task.pic?.fullName ?? null,
     reviewer: task.reviewer?.fullName ?? null,
     priority: task.priority as TaskPriority,
-    startDate: task.startDate ? new Date(task.startDate).toISOString().slice(0, 10) : '',
-    dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : '',
+    startDate: task.startDate ? toLocalDateString(new Date(task.startDate)) : '',
+    dueDate: task.dueDate ? toLocalDateString(new Date(task.dueDate)) : '',
     status: (LEGACY_STATUS_MAP[task.status] ?? task.status) as TaskStatus,
     completedAt: task.completedAt ? new Date(task.completedAt).toISOString() : undefined,
     sla,
@@ -283,8 +283,8 @@ function mapProjectRow(p: any, tasks: any[] = []): MarketingProject {
     channel: p.channel,
     category: p.category,
     owner: p.owner?.fullName ?? null,
-    start: p.startDate ? new Date(p.startDate).toISOString().slice(0, 10) : '',
-    deadline: p.deadline ? new Date(p.deadline).toISOString().slice(0, 10) : '',
+    start: p.startDate ? toLocalDateString(new Date(p.startDate)) : '',
+    deadline: p.deadline ? toLocalDateString(new Date(p.deadline)) : '',
     progress: p.progress ?? 0,
     openTasks: tasks.filter(t => t.projectId === p.id && t.status !== 'Done').length,
     pendingApproval: tasks.filter(t => t.projectId === p.id && t.status === 'Revision').length,
@@ -896,7 +896,7 @@ export class MarketingPrototypeService {
           sla: deriveSla({
             status,
             dueDate: input.dueDate ?? '',
-            completedAt: status === 'Done' ? now.toISOString() : undefined,
+            completedAt: status === 'Done' ? toLocalDateString(now) : undefined,
           }),
           estimatedHours: input.estimatedHours ?? 4,
           actualHours: input.actualHours ?? 0,
