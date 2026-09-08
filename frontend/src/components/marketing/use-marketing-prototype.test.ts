@@ -44,19 +44,21 @@ describe('useMarketingPrototypeBundle (regression)', () => {
     expect(mockOptions.placeholderData).toBeUndefined();
   });
 
-  it('uses a 2-minute staleTime', () => {
+  it('uses a 30-second staleTime', () => {
     (useAuth as any).mockReturnValue({ user: { id: 'u1' } });
     useMarketingPrototypeBundle();
-    expect(mockOptions.staleTime).toBe(2 * 60 * 1000);
+    expect(mockOptions.staleTime).toBe(30 * 1000);
   });
 
-  it('uses user id (or anonymous) in the query key', () => {
+  it('uses a single stable query key (no user.id dependency)', () => {
+    // A3 fix: stable key prevents remount when user hydrates
     (useAuth as any).mockReturnValue({ user: { id: 'user-42' } });
     useMarketingPrototypeBundle();
-    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle', 'user-42']);
+    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle']);
 
+    // Same key regardless of user.id — auth gating is via `enabled`, not key
     (useAuth as any).mockReturnValue({ user: undefined });
     useMarketingPrototypeBundle();
-    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle', 'anonymous']);
+    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle']);
   });
 });
