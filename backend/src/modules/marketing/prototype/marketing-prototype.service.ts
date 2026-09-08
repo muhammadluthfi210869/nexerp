@@ -207,18 +207,6 @@ function memberIdForName(name: string): string {
   return canonicalMember(name).toLowerCase();
 }
 
-function timeStampLabel(date = new Date()) {
-  return date.toISOString().slice(11, 16);
-}
-
-function hash8(value: string): string {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
-}
-
 function fmtDate(d: Date | string | null | undefined): string {
   if (!d) return '';
   if (typeof d === 'string') return d.slice(0, 10);
@@ -373,29 +361,12 @@ export class MarketingPrototypeService {
     return scope.managedMembers.includes(memberIdForName(picName));
   }
 
-  private isNotificationVisible(notification: any, scope: ViewerScope) {
-    if (scope.isManager) return true;
-    if (!scope.aliases.length && !scope.managedMembers.length) return false;
-    if (!notification.recipient) return true;
-    if (scope.aliases.includes(normalizeIdentity(notification.recipient))) return true;
-    return scope.managedMembers.includes(memberIdForName(notification.recipient));
-  }
-
   private ensureManager(viewer?: ViewerContext) {
     const scope = this.resolveViewer(viewer);
     if (!scope.isManager) {
       throw new ForbiddenException('Only Head of Marketing can manage task registry changes');
     }
     return scope;
-  }
-
-  private viewerPreferenceKey(viewer?: ViewerContext) {
-    return (
-      viewer?.id ??
-      normalizeIdentity(viewer?.email) ??
-      normalizeIdentity(viewer?.fullName) ??
-      'anonymous'
-    );
   }
 
   async getBundle(viewer?: ViewerContext) {
@@ -651,7 +622,6 @@ export class MarketingPrototypeService {
 
   async updateTaskStatus(viewer: ViewerContext | undefined, id: string, status: TaskStatus, note = 'Status updated') {
     const scope = this.resolveViewer(viewer);
-    const actor = scope.prototypeName ?? headOfMarketing;
 
     const task = await this.prisma.marketingTask.findUnique({
       where: { id },
@@ -688,7 +658,6 @@ export class MarketingPrototypeService {
 
   async updateTask(viewer: ViewerContext | undefined, id: string, input: MarketingTaskInput) {
     const scope = this.resolveViewer(viewer);
-    const actor = scope.prototypeName ?? headOfMarketing;
 
     const task = await this.prisma.marketingTask.findUnique({
       where: { id },
