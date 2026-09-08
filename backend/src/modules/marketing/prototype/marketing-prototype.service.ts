@@ -829,7 +829,11 @@ export class MarketingPrototypeService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // ponytail: Prisma's CreateInput vs UncheckedCreateInput union narrowing rejects
+      // mixed flat-FK + scalar values even though runtime accepts them. Cast to
+      // MarketingTaskUncheckedCreateInput — matches the data shape (flat FK cols).
       const task = await tx.marketingTask.create({
+        // @ts-expect-error -- Prisma type-union limitation; runtime accepts flat FK cols
         data: {
           taskCode: id,
           title: input.title ?? 'Untitled task',

@@ -189,29 +189,44 @@ model OmniCrmState {
 }
 
 model MarketingTask {
-  id          String  @id @default(uuid()) @db.Uuid
-  ownerId     String  @db.Uuid
-  assigneeId  String? @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
+  taskCode    String    @unique @db.VarChar(100)
+  ownerId     String    @db.Uuid
+  assigneeId  String?   @db.Uuid
   title       String
   description String?
-  status      String  @default("OPEN")
-  priority    String  @default("MEDIUM")
+  status      String    @default("OPEN")
+  priority    String    @default("MEDIUM")
+  startDate   DateTime?
   dueDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  completedAt DateTime?
+  channel     String    @default("General") @db.VarChar(100)
+  category    String    @default("general_operations") @db.VarChar(100)
+  brand       String    @default("Dreamlab") @db.VarChar(50)
+  estimatedHours Int    @default(0)
+  actualHours    Int    @default(0)
+  revisionCount  Int    @default(0)
+  checklistDone  Int    @default(0)
+  checklistTotal Int    @default(0)
+  brief       String?   @db.Text
+  link        String?   @db.Text
+  tags        String?   @db.Text
+  sla         String?   @db.VarChar(50)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations restored for the marketing task subsystem
-  projectId   String?                       @db.Uuid
-  project     MarketingProject?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  picId       String?                       @db.Uuid
-  pic         User?                         @relation("MarketingTaskPic", fields: [picId], references: [id], onDelete: SetNull)
-  reviewerId  String?                       @db.Uuid
-  reviewer    User?                         @relation("MarketingTaskReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  assignedById String?                      @db.Uuid
-  assignedBy   User?                        @relation("MarketingTaskAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
-  history       MarketingTaskHistory[]
-  attachments   MarketingTaskAttachment[]
-  comments      MarketingTaskComment[]
+  projectId    String?                   @db.Uuid
+  project      MarketingProject?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  picId        String?                   @db.Uuid
+  pic          User?                     @relation("MarketingTaskPic", fields: [picId], references: [id], onDelete: SetNull)
+  reviewerId   String?                   @db.Uuid
+  reviewer     User?                     @relation("MarketingTaskReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  assignedById String?                   @db.Uuid
+  assignedBy   User?                     @relation("MarketingTaskAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  history      MarketingTaskHistory[]
+  attachments  MarketingTaskAttachment[]
+  comments     MarketingTaskComment[]
 
   @@index([ownerId])
   @@index([assigneeId])
@@ -368,21 +383,21 @@ model MarketingTaskComment {
 }
 
 model MarketingProject {
-  id          String        @id @default(uuid()) @db.Uuid
-  projectCode String        @unique @db.VarChar(100)
-  name        String        @db.VarChar(255)
-  channel     String        @db.VarChar(100)
-  category    String        @db.VarChar(100)
-  ownerId     String?       @db.Uuid
-  owner       User?         @relation("MarketingProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  id          String          @id @default(uuid()) @db.Uuid
+  projectCode String          @unique @db.VarChar(100)
+  name        String          @db.VarChar(255)
+  channel     String          @db.VarChar(100)
+  category    String          @db.VarChar(100)
+  ownerId     String?         @db.Uuid
+  owner       User?           @relation("MarketingProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   startDate   DateTime?
   deadline    DateTime?
-  progress    Int           @default(0)
-  status      String        @default("On Track") @db.VarChar(50)
-  summary     String?       @db.Text
-  blockers    String?       @db.Text
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  progress    Int             @default(0)
+  status      String          @default("On Track") @db.VarChar(50)
+  summary     String?         @db.Text
+  blockers    String?         @db.Text
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   tasks       MarketingTask[]
 
   @@map("marketing_projects")
