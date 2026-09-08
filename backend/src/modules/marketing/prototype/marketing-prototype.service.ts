@@ -373,14 +373,49 @@ export class MarketingPrototypeService {
     const scope = this.resolveViewer(viewer);
 
     const rawTasks = await this.prisma.marketingTask.findMany({
-      include: {
-        project: { include: { owner: true } },
-        pic: true,
-        reviewer: true,
-        assignedBy: true,
-        attachments: { include: { uploadedBy: true } },
-        comments: { include: { author: true } },
-        history: { include: { by: true } },
+      select: {
+        id: true,
+        taskCode: true,
+        title: true,
+        projectId: true,
+        channel: true,
+        category: true,
+        brand: true,
+        priority: true,
+        startDate: true,
+        dueDate: true,
+        completedAt: true,
+        status: true,
+        estimatedHours: true,
+        actualHours: true,
+        revisionCount: true,
+        checklistDone: true,
+        checklistTotal: true,
+        brief: true,
+        link: true,
+        tags: true,
+        project: { select: { name: true } },
+        pic: { select: { fullName: true } },
+        reviewer: { select: { fullName: true } },
+        assignedBy: { select: { fullName: true } },
+        attachments: {
+          select: {
+            id: true, name: true, type: true, sizeKb: true, path: true, createdAt: true,
+            uploadedBy: { select: { fullName: true } },
+          },
+        },
+        comments: {
+          select: {
+            body: true, createdAt: true,
+            author: { select: { fullName: true } },
+          },
+        },
+        history: {
+          select: {
+            at: true, fromStatus: true, toStatus: true, note: true,
+            by: { select: { fullName: true } },
+          },
+        },
       },
     });
 
@@ -388,7 +423,20 @@ export class MarketingPrototypeService {
     const tasks = visibleTasks.map(mapTaskRow);
 
     const rawProjects = await this.prisma.marketingProject.findMany({
-      include: { owner: true },
+      select: {
+        id: true,
+        projectCode: true,
+        name: true,
+        channel: true,
+        category: true,
+        startDate: true,
+        deadline: true,
+        progress: true,
+        status: true,
+        summary: true,
+        blockers: true,
+        owner: { select: { fullName: true } },
+      },
     });
     const visibleProjectIds = new Set(tasks.map(t => t.projectId).filter(Boolean));
     const projects = rawProjects
@@ -497,6 +545,7 @@ export class MarketingPrototypeService {
           { email: { in: ['revita@nexerp.id', 'zarkasi@nexerp.id', 'gusti@nexerp.id', 'aurel@nexerp.id', 'luthfi@nexerp.id', 'rahmat@nexerp.id', 'zarkasi@dreamlab.com', 'gusti@dreamlab.com', 'aurel@dreamlab.com', 'luthfi@dreamlab.com', 'rahmat@dreamlab.com'] } },
         ],
       },
+      select: { id: true, fullName: true, email: true },
     });
 
     const profilesData = profiles.map(u => {
@@ -829,11 +878,8 @@ export class MarketingPrototypeService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      // ponytail: Prisma's CreateInput vs UncheckedCreateInput union narrowing rejects
-      // mixed flat-FK + scalar values even though runtime accepts them. Cast to
-      // MarketingTaskUncheckedCreateInput — matches the data shape (flat FK cols).
+      // @ts-expect-error -- Prisma's CreateInput vs UncheckedCreateInput union rejects flat FK cols
       const task = await tx.marketingTask.create({
-        // @ts-expect-error -- Prisma type-union limitation; runtime accepts flat FK cols
         data: {
           taskCode: id,
           title: input.title ?? 'Untitled task',
