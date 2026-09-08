@@ -356,6 +356,7 @@ export default function MasterCategoriesPage() {
           </div>
         </>
       }
+      />
 
       {/* Modal: Add/Edit Category */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

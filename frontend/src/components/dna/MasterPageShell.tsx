@@ -87,11 +87,11 @@ export function MasterPageShell({
       {/* 1. Page Header dengan 2 tabs (Daftar + Kelola) */}
       <DnaPageHeader
         title={title}
-        badge={badge}
         subtitle={subtitle}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
+        action={badge}
       />
 
       {/* 2. KPI Cards — 4 stats konsisten di kedua tabs */}
