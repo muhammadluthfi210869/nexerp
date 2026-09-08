@@ -155,6 +155,18 @@ function avg(values: number[]) {
   return Math.round(values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1));
 }
 
+function parseTaskDate(value: string, fieldName: string): Date | null {
+  if (!value) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new BadRequestException(`${fieldName} harus berformat YYYY-MM-DD (got: ${value})`);
+  }
+  const d = new Date(value + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) {
+    throw new BadRequestException(`${fieldName} tidak valid: ${value}`);
+  }
+  return d;
+}
+
 function workingDaysInMonth(date = new Date()) {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -702,7 +714,7 @@ export class MarketingPrototypeService {
         const val = input[key as keyof MarketingTaskInput];
         if (val !== undefined && key !== 'pic' && key !== 'projectId') {
           if (key === 'dueDate' || key === 'startDate') {
-            updateData[key] = val ? new Date(val as string) : null;
+            updateData[key] = val ? parseTaskDate(val as string, key) : null;
           } else {
             updateData[key] = val;
           }
@@ -730,7 +742,7 @@ export class MarketingPrototypeService {
       if (disallowed.length > 0) {
         console.warn(`[updateTask] Member ${viewer?.id ?? 'anon'} tried to edit disallowed fields: ${disallowed.join(', ')}`);
       }
-      if (input.startDate !== undefined) updateData.startDate = new Date(input.startDate);
+      if (input.startDate !== undefined) updateData.startDate = parseTaskDate(input.startDate, 'startDate');
       if (input.status !== undefined && input.status !== task.status) {
         const canonical = (LEGACY_STATUS_MAP[input.status] ?? input.status) as TaskStatus;
         if (isCanonicalStatus(canonical)) updateData.status = canonical;
@@ -745,6 +757,11 @@ export class MarketingPrototypeService {
       updateData.checklistDone = task.checklistTotal;
     } else if (updateData.status && updateData.status !== 'Done') {
       updateData.completedAt = null;
+    }
+
+    // Cross-validate startDate vs dueDate (dueDate from DB row, not yet overwritten)
+    if (updateData.startDate && task.dueDate && updateData.startDate.getTime() > task.dueDate.getTime()) {
+      throw new BadRequestException('startDate tidak boleh setelah dueDate');
     }
 
     const mergedForSla = {
@@ -836,6 +853,12 @@ export class MarketingPrototypeService {
       assignedByUserId = actorUser?.id ?? null;
     }
 
+    const startDate = input.startDate ? parseTaskDate(input.startDate, 'startDate') : now;
+    const dueDate = input.dueDate ? parseTaskDate(input.dueDate, 'dueDate') : now;
+    if (startDate && dueDate && startDate.getTime() > dueDate.getTime()) {
+      throw new BadRequestException('startDate tidak boleh setelah dueDate');
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const task = await tx.marketingTask.create({
         data: {
@@ -848,8 +871,8 @@ export class MarketingPrototypeService {
           assignedById: assignedByUserId,
           picId: picUserId,
           priority: (input.priority ?? 'Medium') as TaskPriority,
-          startDate: input.startDate ? new Date(input.startDate) : now,
-          dueDate: input.dueDate ? new Date(input.dueDate) : now,
+          startDate,
+          dueDate,
           status,
           sla: deriveSla({
             status,
@@ -899,7 +922,7 @@ export class MarketingPrototypeService {
       where: { id: taskId },
       select: { id: true, status: true },
     });
-    if (!task) {
+    if (!task || !this.isVisibleToViewer(task, scope)) {
       await rm(file.path, { force: true }).catch(() => undefined);
       throw new NotFoundException('Task tidak ditemukan');
     }
@@ -916,8 +939,9 @@ export class MarketingPrototypeService {
         },
       });
 
+      const safeName = file.originalname.replace(/[\r\n\t]/g, ' ').slice(0, 200);
       await tx.marketingTaskHistory.create({
-        data: { taskId, byId: uploaderId, fromStatus: null, toStatus: task.status ?? 'Not started', note: `Attachment added: ${file.originalname}`, at: new Date() },
+        data: { taskId, byId: uploaderId, fromStatus: null, toStatus: task.status ?? 'Not started', note: `Attachment added: ${safeName}`, at: new Date() },
       });
 
       return a;
@@ -949,7 +973,7 @@ export class MarketingPrototypeService {
     if (att.path) {
       const full = resolve(UPLOADS_ROOT, att.path);
       if (full.startsWith(resolve(UPLOADS_ROOT))) {
-        rm(full, { force: true }).catch(() => undefined);
+        rm(full, { force: true }).catch((err) => console.warn(`[deleteAttachment] file cleanup failed for ${attachmentId}:`, err));
       }
     }
     return true;

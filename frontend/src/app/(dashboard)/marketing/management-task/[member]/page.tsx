@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { ManagementTaskBoard } from "../ManagementTaskBoard";
+import { MEMBER_ALIASES } from "@/lib/marketing-members";
 
 type ManagementTaskMemberPageProps = {
   params?: Promise<{
@@ -7,10 +8,8 @@ type ManagementTaskMemberPageProps = {
   }>;
 };
 
-// "overview" sengaja valid: dropdown member menyediakan opsi Overview yang
-// menuju /marketing/management-task/overview (sebelumnya 404-bounce karena
-// tidak ada di daftar → Overview tidak pernah bisa dibuka).
-const validMembers = new Set(["overview", "aurel", "revi", "zarka", "gusti", "luthfi", "rahmat"]);
+// "overview" valid: dropdown offers it as a direct route.
+const validMembers = new Set(["overview", ...Object.values(MEMBER_ALIASES).flat()]);
 
 export default async function ManagementTaskMemberPage({ params }: ManagementTaskMemberPageProps) {
   const resolvedParams = (await params) ?? {};
