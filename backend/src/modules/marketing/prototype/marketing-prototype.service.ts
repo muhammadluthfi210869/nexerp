@@ -878,8 +878,8 @@ export class MarketingPrototypeService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      // @ts-expect-error -- Prisma's CreateInput vs UncheckedCreateInput union rejects flat FK cols
       const task = await tx.marketingTask.create({
+        // @ts-expect-error -- Prisma's CreateInput vs UncheckedCreateInput union rejects flat FK cols
         data: {
           taskCode: id,
           title: input.title ?? 'Untitled task',
