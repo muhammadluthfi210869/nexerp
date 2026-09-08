@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:unit": "jest --config ./test/jest-unit.json --verbose",
     "cleanup:uploads": "ts-node scripts/cleanup-orphan-uploads.ts",
-    "cleanup:uploads:apply": "ts-node scripts/cleanup-orphan-uploads.ts --apply"
+    "cleanup:uploads:apply": "ts-node scripts/cleanup-orphan-uploads.ts --apply",
+    "db:status": "ts-node scripts/db-status.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { open, rm } from 'fs/promises';
-import { constants as fsConstants, createReadStream } from 'fs';
-import { dirname, extname, join, relative, resolve, sep } from 'path';
+import { createReadStream } from 'fs';
+import { extname, join, relative, resolve, sep } from 'path';
 import { randomUUID } from 'crypto';
 import {
   calendarDayDiff,
