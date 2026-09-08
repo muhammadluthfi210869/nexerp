@@ -27,22 +27,15 @@ import {
   Users2,
   X,
 } from "lucide-react";
-import {
-  DnaButton,
-  DnaInput,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/dna";
+
 import { useMarketingPrototypeBundle } from "@/components/marketing/use-marketing-prototype";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { toLocalDateString, parseLocalDate, calendarDayDiff } from "@/lib/utils";
 import { canonicalMember, sameMember } from "@/lib/marketing-members";
 import { toast } from "sonner";
+import { DnaButton } from "@/components/dna/DnaButton";
+import { DnaInput } from "@/components/dna/DnaInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 type TaskStatus = "Not started" | "Progress" | "Revision" | "Done";
@@ -1721,18 +1714,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
         ) : null}
       </div>
 
-      <Sheet open={drawerOpen} onOpenChange={(open) => setDrawerOpen(open)}>
-        <SheetContent size="xl" className="w-full bg-white p-0 text-slate-900">
+      <Dialog open={drawerOpen} onOpenChange={(open) => setDrawerOpen(open)}>
+        <DialogContent className="w-full max-w-4xl bg-white p-0 text-slate-900">
           <div className="flex h-full flex-col">
-            <SheetHeader className="border-b border-slate-100 bg-slate-50/80 px-6 py-5 text-left">
+            <DialogHeader className="border-b border-slate-100 bg-slate-50/80 px-6 py-5 text-left">
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <SheetTitle className="text-xl font-bold tracking-tight text-slate-900">
+                  <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
                     {drawerMode === "create" ? "New Task" : selectedTask?.title ?? "Task Detail"}
-                  </SheetTitle>
-                  <SheetDescription className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  </DialogTitle>
+                  <DialogDescription className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     {drawerMode === "create" ? "Create a new task" : "Edit task details"}
-                  </SheetDescription>
+                  </DialogDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -1752,7 +1745,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   </button>
                 </div>
               </div>
-            </SheetHeader>
+            </DialogHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {/* Notes — di ATAS karena isi utama. Field backend = `brief`; diubah
@@ -1977,7 +1970,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               </div>
             </div>
 
-            <SheetFooter className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
+            <DialogFooter className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                 <div className="flex items-center gap-2">
                   {drawerMode === "edit" && selectedTask ? (
@@ -1995,10 +1988,10 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   </DnaButton>
                 </div>
               </div>
-            </SheetFooter>
+            </DialogFooter>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Project Manager Modal */}
       {isProjectManagerOpen && (
