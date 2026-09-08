@@ -1,19 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+/**
+ * Master Barang — Consolidated Page (Daftar + Kelola)
+ *
+ * Per Batch 6.3 user feedback: legacy ERP punya Daftar Barang + Kelola Barang
+ * as 2 pages. Kita consolidated jadi 1 page dengan 2 tabs:
+ *   - Tab 1: DAFTAR BARANG (read-only list — everyone can see)
+ *   - Tab 2: KELOLA BARANG (CRUD with Sheet modal — admin/warehouse)
+ *
+ * Special: Uses Sheet (side panel) for Add/Edit instead of Dialog karena
+ * form Barang panjang (multi-section: Essential + Logistics + Batch QC +
+ * Supplier/HPP). Sheet lebih cocok untuk form panjang.
+ */
+
+import { useState, useEffect, useMemo } from "react";
 import {
   Plus,
-  Search,
   Package,
   Activity,
   AlertTriangle,
   ShieldCheck,
   Truck,
   ArrowRightLeft,
-  Info,
   FlaskConical,
   Clock,
-  History,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import { DnaInput } from "@/components/dna/DnaInput";
 import {
@@ -54,8 +66,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DnaButton } from "@/components/dna/DnaButton";
 import { TableWrapper } from "@/components/dna/TableWrapper";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableShell } from "@/components/layout/TableShell";
+import {
+  MasterPageShell,
+  type MasterStatItem,
+  type MasterTab,
+} from "@/components/dna";
 import { SectionDivider } from "@/components/layout/SectionDivider";
 import { SupplierHistorySection } from "@/components/scm/SupplierHistorySection";
 import { HppBreakdownCard } from "@/components/scm/HppBreakdownCard";
@@ -101,51 +116,52 @@ type Good = {
   inventories?: InventoryBatch[];
 };
 
+const EMPTY_FORM = {
+  name: "",
+  code: "",
+  type: "RAW_MATERIAL",
+  unit: "KG",
+  usageUnit: "GRAM",
+  outMethod: "FIFO" as "FIFO" | "FEFO",
+  leadTime: 0,
+  isDummy: false,
+  unitPrice: 0,
+  minLevel: 0,
+  maxLevel: 0,
+  reorderPoint: 0,
+  categoryId: "",
+  inventoryAccountId: "",
+  salesAccountId: "",
+  halalCertNo: "",
+  halalExpDate: "",
+  isHalalValidated: false,
+  physicalForm: "PADAT" as "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS",
+};
+
 export default function MasterGoodsPage() {
+  // Consolidated tabs (Daftar vs Kelola)
+  const [activeTab, setActiveTab] = useState<"DAFTAR" | "KELOLA">("DAFTAR");
+
   const [goods, setGoods] = useState<Good[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingGood, setEditingGood] = useState<Good | null>(null);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    type: "RAW_MATERIAL",
-    unit: "KG",
-    usageUnit: "GRAM",
-    outMethod: "FIFO",
-    leadTime: 0,
-    isDummy: false,
-    unitPrice: 0,
-    minLevel: 0,
-    maxLevel: 0,
-    reorderPoint: 0,
-    categoryId: "",
-    inventoryAccountId: "",
-    salesAccountId: "",
-    halalCertNo: "",
-    halalExpDate: "",
-    isHalalValidated: false,
-    physicalForm: "PADAT" as "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS",
-  });
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [goodsRes, catRes, accRes] = await Promise.all([
+      const [goodsRes, catRes] = await Promise.all([
         api.get("/scm/materials"),
         api.get("/master/categories?type=GOODS"),
-        api.get("/finance/accounts"),
       ]);
       setGoods(goodsRes.data);
       setCategories(catRes.data);
-      setAccounts(accRes.data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch data ecosystem");
     } finally {
       setLoading(false);
@@ -155,13 +171,13 @@ export default function MasterGoodsPage() {
   const fetchGoodDetail = async (id: string) => {
     try {
       const res = await api.get(`/scm/materials/${id}`);
-      setEditingGood(res.data);
       const good = res.data;
+      setEditingGood(good);
       setFormData({
         name: good.name,
         code: good.code || "",
-        type: good.type as any,
-        unit: good.unit as any,
+        type: good.type,
+        unit: good.unit,
         usageUnit: good.usageUnit || "GRAM",
         outMethod: good.outMethod,
         leadTime: good.leadTime,
@@ -174,28 +190,12 @@ export default function MasterGoodsPage() {
         inventoryAccountId: good.inventoryAccountId || "",
         salesAccountId: good.salesAccountId || "",
         halalCertNo: good.halalCertNo || "",
-        halalExpDate: good.halalExpDate ? new Date(good.halalExpDate).toISOString().split('T')[0] : "",
+        halalExpDate: good.halalExpDate ? new Date(good.halalExpDate).toISOString().split("T")[0] : "",
         isHalalValidated: good.isHalalValidated,
-        physicalForm: good.physicalForm as "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS" || "PADAT",
+        physicalForm: good.physicalForm || "PADAT",
       });
-    } catch (err) {
+    } catch {
       toast.error("Failure in retrieval of material intelligence");
-    }
-  };
-
-  const handleUpdateStatus = async (batchId: string, status: string) => {
-    try {
-      setIsUpdatingStatus(true);
-      await api.post(`/warehouse/batches/${batchId}/status`, {
-        status,
-        userId: "CURRENT_USER_ID",
-      });
-      toast.success(`Batch status calibrated to ${status}`);
-      if (editingGood) fetchGoodDetail(editingGood.id);
-    } catch (err) {
-      toast.error("QC Gate validation failure");
-    } finally {
-      setIsUpdatingStatus(false);
     }
   };
 
@@ -203,7 +203,20 @@ export default function MasterGoodsPage() {
     fetchData();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleUpdateStatus = async (batchId: string, status: string) => {
+    try {
+      await api.post(`/warehouse/batches/${batchId}/status`, {
+        status,
+        userId: "CURRENT_USER_ID",
+      });
+      toast.success(`Batch status calibrated to ${status}`);
+      if (editingGood) fetchGoodDetail(editingGood.id);
+    } catch {
+      toast.error("QC Gate validation failure");
+    }
+  };
+
+  const handleSubmit = (e: { preventDefault: () => void }): void => {
     e.preventDefault();
     setShowConfirm(true);
   };
@@ -221,164 +234,245 @@ export default function MasterGoodsPage() {
       setIsPanelOpen(false);
       setEditingGood(null);
       fetchData();
-    } catch (err) {
+    } catch {
       toast.error("Constraint violation in product registration");
     }
   };
 
-  const filteredGoods = goods.filter(g =>
-    g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (g.code?.toLowerCase() || "").includes(searchQuery.toLowerCase())
-  );
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/scm/materials/${id}`);
+      toast.success("Material deleted");
+      setDeletingId(null);
+      fetchData();
+    } catch {
+      toast.error("Failed to delete material");
+    }
+  };
 
-  const criticalStock = goods.filter(g => g.stockQty <= g.minLevel).length;
-  const dummyCount = goods.filter(g => g.isDummy).length;
+  const openNew = () => {
+    setEditingGood(null);
+    setFormData({ ...EMPTY_FORM });
+    setIsPanelOpen(true);
+  };
 
-  return (
-    <TableShell
-      title="Goods"
-      titleAccent="Catalog"
-      subtitle="Master Data Repository & Logistical Intelligence"
-      actions={
-        <>
-          <DnaButton variant="outline" icon={<History />}>Log Audit</DnaButton>
-          <DnaButton
-            variant="primary"
-            icon={<Plus />}
-            onClick={() => {
-              setEditingGood(null);
-              setFormData({
-                name: "", code: "", type: "RAW_MATERIAL", unit: "KG", usageUnit: "GRAM",
-                outMethod: "FIFO", leadTime: 0, isDummy: false, unitPrice: 0,
-                minLevel: 0, maxLevel: 0, reorderPoint: 0, categoryId: "",
-                inventoryAccountId: "", salesAccountId: "", halalCertNo: "",
-                halalExpDate: "", isHalalValidated: false, physicalForm: "PADAT",
-              });
-              setIsPanelOpen(true);
-            }}
-          >
-            Initialize Good
-          </DnaButton>
-        </>
-      }
-      filters={
-        <div className="flex-1 flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <DnaInput
-              icon={<Search />}
-              placeholder="Search by name or SKU..."
-              className="bg-white text-[11px] font-bold uppercase"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-          </div>
-        </div>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[var(--card-gap)]">
-        <StatCard label="Total SKU" value={goods.length} subValue="Registered SKUs" icon={<Package />} />
-        <div className="bg-white border border-rose-200 rounded-2xl p-7 shadow-card transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in">
-          <div className="relative z-10 w-full">
-            <div className="space-y-2">
-              <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.25em]">Critical Stock</p>
-              <h3 className="text-[26px] font-black text-slate-900 tracking-tight tabular leading-tight">{criticalStock}</h3>
-              <p className="text-[11px] font-bold text-rose-400 uppercase tracking-wider leading-tight">Requires Attention</p>
-            </div>
-          </div>
-          <div className="absolute -bottom-5 -right-5 pointer-events-none select-none z-0">
-            <AlertTriangle className="w-[110px] h-[110px] stroke-[0.75px] text-rose-200/40" />
-          </div>
-        </div>
-        <StatCard label="Dummy Materials" value={dummyCount} subValue="Simulation Data" icon={<FlaskConical />} />
-        <StatCard label="System Sync" value="100%" subValue="Ecosystem Integrity" icon={<Activity />} />
-      </div>
+  const openEdit = (good: Good) => {
+    fetchGoodDetail(good.id);
+    setIsPanelOpen(true);
+  };
 
+  const filteredGoods = useMemo(() => {
+    if (!searchQuery) return goods;
+    const q = searchQuery.toLowerCase();
+    return goods.filter(
+      (g) =>
+        g.name.toLowerCase().includes(q) ||
+        (g.code?.toLowerCase() || "").includes(q)
+    );
+  }, [goods, searchQuery]);
+
+  // Stats
+  const totalSku = goods.length;
+  const criticalStock = goods.filter((g) => g.stockQty <= g.minLevel).length;
+  const dummyCount = goods.filter((g) => g.isDummy).length;
+
+  const stats: [MasterStatItem, MasterStatItem, MasterStatItem, MasterStatItem] = [
+    { variant: "neutral", label: "Total SKU", value: totalSku, subtext: "Registered SKUs", icon: <Package /> },
+    { variant: "rose", label: "Critical Stock", value: criticalStock, subtext: "Requires Attention", icon: <AlertTriangle /> },
+    { variant: "amber", label: "Dummy Materials", value: dummyCount, subtext: "Simulation Data", icon: <FlaskConical /> },
+    { variant: "blue", label: "System Sync", value: "100%", subtext: "Ecosystem Integrity", icon: <Activity /> },
+  ];
+
+  const tabs: [MasterTab, MasterTab] = [
+    { key: "DAFTAR", label: "Daftar Barang", count: totalSku },
+    { key: "KELOLA", label: "Kelola Barang", count: criticalStock },
+  ];
+
+  // ── Tab content: DAFTAR (read-only) ──
+  const daftarContent = (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
       <TableWrapper>
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Product Specification</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Category</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Logistics</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right tabular-nums">Valuation</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">Stock Status</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
+            <TableHeader className="bg-slate-50/75">
+              <TableRow className="hover:bg-transparent border-slate-200">
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Product Specification</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Category</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Logistics</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-right">Valuation</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center">Stock Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-20 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  <TableCell colSpan={5} className="py-20 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     Syncing Global Ledger...
                   </TableCell>
                 </TableRow>
-              ) : filteredGoods.map((good) => (
-                <TableRow
-                  key={good.id}
-                  className="group hover:bg-slate-50/30 border-b border-slate-50 cursor-pointer"
-                  onClick={() => {
-                    fetchGoodDetail(good.id);
-                    setIsPanelOpen(true);
-                  }}
-                >
-                  <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-slate-900 text-xs uppercase">{good.name}</span>
-                          {good.isDummy && (
-                            <DnaBadge status="warning">
-                              DUMMY
-                            </DnaBadge>
-                          )}
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{good.code || "PENDING_SKU"}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <DnaBadge>
-                      {good.category?.name || "UNCATEGORIZED"}
-                    </DnaBadge>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <ArrowRightLeft className="w-3 h-3 text-slate-400" />
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">{good.outMethod}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Truck className="w-3 h-3 text-slate-400" />
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">{good.leadTime} Days</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right tabular-nums">
-                    <span className="font-black text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString('id-ID')}</span>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-tighter">Moving Avg</span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
-                        {good.stockQty} {good.unit}
-                      </DnaBadge>
-                      {good.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
-                      <Info className="h-4 w-4" />
-                    </div>
+              ) : filteredGoods.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-12 text-center text-slate-400">
+                    Tidak ada barang.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredGoods.map((good) => (
+                  <TableRow
+                    key={good.id}
+                    className="group hover:bg-slate-50/80 border-b border-slate-100"
+                  >
+                    <TableCell className="px-4 py-3.5">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 text-xs uppercase">{good.name}</span>
+                          {good.isDummy && <DnaBadge status="warning">DUMMY</DnaBadge>}
+                        </div>
+                        <span className="text-[11px] text-slate-500">{good.code || "PENDING_SKU"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5">
+                      <DnaBadge>{good.category?.name || "UNCATEGORIZED"}</DnaBadge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <ArrowRightLeft className="w-3 h-3 text-slate-400" />
+                          <span className="text-[11px] text-slate-500">{good.outMethod}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Truck className="w-3 h-3 text-slate-400" />
+                          <span className="text-[11px] text-slate-500">{good.leadTime} Days</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 text-right">
+                      <span className="font-bold text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString("id-ID")}</span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
+                          {good.stockQty} {good.unit}
+                        </DnaBadge>
+                        {good.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </TableWrapper>
+    </div>
+  );
 
+  // ── Tab content: KELOLA (CRUD) ──
+  const kelolaContent = (
+    <>
+      <div className="flex items-center justify-end mb-3">
+        <DnaButton variant="primary" icon={<Plus />} onClick={openNew}>
+          Tambah Barang
+        </DnaButton>
+      </div>
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+        <TableWrapper>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/75">
+                <TableRow className="hover:bg-transparent border-slate-200">
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 w-10">#</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Product</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Category</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-right">Price</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center">Stock</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center w-24">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-20 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredGoods.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-12 text-center text-slate-400">
+                      Tidak ada barang. Klik "Tambah Barang" untuk menambah.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredGoods.map((good, idx) => (
+                    <TableRow
+                      key={good.id}
+                      className="group hover:bg-slate-50/80 border-b border-slate-100"
+                    >
+                      <TableCell className="px-4 py-3.5 text-slate-400 tabular-nums">{idx + 1}</TableCell>
+                      <TableCell className="px-4 py-3.5">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 text-xs uppercase">{good.name}</span>
+                          <span className="text-[11px] text-slate-500">{good.code || "PENDING_SKU"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3.5">
+                        <DnaBadge>{good.category?.name || "UNCATEGORIZED"}</DnaBadge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3.5 text-right">
+                        <span className="font-bold text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString("id-ID")}</span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3.5 text-center">
+                        <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
+                          {good.stockQty} {good.unit}
+                        </DnaBadge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => openEdit(good)}
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-center"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingId(good.id)}
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TableWrapper>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <MasterPageShell
+        title="BARANG"
+        badge={<DnaBadge status="info">MATERIALS</DnaBadge>}
+        subtitle="Master SKU & material. Tab Daftar = lihat semua barang. Tab Kelola = CRUD dengan Sheet panel."
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(k) => setActiveTab(k as "DAFTAR" | "KELOLA")}
+        stats={stats}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari nama atau SKU..."
+        daftarContent={daftarContent}
+        kelolaContent={kelolaContent}
+      />
+
+      {/* Sheet: Add/Edit Material (multi-section form) */}
       <Sheet open={isPanelOpen} onOpenChange={setIsPanelOpen}>
         <SheetContent side="right" className="sm:max-w-[700px] p-0 border-l border-slate-200 shadow-2xl bg-white flex flex-col h-full">
           <SheetHeader className="p-8 bg-slate-800 text-white shrink-0">
@@ -387,10 +481,10 @@ export default function MasterGoodsPage() {
                 <Package className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <SheetTitle className="text-sm font-black uppercase tracking-tight text-white leading-none">
+                <SheetTitle className="text-sm font-bold uppercase tracking-tight text-white leading-none">
                   {editingGood ? "Material Detail" : "Initialize Material"}
                 </SheetTitle>
-                <SheetDescription className="text-[9px] font-bold text-white/40 uppercase tracking-wider mt-1">
+                <SheetDescription className="text-[11px] text-white/60 uppercase tracking-wider mt-1">
                   Ecosystem Entry Protocol
                 </SheetDescription>
               </div>
@@ -403,26 +497,26 @@ export default function MasterGoodsPage() {
                 <SectionDivider number={1} title="Essential Architecture" />
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Product Name</Label>
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Name</Label>
                     <DnaInput value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="border-none font-bold uppercase" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">SKU / Code</Label>
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">SKU / Code</Label>
                     <DnaInput value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="border-none font-bold uppercase" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Category</Label>
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</Label>
                     <Select value={formData.categoryId || ""} onValueChange={(v) => setFormData({ ...formData, categoryId: v || "" })}>
                       <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue placeholder="SELECT" /></SelectTrigger>
                       <SelectContent className="border-none shadow-xl rounded-xl">{categories.map(c => <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Type</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as any })}>
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Type</Label>
+                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as string })}>
                       <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent className="border-none shadow-xl rounded-xl">
                         <SelectItem value="RAW_MATERIAL" className="text-xs font-bold uppercase">Raw Material</SelectItem>
@@ -432,8 +526,8 @@ export default function MasterGoodsPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Unit</Label>
-                    <Select value={formData.unit} onValueChange={(v) => setFormData({ ...formData, unit: v as any })}>
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Unit</Label>
+                    <Select value={formData.unit} onValueChange={(v) => setFormData({ ...formData, unit: v as string })}>
                       <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent className="border-none shadow-xl rounded-xl">
                         <SelectItem value="KG" className="text-xs font-bold uppercase">KG</SelectItem>
@@ -444,11 +538,10 @@ export default function MasterGoodsPage() {
                   </div>
                 </div>
 
-                {/* Item 52: physicalForm field */}
                 <div className="grid grid-cols-5 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Physical Form</Label>
-                    <Select value={formData.physicalForm} onValueChange={(v) => setFormData({ ...formData, physicalForm: v as any })}>
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Physical Form</Label>
+                    <Select value={formData.physicalForm} onValueChange={(v) => setFormData({ ...formData, physicalForm: v as typeof formData.physicalForm })}>
                       <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent className="border-none shadow-xl rounded-xl">
                         <SelectItem value="CAIR" className="text-xs font-bold uppercase">Cair</SelectItem>
@@ -467,18 +560,18 @@ export default function MasterGoodsPage() {
                 <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Dummy Material</Label>
+                      <Label className="text-[11px] font-bold text-slate-900 uppercase">Dummy Material</Label>
                       <Switch checked={formData.isDummy} onCheckedChange={(v) => setFormData({ ...formData, isDummy: v })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-bold text-slate-400 uppercase">Lead Time (Days)</Label>
+                      <Label className="text-[11px] font-bold text-slate-500 uppercase">Lead Time (Days)</Label>
                       <DnaInput type="number" value={formData.leadTime} onChange={(e) => setFormData({ ...formData, leadTime: Number(e.target.value) })} className="h-10 bg-white border-slate-200 font-bold" />
                     </div>
                   </div>
                   <div className="space-y-4 border-l border-slate-200 pl-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Outbound Engine</Label>
-                      <Select value={formData.outMethod} onValueChange={(v) => setFormData({ ...formData, outMethod: v as any })}>
+                      <Label className="text-[11px] font-bold text-slate-900 uppercase">Outbound Engine</Label>
+                      <Select value={formData.outMethod} onValueChange={(v) => setFormData({ ...formData, outMethod: v as "FIFO" | "FEFO" })}>
                         <SelectTrigger className="h-10 bg-white border-slate-200 font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent className="border-none shadow-xl rounded-xl">
                           <SelectItem value="FIFO" className="text-xs font-bold uppercase">FIFO</SelectItem>
@@ -487,7 +580,7 @@ export default function MasterGoodsPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-bold text-slate-400 uppercase">Usage Unit</Label>
+                      <Label className="text-[11px] font-bold text-slate-500 uppercase">Usage Unit</Label>
                       <DnaInput value={formData.usageUnit || ""} onChange={(e) => setFormData({ ...formData, usageUnit: e.target.value })} className="h-10 bg-white border-slate-200 font-bold uppercase" />
                     </div>
                   </div>
@@ -504,42 +597,30 @@ export default function MasterGoodsPage() {
                           <div className="flex items-center gap-4">
                             <div className={cn(
                               "h-10 w-10 rounded-xl flex items-center justify-center",
-                              batch.qcStatus === 'GOOD' ? "bg-emerald-50" : batch.qcStatus === 'QUARANTINE' ? "bg-amber-50" : "bg-rose-50"
+                              batch.qcStatus === "GOOD" ? "bg-emerald-50" : batch.qcStatus === "QUARANTINE" ? "bg-amber-50" : "bg-rose-50"
                             )}>
-                              {batch.qcStatus === 'GOOD' ? <ShieldCheck className="w-5 h-5 text-emerald-500" /> :
-                               batch.qcStatus === 'QUARANTINE' ? <Clock className="w-5 h-5 text-amber-500" /> :
-                               <AlertTriangle className="w-5 h-5 text-rose-500" />}
+                              {batch.qcStatus === "GOOD" ? <ShieldCheck className="w-5 h-5 text-emerald-500" /> :
+                                batch.qcStatus === "QUARANTINE" ? <Clock className="w-5 h-5 text-amber-500" /> :
+                                <AlertTriangle className="w-5 h-5 text-rose-500" />}
                             </div>
                             <div>
-                              <p className="text-[11px] font-black text-slate-900 uppercase">BATCH: {batch.batchNumber}</p>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
-                                Qty: {batch.currentStock} {editingGood.unit} &middot; Loc: {batch.location?.name || 'GEN_WAREHOUSE'}
+                              <p className="text-[11px] font-bold text-slate-900 uppercase">BATCH: {batch.batchNumber}</p>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Qty: {batch.currentStock} {editingGood.unit} &middot; Loc: {batch.location?.name || "GEN_WAREHOUSE"}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {batch.qcStatus === 'QUARANTINE' && (
+                            {batch.qcStatus === "QUARANTINE" && (
                               <>
-                                <DnaButton
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleUpdateStatus(batch.id, 'GOOD')}
-                                >
-                                  Release
-                                </DnaButton>
-                                <DnaButton
-                                  variant="danger"
-                                  size="sm"
-                                  onClick={() => handleUpdateStatus(batch.id, 'REJECT')}
-                                >
-                                  Reject
-                                </DnaButton>
+                                <DnaButton variant="primary" size="sm" onClick={() => handleUpdateStatus(batch.id, "GOOD")}>Release</DnaButton>
+                                <DnaButton variant="danger" size="sm" onClick={() => handleUpdateStatus(batch.id, "REJECT")}>Reject</DnaButton>
                               </>
                             )}
                             <DnaBadge status={
-                              batch.qcStatus === 'GOOD' ? "success" :
-                              batch.qcStatus === 'QUARANTINE' ? "warning" :
-                              "critical"
+                              batch.qcStatus === "GOOD" ? "success" :
+                                batch.qcStatus === "QUARANTINE" ? "warning" :
+                                  "critical"
                             }>
                               {batch.qcStatus}
                             </DnaBadge>
@@ -548,14 +629,13 @@ export default function MasterGoodsPage() {
                       ))
                     ) : (
                       <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">No Active Batches in Inventory</p>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase">No Active Batches in Inventory</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Item 39: Supplier History + Item 72: HPP Breakdown */}
               {editingGood && (
                 <div className="px-8 pb-4 space-y-4">
                   <SectionDivider number={7} title="Supplier & HPP" />
@@ -567,25 +647,41 @@ export default function MasterGoodsPage() {
           </div>
 
           <SheetFooter className="p-8 bg-slate-50 border-t border-slate-200 shrink-0">
-            <DnaButton variant="outline" onClick={() => setIsPanelOpen(false)}>Discard</DnaButton>
-            <DnaButton variant="primary" type="button" onClick={handleSubmit} className="mb-0">
-              {editingGood ? "Commit" : "Deploy"}
+            <DnaButton variant="outline" onClick={() => setIsPanelOpen(false)}>Batal</DnaButton>
+            <DnaButton variant="primary" type="button" onClick={handleSubmit}>
+              {editingGood ? "Simpan" : "Tambah"}
             </DnaButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Confirm Submit */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Konfirmasi</DialogTitle>
           </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <p>Yakin ingin menyimpan data barang ini?</p>
           <DialogFooter>
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+
+      {/* Confirm Delete */}
+      <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Barang</DialogTitle>
+          </DialogHeader>
+          <p>Yakin ingin menghapus barang ini?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setDeletingId(null)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => deletingId && handleDelete(deletingId)}>Ya, Hapus</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

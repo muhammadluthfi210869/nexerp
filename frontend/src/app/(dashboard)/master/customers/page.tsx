@@ -1,19 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+/**
+ * Master Customer — Consolidated Page (Daftar + Kelola)
+ *
+ * Per Batch 6.3 user feedback: legacy ERP punya Customer + Kelola Customer
+ * as 2 pages. Kita consolidated jadi 1 page dengan 2 tabs:
+ *   - Tab 1: DAFTAR CUSTOMER (read-only partner directory)
+ *   - Tab 2: KELOLA CUSTOMER (CRUD with full partner profile)
+ *
+ * Per REQUIREMENT Poin 2: Customer form supports Sample/Produksi/Legalitas
+ * sections via category tagging.
+ */
+
+import { useState, useEffect } from "react";
 import {
   Plus,
-  Search,
   Building2,
   Mail,
   Phone,
   ShieldCheck,
-  ArrowUpRight,
   Activity,
   CreditCard,
   UserCircle,
   MapPin,
-  User,
+  Edit2,
   Trash2,
 } from "lucide-react";
 import {
@@ -43,9 +53,11 @@ import { toast } from "sonner";
 import { DnaButton } from "@/components/dna/DnaButton";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableShell } from "@/components/layout/TableShell";
+import {
+  MasterPageShell,
+  type MasterStatItem,
+  type MasterTab,
+} from "@/components/dna";
 import { CascadingAddress } from "@/components/ui/cascading-address";
 
 type Customer = {
@@ -69,33 +81,38 @@ type Customer = {
   taxId: string | null;
 };
 
+const EMPTY_FORM = {
+  name: "",
+  clientName: "",
+  instansi: "",
+  email: "",
+  phone: "",
+  address: "",
+  alamatDetail: "",
+  provinsi: "",
+  kota: "",
+  kecamatan: "",
+  salesAssignee: "",
+  status: "ACTIVE",
+  categoryId: "",
+  creditLimit: 0,
+  taxId: "",
+};
+
 export default function MasterCustomersPage() {
+  // Consolidated tabs
+  const [activeTab, setActiveTab] = useState<"DAFTAR" | "KELOLA">("DAFTAR");
+
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    clientName: "",
-    instansi: "",
-    email: "",
-    phone: "",
-    address: "",
-    alamatDetail: "",
-    provinsi: "",
-    kota: "",
-    kecamatan: "",
-    salesAssignee: "",
-    status: "ACTIVE",
-    categoryId: "",
-    creditLimit: 0,
-    taxId: "",
-  });
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
   const fetchData = async () => {
     try {
@@ -106,7 +123,7 @@ export default function MasterCustomersPage() {
       ]);
       setCustomers(custRes.data);
       setCategories(catRes.data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to sync customer ecosystem");
     } finally {
       setLoading(false);
@@ -132,17 +149,18 @@ export default function MasterCustomersPage() {
     fetchUsers();
   }, []);
 
-  const handleDelete = async (customer: Customer) => {
+  const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/master/customers/${customer.id}`);
+      await api.delete(`/master/customers/${id}`);
       toast.success("Customer deleted successfully");
+      setDeletingId(null);
       fetchData();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete customer");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: { preventDefault: () => void }): void => {
     e.preventDefault();
     setShowConfirm(true);
   };
@@ -159,30 +177,24 @@ export default function MasterCustomersPage() {
       }
       setIsModalOpen(false);
       setEditingCustomer(null);
+      resetForm();
       fetchData();
-    } catch (err) {
+    } catch {
       toast.error("Constraint violation in partner registration");
     }
   };
 
-  const filteredCustomers = customers.filter(c =>
-    c.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (c.email?.toLowerCase() || "").includes(searchQuery.toLowerCase())
-  );
-
-  const activeCount = customers.filter(c => c.status === "ACTIVE").length;
-
-  const openCreateModal = () => {
-    setEditingCustomer(null);
-    setFormData({
-      name: "", clientName: "", instansi: "", email: "", phone: "",
-      address: "", alamatDetail: "", provinsi: "", kota: "", kecamatan: "",
-      salesAssignee: "", status: "ACTIVE", categoryId: "", creditLimit: 0, taxId: "",
-    });
-    setIsModalOpen(true);
+  const resetForm = () => {
+    setFormData({ ...EMPTY_FORM });
   };
 
-  const openEditModal = (customer: Customer) => {
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.email?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+  );
+
+  const openEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     setFormData({
       name: customer.name,
@@ -204,118 +216,155 @@ export default function MasterCustomersPage() {
     setIsModalOpen(true);
   };
 
-  return (
-    <TableShell
-      title="Global"
-      titleAccent="Client Hub"
-      subtitle="Commercial Partner Registry — B2B Commercial Ledger"
-      actions={
-        <DnaButton variant="primary" icon={<Plus />} onClick={openCreateModal}>
-          Onboard Partner
-        </DnaButton>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[var(--card-gap)]">
-        <StatCard label="Partner Registry" value={customers.length} subValue="Total Clients" icon={<Building2 />} />
-        <StatCard label="Active Revenue" value={activeCount} subValue="Active Partners" icon={<Activity />} />
-        <StatCard label="Strategic Segments" value={categories.length} subValue="Categories" icon={<CreditCard />} />
-        <StatCard label="Tax Compliance" value="100%" subValue="NPWP Coverage" icon={<ShieldCheck />} />
-      </div>
+  // Stats
+  const totalCustomers = customers.length;
+  const activeCount = customers.filter((c) => c.status === "ACTIVE").length;
+  const inactiveCount = customers.filter((c) => c.status === "INACTIVE").length;
+  const withTaxId = customers.filter((c) => c.taxId && c.taxId !== "").length;
 
-      <TableWrapper
-        filters={
-          <div className="flex items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-3">
-              <span className="status-dot bg-blue-500" />
-              <div>
-                <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
-                  Partner Directory
-                </h3>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                  {filteredCustomers.length} Records
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <DnaInput
-                icon={<Search />}
-                placeholder="Search partner..."
-                className="md:w-56"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Partner Identity</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Classification</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Contact Protocol</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">Status</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
+  const stats: [MasterStatItem, MasterStatItem, MasterStatItem, MasterStatItem] = [
+    { variant: "neutral", label: "Total Customer", value: totalCustomers, subtext: "Partner terdaftar", icon: <Building2 /> },
+    { variant: "emerald", label: "Customer Aktif", value: activeCount, subtext: "Sedang aktif", icon: <Activity /> },
+    { variant: "rose", label: "Non-aktif", value: inactiveCount, subtext: "Tidak aktif", icon: <Activity /> },
+    { variant: "blue", label: "NPWP Lengkap", value: withTaxId, subtext: "Tax compliance", icon: <ShieldCheck /> },
+  ];
+
+  const tabs: [MasterTab, MasterTab] = [
+    { key: "DAFTAR", label: "Daftar Customer", count: totalCustomers },
+    { key: "KELOLA", label: "Kelola Customer", count: activeCount },
+  ];
+
+  // ── Reusable Customer Table ──
+  const CustomerTable = ({ showActions }: { showActions: boolean }) => (
+    <TableWrapper>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="bg-slate-50/75">
+            <TableRow className="hover:bg-transparent border-slate-200">
+              <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Partner Identity</TableHead>
+              <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Classification</TableHead>
+              <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Contact Protocol</TableHead>
+              <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center">Status</TableHead>
+              {showActions && (
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center w-24">Aksi</TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={showActions ? 5 : 4} className="py-20 text-center">
+                  <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Initializing Matrix...</p>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Initializing Matrix...</p>
-                  </TableCell>
-                </TableRow>
-              ) : filteredCustomers.map((customer) => (
-                <TableRow key={customer.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
-                  <TableCell className="px-6 py-4">
+            ) : filteredCustomers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={showActions ? 5 : 4} className="py-12 text-center text-slate-400">
+                  Tidak ada customer.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCustomers.map((customer) => (
+                <TableRow key={customer.id} className="group hover:bg-slate-50/80 border-b border-slate-100">
+                  <TableCell className="px-4 py-3.5">
                     <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                      <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center">
                         <Building2 className="h-5 w-5" />
                       </div>
                       <div>
-                        <span className="font-black text-slate-900 text-xs uppercase block">{customer.clientName}</span>
-                        <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{customer.taxId || "NO TAX ID"}</span>
+                        <span className="font-bold text-slate-900 text-xs uppercase block">{customer.clientName}</span>
+                        <span className="text-[11px] text-blue-600 uppercase">{customer.taxId || "NO TAX ID"}</span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-[10px] font-black text-slate-400 uppercase">{customer.category?.name || "Tier 1 Partner"}</span>
+                  <TableCell className="px-4 py-3.5">
+                    <span className="text-[11px] text-slate-500">{customer.category?.name || "Tier 1 Partner"}</span>
                   </TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell className="px-4 py-3.5">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500">
                         <Mail className="w-3 h-3" /> {customer.email || "---"}
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500">
                         <Phone className="w-3 h-3" /> {customer.phone || "---"}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-center">
+                  <TableCell className="px-4 py-3.5 text-center">
                     <DnaBadge status={customer.status === "ACTIVE" ? "success" : "default"}>
                       {customer.status}
                     </DnaBadge>
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <DnaButton variant="ghost" onClick={() => openEditModal(customer)}>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </DnaButton>
-                      <DnaButton variant="ghost" onClick={() => handleDelete(customer)}>
-                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                      </DnaButton>
-                    </div>
-                  </TableCell>
+                  {showActions && (
+                    <TableCell className="px-4 py-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => openEdit(customer)}
+                          className="w-7 h-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingId(customer.id)}
+                          className="w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </TableWrapper>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </TableWrapper>
+  );
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+  const daftarContent = <CustomerTable showActions={false} />;
+
+  const kelolaContent = (
+    <>
+      <div className="flex items-center justify-end mb-3">
+        <DnaButton
+          variant="primary"
+          icon={<Plus />}
+          onClick={() => {
+            resetForm();
+            setEditingCustomer(null);
+            setIsModalOpen(true);
+          }}
+        >
+          Tambah Customer
+        </DnaButton>
+      </div>
+      <CustomerTable showActions={true} />
+    </>
+  );
+
+  return (
+    <>
+      <MasterPageShell
+        title="CUSTOMER"
+        badge={<DnaBadge status="info">CLIENT HUB</DnaBadge>}
+        subtitle="Master customer / partner B2B. Tab Daftar = lihat semua customer. Tab Kelola = CRUD."
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(k) => setActiveTab(k as "DAFTAR" | "KELOLA")}
+        stats={stats}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari nama partner atau email..."
+        daftarContent={daftarContent}
+        kelolaContent={kelolaContent}
+      />
+
+      {/* Modal: Add/Edit Customer */}
+      <Dialog open={isModalOpen} onOpenChange={(o) => { setIsModalOpen(o); if (!o) setEditingCustomer(null); }}>
         <DialogContent className="sm:max-w-[700px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white max-h-[85vh] overflow-y-auto">
           <DialogHeader className="p-6 bg-slate-800 text-white sticky top-0 z-10">
             <div className="flex items-center gap-4">
@@ -323,10 +372,10 @@ export default function MasterCustomersPage() {
                 <UserCircle className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <DialogTitle className="text-sm font-black uppercase tracking-tight">
-                  {editingCustomer ? "Edit Partner" : "Register Partner"}
+                <DialogTitle className="text-sm font-bold uppercase tracking-tight">
+                  {editingCustomer ? "Edit Partner" : "Tambah Customer"}
                 </DialogTitle>
-                <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mt-1">B2B Commercial Ledger</p>
+                <p className="text-[11px] text-white/60 uppercase tracking-wider mt-1">B2B Commercial Ledger</p>
               </div>
             </div>
           </DialogHeader>
@@ -335,17 +384,16 @@ export default function MasterCustomersPage() {
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Company Name <span className="text-red-500">*</span></label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Perusahaan *</label>
                 <input
                   placeholder="e.g. PT GLOBAL SYNERGY"
                   value={formData.clientName}
                   onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                   className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase"
-                  autoFocus
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Instansi / Brand</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Instansi / Brand</label>
                 <input
                   placeholder="e.g. Brand Cosmetics"
                   value={formData.instansi}
@@ -357,36 +405,36 @@ export default function MasterCustomersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Category</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
                 <Select value={formData.categoryId} onValueChange={(v) => setFormData({ ...formData, categoryId: v ?? "" })}>
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder="Pilih kategori" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                    {categories.map(c => <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>)}
+                    {categories.map((c) => <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tax ID (NPWP)</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tax ID (NPWP)</label>
                 <input value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Email</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email</label>
                 <input value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">No. Telepon / WA</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">No. Telepon / WA</label>
                 <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
               </div>
             </div>
 
             {/* Address Section */}
             <div className="p-5 bg-emerald-600/5 border border-emerald-100 rounded-2xl space-y-4">
-              <h3 className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-2">
+              <h3 className="text-[11px] font-bold text-emerald-600 uppercase flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5" />
                 Alamat & Wilayah
               </h3>
@@ -399,7 +447,7 @@ export default function MasterCustomersPage() {
                 onKecamatanChange={(v) => setFormData({ ...formData, kecamatan: v })}
               />
               <div className="space-y-2">
-                <label className="text-[9px] font-bold text-slate-400 uppercase">Alamat Detail</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase">Alamat Detail</label>
                 <textarea
                   placeholder="Jalan, RT/RW, Patokan gedung..."
                   value={formData.alamatDetail}
@@ -412,10 +460,10 @@ export default function MasterCustomersPage() {
 
             {/* Sales Assignee */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Sales Assignee</label>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Assignee</label>
               <Select value={formData.salesAssignee} onValueChange={(v) => setFormData({ ...formData, salesAssignee: v ?? "" })}>
                 <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-                  <SelectValue placeholder="Select BD/Sales Staff" />
+                  <SelectValue placeholder="Pilih BD/Sales Staff" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-60 overflow-y-auto">
                   {users.map((u: any) => (
@@ -429,13 +477,13 @@ export default function MasterCustomersPage() {
 
             {/* Financial */}
             <div className="p-5 bg-blue-600/5 border border-blue-100 rounded-2xl space-y-4">
-              <h3 className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2">
+              <h3 className="text-[11px] font-bold text-blue-600 uppercase flex items-center gap-2">
                 <CreditCard className="w-3.5 h-3.5" />
-                Financial Liability
+                Tanggung Jawab Finansial
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Credit Limit</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">Credit Limit</label>
                   <input
                     type="number"
                     value={formData.creditLimit}
@@ -444,7 +492,7 @@ export default function MasterCustomersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase">Status</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">Status</label>
                   <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v ?? "ACTIVE" })}>
                     <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-xl text-xs font-bold">
                       <SelectValue />
@@ -459,26 +507,42 @@ export default function MasterCustomersPage() {
             </div>
 
             <DialogFooter className="pt-4 gap-3">
-              <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>Discard</DnaButton>
+              <DnaButton variant="outline" onClick={() => { setIsModalOpen(false); setEditingCustomer(null); }}>Batal</DnaButton>
               <DnaButton variant="primary" type="submit">
-                {editingCustomer ? "Update Partner" : "Register Partner"}
+                {editingCustomer ? "Simpan" : "Tambah"}
               </DnaButton>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Submit */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Konfirmasi</DialogTitle>
           </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <p>Yakin ingin menyimpan data customer ini?</p>
           <DialogFooter>
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+
+      {/* Confirm Delete */}
+      <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Customer</DialogTitle>
+          </DialogHeader>
+          <p>Yakin ingin menghapus customer ini dari master data?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setDeletingId(null)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => deletingId && handleDelete(deletingId)}>Ya, Hapus</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

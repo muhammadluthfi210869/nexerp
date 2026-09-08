@@ -1,18 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+/**
+ * Personnel Registry — Consolidated (Daftar + Kelola)
+ *
+ * Per Batch 6.3 user feedback: legacy ERP punya Personnel + Kelola Personnel
+ * as 2 pages. Kita consolidated jadi 1 page dengan 2 tabs:
+ *   - Tab 1: DAFTAR PERSONIL (read-only directory)
+ *   - Tab 2: KELOLA PERSONIL (CRUD with Onboard Staff)
+ *
+ * This is the inner client component. The server page.tsx wraps it with
+ * Suspense + initial SSR fetch.
+ */
+
+import { useState } from "react";
 import {
   Plus,
-  Search,
   User as UserIcon,
   Shield,
   Phone,
-  ChevronRight,
   UserCheck,
   Building2,
   Lock,
-  Zap,
-  Fingerprint,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import {
   Table,
@@ -41,9 +51,11 @@ import { toast } from "sonner";
 import { DnaButton } from "@/components/dna/DnaButton";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableShell } from "@/components/layout/TableShell";
+import {
+  MasterPageShell,
+  type MasterStatItem,
+  type MasterTab,
+} from "@/components/dna";
 
 type Department = { id: string; name: string };
 
@@ -64,22 +76,27 @@ interface PersonnelRegistryProps {
   initialDepartments: Department[];
 }
 
+const EMPTY_FORM = {
+  fullName: "",
+  employeeId: "",
+  position: "",
+  phone: "",
+  departmentId: "",
+};
+
 export function PersonnelRegistry({ initialEmployees, initialDepartments }: PersonnelRegistryProps) {
+  // Consolidated tabs
+  const [activeTab, setActiveTab] = useState<"DAFTAR" | "KELOLA">("DAFTAR");
+
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [departments, setDepartments] = useState<Department[]>(initialDepartments);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  const [formData, setFormData] = useState({
-    fullName: "",
-    employeeId: "",
-    position: "",
-    phone: "",
-    departmentId: "",
-  });
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
   const fetchData = async () => {
     try {
@@ -90,14 +107,14 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
       ]);
       setEmployees(empRes.data);
       setDepartments(deptRes.data || []);
-    } catch (err) {
+    } catch {
       toast.error("Personnel registry sync failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: { preventDefault: () => void }): void => {
     e.preventDefault();
     setShowConfirm(true);
   };
@@ -114,146 +131,190 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
       }
       setIsModalOpen(false);
       setEditingEmployee(null);
+      setFormData({ ...EMPTY_FORM });
       fetchData();
-    } catch (err) {
+    } catch {
       toast.error("Integrity error in personnel registration");
     }
   };
 
-  const filteredEmployees = employees.filter(e =>
-    e.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/hr/employees/${id}`);
+      toast.success("Personnel deleted");
+      setDeletingId(null);
+      fetchData();
+    } catch {
+      toast.error("Failed to delete personnel");
+    }
+  };
+
+  const filteredEmployees = employees.filter(
+    (e) =>
+      e.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const linkedCount = employees.filter(e => e.userId).length;
+  const openEdit = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setFormData({
+      fullName: emp.fullName,
+      employeeId: emp.employeeId,
+      position: emp.position,
+      phone: emp.phone || "",
+      departmentId: emp.departmentId,
+    });
+    setIsModalOpen(true);
+  };
 
-  return (
-    <TableShell
-      title="Personnel"
-      titleAccent="Registry Hub"
-      subtitle="Human Capital Ledger — Global staff directory and departmental hierarchy synchronization"
-      actions={
+  // Stats
+  const totalEmployees = employees.length;
+  const linkedCount = employees.filter((e) => e.userId).length;
+  const unlinkedCount = totalEmployees - linkedCount;
+
+  const stats: [MasterStatItem, MasterStatItem, MasterStatItem, MasterStatItem] = [
+    { variant: "neutral", label: "Total Pegawai", value: totalEmployees, subtext: "Seluruh staff terdaftar", icon: <UserCheck /> },
+    { variant: "blue", label: "Departemen", value: departments.length, subtext: "Unit operasional", icon: <Building2 /> },
+    { variant: "emerald", label: "Linked User", value: linkedCount, subtext: "Punya akses sistem", icon: <Shield /> },
+    { variant: "amber", label: "Off-Network", value: unlinkedCount, subtext: "Belum linked ke user", icon: <Lock /> },
+  ];
+
+  const tabs: [MasterTab, MasterTab] = [
+    { key: "DAFTAR", label: "Daftar Pegawai", count: totalEmployees },
+    { key: "KELOLA", label: "Kelola Pegawai", count: linkedCount },
+  ];
+
+  // ── Reusable Employee Table ──
+  const EmployeeTable = ({ showActions }: { showActions: boolean }) => (
+    <TableWrapper>
+      <Table>
+        <TableHeader className="bg-slate-50/75">
+          <TableRow className="hover:bg-transparent border-slate-200">
+            <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Staff Identity</TableHead>
+            <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Posisi / Unit</TableHead>
+            <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Kontak</TableHead>
+            <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center">System Link</TableHead>
+            {showActions && (
+              <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center w-24">Aksi</TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading && employees.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={showActions ? 5 : 4} className="py-20 text-center">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Syncing HRIS...</p>
+              </TableCell>
+            </TableRow>
+          ) : filteredEmployees.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={showActions ? 5 : 4} className="py-12 text-center text-slate-400">
+                Tidak ada pegawai.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredEmployees.map((emp) => (
+              <TableRow key={emp.id} className="group hover:bg-slate-50/80 border-b border-slate-100">
+                <TableCell className="px-4 py-3.5">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center text-sm font-bold uppercase">
+                      {emp.fullName.charAt(0)}
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-900 text-xs uppercase block">{emp.fullName}</span>
+                      <span className="text-[11px] text-blue-600">{emp.employeeId}</span>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="px-4 py-3.5">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-bold text-slate-900 uppercase">{emp.position}</span>
+                    <span className="text-[11px] text-blue-600">{emp.department?.name || "Operations"}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="px-4 py-3.5">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <Phone className="w-3 h-3" /> {emp.phone || "---"}
+                  </div>
+                </TableCell>
+                <TableCell className="px-4 py-3.5 text-center">
+                  {emp.userId ? (
+                    <DnaBadge status="success">
+                      <Shield className="w-3 h-3 mr-1" /> Linked
+                    </DnaBadge>
+                  ) : (
+                    <DnaBadge status="default">Off-Network</DnaBadge>
+                  )}
+                </TableCell>
+                {showActions && (
+                  <TableCell className="px-4 py-3.5 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => openEdit(emp)}
+                        className="w-7 h-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingId(emp.id)}
+                        className="w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </TableWrapper>
+  );
+
+  const daftarContent = <EmployeeTable showActions={false} />;
+
+  const kelolaContent = (
+    <>
+      <div className="flex items-center justify-end mb-3">
         <DnaButton
           variant="primary"
           icon={<Plus />}
           onClick={() => {
             setEditingEmployee(null);
-            setFormData({ fullName: "", employeeId: "", position: "", phone: "", departmentId: "" });
+            setFormData({ ...EMPTY_FORM });
             setIsModalOpen(true);
           }}
         >
-          Onboard Personnel
+          Tambah Pegawai
         </DnaButton>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-[var(--card-gap)]">
-        <StatCard label="Active Staff" value={employees.length} subValue="Total Employees" icon={<UserCheck />} />
-        <StatCard label="Departments" value={departments.length || 0} subValue="Operational Units" icon={<Building2 />} />
-        <StatCard label="System Access" value={linkedCount} subValue="Users with Clearance" icon={<Lock />} />
       </div>
+      <EmployeeTable showActions={true} />
+    </>
+  );
 
-      <TableWrapper
-        filters={
-          <div className="flex items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-3">
-              <span className="status-dot bg-blue-500" />
-              <div>
-                <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
-                  Personnel Directory
-                </h3>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                  {filteredEmployees.length} Records
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <DnaInput
-                icon={<Search />}
-                placeholder="Search by name or ID..."
-                className="md:w-56"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        }
-      >
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Staff Identity</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Position / Unit</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Contact</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-center">System Link</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading && employees.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Syncing HRIS...</p>
-                  </TableCell>
-                </TableRow>
-              ) : filteredEmployees.map((emp) => (
-                <TableRow key={emp.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
-                  <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center group-hover:bg-blue-600 transition-colors text-sm font-black uppercase">
-                        {emp.fullName.charAt(0)}
-                      </div>
-                      <div>
-                        <span className="font-black text-slate-900 text-xs uppercase block">{emp.fullName}</span>
-                        <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{emp.employeeId}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] font-black text-slate-900 uppercase">{emp.position}</span>
-                      <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">{emp.department?.name || "Operations"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                      <Phone className="w-3 h-3" /> {emp.phone || "---"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-center">
-                    {emp.userId ? (
-                      <DnaBadge status="success">
-                        <Shield className="w-3 h-3" /> Linked
-                      </DnaBadge>
-                    ) : (
-                      <DnaBadge status="default">Off-Network</DnaBadge>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <DnaButton
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingEmployee(emp);
-                        setFormData({
-                          fullName: emp.fullName,
-                          employeeId: emp.employeeId,
-                          position: emp.position,
-                          phone: emp.phone || "",
-                          departmentId: emp.departmentId,
-                        });
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      <Fingerprint className="w-3.5 h-3.5" />
-                    </DnaButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-      </TableWrapper>
+  return (
+    <>
+      <MasterPageShell
+        title="PERSONIL"
+        badge={<DnaBadge status="info">HR</DnaBadge>}
+        subtitle="Master kepegawaian. Tab Daftar = lihat semua personil. Tab Kelola = CRUD."
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(k) => setActiveTab(k as "DAFTAR" | "KELOLA")}
+        stats={stats}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari nama atau employee ID..."
+        daftarContent={daftarContent}
+        kelolaContent={kelolaContent}
+      />
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      {/* Modal: Add/Edit Employee */}
+      <Dialog open={isModalOpen} onOpenChange={(o) => { setIsModalOpen(o); if (!o) setEditingEmployee(null); }}>
         <DialogContent className="sm:max-w-[600px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white">
           <DialogHeader className="p-6 bg-slate-800 text-white">
             <div className="flex items-center gap-4">
@@ -261,10 +322,10 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
                 <UserIcon className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <DialogTitle className="text-sm font-black uppercase tracking-tight">
-                  {editingEmployee ? "Edit Profile" : "Onboard Staff"}
+                <DialogTitle className="text-sm font-bold uppercase tracking-tight">
+                  {editingEmployee ? "Edit Pegawai" : "Tambah Pegawai"}
                 </DialogTitle>
-                <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mt-1">Personnel Asset Protocol</p>
+                <p className="text-[11px] text-white/60 uppercase tracking-wider mt-1">Personnel Asset Protocol</p>
               </div>
             </div>
           </DialogHeader>
@@ -272,17 +333,16 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Name</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap *</label>
                 <input
                   placeholder="e.g. JOHN DOE"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase"
-                  autoFocus
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Staff ID</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Employee ID *</label>
                 <input
                   placeholder="EMP-2024-XXX"
                   value={formData.employeeId}
@@ -294,51 +354,65 @@ export function PersonnelRegistry({ initialEmployees, initialDepartments }: Pers
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Department</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Departemen</label>
                 <Select value={formData.departmentId} onValueChange={(v) => setFormData({ ...formData, departmentId: v || "" })}>
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder="Pilih departemen" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                    {departments.map(d => <SelectItem key={d.id} value={d.id} className="text-xs font-bold uppercase">{d.name}</SelectItem>)}
+                    {departments.map((d) => <SelectItem key={d.id} value={d.id} className="text-xs font-bold uppercase">{d.name}</SelectItem>)}
                     {departments.length === 0 && <SelectItem value="default" className="text-xs font-bold uppercase">Operations</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Position</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Posisi</label>
                 <input value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all uppercase" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone / WhatsApp</label>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Telepon / WhatsApp</label>
               <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-300 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
             </div>
 
             <DialogFooter className="pt-4 gap-3">
-              <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>Discard</DnaButton>
+              <DnaButton variant="outline" onClick={() => { setIsModalOpen(false); setEditingEmployee(null); }}>Batal</DnaButton>
               <DnaButton variant="primary" type="submit">
-                {editingEmployee ? "Update" : "Onboard"}
-                <ChevronRight className="w-4 h-4" />
+                {editingEmployee ? "Simpan" : "Tambah"}
               </DnaButton>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
+      {/* Confirm Submit */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Konfirmasi</DialogTitle>
           </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <p>Yakin ingin menyimpan data pegawai ini?</p>
           <DialogFooter>
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </TableShell>
+
+      {/* Confirm Delete */}
+      <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Pegawai</DialogTitle>
+          </DialogHeader>
+          <p>Yakin ingin menghapus pegawai ini dari master data?</p>
+          <DialogFooter>
+            <DnaButton variant="outline" onClick={() => setDeletingId(null)}>Batal</DnaButton>
+            <DnaButton variant="primary" onClick={() => deletingId && handleDelete(deletingId)}>Ya, Hapus</DnaButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
