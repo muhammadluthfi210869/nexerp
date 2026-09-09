@@ -31,189 +31,159 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
-  DnaTabNav,
-  useDnaToast,
-  formatRupiah
+  formatRupiah,
+  useDnaToast
 } from "@/components/dna";
 
-interface JournalLine {
+interface JournalEntryLine {
   id: string;
-  coaCode: string;
-  coaName: string;
+  accountCode: string;
+  accountName: string;
   debit: number;
   credit: number;
-  description?: string;
+  lineDescription: string;
 }
 
-interface JournalEntryItem {
+interface JournalHeader {
   id: string;
-  code: string; // e.g. JV-2026-0901
+  code: string;
   date: string;
   description: string;
-  referenceNo?: string;
-  journalType: "MANUAL" | "SALES" | "PURCHASE" | "PRODUCTION" | "CLOSING";
+  reference: string;
+  type: "MANUAL" | "AUTO_AR" | "AUTO_AP" | "AUTO_STOCK" | "ADJUSTMENT";
+  status: "POSTED" | "DRAFT";
   totalDebit: number;
   totalCredit: number;
-  status: "DRAFT" | "POSTED" | "REVERSED";
   createdBy: string;
-  lines: JournalLine[];
+  lines: JournalEntryLine[];
 }
 
-const FALLBACK_JOURNALS: JournalEntryItem[] = [
+const FALLBACK_JOURNALS: JournalHeader[] = [
   {
-    id: "jv-1",
-    code: "JV-2026-0901",
-    date: "2026-09-09",
-    description: "Jurnal Otomatis Rilis Batch Niacinamide Serum ke WH-03",
-    referenceNo: "COA-2026-0906-088",
-    journalType: "PRODUCTION",
-    totalDebit: 185000000,
-    totalCredit: 185000000,
-    status: "POSTED",
-    createdBy: "System (CPKB Engine)",
-    lines: [
-      { id: "jl-1", coaCode: "114-003", coaName: "Persediaan Barang Jadi (WH-03)", debit: 185000000, credit: 0, description: "Output 5.000 pcs produk jadi" },
-      { id: "jl-2", coaCode: "114-002", coaName: "Persediaan Barang Dalam Proses (WIP)", debit: 0, credit: 185000000, description: "Closing WIP Batch SPK-2026-0042" }
-    ]
-  },
-  {
-    id: "jv-2",
-    code: "JV-2026-0902",
+    id: "1",
+    code: "DL-FIN-JRN-08092026-0001",
     date: "2026-09-08",
-    description: "Alokasi Beban Penyusutan Mesin Homogenizer September 2026",
-    referenceNo: "DEP-2026-09",
-    journalType: "MANUAL",
-    totalDebit: 4500000,
-    totalCredit: 4500000,
+    description: "Realisasi Penerimaan Pembayaran Termin PO-8821 PT Glowing",
+    reference: "KM-2609-001",
+    type: "AUTO_AR",
     status: "POSTED",
-    createdBy: "Dewi Lestari",
+    totalDebit: 450000000,
+    totalCredit: 450000000,
+    createdBy: "Finance Auto System",
     lines: [
-      { id: "jl-3", coaCode: "610-008", coaName: "Beban Depresiasi Mesin Pabrik", debit: 4500000, credit: 0, description: "Penyusutan garis lurus bulan berjalan" },
-      { id: "jl-4", coaCode: "122-002", coaName: "Akumulasi Depresiasi Mesin Pabrik", debit: 0, credit: 4500000, description: "Akumulasi mixer & homogenizer" }
+      { id: "l1", accountCode: "1120", accountName: "Bank BCA Operasional", debit: 450000000, credit: 0, lineDescription: "Penerimaan rekening koran BCA" },
+      { id: "l2", accountCode: "1210", accountName: "Piutang Usaha Pelanggan (AR)", debit: 0, credit: 450000000, lineDescription: "Pengurangan piutang invoice AR-INV-2609-01" },
     ]
   },
   {
-    id: "jv-3",
-    code: "JV-2026-0903",
+    id: "2",
+    code: "DL-FIN-JRN-07092026-0002",
     date: "2026-09-07",
-    description: "Penyesuaian Selisih Kurs Valas Pembelian Bahan Baku Impor",
-    referenceNo: "PO-2026-0182",
-    journalType: "MANUAL",
-    totalDebit: 1250000,
-    totalCredit: 1250000,
+    description: "Pelunasan Pembayaran Faktur Supplier Centella",
+    reference: "KK-2609-001",
+    type: "AUTO_AP",
     status: "POSTED",
-    createdBy: "Dewi Lestari",
+    totalDebit: 120000000,
+    totalCredit: 120000000,
+    createdBy: "Finance Auto System",
     lines: [
-      { id: "jl-5", coaCode: "720-001", coaName: "Rugi Selisih Kurs Valas", debit: 1250000, credit: 0, description: "Kurs spot pelunasan impor" },
-      { id: "jl-6", coaCode: "101-001", coaName: "BCA Giro Operasional", debit: 0, credit: 1250000, description: "Pembayaran selisih transfer valas" }
+      { id: "l3", accountCode: "2110", accountName: "Hutang Usaha Supplier", debit: 120000000, credit: 0, lineDescription: "Pelunasan BILL-2608-012" },
+      { id: "l4", accountCode: "1120", accountName: "Bank BCA Operasional", debit: 0, credit: 120000000, lineDescription: "Transfer keluar dari rekening BCA" },
+    ]
+  },
+  {
+    id: "3",
+    code: "DL-FIN-JRN-05092026-0003",
+    date: "2026-09-05",
+    description: "Penyesuaian Biaya Sewa Fasilitas Dibayar di Muka Periode Sep",
+    reference: "ADJ-2609-01",
+    type: "ADJUSTMENT",
+    status: "POSTED",
+    totalDebit: 25000000,
+    totalCredit: 25000000,
+    createdBy: "Siti Accounting",
+    lines: [
+      { id: "l5", accountCode: "6130", accountName: "Beban Sewa & Fasilitas", debit: 25000000, credit: 0, lineDescription: "Amortisasi sewa bulan berjalan" },
+      { id: "l6", accountCode: "1410", accountName: "Sewa Dibayar Dimuka", debit: 0, credit: 25000000, lineDescription: "Pengurangan aset lancar sewa" },
     ]
   }
 ];
 
-export default function GeneralJournalPage() {
+export default function JurnalUmumPage() {
   const toast = useDnaToast();
-  const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
+  const [typeFilter, setTypeFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [detailItem, setDetailItem] = useState<JournalEntryItem | null>(null);
+  const [selectedJournal, setSelectedJournal] = useState<JournalHeader | null>(null);
 
-  // Form states for manual journal entry
-  const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
-  const [formDesc, setFormDesc] = useState("");
-  const [formRef, setFormRef] = useState("");
-  const [lines, setLines] = useState<JournalLine[]>([
-    { id: "l1", coaCode: "101-001", coaName: "BCA Giro Operasional", debit: 10000000, credit: 0, description: "Debit" },
-    { id: "l2", coaCode: "410-001", coaName: "Pendapatan Jasa Maklon", debit: 0, credit: 10000000, description: "Kredit" }
-  ]);
-
-  const { data: serverData } = useQuery({
-    queryKey: ["finance-general-journals"],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/finance/journals");
-        const unwrapped = unwrapResponse(res);
-        if (Array.isArray(unwrapped) && unwrapped.length > 0) {
-          // Map
-        }
-      } catch (err) {
-        console.warn("Using fallback journals", err);
-      }
-      return FALLBACK_JOURNALS;
-    }
+  // Form states (SCR-080)
+  const [headerForm, setHeaderForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    description: "",
+    reference: ""
   });
 
-  const journals = serverData || FALLBACK_JOURNALS;
+  const [linesForm, setLinesForm] = useState<Array<{ id: string; accountCode: string; accountName: string; debit: number; credit: number; lineDescription: string }>>([
+    { id: "1", accountCode: "1120", accountName: "Bank BCA Operasional", debit: 0, credit: 0, lineDescription: "" },
+    { id: "2", accountCode: "4110", accountName: "Pendapatan Produksi Maklon", debit: 0, credit: 0, lineDescription: "" }
+  ]);
 
-  const filteredList = useMemo(() => {
-    return journals.filter((item) => {
-      if (activeTab !== "ALL" && item.journalType !== activeTab) return false;
+  const formTotalDebit = useMemo(() => linesForm.reduce((acc, l) => acc + (Number(l.debit) || 0), 0), [linesForm]);
+  const formTotalCredit = useMemo(() => linesForm.reduce((acc, l) => acc + (Number(l.credit) || 0), 0), [linesForm]);
+  const isFormBalanced = formTotalDebit > 0 && formTotalDebit === formTotalCredit;
 
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchCode = item.code.toLowerCase().includes(q);
-        const matchDesc = item.description.toLowerCase().includes(q);
-        const matchRef = (item.referenceNo || "").toLowerCase().includes(q);
-        if (!matchCode && !matchDesc && !matchRef) return false;
-      }
-      return true;
+  const totalDebitBulanIni = useMemo(() => FALLBACK_JOURNALS.reduce((acc, j) => acc + j.totalDebit, 0), []);
+  const totalCreditBulanIni = useMemo(() => FALLBACK_JOURNALS.reduce((acc, j) => acc + j.totalCredit, 0), []);
+
+  const filteredJournals = useMemo(() => {
+    return FALLBACK_JOURNALS.filter((j) => {
+      const matchSearch =
+        j.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        j.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        j.reference.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchType = typeFilter === "ALL" || j.type === typeFilter;
+      return matchSearch && matchType;
     });
-  }, [journals, activeTab, searchQuery]);
+  }, [searchQuery, typeFilter]);
 
-  const totalDebitSum = lines.reduce((acc, l) => acc + (Number(l.debit) || 0), 0);
-  const totalCreditSum = lines.reduce((acc, l) => acc + (Number(l.credit) || 0), 0);
-  const isBalanced = totalDebitSum === totalCreditSum && totalDebitSum > 0;
-
-  const handleAddLine = () => {
-    setLines([
-      ...lines,
-      { id: `l${Date.now()}`, coaCode: "610-001", coaName: "Beban Operasional", debit: 0, credit: 0 }
+  const addRow = () => {
+    setLinesForm([
+      ...linesForm,
+      { id: Date.now().toString(), accountCode: "1110", accountName: "Kas Operasional", debit: 0, credit: 0, lineDescription: "" }
     ]);
   };
 
-  const handleRemoveLine = (id: string) => {
-    if (lines.length <= 2) {
-      toast.error("Validasi Baris", "Jurnal minimal harus memiliki 2 baris (Debit & Kredit).");
+  const removeRow = (index: number) => {
+    if (linesForm.length <= 2) {
+      toast.error("Minimal harus terdapat 2 baris akun!");
       return;
     }
-    setLines(lines.filter((l) => l.id !== id));
+    setLinesForm(linesForm.filter((_, i) => i !== index));
   };
 
-  const handleCreateJournal = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isBalanced) {
-      toast.error("Jurnal Tidak Balance", "Total Debit dan Kredit harus sama persis sebelum dapat diposting.");
+  const handleSaveJournal = () => {
+    if (!isFormBalanced) {
+      toast.error("Total Debit harus sama dengan Total Kredit (Balanced)!");
       return;
     }
-
-    const newJournal: JournalEntryItem = {
-      id: `jv-${Date.now()}`,
-      code: `JV-2026-${String(journals.length + 904).padStart(4, "0")}`,
-      date: formDate,
-      description: formDesc,
-      referenceNo: formRef || undefined,
-      journalType: "MANUAL",
-      totalDebit: totalDebitSum,
-      totalCredit: totalCreditSum,
-      status: "POSTED",
-      createdBy: "Dewi Lestari",
-      lines: [...lines]
-    };
-
-    journals.unshift(newJournal);
+    if (!headerForm.description) {
+      toast.error("Mohon isi deskripsi jurnal!");
+      return;
+    }
+    toast.success("Jurnal Umum berhasil disimpan dan diposting ke Buku Besar!");
     setIsCreateModalOpen(false);
-    toast.success("Jurnal Umum Diposting", `Voucher Jurnal ${newJournal.code} (${formatRupiah(totalDebitSum)}) telah masuk ke Buku Besar.`);
   };
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Jurnal Umum (General Journal)"
-        subtitle="Pencatatan voucher entri debit-kredit manual dan monitoring posting otomatis dari seluruh modul transaksi operasional"
+        description="Pencatatan transaksi akuntansi double-entry, jurnal penyesuaian (adjusting entries), reklasifikasi akun, dan posting ke Buku Besar."
         badge={
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
             <Scale className="w-3.5 h-3.5" />
-            <span>Double-Entry Balanced</span>
+            <span>Format ERP Lama G-SERP (Poin 25-27)</span>
           </div>
         }
         actions={
@@ -224,125 +194,145 @@ export default function GeneralJournalPage() {
                 Buku Besar
               </DnaButton>
             </Link>
+            <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Jurnal
+            </DnaButton>
             <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
-              Buat Jurnal Baru
+              + Buat Jurnal Baru
             </DnaButton>
           </div>
         }
       />
 
-      <DnaKpiGrid cols={4}>
+      {/* KPI CARDS (SCR-079) */}
+      <DnaKpiGrid cols={3}>
         <DnaStatCard
-          label="Total Volume Jurnal (Bulan Ini)"
-          value={formatRupiah(journals.reduce((acc, j) => acc + j.totalDebit, 0))}
-          icon={<FileSpreadsheet className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "100% Balanced", isPositive: true }}
-          variant="blue"
-        />
-        <DnaStatCard
-          label="Voucher Terbit"
-          value={`${journals.length} Voucher`}
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-          subtext="Seluruh Periode Aktif"
+          label="Total Debit Bulan Ini"
+          value={formatRupiah(totalDebitBulanIni)}
+          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Balanced", isPositive: true }}
+          subtext="Total Mutasi Sisi Debit"
           variant="success"
         />
         <DnaStatCard
-          label="Jurnal Produksi (Auto)"
-          value={`${journals.filter((j) => j.journalType === "PRODUCTION").length} Voucher`}
-          icon={<Scale className="w-5 h-5 text-indigo-600" />}
-          subtext="WIP to Finished Goods"
-          variant="info"
+          label="Total Kredit Bulan Ini"
+          value={formatRupiah(totalCreditBulanIni)}
+          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Balanced", isPositive: true }}
+          subtext="Total Mutasi Sisi Kredit"
+          variant="success"
         />
         <DnaStatCard
-          label="Status Buku Besar"
-          value="Open"
-          icon={<BookOpen className="w-5 h-5 text-purple-600" />}
-          subtext="Periode September 2026"
-          variant="purple"
+          label="Unbalanced Draft Journal"
+          value="0 (Sempurna)"
+          icon={<Scale className="w-5 h-5 text-blue-600" />}
+          delta={{ value: "Zero Variance", isPositive: true }}
+          subtext="Seluruh Jurnal Seimbang"
+          variant="info"
         />
       </DnaKpiGrid>
 
+      {/* TABLE LIST FORMAT ERP LAMA G-SERP (SCR-079) */}
       <DnaDataTableCard
-        title="Daftar Voucher Jurnal Umum"
-        badge={
-          <DnaBadge variant="default">
-            {filteredList.length} Voucher
-          </DnaBadge>
-        }
+        title="Daftar Jurnal Umum (General Journal Book)"
+        badge={<DnaBadge variant="purple">{filteredJournals.length} Jurnal</DnaBadge>}
         customToolbar={
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full">
-            <DnaTabNav
-              tabs={[
-                { id: "ALL", label: "Semua Tipe", badge: journals.length },
-                { id: "MANUAL", label: "Manual Adjustment", badge: journals.filter((j) => j.journalType === "MANUAL").length },
-                { id: "PRODUCTION", label: "Produksi (WIP/COGS)", badge: journals.filter((j) => j.journalType === "PRODUCTION").length }
-              ]}
-              activeTab={activeTab}
-              onChange={setActiveTab}
-            />
-
-            <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
+              <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
+              <span className="text-slate-400 font-semibold">s/d</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
+            </div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+            >
+              <option value="ALL">Semua Tipe Jurnal</option>
+              <option value="MANUAL">Manual Adjustment</option>
+              <option value="AUTO_AR">Subledger AR (Penjualan)</option>
+              <option value="AUTO_AP">Subledger AP (Pembelian)</option>
+              <option value="ADJUSTMENT">Closing Adjustment</option>
+            </select>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari Kode Jurnal, Deskripsi, Ref..."
+                placeholder="Cari kode/deskripsi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
           </div>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="px-3.5 py-3">No. Jurnal & Ref</th>
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-3">#</th>
+                <th className="px-3.5 py-3">Kode</th>
                 <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Keterangan / Memo</th>
+                <th className="px-3.5 py-3">Deskripsi Jurnal</th>
                 <th className="px-3.5 py-3 text-right">Debit (Rp)</th>
                 <th className="px-3.5 py-3 text-right">Kredit (Rp)</th>
-                <th className="px-3.5 py-3">Tipe</th>
-                <th className="px-3.5 py-3">Pembuat</th>
-                <th className="px-3.5 py-3">Status</th>
+                <th className="px-3.5 py-3 text-center">Tipe</th>
+                <th className="px-3.5 py-3">Referensi</th>
+                <th className="px-3.5 py-3 text-center">Status</th>
                 <th className="px-3.5 py-3 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredList.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-3.5 py-3">
-                    <div className="font-bold text-slate-900">{item.code}</div>
-                    {item.referenceNo && <div className="text-[10px] text-blue-700 font-mono">Ref: {item.referenceNo}</div>}
+              {filteredJournals.map((j, idx) => (
+                <tr key={j.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3.5 py-2.5 text-slate-400 font-mono">{idx + 1}</td>
+                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{j.code}</td>
+                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{j.date}</td>
+                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{j.description}</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(j.totalDebit)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">{formatRupiah(j.totalCredit)}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-mono text-slate-600 font-medium">
+                      {j.type}
+                    </span>
                   </td>
-                  <td className="px-3.5 py-3 text-slate-700">{item.date}</td>
-                  <td className="px-3.5 py-3 max-w-[260px] truncate font-medium text-slate-900" title={item.description}>
-                    {item.description}
-                  </td>
-                  <td className="px-3.5 py-3 text-right font-extrabold text-blue-800">
-                    {formatRupiah(item.totalDebit)}
-                  </td>
-                  <td className="px-3.5 py-3 text-right font-extrabold text-blue-800">
-                    {formatRupiah(item.totalCredit)}
-                  </td>
-                  <td className="px-3.5 py-3">
-                    <DnaBadge variant={item.journalType === "PRODUCTION" ? "purple" : "info"}>
-                      {item.journalType}
+                  <td className="px-3.5 py-2.5 font-mono text-slate-600 text-[11px]">{j.reference}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaBadge variant={j.status === "POSTED" ? "success" : "default"}>
+                      {j.status}
                     </DnaBadge>
                   </td>
-                  <td className="px-3.5 py-3 text-slate-700">{item.createdBy}</td>
-                  <td className="px-3.5 py-3">
-                    <DnaBadge variant={item.status === "POSTED" ? "success" : "default"}>
-                      {item.status}
-                    </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-3 text-center">
-                    <DnaButton variant="secondary" size="sm" onClick={() => setDetailItem(item)}>
-                      <Eye className="w-3.5 h-3.5 mr-1" />
-                      Detail
-                    </DnaButton>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => setSelectedJournal(j)}
+                        className="p-1 text-slate-400 hover:text-blue-600 rounded transition-colors"
+                        title="Lihat Rincian Multi-line"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => toast.success(`Mencetak Bukti Jurnal ${j.code}...`)}
+                        className="p-1 text-slate-400 hover:text-purple-600 rounded transition-colors"
+                        title="Print Jurnal"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -351,204 +341,226 @@ export default function GeneralJournalPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* MODAL BUAT JURNAL MANUAL BARU */}
+      {/* MODAL BUAT JURNAL UMUM (SCR-080) */}
       <DnaModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Buat Voucher Jurnal Umum Manual"
+        title="Buat Jurnal Umum Baru (Double-Entry Journal)"
         size="lg"
       >
-        <form onSubmit={handleCreateJournal} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Tanggal Jurnal <span className="text-rose-500">*</span>
-              </label>
+              <label className="block text-slate-700 font-semibold mb-1">Tanggal *</label>
               <input
                 type="date"
-                required
-                value={formDate}
-                onChange={(e) => setFormDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
+                value={headerForm.date}
+                onChange={(e) => setHeaderForm({ ...headerForm, date: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Deskripsi / Keterangan Jurnal <span className="text-rose-500">*</span>
-              </label>
+            <div className="col-span-2">
+              <label className="block text-slate-700 font-semibold mb-1">Referensi Dokumen (Opsional)</label>
               <input
                 type="text"
-                required
-                placeholder="Contoh: Penyesuaian biaya operasional..."
-                value={formDesc}
-                onChange={(e) => setFormDesc(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
+                placeholder="e.g. ADJ-SEP-26 / MEMO-DIR-01"
+                value={headerForm.reference}
+                onChange={(e) => setHeaderForm({ ...headerForm, reference: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono"
               />
             </div>
           </div>
 
-          {/* TABEL ENTRI BARIS DEBIT / KREDIT */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <div className="bg-slate-100/80 px-3.5 py-2 flex items-center justify-between border-b border-slate-200">
-              <span className="text-xs font-bold text-slate-800">Daftar Akun Entri Jurnal</span>
-              <DnaButton type="button" variant="secondary" size="sm" onClick={handleAddLine}>
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">Deskripsi / Keterangan Jurnal *</label>
+            <input
+              type="text"
+              placeholder="e.g. Penyesuaian Beban Sewa Pabrik Bulan Berjalan"
+              value={headerForm.description}
+              onChange={(e) => setHeaderForm({ ...headerForm, description: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
+            />
+          </div>
+
+          {/* MULTI-LINE ENTRIES */}
+          <div className="border border-slate-200 rounded-lg p-3 space-y-2.5">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-bold text-slate-800">Daftar Akun Jurnal (Multi-line)</span>
+              <DnaButton variant="secondary" size="sm" onClick={addRow}>
                 <Plus className="w-3.5 h-3.5 mr-1" />
                 Tambah Baris
               </DnaButton>
             </div>
 
-            <div className="p-2 space-y-2">
-              {lines.map((line, idx) => (
-                <div key={line.id} className="grid grid-cols-12 gap-2 items-center text-xs">
-                  <div className="col-span-5">
-                    <input
-                      type="text"
-                      placeholder="Kode & Nama COA"
-                      value={`${line.coaCode} - ${line.coaName}`}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const newLines = [...lines];
-                        newLines[idx].coaName = val;
-                        setLines(newLines);
-                      }}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded font-mono text-slate-800"
-                    />
-                  </div>
-
-                  <div className="col-span-3">
-                    <input
-                      type="number"
-                      placeholder="Debit"
-                      value={line.debit || ""}
-                      onChange={(e) => {
-                        const val = Number(e.target.value) || 0;
-                        const newLines = [...lines];
-                        newLines[idx].debit = val;
-                        if (val > 0) newLines[idx].credit = 0;
-                        setLines(newLines);
-                      }}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded font-bold text-blue-900 text-right"
-                    />
-                  </div>
-
-                  <div className="col-span-3">
-                    <input
-                      type="number"
-                      placeholder="Kredit"
-                      value={line.credit || ""}
-                      onChange={(e) => {
-                        const val = Number(e.target.value) || 0;
-                        const newLines = [...lines];
-                        newLines[idx].credit = val;
-                        if (val > 0) newLines[idx].debit = 0;
-                        setLines(newLines);
-                      }}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded font-bold text-emerald-900 text-right"
-                    />
-                  </div>
-
-                  <div className="col-span-1 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveLine(line.id)}
-                      className="p-1 text-rose-400 hover:text-rose-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* BALANCE INDICATOR */}
-            <div className="bg-slate-50 px-3.5 py-2.5 border-t border-slate-200 flex items-center justify-between text-xs font-bold">
-              <div className="flex items-center gap-2">
-                {isBalanced ? (
-                  <span className="text-emerald-700 flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Jurnal Balance (Seimbang)
-                  </span>
-                ) : (
-                  <span className="text-rose-600 flex items-center gap-1">
-                    <Scale className="w-4 h-4" />
-                    Selisih: {formatRupiah(Math.abs(totalDebitSum - totalCreditSum))}
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-4">
-                <span>Total Debit: <strong className="text-blue-900">{formatRupiah(totalDebitSum)}</strong></span>
-                <span>Total Kredit: <strong className="text-emerald-900">{formatRupiah(totalCreditSum)}</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-            <DnaButton type="button" variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton type="submit" variant="primary" disabled={!isBalanced}>
-              Posting Jurnal
-            </DnaButton>
-          </div>
-        </form>
-      </DnaModal>
-
-      {/* MODAL DETAIL JURNAL */}
-      <DnaModal
-        isOpen={!!detailItem}
-        onClose={() => setDetailItem(null)}
-        title={`Detail Voucher Jurnal: ${detailItem?.code}`}
-        size="lg"
-      >
-        {detailItem && (
-          <div className="space-y-4 text-xs">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-              <div className="font-bold text-slate-900">{detailItem.description}</div>
-              <div className="text-slate-500">
-                Tanggal: <strong>{detailItem.date}</strong> • Tipe: <strong>{detailItem.journalType}</strong> • Pembuat: <strong>{detailItem.createdBy}</strong>
-              </div>
-            </div>
-
-            <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
-              <thead className="bg-slate-100 font-bold uppercase text-[10px]">
-                <tr>
-                  <th className="px-3 py-2 border-b border-r border-slate-200">Kode & Akun COA</th>
-                  <th className="px-3 py-2 border-b border-r border-slate-200">Keterangan Baris</th>
-                  <th className="px-3 py-2 border-b border-r border-slate-200 text-right">Debit</th>
-                  <th className="px-3 py-2 border-b border-slate-200 text-right">Kredit</th>
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
+                  <th className="py-1.5 w-1/3">Akun CoA *</th>
+                  <th className="py-1.5 text-right w-1/4">Debit (Rp)</th>
+                  <th className="py-1.5 text-right w-1/4">Kredit (Rp)</th>
+                  <th className="py-1.5">Deskripsi Baris</th>
+                  <th className="py-1.5 text-center w-8"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {detailItem.lines.map((l, i) => (
-                  <tr key={i}>
-                    <td className="px-3 py-2 border-r border-slate-100 font-mono font-medium text-slate-800">
-                      {l.coaCode} - {l.coaName}
+                {linesForm.map((line, idx) => (
+                  <tr key={line.id}>
+                    <td className="py-1.5 pr-2">
+                      <select
+                        value={line.accountCode}
+                        onChange={(e) => {
+                          const updated = [...linesForm];
+                          updated[idx].accountCode = e.target.value;
+                          setLinesForm(updated);
+                        }}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs bg-white"
+                      >
+                        <option value="1110">1110 - Kas Operasional</option>
+                        <option value="1120">1120 - Bank BCA Operasional</option>
+                        <option value="1210">1210 - Piutang Usaha</option>
+                        <option value="2110">2110 - Hutang Usaha</option>
+                        <option value="4110">4110 - Pendapatan Produksi</option>
+                        <option value="5110">5110 - Beban Bahan Baku</option>
+                        <option value="6130">6130 - Beban Sewa & Utilitas</option>
+                      </select>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-600">{l.description || "-"}</td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-right font-bold text-blue-900">
-                      {l.debit > 0 ? formatRupiah(l.debit) : "-"}
+                    <td className="py-1.5 px-2">
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={line.debit || ""}
+                        onChange={(e) => {
+                          const updated = [...linesForm];
+                          updated[idx].debit = Number(e.target.value);
+                          setLinesForm(updated);
+                        }}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs text-right font-semibold"
+                      />
                     </td>
-                    <td className="px-3 py-2 text-right font-bold text-emerald-900">
-                      {l.credit > 0 ? formatRupiah(l.credit) : "-"}
+                    <td className="py-1.5 px-2">
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={line.credit || ""}
+                        onChange={(e) => {
+                          const updated = [...linesForm];
+                          updated[idx].credit = Number(e.target.value);
+                          setLinesForm(updated);
+                        }}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs text-right font-semibold"
+                      />
+                    </td>
+                    <td className="py-1.5 px-2">
+                      <input
+                        type="text"
+                        placeholder="Memo..."
+                        value={line.lineDescription}
+                        onChange={(e) => {
+                          const updated = [...linesForm];
+                          updated[idx].lineDescription = e.target.value;
+                          setLinesForm(updated);
+                        }}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                      />
+                    </td>
+                    <td className="py-1.5 text-center">
+                      <button onClick={() => removeRow(idx)} className="text-slate-400 hover:text-rose-600">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
-                <tr className="bg-slate-50 font-black text-xs">
-                  <td colSpan={2} className="px-3 py-2 border-r border-slate-200 text-right uppercase">Total Balance</td>
-                  <td className="px-3 py-2 border-r border-slate-200 text-right text-blue-900">{formatRupiah(detailItem.totalDebit)}</td>
-                  <td className="px-3 py-2 text-right text-emerald-900">{formatRupiah(detailItem.totalCredit)}</td>
-                </tr>
               </tbody>
             </table>
 
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <DnaButton variant="primary" size="sm" onClick={() => setDetailItem(null)}>
-                Tutup
-              </DnaButton>
+            {/* BALANCE INDICATOR */}
+            <div className="flex justify-between items-center pt-2.5 border-t border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-700">Status Balance:</span>
+                <DnaBadge variant={isFormBalanced ? "success" : "critical"}>
+                  {isFormBalanced ? "SEIMBANG (OK)" : `SELISIH: ${formatRupiah(Math.abs(formTotalDebit - formTotalCredit))}`}
+                </DnaBadge>
+              </div>
+              <div className="text-right space-x-4">
+                <span>Total Debit: <strong>{formatRupiah(formTotalDebit)}</strong></span>
+                <span>Total Kredit: <strong>{formatRupiah(formTotalCredit)}</strong></span>
+              </div>
             </div>
           </div>
-        )}
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <DnaButton variant="secondary" size="md" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={handleSaveJournal} disabled={!isFormBalanced}>
+              Simpan & Posting Jurnal
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+
+      {/* DETAIL JURNAL MODAL */}
+      <DnaModal
+        isOpen={!!selectedJournal}
+        onClose={() => setSelectedJournal(null)}
+        title={`Rincian Jurnal: ${selectedJournal?.code}`}
+        size="lg"
+      >
+        <div className="space-y-3.5 text-xs">
+          <div className="bg-slate-50 p-3 rounded-lg space-y-1.5 border border-slate-200">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Tanggal:</span>
+              <strong className="text-slate-800">{selectedJournal?.date}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Deskripsi:</span>
+              <strong className="text-slate-800">{selectedJournal?.description}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Referensi / Tipe:</span>
+              <span className="font-mono">{selectedJournal?.reference} ({selectedJournal?.type})</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Dibuat Oleh:</span>
+              <span>{selectedJournal?.createdBy}</span>
+            </div>
+          </div>
+
+          <div className="border border-slate-200 rounded-lg p-2.5">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
+                  <th className="py-1">Kode Akun</th>
+                  <th className="py-1">Nama Akun Buku Besar</th>
+                  <th className="py-1 text-right">Debit</th>
+                  <th className="py-1 text-right">Kredit</th>
+                  <th className="py-1">Keterangan Baris</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {selectedJournal?.lines.map((l) => (
+                  <tr key={l.id}>
+                    <td className="py-2 font-mono text-blue-700 font-bold">{l.accountCode}</td>
+                    <td className="py-2 font-semibold text-slate-800">{l.accountName}</td>
+                    <td className="py-2 text-right font-extrabold text-emerald-700">
+                      {l.debit > 0 ? formatRupiah(l.debit) : "-"}
+                    </td>
+                    <td className="py-2 text-right font-extrabold text-rose-700">
+                      {l.credit > 0 ? formatRupiah(l.credit) : "-"}
+                    </td>
+                    <td className="py-2 text-slate-600 text-[11px]">{l.lineDescription}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <DnaButton variant="secondary" size="md" onClick={() => setSelectedJournal(null)}>
+              Tutup
+            </DnaButton>
+          </div>
+        </div>
       </DnaModal>
     </DnaPageContainer>
   );

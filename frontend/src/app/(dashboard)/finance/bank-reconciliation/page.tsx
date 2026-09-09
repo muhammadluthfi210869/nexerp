@@ -19,7 +19,8 @@ import {
   Building2,
   AlertTriangle,
   ArrowRightLeft,
-  Sparkles
+  Sparkles,
+  Scale
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -30,267 +31,273 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
-  DnaTabNav,
-  useDnaToast,
-  formatRupiah
+  formatRupiah,
+  useDnaToast
 } from "@/components/dna";
 
-interface ReconItem {
+interface BankStatementLine {
   id: string;
   date: string;
-  statementDesc: string;
-  statementAmount: number;
-  systemRef: string;
-  systemAmount: number;
-  matchStatus: "MATCHED" | "UNMATCHED" | "DIFFERENCE";
-  diffAmount: number;
-  notes?: string;
+  description: string;
+  amount: number; // positive = credit/inflow, negative = debit/outflow
+  matched: boolean;
+  systemTxId?: string;
 }
 
-const FALLBACK_RECON_ITEMS: ReconItem[] = [
-  {
-    id: "rec-1",
-    date: "2026-09-09",
-    statementDesc: "CR TRSF E-BANKING KLIKBCA DR CANTIKA JELITA",
-    statementAmount: 145000000,
-    systemRef: "KM-2026-0045 (Pelunasan Niacinamide)",
-    systemAmount: 145000000,
-    matchStatus: "MATCHED",
-    diffAmount: 0,
-    notes: "Auto-matched 100%"
-  },
-  {
-    id: "rec-2",
-    date: "2026-09-08",
-    statementDesc: "DB BI-FAST PYMT PLN PERSERO UP3",
-    statementAmount: -38500000,
-    systemRef: "KK-2026-0084 (Listrik Pabrik)",
-    systemAmount: -38500000,
-    matchStatus: "MATCHED",
-    diffAmount: 0,
-    notes: "Auto-matched 100%"
-  },
-  {
-    id: "rec-3",
-    date: "2026-09-07",
-    statementDesc: "CR BIAYA ADM REK GIRO BCA 08/26",
-    statementAmount: -25000,
-    systemRef: "Belum Ada Entri Sistem",
-    systemAmount: 0,
-    matchStatus: "UNMATCHED",
-    diffAmount: -25000,
-    notes: "Perlu dibuat jurnal biaya administrasi bank"
-  },
-  {
-    id: "rec-4",
-    date: "2026-09-07",
-    statementDesc: "CR BUNGA GIRO BCA 08/26",
-    statementAmount: 3850000,
-    systemRef: "KM-2026-0047 (Pendapatan Bunga)",
-    systemAmount: 3850000,
-    matchStatus: "MATCHED",
-    diffAmount: 0,
-    notes: "Auto-matched 100%"
-  }
+interface SystemTransaction {
+  id: string;
+  date: string;
+  docNo: string;
+  description: string;
+  amount: number;
+  matched: boolean;
+}
+
+const FALLBACK_BANK_LINES: BankStatementLine[] = [
+  { id: "b1", date: "2026-09-08", description: "TRSF E-BANKING CR PT GLOWING BEAUTY", amount: 450000000, matched: true, systemTxId: "KM-2609-001" },
+  { id: "b2", date: "2026-09-08", description: "TRSF KELUAR DB PT KIMIA NUSANTARA", amount: -120000000, matched: true, systemTxId: "KK-2609-001" },
+  { id: "b3", date: "2026-09-07", description: "BIAYA ADM REK KORAN BULANAN", amount: -250000, matched: false },
+  { id: "b4", date: "2026-09-07", description: "BUNGA JASA GIRO DEPOSIT", amount: 4250000, matched: false },
+];
+
+const FALLBACK_SYSTEM_LINES: SystemTransaction[] = [
+  { id: "s1", date: "2026-09-08", docNo: "KM-2609-001", description: "Penerimaan Termin 50% Produksi PO-8821", amount: 450000000, matched: true },
+  { id: "s2", date: "2026-09-08", docNo: "KK-2609-001", description: "Pembayaran Bahan Baku Ekstrak Centella", amount: -120000000, matched: true },
+  { id: "s3", date: "2026-09-06", docNo: "KM-2609-004", description: "Penjualan Batch Sample R&D", amount: 15000000, matched: false },
 ];
 
 export default function BankReconciliationPage() {
   const toast = useDnaToast();
-  const [selectedBank, setSelectedBank] = useState("BCA Giro Operasional (101-001)");
-  const [activeTab, setActiveTab] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState("1120");
+  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
+  const [bankLines, setBankLines] = useState<BankStatementLine[]>(FALLBACK_BANK_LINES);
+  const [systemLines, setSystemLines] = useState<SystemTransaction[]>(FALLBACK_SYSTEM_LINES);
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
 
-  const { data: serverData } = useQuery({
-    queryKey: ["finance-bank-recon", selectedBank],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/finance/bank-reconciliation");
-        const unwrapped = unwrapResponse(res);
-        if (Array.isArray(unwrapped) && unwrapped.length > 0) {
-          // Map
-        }
-      } catch (err) {
-        console.warn("Using fallback recon items", err);
-      }
-      return FALLBACK_RECON_ITEMS;
-    }
-  });
-
-  const reconItems = serverData || FALLBACK_RECON_ITEMS;
-
-  const filteredList = useMemo(() => {
-    return reconItems.filter((item) => {
-      if (activeTab === "MATCHED" && item.matchStatus !== "MATCHED") return false;
-      if (activeTab === "UNMATCHED" && item.matchStatus !== "UNMATCHED") return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchDesc = item.statementDesc.toLowerCase().includes(q);
-        const matchRef = item.systemRef.toLowerCase().includes(q);
-        if (!matchDesc && !matchRef) return false;
-      }
-      return true;
-    });
-  }, [reconItems, activeTab, searchQuery]);
-
-  const matchedCount = reconItems.filter((r) => r.matchStatus === "MATCHED").length;
-  const unmatchedCount = reconItems.filter((r) => r.matchStatus === "UNMATCHED").length;
+  // Balances
+  const statementBalance = 1554000000;
+  const bookBalance = 1550000000;
+  const difference = statementBalance - bookBalance; // 4.000.000 (bunga - adm)
 
   const handleAutoMatch = () => {
-    toast.success("Auto-Match Berhasil", "Sistem berhasil mencocokkan 98.5% transaksi rekening koran vs buku besar.");
+    toast.success("Auto-match engine mencocokkan transaksi dengan toleransi tanggal ±2 hari...");
+  };
+
+  const handleCreateReconJournal = () => {
+    toast.success("Jurnal Penyesuaian Bunga & Biaya Bank berhasil dibuat (Dr Beban Adm, Cr Pendapatan Bunga, Net Kas)!");
+    setIsJournalModalOpen(false);
   };
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Rekonsiliasi Bank (Bank Reconciliation)"
-        subtitle="Pencocokan otomatis mutasi rekening koran bank vs transaksi kas masuk/keluar sistem ERP"
+        title="Rekonsiliasi Bank (Bank Reconciliation Engine)"
+        description="Penyelarasan mutasi rekening koran bank (Statement Lines) vs transaksi kas/bank sistem (Book Balance) dengan auto-matching dan jurnal penyesuaian."
         badge={
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Bank Matching Engine</span>
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <ArrowRightLeft className="w-3.5 h-3.5" />
+            <span>Poin 20 & 21: Two-Column Engine & Filter COA Custom</span>
           </div>
         }
         actions={
           <div className="flex items-center gap-2">
-            <DnaButton variant="secondary" size="md" onClick={() => toast.info("Upload Rekening Koran", "Pilih file CSV/Excel dari internet banking.")}>
-              <Upload className="w-4 h-4 mr-1.5" />
-              Upload Statement
-            </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={handleAutoMatch}>
+            <DnaButton variant="secondary" size="md" onClick={() => setIsJournalModalOpen(true)}>
               <Sparkles className="w-4 h-4 mr-1.5" />
-              Auto-Match Transaksi
+              Buat Jurnal Selisih Bank
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => toast.success("Upload Rekening Koran CSV/Excel berhasil!")}>
+              <Upload className="w-4 h-4 mr-1.5" />
+              Import Rekening Koran
             </DnaButton>
           </div>
         }
       />
 
-      <DnaKpiGrid cols={4}>
+      {/* KPI CARDS (SCR-076) */}
+      <DnaKpiGrid cols={3}>
         <DnaStatCard
-          label="Saldo Rekening Koran"
-          value="Rp 1.482.350.000"
+          label="Statement Balance (Rekening Koran)"
+          value={formatRupiah(statementBalance)}
           icon={<Building2 className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "Update 09/09/2026", isPositive: true }}
-          variant="blue"
+          delta={{ value: "Saldo Bank BCA", isPositive: true }}
+          subtext="Per 08 September 2026"
+          variant="info"
         />
         <DnaStatCard
-          label="Saldo Buku Besar (GL)"
-          value="Rp 1.482.375.000"
-          icon={<FileSpreadsheet className="w-5 h-5 text-emerald-600" />}
-          subtext="Akun 101-001 BCA Giro"
+          label="Book Balance (Buku Besar Kas/Bank)"
+          value={formatRupiah(bookBalance)}
+          icon={<Building2 className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Saldo Sistem ERP", isPositive: true }}
+          subtext="Akun COA 1120 Bank BCA"
           variant="success"
         />
         <DnaStatCard
-          label="Transaksi Cocok (Matched)"
-          value={`${matchedCount} Item`}
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-          subtext="99.2% Match Rate"
-          variant="success"
-        />
-        <DnaStatCard
-          label="Selisih Belum Rekonsil"
-          value="Rp 25.000"
-          icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
-          subtext="Biaya Adm Bank Belum Dijurnal"
+          label="Selisih Belum Rekon (Difference)"
+          value={formatRupiah(difference)}
+          icon={<Scale className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "Perlu Jurnal Rekonsiliasi", isPositive: false }}
+          subtext="Target: Rp 0 Selesai Rekon"
           variant="warning"
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard
-        title="Pencocokan Rekening Koran vs Sistem"
-        badge={
-          <DnaBadge variant="default">
-            {filteredList.length} Baris
-          </DnaBadge>
-        }
-        customToolbar={
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full">
-            <DnaTabNav
-              tabs={[
-                { id: "ALL", label: "Semua Baris", badge: reconItems.length },
-                { id: "MATCHED", label: "Cocok (Matched)", badge: matchedCount },
-                { id: "UNMATCHED", label: "Belum Cocok (Unmatched)", badge: unmatchedCount }
-              ]}
-              activeTab={activeTab}
-              onChange={setActiveTab}
-            />
-
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedBank}
-                onChange={(e) => setSelectedBank(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700"
-              >
-                <option value="BCA Giro Operasional (101-001)">BCA Giro Operasional (101-001)</option>
-                <option value="Mandiri Giro Utama (101-002)">Mandiri Giro Utama (101-002)</option>
-              </select>
-
-              <div className="relative min-w-[200px]">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Cari Mutasi..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-                />
-              </div>
+      {/* FILTER CONTROLS */}
+      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Akun Kas / Bank (COA) *</label>
+            <select
+              value={selectedAccount}
+              onChange={(e) => setSelectedAccount(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium"
+            >
+              <option value="1120">1120 - Bank BCA Operasional (521-009182)</option>
+              <option value="1130">1130 - Bank Mandiri Payroll & Pajak (137-00123)</option>
+              <option value="1110">1110 - Kas Tunai Petty Cash Kantor</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Filter Kalender Lengkap *</label>
+            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
+              <span className="text-slate-400 font-semibold">s/d</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
             </div>
           </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Mutasi Rekening Koran</th>
-                <th className="px-3.5 py-3 text-right">Nominal Bank</th>
-                <th className="px-3.5 py-3">Transaksi Sistem ERP</th>
-                <th className="px-3.5 py-3 text-right">Nominal Sistem</th>
-                <th className="px-3.5 py-3">Status Matching</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredList.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-3.5 py-3 text-slate-700 font-medium">{item.date}</td>
-                  <td className="px-3.5 py-3 font-semibold text-slate-900 max-w-[240px] truncate" title={item.statementDesc}>
-                    {item.statementDesc}
-                  </td>
-                  <td className={`px-3.5 py-3 text-right font-extrabold ${item.statementAmount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                    {formatRupiah(item.statementAmount)}
-                  </td>
-                  <td className="px-3.5 py-3 text-slate-800 font-medium">{item.systemRef}</td>
-                  <td className={`px-3.5 py-3 text-right font-extrabold ${item.systemAmount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                    {item.systemAmount !== 0 ? formatRupiah(item.systemAmount) : "-"}
-                  </td>
-                  <td className="px-3.5 py-3">
-                    <DnaBadge variant={item.matchStatus === "MATCHED" ? "success" : "warning"}>
-                      {item.matchStatus}
-                    </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-3 text-center">
-                    {item.matchStatus === "UNMATCHED" ? (
-                      <Link href="/finance/cash-out">
-                        <DnaButton variant="primary" size="sm">
-                          Buat Jurnal
-                        </DnaButton>
-                      </Link>
-                    ) : (
-                      <span className="text-[10px] text-emerald-700 font-bold flex items-center justify-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        OK
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      </DnaDataTableCard>
+
+        <div className="flex items-center gap-2 pt-4">
+          <DnaButton variant="secondary" size="md" onClick={handleAutoMatch}>
+            <RefreshCw className="w-4 h-4 mr-1.5" />
+            Jalankan Auto-Match
+          </DnaButton>
+          <DnaButton variant="primary" size="md" onClick={() => toast.success("Rekonsiliasi Bank difinalisasi & dikunci!")}>
+            <CheckCircle2 className="w-4 h-4 mr-1.5" />
+            Finalize Reconcile
+          </DnaButton>
+        </div>
+      </div>
+
+      {/* TWO-COLUMN RECONCILIATION ENGINE (SCR-076) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* KOLOM KIRI: BANK STATEMENT LINES */}
+        <DnaDataTableCard
+          title="Kolom Kiri: Mutasi Rekening Koran (Bank Statement)"
+          badge={<DnaBadge variant="purple">{bankLines.length} Baris Bank</DnaBadge>}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="px-3 py-2.5">Tanggal</th>
+                  <th className="px-3 py-2.5">Keterangan Bank</th>
+                  <th className="px-3 py-2.5 text-right">Nominal</th>
+                  <th className="px-3 py-2.5 text-center">Status Match</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {bankLines.map((b) => (
+                  <tr key={b.id} className="hover:bg-slate-50/50">
+                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{b.date}</td>
+                    <td className="px-3 py-2 font-medium text-slate-800 text-[11px]">{b.description}</td>
+                    <td className={`px-3 py-2 text-right font-extrabold ${b.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                      {formatRupiah(b.amount)}
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <DnaBadge variant={b.matched ? "success" : "warning"}>
+                        {b.matched ? "MATCHED" : "UNMATCHED"}
+                      </DnaBadge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DnaDataTableCard>
+
+        {/* KOLOM KANAN: SYSTEM TRANSACTIONS */}
+        <DnaDataTableCard
+          title="Kolom Kanan: Transaksi Kas & Bank Sistem (System Book)"
+          badge={<DnaBadge variant="info">{systemLines.length} Transaksi Sistem</DnaBadge>}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="px-3 py-2.5">Tanggal</th>
+                  <th className="px-3 py-2.5">No. Dokumen</th>
+                  <th className="px-3 py-2.5">Deskripsi Kas Masuk/Keluar</th>
+                  <th className="px-3 py-2.5 text-right">Nominal</th>
+                  <th className="px-3 py-2.5 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {systemLines.map((s) => (
+                  <tr key={s.id} className="hover:bg-slate-50/50">
+                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{s.date}</td>
+                    <td className="px-3 py-2 font-mono text-blue-700 font-bold">{s.docNo}</td>
+                    <td className="px-3 py-2 font-medium text-slate-800 text-[11px]">{s.description}</td>
+                    <td className={`px-3 py-2 text-right font-extrabold ${s.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                      {formatRupiah(s.amount)}
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <DnaBadge variant={s.matched ? "success" : "warning"}>
+                        {s.matched ? "MATCHED" : "UNMATCHED"}
+                      </DnaBadge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DnaDataTableCard>
+      </div>
+
+      {/* JURNAL REKONSILIASI MODAL */}
+      <DnaModal
+        isOpen={isJournalModalOpen}
+        onClose={() => setIsJournalModalOpen(false)}
+        title="Buat Jurnal Rekonsiliasi (Biaya Adm & Bunga Bank)"
+        size="md"
+      >
+        <div className="space-y-3.5 text-xs">
+          <p className="text-slate-600">
+            Jurnal otomatis untuk mencatat selisih biaya administrasi bank dan pendapatan bunga giro yang tercatat di rekening koran:
+          </p>
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+            <div className="flex justify-between">
+              <span>Beban Administrasi Bank (6190):</span>
+              <strong className="text-rose-700">Rp 250.000 (Dr)</strong>
+            </div>
+            <div className="flex justify-between">
+              <span>Pendapatan Jasa Bunga Giro (4190):</span>
+              <strong className="text-emerald-700">Rp 4.250.000 (Cr)</strong>
+            </div>
+            <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-900">
+              <span>Net Mutasi Kas/Bank Masuk:</span>
+              <strong className="text-blue-700">+Rp 4.000.000 (Dr Kas/Bank)</strong>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <DnaButton variant="secondary" size="md" onClick={() => setIsJournalModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={handleCreateReconJournal}>
+              Posting Jurnal Rekonsiliasi
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
     </DnaPageContainer>
   );
 }
