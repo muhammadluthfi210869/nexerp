@@ -1,511 +1,857 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { 
-  Plus, 
-  History, 
-  Eye, 
-  Search, 
-  Calendar, 
-  Warehouse, 
-  Package, 
-  Trash2, 
-  ChevronLeft, 
-  Save, 
-  ShoppingCart, 
-  Info,
-  ArrowRightLeft,
-  ArrowRight,
-  ClipboardList,
+import {
+  Package,
+  Plus,
+  Search,
+  Filter,
+  Eye,
   CheckCircle2,
   Clock,
-  ArrowDownToLine,
-  Layers,
-  MoreVertical,
-  Loader2
+  XCircle,
+  ArrowRightLeft,
+  Warehouse,
+  FileSpreadsheet,
+  AlertTriangle,
+  Send,
+  Trash2,
+  FileText,
+  Boxes,
+  ArrowRight,
+  ClipboardList
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { toast } from "sonner";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaButton,
+  DnaBadge,
+  DnaModal,
+  DnaTabNav,
+  useDnaToast
+} from "@/components/dna";
 
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr);
-  return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
-};
+interface RequisitionItem {
+  id: string;
+  materialCode: string;
+  materialName: string;
+  category: "BAHAN_BAKU" | "BAHAN_KEMAS" | "CONSUMABLE";
+  requestedQty: number;
+  availableStock: number;
+  unit: string;
+  notes?: string;
+}
 
-const statusLabel = (status: string) => {
-  switch (status) {
-    case "APPROVED": return "Diterima";
-    case "REJECTED": return "Ditolak";
-    case "PENDING":
-    case "PROCESSING": return "Proses";
-    default: return status;
+interface MaterialRequisition {
+  id: string;
+  requisitionNumber: string;
+  requestDate: string;
+  fromWarehouse: string;
+  toDivision: string;
+  spkNumber: string;
+  batchNumber?: string;
+  purpose: string;
+  totalItems: number;
+  requestedBy: string;
+  status: "PENDING" | "APPROVED" | "COMPLETED" | "REJECTED";
+  approvalNotes?: string;
+  items: RequisitionItem[];
+}
+
+const INITIAL_REQUISITIONS: MaterialRequisition[] = [
+  {
+    id: "req-1",
+    requisitionNumber: "REQ-202609-0012",
+    requestDate: "2026-09-09",
+    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
+    toDivision: "Ruang Mixing Produksi - Line A",
+    spkNumber: "SPK-2026-09-008",
+    batchNumber: "LOT-BL-2609-01",
+    purpose: "Bahan Baku Batch 1 Body Lotion Brightening 100ml (PO-202608-000033)",
+    totalItems: 4,
+    requestedBy: "Rahmat Hidayat (Supervisor Mixing)",
+    status: "APPROVED",
+    items: [
+      { id: "ri-1", materialCode: "BBK00028", materialName: "Super Moisturing Max", category: "BAHAN_BAKU", requestedQty: 45.5, availableStock: 120.0, unit: "Kg" },
+      { id: "ri-2", materialCode: "BBK00031", materialName: "Niacinamide PC (Vitamin B3)", category: "BAHAN_BAKU", requestedQty: 15.0, availableStock: 85.0, unit: "Kg" },
+      { id: "ri-3", materialCode: "BBK00045", materialName: "Cetyl Alcohol Flakes", category: "BAHAN_BAKU", requestedQty: 30.0, availableStock: 250.0, unit: "Kg" },
+      { id: "ri-4", materialCode: "BBK00092", materialName: "Fragrance Sweet Vanilla", category: "BAHAN_BAKU", requestedQty: 3.5, availableStock: 18.0, unit: "Kg" }
+    ]
+  },
+  {
+    id: "req-2",
+    requisitionNumber: "REQ-202609-0013",
+    requestDate: "2026-09-09",
+    fromWarehouse: "Gudang Kemas & Box (WH-02)",
+    toDivision: "Line Packaging & Boxing - Line C",
+    spkNumber: "SPK-2026-09-006",
+    batchNumber: "LOT-FS-2609-03",
+    purpose: "Kemas Primer & Sekunder Facial Wash Tea Tree 100ml",
+    totalItems: 3,
+    requestedBy: "Siti Rahma (Lead Packing)",
+    status: "PENDING",
+    items: [
+      { id: "ri-5", materialCode: "KMS00012", materialName: "Botol Tube 100ml Doff White + Flip Cap", category: "BAHAN_KEMAS", requestedQty: 5000, availableStock: 12500, unit: "Pcs" },
+      { id: "ri-6", materialCode: "KMS00088", materialName: "Inner Box Printing Ivory 300gsm", category: "BAHAN_KEMAS", requestedQty: 5000, availableStock: 5200, unit: "Pcs" },
+      { id: "ri-7", materialCode: "KMS00105", materialName: "Master Carton Box K125/M125 (Isi 48)", category: "BAHAN_KEMAS", requestedQty: 105, availableStock: 350, unit: "Pcs" }
+    ]
+  },
+  {
+    id: "req-3",
+    requisitionNumber: "REQ-202609-0010",
+    requestDate: "2026-09-08",
+    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
+    toDivision: "Laboratorium R&D / Formularium",
+    spkNumber: "SAMPLE-2026-089",
+    purpose: "Bahan Uji Coba Trial Formula Serum Peptide Anti-Aging",
+    totalItems: 2,
+    requestedBy: "Dr. Farah (R&D Chemist)",
+    status: "COMPLETED",
+    items: [
+      { id: "ri-8", materialCode: "BBK00112", materialName: "Copper Tripeptide-1 Solution 5%", category: "BAHAN_BAKU", requestedQty: 0.5, availableStock: 2.2, unit: "Kg" },
+      { id: "ri-9", materialCode: "BBK00015", materialName: "Hyaluronic Acid Multi-Molecular", category: "BAHAN_BAKU", requestedQty: 1.0, availableStock: 14.5, unit: "Kg" }
+    ]
+  },
+  {
+    id: "req-4",
+    requisitionNumber: "REQ-202609-0008",
+    requestDate: "2026-09-07",
+    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
+    toDivision: "Ruang Filling & Sealing",
+    spkNumber: "SPK-2026-08-044",
+    purpose: "Bahan Tambahan Emulsifier Batch 2 Hair Tonic",
+    totalItems: 1,
+    requestedBy: "Budi Santoso (Foreman)",
+    status: "REJECTED",
+    approvalNotes: "Stok fisik di WH-01 sedang dalam masa karantina QA Re-testing. Mohon gunakan Batch Alternatif.",
+    items: [
+      { id: "ri-10", materialCode: "BBK00067", materialName: "Polysorbate 20 Pure Grade", category: "BAHAN_BAKU", requestedQty: 25.0, availableStock: 0, unit: "Kg" }
+    ]
   }
-};
+];
 
-export default function MaterialRequisitionPrototype() {
+const MASTER_WAREHOUSES = [
+  "Gudang Bahan Baku Utama (WH-01)",
+  "Gudang Kemas & Box (WH-02)",
+  "Gudang Produk Jadi (WH-03)",
+  "Gudang Karantina & QC (WH-04)",
+  "Gudang Retur & Reject (WH-05)"
+];
+
+const TARGET_DIVISIONS = [
+  "Ruang Mixing Produksi - Line A",
+  "Ruang Mixing Produksi - Line B",
+  "Line Packaging & Boxing - Line C",
+  "Ruang Filling & Sealing",
+  "Laboratorium R&D / Formularium",
+  "Quality Control (QC Field Lab)",
+  "Maintenance & Engineering"
+];
+
+const AVAILABLE_MATERIALS = [
+  { code: "BBK00028", name: "Super Moisturing Max", category: "BAHAN_BAKU", unit: "Kg", stock: 120.0 },
+  { code: "BBK00031", name: "Niacinamide PC (Vitamin B3)", category: "BAHAN_BAKU", unit: "Kg", stock: 85.0 },
+  { code: "BBK00045", name: "Cetyl Alcohol Flakes", category: "BAHAN_BAKU", unit: "Kg", stock: 250.0 },
+  { code: "BBK00092", name: "Fragrance Sweet Vanilla", category: "BAHAN_BAKU", unit: "Kg", stock: 18.0 },
+  { code: "BBK00112", name: "Copper Tripeptide-1 Solution 5%", category: "BAHAN_BAKU", unit: "Kg", stock: 2.2 },
+  { code: "KMS00012", name: "Botol Tube 100ml Doff White + Flip Cap", category: "BAHAN_KEMAS", unit: "Pcs", stock: 12500 },
+  { code: "KMS00088", name: "Inner Box Printing Ivory 300gsm", category: "BAHAN_KEMAS", unit: "Pcs", stock: 5200 },
+  { code: "KMS00105", name: "Master Carton Box K125/M125 (Isi 48)", category: "BAHAN_KEMAS", unit: "Pcs", stock: 350 }
+];
+
+export default function MaterialRequisitionPage() {
+  const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [view, setView] = useState<"list" | "form">("list");
-  const [cart, setCart] = useState<any[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [qty, setQty] = useState<number>(1);
-  const [fromWarehouse, setFromWarehouse] = useState("");
-  const [toWarehouse, setToWarehouse] = useState("");
-  const [notes, setNotes] = useState("");
+  const [dataList, setDataList] = useState<MaterialRequisition[]>(INITIAL_REQUISITIONS);
 
-  const { data: requisitions, isLoading: reqLoading } = useQuery({
-    queryKey: ["warehouse-requisitions"],
-    queryFn: async () => {
-      const res = await api.get("/warehouse/requisitions");
-      return unwrapResponse(res);
-    },
-  });
+  // Filters & State
+  const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [warehouseFilter, setWarehouseFilter] = useState("ALL");
+  const [selectedReq, setSelectedReq] = useState<MaterialRequisition | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const { data: materials } = useQuery({
-    queryKey: ["master-materials"],
-    queryFn: async () => {
-      const res = await api.get("/master/materials");
-      return unwrapResponse(res);
-    },
-  });
+  // Form State
+  const [fromWarehouse, setFromWarehouse] = useState(MASTER_WAREHOUSES[0]);
+  const [toDivision, setToDivision] = useState(TARGET_DIVISIONS[0]);
+  const [spkNumber, setSpkNumber] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [cartItems, setCartItems] = useState<Array<{
+    materialCode: string;
+    materialName: string;
+    category: "BAHAN_BAKU" | "BAHAN_KEMAS" | "CONSUMABLE";
+    requestedQty: number;
+    availableStock: number;
+    unit: string;
+    notes?: string;
+  }>>([]);
+  const [selectedMaterialCode, setSelectedMaterialCode] = useState("");
+  const [itemQty, setItemQty] = useState<number>(1);
+  const [itemNote, setItemNote] = useState("");
 
-  const createMutation = useMutation({
-    mutationFn: async (payload: {
-      fromWarehouse: string;
-      toWarehouse: string;
-      notes?: string;
-      items: { materialId: string; qty: number; notes?: string }[];
-    }) => {
-      const res = await api.post("/warehouse/requisitions", payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["warehouse-requisitions"] });
-      toast.success("Requisition created successfully");
-      setView("list");
-      setCart([]);
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to create requisition");
-    },
-  });
+  // Calculate KPIs
+  const kpis = useMemo(() => {
+    const list = dataList;
+    const total = list.length;
+    const pending = list.filter(r => r.status === "PENDING").length;
+    const approved = list.filter(r => r.status === "APPROVED" || r.status === "COMPLETED").length;
+    const totalItemsCount = list.reduce((sum, r) => sum + r.items.reduce((iSum, i) => iSum + i.requestedQty, 0), 0);
 
-  const reqList = Array.isArray(requisitions) ? requisitions : [];
-  const materialList = Array.isArray(materials) ? materials : [];
+    return {
+      total,
+      pending,
+      approved,
+      totalItemsCount
+    };
+  }, [dataList]);
 
-  const addToCart = () => {
-    if (!selectedProduct) return;
-    setCart([...cart, { ...selectedProduct, qty, note: "" }]);
-    setSelectedProduct(null);
-    setQty(1);
-  };
+  // Filtered List
+  const filteredList = useMemo(() => {
+    return dataList.filter(item => {
+      const matchSearch =
+        item.requisitionNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.spkNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.requestedBy.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const removeFromCart = (index: number) => {
-    setCart(cart.filter((_, i) => i !== index));
-  };
+      const matchTab =
+        activeTab === "ALL" ? true :
+        activeTab === "PENDING" ? item.status === "PENDING" :
+        activeTab === "APPROVED" ? item.status === "APPROVED" :
+        activeTab === "COMPLETED" ? item.status === "COMPLETED" :
+        activeTab === "REJECTED" ? item.status === "REJECTED" : true;
 
-  const handleSave = () => {
-    if (!fromWarehouse || !toWarehouse || cart.length === 0) {
-      toast.error("Please select warehouses and add at least one item");
+      const matchWarehouse = warehouseFilter === "ALL" ? true : item.fromWarehouse.includes(warehouseFilter);
+
+      return matchSearch && matchTab && matchWarehouse;
+    });
+  }, [dataList, searchQuery, activeTab, warehouseFilter]);
+
+  // Cart Handlers
+  const handleAddItemToCart = () => {
+    if (!selectedMaterialCode) {
+      toast.error("Pilih material terlebih dahulu");
       return;
     }
-    createMutation.mutate({
+    const mat = AVAILABLE_MATERIALS.find(m => m.code === selectedMaterialCode);
+    if (!mat) return;
+
+    if (itemQty <= 0) {
+      toast.error("Jumlah permintaan harus lebih dari 0");
+      return;
+    }
+
+    const existing = cartItems.find(c => c.materialCode === mat.code);
+    if (existing) {
+      setCartItems(cartItems.map(c => c.materialCode === mat.code ? { ...c, requestedQty: c.requestedQty + itemQty } : c));
+    } else {
+      setCartItems([
+        ...cartItems,
+        {
+          materialCode: mat.code,
+          materialName: mat.name,
+          category: mat.category as any,
+          requestedQty: itemQty,
+          availableStock: mat.stock,
+          unit: mat.unit,
+          notes: itemNote
+        }
+      ]);
+    }
+
+    setSelectedMaterialCode("");
+    setItemQty(1);
+    setItemNote("");
+    toast.success(`${mat.name} ditambahkan ke daftar permintaan`);
+  };
+
+  const handleRemoveFromCart = (code: string) => {
+    setCartItems(cartItems.filter(c => c.materialCode !== code));
+  };
+
+  const handleCreateRequisition = () => {
+    if (!spkNumber.trim()) {
+      toast.error("Nomor SPK / Referensi Order wajib diisi");
+      return;
+    }
+    if (!purpose.trim()) {
+      toast.error("Keperluan / Keterangan permintaan wajib diisi");
+      return;
+    }
+    if (cartItems.length === 0) {
+      toast.error("Tambahkan minimal 1 item material ke dalam daftar");
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const newNo = `REQ-202609-00${String(dataList.length + 10).padStart(2, "0")}`;
+
+    const newReq: MaterialRequisition = {
+      id: `req-${Date.now()}`,
+      requisitionNumber: newNo,
+      requestDate: todayStr,
       fromWarehouse,
-      toWarehouse,
-      notes: notes || undefined,
-      items: cart.map((item) => ({
-        materialId: item.id,
-        qty: item.qty,
-        notes: item.note || undefined,
-      })),
-    });
+      toDivision,
+      spkNumber,
+      batchNumber: batchNumber || undefined,
+      purpose,
+      totalItems: cartItems.length,
+      requestedBy: "Logistics Admin (Anda)",
+      status: "PENDING",
+      items: cartItems.map((c, idx) => ({
+        id: `ri-${Date.now()}-${idx}`,
+        ...c
+      }))
+    };
+
+    setDataList([newReq, ...dataList]);
+    setIsCreateOpen(false);
+    setCartItems([]);
+    setSpkNumber("");
+    setBatchNumber("");
+    setPurpose("");
+    toast.success(`Permintaan Barang ${newNo} berhasil diajukan dan menunggu persetujuan Kepala Gudang.`);
+  };
+
+  const handleApprove = (id: string) => {
+    setDataList(dataList.map(item => {
+      if (item.id === id) {
+        return { ...item, status: "APPROVED" };
+      }
+      return item;
+    }));
+    if (selectedReq && selectedReq.id === id) {
+      setSelectedReq({ ...selectedReq, status: "APPROVED" });
+    }
+    toast.success("Permintaan barang disetujui. Petugas gudang dapat menyiapkan barang (Picking).");
+  };
+
+  const handleHandoverComplete = (id: string) => {
+    setDataList(dataList.map(item => {
+      if (item.id === id) {
+        return { ...item, status: "COMPLETED" };
+      }
+      return item;
+    }));
+    if (selectedReq && selectedReq.id === id) {
+      setSelectedReq({ ...selectedReq, status: "COMPLETED" });
+    }
+    toast.success("Barang telah diserahterimakan dan stok gudang terpotong secara otomatis.");
+  };
+
+  const getStatusBadge = (status: MaterialRequisition["status"]) => {
+    switch (status) {
+      case "PENDING":
+        return <DnaBadge variant="warning">Menunggu Approval</DnaBadge>;
+      case "APPROVED":
+        return <DnaBadge variant="info">Disetujui (Siap Picking)</DnaBadge>;
+      case "COMPLETED":
+        return <DnaBadge variant="success">Selesai Diserahkan</DnaBadge>;
+      case "REJECTED":
+        return <DnaBadge variant="critical">Ditolak</DnaBadge>;
+    }
   };
 
   return (
-    <DashboardShell
-      title={view === "list" ? "PERMINTAAN" : "BUAT PERMINTAAN"}
-      titleAccent="BARANG"
-      subtitle={
-        view === "list" 
-          ? "(Requisisi Material Internal & Alokasi Stok Antar-Gudang)" 
-          : "(Drafting Phase • Protocol 05-PR)"
-      }
-      actions={
-        view === "list" ? (
-          <div className="flex gap-3">
-            <DnaButton variant="outline" size="md" icon={<History className="text-amber-500" />}>
-              Riwayat
+    <DnaPageContainer>
+      {/* Header */}
+      <DnaPageHeader
+        title="Permintaan Barang"
+        description="Kelola pengajuan pengeluaran bahan baku, kemas, dan pendukung dari gudang ke divisi produksi / R&D."
+        badge={<DnaBadge variant="neutral">SCR-033 / SCM-WH-REQ</DnaBadge>}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              onClick={() => toast.success("Data Permintaan Barang diexport ke Excel")}
+            >
+              Export Excel
             </DnaButton>
-            <DnaButton variant="primary" size="md" icon={<Plus />} onClick={() => setView("form")} className="hover:scale-[1.02] active:scale-[0.98]">
-              Buat
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              + Buat Permintaan Barang
             </DnaButton>
           </div>
-        ) : (
-          <div className="flex gap-3">
-            <DnaButton variant="ghost" icon={<ChevronLeft />} onClick={() => setView("list")} className="text-rose-500 hover:bg-rose-50 hover:text-rose-500">
+        }
+      />
+
+      {/* KPI Cards */}
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Total Permintaan"
+          value={`${kpis.total} Dokumen`}
+          icon={<ClipboardList className="w-5 h-5 text-indigo-600" />}
+          delta={{ value: "+3 minggu ini", isPositive: true }}
+        />
+        <DnaStatCard
+          label="Menunggu Persetujuan"
+          value={`${kpis.pending} Dokumen`}
+          icon={<Clock className="w-5 h-5 text-amber-500" />}
+          variant={kpis.pending > 0 ? "warning" : "default"}
+        />
+        <DnaStatCard
+          label="Disetujui & Siap Serah"
+          value={`${kpis.approved} Dokumen`}
+          icon={<Boxes className="w-5 h-5 text-emerald-600" />}
+        />
+        <DnaStatCard
+          label="Total Unit Diminta"
+          value={`${kpis.totalItemsCount.toLocaleString("id-ID")} Qty`}
+          icon={<Warehouse className="w-5 h-5 text-blue-600" />}
+        />
+      </DnaKpiGrid>
+
+      {/* Navigation Tabs */}
+      <div className="mb-4">
+        <DnaTabNav
+          tabs={[
+            { id: "ALL", label: "Semua", count: dataList.length },
+            { id: "PENDING", label: "Menunggu Approval", count: dataList.filter(d => d.status === "PENDING").length },
+            { id: "APPROVED", label: "Siap Serah (Approved)", count: dataList.filter(d => d.status === "APPROVED").length },
+            { id: "COMPLETED", label: "Selesai Diserahkan", count: dataList.filter(d => d.status === "COMPLETED").length },
+            { id: "REJECTED", label: "Ditolak", count: dataList.filter(d => d.status === "REJECTED").length }
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+      </div>
+
+      {/* Main Table Card */}
+      <DnaDataTableCard
+        title="Daftar Bon Permintaan Barang (Material Requisitions)"
+        description="Semua pengeluaran stok harus melalui verifikasi ketersediaan dan serah terima resmi."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari No Req, SPK, keperluan, pemohon..."
+        actions={
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Filter Gudang"
+              value={warehouseFilter}
+              onChange={(e) => setWarehouseFilter(e.target.value)}
+              className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="ALL">Semua Gudang Asal</option>
+              <option value="WH-01">Gudang Bahan Baku (WH-01)</option>
+              <option value="WH-02">Gudang Kemas (WH-02)</option>
+            </select>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-slate-600">
+            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <tr>
+                <th className="py-3 px-4">No. Permintaan</th>
+                <th className="py-3 px-4">Tanggal</th>
+                <th className="py-3 px-4">Gudang Asal</th>
+                <th className="py-3 px-4">Tujuan / Divisi</th>
+                <th className="py-3 px-4">No. SPK / Keperluan</th>
+                <th className="py-3 px-4 text-center">Item</th>
+                <th className="py-3 px-4">Pemohon</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-normal">
+              {filteredList.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <Package className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada dokumen permintaan barang yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredList.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs">
+                      {row.requisitionNumber}
+                    </td>
+                    <td className="py-3 px-4 text-xs whitespace-nowrap">
+                      {row.requestDate}
+                    </td>
+                    <td className="py-3 px-4 text-xs font-medium text-slate-800">
+                      {row.fromWarehouse}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-slate-700">
+                      <div className="font-semibold text-slate-900">{row.toDivision}</div>
+                      {row.batchNumber && (
+                        <div className="text-[11px] text-slate-500 font-mono">Lot: {row.batchNumber}</div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-xs max-w-xs">
+                      <div className="font-mono font-medium text-slate-900">{row.spkNumber}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{row.purpose}</div>
+                    </td>
+                    <td className="py-3 px-4 text-center text-xs font-semibold text-slate-800">
+                      {row.totalItems} Material
+                    </td>
+                    <td className="py-3 px-4 text-xs text-slate-600">
+                      {row.requestedBy}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {getStatusBadge(row.status)}
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          icon={<Eye className="w-3.5 h-3.5" />}
+                          onClick={() => {
+                            setSelectedReq(row);
+                            setIsDetailOpen(true);
+                          }}
+                        >
+                          Detail
+                        </DnaButton>
+                        {row.status === "PENDING" && (
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
+                            icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                            onClick={() => handleApprove(row.id)}
+                          >
+                            Setujui
+                          </DnaButton>
+                        )}
+                        {row.status === "APPROVED" && (
+                          <DnaButton
+                            variant="secondary"
+                            size="sm"
+                            icon={<Send className="w-3.5 h-3.5 text-emerald-600" />}
+                            onClick={() => handleHandoverComplete(row.id)}
+                          >
+                            Serah Terima
+                          </DnaButton>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DnaDataTableCard>
+
+      {/* Modal Detail Permintaan */}
+      {selectedReq && (
+        <DnaModal
+          isOpen={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          title={`Detail Permintaan Barang: ${selectedReq.requisitionNumber}`}
+          description={`Pengajuan dari ${selectedReq.fromWarehouse} menuju ${selectedReq.toDivision}`}
+          size="xl"
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <div className="text-xs text-slate-500">
+                Diajukan oleh: <span className="font-semibold text-slate-700">{selectedReq.requestedBy}</span> ({selectedReq.requestDate})
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedReq.status === "PENDING" && (
+                  <DnaButton
+                    variant="primary"
+                    size="sm"
+                    icon={<CheckCircle2 className="w-4 h-4" />}
+                    onClick={() => {
+                      handleApprove(selectedReq.id);
+                      setIsDetailOpen(false);
+                    }}
+                  >
+                    Setujui Permintaan
+                  </DnaButton>
+                )}
+                {selectedReq.status === "APPROVED" && (
+                  <DnaButton
+                    variant="primary"
+                    size="sm"
+                    icon={<Send className="w-4 h-4" />}
+                    onClick={() => {
+                      handleHandoverComplete(selectedReq.id);
+                      setIsDetailOpen(false);
+                    }}
+                  >
+                    Konfirmasi Serah Terima Barang
+                  </DnaButton>
+                )}
+                <DnaButton variant="outline" size="sm" onClick={() => setIsDetailOpen(false)}>
+                  Tutup
+                </DnaButton>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div>
+                <span className="text-slate-500 block">No. SPK / Referensi</span>
+                <span className="font-bold text-slate-900 font-mono text-sm">{selectedReq.spkNumber}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Status Pengajuan</span>
+                <div className="mt-0.5">{getStatusBadge(selectedReq.status)}</div>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Keperluan / Keterangan</span>
+                <span className="text-slate-700">{selectedReq.purpose}</span>
+              </div>
+            </div>
+
+            {selectedReq.approvalNotes && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800">
+                <span className="font-bold block mb-1">Catatan Persetujuan / Penolakan:</span>
+                {selectedReq.approvalNotes}
+              </div>
+            )}
+
+            {/* Items Table */}
+            <div>
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Material yang Diminta</h4>
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <table className="w-full text-left text-xs text-slate-600">
+                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
+                    <tr>
+                      <th className="py-2.5 px-3">Kode</th>
+                      <th className="py-2.5 px-3">Nama Material</th>
+                      <th className="py-2.5 px-3">Kategori</th>
+                      <th className="py-2.5 px-3 text-right">Stok Gudang</th>
+                      <th className="py-2.5 px-3 text-right">Qty Diminta</th>
+                      <th className="py-2.5 px-3">Satuan</th>
+                      <th className="py-2.5 px-3 text-center">Status Stok</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedReq.items.map((it) => {
+                      const isSufficient = it.availableStock >= it.requestedQty;
+                      return (
+                        <tr key={it.id} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-3 font-mono font-medium text-indigo-600">{it.materialCode}</td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-800">{it.materialName}</td>
+                          <td className="py-2.5 px-3">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200 font-mono text-slate-700">
+                              {it.category}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-medium text-slate-600">
+                            {it.availableStock.toLocaleString("id-ID")}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-indigo-700">
+                            {it.requestedQty.toLocaleString("id-ID")}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-500">{it.unit}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            {isSufficient ? (
+                              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10px] font-semibold">
+                                Tersedia
+                              </span>
+                            ) : (
+                              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 text-[10px] font-semibold">
+                                Stok Defisit
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </DnaModal>
+      )}
+
+      {/* Modal Buat Permintaan Baru */}
+      <DnaModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Form Pengajuan Bon Permintaan Barang"
+        description="Isi form untuk meminta transfer material dari gudang penyimpanan ke line produksi atau divisi lain."
+        size="2xl"
+        footer={
+          <div className="flex items-center justify-end gap-2.5 w-full">
+            <DnaButton variant="outline" size="sm" onClick={() => setIsCreateOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" icon={<Save />} onClick={handleSave} disabled={createMutation.isPending} className="hover:scale-[1.02] active:scale-[0.98]">
-              {createMutation.isPending ? "Processing..." : "Simpan Permintaan"}
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Send className="w-4 h-4" />}
+              onClick={handleCreateRequisition}
+            >
+              Ajukan Permintaan
             </DnaButton>
           </div>
-        )
-      }
-    >
-      <AnimatePresence mode="wait">
-        {view === "list" ? (
-          <motion.div
-            key="list"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-[var(--section-gap)]"
-          >
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Permintaan Aktif" value="12" icon={<Clock className="text-amber-500" />} />
-            <StatCard label="Terpenuhi Hari Ini" value="45" icon={<CheckCircle2 className="text-emerald-500" />} />
-            <StatCard label="Stok Dalam Transit" value="8" icon={<ArrowRightLeft className="text-blue-600" />} />
-            <StatCard label="Prioritas" value="3" icon={<Layers className="text-rose-600" />} />
+        }
+      >
+        <div className="space-y-4 text-xs">
+          {/* Warehouse & Destination */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Gudang Asal (Pengeluaran)</label>
+              <select
+                aria-label="Gudang Asal"
+                value={fromWarehouse}
+                onChange={(e) => setFromWarehouse(e.target.value)}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {MASTER_WAREHOUSES.map((wh) => (
+                  <option key={wh} value={wh}>{wh}</option>
+                ))}
+              </select>
             </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Tujuan / Divisi Pemohon</label>
+              <select
+                aria-label="Tujuan Divisi"
+                value={toDivision}
+                onChange={(e) => setToDivision(e.target.value)}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {TARGET_DIVISIONS.map((div) => (
+                  <option key={div} value={div}>{div}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-            {/* List Table */}
-            <TableWrapper
-              filters={
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                  <div className="w-72">
-                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari ID Requisisi..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
-                  </div>
-                  <div className="flex gap-4">
-                    <DnaButton variant="ghost" className="h-10 px-5 rounded-lg text-[9px] text-slate-500 hover:bg-slate-50 hover:text-slate-500">
-                      Filter: Semua Status
-                    </DnaButton>
-                  </div>
-                </div>
-              }
-            >
-              <Table className="table-dense">
-                <TableHeader>
-                  <TableRow className="bg-slate-50/50">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">ID Permintaan</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Asal / Tujuan</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Peminta / Catatan</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reqLoading && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-20 text-center">
-                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat requisisi...</p>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!reqLoading && reqList.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada requisisi</p>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!reqLoading && reqList.map((req: any) => (
-                    <TableRow key={req.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                      <TableCell className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                            <ClipboardList className="h-4.5 w-4.5" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{req.reqNumber}</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase">{formatDate(req.requestDate)}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4">
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1.5">
-                             <Warehouse className="h-3 w-3 text-slate-400" />
-                             <span className="text-[10px] font-black text-slate-600 uppercase">{req.fromWh?.name || req.fromWarehouse || "-"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                             <Warehouse className="h-3 w-3 text-blue-600" />
-                             <span className="text-[10px] font-black text-blue-600 uppercase italic">{req.toWh?.name || req.toWarehouse || "-"}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4">
-                        <div className="flex flex-col">
-                          <DnaBadge status="default" className="rounded-md text-[8px] px-1.5 py-0.5">
-                            {req.requester?.fullName || req.createdById || "-"}
-                          </DnaBadge>
-                          <p className="text-[9px] font-medium text-slate-400 uppercase truncate mt-1 max-w-[200px]">{req.notes || ""}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-center">
-                        <DnaBadge status={req.status === "APPROVED" || req.status === "Diterima" ? "success" : "warning"} className="text-[8px]">
-                          {statusLabel(req.status)}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">No. SPK / No. Order Referensi *</label>
+              <input
+                type="text"
+                placeholder="Contoh: SPK-2026-09-012"
+                value={spkNumber}
+                onChange={(e) => setSpkNumber(e.target.value)}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">No. Batch / Lot (Opsional)</label>
+              <input
+                type="text"
+                placeholder="Contoh: LOT-2026-09"
+                value={batchNumber}
+                onChange={(e) => setBatchNumber(e.target.value)}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">Keperluan / Keterangan Penggunaan *</label>
+            <input
+              type="text"
+              placeholder="Contoh: Kebutuhan bahan baku produksi Face Wash Batch 1"
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Item Adder */}
+          <div className="border-t border-slate-200 pt-3">
+            <h4 className="font-bold text-slate-800 text-xs mb-2 flex items-center justify-between">
+              <span>Tambahkan Material</span>
+              <span className="text-[11px] font-normal text-slate-500">{cartItems.length} Item dalam Keranjang</span>
+            </h4>
+            <div className="grid grid-cols-12 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 items-end">
+              <div className="col-span-6">
+                <label className="block text-[11px] text-slate-600 font-medium mb-1">Pilih Material / Bahan</label>
+                <select
+                  aria-label="Pilih Material"
+                  value={selectedMaterialCode}
+                  onChange={(e) => setSelectedMaterialCode(e.target.value)}
+                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">-- Pilih Material --</option>
+                  {AVAILABLE_MATERIALS.map((m) => (
+                    <option key={m.code} value={m.code}>
+                      [{m.code}] {m.name} (Stok: {m.stock} {m.unit})
+                    </option>
                   ))}
-                </TableBody>
-              </Table>
-            </TableWrapper>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-[var(--section-gap)] pb-10"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-               {/* Left: Configuration */}
-               <div className="lg:col-span-4 space-y-6">
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8 relative overflow-hidden">
-                      <div className="relative z-10 space-y-6">
-                         <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">Logistical Path</p>
-                            <h3 className="text-2xl font-black italic tracking-tighter uppercase">Warehouse <br/> <span className="text-blue-500 text-3xl">Routing</span></h3>
-                         </div>
-
-                         <div className="space-y-5">
-                            <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase block">
-                                  <ArrowDownToLine className="h-3 w-3" /> Gudang Peminta
-                               </label>
-                               <select
-                                 value={fromWarehouse}
-                                 onChange={(e) => setFromWarehouse(e.target.value)}
-                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none"
-                               >
-                                   <option value="" className="bg-white">-- Pilih Gudang --</option>
-                                   <option value="00000000-0000-0000-0000-000000000001" className="bg-white">Gudang Produksi Mixing</option>
-                                   <option value="00000000-0000-0000-0000-000000000002" className="bg-white">Gudang Produksi Filling</option>
-                               </select>
-                            </div>
-
-                            <div className="flex justify-center">
-                               <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                  <ArrowRight className="h-4.5 w-4.5 rotate-90" />
-                               </div>
-                            </div>
-
-                            <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase block">
-                                  <Warehouse className="h-3 w-3" /> Gudang Penyedia
-                               </label>
-                               <select
-                                 value={toWarehouse}
-                                 onChange={(e) => setToWarehouse(e.target.value)}
-                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none"
-                               >
-                                   <option value="" className="bg-white">-- Pilih Gudang --</option>
-                                   <option value="00000000-0000-0000-0000-000000000003" className="bg-white">Gudang Bahan Baku</option>
-                                   <option value="00000000-0000-0000-0000-000000000004" className="bg-white">Gudang Kemasan</option>
-                                   <option value="00000000-0000-0000-0000-000000000005" className="bg-white">Gudang Jadi</option>
-                               </select>
-                            </div>
-                         </div>
-
-                         <div className="pt-6 border-t border-slate-200 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Commercial Notes</label>
-                            <textarea
-                              value={notes}
-                              onChange={(e) => setNotes(e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
-                              rows={3}
-                              placeholder="Production batch ref..."
-                            />
-                         </div>
-                      </div>
-                      <Warehouse className="h-40 w-40 text-slate-200 absolute -right-10 -bottom-10 rotate-12" />
-                   </div>
-               </div>
-
-               {/* Right: Item Selection & Cart */}
-               <div className="lg:col-span-8 space-y-6">
-                  {/* Item Picker */}
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8">
-                      <div className="flex items-center justify-between">
-                         <div className="space-y-1">
-                            <h2 className="text-xl font-black uppercase tracking-tighter italic">Resource <span className="text-blue-600">Allocation</span></h2>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select materials to be requisitioned</p>
-                         </div>
-                         <DnaBadge status="info">
-                            Real-time Stock Enabled
-                         </DnaBadge>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                         <div className="md:col-span-5 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Search Material</label>
-                            <select 
-                              onChange={(e) => setSelectedProduct(materialList.find((p: any) => p.id === e.target.value))}
-                              className="w-full h-11 px-4 bg-slate-50 border-none rounded-xl font-black text-xs italic uppercase appearance-none"
-                            >
-                               <option value="">— CHOOSE MATERIAL —</option>
-                               {materialList.map((p: any) => (
-                                 <option key={p.id} value={p.id}>{p.name} ({p.unit})</option>
-                               ))}
-                            </select>
-                         </div>
-                         <div className="md:col-span-3 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Request Qty</label>
-                            <DnaInput 
-                              type="number" 
-                              value={qty}
-                              onChange={(e) => setQty(Number(e.target.value))}
-                              className="h-11 bg-slate-50 border-none rounded-xl font-black text-center text-xs" 
-                            />
-                         </div>
-                         <div className="md:col-span-4 h-11">
-                            <DnaButton variant="primary" icon={<Plus />} onClick={addToCart} className="w-full h-full text-[9px]">
-                              Add to Allocation
-                            </DnaButton>
-                         </div>
-                      </div>
-
-                     {/* Stock Feedback (Only if product selected) */}
-                     <AnimatePresence>
-                        {selectedProduct && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                            className="grid grid-cols-2 gap-4"
-                          >
-                             <div className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between group overflow-hidden relative">
-                                <div>
-                                   <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Requesting Stock</p>
-                                   <p className="text-lg font-black text-slate-900 tabular-nums">{selectedProduct.stockQty || 0} <span className="text-[9px] text-slate-400 font-black">{selectedProduct.unit || "pcs"}</span></p>
-                                </div>
-                                <ArrowDownToLine className="h-8 w-8 text-slate-200 transition-colors" />
-                             </div>
-                             <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between group overflow-hidden relative">
-                                <div>
-                                   <p className="text-[8px] font-black uppercase text-blue-600 tracking-widest">Available Stock</p>
-                                   <p className="text-lg font-black text-blue-700 tabular-nums">{selectedProduct.stockQty || 0} <span className="text-[9px] text-slate-400 font-black">{selectedProduct.unit || "pcs"}</span></p>
-                                </div>
-                       <Warehouse className="h-8 w-8 text-blue-200" />
-                              </div>
-                           </motion.div>
-                         )}
-                      </AnimatePresence>
-                   </div>
-
-                   {/* Cart Table */}
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 overflow-hidden">
-                      <div className="flex items-center justify-between mb-6">
-                         <div className="flex items-center gap-2">
-                             <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                <ShoppingCart className="h-4.5 w-4.5" />
-                            </div>
-                            <h3 className="text-base font-black uppercase italic tracking-tighter">Allocation <span className="text-blue-600">Manifest</span></h3>
-                         </div>
-                         {cart.length > 0 && (
-                           <DnaButton variant="ghost" icon={<Trash2 />} onClick={() => setCart([])} className="text-[9px] text-rose-500 hover:bg-rose-50 hover:text-rose-500 rounded-lg h-9">
-                             Clear Cart
-                           </DnaButton>
-                         )}
-                      </div>
-
-                      <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                         <Table className="table-dense">
-                            <TableHeader>
-                               <TableRow className="bg-slate-50/50">
-                                  <TableHead className="py-4 px-4 text-[9px] font-black uppercase text-slate-400">#</TableHead>
-                                  <TableHead className="py-4 px-4 text-[9px] font-black uppercase text-slate-400">Barang</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Qty</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Info Stok</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Catatan</TableHead>
-                                  <TableHead className="py-4 px-4 text-right text-[9px] font-black uppercase text-slate-400">Aksi</TableHead>
-                               </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                               {cart.length === 0 ? (
-                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-14 text-center">
-                                       <div className="flex flex-col items-center gap-3">
-                                          <Layers className="h-10 w-10 text-slate-200" />
-                                          <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.3em]">No materials added to manifest</p>
-                                       </div>
-                                    </TableCell>
-                                 </TableRow>
-                               ) : (
-                                 cart.map((item, i) => (
-                                   <TableRow key={i} className="group hover:bg-slate-50 transition-all border-b border-slate-50">
-                                      <TableCell className="py-4 px-4 font-black text-slate-400 text-xs">{i + 1}</TableCell>
-                                      <TableCell className="py-4 px-4">
-                                          <div className="flex flex-col">
-                                             <span className="font-black text-slate-900 text-xs uppercase">{item.name}</span>
-                                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kode: {item.code || item.id}</span>
-                                          </div>
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-center font-black text-slate-900 text-xs tabular-nums">
-                                          {item.qty} <span className="text-[9px] text-slate-400 font-medium">{item.unit || "pcs"}</span>
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-center">
-                                          <DnaBadge status="info" className="rounded-md text-[8px] px-1.5 py-0.5">
-                                             {item.stockQty || 0} Available
-                                          </DnaBadge>
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-center min-w-[150px]">
-                                          <DnaInput 
-                                            className="h-8 text-[9px] bg-slate-50 border-none rounded-lg font-medium" 
-                                            placeholder="Catatan item..."
-                                            value={item.note || ""}
-                                            onChange={(e) => {
-                                              const newCart = [...cart];
-                                              newCart[i].note = e.target.value;
-                                              setCart(newCart);
-                                            }}
-                                          />
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-right">
-                                          <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => removeFromCart(i)}
-                                            className="h-8 w-8 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all"
-                                          >
-                                             <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                      </TableCell>
-                                   </TableRow>
-                                 ))
-                               )}
-                            </TableBody>
-                         </Table>
-                      </div>
-                   </div>
-               </div>
+                </select>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-[11px] text-slate-600 font-medium mb-1">Qty Diminta</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  value={itemQty}
+                  onChange={(e) => setItemQty(parseFloat(e.target.value) || 0)}
+                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 text-right font-mono"
+                />
+              </div>
+              <div className="col-span-3">
+                <DnaButton
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  icon={<Plus className="w-3.5 h-3.5" />}
+                  onClick={handleAddItemToCart}
+                >
+                  Tambah
+                </DnaButton>
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </DashboardShell>
+          </div>
+
+          {/* Cart Table */}
+          {cartItems.length > 0 && (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
+                  <tr>
+                    <th className="py-2 px-3">Kode</th>
+                    <th className="py-2 px-3">Nama Material</th>
+                    <th className="py-2 px-3 text-right">Stok Real</th>
+                    <th className="py-2 px-3 text-right">Qty Diminta</th>
+                    <th className="py-2 px-3">Satuan</th>
+                    <th className="py-2 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {cartItems.map((c) => (
+                    <tr key={c.materialCode}>
+                      <td className="py-2 px-3 font-mono font-medium text-indigo-600">{c.materialCode}</td>
+                      <td className="py-2 px-3 font-semibold text-slate-800">{c.materialName}</td>
+                      <td className="py-2 px-3 text-right font-mono text-slate-600">{c.availableStock}</td>
+                      <td className="py-2 px-3 text-right font-mono font-bold text-indigo-700">{c.requestedQty}</td>
+                      <td className="py-2 px-3 text-slate-500">{c.unit}</td>
+                      <td className="py-2 px-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFromCart(c.materialCode)}
+                          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </DnaModal>
+    </DnaPageContainer>
   );
 }
