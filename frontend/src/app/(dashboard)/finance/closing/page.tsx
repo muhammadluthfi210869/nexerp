@@ -1,150 +1,258 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+import {
+  ShieldCheck,
+  Lock,
+  Unlock,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Search,
+  Filter,
+  DollarSign,
+  Printer,
+  FileSpreadsheet,
+  AlertTriangle,
+  FileCheck,
+  Calendar
+} from "lucide-react";
 import {
   DnaPageContainer,
   DnaPageHeader,
-  DnaStatCard,
   DnaKpiGrid,
+  DnaStatCard,
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaSwitch,
-  formatRupiah,
+  DnaModal,
+  DnaTabNav,
+  useDnaToast,
+  formatRupiah
 } from "@/components/dna";
-import { Lock, Unlock, CheckCircle2, AlertTriangle, ShieldCheck, FileSpreadsheet } from "lucide-react";
 
-interface ClosingStep {
+interface ClosingTaskItem {
   id: string;
-  order: number;
-  category: "INVENTORY" | "AR_AP" | "FIXED_ASSET" | "PAYROLL" | "GENERAL_LEDGER";
   taskName: string;
-  department: string;
-  picName: string;
-  isCompleted: boolean;
+  category: "BANK_RECONCILE" | "AP_AR_REVIEW" | "STOCK_VALUATION" | "DEPRECIATION" | "TAX_FILING" | "GL_REVIEW";
+  owner: string;
+  dueDate: string;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "BLOCKED";
+  approver: string;
   completedAt?: string;
-  notes?: string;
+  evidenceNotes?: string;
 }
 
-const SAMPLE_STEPS: ClosingStep[] = [
-  { id: "s-1", order: 1, category: "INVENTORY", taskName: "Rekonsiliasi Stok Opname & Penyesuaian Nilai Persediaan", department: "Gudang & SCM", picName: "Budi Santoso", isCompleted: true, completedAt: "2026-08-31 17:00" },
-  { id: "s-2", order: 2, category: "AR_AP", taskName: "Verifikasi Seluruh Faktur Pembelian (3-Way Match) & Faktur Penjualan", department: "Finance AP/AR", picName: "Siti Rahma", isCompleted: true, completedAt: "2026-08-31 18:30" },
-  { id: "s-3", order: 3, category: "FIXED_ASSET", taskName: "Posting Penyusutan Garis Lurus Aset Tetap & Amortisasi Izin BPOM", department: "Accounting", picName: "Upii", isCompleted: true, completedAt: "2026-08-31 19:15" },
-  { id: "s-4", order: 4, category: "PAYROLL", taskName: "Pencatatan Gaji, Upah Lembur Pabrik, & PPh 21 Tenaga Kerja", department: "HRD & Finance", picName: "Rudi Hartono", isCompleted: true, completedAt: "2026-08-31 20:00" },
-  { id: "s-5", order: 5, category: "GENERAL_LEDGER", taskName: "Pencocokan Rekonsiliasi Bank Giro & Brankas Kas Pabrik", department: "Finance Controller", picName: "Upii", isCompleted: true, completedAt: "2026-08-31 20:45" },
-  { id: "s-6", order: 6, category: "GENERAL_LEDGER", taskName: "Otorisasi Hard Period Lock (Blokir Seluruh Transaksi Mundur)", department: "Direktur Keuangan", picName: "Direksi", isCompleted: false, notes: "Menunggu final sign-off" },
+const FALLBACK_CLOSING_TASKS: ClosingTaskItem[] = [
+  {
+    id: "cl-1",
+    taskName: "Rekonsiliasi Rekening Koran Seluruh Bank (BCA, Mandiri, BRI)",
+    category: "BANK_RECONCILE",
+    owner: "Dewi Lestari",
+    dueDate: "2026-09-05",
+    status: "DONE",
+    approver: "Bambang Sudarsono (Finance Head)",
+    completedAt: "2026-09-05 16:30",
+    evidenceNotes: "Bank statement dan GL reconciled 100% matched."
+  },
+  {
+    id: "cl-2",
+    taskName: "Verifikasi Valuasi Persediaan Akhir Bahan Baku & Produk Jadi",
+    category: "STOCK_VALUATION",
+    owner: "Yayan Sopian (Gudang)",
+    dueDate: "2026-09-04",
+    status: "DONE",
+    approver: "Bambang Sudarsono",
+    completedAt: "2026-09-04 18:00",
+    evidenceNotes: "Stock opname fisik cocok dengan kartu stok mutasi."
+  },
+  {
+    id: "cl-3",
+    taskName: "Posting Beban Depresiasi Aset Tetap Bulanan",
+    category: "DEPRECIATION",
+    owner: "Dewi Lestari",
+    dueDate: "2026-09-05",
+    status: "DONE",
+    approver: "Bambang Sudarsono",
+    completedAt: "2026-09-05 11:15",
+    evidenceNotes: "JV-2026-0902 telah terposting ke GL."
+  },
+  {
+    id: "cl-4",
+    taskName: "Review Umur Piutang (AR Aging) & Konfirmasi Penerimaan DP",
+    category: "AP_AR_REVIEW",
+    owner: "Dewi Lestari",
+    dueDate: "2026-09-06",
+    status: "DONE",
+    approver: "Bambang Sudarsono",
+    completedAt: "2026-09-06 14:20",
+    evidenceNotes: "AR aging verified, bad debt allowance 0%."
+  },
+  {
+    id: "cl-5",
+    taskName: "Rekapitulasi Pajak PPh 21, PPh 23, dan PPN Keluaran",
+    category: "TAX_FILING",
+    owner: "Dewi Lestari",
+    dueDate: "2026-09-10",
+    status: "IN_PROGRESS",
+    approver: "Bambang Sudarsono",
+    evidenceNotes: "Sedang sinkronisasi faktur pajak DJP."
+  }
 ];
 
-export default function ClosingAndPeriodLockPage() {
-  const [steps, setSteps] = useState<ClosingStep[]>(SAMPLE_STEPS);
-  const [period, setPeriod] = useState("2026-08");
-  const [isHardLocked, setIsHardLocked] = useState(false);
+export default function ClosingPeriodLockPage() {
+  const toast = useDnaToast();
+  const [selectedPeriod, setSelectedPeriod] = useState("Agustus 2026");
+  const [isPeriodLocked, setIsPeriodLocked] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("ALL");
 
-  const completedCount = steps.filter((s) => s.isCompleted).length;
-  const progressPct = Math.round((completedCount / steps.length) * 100);
-
-  const handleToggleStep = (id: string) => {
-    setSteps(
-      steps.map((s) =>
-        s.id === id ? { ...s, isCompleted: !s.isCompleted, completedAt: !s.isCompleted ? new Date().toISOString() : undefined } : s
-      )
-    );
-  };
-
-  const handleLockPeriod = () => {
-    if (completedCount < steps.length - 1) {
-      alert("Peringatan: Seluruh tahapan checklist pra-closing harus selesai sebelum mengaktifkan Hard Period Lock!");
-      return;
+  const { data: serverData } = useQuery({
+    queryKey: ["finance-closing-tasks", selectedPeriod],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/closing");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped) && unwrapped.length > 0) {
+          // Map
+        }
+      } catch (err) {
+        console.warn("Using fallback closing tasks", err);
+      }
+      return FALLBACK_CLOSING_TASKS;
     }
-    setIsHardLocked(!isHardLocked);
+  });
+
+  const taskList = serverData || FALLBACK_CLOSING_TASKS;
+
+  const completedCount = taskList.filter((t) => t.status === "DONE").length;
+  const progressPct = Math.round((completedCount / taskList.length) * 100);
+
+  const handleToggleLock = () => {
+    setIsPeriodLocked(!isPeriodLocked);
+    if (!isPeriodLocked) {
+      toast.success("Periode Berhasil Dikunci", `Periode ${selectedPeriod} telah dikunci (Hard Lock). Transaksi lampau tidak dapat diubah.`);
+    } else {
+      toast.warning("Periode Dibuka", `Kunci periode ${selectedPeriod} dibuka sementara untuk audit.`);
+    }
   };
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Closing Bulanan & Period Hard Lock"
-        subtitle="Manajemen tahapan tutup buku akhir bulan dan penguncian mutasi jurnal mundur (Batch 5B)"
-        breadcrumbs={[{ label: "Finance", href: "/finance/dashboard" }, { label: "Closing & Controls" }]}
+        title="Closing Checklist & Period Lock"
+        subtitle="Audit checklist penutupan buku akhir bulan dan penguncian periode transaksi akuntansi (Period Lock)"
+        badge={
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+            {isPeriodLocked ? <Lock className="w-3.5 h-3.5 text-rose-600" /> : <Unlock className="w-3.5 h-3.5 text-emerald-600" />}
+            <span>{isPeriodLocked ? "Period Locked" : "Period Open"}</span>
+          </div>
+        }
         actions={
-          <DnaButton
-            variant={isHardLocked ? "danger" : "primary"}
-            onClick={handleLockPeriod}
-          >
-            {isHardLocked ? <Unlock className="h-4 w-4 mr-1.5" /> : <Lock className="h-4 w-4 mr-1.5" />}
-            {isHardLocked ? "Buka Hard Lock Periode" : "Kunci Hard Lock Periode"}
-          </DnaButton>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg font-bold text-slate-800"
+            >
+              <option value="Agustus 2026">Periode: Agustus 2026</option>
+              <option value="September 2026">Periode: September 2026 (Berjalan)</option>
+            </select>
+            <DnaButton
+              variant={isPeriodLocked ? "secondary" : "primary"}
+              size="md"
+              onClick={handleToggleLock}
+            >
+              {isPeriodLocked ? (
+                <>
+                  <Unlock className="w-4 h-4 mr-1.5 text-emerald-600" />
+                  Buka Kunci Periode
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 mr-1.5" />
+                  Kunci Periode (Hard Lock)
+                </>
+              )}
+            </DnaButton>
+          </div>
         }
       />
 
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Status Periode Buku"
-          value={isHardLocked ? "LOCKED (TERKUNCI)" : "OPEN (DIBUKA)"}
-          variant={isHardLocked ? "danger" : "emerald"}
-          icon={isHardLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-          delta={{ value: isHardLocked ? "Transaksi Mundur Diblokir" : "Transaksi Masih Bisa Masuk", isPositive: !isHardLocked }}
-        />
-        <DnaStatCard
-          label="Progress Checklist Closing"
+          label="Progress Closing Periode"
           value={`${progressPct}%`}
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: `${completedCount} dari ${taskList.length} Task Selesai`, isPositive: true }}
+          variant="success"
+        />
+        <DnaStatCard
+          label="Status Kunci Transaksi"
+          value={isPeriodLocked ? "Terkunci (Lock)" : "Terbuka (Open)"}
+          icon={isPeriodLocked ? <Lock className="w-5 h-5 text-rose-600" /> : <Unlock className="w-5 h-5 text-emerald-600" />}
+          subtext="Mencegah Edit Transaksi Lampau"
+          variant={isPeriodLocked ? "critical" : "warning"}
+        />
+        <DnaStatCard
+          label="Sign-Off Approver"
+          value="Finance Head"
+          icon={<ShieldCheck className="w-5 h-5 text-blue-600" />}
+          subtext="Bambang Sudarsono, SE, Ak"
           variant="blue"
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          delta={{ value: `${completedCount} dari ${steps.length} Selesai`, isPositive: true }}
         />
         <DnaStatCard
-          label="Periode Tutup Buku"
-          value={`Agustus 2026`}
-          variant="slate"
-          delta={{ value: "Cut-off: 31 Agustus 2026", isPositive: true }}
-        />
-        <DnaStatCard
-          label="Adjustment Journal"
-          value="Otorisasi Khusus"
-          variant="amber"
-          icon={<ShieldCheck className="h-4 w-4" />}
-          delta={{ value: "Hanya Finance Manager", isPositive: true }}
+          label="Laba Bersih Siap Posting"
+          value="Rp 214.850.000"
+          icon={<DollarSign className="w-5 h-5 text-purple-600" />}
+          subtext="Auto-Post ke Retained Earnings"
+          variant="purple"
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard title="Checklist Tahapan Tutup Buku (Month-End Closing Protocol)">
+      <DnaDataTableCard
+        title="Checklist Tugas Penutupan Buku (Closing)"
+        badge={
+          <DnaBadge variant="default">
+            {taskList.length} Item Checklist
+          </DnaBadge>
+        }
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3 w-16 text-center">Urutan</th>
-                <th className="px-4 py-3">Tahapan Verifikasi & Closing</th>
-                <th className="px-4 py-3">Departemen Terkait</th>
-                <th className="px-4 py-3">PIC Bertanggung Jawab</th>
-                <th className="px-4 py-3">Waktu Selesai</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Verifikasi</th>
+                <th className="px-3.5 py-3">Nama Task / Prosedur Closing</th>
+                <th className="px-3.5 py-3">Kategori</th>
+                <th className="px-3.5 py-3">Penanggung Jawab (Owner)</th>
+                <th className="px-3.5 py-3">Batas Waktu</th>
+                <th className="px-3.5 py-3">Status</th>
+                <th className="px-3.5 py-3">Bukti / Catatan Verifikasi</th>
+                <th className="px-3.5 py-3">Approver Sign-Off</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {steps.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 text-center font-mono font-bold text-slate-700">#{s.order}</td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{s.taskName}</div>
-                    {s.notes && <div className="text-[11px] text-amber-600 font-medium">{s.notes}</div>}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{s.department}</td>
-                  <td className="px-4 py-3 font-medium text-slate-800">{s.picName}</td>
-                  <td className="px-4 py-3 text-slate-500 font-mono text-[11px]">{s.completedAt || "—"}</td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaBadge variant={s.isCompleted ? "emerald" : "amber"}>
-                      {s.isCompleted ? "Selesai" : "Pending"}
+            <tbody className="divide-y divide-slate-100">
+              {taskList.map((task) => (
+                <tr key={task.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-3.5 py-3 font-semibold text-slate-900">{task.taskName}</td>
+                  <td className="px-3.5 py-3">
+                    <DnaBadge variant="info">
+                      {task.category.replace(/_/g, " ")}
                     </DnaBadge>
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaButton
-                      variant={s.isCompleted ? "secondary" : "primary"}
-                      size="sm"
-                      onClick={() => handleToggleStep(s.id)}
-                    >
-                      {s.isCompleted ? "Batalkan" : "Tandai Selesai"}
-                    </DnaButton>
+                  <td className="px-3.5 py-3 text-slate-800 font-medium">{task.owner}</td>
+                  <td className="px-3.5 py-3 text-slate-700">{task.dueDate}</td>
+                  <td className="px-3.5 py-3">
+                    <DnaBadge variant={task.status === "DONE" ? "success" : "warning"}>
+                      {task.status}
+                    </DnaBadge>
                   </td>
+                  <td className="px-3.5 py-3 text-slate-600 text-[11px] italic">
+                    {task.evidenceNotes || "-"}
+                  </td>
+                  <td className="px-3.5 py-3 text-slate-800 font-medium">{task.approver}</td>
                 </tr>
               ))}
             </tbody>

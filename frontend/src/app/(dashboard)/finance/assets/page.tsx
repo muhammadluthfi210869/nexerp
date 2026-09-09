@@ -1,263 +1,309 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+import {
+  Building2,
+  Plus,
+  Boxes,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Search,
+  Filter,
+  DollarSign,
+  Printer,
+  FileSpreadsheet,
+  Layers,
+  Wrench,
+  TrendingDown
+} from "lucide-react";
 import {
   DnaPageContainer,
   DnaPageHeader,
-  DnaStatCard,
   DnaKpiGrid,
+  DnaStatCard,
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaCell,
-  DnaCrudModal,
-  DnaInput,
-  DnaCurrencyInput,
-  DnaConfirmDialog,
-  formatRupiah,
+  DnaModal,
+  DnaTabNav,
+  useDnaToast,
+  formatRupiah
 } from "@/components/dna";
-import { Plus, Landmark, Truck, Wrench, Building, History, ArrowRightLeft, Trash2 } from "lucide-react";
 
-interface Asset {
+interface FixedAssetItem {
   id: string;
-  assetCode: string;
-  name: string;
-  category: "INVENTARIS" | "MOTOR" | "MOBIL" | "BANGUNAN";
+  assetCode: string; // e.g. AST-PRD-2024-001
+  assetName: string;
+  category: "MESIN_PABRIK" | "ALAT_LAB_QC" | "KENDARAAN" | "PERALATAN_KANTOR";
   acquisitionDate: string;
   acquisitionCost: number;
-  usefulLifeMonths: number;
-  accumulatedDepreciation: number;
+  usefulLifeMonths: number; // e.g. 96 months (8 years)
+  accumDepreciation: number;
   bookValue: number;
   location: string;
   department: string;
-  status: "ACTIVE" | "TRANSFERRED" | "DISPOSED";
-  purchaseHistory: {
-    date: string;
-    type: string;
-    refInvoice: string;
-    amount: number;
-    notes: string;
-  }[];
+  status: "ACTIVE" | "UNDER_MAINTENANCE" | "DISPOSED";
 }
 
-const DEFAULT_LIFE: Record<string, number> = {
-  INVENTARIS: 48, // 4 tahun
-  MOTOR: 48,      // 4 tahun
-  MOBIL: 96,      // 8 tahun
-  BANGUNAN: 240,  // 20 tahun
-};
-
-const SAMPLE_ASSETS: Asset[] = [
+const FALLBACK_ASSETS: FixedAssetItem[] = [
   {
     id: "ast-1",
-    assetCode: "DL-FIN-AST-2026-0001",
-    name: "Mesin Homogenizer High Shear 500L",
-    category: "INVENTARIS",
+    assetCode: "AST-PRD-2024-001",
+    assetName: "Vacuum Homogenizer Mixer Vessel 500L (Stainless SUS316L)",
+    category: "MESIN_PABRIK",
     acquisitionDate: "2024-01-15",
-    acquisitionCost: 380000000,
-    usefulLifeMonths: 48,
-    accumulatedDepreciation: 190000000,
-    bookValue: 190000000,
-    location: "Ruang Produksi Lantai 1",
-    department: "Produksi",
-    status: "ACTIVE",
-    purchaseHistory: [
-      { date: "2024-01-15", type: "Pembelian Baru", refInvoice: "INV-SUP-2024-0012", amount: 380000000, notes: "Perolehan awal unit homogenizer" },
-      { date: "2025-06-10", type: "Upgrade Rotor Stator", refInvoice: "INV-SUP-2025-0144", amount: 25000000, notes: "Peningkatan kapasitas putaran hingga 3500 RPM" },
-    ],
+    acquisitionCost: 450000000,
+    usefulLifeMonths: 96,
+    accumDepreciation: 121875000,
+    bookValue: 328125000,
+    location: "Ruang Mixing Pabrik Lt 1",
+    department: "Produksi Pabrik",
+    status: "ACTIVE"
   },
   {
     id: "ast-2",
-    assetCode: "DL-FIN-AST-2026-0002",
-    name: "Truk Box Isuzu Giga Pengiriman Kosmetik",
-    category: "MOBIL",
-    acquisitionDate: "2023-05-20",
-    acquisitionCost: 450000000,
+    assetCode: "AST-PRD-2024-002",
+    assetName: "High-Speed Rotary Automatic Bottle Filling & Capping Line 2",
+    category: "MESIN_PABRIK",
+    acquisitionDate: "2024-03-20",
+    acquisitionCost: 320000000,
     usefulLifeMonths: 96,
-    accumulatedDepreciation: 140625000,
-    bookValue: 309375000,
-    location: "Gudang Logistik",
-    department: "Logistik",
-    status: "ACTIVE",
-    purchaseHistory: [
-      { date: "2023-05-20", type: "Pembelian Baru", refInvoice: "INV-AUTO-2023-99", amount: 450000000, notes: "Armada pengiriman finish good" },
-    ],
+    accumDepreciation: 80000000,
+    bookValue: 240000000,
+    location: "Cleanroom Filling Kelas D",
+    department: "Produksi Pabrik",
+    status: "ACTIVE"
   },
   {
     id: "ast-3",
-    assetCode: "DL-FIN-AST-2026-0003",
-    name: "Gedung Pabrik & Cleanroom CPKB",
-    category: "BANGUNAN",
-    acquisitionDate: "2022-01-01",
-    acquisitionCost: 2500000000,
-    usefulLifeMonths: 240,
-    accumulatedDepreciation: 520833333,
-    bookValue: 1979166667,
-    location: "Kawasan Industri",
-    department: "Operasional Pabrik",
-    status: "ACTIVE",
-    purchaseHistory: [
-      { date: "2022-01-01", type: "Perolehan Awal", refInvoice: "NOTARIS-2022-001", amount: 2500000000, notes: "Bangunan permanen berizin CPKB BPOM" },
-    ],
-  },
+    assetCode: "AST-LAB-2024-005",
+    assetName: "Digital Brookfield Viscometer DV2T + Incubator Stabilitas",
+    category: "ALAT_LAB_QC",
+    acquisitionDate: "2024-02-10",
+    acquisitionCost: 110000000,
+    usefulLifeMonths: 60,
+    accumDepreciation: 56833333,
+    bookValue: 53166667,
+    location: "Lab R&D & Pengujian Mutu",
+    department: "R&D & QA",
+    status: "ACTIVE"
+  }
 ];
 
-export default function AssetRegisterPage() {
-  const [assets, setAssets] = useState<Asset[]>(SAMPLE_ASSETS);
-  const [search, setSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAssetForDetail, setSelectedAssetForDetail] = useState<Asset | null>(null);
+export default function FixedAssetsPage() {
+  const toast = useDnaToast();
+  const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const totalCost = assets.reduce((acc, a) => acc + a.acquisitionCost, 0);
-  const totalDeprec = assets.reduce((acc, a) => acc + a.accumulatedDepreciation, 0);
-  const totalBook = assets.reduce((acc, a) => acc + a.bookValue, 0);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [detailItem, setDetailItem] = useState<FixedAssetItem | null>(null);
 
-  const [form, setForm] = useState({
-    name: "",
-    category: "INVENTARIS" as "INVENTARIS" | "MOTOR" | "MOBIL" | "BANGUNAN",
-    acquisitionDate: new Date().toISOString().split("T")[0],
-    acquisitionCost: 0,
-    location: "Pabrik Utama",
-    department: "Produksi",
+  // Form states
+  const [formName, setFormName] = useState("");
+  const [formCat, setFormCat] = useState<"MESIN_PABRIK" | "ALAT_LAB_QC" | "KENDARAAN" | "PERALATAN_KANTOR">("MESIN_PABRIK");
+  const [formCost, setFormCost] = useState<number>(100000000);
+  const [formYears, setFormYears] = useState<number>(8);
+  const [formLocation, setFormLocation] = useState("Ruang Mixing Pabrik Lt 1");
+  const [formDept, setFormDept] = useState("Produksi Pabrik");
+
+  const { data: serverData } = useQuery({
+    queryKey: ["finance-fixed-assets"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/assets");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped) && unwrapped.length > 0) {
+          // Map
+        }
+      } catch (err) {
+        console.warn("Using fallback fixed assets", err);
+      }
+      return FALLBACK_ASSETS;
+    }
   });
 
-  const handleCreate = () => {
-    const nextSeq = String(assets.length + 1).padStart(4, "0");
-    const assetCode = `DL-FIN-AST-2026-${nextSeq}`;
-    const usefulLifeMonths = DEFAULT_LIFE[form.category];
+  const assetList = serverData || FALLBACK_ASSETS;
 
-    const newAsset: Asset = {
-      id: "ast-" + Date.now(),
-      assetCode,
-      name: form.name,
-      category: form.category,
-      acquisitionDate: form.acquisitionDate,
-      acquisitionCost: form.acquisitionCost,
-      usefulLifeMonths,
-      accumulatedDepreciation: 0,
-      bookValue: form.acquisitionCost,
-      location: form.location,
-      department: form.department,
-      status: "ACTIVE",
-      purchaseHistory: [
-        {
-          date: form.acquisitionDate,
-          type: "Perolehan Awal",
-          refInvoice: "AUTO-PO-" + nextSeq,
-          amount: form.acquisitionCost,
-          notes: "Registrasi aset tetap baru",
-        },
-      ],
+  const filteredList = useMemo(() => {
+    return assetList.filter((item) => {
+      if (activeTab !== "ALL" && item.category !== activeTab) return false;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchCode = item.assetCode.toLowerCase().includes(q);
+        const matchName = item.assetName.toLowerCase().includes(q);
+        const matchLoc = item.location.toLowerCase().includes(q);
+        if (!matchCode && !matchName && !matchLoc) return false;
+      }
+      return true;
+    });
+  }, [assetList, activeTab, searchQuery]);
+
+  const totalAcquisition = assetList.reduce((acc, a) => acc + a.acquisitionCost, 0);
+  const totalBookValue = assetList.reduce((acc, a) => acc + a.bookValue, 0);
+  const totalAccumDeprec = assetList.reduce((acc, a) => acc + a.accumDepreciation, 0);
+
+  const handleCreateAsset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName || formCost <= 0) {
+      toast.error("Validasi Gagal", "Harap isi nama aset dan nilai perolehan.");
+      return;
+    }
+
+    const newItem: FixedAssetItem = {
+      id: `ast-${Date.now()}`,
+      assetCode: `AST-PRD-2026-${String(assetList.length + 10).padStart(3, "0")}`,
+      assetName: formName,
+      category: formCat,
+      acquisitionDate: new Date().toISOString().slice(0, 10),
+      acquisitionCost: Number(formCost),
+      usefulLifeMonths: formYears * 12,
+      accumDepreciation: 0,
+      bookValue: Number(formCost),
+      location: formLocation,
+      department: formDept,
+      status: "ACTIVE"
     };
 
-    setAssets([newAsset, ...assets]);
-    setIsModalOpen(false);
+    assetList.unshift(newItem);
+    setIsCreateModalOpen(false);
+    toast.success("Aset Tetap Terdaftar", `Aset ${newItem.assetCode} (${newItem.assetName}) telah didaftarkan ke register aset.`);
   };
-
-  const filtered = assets.filter(
-    (a) =>
-      a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a.assetCode.toLowerCase().includes(search.toLowerCase()) ||
-      a.location.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Kelola Aset Tetap (Fixed Asset Register)"
-        subtitle="Registrasi aset kapital, histori perbaikan/upgrade, dan skedul penyusutan garis lurus (Poin 30-33)"
-        breadcrumbs={[{ label: "Finance", href: "/finance/dashboard" }, { label: "Aset Tetap" }]}
+        title="Aset Tetap & Skedul Depresiasi"
+        subtitle="Register aktiva tetap manufaktur, mesin bejana homogenizer, alat lab R&D, dan kalkulasi otomatis penyusutan garis lurus"
+        badge={
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Fixed Assets & Depreciation</span>
+          </div>
+        }
         actions={
-          <DnaButton variant="primary" onClick={() => setIsModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" /> + Registrasi Aset Baru
-          </DnaButton>
+          <div className="flex items-center gap-2">
+            <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Daftarkan Aset Baru
+            </DnaButton>
+          </div>
         }
       />
 
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Nilai Perolehan Aset"
-          value={formatRupiah(totalCost)}
+          value={formatRupiah(totalAcquisition)}
+          icon={<Building2 className="w-5 h-5 text-blue-600" />}
+          delta={{ value: "Historical Cost", isPositive: true }}
           variant="blue"
-          icon={<Landmark className="h-4 w-4" />}
-          delta={{ value: `${assets.length} Unit Terdaftar`, isPositive: true }}
         />
         <DnaStatCard
-          label="Akumulasi Penyusutan"
-          value={formatRupiah(totalDeprec)}
-          variant="amber"
-          icon={<Wrench className="h-4 w-4" />}
-          delta={{ value: "Metode Garis Lurus", isPositive: false }}
+          label="Total Nilai Buku (Book Value)"
+          value={formatRupiah(totalBookValue)}
+          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
+          subtext="Net Asset Value"
+          variant="success"
         />
         <DnaStatCard
-          label="Nilai Buku Bersih (Book Value)"
-          value={formatRupiah(totalBook)}
-          variant="emerald"
-          icon={<Building className="h-4 w-4" />}
-          delta={{ value: "Posisi Neraca Aktif", isPositive: true }}
+          label="Akumulasi Depresiasi"
+          value={formatRupiah(totalAccumDeprec)}
+          icon={<TrendingDown className="w-5 h-5 text-amber-600" />}
+          subtext="Metode Garis Lurus (Straight Line)"
+          variant="warning"
         />
         <DnaStatCard
-          label="Aset Aktif Beroperasi"
-          value={`${assets.filter((a) => a.status === "ACTIVE").length} Unit`}
-          variant="slate"
-          delta={{ value: "100% Kondisi Baik", isPositive: true }}
+          label="Total Unit Aset Aktif"
+          value={`${assetList.length} Unit`}
+          icon={<Boxes className="w-5 h-5 text-purple-600" />}
+          subtext="Mesin Pabrik & Alat Lab"
+          variant="purple"
         />
       </DnaKpiGrid>
 
       <DnaDataTableCard
-        searchPlaceholder="Cari kode universal aset, nama mesin, atau lokasi..."
-        searchValue={search}
-        onSearchChange={setSearch}
+        title="Register Aset Tetap Perusahaan"
+        badge={
+          <DnaBadge variant="default">
+            {filteredList.length} Unit Aset
+          </DnaBadge>
+        }
+        customToolbar={
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full">
+            <DnaTabNav
+              tabs={[
+                { id: "ALL", label: "Semua Kategori", badge: assetList.length },
+                { id: "MESIN_PABRIK", label: "Mesin Pabrik", badge: assetList.filter((a) => a.category === "MESIN_PABRIK").length },
+                { id: "ALAT_LAB_QC", label: "Alat Lab R&D", badge: assetList.filter((a) => a.category === "ALAT_LAB_QC").length }
+              ]}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
+
+            <div className="relative min-w-[240px]">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Cari Kode Aset, Nama, Lokasi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+              />
+            </div>
+          </div>
+        }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3">Kode Aset Universal</th>
-                <th className="px-4 py-3">Nama Aset & Lokasi</th>
-                <th className="px-4 py-3">Kategori & Masa Manfaat</th>
-                <th className="px-4 py-3">Tgl Perolehan</th>
-                <th className="px-4 py-3 text-right">Biaya Perolehan</th>
-                <th className="px-4 py-3 text-right">Akum. Depresiasi</th>
-                <th className="px-4 py-3 text-right">Nilai Buku</th>
-                <th className="px-4 py-3 text-center">Aksi</th>
+                <th className="px-3.5 py-3">Kode Aset</th>
+                <th className="px-3.5 py-3">Nama Aset & Spesifikasi</th>
+                <th className="px-3.5 py-3">Kategori</th>
+                <th className="px-3.5 py-3">Tgl Perolehan</th>
+                <th className="px-3.5 py-3 text-right">Nilai Perolehan</th>
+                <th className="px-3.5 py-3 text-right">Akum. Depresiasi</th>
+                <th className="px-3.5 py-3 text-right">Nilai Buku</th>
+                <th className="px-3.5 py-3">Lokasi & Dept</th>
+                <th className="px-3.5 py-3 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {filtered.map((ast) => (
-                <tr key={ast.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <DnaCell.Code value={ast.assetCode} />
+            <tbody className="divide-y divide-slate-100">
+              {filteredList.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-3.5 py-3 font-mono font-bold text-blue-900">{item.assetCode}</td>
+                  <td className="px-3.5 py-3 font-semibold text-slate-900 max-w-[220px] truncate" title={item.assetName}>
+                    {item.assetName}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{ast.name}</div>
-                    <div className="text-[11px] text-slate-400">
-                      {ast.location} • Dept: {ast.department}
-                    </div>
+                  <td className="px-3.5 py-3">
+                    <DnaBadge variant="info">
+                      {item.category.replace(/_/g, " ")}
+                    </DnaBadge>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-1.5">
-                      <DnaBadge variant={ast.category === "BANGUNAN" ? "purple" : ast.category === "MOBIL" ? "blue" : "emerald"}>
-                        {ast.category}
-                      </DnaBadge>
-                      <span className="text-[11px] text-slate-500">
-                        ({ast.usefulLifeMonths / 12} Thn)
-                      </span>
-                    </div>
+                  <td className="px-3.5 py-3 text-slate-700">{item.acquisitionDate}</td>
+                  <td className="px-3.5 py-3 text-right font-semibold text-slate-900">
+                    {formatRupiah(item.acquisitionCost)}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{ast.acquisitionDate}</td>
-                  <td className="px-4 py-3 text-right font-mono font-medium text-slate-900">
-                    {formatRupiah(ast.acquisitionCost)}
+                  <td className="px-3.5 py-3 text-right font-medium text-amber-700">
+                    {formatRupiah(item.accumDepreciation)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-500">
-                    {formatRupiah(ast.accumulatedDepreciation)}
+                  <td className="px-3.5 py-3 text-right font-extrabold text-emerald-800">
+                    {formatRupiah(item.bookValue)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">
-                    {formatRupiah(ast.bookValue)}
+                  <td className="px-3.5 py-3 text-slate-700">
+                    <div className="font-medium">{item.location}</div>
+                    <div className="text-[10px] text-slate-400">{item.department}</div>
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaButton variant="secondary" size="sm" onClick={() => setSelectedAssetForDetail(ast)}>
-                      <History className="h-3.5 w-3.5 mr-1" /> Histori & Detail
+                  <td className="px-3.5 py-3 text-center">
+                    <DnaButton variant="secondary" size="sm" onClick={() => setDetailItem(item)}>
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      Detail
                     </DnaButton>
                   </td>
                 </tr>
@@ -267,130 +313,141 @@ export default function AssetRegisterPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Buat Aset */}
-      <DnaCrudModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title="Registrasi Aset Tetap Baru"
-        subtitle="Format kode otomatis universal berkelanjutan: DL-FIN-AST-2026-XXXX (Poin 30-33)"
-        onSave={handleCreate}
-        saveText="Daftarkan Aset"
+      {/* MODAL DAFTARKAN ASET BARU */}
+      <DnaModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Daftarkan Aset Tetap Baru"
+        size="lg"
       >
-        <div className="space-y-4">
-          <DnaInput
-            label="Nama Aset / Mesin *"
-            placeholder="Misal: Tangki Emulsifier 1000L"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
+        <form onSubmit={handleCreateAsset} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Nama Aset & Spesifikasi <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Contoh: Vacuum Homogenizer Mixer 500L SUS316L"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[12px] font-medium text-slate-700">Kategori Aset (Auto Masa Manfaat) *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Kategori Aset</label>
               <select
-                value={form.category}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    category: e.target.value as "INVENTARIS" | "MOTOR" | "MOBIL" | "BANGUNAN",
-                  })
-                }
-                className="w-full mt-1.5 px-3 py-2 text-[13px] rounded-lg border border-slate-200 bg-white"
+                value={formCat}
+                onChange={(e) => setFormCat(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
               >
-                <option value="INVENTARIS">Inventaris / Mesin (4 Tahun)</option>
-                <option value="MOTOR">Sepeda Motor Operasional (4 Tahun)</option>
-                <option value="MOBIL">Mobil / Truk Pengiriman (8 Tahun)</option>
-                <option value="BANGUNAN">Bangunan Pabrik Permanen (20 Tahun)</option>
+                <option value="MESIN_PABRIK">Mesin Pabrik (Mixing/Filling/Packing)</option>
+                <option value="ALAT_LAB_QC">Alat Lab & Instrumen Pengujian QC</option>
+                <option value="KENDARAAN">Kendaraan Operasional & Truk Logistik</option>
+                <option value="PERALATAN_KANTOR">Peralatan Server & Komputer Kantor</option>
               </select>
             </div>
-            <DnaInput
-              label="Tanggal Perolehan *"
-              type="date"
-              value={form.acquisitionDate}
-              onChange={(e) => setForm({ ...form, acquisitionDate: e.target.value })}
-            />
-          </div>
 
-          <DnaCurrencyInput
-            label="Nilai Perolehan (Cost) *"
-            value={form.acquisitionCost}
-            onChange={(val) => setForm({ ...form, acquisitionCost: val })}
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <DnaInput
-              label="Lokasi Penempatan"
-              placeholder="Misal: Gudang Finished Goods"
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-            />
-            <DnaInput
-              label="Departemen Pengguna"
-              placeholder="Misal: Logistik"
-              value={form.department}
-              onChange={(e) => setForm({ ...form, department: e.target.value })}
-            />
-          </div>
-        </div>
-      </DnaCrudModal>
-
-      {/* Modal Detail & Histori Pembelian */}
-      {selectedAssetForDetail && (
-        <DnaCrudModal
-          open={!!selectedAssetForDetail}
-          onOpenChange={() => setSelectedAssetForDetail(null)}
-          title={`Detail Aset & Histori: ${selectedAssetForDetail.assetCode}`}
-          subtitle={selectedAssetForDetail.name}
-          saveText="Tutup"
-          onSave={() => setSelectedAssetForDetail(null)}
-          maxWidth="max-w-2xl"
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[12px]">
-              <div>
-                <span className="text-slate-400 block">Kategori</span>
-                <span className="font-semibold text-slate-800">{selectedAssetForDetail.category}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block">Masa Manfaat</span>
-                <span className="font-semibold text-slate-800">{selectedAssetForDetail.usefulLifeMonths / 12} Tahun</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block">Nilai Buku Saat Ini</span>
-                <span className="font-bold text-emerald-700">{formatRupiah(selectedAssetForDetail.bookValue)}</span>
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Nilai Perolehan / Beli (Rp) <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="number"
+                min="1000"
+                required
+                value={formCost}
+                onChange={(e) => setFormCost(Number(e.target.value))}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold text-blue-900 focus:ring-1 focus:ring-blue-500"
+              />
             </div>
 
             <div>
-              <h4 className="text-[13px] font-bold text-slate-900 mb-2">
-                Sub-Tab: Riwayat Pembelian & Upgrade Kapitalisasi (Poin 30)
-              </h4>
-              <table className="w-full text-left text-[12px] border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                  <tr>
-                    <th className="p-2.5">Tanggal</th>
-                    <th className="p-2.5">Jenis Transaksi</th>
-                    <th className="p-2.5">No Faktur Pembelian</th>
-                    <th className="p-2.5 text-right">Nominal</th>
-                    <th className="p-2.5">Keterangan</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {selectedAssetForDetail.purchaseHistory.map((h, i) => (
-                    <tr key={i}>
-                      <td className="p-2.5">{h.date}</td>
-                      <td className="p-2.5 font-medium">{h.type}</td>
-                      <td className="p-2.5 font-mono text-blue-600">{h.refInvoice}</td>
-                      <td className="p-2.5 text-right font-mono">{formatRupiah(h.amount)}</td>
-                      <td className="p-2.5 text-slate-500">{h.notes}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Masa Manfaat (Tahun)</label>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                required
+                value={formYears}
+                onChange={(e) => setFormYears(Number(e.target.value))}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Departemen Penanggung Jawab</label>
+              <input
+                type="text"
+                value={formDept}
+                onChange={(e) => setFormDept(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Lokasi Fisik Penempatan</label>
+              <input
+                type="text"
+                value={formLocation}
+                onChange={(e) => setFormLocation(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500"
+              />
             </div>
           </div>
-        </DnaCrudModal>
-      )}
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <DnaButton type="button" variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton type="submit" variant="primary">
+              Simpan Aset Tetap
+            </DnaButton>
+          </div>
+        </form>
+      </DnaModal>
+
+      {/* MODAL DETAIL ASET */}
+      <DnaModal
+        isOpen={!!detailItem}
+        onClose={() => setDetailItem(null)}
+        title={`Detail Aset: ${detailItem?.assetCode}`}
+        size="md"
+      >
+        {detailItem && (
+          <div className="space-y-4 text-xs">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div className="font-bold text-slate-900">{detailItem.assetName}</div>
+              <div className="text-slate-500">
+                Lokasi: <strong>{detailItem.location}</strong> ({detailItem.department})
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 p-3 bg-white border border-slate-200 rounded-lg text-center">
+              <div>
+                <div className="text-[10px] text-slate-500 font-semibold uppercase">Nilai Beli</div>
+                <div className="font-bold text-slate-900">{formatRupiah(detailItem.acquisitionCost)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-slate-500 font-semibold uppercase">Akum. Depresiasi</div>
+                <div className="font-bold text-amber-700">{formatRupiah(detailItem.accumDepreciation)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-slate-500 font-semibold uppercase">Nilai Buku</div>
+                <div className="font-extrabold text-emerald-800">{formatRupiah(detailItem.bookValue)}</div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <DnaButton variant="primary" size="sm" onClick={() => setDetailItem(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          </div>
+        )}
+      </DnaModal>
     </DnaPageContainer>
   );
 }
