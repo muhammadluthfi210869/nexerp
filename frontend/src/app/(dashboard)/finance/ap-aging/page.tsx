@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -14,7 +14,9 @@ import {
   Filter,
   DollarSign,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  Wallet,
+  Calendar
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -24,56 +26,71 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaModal,
   formatRupiah,
   useDnaToast
 } from "@/components/dna";
 
 interface ApAgingItem {
   id: string;
-  supplierName: string;
-  billNo: string;
-  dueDate: string;
-  current: number;
-  days1_30: number;
-  days31_60: number;
-  daysOver60: number;
-  totalDue: number;
-  category: string;
+  vendor: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  deadline: string;
+  statusDueDate: "H-3" | "H-7" | "OVERDUE" | "NORMAL";
+  daysOverdue: number;
+  amount: number;
+  bucket: "Current" | "1-30" | "31-60" | ">60";
 }
 
-const FALLBACK_AP: ApAgingItem[] = [
-  { id: "1", supplierName: "PT Bahan Kimia Aktif Nusantara", billNo: "BILL-2609-012", dueDate: "2026-09-25", current: 280000000, days1_30: 0, days31_60: 0, daysOver60: 0, totalDue: 280000000, category: "Bahan Baku" },
-  { id: "2", supplierName: "CV Botol & Jar Kemas Lestari", billNo: "BILL-2608-088", dueDate: "2026-09-02", current: 0, days1_30: 160000000, days31_60: 0, daysOver60: 0, totalDue: 160000000, category: "Bahan Kemas" },
-  { id: "3", supplierName: "PT Percetakan Box & Folding Karton", billNo: "BILL-2608-041", dueDate: "2026-08-15", current: 0, days1_30: 0, days31_60: 95000000, daysOver60: 0, totalDue: 95000000, category: "Bahan Sekunder" },
-  { id: "4", supplierName: "PT Aroma Fragrance Essential", billNo: "BILL-2607-010", dueDate: "2026-07-20", current: 0, days1_30: 0, days31_60: 0, daysOver60: 155000000, totalDue: 155000000, category: "Bahan Baku" },
+const FALLBACK_AP_ITEMS: ApAgingItem[] = [
+  { id: "1", vendor: "PT Bahan Kimia Aktif Nusantara", invoiceNo: "BILL-2609-012", invoiceDate: "2026-08-25", deadline: "2026-09-12", statusDueDate: "H-3", daysOverdue: 0, amount: 280000000, bucket: "Current" },
+  { id: "2", vendor: "CV Botol & Jar Kemas Lestari", invoiceNo: "BILL-2608-088", invoiceDate: "2026-08-16", deadline: "2026-09-16", statusDueDate: "H-7", daysOverdue: 0, amount: 160000000, bucket: "Current" },
+  { id: "3", vendor: "PT Percetakan Box & Folding Karton", invoiceNo: "BILL-2608-041", invoiceDate: "2026-07-15", deadline: "2026-08-15", statusDueDate: "OVERDUE", daysOverdue: 25, amount: 95000000, bucket: "1-30" },
+  { id: "4", vendor: "PT Aroma Fragrance Essential", invoiceNo: "BILL-2607-010", invoiceDate: "2026-06-20", deadline: "2026-07-20", statusDueDate: "OVERDUE", daysOverdue: 51, amount: 155000000, bucket: "31-60" },
 ];
 
 export default function ApAgingReportPage() {
   const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [bucketFilter, setBucketFilter] = useState("ALL");
+  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
+  const [selectedInvoice, setSelectedInvoice] = useState<ApAgingItem | null>(null);
 
-  const totalCurrent = FALLBACK_AP.reduce((acc, r) => acc + r.current, 0);
-  const total1_30 = FALLBACK_AP.reduce((acc, r) => acc + r.days1_30, 0);
-  const total31_60 = FALLBACK_AP.reduce((acc, r) => acc + r.days31_60, 0);
-  const totalOver60 = FALLBACK_AP.reduce((acc, r) => acc + r.daysOver60, 0);
-  const grandTotal = FALLBACK_AP.reduce((acc, r) => acc + r.totalDue, 0);
+  // Real-time Saldo Bank (Poin 10-12)
+  const realTimeBankBalance = 1550000000;
+
+  const totalOutstanding = useMemo(() => FALLBACK_AP_ITEMS.reduce((acc, r) => acc + r.amount, 0), []);
+  const countH3 = useMemo(() => FALLBACK_AP_ITEMS.filter((r) => r.statusDueDate === "H-3").length, []);
+  const countH7 = useMemo(() => FALLBACK_AP_ITEMS.filter((r) => r.statusDueDate === "H-7").length, []);
+  const overdueCount = useMemo(() => FALLBACK_AP_ITEMS.filter((r) => r.statusDueDate === "OVERDUE").length, []);
+
+  const filteredItems = useMemo(() => {
+    return FALLBACK_AP_ITEMS.filter((item) => {
+      const matchSearch =
+        item.vendor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.invoiceNo.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchBucket = bucketFilter === "ALL" || item.bucket === bucketFilter;
+      return matchSearch && matchBucket;
+    });
+  }, [searchQuery, bucketFilter]);
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Laporan Umur Hutang Supplier (AP Aging Report)"
-        description="Monitoring jatuh tempo kewajiban pembayaran faktur supplier bahan baku, kemasan, dan pihak ketiga."
+        description="Monitoring jatuh tempo kewajiban faktur vendor bahan baku/kemas dengan skema peringatan H-3 (Merah), H-7 (Kuning), dan Overdue beranimasi."
         badge={
-          <div className="flex items-center gap-1.5 text-xs text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 font-semibold">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Total Kewajiban Hutang: {formatRupiah(grandTotal)}</span>
+          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
+            <Wallet className="w-3.5 h-3.5" />
+            <span>Saldo Kas Bank Realtime: {formatRupiah(realTimeBankBalance)}</span>
           </div>
         }
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
-              Cetak
+              Cetak AP Aging
             </DnaButton>
             <DnaButton variant="primary" size="md" onClick={() => toast.success("Exporting AP Aging ke Excel...")}>
               <FileSpreadsheet className="w-4 h-4 mr-1.5" />
@@ -83,53 +100,85 @@ export default function ApAgingReportPage() {
         }
       />
 
+      {/* 4 KPI CARDS SESUAI SPESIFIKASI SCR-158 (POIN 10-12) */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Total Hutang Supplier"
-          value={formatRupiah(grandTotal)}
+          label="Total Outstanding AP"
+          value={formatRupiah(totalOutstanding)}
           icon={<DollarSign className="w-5 h-5 text-rose-600" />}
-          subtext="Total Tagihan Supplier Aktif"
+          delta={{ value: `${FALLBACK_AP_ITEMS.length} Faktur Supplier`, isPositive: false }}
+          subtext="Total Kewajiban Hutang Berjalan"
           variant="critical"
         />
         <DnaStatCard
-          label="Hutang Lancar (Aktif)"
-          value={formatRupiah(totalCurrent)}
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "Jatuh Tempo Normal", isPositive: true }}
-          subtext="Belum lewat jatuh tempo"
-          variant="success"
+          label="Jatuh Tempo H-3 (Mendesak)"
+          value={`${countH3} Tagihan (Merah)`}
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+          delta={{ value: "Deadline < 3 Hari", isPositive: false }}
+          subtext="Segera Jadwalkan Kas Keluar"
+          variant="critical"
         />
         <DnaStatCard
-          label="Jatuh Tempo (1 - 30 Hari)"
-          value={formatRupiah(total1_30)}
+          label="Jatuh Tempo H-7 (Peringatan)"
+          value={`${countH7} Tagihan (Kuning)`}
           icon={<Clock className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "Prioritas Bayar", isPositive: false }}
-          subtext="Perlu dijadwalkan Kas Keluar"
+          delta={{ value: "Deadline < 7 Hari", isPositive: true }}
+          subtext="Siapkan Likuiditas Bank"
           variant="warning"
         />
         <DnaStatCard
-          label="Tertunggak (> 30 Hari)"
-          value={formatRupiah(total31_60 + totalOver60)}
-          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
-          delta={{ value: "Urgent Settlement", isPositive: false }}
-          subtext="Risiko hold pengiriman bahan"
+          label="Overdue (Lewat Jatuh Tempo)"
+          value={`${overdueCount} Tagihan`}
+          icon={<AlertTriangle className="w-5 h-5 text-rose-700" />}
+          delta={{ value: "Tertunggak", isPositive: false }}
+          subtext="Risiko Hold Pengiriman Bahan"
           variant="critical"
         />
       </DnaKpiGrid>
 
+      {/* TABLE LIST FORMAT PERSIS SCR-158 DENGAN PEWARNAAN H-3, H-7, DAN OVERDUE ANIMASI PULSE */}
       <DnaDataTableCard
-        title="Daftar Tagihan Hutang per Supplier"
-        badge={<DnaBadge variant="default">{FALLBACK_AP.length} Supplier</DnaBadge>}
+        title="Matriks Jatuh Tempo Hutang per Vendor (AP Aging)"
+        badge={<DnaBadge variant="default">{filteredItems.length} Faktur</DnaBadge>}
         customToolbar={
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari supplier/tagihan..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
+              <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
+              <span className="text-slate-400 font-semibold">s/d</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
+            </div>
+            <select
+              value={bucketFilter}
+              onChange={(e) => setBucketFilter(e.target.value)}
+              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+            >
+              <option value="ALL">Semua Bucket Umur</option>
+              <option value="Current">Current (Lancar)</option>
+              <option value="1-30">1 - 30 Hari</option>
+              <option value="31-60">31 - 60 Hari</option>
+              <option value=">60">&gt; 60 Hari</option>
+            </select>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari Vendor / No. Faktur..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
           </div>
         }
       >
@@ -137,57 +186,96 @@ export default function ApAgingReportPage() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Nama Supplier</th>
-                <th className="px-3.5 py-3">No. Faktur Beli</th>
-                <th className="px-3.5 py-3">Kategori</th>
-                <th className="px-3.5 py-3">Jatuh Tempo</th>
-                <th className="px-3.5 py-3 text-right">Lancar</th>
-                <th className="px-3.5 py-3 text-right">1-30 Hari</th>
-                <th className="px-3.5 py-3 text-right">31-60 Hari</th>
-                <th className="px-3.5 py-3 text-right">&gt;60 Hari</th>
-                <th className="px-3.5 py-3 text-right">Total Hutang</th>
+                <th className="px-3.5 py-3">Vendor</th>
+                <th className="px-3.5 py-3">Invoice No</th>
+                <th className="px-3.5 py-3">Invoice Date</th>
+                <th className="px-3.5 py-3">Deadline</th>
+                <th className="px-3.5 py-3 text-center">Status Jatuh Tempo</th>
+                <th className="px-3.5 py-3 text-center">Days Overdue</th>
+                <th className="px-3.5 py-3 text-right">Amount (Rp)</th>
+                <th className="px-3.5 py-3 text-center">Bucket</th>
+                <th className="px-3.5 py-3 text-center">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {FALLBACK_AP.map((item) => (
+              {filteredItems.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{item.supplierName}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-rose-700 font-semibold">{item.billNo}</td>
-                  <td className="px-3.5 py-2.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-medium text-slate-600">
-                      {item.category}
-                    </span>
+                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{item.vendor}</td>
+                  <td className="px-3.5 py-2.5 font-mono text-rose-700 font-semibold">{item.invoiceNo}</td>
+                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.invoiceDate}</td>
+                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.deadline}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    {item.statusDueDate === "H-3" ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                        🔴 H-3 Jatuh Tempo
+                      </span>
+                    ) : item.statusDueDate === "H-7" ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        🟡 H-7 Peringatan
+                      </span>
+                    ) : item.statusDueDate === "OVERDUE" ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-700 text-white animate-bounce">
+                        ⚠️ OVERDUE
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-500 font-medium">Normal</span>
+                    )}
                   </td>
-                  <td className="px-3.5 py-2.5 text-slate-600">{item.dueDate}</td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-emerald-700">
-                    {item.current > 0 ? formatRupiah(item.current) : "-"}
+                  <td className="px-3.5 py-2.5 text-center font-semibold text-slate-700">
+                    {item.daysOverdue > 0 ? `+${item.daysOverdue} Hari` : "0"}
                   </td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-amber-700">
-                    {item.days1_30 > 0 ? formatRupiah(item.days1_30) : "-"}
+                  <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(item.amount)}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaBadge variant={item.bucket === "Current" ? "success" : "critical"}>
+                      {item.bucket}
+                    </DnaBadge>
                   </td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-amber-800">
-                    {item.days31_60 > 0 ? formatRupiah(item.days31_60) : "-"}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-rose-800 font-bold">
-                    {item.daysOver60 > 0 ? formatRupiah(item.daysOver60) : "-"}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">
-                    {formatRupiah(item.totalDue)}
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSelectedInvoice(item)}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      Drill Down
+                    </DnaButton>
                   </td>
                 </tr>
               ))}
-              <tr className="bg-slate-100 font-black border-t-2 border-slate-300">
-                <td colSpan={4} className="px-3.5 py-3 text-slate-900 font-black text-right">TOTAL KESELURUHAN HUTANG:</td>
-                <td className="px-3.5 py-3 text-right text-emerald-900 font-extrabold">{formatRupiah(totalCurrent)}</td>
-                <td className="px-3.5 py-3 text-right text-amber-900 font-extrabold">{formatRupiah(total1_30)}</td>
-                <td className="px-3.5 py-3 text-right text-amber-950 font-extrabold">{formatRupiah(total31_60)}</td>
-                <td className="px-3.5 py-3 text-right text-rose-950 font-black">{formatRupiah(totalOver60)}</td>
-                <td className="px-3.5 py-3 text-right text-slate-950 font-black text-sm">{formatRupiah(grandTotal)}</td>
-              </tr>
             </tbody>
           </table>
         </div>
       </DnaDataTableCard>
+
+      {/* DRILLDOWN MODAL FAKTUR PEMBELIAN */}
+      <DnaModal
+        isOpen={!!selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+        title={`Detail Faktur Pembelian: ${selectedInvoice?.invoiceNo}`}
+        size="md"
+      >
+        <div className="space-y-3.5 text-xs">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Nama Vendor:</span>
+              <strong className="text-slate-900">{selectedInvoice?.vendor}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Deadline Pembayaran:</span>
+              <strong className="text-rose-700">{selectedInvoice?.deadline}</strong>
+            </div>
+            <div className="flex justify-between border-t border-slate-200 pt-2">
+              <span className="text-slate-900 font-bold">Total Nilai Tagihan:</span>
+              <strong className="text-rose-700 font-black text-sm">{selectedInvoice ? formatRupiah(selectedInvoice.amount) : "0"}</strong>
+            </div>
+          </div>
+          <div className="flex justify-end pt-2">
+            <DnaButton variant="secondary" size="md" onClick={() => setSelectedInvoice(null)}>
+              Tutup
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
     </DnaPageContainer>
   );
 }

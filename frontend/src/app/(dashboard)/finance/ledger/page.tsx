@@ -16,7 +16,7 @@ import {
   TrendingUp,
   Scale,
   Building2,
-  ChevronDown
+  ChevronRight
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -31,68 +31,52 @@ import {
   useDnaToast
 } from "@/components/dna";
 
-interface LedgerEntry {
-  id: string;
-  date: string;
-  journalNo: string;
-  reference: string;
-  description: string;
-  debit: number;
-  credit: number;
-  balance: number;
-}
-
-interface AccountSummary {
+interface LedgerAccountSummary {
   accountCode: string;
   accountName: string;
-  category: string;
-  openingBalance: number;
-  totalDebit: number;
-  totalCredit: number;
-  endingBalance: number;
+  opening: number;
+  debit: number;
+  credit: number;
+  change: number;
+  saldo: number;
 }
 
-const FALLBACK_ACCOUNTS: AccountSummary[] = [
-  { accountCode: "1110", accountName: "Kas Operasional Kantor", category: "Kas & Bank", openingBalance: 45000000, totalDebit: 350000000, totalCredit: 310000000, endingBalance: 85000000 },
-  { accountCode: "1120", accountName: "Bank BCA Operasional (521-009182)", category: "Kas & Bank", openingBalance: 1250000000, totalDebit: 2100000000, totalCredit: 1800000000, endingBalance: 1550000000 },
-  { accountCode: "1130", accountName: "Bank Mandiri Payroll & Pajak", category: "Kas & Bank", openingBalance: 420000000, totalDebit: 800000000, totalCredit: 650000000, endingBalance: 570000000 },
-  { accountCode: "1210", accountName: "Piutang Usaha Pelanggan (AR)", category: "Piutang", openingBalance: 850000000, totalDebit: 1450000000, totalCredit: 1300000000, endingBalance: 1000000000 },
-  { accountCode: "1310", accountName: "Persediaan Bahan Baku Pabrik", category: "Persediaan", openingBalance: 980000000, totalDebit: 620000000, totalCredit: 480000000, endingBalance: 1120000000 },
-  { accountCode: "2110", accountName: "Hutang Usaha Supplier Bahan Kemas", category: "Hutang Lancar", openingBalance: 620000000, totalDebit: 450000000, totalCredit: 520000000, endingBalance: 690000000 },
-  { accountCode: "4110", accountName: "Pendapatan Produksi OEM/ODM", category: "Pendapatan", openingBalance: 0, totalDebit: 0, totalCredit: 1450000000, endingBalance: 1450000000 },
-];
-
-const FALLBACK_MUTATIONS: LedgerEntry[] = [
-  { id: "1", date: "2026-09-01", journalNo: "JV-2609-001", reference: "PO-BCA-001", description: "Penerimaan Termin 50% Produksi PT Kosmetik Glow", debit: 450000000, credit: 0, balance: 1700000000 },
-  { id: "2", date: "2026-09-03", journalNo: "JV-2609-004", reference: "PO-RAW-991", description: "Pembayaran Bahan Baku Ekstrak Centella Asiatica", debit: 0, credit: 120000000, balance: 1580000000 },
-  { id: "3", date: "2026-09-05", journalNo: "JV-2609-011", reference: "EXP-UTIL-01", description: "Pembayaran Utilitas Listrik Industri & Boiler", debit: 0, credit: 45000000, balance: 1535000000 },
-  { id: "4", date: "2026-09-07", journalNo: "JV-2609-015", reference: "PO-BCA-002", description: "Penerimaan Pelunasan Batch Serum Niacinamide", debit: 380000000, credit: 0, balance: 1915000000 },
-  { id: "5", date: "2026-09-08", journalNo: "JV-2609-020", reference: "PACK-PO-04", description: "Pembayaran Botol Airless Pump 30ml", debit: 0, credit: 65000000, balance: 1850000000 },
+const FALLBACK_LEDGER_DATA: LedgerAccountSummary[] = [
+  { accountCode: "1110", accountName: "Kas Operasional Kantor", opening: 45000000, debit: 350000000, credit: 310000000, change: 40000000, saldo: 85000000 },
+  { accountCode: "1120", accountName: "Bank BCA Operasional (521-009182)", opening: 1250000000, debit: 2100000000, credit: 1800000000, change: 300000000, saldo: 1550000000 },
+  { accountCode: "1130", accountName: "Bank Mandiri Payroll & Pajak", opening: 420000000, debit: 800000000, credit: 650000000, change: 150000000, saldo: 570000000 },
+  { accountCode: "1210", accountName: "Piutang Usaha Pelanggan Maklon", opening: 850000000, debit: 1450000000, credit: 1300000000, change: 150000000, saldo: 1000000000 },
+  { accountCode: "1310", accountName: "Persediaan Bahan Baku Aktif Pabrik", opening: 980000000, debit: 620000000, credit: 480000000, change: 140000000, saldo: 1120000000 },
+  { accountCode: "2110", accountName: "Hutang Usaha Supplier Bahan Baku", opening: 620000000, debit: 450000000, credit: 520000000, change: 70000000, saldo: 690000000 },
+  { accountCode: "4110", accountName: "Pendapatan Produksi Maklon OEM", opening: 0, debit: 0, credit: 1450000000, change: 1450000000, saldo: 1450000000 },
 ];
 
 export default function GeneralLedgerPage() {
   const toast = useDnaToast();
-  const [selectedAccount, setSelectedAccount] = useState<string>("1120");
+  const [selectedCode, setSelectedCode] = useState<string>("1120");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
+  const [selectedDrilldown, setSelectedDrilldown] = useState<LedgerAccountSummary | null>(null);
 
   const activeAccount = useMemo(() => {
-    return FALLBACK_ACCOUNTS.find((a) => a.accountCode === selectedAccount) || FALLBACK_ACCOUNTS[1];
-  }, [selectedAccount]);
+    return FALLBACK_LEDGER_DATA.find((a) => a.accountCode === selectedCode) || FALLBACK_LEDGER_DATA[1];
+  }, [selectedCode]);
 
-  const handleExportExcel = () => {
-    toast.success(`Exporting Buku Besar Akun ${activeAccount.accountCode} - ${activeAccount.accountName} ke Excel...`);
-  };
+  const filteredAccounts = useMemo(() => {
+    return FALLBACK_LEDGER_DATA.filter((a) => {
+      return a.accountCode.includes(searchQuery) || a.accountName.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [searchQuery]);
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Buku Besar Umum (General Ledger)"
-        description="Audit terperinci mutasi debit, kredit, dan saldo berjalan untuk seluruh bagan akun (Chart of Accounts)."
+        title="Laporan Buku Besar (General Ledger Report)"
+        description="Ringkasan saldo awal, mutasi debit/kredit, perubahan bersih, dan saldo akhir per akun COA dengan drill-down ke jurnal dan dokumen sumber."
         badge={
-          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-medium">
-            <Scale className="w-3.5 h-3.5" />
-            <span>Akun Aktif: {activeAccount.accountCode} - {activeAccount.accountName}</span>
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Spesifikasi SCR-162 (Poin 31): Filter Periode Bebas Lintas Bulan</span>
           </div>
         }
         actions={
@@ -101,7 +85,7 @@ export default function GeneralLedgerPage() {
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak GL
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={handleExportExcel}>
+            <DnaButton variant="primary" size="md" onClick={() => toast.success("Exporting Buku Besar ke Excel...")}>
               <FileSpreadsheet className="w-4 h-4 mr-1.5" />
               Export Excel
             </DnaButton>
@@ -109,154 +93,170 @@ export default function GeneralLedgerPage() {
         }
       />
 
+      {/* KPI CARDS (SCR-162: Opening Balance, Total Debit, Total Credit, Closing Balance) */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Saldo Awal Periode"
-          value={formatRupiah(activeAccount.openingBalance)}
+          label="Opening Balance (Saldo Awal)"
+          value={formatRupiah(activeAccount.opening)}
           icon={<BookOpen className="w-5 h-5 text-slate-600" />}
-          subtext="Per 01 September 2026"
+          subtext={"Per " + dateRange.start}
           variant="default"
         />
         <DnaStatCard
-          label="Total Mutasi Debit"
-          value={formatRupiah(activeAccount.totalDebit)}
+          label="Total Debet Periode"
+          value={formatRupiah(activeAccount.debit)}
           icon={<TrendingUp className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "+Debit Periode", isPositive: true }}
-          subtext="Akumulasi Debit Berjalan"
+          delta={{ value: "+Mutasi Debet", isPositive: true }}
+          subtext="Akumulasi Masuk Sisi Debet"
           variant="success"
         />
         <DnaStatCard
-          label="Total Mutasi Kredit"
-          value={formatRupiah(activeAccount.totalCredit)}
+          label="Total Kredit Periode"
+          value={formatRupiah(activeAccount.credit)}
           icon={<Scale className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "-Kredit Periode", isPositive: false }}
-          subtext="Akumulasi Kredit Berjalan"
+          delta={{ value: "-Mutasi Kredit", isPositive: false }}
+          subtext="Akumulasi Masuk Sisi Kredit"
           variant="warning"
         />
         <DnaStatCard
-          label="Saldo Akhir Buku Besar"
-          value={formatRupiah(activeAccount.endingBalance)}
+          label="Closing Balance (Saldo Akhir)"
+          value={formatRupiah(activeAccount.saldo)}
           icon={<Building2 className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "Balance Terverifikasi", isPositive: true }}
-          subtext="Ending Net Balance"
+          delta={{ value: `Perubahan: +${formatRupiah(activeAccount.change)}`, isPositive: true }}
+          subtext={"Per " + dateRange.end}
           variant="info"
         />
       </DnaKpiGrid>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* ACCOUNT SELECTOR SIDEBAR */}
-        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
-          <h3 className="font-bold text-slate-900 text-sm flex items-center justify-between">
-            <span>Pilih Akun COA</span>
-            <DnaBadge variant="default">{FALLBACK_ACCOUNTS.length} Akun</DnaBadge>
-          </h3>
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari kode/nama akun..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
-            {FALLBACK_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.accountCode}
-                onClick={() => setSelectedAccount(acc.accountCode)}
-                className={`w-full text-left p-2.5 rounded-lg text-xs transition-all border ${
-                  selectedAccount === acc.accountCode
-                    ? "bg-blue-50 border-blue-200 text-blue-900 font-semibold shadow-xs"
-                    : "border-slate-100 hover:bg-slate-50 text-slate-700"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-mono text-[11px] text-blue-700 font-bold">{acc.accountCode}</span>
-                  <span className="text-[10px] text-slate-500">{acc.category}</span>
-                </div>
-                <div className="truncate font-medium">{acc.accountName}</div>
-                <div className="text-right text-[11px] font-extrabold text-slate-900 mt-1">
-                  {formatRupiah(acc.endingBalance)}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* LEDGER DETAILS TABLE */}
-        <div className="lg:col-span-3 space-y-4">
-          <DnaDataTableCard
-            title={`Rincian Mutasi Akun: ${activeAccount.accountCode} - ${activeAccount.accountName}`}
-            badge={<DnaBadge variant="purple">Periode: {dateRange.start} s/d {dateRange.end}</DnaBadge>}
-            customToolbar={
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={dateRange.start}
-                  onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white"
-                />
-                <span className="text-xs text-slate-500">s/d</span>
-                <input
-                  type="date"
-                  value={dateRange.end}
-                  onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white"
-                />
-              </div>
-            }
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="px-3.5 py-3">Tanggal</th>
-                    <th className="px-3.5 py-3">No. Jurnal</th>
-                    <th className="px-3.5 py-3">Referensi</th>
-                    <th className="px-3.5 py-3">Keterangan / Memo</th>
-                    <th className="px-3.5 py-3 text-right">Debit</th>
-                    <th className="px-3.5 py-3 text-right">Kredit</th>
-                    <th className="px-3.5 py-3 text-right">Saldo Berjalan</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  <tr className="bg-slate-50/60 font-semibold">
-                    <td className="px-3.5 py-2.5 text-slate-500">{dateRange.start}</td>
-                    <td className="px-3.5 py-2.5 font-mono text-slate-400">-</td>
-                    <td className="px-3.5 py-2.5 text-slate-400">-</td>
-                    <td className="px-3.5 py-2.5 font-bold text-slate-800">SALDO AWAL (OPENING BALANCE)</td>
-                    <td className="px-3.5 py-2.5 text-right font-medium text-slate-500">-</td>
-                    <td className="px-3.5 py-2.5 text-right font-medium text-slate-500">-</td>
-                    <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(activeAccount.openingBalance)}</td>
-                  </tr>
-                  {FALLBACK_MUTATIONS.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-3.5 py-2.5 text-slate-600">{entry.date}</td>
-                      <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{entry.journalNo}</td>
-                      <td className="px-3.5 py-2.5 font-mono text-slate-600">{entry.reference}</td>
-                      <td className="px-3.5 py-2.5 text-slate-800 font-medium">{entry.description}</td>
-                      <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">
-                        {entry.debit > 0 ? formatRupiah(entry.debit) : "-"}
-                      </td>
-                      <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">
-                        {entry.credit > 0 ? formatRupiah(entry.credit) : "-"}
-                      </td>
-                      <td className="px-3.5 py-2.5 text-right font-black text-slate-900">
-                        {formatRupiah(entry.balance)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-blue-50/75 font-black border-t-2 border-blue-300">
-                    <td colSpan={4} className="px-3.5 py-3 text-blue-950 font-black text-right">TOTAL MUTASI & SALDO AKHIR:</td>
-                    <td className="px-3.5 py-3 text-right text-emerald-900 font-extrabold">{formatRupiah(activeAccount.totalDebit)}</td>
-                    <td className="px-3.5 py-3 text-right text-rose-900 font-extrabold">{formatRupiah(activeAccount.totalCredit)}</td>
-                    <td className="px-3.5 py-3 text-right text-blue-950 font-black text-sm">{formatRupiah(activeAccount.endingBalance)}</td>
-                  </tr>
-                </tbody>
-              </table>
+      {/* TABLE LIST FORMAT PERSIS LEGACY SCR-162 */}
+      <DnaDataTableCard
+        title="Ringkasan Perubahan Buku Besar Seluruh Akun"
+        badge={<DnaBadge variant="purple">{filteredAccounts.length} Akun COA</DnaBadge>}
+        customToolbar={
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
+              <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
+              <span className="text-slate-400 font-semibold">s/d</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+              />
             </div>
-          </DnaDataTableCard>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari kode / nama COA..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-3">Kode CoA</th>
+                <th className="px-3.5 py-3">Nama CoA</th>
+                <th className="px-3.5 py-3 text-right">Opening (Rp)</th>
+                <th className="px-3.5 py-3 text-right">Debet (Rp)</th>
+                <th className="px-3.5 py-3 text-right">Kredit (Rp)</th>
+                <th className="px-3.5 py-3 text-right">Perubahan (Rp)</th>
+                <th className="px-3.5 py-3 text-right">Saldo (Rp)</th>
+                <th className="px-3.5 py-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredAccounts.map((row) => (
+                <tr
+                  key={row.accountCode}
+                  onClick={() => setSelectedCode(row.accountCode)}
+                  className={`cursor-pointer transition-colors ${
+                    selectedCode === row.accountCode ? "bg-blue-50/60 font-semibold" : "hover:bg-slate-50/50"
+                  }`}
+                >
+                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{row.accountCode}</td>
+                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{row.accountName}</td>
+                  <td className="px-3.5 py-2.5 text-right font-medium text-slate-700">{formatRupiah(row.opening)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(row.debit)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">{formatRupiah(row.credit)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-blue-700">+{formatRupiah(row.change)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-black text-slate-900">{formatRupiah(row.saldo)}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDrilldown(row);
+                      }}
+                      className="p-1 text-slate-400 hover:text-blue-600 rounded"
+                      title="Drilldown ke Jurnal Asli"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </DnaDataTableCard>
+
+      {/* DRILLDOWN MODAL KE JURNAL & SOURCE DOCUMENT (SCR-162) */}
+      <DnaModal
+        isOpen={!!selectedDrilldown}
+        onClose={() => setSelectedDrilldown(null)}
+        title={`Drilldown Transaksi: ${selectedDrilldown?.accountCode} - ${selectedDrilldown?.accountName}`}
+        size="lg"
+      >
+        <div className="space-y-3.5 text-xs">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5">
+            <div className="flex justify-between">
+              <span>Akun COA:</span>
+              <strong className="text-slate-900">{selectedDrilldown?.accountCode} - {selectedDrilldown?.accountName}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span>Saldo Akhir Berjalan:</span>
+              <strong className="text-blue-700 font-bold">{selectedDrilldown ? formatRupiah(selectedDrilldown.saldo) : "0"}</strong>
+            </div>
+          </div>
+          <table className="w-full text-left text-xs border border-slate-200 rounded-lg">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr className="border-b border-slate-200">
+                <th className="p-2">Tgl</th>
+                <th className="p-2">No. Jurnal</th>
+                <th className="p-2">Source Document</th>
+                <th className="p-2 text-right">Debet</th>
+                <th className="p-2 text-right">Kredit</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              <tr>
+                <td className="p-2 text-slate-600">2026-09-08</td>
+                <td className="p-2 font-mono text-blue-700 font-semibold">DL-FIN-JRN-08092026-0001</td>
+                <td className="p-2 font-mono text-emerald-700">AR-INV-2609-01 (Faktur Maklon)</td>
+                <td className="p-2 text-right font-bold text-emerald-700">Rp 450.000.000</td>
+                <td className="p-2 text-right text-slate-400">-</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className="flex justify-end pt-2">
+            <DnaButton variant="secondary" size="md" onClick={() => setSelectedDrilldown(null)}>
+              Tutup
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
     </DnaPageContainer>
   );
 }
