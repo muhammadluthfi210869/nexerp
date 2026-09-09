@@ -33,6 +33,7 @@ import {
   ChevronDown,
   CheckCircle2,
   Check,
+  RefreshCw,
 } from 'lucide-react';
 
 import type {
@@ -71,6 +72,8 @@ import {
   useGatewayStatus,
   useMessages,
   useUpdateLead,
+  useSyncDreamlabRr,
+  useDreamlabRrSummary,
 } from '@/hooks/useOmniCrmConversations';
 import { useOmniCrmStateSync } from '@/hooks/useOmniCrmState';
 
@@ -215,7 +218,21 @@ export default function OmniCrmClient() {
   const updateLeadMutation = useUpdateLead();
   const { data: gatewayStatus } = useGatewayStatus();
   const { data: activeServerThread } = useMessages(selectedLeadForChatId);
+  const syncDreamlabRrMutation = useSyncDreamlabRr();
   useOmniCrmStateSync();
+
+  const handleSyncWebsiteRr = async () => {
+    try {
+      showToast('⏳ Menghubungi database website & menyinkronkan data leads...');
+      const res = await syncDreamlabRrMutation.mutateAsync();
+      if (res.success) {
+        showToast(`✅ Sinkronisasi berhasil! ${res.importedCount} leads baru diimpor, ${res.updatedCount} terupdate.`);
+        refetchConversations();
+      }
+    } catch (err: any) {
+      showToast(`Gagal sinkronisasi website: ${err?.message || 'Error koneksi'}`);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -302,9 +319,20 @@ export default function OmniCrmClient() {
       const newMessages: WhatsAppMessage[] = [];
 
       for (const conv of serverConversations) {
-        const assignedBusDev = (prevState.busDevs || []).find((b) =>
-          conv.assignedName && b.name.toLowerCase().includes(conv.assignedName.toLowerCase())
-        );
+        const assignedBusDev = (prevState.busDevs || []).find((b) => {
+          if (!conv.assignedName && !conv.assignedBusDevId) return false;
+          if (conv.assignedBusDevId && b.id === conv.assignedBusDevId) return true;
+          if (conv.assignedName) {
+            const cleanConvName = conv.assignedName.toLowerCase().trim();
+            const cleanBName = b.name.toLowerCase().trim();
+            return cleanBName.includes(cleanConvName) || cleanConvName.includes(cleanBName);
+          }
+          return false;
+        });
+
+        const assignedPipeline = assignedBusDev
+          ? (prevState.pipelines || []).find((p) => p.assignedBusDevId === assignedBusDev.id)
+          : undefined;
 
         const realLead: Lead = {
           id: conv.id,
@@ -313,11 +341,10 @@ export default function OmniCrmClient() {
           name: conv.name || `Prospek ${conv.trackingCode}`,
           phone: conv.phone || '',
           source: conv.source || 'WhatsApp Inbound',
-          pipelineId: assignedBusDev
-            ? `pipe_${assignedBusDev.name.toLowerCase().replace(/\s+/g, '_')}`
-            : 'pipe_round_robin',
+          pipelineId: assignedPipeline ? assignedPipeline.id : 'pipe_round_robin',
           stageId: mapWorkflowStatusToStage(conv.workflowStatus),
-          assignedTo: assignedBusDev ? assignedBusDev.id : null,
+          assignedTo: assignedBusDev ? assignedBusDev.id : (conv.assignedBusDevId || null),
+          assignedName: conv.assignedName || assignedBusDev?.name,
           createdAt: conv.createdAt || new Date().toISOString(),
           updatedAt: conv.lastMessageAt || conv.createdAt || new Date().toISOString(),
           tags: [conv.source || 'WhatsApp', conv.workflowStatus].filter(Boolean),
@@ -346,9 +373,31 @@ export default function OmniCrmClient() {
       }
 
       const mergedLeads = [...newLeads, ...cleanedExistingLeads];
+
+      // Dynamic calculation of trafficSources
+      const updatedTrafficSources = (prevState.trafficSources || []).map((src) => {
+        const matchingLeads = mergedLeads.filter((l) => {
+          const lSrc = (l.source || '').toLowerCase();
+          const sName = src.name.toLowerCase();
+          const sUtm = (src.utmSource || '').toLowerCase();
+          return (
+            lSrc === sName ||
+            lSrc.includes(sName) ||
+            sName.includes(lSrc) ||
+            (sUtm && lSrc.includes(sUtm))
+          );
+        });
+        return {
+          ...src,
+          leadCount: matchingLeads.length,
+          totalValue: matchingLeads.reduce((acc, curr) => acc + (curr.value || 0), 0),
+        };
+      });
+
       return {
         ...prevState,
         leads: mergedLeads,
+        trafficSources: updatedTrafficSources,
         messages: [...newMessages, ...(prevState.messages || []).filter((m) => !m.id.startsWith('msg_10') && !m.id.startsWith('msg_11') && !m.id.startsWith('msg_12'))],
       };
     });
@@ -630,7 +679,7 @@ export default function OmniCrmClient() {
       currentState = res.newState;
     }
     setState(currentState);
-    showToast(`Berhasil mensimulasikan ${count} lead masuk secara rotasi Round-Robin 10 BusDev!`);
+    showToast(`Berhasil mensimulasikan ${count} lead masuk secara rotasi Round-Robin ${(state.busDevs || []).length} BusDev!`);
   };
 
   // Tool Invoker from Engine Console
@@ -801,6 +850,17 @@ export default function OmniCrmClient() {
               title="Reset Demo State"
             >
               <RotateCcw className="w-4 h-4 text-slate-500" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSyncWebsiteRr}
+              disabled={syncDreamlabRrMutation.isPending}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[12px] font-semibold shadow-2xs cursor-pointer transition-colors disabled:opacity-50"
+              title="Tarik 353 leads & update rotasi BusDev dari website DreamLab"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncDreamlabRrMutation.isPending ? 'animate-spin' : ''}`} />
+              <span>Tarik Data Website RR</span>
             </button>
 
             <button

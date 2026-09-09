@@ -116,12 +116,27 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
   const visibleLeads = useMemo(() => {
     let leads = state.leads || [];
     if (isBusDevAccount && currentUser) {
-      leads = leads.filter((l) => l.assignedTo === currentUser.id);
+      leads = leads.filter(
+        (l) =>
+          l.assignedTo === currentUser.id ||
+          (currentUser.name &&
+            l.assignedName &&
+            (l.assignedName.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+              currentUser.name.toLowerCase().includes(l.assignedName.toLowerCase())))
+      );
     } else if (busDevFilter !== 'ALL') {
-      leads = leads.filter((l) => l.assignedTo === busDevFilter);
+      const selectedDev = (state.busDevs || []).find((b) => b.id === busDevFilter);
+      leads = leads.filter(
+        (l) =>
+          l.assignedTo === busDevFilter ||
+          (selectedDev &&
+            l.assignedName &&
+            (l.assignedName.toLowerCase().includes(selectedDev.name.toLowerCase()) ||
+              selectedDev.name.toLowerCase().includes(l.assignedName.toLowerCase())))
+      );
     }
     return leads;
-  }, [state.leads, isBusDevAccount, currentUser, busDevFilter]);
+  }, [state.leads, state.busDevs, isBusDevAccount, currentUser, busDevFilter]);
 
   // Filtered leads for Left Column Inbox
   const filteredLeads = useMemo(() => {
@@ -148,25 +163,21 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
         return lead.stageId !== 'stage_client_deal' && lead.stageId !== 'stage_junk_leads';
       }
       if (filterMode === 'unread') {
-        const hasUnread = (state.messages || []).some(
-          (m) => m.leadId === lead.id && m.direction === 'INBOUND' && !m.tags?.includes('read')
-        );
-        return hasUnread;
+        return lead.isAnswered === false;
+      }
+      if (filterMode === 'mine' && currentUser) {
+        return lead.assignedTo === currentUser.id;
       }
       return true;
     });
-  }, [visibleLeads, searchQuery, sourceFilter, filterMode, state.messages]);
+  }, [visibleLeads, searchQuery, sourceFilter, filterMode, currentUser]);
 
-  // Active Lead selection fallback
+  // Active Lead Object
   const activeLead = useMemo(() => {
-    if (selectedLeadId) {
-      const found = visibleLeads.find((l) => l.id === selectedLeadId);
-      if (found) return found;
-    }
-    return filteredLeads[0] || visibleLeads[0] || null;
-  }, [selectedLeadId, visibleLeads, filteredLeads]);
+    return (state.leads || []).find((l) => l.id === selectedLeadId) || null;
+  }, [state.leads, selectedLeadId]);
 
-  // Active messages
+  // Messages for Active Conversation
   const activeMessages = useMemo(() => {
     if (!activeLead) return [];
     return (state.messages || []).filter((m) => m.leadId === activeLead.id);
@@ -175,7 +186,13 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
   // Assigned Sales / BusDev info
   const assignedSales = useMemo(() => {
     if (!activeLead) return null;
-    return (state.busDevs || []).find((b) => b.id === activeLead.assignedTo);
+    return (state.busDevs || []).find(
+      (b) =>
+        b.id === activeLead.assignedTo ||
+        (activeLead.assignedName &&
+          (b.name.toLowerCase().includes(activeLead.assignedName.toLowerCase()) ||
+            activeLead.assignedName.toLowerCase().includes(b.name.toLowerCase())))
+    );
   }, [state.busDevs, activeLead]);
 
   // Current lead pipeline stages
@@ -344,7 +361,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   Mode Super Admin (Akses Penuh Seluruh Nomor WhatsApp)
                 </span>
                 <span className="text-[10px] font-bold bg-blue-200 text-blue-900 px-2 py-0.2 rounded-full">
-                  10 BusDev Connected
+                  {(state.busDevs || []).filter((b) => b.status === 'AKTIF').length} BusDev Connected
                 </span>
               </div>
               <p className="text-[11px] text-blue-700 font-medium">
@@ -361,7 +378,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
               onChange={(e) => setBusDevFilter(e.target.value)}
               className="bg-white border border-blue-300 rounded-lg px-2.5 py-1 text-xs text-blue-950 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs"
             >
-              <option value="ALL">Semua Nomor BusDev (10 Sales)</option>
+              <option value="ALL">Semua Nomor BusDev ({(state.busDevs || []).length} Sales)</option>
               {(state.busDevs || []).map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name} ({b.formattedPhone || b.phone})
@@ -726,7 +743,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                       <div>
                         <span className="text-[10px] text-slate-400 block">Estimasi Omset / Nilai:</span>
                         <span className="font-bold text-emerald-700 font-mono">
-                          Rp {(activeLead.value || 50000000).toLocaleString('id-ID')}
+                          Rp {(activeLead.value || 0).toLocaleString('id-ID')}
                         </span>
                       </div>
                     </div>
@@ -742,14 +759,14 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
-                          {assignedSales?.name.charAt(0) || 'D'}
+                          {assignedSales?.name.charAt(0) || '?'}
                         </div>
                         <div>
                           <span className="font-bold text-slate-900 block text-xs">
-                            {assignedSales?.name || 'Diaz Pratama'}
+                            {assignedSales?.name || 'Belum Ditugaskan'}
                           </span>
                           <span className="text-[10px] text-slate-500 font-mono">
-                            📱 {assignedSales?.formattedPhone || assignedSales?.phone || '+62 812-7788-9904'}
+                            📱 {assignedSales?.formattedPhone || assignedSales?.phone || '-'}
                           </span>
                         </div>
                       </div>

@@ -291,7 +291,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                             </span>
                           </div>
                           <span className="text-[10px] text-slate-500">
-                            Bisa melihat seluruh chat & 10 BusDev
+                            Bisa melihat seluruh chat & {(state.busDevs || []).length} BusDev
                           </span>
                         </div>
                       </div>
@@ -308,7 +308,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {(state.busDevs || []).map((busdev) => {
                       const isSelected = currentUser.id === busdev.id;
                       const busdevLeadsCount = (state.leads || []).filter(
-                        (l) => l.assignedTo === busdev.id
+                        (l) =>
+                          l.assignedTo === busdev.id ||
+                          (l.assignedName &&
+                            (l.assignedName.toLowerCase().includes(busdev.name.toLowerCase()) ||
+                              busdev.name.toLowerCase().includes(l.assignedName.toLowerCase())))
                       ).length;
 
                       return (

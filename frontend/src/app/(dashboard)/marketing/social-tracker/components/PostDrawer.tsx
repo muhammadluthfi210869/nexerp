@@ -60,6 +60,34 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [newChecklistText, setNewChecklistText] = useState('');
+  const [isEditingMetrics, setIsEditingMetrics] = useState(false);
+
+  const handleMetricChange = (field: string, val: number) => {
+    const current = post.performance || {
+      reach: 0,
+      impressions: 0,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      saves: 0,
+      videoViews: 0,
+      clicks: 0,
+      engagementRate: 0,
+      viralityScore: 0,
+      costPerResult: 0,
+    };
+    const safeVal = isNaN(val) ? 0 : Math.max(0, val);
+    const updated = { ...current, [field]: safeVal };
+    const interactions = (updated.likes || 0) + (updated.comments || 0) + (updated.shares || 0) + (updated.saves || 0);
+    const reach = updated.reach || 0;
+    updated.engagementRate = reach > 0 ? Number(((interactions / reach) * 100).toFixed(2)) : 0;
+
+    onUpdatePost({
+      ...post,
+      performance: updated,
+      updatedAt: new Date().toISOString(),
+    });
+  };
 
   const platform = platformConfig[post.platform];
   const status = statusConfig[post.status];
@@ -327,59 +355,126 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
               </div>
             </div>
 
-            {/* Performance Stats Banner if Published */}
-            {post.performance && (
-              <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                    <Flame className="w-4 h-4 text-emerald-600" />
-                    <span>Meta Business Suite Live Insights</span>
-                  </span>
-                  <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
-                    Post ID: {post.metaPostId || 'meta_sync_ok'}
-                  </span>
-                </div>
+            {/* Performance Stats Banner & Manual Tracking */}
+            <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-emerald-600" />
+                  <span>Performa & Tracking Media Sosial</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingMetrics(!isEditingMetrics)}
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 transition cursor-pointer"
+                >
+                  {isEditingMetrics ? '✓ Selesai Edit' : '✏️ Input Metrik Manual'}
+                </button>
+              </div>
 
+              {!isEditingMetrics ? (
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Reach</span>
                     <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                      {formatNumber(post.performance.reach)}
+                      {formatNumber(post.performance?.reach || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Likes</span>
                     <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
-                      {formatNumber(post.performance.likes)}
+                      {formatNumber(post.performance?.likes || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Comments</span>
                     <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
-                      {formatNumber(post.performance.comments)}
+                      {formatNumber(post.performance?.comments || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Saves</span>
                     <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
-                      {formatNumber(post.performance.saves)}
+                      {formatNumber(post.performance?.saves || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Shares</span>
                     <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
-                      {formatNumber(post.performance.shares)}
+                      {formatNumber(post.performance?.shares || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Eng. Rate</span>
                     <span className="text-xs font-bold font-mono text-amber-600 dark:text-amber-400">
-                      {post.performance.engagementRate}%
+                      {post.performance?.engagementRate || 0}%
                     </span>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-emerald-300 dark:border-emerald-700">
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-500 block mb-1">Total Reach</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={post.performance?.reach ?? 0}
+                      onChange={(e) => handleMetricChange('reach', parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-500 block mb-1">Likes</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={post.performance?.likes ?? 0}
+                      onChange={(e) => handleMetricChange('likes', parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-500 block mb-1">Comments</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={post.performance?.comments ?? 0}
+                      onChange={(e) => handleMetricChange('comments', parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-500 block mb-1">Saves</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={post.performance?.saves ?? 0}
+                      onChange={(e) => handleMetricChange('saves', parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-500 block mb-1">Shares</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={post.performance?.shares ?? 0}
+                      onChange={(e) => handleMetricChange('shares', parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-500 block mb-1">Video Views</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={post.performance?.videoViews ?? 0}
+                      onChange={(e) => handleMetricChange('videoViews', parseInt(e.target.value, 10))}
+                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* TAB CONTENT 1: NOTION DOCUMENT EDITOR */}
             {activeTab === 'editor' && (

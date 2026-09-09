@@ -140,7 +140,13 @@ export const BusDevManager: React.FC<BusDevManagerProps> = ({
         {busDevsList.map((busdev) => {
           const isCurrentUser = currentUser?.id === busdev.id;
           const isNext = nextEligible?.id === busdev.id;
-          const assignedCount = (state.leads || []).filter((l) => l.assignedTo === busdev.id).length;
+          const assignedCount = (state.leads || []).filter(
+            (l) =>
+              l.assignedTo === busdev.id ||
+              (l.assignedName &&
+                (l.assignedName.toLowerCase().includes(busdev.name.toLowerCase()) ||
+                  busdev.name.toLowerCase().includes(l.assignedName.toLowerCase())))
+          ).length;
 
           return (
             <div

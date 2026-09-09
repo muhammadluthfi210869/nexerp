@@ -1,9 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Wallet,
   DollarSign,
@@ -15,7 +12,10 @@ import {
   CheckCircle2,
   Lock,
   Building2,
-  Calendar
+  Calendar,
+  Send,
+  Download,
+  CreditCard
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -23,6 +23,7 @@ import {
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
+  DnaTabNav,
   DnaButton,
   DnaBadge,
   DnaModal,
@@ -35,20 +36,26 @@ interface PayrollItem {
   empId: string;
   empName: string;
   department: string;
+  role: string;
   basicSalary: number;
   allowance: number;
-  overtime: number;
-  deductions: number;
+  overtimePay: number;
+  bpjsDeduction: number;
+  taxPph21: number;
+  lateDeduction: number;
   netSalary: number;
+  bankName: string;
   bankAccount: string;
   status: "DRAFT" | "CALCULATED" | "APPROVED" | "PAID";
 }
 
-const FALLBACK_PAYROLL: PayrollItem[] = [
-  { id: "1", empId: "EMP-001", empName: "Budi Santoso", department: "Produksi", basicSalary: 6500000, allowance: 1200000, overtime: 850000, deductions: 250000, netSalary: 8300000, bankAccount: "BCA 521-998811", status: "APPROVED" },
-  { id: "2", empId: "EMP-002", empName: "Rian Saputra", department: "R&D", basicSalary: 8000000, allowance: 1500000, overtime: 0, deductions: 320000, netSalary: 9180000, bankAccount: "Mandiri 137-009911", status: "APPROVED" },
-  { id: "3", empId: "EMP-003", empName: "Siti Rahmawati", department: "QC", basicSalary: 5500000, allowance: 900000, overtime: 400000, deductions: 180000, netSalary: 6620000, bankAccount: "BCA 521-112233", status: "APPROVED" },
-  { id: "4", empId: "EMP-004", empName: "Dewi Lestari", department: "BusDev", basicSalary: 7000000, allowance: 2000000, overtime: 0, deductions: 280000, netSalary: 8720000, bankAccount: "BCA 521-778899", status: "APPROVED" },
+const INITIAL_PAYROLL: PayrollItem[] = [
+  { id: "PAY-01", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", department: "Produksi Mixing", role: "Supervisor Produksi", basicSalary: 6500000, allowance: 1200000, overtimePay: 850000, bpjsDeduction: 260000, taxPph21: 150000, lateDeduction: 0, netSalary: 8140000, bankName: "BCA", bankAccount: "521-0099881", status: "APPROVED" },
+  { id: "PAY-02", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", department: "R&D Formulasi", role: "Senior Formulator", basicSalary: 8000000, allowance: 1500000, overtimePay: 0, bpjsDeduction: 320000, taxPph21: 210000, lateDeduction: 0, netSalary: 8970000, bankName: "Bank Mandiri", bankAccount: "137-0099112", status: "APPROVED" },
+  { id: "PAY-03", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", role: "Analis Kimia & QC", basicSalary: 5500000, allowance: 900000, overtimePay: 450000, bpjsDeduction: 220000, taxPph21: 90000, lateDeduction: 50000, netSalary: 6490000, bankName: "BCA", bankAccount: "521-1122334", status: "APPROVED" },
+  { id: "PAY-04", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", department: "BusDev Maklon", role: "Senior AE BusDev", basicSalary: 7000000, allowance: 2000000, overtimePay: 0, bpjsDeduction: 280000, taxPph21: 180000, lateDeduction: 0, netSalary: 8540000, bankName: "BCA", bankAccount: "521-7788990", status: "APPROVED" },
+  { id: "PAY-05", empId: "KIL-2024-031", empName: "Ahmad Dani", department: "Gudang Inbound", role: "Staff Inbound", basicSalary: 4800000, allowance: 600000, overtimePay: 350000, bpjsDeduction: 192000, taxPph21: 45000, lateDeduction: 0, netSalary: 5513000, bankName: "BRI", bankAccount: "012-3344556", status: "APPROVED" },
+  { id: "PAY-06", empId: "KIL-2025-012", empName: "dr. Amanda Putri, M.Biomed", department: "QA & APJ", role: "Apoteker PJ", basicSalary: 11000000, allowance: 2500000, overtimePay: 0, bpjsDeduction: 440000, taxPph21: 480000, lateDeduction: 0, netSalary: 12580000, bankName: "BCA", bankAccount: "521-9988776", status: "APPROVED" },
 ];
 
 export default function HrPayrollPage() {
@@ -57,19 +64,26 @@ export default function HrPayrollPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSlip, setSelectedSlip] = useState<PayrollItem | null>(null);
 
-  const totalGross = FALLBACK_PAYROLL.reduce((acc, r) => acc + r.basicSalary + r.allowance + r.overtime, 0);
-  const totalDeductions = FALLBACK_PAYROLL.reduce((acc, r) => acc + r.deductions, 0);
-  const totalNet = FALLBACK_PAYROLL.reduce((acc, r) => acc + r.netSalary, 0);
+  const totalBasic = INITIAL_PAYROLL.reduce((acc, r) => acc + r.basicSalary, 0);
+  const totalAllowances = INITIAL_PAYROLL.reduce((acc, r) => acc + r.allowance + r.overtimePay, 0);
+  const totalDeductions = INITIAL_PAYROLL.reduce((acc, r) => acc + r.bpjsDeduction + r.taxPph21 + r.lateDeduction, 0);
+  const totalNetPayroll = INITIAL_PAYROLL.reduce((acc, r) => acc + r.netSalary, 0);
+
+  const filteredPayroll = INITIAL_PAYROLL.filter(r =>
+    r.empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Payroll Workbench & Penggajian (Salary Processing)"
-        description="Kalkulasi otomatis gaji pokok, tunjangan keahlian, upah lembur, potongan BPJS/PPh 21, dan cetak slip gaji."
+        description="Kalkulasi otomatis gaji pokok, tunjangan keahlian, upah lembur SPL, pemotongan iuran BPJS & PPh 21, dan cetak slip gaji resmi."
         badge={
           <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
             <Lock className="w-3.5 h-3.5" />
-            <span>Payroll Batch Approved & Ready for Bank Transfer</span>
+            <span>Payroll Batch Disetujui (Ready for Bank Disbursement)</span>
           </div>
         }
         actions={
@@ -78,179 +92,248 @@ export default function HrPayrollPage() {
               type="month"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-medium"
+              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-semibold"
             />
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Rekap
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={() => toast.success("Menjalankan Batch Transfer Gaji via Bank BCA...")}>
-              <Wallet className="w-4 h-4 mr-1.5" />
+            <DnaButton variant="secondary" size="md" onClick={() => toast.success("Exporting Rekap Payroll ke Excel...")}>
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Export Excel
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => toast.success("Batch Transfer Penggajian Berhasil Dikirim ke Host-to-Host Bank BCA!")}>
+              <CreditCard className="w-4 h-4 mr-1.5" />
               Transfer Batch Gaji
             </DnaButton>
           </div>
         }
       />
 
+      {/* KPI STAT CARDS */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Total Net Payroll"
-          value={formatRupiah(totalNet)}
+          label="Total Net Take Home Pay"
+          value={formatRupiah(totalNetPayroll)}
           icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
           delta={{ value: "Periode Sep 2026", isPositive: true }}
-          subtext="Total Transfer ke 124 Pegawai"
+          subtext="Total Dana Gaji Karyawan Bersih"
           variant="success"
         />
         <DnaStatCard
-          label="Total Gaji Pokok & Tunjangan"
-          value={formatRupiah(totalGross)}
+          label="Total Gaji Pokok"
+          value={formatRupiah(totalBasic)}
           icon={<Wallet className="w-5 h-5 text-blue-600" />}
-          subtext="Gross Base & Allowances"
+          subtext="Akumulasi Basic Salary"
           variant="info"
+        />
+        <DnaStatCard
+          label="Tunjangan & Lembur SPL"
+          value={formatRupiah(totalAllowances)}
+          icon={<Calendar className="w-5 h-5 text-purple-600" />}
+          delta={{ value: "Overtime: +Rp 1.65 Jt", isPositive: true }}
+          subtext="Tunjangan Keahlian & Jam Lembur"
+          variant="purple"
         />
         <DnaStatCard
           label="Total Potongan (BPJS & Pajak)"
           value={formatRupiah(totalDeductions)}
           icon={<Building2 className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "BPJS TK & Kes", isPositive: true }}
-          subtext="Disetorkan ke Kas Negara"
+          subtext="BPJS Kes/TK & PPh 21 Pasal 21"
           variant="warning"
-        />
-        <DnaStatCard
-          label="Status Batch Payroll"
-          value="Disetujui 100%"
-          icon={<CheckCircle2 className="w-5 h-5 text-purple-600" />}
-          delta={{ value: "Ready to Disburse", isPositive: true }}
-          subtext="Disahkan GM & Direktur"
-          variant="purple"
         />
       </DnaKpiGrid>
 
+      {/* DATA TABLE */}
       <DnaDataTableCard
-        title="Daftar Rincian Penggajian Karyawan"
-        badge={<DnaBadge variant="default">{FALLBACK_PAYROLL.length} Rekening</DnaBadge>}
+        title="Daftar Komponen Penggajian Karyawan Batch September 2026"
+        badge={<DnaBadge variant="purple">{filteredPayroll.length} Karyawan</DnaBadge>}
         customToolbar={
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+          <div className="relative min-w-[260px]">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Cari NIK / nama karyawan..."
+              placeholder="Cari nama, NIK, atau divisi..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-3 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"
             />
           </div>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">NIK</th>
-                <th className="px-3.5 py-3">Nama Pegawai</th>
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+              <tr>
+                <th className="px-3.5 py-3">Karyawan & NIK</th>
                 <th className="px-3.5 py-3">Departemen</th>
                 <th className="px-3.5 py-3 text-right">Gaji Pokok</th>
                 <th className="px-3.5 py-3 text-right">Tunjangan</th>
-                <th className="px-3.5 py-3 text-right">Lembur</th>
+                <th className="px-3.5 py-3 text-right">Upah Lembur</th>
                 <th className="px-3.5 py-3 text-right">Potongan</th>
-                <th className="px-3.5 py-3 text-right">Gaji Bersih (THP)</th>
-                <th className="px-3.5 py-3">Rekening Bank</th>
+                <th className="px-3.5 py-3 text-right font-black">Take Home Pay</th>
+                <th className="px-3.5 py-3">Rekening Pembayaran</th>
+                <th className="px-3.5 py-3 text-center">Status</th>
                 <th className="px-3.5 py-3 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {FALLBACK_PAYROLL.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-mono text-slate-600 font-bold">{row.empId}</td>
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{row.empName}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600">{row.department}</td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-slate-800">{formatRupiah(row.basicSalary)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-emerald-700">{formatRupiah(row.allowance)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-blue-700">{row.overtime > 0 ? formatRupiah(row.overtime) : "-"}</td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-rose-700">({formatRupiah(row.deductions)})</td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-emerald-800 text-xs">{formatRupiah(row.netSalary)}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-slate-600 text-[11px]">{row.bankAccount}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <DnaButton variant="secondary" size="sm" onClick={() => setSelectedSlip(row)}>
-                      <Printer className="w-3.5 h-3.5 mr-1" />
+              {filteredPayroll.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-3.5 py-3">
+                    <div className="font-bold text-slate-900">{item.empName}</div>
+                    <div className="text-[11px] font-mono text-slate-500">{item.empId}</div>
+                  </td>
+                  <td className="px-3.5 py-3">
+                    <div className="font-semibold text-slate-800">{item.role}</div>
+                    <div className="text-[11px] text-slate-500">{item.department}</div>
+                  </td>
+                  <td className="px-3.5 py-3 text-right font-mono font-semibold text-slate-800">
+                    {formatRupiah(item.basicSalary)}
+                  </td>
+                  <td className="px-3.5 py-3 text-right font-mono text-slate-700">
+                    {formatRupiah(item.allowance)}
+                  </td>
+                  <td className="px-3.5 py-3 text-right font-mono text-emerald-700 font-semibold">
+                    {formatRupiah(item.overtimePay)}
+                  </td>
+                  <td className="px-3.5 py-3 text-right font-mono text-rose-600 font-semibold">
+                    -{formatRupiah(item.bpjsDeduction + item.taxPph21 + item.lateDeduction)}
+                  </td>
+                  <td className="px-3.5 py-3 text-right font-mono font-black text-slate-900 text-sm">
+                    {formatRupiah(item.netSalary)}
+                  </td>
+                  <td className="px-3.5 py-3 font-mono text-slate-700">
+                    <div className="font-bold text-slate-800">{item.bankName}</div>
+                    <div className="text-[11px] text-slate-500">{item.bankAccount}</div>
+                  </td>
+                  <td className="px-3.5 py-3 text-center">
+                    <DnaBadge variant="success">{item.status}</DnaBadge>
+                  </td>
+                  <td className="px-3.5 py-3 text-center">
+                    <DnaButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setSelectedSlip(item)}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" />
                       Slip Gaji
                     </DnaButton>
                   </td>
                 </tr>
               ))}
-              <tr className="bg-emerald-50/75 font-black border-t-2 border-emerald-300">
-                <td colSpan={3} className="px-3.5 py-3 text-emerald-950 font-black text-right">TOTAL PENGGAJIAN:</td>
-                <td colSpan={4} className="px-3.5 py-3 text-right text-slate-600 font-bold">Net Total:</td>
-                <td className="px-3.5 py-3 text-right text-emerald-950 font-black text-sm">{formatRupiah(totalNet)}</td>
-                <td colSpan={2}></td>
-              </tr>
             </tbody>
           </table>
         </div>
       </DnaDataTableCard>
 
-      {/* SLIP GAJI MODAL */}
+      {/* MODAL: RESMI SLIP GAJI PDF / PRINT VIEW */}
       <DnaModal
         isOpen={!!selectedSlip}
         onClose={() => setSelectedSlip(null)}
-        title={`Slip Gaji Elektronik: ${selectedSlip?.empName} (${selectedSlip?.empId})`}
-        size="md"
+        title={"Slip Gaji Karyawan: " + (selectedSlip?.empName || "")}
+        maxWidth="max-w-xl"
       >
-        <div className="space-y-3.5 text-xs p-2">
-          <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
-            <div>
-              <p className="font-bold text-slate-900 text-sm">PT AUREON COSMETICS INDONESIA</p>
-              <p className="text-slate-500 text-[11px]">Kawasan Industri Manufaktur Kosmetik CPKB</p>
+        {selectedSlip && (
+          <div className="space-y-4 text-xs">
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm">PT. KALOPSIA AUREON PHARMA</h3>
+                  <p className="text-[11px] text-slate-500">SLIP GAJI RESMI • PERIODE SEPTEMBER 2026</p>
+                </div>
+                <div className="text-right font-mono">
+                  <div className="font-bold text-slate-800">{selectedSlip.empId}</div>
+                  <div className="text-[11px] text-emerald-700 font-semibold">STATUS: LUNAS TRANSFER</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Nama Karyawan:</span>
+                  <strong className="text-slate-900">{selectedSlip.empName}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Jabatan & Divisi:</span>
+                  <strong className="text-slate-900">{selectedSlip.role} ({selectedSlip.department})</strong>
+                </div>
+              </div>
+
+              {/* RINCIAN PENDAPATAN & POTONGAN */}
+              <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-3">
+                {/* PENERIMAAN */}
+                <div className="space-y-1.5">
+                  <div className="font-bold text-slate-900 border-b border-slate-200 pb-1 text-[11px] uppercase">
+                    A. Penerimaan (Earnings)
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Gaji Pokok:</span>
+                    <span className="font-mono font-bold text-slate-800">{formatRupiah(selectedSlip.basicSalary)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Tunjangan Jabatan:</span>
+                    <span className="font-mono text-slate-800">{formatRupiah(selectedSlip.allowance)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Upah Lembur SPL:</span>
+                    <span className="font-mono text-emerald-700 font-bold">{formatRupiah(selectedSlip.overtimePay)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-1 font-bold text-slate-900">
+                    <span>Total Kotor:</span>
+                    <span className="font-mono">{formatRupiah(selectedSlip.basicSalary + selectedSlip.allowance + selectedSlip.overtimePay)}</span>
+                  </div>
+                </div>
+
+                {/* POTONGAN */}
+                <div className="space-y-1.5">
+                  <div className="font-bold text-slate-900 border-b border-slate-200 pb-1 text-[11px] uppercase">
+                    B. Potongan (Deductions)
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">BPJS Ketenagakerjaan:</span>
+                    <span className="font-mono text-rose-600">-{formatRupiah(selectedSlip.bpjsDeduction)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">PPh 21 Bulanan:</span>
+                    <span className="font-mono text-rose-600">-{formatRupiah(selectedSlip.taxPph21)}</span>
+                  </div>
+                  {selectedSlip.lateDeduction > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Potongan Terlambat:</span>
+                      <span className="font-mono text-rose-600">-{formatRupiah(selectedSlip.lateDeduction)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-slate-200 pt-1 font-bold text-rose-700">
+                    <span>Total Potongan:</span>
+                    <span className="font-mono">-{formatRupiah(selectedSlip.bpjsDeduction + selectedSlip.taxPph21 + selectedSlip.lateDeduction)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* NET TAKE HOME PAY */}
+              <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-emerald-800 text-[11px] block">GAJI BERSIH (TAKE HOME PAY):</span>
+                  <span className="font-mono font-black text-emerald-900 text-base">{formatRupiah(selectedSlip.netSalary)}</span>
+                </div>
+                <div className="text-right text-slate-600">
+                  <div className="text-[11px]">Ditransfer ke:</div>
+                  <div className="font-mono font-bold text-slate-900">{selectedSlip.bankName} - {selectedSlip.bankAccount}</div>
+                </div>
+              </div>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">LUNAS TRANSFER</span>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
+                <Printer className="w-4 h-4 mr-1.5" />
+                Cetak Slip PDF
+              </DnaButton>
+              <DnaButton variant="primary" size="md" onClick={() => setSelectedSlip(null)}>
+                Tutup
+              </DnaButton>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-lg">
-            <div>Nama: <strong>{selectedSlip?.empName}</strong></div>
-            <div>Departemen: <strong>{selectedSlip?.department}</strong></div>
-            <div>NIK: <strong>{selectedSlip?.empId}</strong></div>
-            <div>Rekening: <strong>{selectedSlip?.bankAccount}</strong></div>
-          </div>
-          <div className="space-y-1.5 pt-1">
-            <div className="flex justify-between py-1 border-b border-slate-100">
-              <span>Gaji Pokok:</span>
-              <strong className="text-slate-900">{selectedSlip ? formatRupiah(selectedSlip.basicSalary) : "0"}</strong>
-            </div>
-            <div className="flex justify-between py-1 border-b border-slate-100">
-              <span>Tunjangan Keahlian & Transport:</span>
-              <strong className="text-emerald-700">+{selectedSlip ? formatRupiah(selectedSlip.allowance) : "0"}</strong>
-            </div>
-            <div className="flex justify-between py-1 border-b border-slate-100">
-              <span>Upah Lembur Resmi:</span>
-              <strong className="text-blue-700">+{selectedSlip ? formatRupiah(selectedSlip.overtime) : "0"}</strong>
-            </div>
-            <div className="flex justify-between py-1 border-b border-slate-100">
-              <span>Potongan BPJS & PPh 21:</span>
-              <strong className="text-rose-700">-{selectedSlip ? formatRupiah(selectedSlip.deductions) : "0"}</strong>
-            </div>
-            <div className="flex justify-between py-2 bg-emerald-50 px-2 rounded-lg font-black text-sm text-emerald-950">
-              <span>TOTAL TAKE HOME PAY (THP):</span>
-              <span>{selectedSlip ? formatRupiah(selectedSlip.netSalary) : "0"}</span>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-            <DnaButton variant="secondary" size="md" onClick={() => setSelectedSlip(null)}>
-              Tutup
-            </DnaButton>
-            <DnaButton
-              variant="primary"
-              size="md"
-              onClick={() => {
-                toast.success("Mencetak Slip Gaji PDF...");
-                window.print();
-              }}
-            >
-              <Printer className="w-4 h-4 mr-1.5" />
-              Cetak Slip Gaji
-            </DnaButton>
-          </div>
-        </div>
+        )}
       </DnaModal>
     </DnaPageContainer>
   );

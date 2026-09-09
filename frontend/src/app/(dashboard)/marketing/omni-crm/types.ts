@@ -84,6 +84,7 @@ export interface Lead {
   pipelineId: string; // e.g., 'pipe_anisa'
   stageId: string; // e.g., 'stage_client_deal'
   assignedTo: string | null; // user_anisa or null
+  assignedName?: string;
   createdAt: string;
   updatedAt: string;
   tags?: string[];

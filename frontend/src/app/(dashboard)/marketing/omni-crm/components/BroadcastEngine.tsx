@@ -360,7 +360,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
                     onChange={(e) => setBusDevFilter(e.target.value)}
                     className="h-9 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 text-slate-700 text-[12px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white cursor-pointer"
                   >
-                    <option value="ALL">Semua Nomor BusDev (10 Sales)</option>
+                    <option value="ALL">Semua Nomor BusDev ({(state.busDevs || []).length} Sales)</option>
                     {(state.busDevs || []).map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name} ({b.formattedPhone || b.phone})

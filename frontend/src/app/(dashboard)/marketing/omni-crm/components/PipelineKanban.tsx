@@ -207,20 +207,25 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
   const filteredLeads = (state.leads || []).filter((lead) => {
     // Role Isolation
     if (isBusDev && currentUser) {
-      if (lead.assignedTo !== currentUser.id) return false;
+      const matchBusDev =
+        lead.assignedTo === currentUser.id ||
+        (currentUser.name &&
+          lead.assignedName &&
+          (lead.assignedName.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+            currentUser.name.toLowerCase().includes(lead.assignedName.toLowerCase())));
+      if (!matchBusDev) return false;
     } else {
       // Admin pipeline filter
       if (currentPipeline.id !== 'pipe_round_robin') {
-        if (lead.pipelineId !== currentPipeline.id) {
-          if (
-            currentPipeline.assignedBusDevId &&
-            lead.assignedTo === currentPipeline.assignedBusDevId
-          ) {
-            // matches busDev owner
-          } else {
-            return false;
-          }
-        }
+        const owner = (state.busDevs || []).find((b) => b.id === currentPipeline.assignedBusDevId);
+        const matchPipe =
+          lead.pipelineId === currentPipeline.id ||
+          (currentPipeline.assignedBusDevId && lead.assignedTo === currentPipeline.assignedBusDevId) ||
+          (owner &&
+            lead.assignedName &&
+            (lead.assignedName.toLowerCase().includes(owner.name.toLowerCase()) ||
+              owner.name.toLowerCase().includes(lead.assignedName.toLowerCase())));
+        if (!matchPipe) return false;
       }
     }
 
@@ -230,8 +235,15 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
     }
 
     // BusDev Filter (Admin only)
-    if (!isBusDev && selectedBusDevFilter !== 'ALL' && lead.assignedTo !== selectedBusDevFilter) {
-      return false;
+    if (!isBusDev && selectedBusDevFilter !== 'ALL') {
+      const selectedDev = (state.busDevs || []).find((b) => b.id === selectedBusDevFilter);
+      const matchDev =
+        lead.assignedTo === selectedBusDevFilter ||
+        (selectedDev &&
+          lead.assignedName &&
+          (lead.assignedName.toLowerCase().includes(selectedDev.name.toLowerCase()) ||
+            selectedDev.name.toLowerCase().includes(lead.assignedName.toLowerCase())));
+      if (!matchDev) return false;
     }
 
     // Tag Filter

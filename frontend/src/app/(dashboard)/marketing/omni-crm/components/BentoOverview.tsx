@@ -84,11 +84,26 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
   // Leads for current pipeline view & security context
   const currentPipelineLeads = (state.leads || []).filter((l) => {
     if (isBusDev && currentUser) {
-      return l.assignedTo === currentUser.id;
+      return (
+        l.assignedTo === currentUser.id ||
+        (currentUser.name &&
+          l.assignedName &&
+          (l.assignedName.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+            currentUser.name.toLowerCase().includes(l.assignedName.toLowerCase())))
+      );
     }
     if (isMasterOverview) return true;
     if (l.pipelineId === currentPipeline.id) return true;
     if (currentPipeline.assignedBusDevId && l.assignedTo === currentPipeline.assignedBusDevId) return true;
+    const owner = (state.busDevs || []).find((b) => b.id === currentPipeline.assignedBusDevId);
+    if (
+      owner &&
+      l.assignedName &&
+      (l.assignedName.toLowerCase().includes(owner.name.toLowerCase()) ||
+        owner.name.toLowerCase().includes(l.assignedName.toLowerCase()))
+    ) {
+      return true;
+    }
     return false;
   });
 
@@ -278,7 +293,11 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                 const count = (state.leads || []).filter(
                   (l) =>
                     l.pipelineId === pipe.id ||
-                    (pipe.assignedBusDevId && l.assignedTo === pipe.assignedBusDevId)
+                    (pipe.assignedBusDevId && l.assignedTo === pipe.assignedBusDevId) ||
+                    (owner &&
+                      l.assignedName &&
+                      (l.assignedName.toLowerCase().includes(owner.name.toLowerCase()) ||
+                        owner.name.toLowerCase().includes(l.assignedName.toLowerCase())))
                 ).length;
                 const isOnline = owner ? owner.status === 'AKTIF' : true;
 
@@ -432,7 +451,9 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                   <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
                   <span>Overview Matriks Seluruh Pipeline BusDev:</span>
                 </span>
-                <span className="text-[11px] text-slate-500 font-mono">10 BusDev Connected</span>
+                <span className="text-[11px] text-slate-500 font-mono">
+                  {activeBusDevs.length} BusDev Connected
+                </span>
               </div>
 
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
@@ -451,18 +472,22 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                   <tbody className="divide-y divide-slate-100 font-mono text-[12px]">
                     {pipelinesList.map((pipe) => {
                       const isSelected = pipe.id === selectedPipelineId;
+                      const owner = (state.busDevs || []).find((b) => b.id === pipe.assignedBusDevId);
                       const pLeads = (state.leads || []).filter((l) =>
                         pipe.id === 'pipe_round_robin'
                           ? true
                           : l.pipelineId === pipe.id ||
-                            (pipe.assignedBusDevId && l.assignedTo === pipe.assignedBusDevId)
+                            (pipe.assignedBusDevId && l.assignedTo === pipe.assignedBusDevId) ||
+                            (owner &&
+                              l.assignedName &&
+                              (l.assignedName.toLowerCase().includes(owner.name.toLowerCase()) ||
+                                owner.name.toLowerCase().includes(l.assignedName.toLowerCase())))
                       );
                       const cold = pLeads.filter((l) => l.stageId === 'stage_cold').length;
                       const warm = pLeads.filter((l) => l.stageId === 'stage_warm').length;
                       const hot = pLeads.filter((l) => l.stageId === 'stage_hot').length;
                       const sample = pLeads.filter((l) => l.stageId === 'stage_sample').length;
                       const val = pLeads.reduce((acc, l) => acc + (l.value || 0), 0);
-                      const owner = (state.busDevs || []).find((b) => b.id === pipe.assignedBusDevId);
 
                       return (
                         <tr
@@ -584,7 +609,9 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                   {isBusDev ? 'Profil & Spesialisasi Anda' : 'Distribusi Round Robin'}
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono">
-                  {isBusDev ? currentUser?.specialty : `Next: ${nextEligible?.name || 'Diaz'}`}
+                  {isBusDev
+                    ? currentUser?.specialty
+                    : `Next: ${nextEligible?.name || (activeBusDevs[0]?.name ?? 'Belum ada')}`}
                 </span>
               </div>
             </div>
@@ -601,7 +628,13 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {(state.busDevs || []).slice(0, 5).map((busdev) => {
               const isCurrent = currentUser?.id === busdev.id;
-              const count = (state.leads || []).filter((l) => l.assignedTo === busdev.id).length;
+              const count = (state.leads || []).filter(
+                (l) =>
+                  l.assignedTo === busdev.id ||
+                  (l.assignedName &&
+                    (l.assignedName.toLowerCase().includes(busdev.name.toLowerCase()) ||
+                      busdev.name.toLowerCase().includes(l.assignedName.toLowerCase())))
+              ).length;
 
               return (
                 <div

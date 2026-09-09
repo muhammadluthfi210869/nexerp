@@ -58,6 +58,7 @@ export const GuestbookIntakeModal: React.FC<GuestbookIntakeModalProps> = ({
     ])
   );
 
+  const busDevs = state.busDevs || [];
   const pipelinesList = state.pipelines || [];
   const targetPipeline =
     pipelinesList.find((p) => p.id === pipelineId) || pipelinesList[0] || {
@@ -128,7 +129,7 @@ export const GuestbookIntakeModal: React.FC<GuestbookIntakeModalProps> = ({
                 Intake Lead / Buku Tamu Baru
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Registrasi lead & alokasi otomatis ke 10 BusDev Dreamlab via Round-Robin
+                Registrasi lead & alokasi otomatis ke {(state.busDevs || []).length} BusDev Dreamlab via Round-Robin
               </p>
             </div>
           </div>
@@ -146,7 +147,7 @@ export const GuestbookIntakeModal: React.FC<GuestbookIntakeModalProps> = ({
             <RotateCw className="w-4 h-4 text-blue-600" />
             <div>
               <span className="text-slate-500 block text-[11px] font-semibold">
-                Prediksi Alokasi Sales (Round-Robin 10 BusDev):
+                Prediksi Alokasi Sales (Round-Robin {(state.busDevs || []).length} BusDev):
               </span>
               <strong className="text-blue-700 font-mono font-bold">
                 {targetPipeline.roundRobin

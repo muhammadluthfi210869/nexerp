@@ -16,6 +16,7 @@ export interface Conversation {
   lastDirection: 'INBOUND' | 'OUTBOUND' | null;
   messageCount: number;
   assignedName: string | null;
+  assignedBusDevId?: string | null;
   nameMatch: boolean | null;
   createdAt: string;
 }
@@ -174,11 +175,6 @@ export interface IntakeResult {
 
 /**
  * Intake a new lead into the buku tamu (guestbook).
- * Two-step backend call:
- *   1) POST /v1/lead-capture/track      → creates LeadCapture + auto round-robin
- *   2) PUT  /v1/lead-capture/whatsapp/:trackingCode → seed phone+name so the
- *      lead shows up in the Omni CRM inbox immediately (without waiting for
- *      the real WA webhook to fire).
  */
 export function useIntakeGuestbook() {
   const qc = useQueryClient();
@@ -197,14 +193,12 @@ export function useIntakeGuestbook() {
         );
         const { trackingCode, waUrl } = trackRes.data;
 
-        // Seed the lead's phone + waName immediately so the inbox sees it now.
         await api.put(`/lead-capture/whatsapp/${trackingCode}`, {
           phone: data.phone,
           waName: data.name,
           waMessage: data.notes || `Manual intake via Buku Tamu (${data.source || 'manual'})`,
         });
 
-        // Pull the just-created row to read back the assigned agent
         const listRes = await api.get<{ data: Array<{ trackingCode: string; assignedName: string | null; assignedPhone: string | null }> }>(
           '/lead-capture',
           { params: { search: trackingCode, limit: 1 } },
@@ -223,6 +217,42 @@ export function useIntakeGuestbook() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'conversations'] });
+    },
+  });
+}
+
+export function useDreamlabRrSummary() {
+  return useQuery({
+    queryKey: ['marketing', 'omni-crm', 'dreamlab-rr-summary'],
+    queryFn: async () => {
+      const res = await api.get<{
+        success: boolean;
+        totalLeads: number;
+        activeAgents: Array<{ name: string; phone: string; count: number; orderIndex: number }>;
+      }>('/marketing/omni-crm/conversations/dreamlab-rr-summary');
+      return res.data;
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useSyncDreamlabRr() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await api.post<{
+        success: boolean;
+        totalLeadsInWebsiteDb: number;
+        importedCount: number;
+        updatedCount: number;
+        agents: Array<{ name: string; phone: string; count: number; orderIndex: number }>;
+      }>('/marketing/omni-crm/conversations/sync-dreamlab-rr');
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'conversations'] });
+      qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'busdevs'] });
+      qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'dreamlab-rr-summary'] });
     },
   });
 }

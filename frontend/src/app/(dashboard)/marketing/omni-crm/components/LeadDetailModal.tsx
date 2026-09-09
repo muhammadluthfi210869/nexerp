@@ -59,7 +59,13 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
       order: 1,
     };
 
-  const assignedBusDev = (state.busDevs || []).find((b) => b.id === lead.assignedTo);
+  const assignedBusDev = (state.busDevs || []).find(
+    (b) =>
+      b.id === lead.assignedTo ||
+      (lead.assignedName &&
+        (b.name.toLowerCase().includes(lead.assignedName.toLowerCase()) ||
+          lead.assignedName.toLowerCase().includes(b.name.toLowerCase())))
+  );
   const leadMessages = (state.messages || []).filter((m) => m.leadId === lead.id);
 
   const handleSend = (e: React.FormEvent) => {
