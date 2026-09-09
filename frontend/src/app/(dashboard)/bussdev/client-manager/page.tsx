@@ -741,21 +741,36 @@ function ClientManagerContent() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-[11px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-bold uppercase tracking-wider select-none whitespace-nowrap">
-                    <th className="py-3 px-3 w-10 text-center">#</th>
-                    <th className="py-3 px-3">TGL</th>
-                    <th className="py-3 px-3">CLIENT & TELP</th>
-                    <th className="py-3 px-3">BRAND / DOMISILI</th>
-                    <th className="py-3 px-3">PRODUK SAMPLE</th>
-                    <th className="py-3 px-3 text-right">MOQ & BUDGET</th>
-                    <th className="py-3 px-3 text-center">SAMPLE 1</th>
-                    <th className="py-3 px-3 text-center">REVISI 1</th>
-                    <th className="py-3 px-3 text-center">REVISI 2</th>
-                    <th className="py-3 px-3">STATUS PROGRESS</th>
-                    <th className="py-3 px-3">HKI & KEMASAN</th>
-                    <th className="py-3 px-3 text-center">STATUS AKHIR</th>
-                    <th className="py-3 px-3">HEAD BD</th>
-                    <th className="py-3 px-3 text-right">AKSI</th>
+                  {/* Row 1: Main Headers */}
+                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-bold uppercase tracking-wider select-none whitespace-nowrap text-[10px]">
+                    <th className="py-2.5 px-2.5 w-8 text-center" rowSpan={2}>#</th>
+                    <th className="py-2.5 px-2.5" rowSpan={2}>TGL</th>
+                    <th className="py-2.5 px-3 min-w-[130px]" rowSpan={2}>NAMA CLIENT</th>
+                    <th className="py-2.5 px-2.5" rowSpan={2}>BRAND</th>
+                    <th className="py-2.5 px-2.5" rowSpan={2}>DOMISILI</th>
+                    <th className="py-2.5 px-2.5" rowSpan={2}>NO TELP</th>
+                    <th className="py-2.5 px-3 min-w-[140px]" rowSpan={2}>SAMPLE PRODUCT</th>
+                    <th className="py-2.5 px-2.5 text-right" rowSpan={2}>RENCANA MOQ</th>
+                    <th className="py-2.5 px-3 text-right min-w-[110px]" rowSpan={2}>BUDGET CLOSING</th>
+                    <th className="py-1.5 px-2 text-center bg-blue-50/60 border-l border-r border-slate-200" colSpan={2}>SAMPLE 1</th>
+                    <th className="py-1.5 px-2 text-center bg-purple-50/60 border-r border-slate-200" colSpan={2}>REVISI 1</th>
+                    <th className="py-1.5 px-2 text-center bg-amber-50/60 border-r border-slate-200" colSpan={2}>REVISI 2</th>
+                    <th className="py-2.5 px-3 min-w-[160px]" rowSpan={2}>STATUS PROGRESS</th>
+                    <th className="py-2.5 px-2 text-center" rowSpan={2}>HKI</th>
+                    <th className="py-2.5 px-2.5" rowSpan={2}>KEMASAN</th>
+                    <th className="py-2.5 px-2.5 text-center" rowSpan={2}>TARGET DP</th>
+                    <th className="py-2.5 px-2.5 text-center min-w-[90px]" rowSpan={2}>STATUS AKHIR</th>
+                    <th className="py-2.5 px-2.5" rowSpan={2}>HEAD BD</th>
+                    <th className="py-2.5 px-2 text-right" rowSpan={2}>#</th>
+                  </tr>
+                  {/* Row 2: Sub-headers for NPF & Delivery */}
+                  <tr className="border-b border-slate-200 bg-slate-100/50 text-slate-500 font-semibold text-[9px] uppercase tracking-wider select-none text-center">
+                    <th className="py-1 px-2 border-l border-slate-200">NPF</th>
+                    <th className="py-1 px-2 border-r border-slate-200">Delivery</th>
+                    <th className="py-1 px-2">NPF</th>
+                    <th className="py-1 px-2 border-r border-slate-200">Delivery</th>
+                    <th className="py-1 px-2">NPF</th>
+                    <th className="py-1 px-2 border-r border-slate-200">Delivery</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -765,89 +780,100 @@ function ClientManagerContent() {
                       onClick={() => setSelectedSample(s)}
                       className="hover:bg-slate-50/90 transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 px-3 text-center font-bold text-slate-400">
-                        {idx + 1}
+                      <td className="py-2.5 px-2.5 text-center font-bold text-slate-400">
+                        {s.no || idx + 1}
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-700 whitespace-nowrap">
+                      <td className="py-2.5 px-2.5 font-semibold text-slate-700 whitespace-nowrap font-mono text-[10px]">
                         {s.tgl || "—"}
                       </td>
-                      <td className="py-2.5 px-3">
-                        <p className="font-bold text-slate-900 text-xs">{s.client}</p>
-                        <p className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
-                          <Phone className="w-2.5 h-2.5" /> {s.phone || "-"}
-                        </p>
+                      <td className="py-2.5 px-3 font-bold text-slate-900 whitespace-nowrap">
+                        {s.client}
                       </td>
-                      <td className="py-2.5 px-3">
-                        <p className="font-semibold text-slate-800">
-                          {s.brand && s.brand !== "-" ? s.brand : "(Private Label)"}
-                        </p>
-                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                          <MapPin className="w-2.5 h-2.5" /> {s.domisili || "-"}
-                        </p>
+                      <td className="py-2.5 px-2.5 font-semibold text-slate-700 whitespace-nowrap">
+                        {s.brand && s.brand !== "-" ? s.brand : "—"}
                       </td>
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-2.5 text-slate-600 whitespace-nowrap">
+                        {s.domisili || "—"}
+                      </td>
+                      <td className="py-2.5 px-2.5 font-mono text-slate-500 text-[10px] whitespace-nowrap">
+                        {s.phone ? `0${s.phone}` : "—"}
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
                         <span className="font-semibold text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">
                           {s.product}
                         </span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{s.prio}</p>
-                      </td>
-                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                        <p className="font-bold text-slate-900">{s.budget || "-"}</p>
-                        <p className="text-[10px] text-slate-500 font-medium">MOQ: {s.moq} pcs</p>
-                      </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {s.s1_npf ? (
-                          <div className="text-[10px]">
-                            <span className="text-slate-600 block">NPF: {s.s1_npf}</span>
-                            <span className="text-emerald-700 font-medium block">Kirim: {s.s1_del || "-"}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-300">—</span>
+                        {s.prio && s.prio !== "STANDAR" && (
+                          <span className="ml-1 text-[9px] font-bold text-amber-700 bg-amber-50 px-1 py-0.5 rounded">
+                            {s.prio}
+                          </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {s.r1_npf ? (
-                          <div className="text-[10px]">
-                            <span className="text-slate-600 block">NPF: {s.r1_npf}</span>
-                            <span className="text-emerald-700 font-medium block">Kirim: {s.r1_del || "-"}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
+                      <td className="py-2.5 px-2.5 text-right whitespace-nowrap font-semibold text-slate-700">
+                        {s.moq && s.moq !== "-" ? `${s.moq} pcs` : "—"}
                       </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {s.r2_npf ? (
-                          <div className="text-[10px]">
-                            <span className="text-slate-600 block">NPF: {s.r2_npf}</span>
-                            <span className="text-emerald-700 font-medium block">Kirim: {s.r2_del || "-"}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap font-bold text-slate-900">
+                        {s.budget || "—"}
                       </td>
-                      <td className="py-2.5 px-3 max-w-[180px]">
+
+                      {/* Sample 1 NPF & Delivery */}
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-slate-600 border-l border-slate-100 whitespace-nowrap">
+                        {s.s1_npf || "—"}
+                      </td>
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-emerald-700 font-semibold border-r border-slate-100 whitespace-nowrap">
+                        {s.s1_del || "—"}
+                      </td>
+
+                      {/* Revisi 1 NPF & Delivery */}
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-slate-600 whitespace-nowrap">
+                        {s.r1_npf || "—"}
+                      </td>
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-emerald-700 font-semibold border-r border-slate-100 whitespace-nowrap">
+                        {s.r1_del || "—"}
+                      </td>
+
+                      {/* Revisi 2 NPF & Delivery */}
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-slate-600 whitespace-nowrap">
+                        {s.r2_npf || "—"}
+                      </td>
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-emerald-700 font-semibold border-r border-slate-100 whitespace-nowrap">
+                        {s.r2_del || "—"}
+                      </td>
+
+                      {/* Status Progress */}
+                      <td className="py-2.5 px-3 max-w-[200px]">
                         <p className="text-[11px] text-slate-700 font-medium line-clamp-2">
-                          {s.progress || "-"}
+                          {s.progress || "—"}
                         </p>
                         {s.lastFU && (
-                          <p className="text-[10px] text-slate-400 mt-0.5">FU Terakhir: {s.lastFU}</p>
+                          <p className="text-[9px] text-slate-400 mt-0.5 font-mono">FU: {s.lastFU}</p>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
+
+                      {/* HKI */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap">
                         <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                            s.hki.includes("SUDAH")
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                            s.hki && s.hki.includes("SUDAH")
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : "bg-slate-50 text-slate-500 border-slate-200"
                           }`}
                         >
-                          {s.hki || "BELUM ADA"}
+                          {s.hki && s.hki.includes("SUDAH") ? "SUDAH" : "BELUM"}
                         </span>
-                        <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[120px]">
-                          Kemas: {s.kemasanPrimer}
-                        </p>
                       </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+
+                      {/* Kemasan */}
+                      <td className="py-2.5 px-2.5 whitespace-nowrap text-slate-600 text-[10px]">
+                        {s.kemasanPrimer || "BELUM PILIH"}
+                      </td>
+
+                      {/* Target DP */}
+                      <td className="py-2.5 px-2.5 text-center whitespace-nowrap font-mono text-[10px] text-amber-700 font-medium">
+                        {s.tglTargetDP || "—"}
+                      </td>
+
+                      {/* Status Akhir */}
+                      <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                             s.statusAkhir === "DEAL"
@@ -864,10 +890,14 @@ function ClientManagerContent() {
                           {s.statusAkhir}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
+
+                      {/* Head BD */}
+                      <td className="py-2.5 px-2.5 whitespace-nowrap">
                         <span className="font-semibold text-slate-700 text-xs">{s.headBD}</span>
                       </td>
-                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+
+                      {/* Aksi */}
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(e) => {

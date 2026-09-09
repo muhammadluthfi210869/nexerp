@@ -227,10 +227,10 @@ function defaultDraft(memberSlug: string, viewerName?: string | null): TaskDraft
 
 function taskToDraft(task: TaskRow): TaskDraft {
   return {
-    title: task.title,
-    project: task.project,
+    title: task.title ?? "",
+    project: task.project ?? "",
     brand: task.brand,
-    pic: task.pic,
+    pic: task.pic ?? "",
     status: task.status,
     priority: task.priority,
     startDate: task.startDate ?? task.dueDate,
@@ -261,6 +261,30 @@ function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | nul
     brief: draft.brief,
     link: draft.link.trim(),
     history: [],
+  };
+}
+
+/**
+ * Keep the API contract separate from the richer client-side TaskRow shape.
+ * Sending TaskRow/draft objects directly used to leak UI-only fields such as
+ * `history` and an empty `link`, which production correctly rejects with 400.
+ */
+function draftToApiPayload(draft: TaskDraft, projectId?: string) {
+  const cleanProject = draft.project.trim();
+  const cleanLink = draft.link.trim();
+
+  return {
+    title: draft.title.trim(),
+    ...(projectId && projectId !== "local" ? { projectId } : {}),
+    ...(cleanProject ? { project: cleanProject } : {}),
+    brand: draft.brand,
+    pic: draft.pic.trim(),
+    status: draft.status,
+    priority: draft.priority,
+    startDate: draft.startDate,
+    dueDate: draft.dueDate,
+    brief: draft.brief.trim(),
+    ...(cleanLink ? { link: cleanLink } : {}),
   };
 }
 
@@ -476,10 +500,10 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   useEffect(() => {
     setGlobalQuickAdd(defaultQuickAdd(activeMember, viewerName));
     setBrandFilter("all");
-    if (!selectedTaskId) {
+    if (!drawerOpen && !selectedTaskId) {
       setDraft(defaultDraft(activeMember, viewerName));
     }
-  }, [activeMember, selectedTaskId, viewerName]);
+  }, [activeMember, drawerOpen, selectedTaskId, viewerName]);
 
   // Signature field yang dicerminkan draft — dipakai untuk mencegah reset draft
   // saat localTasks berubah karena hal yang TIDAK memengaruhi draft (mis.
@@ -511,8 +535,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       return;
     }
 
+    // Create drafts are initialized by openCreateDrawer. Do not reset them
+    // here when bundle/viewer data refreshes while the user is typing.
     draftSourceRef.current = "";
-    setDraft(defaultDraft(activeMember, viewerName));
   }, [activeMember, drawerMode, drawerOpen, localTasks, selectedTaskId, viewerName]);
 
   const selectedMember = memberLookup[activeMember] ?? memberLookup.overview;
@@ -582,9 +607,14 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   const projectOptions = useMemo(() => {
     const fromTasks = localTasks.map((task) => task.project);
-    return Array.from(new Set([...localProjects, ...fromTasks].map((value) => value.trim()).filter(Boolean))).sort((left, right) =>
-      left.localeCompare(right),
-    );
+    return Array.from(
+      new Set(
+        [...localProjects, ...fromTasks]
+          .filter((value): value is string => typeof value === "string")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ).sort((left, right) => left.localeCompare(right));
   }, [localTasks, localProjects]);
 
   const monthOptions = useMemo(() => {
@@ -881,7 +911,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // Persist to backend so other users see it. Setelah sukses, id lokal
     // diganti id server dari respons (BUG-S3/P4.3) supaya status berikutnya
     // (edit/delete) memakai id yang benar.
-    api.post("/marketing/prototype/tasks", newTask).then((res) => {
+    const quickAddPayload = {
+      title: globalQuickAdd.title.trim(),
+      ...(globalQuickAdd.project.trim() ? { project: globalQuickAdd.project.trim() } : {}),
+      brand: globalQuickAdd.brand,
+      pic,
+      priority: globalQuickAdd.priority,
+      startDate: globalQuickAdd.startDate,
+      dueDate: globalQuickAdd.dueDate,
+      status: "Not started" as const,
+    };
+
+    api.post("/marketing/prototype/tasks", quickAddPayload).then((res) => {
       const savedId = res?.data?.id;
       if (savedId && savedId !== newTask.id) {
         setLocalTasks((current) => current.map((t) => (t.id === newTask.id ? { ...t, id: savedId } : t)));
@@ -935,9 +976,10 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
     // Persist to backend. Rollback gagal = invalidate/refetch dari server,
     // BUKAN snapshot closure yang stale (BUG-U2/P5.1).
+    const apiPayload = draftToApiPayload(draft, editBase?.projectId);
     const persistPromise = editBase
-      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, draft)
-      : api.post("/marketing/prototype/tasks", nextTask);
+      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, apiPayload)
+      : api.post("/marketing/prototype/tasks", apiPayload);
 
     persistPromise
       .then((res) => {
