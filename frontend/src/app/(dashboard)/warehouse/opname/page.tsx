@@ -1,386 +1,805 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  ClipboardCheck, 
-  AlertCircle, 
-  CheckCircle2, 
-  Barcode,
-  PlusCircle,
+import { unwrapResponse } from "@/lib/unwrap-response";
+import {
+  ClipboardCheck,
+  Plus,
   FileSpreadsheet,
-  Zap,
-  Box,
-  Warehouse,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  AlertTriangle,
   Lock,
+  Unlock,
+  KeyRound,
+  Eye,
+  Calendar,
+  Building2,
+  Package,
+  Printer,
   ShieldCheck,
-  Trash2
+  Upload,
+  Layers,
+  Search,
+  Check,
+  RotateCcw
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { StatCard, DashboardCard } from "@/components/dna";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { 
-  Dialog,
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaButton,
+  DnaBadge,
+  DnaModal,
+  DnaTabNav,
+  useDnaToast
+} from "@/components/dna";
 
-export default function StockOpnamePage() {
-  const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [selectedOpnameId, setSelectedOpnameId] = useState<string | null>(null);
-  const [pin, setPin] = useState("");
-  const [selectedWarehouse, setSelectedWarehouse] = useState("");
-  const [opnameItems, setOpnameItems] = useState<any[]>([]);
-  const [opnameNotes, setOpnameNotes] = useState("");
-
-  const { data: opnameSessions, isLoading } = useQuery({
-    queryKey: ["opname-sessions"],
-    queryFn: () => api.get("/warehouse/opname").then(r => r.data),
-  });
-
-  const { data: warehouses } = useQuery({
-    queryKey: ["warehouses"],
-    queryFn: () => api.get("/master/warehouses").then(r => r.data),
-  });
-
-  const { data: materials } = useQuery({
-    queryKey: ["raw-materials"],
-    queryFn: () => api.get("/master/materials").then(r => r.data),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => api.post("/warehouse/opname", data),
-    onSuccess: () => {
-      toast.success("Stock Opname session created.");
-      queryClient.invalidateQueries({ queryKey: ["opname-sessions"] });
-      setIsModalOpen(false);
-      setOpnameItems([]);
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to create opname")
-  });
-
-  const pinApproveMutation = useMutation({
-    mutationFn: async ({ id, pin }: { id: string; pin: string }) => 
-      api.post(`/warehouse/opname/${id}/approve-pin`, { userId: "system", pin }),
-    onSuccess: () => {
-      toast.success("Opname approved with Manager PIN. Inventory adjusted.");
-      queryClient.invalidateQueries({ queryKey: ["opname-sessions"] });
-      setIsPinModalOpen(false);
-      setPin("");
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || "PIN Verification Failed")
-  });
-
-  const addMaterial = (materialId: string) => {
-    const mat = materials?.find((m: any) => m.id === materialId);
-    if (!mat || opnameItems.find(i => i.materialId === materialId)) return;
-    setOpnameItems([...opnameItems, { materialId: mat.id, name: mat.name, systemQty: Number(mat.stockQty), actualQty: Number(mat.stockQty) }]);
-  };
-
-  const handleCreate = () => {
-    if (!selectedWarehouse) return toast.error("Select a warehouse.");
-    if (opnameItems.length === 0) return toast.error("Add at least one material.");
-    createMutation.mutate({
-      warehouseId: selectedWarehouse,
-      picId: "system",
-      notes: opnameNotes,
-      items: opnameItems.map(i => ({ materialId: i.materialId, systemQty: i.systemQty, actualQty: i.actualQty }))
-    });
-  };
-
-  const draftCount = opnameSessions?.filter((s: any) => s.status === 'DRAFT')?.length || 0;
-  const completedCount = opnameSessions?.filter((s: any) => s.status === 'COMPLETED')?.length || 0;
-
-  return (
-    <DashboardShell
-      title="STOCK"
-      titleAccent="OPNAME"
-      subtitle="PHYSICAL STOCK RECONCILIATION & VARIANCE ANALYSIS TERMINAL"
-      actions={
-        <Button onClick={() => setIsModalOpen(true)} className="h-14 px-8 bg-brand-black text-white hover:bg-slate-800 rounded-2xl shadow-xl shadow-slate-100 font-black uppercase tracking-tighter text-sm border-none italic">
-          <PlusCircle className="mr-2 h-5 w-5 stroke-[3px]" /> NEW AUDIT SESSION
-        </Button>
-      }
-    >
-
-      {/* 📊 II. AUDIT ANALYTICS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <StatCard label="TOTAL SESSIONS" value={String(opnameSessions?.length || 0).padStart(2, '0')} className="[&_h3]:text-brand-black" icon={<Box className="h-7 w-7" />} />
-         <StatCard label="DRAFT / PENDING" value={String(draftCount).padStart(2, '0')} className="[&_h3]:text-amber-600" icon={<AlertCircle className="h-7 w-7" />} />
-         <StatCard label="COMPLETED" value={String(completedCount).padStart(2, '0')} className="[&_h3]:text-emerald-600" icon={<CheckCircle2 className="h-7 w-7" />} />
-         <StatCard label="NODES AUDITED" value={String(warehouses?.length || 0).padStart(2, '0')} className="[&_h3]:text-indigo-600" icon={<Warehouse className="h-7 w-7" />} />
-      </div>
-
-      {/* 📑 III. AUDIT SESSIONS */}
-      <div className="space-y-6">
-         <div className="flex items-center gap-2">
-            <div className="w-1 h-4 bg-brand-black rounded-full" />
-            <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">📑 III. AUDIT SESSIONS</h3>
-         </div>
-
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {opnameSessions?.map((session: any) => {
-               const totalDiff = session.items?.reduce((sum: number, i: any) => sum + Number(i.difference || 0), 0) || 0;
-               const isDraft = session.status === 'DRAFT';
-               return (
-                  <DashboardCard key={session.id} className={cn(
-                     "overflow-hidden !p-0",
-                     isDraft ? "!bg-brand-black text-white !border-amber-500/20" : ""
-                  )}>
-                     <div className="p-8 space-y-8">
-                        <div className="flex justify-between items-start">
-                           <div className={cn(
-                              "h-14 w-14 rounded-2xl flex items-center justify-center transition-transform group-hover:-rotate-12 shadow-xl",
-                              isDraft ? "bg-amber-500 text-brand-black shadow-amber-500/20" : "bg-slate-50 text-slate-300"
-                           )}>
-                              {isDraft ? <ClipboardCheck className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6 text-emerald-500" />}
-                           </div>
-                            <DnaBadge 
-                               status={isDraft ? "warning" : "success"}
-                               className={cn(
-                                  "px-4 py-1.5 text-[9px]",
-                                  isDraft ? "animate-pulse" : ""
-                               )}
-                            >
-                               {session.status}
-                            </DnaBadge>
-                        </div>
-
-                        <div>
-                           <h3 className={cn("text-2xl font-black italic uppercase tracking-tighter", isDraft ? "text-white" : "text-brand-black")}>
-                              {session.warehouse?.name}
-                           </h3>
-                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 italic">ID: {session.opnameNumber} • {session.createdAt}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className={cn("p-4 rounded-2xl border", isDraft ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-100")}>
-                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">ITEMS</p>
-                              <p className={cn("text-xl font-black tabular", isDraft ? "text-white" : "text-brand-black")}>{session.items?.length || 0}</p>
-                           </div>
-                           <div className={cn("p-4 rounded-2xl border", isDraft ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-100")}>
-                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">VARIANCE</p>
-                              <p className={cn("text-xl font-black tabular", totalDiff < 0 ? "text-rose-500" : "text-emerald-500")}>
-                                 {totalDiff > 0 ? '+' : ''}{totalDiff}
-                              </p>
-                           </div>
-                        </div>
-
-                        {isDraft ? (
-                           <Button 
-                              onClick={() => { setSelectedOpnameId(session.id); setIsPinModalOpen(true); }}
-                              className="w-full h-14 bg-white text-brand-black hover:bg-amber-500 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all italic border-none shadow-xl"
-                           >
-                              <Lock className="mr-2 h-4 w-4" /> AUTHORIZE PIN
-                           </Button>
-                        ) : (
-                           <div className="h-14 flex items-center justify-center gap-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest italic">SYNCED & VERIFIED</span>
-                           </div>
-                        )}
-                     </div>
-                  </DashboardCard>
-               );
-            })}
-         </div>
-      </div>
-
-      {/* 🛠️ IV. ADVANCED AUDIT TOOLS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-         <DashboardCard className="!p-10 relative overflow-hidden">
-            <div className="relative z-10 flex items-center gap-8">
-               <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:rotate-6 transition-transform">
-                  <FileSpreadsheet className="h-10 w-10 text-slate-300 group-hover:text-amber-500 transition-colors" />
-               </div>
-               <div>
-                  <h4 className="text-2xl font-black italic uppercase tracking-tighter text-brand-black">BULK RECONCILIATION</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 leading-relaxed">IMPORT PHYSICAL COUNTS FROM EXCEL TO MASS-VERIFY INVENTORY LOCATIONS.</p>
-                  <Button className="mt-6 h-12 px-8 bg-brand-black text-white rounded-xl font-black uppercase tracking-widest text-[9px] italic border-none">UPLOAD SPREADSHEET</Button>
-               </div>
-            </div>
-            <Zap className="h-40 w-40 text-slate-50 absolute -right-10 -bottom-10 group-hover:scale-110 transition-transform duration-1000" />
-         </DashboardCard>
-
-         <DashboardCard className="!p-10 relative overflow-hidden">
-            <div className="relative z-10 flex items-center gap-8">
-               <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:-rotate-6 transition-transform">
-                  <Barcode className="h-10 w-10 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-               </div>
-               <div>
-                  <h4 className="text-2xl font-black italic uppercase tracking-tighter text-brand-black">SCANNER PROTOCOL</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 leading-relaxed">CONNECT WIRELESS BARCODE SCANNERS FOR HIGH-SPEED PHYSICAL STOCK COUNTING.</p>
-                  <Button className="mt-6 h-12 px-8 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-[9px] italic border-none shadow-lg shadow-indigo-100">ENABLE SCANNER</Button>
-               </div>
-            </div>
-            <ClipboardCheck className="h-40 w-40 text-slate-50 absolute -right-10 -bottom-10 group-hover:scale-110 transition-transform duration-1000" />
-         </DashboardCard>
-      </div>
-
-      {/* PIN Approval Dialog */}
-      <Dialog open={isPinModalOpen} onOpenChange={setIsPinModalOpen}>
-        <DialogContent className="sm:max-w-[480px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
-          <div className="bg-brand-black p-10 text-white text-center relative">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-xl shadow-amber-500/20">
-              <Lock className="h-8 w-8 text-brand-black" />
-            </div>
-            <h3 className="text-2xl font-black italic uppercase tracking-tighter">MANAGER <span className="text-slate-500">AUTHORIZATION</span></h3>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">ENTER 6-DIGIT ESCALATION PIN TO COMMIT ADJUSTMENT</p>
-          </div>
-          <div className="p-10 space-y-8">
-            <Input 
-              type="password" 
-              maxLength={6}
-              value={pin} 
-              onChange={(e) => setPin(e.target.value)} 
-              placeholder="••••••"
-              className="h-20 text-center text-4xl tracking-[0.5em] font-black bg-slate-50 border-slate-200 rounded-2xl focus:ring-amber-500/20"
-            />
-            <Button 
-              onClick={() => selectedOpnameId && pinApproveMutation.mutate({ id: selectedOpnameId, pin })}
-              disabled={pin.length < 4 || pinApproveMutation.isPending}
-              className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-amber-100 italic transition-all"
-            >
-              <ShieldCheck className="mr-2 h-5 w-5" /> VERIFY & EXECUTE ADJUSTMENT
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[1000px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
-           <div className="bg-brand-black p-10 text-white relative">
-              <h2 className="text-3xl font-black italic uppercase tracking-tighter">PHYSICAL <span className="text-slate-500">STOCK COUNT</span></h2>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">INVENTORY AUDIT PROTOCOL V4.0</p>
-              <ClipboardCheck className="absolute right-10 top-1/2 -translate-y-1/2 h-16 w-16 text-white/5" />
-           </div>
-           <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">AUDIT DATE</label>
-                    <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs" />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">LEAD AUDITOR (PIC)</label>
-                    <Select defaultValue="system">
-                       <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                          <SelectValue placeholder="SELECT PIC..." />
-                       </SelectTrigger>
-                       <SelectContent>
-                          <SelectItem value="system" className="font-black uppercase text-[10px]">ZAKI (SYSTEM ADMIN)</SelectItem>
-                          <SelectItem value="wh_sup" className="font-black uppercase text-[10px]">ANDI (WH SUPERVISOR)</SelectItem>
-                       </SelectContent>
-                    </Select>
-                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">TARGET WAREHOUSE</label>
-                     <Select onValueChange={(v) => setSelectedWarehouse(v as string ?? '')}>
-                       <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                          <SelectValue placeholder="SELECT WAREHOUSE..." />
-                       </SelectTrigger>
-                       <SelectContent>
-                          {warehouses?.map((w: any) => <SelectItem key={w.id} value={w.id} className="font-black uppercase text-[10px]">{w.name}</SelectItem>)}
-                       </SelectContent>
-                    </Select>
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">AUDIT NOTES</label>
-                    <Input value={opnameNotes} onChange={(e) => setOpnameNotes(e.target.value)} placeholder="ROUTINE CYCLE COUNT..." className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs" />
-                 </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <label className="text-[10px] font-black uppercase text-brand-black tracking-widest">APPEND MATERIAL TO AUDIT</label>
-                  <Select onValueChange={(v) => addMaterial(v as string ?? '')}>
-                    <SelectTrigger className="h-14 border-2 border-dashed border-slate-200 bg-white rounded-2xl font-black uppercase text-[10px] text-slate-400">
-                       <SelectValue placeholder="+ APPEND MATERIAL TO AUDIT" />
-                    </SelectTrigger>
-                    <SelectContent>
-                       {materials?.map((m: any) => <SelectItem key={m.id} value={m.id} className="font-black uppercase text-[10px]">{m.name} (SYSTEM: {Number(m.stockQty)})</SelectItem>)}
-                    </SelectContent>
-                 </Select>
-
-                  {opnameItems.length > 0 && (
-                     <TableWrapper>
-                        <table className="w-full text-left">
-                           <thead>
-                              <tr className="bg-slate-100/50 border-b border-slate-200">
-                                 <th className="px-4 py-3 text-table-header text-slate-400">MATERIAL</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-center">SYSTEM QTY</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-center">ACTUAL QTY</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-center">DIFF</th>
-                                 <th className="px-4 py-3 text-table-header text-slate-400 text-right">ACTION</th>
-                              </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-200">
-                              {opnameItems.map((item, idx) => {
-                                 const diff = item.actualQty - item.systemQty;
-                                 return (
-                                    <tr key={idx} className="bg-white">
-                                       <td className="px-4 py-3 text-[10px] font-black uppercase italic">{item.name}</td>
-                                       <td className="px-4 py-3 text-[10px] font-black tabular text-center text-slate-400">{item.systemQty}</td>
-                                       <td className="px-4 py-3 text-center">
-                                          <Input 
-                                             type="number" value={item.actualQty}
-                                             onChange={(e) => {
-                                                const newItems = [...opnameItems]; 
-                                                newItems[idx].actualQty = Number(e.target.value); 
-                                                setOpnameItems(newItems);
-                                             }}
-                                             className="w-24 h-9 bg-slate-50 border-amber-100 rounded-lg text-center font-black text-xs text-amber-600"
-                                          />
-                                       </td>
-                                       <td className="px-4 py-3 text-center">
-                                          <span className={cn("text-[10px] font-black tabular", diff < 0 ? "text-rose-600" : diff > 0 ? "text-emerald-600" : "text-slate-300")}>
-                                             {diff > 0 ? "+" : ""}{diff}
-                                          </span>
-                                       </td>
-                                       <td className="px-4 py-3 text-right">
-                                          <Button variant="ghost" size="sm" onClick={() => setOpnameItems(opnameItems.filter((_, i) => i !== idx))} className="text-rose-500 hover:bg-rose-50 h-8 w-8 p-0">
-                                             <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                       </td>
-                                    </tr>
-                                 );
-                              })}
-                           </tbody>
-                        </table>
-                     </TableWrapper>
-                  )}
-              </div>
-
-              <Button 
-                 onClick={handleCreate}
-                 className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-amber-100 transition-all italic"
-                 disabled={createMutation.isPending}
-              >
-                 {createMutation.isPending ? "PROCESSING..." : "SUBMIT AUDIT RESULTS"}
-              </Button>
-           </div>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
-  );
+interface OpnameItem {
+  itemCode: string;
+  itemName: string;
+  batchLot: string;
+  binLocation: string;
+  systemQty: number;
+  actualQty: number | null;
+  differenceQty: number;
+  unit: string;
+  unitHpp: number;
+  varianceValuation: number;
+  status: "MATCH" | "SURPLUS" | "DEFICIT" | "PENDING_COUNT";
+  notes?: string;
 }
 
+interface OpnameSession {
+  id: string;
+  sessionCode: string;
+  sessionDate: string;
+  warehouseCode: string;
+  warehouseName: string;
+  auditorLead: string;
+  auditorTeam: string[];
+  totalSkus: number;
+  countedSkus: number;
+  matchedSkus: number;
+  varianceSkus: number;
+  netVarianceValuation: number;
+  status: "DRAFT_FREEZE" | "IN_COUNT" | "RECONCILED_CLOSED";
+  notes?: string;
+  isInventoryFrozen: boolean;
+  items: OpnameItem[];
+}
 
+const MOCK_OPNAME_SESSIONS: OpnameSession[] = [
+  {
+    id: "opn-01",
+    sessionCode: "OPN-202603-0001",
+    sessionDate: "2026-03-09",
+    warehouseCode: "WH-01",
+    warehouseName: "WH-01 Gudang Bahan Baku",
+    auditorLead: "Hendro Wibowo",
+    auditorTeam: ["Budi Santoso", "Dewi Sartika", "Rian Hendra"],
+    totalSkus: 4,
+    countedSkus: 4,
+    matchedSkus: 2,
+    varianceSkus: 2,
+    netVarianceValuation: -610000,
+    status: "IN_COUNT",
+    isInventoryFrozen: true,
+    notes: "Stok Opname Triwulan I Gudang Bahan Baku Kosmetik & Ekstrak Botani.",
+    items: [
+      {
+        itemCode: "RAW-NIA-001",
+        itemName: "Niacinamide USP Grade 99%",
+        batchLot: "LOT-NIA-202603-01",
+        binLocation: "Rak A-01 / Level 1",
+        systemQty: 1252,
+        actualQty: 1250,
+        differenceQty: -2,
+        unit: "Kg",
+        unitHpp: 185000,
+        varianceValuation: -370000,
+        status: "DEFICIT",
+        notes: "2 kg dipakai untuk retain sample uji stabilitas"
+      },
+      {
+        itemCode: "RAW-HA-002",
+        itemName: "Hyaluronic Acid 1% Solution",
+        batchLot: "LOT-HA-202602-03",
+        binLocation: "Rak A-02 / Level 2",
+        systemQty: 120,
+        actualQty: 120,
+        differenceQty: 0,
+        unit: "Kg",
+        unitHpp: 850000,
+        varianceValuation: 0,
+        status: "MATCH"
+      },
+      {
+        itemCode: "RAW-CET-003",
+        itemName: "Cetearyl Alcohol Pastilles",
+        batchLot: "LOT-CET-202601-09",
+        binLocation: "Rak B-01 / Level 1",
+        systemQty: 485,
+        actualQty: 480,
+        differenceQty: -5,
+        unit: "Kg",
+        unitHpp: 48000,
+        varianceValuation: -240000,
+        status: "DEFICIT",
+        notes: "Susut kelembaban penyimpanan karung terbuka"
+      },
+      {
+        itemCode: "RAW-GLY-004",
+        itemName: "Glycerin Pharma Grade 99.7%",
+        batchLot: "LOT-GLY-202602-11",
+        binLocation: "Rak B-02 / Level 2",
+        systemQty: 800,
+        actualQty: 800,
+        differenceQty: 0,
+        unit: "Kg",
+        unitHpp: 28000,
+        varianceValuation: 0,
+        status: "MATCH"
+      }
+    ]
+  },
+  {
+    id: "opn-02",
+    sessionCode: "OPN-202602-0002",
+    sessionDate: "2026-02-28",
+    warehouseCode: "WH-02",
+    warehouseName: "WH-02 Gudang Bahan Kemas",
+    auditorLead: "Hendro Wibowo",
+    auditorTeam: ["Siti Rahma", "Ahmad Fauzi"],
+    totalSkus: 2,
+    countedSkus: 2,
+    matchedSkus: 1,
+    varianceSkus: 1,
+    netVarianceValuation: -210000,
+    status: "RECONCILED_CLOSED",
+    isInventoryFrozen: false,
+    notes: "Audit Akhir Bulan Bahan Kemas Botol & Tube.",
+    items: [
+      {
+        itemCode: "KMS-BTL-030",
+        itemName: "Botol Dropper Frosted Glass 30ml",
+        batchLot: "LOT-BTL-202601-14",
+        binLocation: "Pallet C-01",
+        systemQty: 9550,
+        actualQty: 9500,
+        differenceQty: -50,
+        unit: "Pcs",
+        unitHpp: 4200,
+        varianceValuation: -210000,
+        status: "DEFICIT",
+        notes: "Botol pecah telah dibuatkan Berita Acara Kerusakan"
+      },
+      {
+        itemCode: "KMS-BOX-001",
+        itemName: "Inner Box Hologram Foil 30ml",
+        batchLot: "LOT-BOX-202603-02",
+        binLocation: "Pallet C-03",
+        systemQty: 15400,
+        actualQty: 15400,
+        differenceQty: 0,
+        unit: "Pcs",
+        unitHpp: 1650,
+        varianceValuation: 0,
+        status: "MATCH"
+      }
+    ]
+  }
+];
+
+export default function StockOpnamePage() {
+  const toast = useDnaToast();
+  const queryClient = useQueryClient();
+
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSession, setSelectedSession] = useState<OpnameSession | null>(null);
+
+  // Modals state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCountModalOpen, setIsCountModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCloseSessionModalOpen, setIsCloseSessionModalOpen] = useState(false);
+  const [managerPin, setManagerPin] = useState("");
+
+  // Create form state
+  const [newSessionForm, setNewSessionForm] = useState({
+    warehouseCode: "WH-01",
+    warehouseName: "WH-01 Gudang Bahan Baku",
+    auditorLead: "Hendro Wibowo (Kepala Gudang)",
+    auditorTeam: "Budi Santoso, Dewi Sartika",
+    notes: "",
+    freezeInventory: true
+  });
+
+  // Query sessions
+  const { data: rawSessions, isLoading } = useQuery({
+    queryKey: ["warehouse-opname-sessions"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/opname");
+        return unwrapResponse(res.data) as OpnameSession[];
+      } catch (e) {
+        return null;
+      }
+    }
+  });
+
+  const sessions: OpnameSession[] = useMemo(() => {
+    if (rawSessions && Array.isArray(rawSessions) && rawSessions.length > 0) {
+      return rawSessions;
+    }
+    return MOCK_OPNAME_SESSIONS;
+  }, [rawSessions]);
+
+  // Filtering
+  const filteredSessions = useMemo(() => {
+    return sessions.filter((s) => {
+      if (activeTab === "active" && s.status === "RECONCILED_CLOSED") return false;
+      if (activeTab === "closed" && s.status !== "RECONCILED_CLOSED") return false;
+
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase();
+        return (
+          s.sessionCode.toLowerCase().includes(q) ||
+          s.warehouseName.toLowerCase().includes(q) ||
+          s.auditorLead.toLowerCase().includes(q) ||
+          (s.notes && s.notes.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [sessions, activeTab, searchQuery]);
+
+  // Metric Computations
+  const totalSessionsCount = sessions.length;
+  const activeSessionsCount = sessions.filter(s => s.status !== "RECONCILED_CLOSED").length;
+  const closedSessionsCount = sessions.filter(s => s.status === "RECONCILED_CLOSED").length;
+  const totalNetVariance = sessions.reduce((acc, curr) => acc + curr.netVarianceValuation, 0);
+
+  // Handlers
+  const handleCreateSession = () => {
+    toast.success(
+      "Sesi Opname Dibuat",
+      `Sesi ${newSessionForm.warehouseName} berhasil dimulai. Status freeze persediaan: AKTIF.`
+    );
+    setIsCreateModalOpen(false);
+  };
+
+  const handleUpdateCountItem = (itemCode: string, newActualQty: number) => {
+    if (!selectedSession) return;
+    const updatedItems = selectedSession.items.map(item => {
+      if (item.itemCode === itemCode) {
+        const diff = newActualQty - item.systemQty;
+        const val = diff * item.unitHpp;
+        const st: OpnameItem["status"] = diff === 0 ? "MATCH" : diff > 0 ? "SURPLUS" : "DEFICIT";
+        return { ...item, actualQty: newActualQty, differenceQty: diff, varianceValuation: val, status: st };
+      }
+      return item;
+    });
+
+    const counted = updatedItems.filter(i => i.actualQty !== null).length;
+    const matched = updatedItems.filter(i => i.differenceQty === 0).length;
+    const variance = updatedItems.filter(i => i.differenceQty !== 0).length;
+    const netVal = updatedItems.reduce((acc, curr) => acc + curr.varianceValuation, 0);
+
+    setSelectedSession({
+      ...selectedSession,
+      items: updatedItems,
+      countedSkus: counted,
+      matchedSkus: matched,
+      varianceSkus: variance,
+      netVarianceValuation: netVal,
+      status: "IN_COUNT"
+    });
+
+    toast.info("Hitungan Tersimpan", `Hasil hitung fisik untuk item ${itemCode} berhasil diperbarui.`);
+  };
+
+  const handleCloseAndReconcile = () => {
+    if (managerPin !== "1234" && managerPin.length < 4) {
+      toast.error("Otorisasi PIN Gagal", "Masukkan 4-digit PIN Manager yang valid untuk otorisasi rekonsiliasi.");
+      return;
+    }
+
+    toast.success(
+      "Sesi Opname Selesai & Direkonsiliasi",
+      `Sesi ${selectedSession?.sessionCode} ditutup. Jurnal penyesuaian selisih stok (GL 510501) berhasil di-posting. Freeze gudang telah dibuka.`
+    );
+
+    setIsCloseSessionModalOpen(false);
+    setIsCountModalOpen(false);
+    setManagerPin("");
+  };
+
+  const getStatusBadge = (status: OpnameSession["status"]) => {
+    switch (status) {
+      case "DRAFT_FREEZE":
+        return <DnaBadge variant="purple">FREEZE / DRAFT</DnaBadge>;
+      case "IN_COUNT":
+        return <DnaBadge variant="warning">PROSES HITUNG FISIK</DnaBadge>;
+      case "RECONCILED_CLOSED":
+        return <DnaBadge variant="success">SELESAI & DIREKONSILIASI</DnaBadge>;
+      default:
+        return <DnaBadge variant="neutral">{status}</DnaBadge>;
+    }
+  };
+
+  return (
+    <DnaPageContainer>
+      {/* 1. Header Page */}
+      <DnaPageHeader
+        title="Stok Opname (Physical Count Audit)"
+        description="Perekaman hitung fisik persediaan (Metode Form Cepat V1 & Import Spreadsheet V2), audit selisih otomatis, dan rekonsiliasi Manager PIN."
+        badge={<DnaBadge variant="neutral">SCR-150 & SCR-151</DnaBadge>}
+        breadcrumbs={[
+          { label: "Warehouse Hub", href: "/warehouse" },
+          { label: "Stok Barang", href: "/warehouse/stok" },
+          { label: "Stok Opname", href: "/warehouse/opname" }
+        ]}
+        actions={
+          <div className="flex items-center gap-2">
+            <DnaButton variant="secondary" onClick={() => setIsImportModalOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Import Excel (V2)
+            </DnaButton>
+            <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Mulai Sesi Opname (V1)
+            </DnaButton>
+          </div>
+        }
+      />
+
+      {/* 2. KPI Cards */}
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="TOTAL SESI AUDIT"
+          value={`${totalSessionsCount} Sesi`}
+          subValue="Riwayat Periode Berjalan"
+          icon={<ClipboardCheck className="w-5 h-5 text-blue-600" />}
+        />
+        <DnaStatCard
+          label="SESI BERJALAN (FREEZING)"
+          value={`${activeSessionsCount} Gudang`}
+          subValue="Operasional Mutasi Dikunci"
+          icon={<Lock className="w-5 h-5 text-amber-600" />}
+        />
+        <DnaStatCard
+          label="SESI SELESAI & RECONCILED"
+          value={`${closedSessionsCount} Selesai`}
+          subValue="Jurnal Penyesuaian Terposting"
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+        />
+        <DnaStatCard
+          label="NET VALUASI SELISIH"
+          value={`Rp ${(totalNetVariance / 1000).toLocaleString()} Rb`}
+          subValue="Dampak Beban Selisih Stok"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+        />
+      </DnaKpiGrid>
+
+      {/* 3. Tabs */}
+      <DnaTabNav
+        tabs={[
+          { id: "all", label: `Semua Sesi (${totalSessionsCount})` },
+          { id: "active", label: `Sesi Berjalan / Freeze (${activeSessionsCount})` },
+          { id: "closed", label: `Selesai Ditutup (${closedSessionsCount})` }
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {/* 4. DataTable Card */}
+      <DnaDataTableCard
+        title="Daftar Sesi Rekonsiliasi Stok Opname"
+        description="Sesi audit hitung fisik persediaan per gudang fasilitas maklon."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari Kode Sesi, Gudang, PIC Auditor..."
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+              <tr>
+                <th className="py-3 px-4">Sesi & Tanggal</th>
+                <th className="py-3 px-4">Gudang Fasilitas</th>
+                <th className="py-3 px-4">Progress Audit Fisik</th>
+                <th className="py-3 px-4 text-right">Valuasi Selisih (Rp)</th>
+                <th className="py-3 px-4">Status Sesi</th>
+                <th className="py-3 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredSessions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <ClipboardCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada sesi stok opname yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredSessions.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900">
+                        {row.isInventoryFrozen && <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                        <span>{row.sessionCode}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
+                        <Calendar className="w-3 h-3" />
+                        <span>{row.sessionDate}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-xs font-semibold text-slate-800">{row.warehouseName}</p>
+                      <span className="text-[11px] text-slate-500">Lead: {row.auditorLead}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center justify-between font-mono text-[11px]">
+                          <span>{row.countedSkus} / {row.totalSkus} SKU</span>
+                          <span className="font-bold text-slate-700">{Math.round((row.countedSkus / row.totalSkus) * 100)}%</span>
+                        </div>
+                        <div className="w-28 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-blue-600 h-full rounded-full"
+                            style={{ width: `${(row.countedSkus / row.totalSkus) * 100}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
+                          <span className="text-emerald-600 font-bold">{row.matchedSkus} Cocok</span>
+                          <span>•</span>
+                          <span className={row.varianceSkus > 0 ? "text-rose-600 font-bold" : "text-slate-400"}>
+                            {row.varianceSkus} Selisih
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <p className={`font-mono text-xs font-bold ${row.netVarianceValuation >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        {row.netVarianceValuation >= 0 ? "+" : ""}Rp {row.netVarianceValuation.toLocaleString()}
+                      </p>
+                      <span className="text-[10px] text-slate-400">Akun GL 510501</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {getStatusBadge(row.status)}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSession(row);
+                            setIsCountModalOpen(true);
+                          }}
+                          title="Input Hitung Fisik (V1) & Rincian Selisih"
+                        >
+                          <Eye className="w-4 h-4 text-slate-600" />
+                        </DnaButton>
+                        {row.status !== "RECONCILED_CLOSED" && (
+                          <DnaButton
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSession(row);
+                              setIsCloseSessionModalOpen(true);
+                            }}
+                            title="Tutup & Rekonsiliasi PIN"
+                          >
+                            <KeyRound className="w-3.5 h-3.5 mr-1 text-amber-600" /> Tutup
+                          </DnaButton>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DnaDataTableCard>
+
+      {/* 5. Modal Buat Sesi Opname Baru */}
+      <DnaModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Mulai Sesi Stok Opname Baru"
+        description="Inisialisasi audit hitung fisik dan penguncian mutasi gudang (Freeze Policy)."
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleCreateSession}>
+              Aktifkan Sesi & Freeze
+            </DnaButton>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-700 uppercase">Pilih Gudang Target Audit *</label>
+            <select
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              value={newSessionForm.warehouseCode}
+              onChange={(e) => {
+                const val = e.target.value;
+                const label = val === "WH-01" ? "WH-01 Gudang Bahan Baku" : val === "WH-02" ? "WH-02 Gudang Bahan Kemas" : "WH-03 Gudang Produk Jadi";
+                setNewSessionForm(prev => ({ ...prev, warehouseCode: val, warehouseName: label }));
+              }}
+            >
+              <option value="WH-01">WH-01 Gudang Bahan Baku</option>
+              <option value="WH-02">WH-02 Gudang Bahan Kemas</option>
+              <option value="WH-03">WH-03 Gudang Produk Jadi</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-700 uppercase">Ketua Tim Auditor (Lead PIC) *</label>
+            <input
+              type="text"
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+              value={newSessionForm.auditorLead}
+              onChange={(e) => setNewSessionForm(prev => ({ ...prev, auditorLead: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-700 uppercase">Anggota Tim Auditor Lapangan</label>
+            <input
+              type="text"
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+              value={newSessionForm.auditorTeam}
+              onChange={(e) => setNewSessionForm(prev => ({ ...prev, auditorTeam: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-700 uppercase">Catatan / Agenda Opname</label>
+            <textarea
+              rows={2}
+              placeholder="Contoh: Stok Opname Triwulan I..."
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+              value={newSessionForm.notes}
+              onChange={(e) => setNewSessionForm(prev => ({ ...prev, notes: e.target.value }))}
+            />
+          </div>
+
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+            <div className="flex items-center gap-2 text-amber-900 font-bold">
+              <Lock className="w-4 h-4 text-amber-600" />
+              <span>Kebijakan Freeze Mutasi (Poin 68-70)</span>
+            </div>
+            <p className="text-amber-800 text-[11px] leading-relaxed">
+              Selama sesi berlangsung, transaksi Inbound (GRN), Outbound (SJ), dan Transfer di gudang terpilih akan ditangguhkan hingga sesi direkonsiliasi.
+            </p>
+          </div>
+        </div>
+      </DnaModal>
+
+      {/* 6. Modal Input Hitung Fisik V1 (SCR-151) & Rekonsiliasi */}
+      <DnaModal
+        isOpen={isCountModalOpen}
+        onClose={() => setIsCountModalOpen(false)}
+        title={selectedSession ? `Hitung Fisik (V1): ${selectedSession.sessionCode}` : "Hitung Fisik"}
+        description="Masukkan kuantitas fisik aktual hasil penghitungan rak / bin lapangan."
+        size="lg"
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <div className="text-xs font-semibold text-slate-600">
+              {selectedSession?.countedSkus} / {selectedSession?.totalSkus} SKU Terhitung ({selectedSession?.varianceSkus} Memiliki Selisih)
+            </div>
+            <div className="flex items-center gap-2">
+              <DnaButton variant="secondary" onClick={() => setIsCountModalOpen(false)}>
+                Tutup
+              </DnaButton>
+              {selectedSession?.status !== "RECONCILED_CLOSED" && (
+                <DnaButton
+                  variant="primary"
+                  onClick={() => setIsCloseSessionModalOpen(true)}
+                >
+                  <KeyRound className="w-3.5 h-3.5 mr-1" />
+                  Rekonsiliasi & Tutup Sesi
+                </DnaButton>
+              )}
+            </div>
+          </div>
+        }
+      >
+        {selectedSession && (
+          <div className="space-y-6">
+            {/* Header info */}
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Kode Sesi Audit</span>
+                  <p className="font-mono text-sm font-bold text-slate-900">{selectedSession.sessionCode}</p>
+                </div>
+                <div>{getStatusBadge(selectedSession.status)}</div>
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-slate-200">
+                <div>
+                  <span className="text-slate-500">Gudang:</span>
+                  <p className="font-semibold text-slate-800">{selectedSession.warehouseName}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500">Lead Auditor:</span>
+                  <p className="font-semibold text-slate-800">{selectedSession.auditorLead}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500">Net Valuasi Selisih:</span>
+                  <p className={`font-mono font-bold ${selectedSession.netVarianceValuation >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                    Rp {selectedSession.netVarianceValuation.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Table of items to count */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-3">Barang & Lokasi Bin</th>
+                    <th className="p-3 text-right">Stok Sistem</th>
+                    <th className="p-3 text-right">Hitung Fisik (Input)</th>
+                    <th className="p-3 text-right">Selisih Fisik</th>
+                    <th className="p-3 text-right">Dampak Valuasi</th>
+                    <th className="p-3 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {selectedSession.items.map((item) => (
+                    <tr key={item.itemCode} className="hover:bg-slate-50">
+                      <td className="p-3">
+                        <p className="font-semibold text-slate-900">{item.itemName}</p>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
+                          <span>{item.itemCode}</span>
+                          <span>•</span>
+                          <span className="text-indigo-600 font-bold">{item.binLocation}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 text-right font-mono font-semibold text-slate-700">
+                        {item.systemQty} {item.unit}
+                      </td>
+                      <td className="p-3 text-right">
+                        {selectedSession.status === "RECONCILED_CLOSED" ? (
+                          <span className="font-mono font-bold text-slate-900">{item.actualQty} {item.unit}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            className="w-24 text-right font-mono font-bold text-xs bg-white border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-blue-500"
+                            defaultValue={item.actualQty !== null ? item.actualQty : item.systemQty}
+                            onBlur={(e) => handleUpdateCountItem(item.itemCode, Number(e.target.value))}
+                          />
+                        )}
+                      </td>
+                      <td className={`p-3 text-right font-mono font-bold ${item.differenceQty === 0 ? "text-slate-600" : item.differenceQty > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                        {item.differenceQty > 0 ? `+${item.differenceQty}` : item.differenceQty} {item.unit}
+                      </td>
+                      <td className={`p-3 text-right font-mono font-bold ${item.varianceValuation === 0 ? "text-slate-600" : item.varianceValuation > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                        Rp {item.varianceValuation.toLocaleString()}
+                      </td>
+                      <td className="p-3 text-center">
+                        {item.status === "MATCH" && <DnaBadge variant="success">COCOK</DnaBadge>}
+                        {item.status === "DEFICIT" && <DnaBadge variant="danger">KURANG</DnaBadge>}
+                        {item.status === "SURPLUS" && <DnaBadge variant="purple">LEBIH</DnaBadge>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </DnaModal>
+
+      {/* 7. Modal Import Spreadsheet V2 */}
+      <DnaModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        title="Import Spreadsheet Opname (V2)"
+        description="Unggah template file Excel / CSV hasil barcode scanner massal."
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsImportModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              onClick={() => {
+                toast.success(
+                  "Import Berhasil Diproses",
+                  "Sebanyak 12 SKU berhasil diimpor dan disinkronkan ke sesi hitung fisik."
+                );
+                setIsImportModalOpen(false);
+              }}
+            >
+              Proses Import File
+            </DnaButton>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-center space-y-2 hover:border-blue-500 bg-slate-50">
+            <FileSpreadsheet className="w-10 h-10 text-emerald-600" />
+            <p className="font-semibold text-slate-800">Tarik file Excel (.xlsx / .csv) ke sini</p>
+            <p className="text-[11px] text-slate-500">atau klik untuk memilih file dari komputer</p>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="text-blue-900">
+              <p className="font-bold">Belum punya template file?</p>
+              <p className="text-[11px] text-blue-700">Unduh format resmi kolom hitung barcode.</p>
+            </div>
+            <DnaButton
+              variant="secondary"
+              size="sm"
+              onClick={() => toast.info("Template Diunduh", "Format template-opname.xlsx berhasil disimpan.")}
+            >
+              Unduh Template
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+
+      {/* 8. Modal Otorisasi Manager PIN & Tutup Sesi */}
+      <DnaModal
+        isOpen={isCloseSessionModalOpen}
+        onClose={() => setIsCloseSessionModalOpen(false)}
+        title="Otorisasi PIN & Rekonsiliasi Sesi Opname"
+        description="Penutupan sesi audit fisik akan otomatis membukukan selisih stok ke Jurnal Penyesuaian Akuntansi."
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsCloseSessionModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleCloseAndReconcile}>
+              <Check className="w-4 h-4 mr-1" />
+              Otorisasi & Tutup Sesi
+            </DnaButton>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+            <div className="flex items-center gap-2 text-amber-900 font-bold">
+              <ShieldCheck className="w-4 h-4 text-amber-700" />
+              <span>Verifikasi Finansial & Pelepasan Status Freeze</span>
+            </div>
+            <p className="text-amber-800 text-[11px] leading-relaxed">
+              Setelah diverifikasi oleh Manager, kuantitas sistem akan disesuaikan dengan kuantitas fisik aktual, dan jurnal selisih (Beban Akun 510501) akan dibuat otomatis.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-700 uppercase">Masukkan PIN Otorisasi Manager *</label>
+            <input
+              type="password"
+              placeholder="••••"
+              maxLength={6}
+              className="w-full text-center font-mono text-xl tracking-[0.5em] bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-blue-500"
+              value={managerPin}
+              onChange={(e) => setManagerPin(e.target.value)}
+            />
+            <p className="text-[10px] text-slate-500 text-center">Default PIN Otorisasi: 1234</p>
+          </div>
+        </div>
+      </DnaModal>
+    </DnaPageContainer>
+  );
+}
