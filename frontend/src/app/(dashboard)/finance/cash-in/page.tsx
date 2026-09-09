@@ -7,9 +7,8 @@ import { ArrowUpCircle, Plus, Trash2, Save } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, TableWrapper, DnaPageContainer, DnaPageHeader } from "@/components/dna";
 import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
   Dialog,
   DialogContent,
@@ -86,9 +85,12 @@ export default function CashInPage() {
   };
 
   return (
-    <DashboardShell title="KAS" titleAccent="MASUK" subtitle="Penerimaan Dana — Multi-Line Cash Receipt Terminal"
-      actions={<DnaBadge status="success">Cash In</DnaBadge>}
-    >
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="KAS MASUK"
+        subtitle="Penerimaan Dana — Multi-Line Cash Receipt Terminal"
+        badge={<DnaBadge status="success">Cash In</DnaBadge>}
+      />
       <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 overflow-hidden relative">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-emerald-500">
           <ArrowUpCircle size={180} />
@@ -209,6 +211,6 @@ export default function CashInPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </DnaPageContainer>
   );
 }

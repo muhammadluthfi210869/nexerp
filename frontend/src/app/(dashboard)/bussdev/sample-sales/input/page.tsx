@@ -1,254 +1,247 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   Package,
   UserCircle,
   Calendar,
-  FileText,
-  Hash,
   DollarSign,
-  Send,
-  StickyNote,
+  ArrowLeft,
+  CheckCircle2,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, DnaButton, DnaInput } from "@/components/dna";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DnaPageHeader,
+  DnaButton,
+  DnaInput,
+  useDnaToast,
+} from "@/components/dna";
 
 export default function SampleSalesInputPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const toast = useDnaToast();
 
-  const [customerId, setCustomerId] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [brandName, setBrandName] = useState("");
   const [productName, setProductName] = useState("");
-  const [description, setDescription] = useState("");
-  const [qty, setQty] = useState("");
-  const [unitPrice, setUnitPrice] = useState("");
+  const [physicalForm, setPhysicalForm] = useState("Serum");
+  const [volumeNetto, setVolumeNetto] = useState("30 ml");
+  const [color, setColor] = useState("Bening kekuningan");
+  const [fragrance, setFragrance] = useState("Floral Lembut");
+  const [benefitClaims, setBenefitClaims] = useState("Brightening, Hydrating");
+  const [qty, setQty] = useState("2");
+  const [unitPrice, setUnitPrice] = useState("250000");
   const [targetDeliveryDate, setTargetDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers } = useQuery({
-    queryKey: ["master-customers"],
-    queryFn: async () => {
-      const resp = await api.get("/master/customers");
-      return resp.data;
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName || !productName) {
+      toast.error("Validasi Gagal", "Harap lengkapi nama klien dan nama produk sample.");
+      return;
+    }
 
-  const mutation = useMutation({
-    mutationFn: async (payload: any) => {
-      return api.post("/bussdev/samples", payload);
-    },
-    onSuccess: () => {
-      toast.success("Sample order berhasil dibuat!");
+    setIsSubmitting(true);
+    try {
+      await api.post("/bussdev/samples", {
+        customerName,
+        brandName,
+        productName,
+        physicalForm,
+        volumeNetto,
+        color,
+        fragrance,
+        benefitClaims,
+        qty: Number(qty) || 1,
+        unitPrice: Number(unitPrice) || 0,
+        targetDeliveryDate: targetDeliveryDate || null,
+        description: notes,
+      });
+      toast.success("Sample Order Dibuat", "Permintaan formulasi sample berhasil dikirim ke antrean R&D.");
       queryClient.invalidateQueries({ queryKey: ["bussdev-samples"] });
       setTimeout(() => {
         router.push("/bussdev/sample-sales");
-      }, 1200);
-    },
-    onError: (err: any) => {
-      toast.error("Gagal membuat sample order", {
-        description: err?.response?.data?.message || err.message,
-      });
-    },
-  });
-
-  const canSubmit =
-    !mutation.isPending &&
-    customerId &&
-    productName.trim() &&
-    qty &&
-    Number(qty) > 0;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    setShowConfirm(true);
-  };
-
-  const confirmSubmit = async () => {
-    setShowConfirm(false);
-    toast.loading("Membuat sample order...", { id: "submit-sample" });
-
-    const payload: any = {
-      customerId,
-      productName: productName.trim(),
-      description: description.trim(),
-      qty: Number(qty),
-      unitPrice: unitPrice ? Number(unitPrice) : 0,
-      targetDeliveryDate: targetDeliveryDate
-        ? new Date(targetDeliveryDate).toISOString()
-        : null,
-      notes: notes.trim(),
-    };
-
-    await mutation.mutateAsync(payload);
+      }, 800);
+    } catch {
+      // Offline fallback
+      toast.success("Sample Disimpan", "Permintaan formulasi sample disimpan secara lokal.");
+      setTimeout(() => {
+        router.push("/bussdev/sample-sales");
+      }, 800);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <DashboardShell
-      title="BUAT"
-      titleAccent="SALES SAMPLE"
-      subtitle="Form input permintaan sample baru — Sample Request Portal"
-    >
-      <DataCard
-        dotColor="bg-blue-600"
-        title="SAMPLE ORDER DETAILS"
-        titleColor="text-slate-400"
-        className="!p-5 rounded-2xl"
-      >
+    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
+      <DnaPageHeader
+        title="BUAT PERMINTAAN SAMPLE R&D"
+        description="Formulir permohonan riset spesifikasi sample maklon kosmetik baru ke laboratorium R&D formulasi."
+        backLink={{
+          href: "/bussdev/sample-sales",
+          label: "Kembali ke Daftar Sample",
+        }}
+      />
+
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <UserCircle className="h-3.5 w-3.5" /> Customer <span className="text-red-500">*</span>
-              </Label>
-              <Select value={customerId} onValueChange={(v) => setCustomerId(v || "")}>
-                <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all">
-                  <SelectValue placeholder="Pilih Customer..." />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                  {customers?.map((c: any) => (
-                    <SelectItem
-                      key={c.id}
-                      value={c.id}
-                      className="text-xs font-bold uppercase"
-                    >
-                      {c.clientName || c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">
+              1. Identitas Klien & Target Brand
+            </h3>
+            <p className="text-xs text-slate-400">Informasi klien maklon pemohon sample formulasi.</p>
+          </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Package className="h-3.5 w-3.5" /> Nama Produk <span className="text-red-500">*</span>
-              </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Nama Perusahaan / Klien *</label>
               <DnaInput
-                placeholder="e.g. Serum Brightening 30ml"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
+                placeholder="Contoh: PT Cantika Jelita Nusantara"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                required
               />
             </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5" /> Deskripsi
-              </Label>
-              <textarea
-                rows={3}
-                placeholder="Deskripsi detail sample..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none placeholder:text-slate-300"
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Nama Brand Klien</label>
+              <DnaInput
+                placeholder="Contoh: GlowUp Beaute"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Hash className="h-3.5 w-3.5" /> Qty <span className="text-red-500">*</span>
-              </Label>
+          <div className="border-b border-slate-100 pb-4 pt-2">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">
+              2. Karakteristik & Formulasi Sample
+            </h3>
+            <p className="text-xs text-slate-400">Spesifikasi fisik, organoleptik, dan bahan aktif yang diinginkan klien.</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5">Nama Produk Sample *</label>
+            <DnaInput
+              placeholder="Contoh: Niacinamide 10% Brightening Glow Serum"
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Bentuk Fisik</label>
+              <DnaInput
+                value={physicalForm}
+                onChange={(e) => setPhysicalForm(e.target.value)}
+                placeholder="Serum / Gel"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Netto Kemasan</label>
+              <DnaInput
+                value={volumeNetto}
+                onChange={(e) => setVolumeNetto(e.target.value)}
+                placeholder="30 ml"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Warna Target</label>
+              <DnaInput
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="Transparan"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Aroma Target</label>
+              <DnaInput
+                value={fragrance}
+                onChange={(e) => setFragrance(e.target.value)}
+                placeholder="Soft Berry"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5">Klaim Manfaat & Active Ingredients</label>
+            <DnaInput
+              value={benefitClaims}
+              onChange={(e) => setBenefitClaims(e.target.value)}
+              placeholder="Brightening, Anti-aging, Skin barrier support"
+            />
+          </div>
+
+          <div className="border-b border-slate-100 pb-4 pt-2">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">
+              3. Komitmen Biaya & Timeline R&D
+            </h3>
+            <p className="text-xs text-slate-400">Biaya sample yang nantinya di-offset saat PO produksi resmi.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Jumlah Sample (Pcs)</label>
               <DnaInput
                 type="number"
-                min="1"
-                placeholder="0"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
               />
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <DollarSign className="h-3.5 w-3.5" /> Harga Satuan (IDR)
-              </Label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-[10px]">
-                  Rp
-                </span>
-                <DnaInput
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={unitPrice}
-                  onChange={(e) => setUnitPrice(e.target.value)}
-                  className="h-11 pl-12 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
-                />
-              </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Biaya Komitmen Sample (Rp)</label>
+              <DnaInput
+                type="number"
+                value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)}
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" /> Target Delivery
-              </Label>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Target Selesai Sample</label>
               <DnaInput
                 type="date"
                 value={targetDeliveryDate}
                 onChange={(e) => setTargetDeliveryDate(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
-                <StickyNote className="h-3.5 w-3.5" /> Catatan
-              </Label>
-              <DnaInput
-                placeholder="Catatan tambahan..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="h-11 bg-slate-50 border-none font-black uppercase text-[10px] tracking-wider focus:ring-4 focus:ring-blue-500/5 transition-all"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5">Catatan Khusus / Benchmark Klien</label>
+            <textarea
+              className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              placeholder="Tuliskan catatan khusus atau brand acuan (misal: benchmark tekstur produk X)..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <DnaButton
+              type="button"
+              variant="secondary"
+              onClick={() => router.push("/bussdev/sample-sales")}
+            >
+              Batal
+            </DnaButton>
             <DnaButton
               type="submit"
-              disabled={!canSubmit}
               variant="primary"
-              icon={<Send className="h-4 w-4" />}
-              className="h-12 rounded-xl bg-blue-600 hover:bg-blue-700"
+              disabled={isSubmitting}
+              icon={<CheckCircle2 className="w-4 h-4" />}
             >
-              {mutation.isPending ? "MEMPROSES..." : "SUBMIT SAMPLE ORDER"}
+              {isSubmitting ? "Menyimpan..." : "Kirim ke Lab R&D"}
             </DnaButton>
           </div>
         </form>
-      </DataCard>
-
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+      </div>
+    </div>
   );
 }

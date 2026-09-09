@@ -1,602 +1,556 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   RotateCcw,
-  History,
+  Plus,
   Eye,
   Search,
   Calendar,
+  Package,
+  Building2,
   FileText,
-  Plus,
-  Trash2,
-  ChevronLeft,
-  Save,
-  ShoppingCart,
-  Info,
-  ArrowRightLeft,
-  ArrowRight,
-  ClipboardList,
+  AlertCircle,
   CheckCircle2,
   Clock,
-  ArrowDownToLine,
-  Layers,
-  MoreVertical,
-  PackageX,
   ShieldAlert,
-  Coins,
-  Receipt,
-  Loader2,
+  ArrowRightLeft,
+  Warehouse,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaCell,
+  DnaModal,
+  DnaButton,
+  DnaInput,
+  useDnaToast,
+} from "@/components/dna";
 
-type SalesReturn = {
+interface SalesReturn {
   id: string;
+  returnCode: string;
+  soNumber: string;
+  customerName: string;
+  brandName?: string;
   returnDate: string;
-  soId: string;
-  warehouseId: string;
-  notes: string;
-  returnStatus: string;
-  createdAt: string;
-  so?: { orderNumber: string; lead?: { clientName?: string } } | null;
-  warehouse?: { name: string } | null;
-  items?: any[];
+  warehouseName: string;
+  productName: string;
+  qtyReturned: number;
+  unitPrice: number;
+  totalValue: number;
+  returnType: "POTONG_TAGIHAN" | "GANTI_BARANG" | "REFUND";
+  status: "PROSES" | "QC_PASSED" | "SELESAI" | "DITOLAK";
+  reason: string;
+}
+
+const INITIAL_RETURNS: SalesReturn[] = [
+  {
+    id: "ret-01",
+    returnCode: "RET-202603-001",
+    soNumber: "SO-2026-001",
+    customerName: "PT Cantika Jelita Nusantara",
+    brandName: "C-Jelita Herbal",
+    returnDate: "2026-03-06",
+    warehouseName: "Gudang Karantina Maklon (KRT-01)",
+    productName: "Brightening Niacinamide Serum 10%",
+    qtyReturned: 250,
+    unitPrice: 13000,
+    totalValue: 3250000,
+    returnType: "POTONG_TAGIHAN",
+    status: "PROSES",
+    reason: "Segel pump bocor mikro saat ekspedisi ke gudang klien.",
+  },
+  {
+    id: "ret-02",
+    returnCode: "RET-202602-004",
+    soNumber: "SO-2026-003",
+    customerName: "CV Aura Natural Skincare",
+    brandName: "AuraGlow Botanical",
+    returnDate: "2026-02-28",
+    warehouseName: "Gudang Barang Jadi Utama (GBJ-01)",
+    productName: "Centella Soothing Moisturizer Gel",
+    qtyReturned: 100,
+    unitPrice: 15000,
+    totalValue: 1500000,
+    returnType: "GANTI_BARANG",
+    status: "SELESAI",
+    reason: "Label kemasan primer miring pada batch awal.",
+  },
+  {
+    id: "ret-03",
+    returnCode: "RET-202602-002",
+    soNumber: "SO-2026-004",
+    customerName: "PT Derma Estetika Utama",
+    brandName: "DermaGleam Pro",
+    returnDate: "2026-02-20",
+    warehouseName: "Gudang Karantina Maklon (KRT-01)",
+    productName: "Hydrating Hybrid Sunscreen SPF 50+",
+    qtyReturned: 150,
+    unitPrice: 19000,
+    totalValue: 2850000,
+    returnType: "POTONG_TAGIHAN",
+    status: "QC_PASSED",
+    reason: "Kardus luar basah terkena hujan saat transit logistik.",
+  },
+];
+
+const statusBadgeConfig: Record<string, { status: "warning" | "info" | "success" | "critical"; label: string }> = {
+  PROSES: { status: "warning", label: "Inspeksi QC" },
+  QC_PASSED: { status: "info", label: "QC Lolos (Karantina)" },
+  SELESAI: { status: "success", label: "Selesai (Di-Offset)" },
+  DITOLAK: { status: "critical", label: "Ditolak QC" },
 };
 
-type SalesOrder = {
-  id: string;
-  orderNumber: string;
-  lead?: { clientName: string } | null;
-  items?: { id: string; productName: string; quantity: number; unitPrice: number }[];
+const returnTypeLabels: Record<string, string> = {
+  POTONG_TAGIHAN: "Potong Faktur",
+  GANTI_BARANG: "Ganti Barang",
+  REFUND: "Pengembalian Dana",
 };
 
-type Warehouse = {
-  id: string;
-  name: string;
-};
+export default function ReturPenjualanPage() {
+  const toast = useDnaToast();
+  const [returns, setReturns] = useState<SalesReturn[]>(INITIAL_RETURNS);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [detailReturn, setDetailReturn] = useState<SalesReturn | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-export default function SalesReturnPage() {
-  const [view, setView] = useState<"list" | "form">("list");
-  const [returns, setReturns] = useState<SalesReturn[]>([]);
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [selectedSO, setSelectedSO] = useState<SalesOrder | null>(null);
-  const [returnItems, setReturnItems] = useState<any[]>([]);
+  // Form State
+  const [formSoNumber, setFormSoNumber] = useState("");
+  const [formCustomer, setFormCustomer] = useState("");
+  const [formBrand, setFormBrand] = useState("");
+  const [formProduct, setFormProduct] = useState("");
+  const [formQty, setFormQty] = useState("");
+  const [formPrice, setFormPrice] = useState("");
+  const [formWarehouse, setFormWarehouse] = useState("Gudang Karantina Maklon (KRT-01)");
+  const [formType, setFormType] = useState<"POTONG_TAGIHAN" | "GANTI_BARANG" | "REFUND">("POTONG_TAGIHAN");
+  const [formReason, setFormReason] = useState("");
 
-  const [formData, setFormData] = useState({
-    soId: "",
-    warehouseId: "",
-    returnStatus: "POTONG_TAGIHAN",
-    notes: "",
-    returnDate: new Date().toISOString().split("T")[0],
+  const filteredReturns = returns.filter((r) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      r.returnCode.toLowerCase().includes(q) ||
+      r.soNumber.toLowerCase().includes(q) ||
+      r.customerName.toLowerCase().includes(q) ||
+      r.productName.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === "ALL" || r.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
-  const fetchReturns = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/bussdev/sales-returns");
-      setReturns(Array.isArray(res.data) ? res.data : []);
-    } catch {
-      toast.error("Gagal memuat data retur penjualan");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const totalReturnsCount = returns.length;
+  const totalValue = returns.reduce((acc, r) => acc + r.totalValue, 0);
+  const inProcessCount = returns.filter((r) => r.status === "PROSES" || r.status === "QC_PASSED").length;
+  const completedCount = returns.filter((r) => r.status === "SELESAI").length;
 
-  const fetchSalesOrders = useCallback(async () => {
-    try {
-      const res = await api.get("/commercial/sales-orders");
-      setSalesOrders(Array.isArray(res.data) ? res.data : []);
-    } catch {
-      setSalesOrders([]);
-    }
-  }, []);
-
-  const fetchWarehouses = useCallback(async () => {
-    try {
-      const res = await api.get("/master/warehouses");
-      setWarehouses(Array.isArray(res.data) ? res.data : []);
-    } catch {
-      setWarehouses([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchReturns();
-    fetchSalesOrders();
-    fetchWarehouses();
-  }, [fetchReturns, fetchSalesOrders, fetchWarehouses]);
-
-  const handleSelectSO = (soId: string) => {
-    const so = salesOrders.find(s => s.id === soId);
-    if (so) {
-      setSelectedSO(so);
-      setFormData({ ...formData, soId: so.id });
-      setReturnItems(
-        (so.items || []).map((item) => ({
-          ...item,
-          qtyReturned: 0,
-          qtyOriginal: item.quantity,
-        }))
-      );
-    }
-  };
-
-  const updateItem = (id: string, field: string, value: any) => {
-    setReturnItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
-  };
-
-  const financials = useMemo(() => {
-    const subtotal = returnItems.reduce(
-      (acc, item) => acc + (item.qtyReturned * (item.unitPrice || 0)),
-      0
-    );
-    const tax = subtotal * 0.11;
-    return { subtotal, tax, total: subtotal + tax };
-  }, [returnItems]);
-
-  const handleSubmit = () => {
-    if (!formData.soId || !formData.warehouseId) {
-      toast.error("Lengkapi semua field wajib");
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formCustomer || !formProduct || !formQty || Number(formQty) <= 0) {
+      toast.error("Validasi Gagal", "Harap isi nama klien, nama produk, dan jumlah qty retur.");
       return;
     }
-    const validItems = returnItems.filter((i) => i.qtyReturned > 0);
-    if (validItems.length === 0) {
-      toast.error("Minimal 1 item harus diretur");
-      return;
-    }
-    setShowConfirm(true);
-  };
 
-  const confirmSubmit = async () => {
-    setShowConfirm(false);
-    const validItems = returnItems.filter((i: any) => i.qtyReturned > 0);
-    try {
-      setSaving(true);
-      await api.post("/bussdev/sales-returns", {
-        ...formData,
-        items: validItems.map((i) => ({
-          materialId: i.materialItemId || i.id,
-          qtyOriginal: i.qtyOriginal,
-          qtyReturned: i.qtyReturned,
-        })),
-      });
-      toast.success("Retur penjualan berhasil disimpan");
-      setView("list");
-      fetchReturns();
-      resetForm();
-    } catch {
-      toast.error("Gagal menyimpan retur penjualan");
-    } finally {
-      setSaving(false);
-    }
-  };
+    const qty = Number(formQty);
+    const price = Number(formPrice) || 0;
+    const total = qty * price;
+    const code = `RET-202603-00${returns.length + 1}`;
 
-  const resetForm = () => {
-    setFormData({ soId: "", warehouseId: "", returnStatus: "POTONG_TAGIHAN", notes: "", returnDate: new Date().toISOString().split("T")[0] });
-    setSelectedSO(null);
-    setReturnItems([]);
+    const newRet: SalesReturn = {
+      id: `ret-${Date.now()}`,
+      returnCode: code,
+      soNumber: formSoNumber || "SO-2026-999",
+      customerName: formCustomer,
+      brandName: formBrand || "Private Label",
+      returnDate: new Date().toISOString().split("T")[0],
+      warehouseName: formWarehouse,
+      productName: formProduct,
+      qtyReturned: qty,
+      unitPrice: price,
+      totalValue: total,
+      returnType: formType,
+      status: "PROSES",
+      reason: formReason,
+    };
+
+    setReturns([newRet, ...returns]);
+    toast.success("Retur Penjualan Dicatat", `Klaim retur ${code} sebesar Rp ${total.toLocaleString("id-ID")} dikirim ke QC Karantina.`);
+    setIsCreateOpen(false);
+
+    // Reset Form
+    setFormSoNumber("");
+    setFormCustomer("");
+    setFormBrand("");
+    setFormProduct("");
+    setFormQty("");
+    setFormPrice("");
+    setFormReason("");
   };
 
   return (
-    <DashboardShell
-      title="RETUR"
-      titleAccent="PENJUALAN"
-      subtitle="(Sales Return Management & Inventory Recalibration Protocol)"
-      actions={
-        <div className="flex gap-4">
-          <DnaButton variant="outline" size="md">
-            <History className="mr-2 h-4 w-4 text-blue-500" /> Riwayat
-          </DnaButton>
+    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
+      {/* Top Header */}
+      <DnaPageHeader
+        title="RETUR PENJUALAN (SALES RETURN)"
+        description="Administrasi klaim pengembalian barang jadi dari klien maklon kosmetik, verifikasi QC gudang karantina, dan kompensasi nota kredit pemotong tagihan faktur."
+        actions={
           <DnaButton
-            onClick={() => { resetForm(); setView("form"); }}
             variant="primary"
-            size="md"
+            icon={<Plus className="w-4 h-4" />}
+            onClick={() => setIsCreateOpen(true)}
           >
-            <RotateCcw className="mr-2 h-5 w-5" /> Buat
+            Buat Retur Penjualan
           </DnaButton>
-        </div>
-      }
-    >
-      <AnimatePresence mode="wait">
-        {view === "list" ? (
-          <motion.div
-            key="list"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="space-y-10"
-          >
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard label="Pending Returns" value={returns.filter(r => r.returnStatus === "PROSES").length} icon={<Clock className="text-amber-500" />} />
-              <StatCard label="Total Returns" value={returns.length} icon={<Coins className="text-emerald-500" />} />
-              <StatCard label="Return Frequency" value="—" icon={<ArrowRightLeft className="text-blue-500" />} />
-              <StatCard label="Completed" value={returns.filter(r => r.returnStatus === "SELESAI").length} icon={<ShieldAlert className="text-rose-500" />} />
-            </div>
+        }
+      />
 
-            {/* List Table */}
-            <TableWrapper
-              filters={
-                <div className="flex justify-between items-center bg-white w-full">
-                  <div className="relative w-72">
-                    <DnaInput placeholder="Search Return ID..." icon={<Search className="h-4 w-4" />} className="bg-slate-50 border-none rounded-xl text-xs font-medium" />
-                  </div>
-                  <div className="flex gap-4">
-                    <Button variant="ghost" className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-tight text-slate-500">
-                      Sort: Newest First
-                    </Button>
-                  </div>
-                </div>
-              }
-            >
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Return Identity</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Source SO</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Client</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Value Recovery</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 pr-6 text-table-header text-slate-400 text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-20 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                          <p className="text-[9px] font-black uppercase text-slate-300">Loading returns...</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : returns.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-20 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <RotateCcw className="h-10 w-10 text-slate-200" />
-                          <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">Belum ada data retur</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    returns.map((ret) => (
-                      <TableRow key={ret.id} className="group hover:bg-rose-50/30 transition-all duration-300 border-b border-slate-50">
-                        <TableCell className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                              <RotateCcw className="h-4.5 w-4.5" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{ret.so?.orderNumber || "—"}</span>
-                              <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">{new Date(ret.returnDate).toLocaleDateString("id-ID")}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-xs uppercase">{ret.so?.orderNumber || "—"}</span>
-                            <span className="text-[9px] font-medium text-rose-600 uppercase italic mt-0.5">Linked SO</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4">
-                          <span className="font-black text-slate-900 text-xs uppercase">{ret.so?.lead?.clientName || "—"}</span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right font-black text-slate-900 text-xs tabular-nums">
-                          —
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <span className={cn(
-                            "rounded-lg px-3 py-1 font-black uppercase text-[8px] shadow-sm",
-                            ret.returnStatus === "SELESAI" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700 animate-pulse"
-                          )}>
-                            {ret.returnStatus}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 pr-6 text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableWrapper>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="max-w-7xl mx-auto space-y-10 pb-20"
-          >
-            {/* Form Header */}
-            <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-              <Button
-                variant="ghost"
-                onClick={() => { resetForm(); setView("list"); }}
-                className="group rounded-xl p-2 pr-6 transition-all hover:bg-rose-50 hover:text-rose-600"
-              >
-                <div className="h-10 w-10 rounded-lg bg-rose-600 text-white shadow-sm flex items-center justify-center group-hover:bg-rose-700 transition-all">
-                  <ChevronLeft className="h-4 w-4" />
-                </div>
-                <span className="ml-4 font-black uppercase text-[10px] tracking-widest italic text-slate-400 group-hover:text-rose-600">Abort Reversal</span>
-              </Button>
-              <div className="flex items-center gap-6">
-                <div className="flex flex-col items-end">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Drafting Phase</span>
-                  <span className="text-xs font-black uppercase text-rose-600">Protocol 08-SR</span>
-                </div>
-                <div className="h-8 w-[1px] bg-slate-100" />
-                <Button
-                  onClick={handleSubmit}
-                  disabled={saving}
-                  className="h-10 px-6 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm font-black uppercase tracking-widest text-[9px]"
+      {/* KPI Cards */}
+      <DnaKpiGrid
+        items={[
+          {
+            label: "Total Klaim Retur",
+            value: totalReturnsCount,
+            subtitle: "Akumulasi komplain batch",
+            trend: "0.8% dari volume kirim",
+            icon: RotateCcw,
+            variant: "blue",
+          },
+          {
+            label: "Nilai Pemulihan (Kredit)",
+            value: `Rp ${(totalValue / 1000000).toFixed(1)} Jt`,
+            subtitle: "Potensi nota kredit invoice",
+            trend: "Rekonsiliasi aktif",
+            icon: ArrowRightLeft,
+            variant: "purple",
+          },
+          {
+            label: "Dalam Inspeksi QC",
+            value: inProcessCount,
+            subtitle: "Di gudang karantina",
+            trend: "Butuh uji lab",
+            icon: Clock,
+            variant: "amber",
+          },
+          {
+            label: "Retur Selesai (Di-Offset)",
+            value: completedCount,
+            subtitle: "Tagihan telah disesuaikan",
+            trend: "Terselesaikan",
+            icon: CheckCircle2,
+            variant: "emerald",
+          },
+        ]}
+      />
+
+      {/* Main Table Card */}
+      <DnaDataTableCard
+        title="Daftar Klaim & Pengembalian Produk Maklon"
+        count={filteredReturns.length}
+        totalItems={returns.length}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="w-64">
+              <DnaInput
+                placeholder="Cari kode, SO, klien, produk..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+              />
+            </div>
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              {["ALL", "PROSES", "QC_PASSED", "SELESAI"].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    statusFilter === st
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
                 >
-                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  {saving ? "Saving..." : "Finalize Return"}
-                </Button>
+                  {st === "ALL" ? "Semua" : statusBadgeConfig[st]?.label || st}
+                </button>
+              ))}
+            </div>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4">KODE & TANGGAL</th>
+                <th className="py-3 px-4">KLIEN & SO</th>
+                <th className="py-3 px-4">PRODUK & GUDANG TUJUAN</th>
+                <th className="py-3 px-4 text-right">QTY & NILAI RETUR</th>
+                <th className="py-3 px-4 text-center">METODE RETUR</th>
+                <th className="py-3 px-4 text-center">STATUS QC</th>
+                <th className="py-3 px-4 text-right">AKSI</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {filteredReturns.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                    <RotateCcw className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+                    <p className="font-semibold text-slate-600">Tidak ada klaim retur ditemukan</p>
+                    <p className="text-xs text-slate-400">Sesuaikan filter atau catat retur baru.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredReturns.map((ret) => (
+                  <tr key={ret.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <DnaCell.Text primary={ret.returnCode} secondary={ret.returnDate} />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <DnaCell.Avatar name={ret.customerName} subtext={`SO: ${ret.soNumber}`} />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <DnaCell.Text primary={ret.productName} secondary={ret.warehouseName} />
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <p className="font-bold text-slate-900">
+                        Rp {ret.totalValue.toLocaleString("id-ID")}
+                      </p>
+                      <p className="text-[11px] text-rose-600 font-medium">
+                        {ret.qtyReturned.toLocaleString("id-ID")} pcs @ Rp {ret.unitPrice.toLocaleString("id-ID")}
+                      </p>
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md">
+                        {returnTypeLabels[ret.returnType] || ret.returnType}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <DnaCell.Badge
+                        status={statusBadgeConfig[ret.status]?.status || "default"}
+                        label={statusBadgeConfig[ret.status]?.label || ret.status}
+                      />
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <DnaCell.Actions
+                        onView={() => setDetailReturn(ret)}
+                        extraActions={
+                          <button
+                            type="button"
+                            onClick={() => {
+                              toast.info("Inspeksi QC", `Buka hasil analisa laboratorium untuk ${ret.returnCode}`);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
+                            title="Konfirmasi QC"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5" />
+                          </button>
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DnaDataTableCard>
+
+      {/* Modal Detail Retur Penjualan */}
+      <DnaModal
+        isOpen={!!detailReturn}
+        onClose={() => setDetailReturn(null)}
+        title="Detail Klaim Retur & Karantina"
+        size="md"
+      >
+        {detailReturn && (
+          <div className="space-y-4 text-sm">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Nomor Retur
+                </span>
+                <h3 className="text-base font-bold text-slate-900">{detailReturn.returnCode}</h3>
+                <p className="text-xs text-slate-500">Tanggal: {detailReturn.returnDate}</p>
               </div>
+              <DnaCell.Badge
+                status={statusBadgeConfig[detailReturn.status]?.status || "default"}
+                label={statusBadgeConfig[detailReturn.status]?.label || detailReturn.status}
+              />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left: Configuration */}
-              <div className="lg:col-span-8 space-y-8">
-                <Card className="rounded-2xl border border-slate-100 shadow-sm p-8 bg-white space-y-8">
-                  <div className="flex items-center gap-3">
-                    <Receipt className="h-5 w-5 text-rose-600" />
-                    <h2 className="text-2xl font-black uppercase tracking-tighter italic">Source <span className="text-rose-600">Validation</span></h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Sales Order <span className="text-red-500">*</span></label>
-                      <select
-                        value={formData.soId}
-                        onChange={(e) => handleSelectSO(e.target.value)}
-                        className="w-full h-11 px-4 bg-slate-50 border border-slate-100 rounded-xl font-black uppercase text-xs appearance-none focus:ring-2 focus:ring-rose-500 transition-all italic text-slate-800"
-                      >
-                        <option value="">— SELECT SALES ORDER —</option>
-                        {salesOrders.map((so) => (
-                          <option key={so.id} value={so.id}>{so.orderNumber} | {so.lead?.clientName || "—"}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Gudang Tujuan <span className="text-red-500">*</span></label>
-                      <select
-                        value={formData.warehouseId}
-                        onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
-                        className="w-full h-11 px-4 bg-slate-50 border border-slate-100 rounded-xl font-black uppercase text-xs appearance-none focus:ring-2 focus:ring-rose-500 transition-all italic text-slate-800"
-                      >
-                        <option value="">— SELECT GUDANG —</option>
-                        {warehouses.map((w) => (
-                          <option key={w.id} value={w.id}>{w.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Status Retur</label>
-                      <select
-                        value={formData.returnStatus}
-                        onChange={(e) => setFormData({ ...formData, returnStatus: e.target.value })}
-                        className="w-full h-11 px-4 bg-slate-50 border border-slate-100 rounded-xl font-black uppercase text-xs appearance-none focus:ring-2 focus:ring-rose-500 transition-all italic text-slate-800"
-                      >
-                        <option value="POTONG_TAGIHAN">Potong Tagihan</option>
-                        <option value="TUKAR_BARANG">Tukar Barang</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Return Date</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <DnaInput
-                          type="date"
-                          className="h-11 pl-12 bg-slate-50 border border-slate-100 rounded-xl font-black uppercase text-xs"
-                          value={formData.returnDate}
-                          onChange={(e) => setFormData({ ...formData, returnDate: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <AnimatePresence>
-                    {selectedSO && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="p-6 rounded-2xl bg-rose-50/50 border border-rose-100 grid grid-cols-3 gap-6 overflow-hidden"
-                      >
-                        <div className="space-y-1">
-                          <p className="text-[9px] font-black text-rose-400 uppercase">SO Number</p>
-                          <p className="font-black text-slate-900 text-xs italic uppercase">{selectedSO.orderNumber}</p>
-                        </div>
-                        <div className="space-y-1 text-center">
-                          <p className="text-[9px] font-black text-rose-400 uppercase">Customer</p>
-                          <p className="font-black text-slate-900 text-xs uppercase">{selectedSO.lead?.clientName || "—"}</p>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <p className="text-[9px] font-black text-rose-400 uppercase">Status</p>
-                          <span className="bg-white text-rose-600 border border-rose-100 font-black text-[9px] uppercase px-2 py-1 rounded-lg">Selected</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </Card>
-
-                {/* Return Table */}
-                <Card className="rounded-2xl border border-slate-100 shadow-sm p-6 bg-white overflow-hidden">
-                  <div className="flex items-center gap-3 mb-6">
-                    <PackageX className="h-5 w-5 text-rose-600" />
-                    <h3 className="text-lg font-black uppercase italic tracking-tighter">Material <span className="text-rose-600">Reversal List</span></h3>
-                  </div>
-
-                  <div className="border border-slate-100 rounded-2xl overflow-hidden">
-                    <Table>
-                      <TableHeader className="bg-slate-50/50">
-                        <TableRow className="hover:bg-transparent border-slate-100">
-                          <TableHead className="pl-4 text-[9px] font-black uppercase text-slate-400 py-3">Barang Diretur</TableHead>
-                          <TableHead className="text-center text-[9px] font-black uppercase text-slate-400 py-3">Qty Beli</TableHead>
-                          <TableHead className="text-center text-[9px] font-black uppercase text-slate-400 py-3">Qty Retur</TableHead>
-                          <TableHead className="text-center text-[9px] font-black uppercase text-slate-400 py-3">Status Retur</TableHead>
-                          <TableHead className="pr-4 text-right text-[9px] font-black uppercase text-slate-400 py-3">Subtotal</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {returnItems.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="py-16 text-center">
-                              <div className="flex flex-col items-center gap-3">
-                                <Layers className="h-10 w-10 text-slate-200" />
-                                <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2rem]">No sales order selected</p>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          returnItems.map((item) => (
-                            <TableRow key={item.id} className="group hover:bg-rose-50/20 transition-all border-b border-slate-50">
-                              <TableCell className="pl-4 py-2.5">
-                                <div className="flex flex-col">
-                                  <span className="font-black text-slate-900 text-xs uppercase">{item.productName}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-center py-2.5 font-black text-slate-900 text-xs tabular-nums">
-                                {item.qtyOriginal}
-                              </TableCell>
-                              <TableCell className="text-center py-2.5">
-                                <div className="flex items-center justify-center">
-                                  <DnaInput
-                                    type="number"
-                                    className="w-16 h-8 bg-slate-50 border border-slate-100 rounded-lg text-center font-black text-xs"
-                                    value={item.qtyReturned}
-                                    min={0}
-                                    max={item.qtyOriginal}
-                                    onChange={(e) => updateItem(item.id, "qtyReturned", Number(e.target.value))}
-                                  />
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-center py-2.5">
-                                <select
-                                  value={formData.returnStatus}
-                                  className="h-8 px-2 bg-slate-50 border border-slate-100 rounded-lg font-black text-[9px] uppercase appearance-none"
-                                >
-                                  <option value="POTONG_TAGIHAN">Potong Tagihan</option>
-                                  <option value="TUKAR_BARANG">Tukar Barang</option>
-                                </select>
-                              </TableCell>
-                              <TableCell className="pr-4 py-2.5 text-right font-black text-slate-900 text-xs tabular-nums">
-                                Rp {(item.qtyReturned * (item.unitPrice || 0)).toLocaleString()}
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Right: Financial Summary */}
-              <div className="lg:col-span-4 space-y-8">
-                <div className="sticky top-10 space-y-8">
-                  <Card className="rounded-2xl border border-slate-100 shadow-sm p-8 bg-rose-600 text-white overflow-hidden relative">
-                    <div className="relative z-10 space-y-8">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-rose-400">Financial Reversal</p>
-                        <h2 className="text-2xl font-black italic tracking-tighter uppercase mt-2">Asset <br /> <span className="text-rose-500">Recovery</span></h2>
-                      </div>
-
-                      <div className="pt-6 border-t border-white/10 space-y-4 font-black uppercase text-[9px] tracking-wider">
-                        <div className="flex justify-between items-center text-slate-400">
-                          <span>Net Return Value</span>
-                          <span className="tabular-nums text-white">Rp {financials.subtotal.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-slate-400">
-                          <span>P.P.N Reversal (11%)</span>
-                          <span className="tabular-nums text-white">Rp {financials.tax.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-white/20 text-rose-400">
-                          <span className="tracking-widest">Grand Total Recovery</span>
-                          <span className="text-xl text-white tabular-nums">Rp {financials.total.toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-2">
-                        <label className="text-[9px] font-black uppercase text-slate-400">Return Ledger Remarks</label>
-                        <textarea
-                          className="w-full bg-transparent border-none p-0 text-xs font-medium text-slate-300 outline-none resize-none"
-                          rows={3}
-                          placeholder="Provide technical reason for return..."
-                          value={formData.notes}
-                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <RotateCcw className="h-40 w-40 text-white/5 absolute -right-10 -bottom-10 rotate-12" />
-                  </Card>
-
-                  <div className="p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-white/50 space-y-3">
-                    <div className="flex items-center gap-3 text-rose-600">
-                      <ShieldAlert className="h-4.5 w-4.5" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Accounting Protocol</span>
-                    </div>
-                    <p className="text-[10px] font-medium text-slate-400 leading-relaxed uppercase italic">
-                      &quot;All returns trigger an automatic debit to Sales Returns and credit to Accounts Receivable. Stock will be quarantined upon arrival.&quot;
-                    </p>
-                  </div>
+            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-xs text-slate-400 block">Klien Maklon</span>
+                  <span className="font-semibold text-slate-800 text-xs">{detailReturn.customerName}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Nomor Sales Order</span>
+                  <span className="font-mono font-semibold text-blue-600 text-xs">{detailReturn.soNumber}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Nama Produk</span>
+                  <span className="font-semibold text-slate-800 text-xs">{detailReturn.productName}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Gudang Alokasi</span>
+                  <span className="font-semibold text-slate-800 text-xs">{detailReturn.warehouseName}</span>
                 </div>
               </div>
             </div>
-          </motion.div>
+
+            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Jumlah Barang Diretur:</span>
+                <span className="font-bold text-slate-800">{detailReturn.qtyReturned.toLocaleString("id-ID")} pcs</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Harga Satuan:</span>
+                <span className="font-semibold text-slate-800">Rp {detailReturn.unitPrice.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-bold text-rose-600">
+                <span>Nilai Total Kompensasi:</span>
+                <span>Rp {detailReturn.totalValue.toLocaleString("id-ID")}</span>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
+              <span className="font-bold block mb-1">Alasan Pengembalian / Temuan Lapangan:</span>
+              {detailReturn.reason}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <DnaButton variant="secondary" onClick={() => setDetailReturn(null)}>
+                Tutup
+              </DnaButton>
+              {detailReturn.status !== "SELESAI" && (
+                <DnaButton
+                  variant="primary"
+                  onClick={() => {
+                    setReturns((prev) =>
+                      prev.map((r) => (r.id === detailReturn.id ? { ...r, status: "SELESAI" } : r))
+                    );
+                    toast.success("Retur Selesai", `Kompensasi ${detailReturn.returnCode} berhasil diproses.`);
+                    setDetailReturn(null);
+                  }}
+                >
+                  Selesaikan & Offset Tagihan
+                </DnaButton>
+              )}
+            </div>
+          </div>
         )}
-      </AnimatePresence>
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+      </DnaModal>
+
+      {/* Modal Buat Retur Penjualan Baru */}
+      <DnaModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Catat Retur Penjualan Baru"
+        size="md"
+      >
+        <form onSubmit={handleCreateSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">No. Referensi Sales Order *</label>
+              <DnaInput
+                placeholder="Contoh: SO-2026-001"
+                value={formSoNumber}
+                onChange={(e) => setFormSoNumber(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Nama Klien Maklon *</label>
+              <DnaInput
+                placeholder="Contoh: PT Cantika Jelita Nusantara"
+                value={formCustomer}
+                onChange={(e) => setFormCustomer(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5">Nama Produk Retur *</label>
+            <DnaInput
+              placeholder="Contoh: Brightening Niacinamide Serum 10%"
+              value={formProduct}
+              onChange={(e) => setFormProduct(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Qty Retur (Pcs) *</label>
+              <DnaInput
+                type="number"
+                placeholder="Contoh: 100"
+                value={formQty}
+                onChange={(e) => setFormQty(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Harga Satuan (Rp) *</label>
+              <DnaInput
+                type="number"
+                placeholder="Contoh: 15000"
+                value={formPrice}
+                onChange={(e) => setFormPrice(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Gudang Penerima</label>
+              <select
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                value={formWarehouse}
+                onChange={(e) => setFormWarehouse(e.target.value)}
+              >
+                <option value="Gudang Karantina Maklon (KRT-01)">Gudang Karantina Maklon (KRT-01)</option>
+                <option value="Gudang Barang Jadi Utama (GBJ-01)">Gudang Barang Jadi Utama (GBJ-01)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Metode Kompensasi</label>
+              <select
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                value={formType}
+                onChange={(e) => setFormType(e.target.value as any)}
+              >
+                <option value="POTONG_TAGIHAN">Potong Faktur / Nota Kredit</option>
+                <option value="GANTI_BARANG">Ganti Barang Baru</option>
+                <option value="REFUND">Pengembalian Dana Kas</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5">Alasan Retur / Kerusakan</label>
+            <textarea
+              className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={2}
+              placeholder="Contoh: Tutup botol bocor halus saat distribusi."
+              value={formReason}
+              onChange={(e) => setFormReason(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <DnaButton type="button" variant="secondary" onClick={() => setIsCreateOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton type="submit" variant="primary">
+              Simpan & Teruskan ke QC
+            </DnaButton>
+          </div>
+        </form>
+      </DnaModal>
+    </div>
   );
 }

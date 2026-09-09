@@ -3,7 +3,9 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DnaPageContainer } from "@/components/dna";
+import { DnaPageHeader } from "@/components/dna";
+import { DnaKpiGrid } from "@/components/dna";
 import { KpiCard } from "@/components/dna/KpiCard";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { PageSection, SectionLabel } from "@/components/dna";
@@ -29,18 +31,18 @@ export default function ProductionMyPerformancePage() {
   const totalWO = myWorkOrders?.length || 0;
 
   return (
-    <DashboardShell
-      title="My"
-      titleAccent="Performance"
-      subtitle="Personal production output and work order metrics. Only your assigned work is shown here."
-    >
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="My"
+        subtitle="Personal production output and work order metrics. Only your assigned work is shown here."
+      />
       <div className="space-y-10">
-        <div className="grid grid-cols-4 gap-8">
+        <DnaKpiGrid cols={4}>
           <KpiCard label="My WOs" value={String(totalWO)} targetPct={totalWO >= 5 ? 100 : totalWO * 20} icon={<Factory />} />
           <KpiCard label="Active WOs" value={String(activeWO)} targetPct={activeWO <= 3 ? 100 : Math.max(0, 100 - activeWO * 10)} icon={<Clock />} />
           <KpiCard label="Completed" value={String(completedWO)} targetPct={completedWO > 0 ? 100 : 0} icon={<ClipboardCheck />} />
           <KpiCard label="Quality" value={String(completedWO || 0)} targetPct={50} icon={<Gauge />} />
-        </div>
+        </DnaKpiGrid>
 
         <TableWrapper>
           <SectionLabel>My Work Orders</SectionLabel>
@@ -111,6 +113,6 @@ export default function ProductionMyPerformancePage() {
           </PageSection>
         </div>
       </div>
-    </DashboardShell>
+    </DnaPageContainer>
   );
 }

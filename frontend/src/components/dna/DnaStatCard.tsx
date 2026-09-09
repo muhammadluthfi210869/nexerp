@@ -37,17 +37,26 @@ export type DnaStatCardVariant =
   | "danger"       // alias for rose
   | "critical"     // alias for rose
   | "info"         // alias for sky
+  | "purple"       // subtle purple
   | "default";     // alias for neutral
 
 export interface DnaStatCardProps {
   /** Card label (small uppercase-ish text above value) */
-  label: string;
+  label?: string;
+  /** Title alias for label */
+  title?: string;
   /** Main KPI value (number or formatted string) */
   value: string | number | React.ReactNode;
   /** Optional supporting text below value */
   subtext?: string | React.ReactNode;
-  /** Optional icon — Lucide React component recommended */
-  icon?: React.ReactNode;
+  /** Description alias for subtext */
+  description?: string | React.ReactNode;
+  /** subValue alias for subtext */
+  subValue?: string | React.ReactNode;
+  /** Optional trend delta (e.g. +12.5% vs target) */
+  delta?: { value: string; isPositive?: boolean } | string;
+  /** Optional icon — Lucide React component or element */
+  icon?: any;
   /** Visual variant — determines subtle bg/border/icon color */
   variant?: DnaStatCardVariant;
   /** Optional click handler — makes card interactive */
@@ -122,26 +131,39 @@ const VARIANT_STYLES: Record<string, {
     container: "border-slate-200 bg-slate-50/30",
     iconBadge: "bg-slate-100 text-slate-600",
   },
+  purple: {
+    container: "border-purple-100/80 bg-purple-50/30",
+    iconBadge: "bg-purple-100/70 text-purple-700",
+  },
 };
 
 /**
  * Renders the icon at standard badge sizing.
  * Accepts Lucide-style icon components (already have className) or elements.
  */
-function renderIcon(icon: React.ReactNode): React.ReactNode {
+function renderIcon(icon: any): React.ReactNode {
   if (!icon) return null;
   if (React.isValidElement(icon)) {
     return React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
       className: cn("w-3.5 h-3.5", (icon.props as any)?.className),
     });
   }
-  return icon;
+  // If a component function or forwardRef object was passed (e.g. icon={Package})
+  if (typeof icon === "function" || (typeof icon === "object" && "$$typeof" in icon)) {
+    const IconComp = icon;
+    return <IconComp className="w-3.5 h-3.5" />;
+  }
+  return null;
 }
 
 export function DnaStatCard({
   label,
+  title,
   value,
   subtext,
+  description,
+  subValue,
+  delta,
   icon,
   variant = "neutral",
   onClick,
@@ -150,6 +172,8 @@ export function DnaStatCard({
 }: DnaStatCardProps) {
   const styles = (variant && VARIANT_STYLES[variant]) || VARIANT_STYLES.neutral;
   const isInteractive = !!onClick;
+  const displayLabel = label || title || "";
+  const displaySubtext = subtext || description || subValue;
 
   return (
     <div
@@ -163,7 +187,7 @@ export function DnaStatCard({
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-normal text-slate-500">{label}</span>
+        <span className="text-[13px] font-normal text-slate-500">{displayLabel}</span>
         {icon && (
           <div
             className={cn(
@@ -185,8 +209,24 @@ export function DnaStatCard({
             {value}
           </div>
         )}
-        {subtext && (
-          <p className="text-[11px] font-normal text-slate-500 mt-0.5">{subtext}</p>
+        {(displaySubtext || delta) && (
+          <div className="flex items-center gap-1.5 text-[11px] font-normal text-slate-500 mt-0.5">
+            {delta && (
+              <span
+                className={cn(
+                  "font-medium",
+                  typeof delta === "object"
+                    ? delta.isPositive
+                      ? "text-emerald-600"
+                      : "text-rose-600"
+                    : "text-slate-600"
+                )}
+              >
+                {typeof delta === "object" ? delta.value : delta}
+              </span>
+            )}
+            {displaySubtext && <span>{displaySubtext}</span>}
+          </div>
         )}
       </div>
     </div>

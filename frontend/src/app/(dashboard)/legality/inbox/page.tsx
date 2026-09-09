@@ -28,8 +28,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DataCard, DnaBadge, DnaButton } from "@/components/dna";
-import { Card } from "@/components/ui/card";
+import { TableWrapper, DataCard, DnaBadge, DnaButton, Card } from "@/components/dna";
 
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();

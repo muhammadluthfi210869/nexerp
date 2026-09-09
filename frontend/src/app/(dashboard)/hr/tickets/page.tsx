@@ -5,10 +5,25 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Clock, DollarSign, Umbrella, CheckCircle2, XCircle, Plus, Search, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaBadge, DnaButton } from "@/components/dna";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DnaBadge,
+  DnaButton,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/dna";
 import { toast } from "sonner";
 
 type TicketType = "LEAVE" | "OVERTIME" | "REIMBURSE";

@@ -22,9 +22,9 @@ export interface PostPerformance {
   saves: number;
   videoViews?: number;
   clicks?: number;
-  engagementRate: number;
-  viralityScore?: number;
-  costPerResult?: number;
+  engagementRate: number; // percentage, e.g. 5.4
+  viralityScore?: number; // 1-100
+  costPerResult?: number; // for meta ads
 }
 
 export interface ChecklistItem {
@@ -39,7 +39,7 @@ export interface PostItem {
   platform: SocialPlatform;
   contentType: ContentType;
   status: PostStatus;
-  scheduledDate: string;
+  scheduledDate: string; // ISO string or YYYY-MM-DDTHH:mm
   publishedDate?: string;
   pillar: ContentPillar;
   caption: string;
@@ -77,6 +77,7 @@ export interface MetaAccountConfig {
   isConnected: boolean;
   isLiveApi: boolean;
   tokenExpiresAt?: string;
+  lastSyncTime?: string;
   permissions: string[];
   followersCount: number;
   igFollowersCount: number;
@@ -130,7 +131,7 @@ export interface CampaignOKR {
   startDate: string;
   endDate: string;
   status: 'on_track' | 'at_risk' | 'completed' | 'behind';
-  associatedPosts: string[];
+  associatedPosts: string[]; // post IDs
   color: string;
 }
 
@@ -142,13 +143,16 @@ export type DatabaseViewType =
   | 'list' 
   | 'meta_analytics' 
   | 'api_hub' 
-  | 'campaign_okrs';
+  | 'campaign_okrs' 
+  | 'ai_studio';
 
 export interface ViewFilter {
   platform?: SocialPlatform | 'all';
   status?: PostStatus | 'all';
   pillar?: ContentPillar | 'all';
+  month?: string; // 'all' or 'YYYY-MM' e.g. '2026-08'
   search?: string;
+  groupByMonth?: boolean;
 }
 
 export interface ViewSort {

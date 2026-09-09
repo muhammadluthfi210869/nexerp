@@ -1,16 +1,3 @@
-import { PrismaClient } from "@prisma/client";
-
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-};
-
-declare global {
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
-}
-
-const prisma = globalThis.prisma ?? prismaClientSingleton();
-
-export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
-
+// DEPRECATED & REMOVED: Prisma has been decoupled from the Next.js frontend.
+// All database operations must go through the NestJS backend API.
+export default null;

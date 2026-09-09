@@ -36,3 +36,37 @@ describe('StatCard', () => {
     expect(container.firstChild).toHaveClass('custom-class');
   });
 });
+
+import { DnaStatCard } from '@/components/dna/DnaStatCard';
+
+describe('DnaStatCard', () => {
+  it('renders label and value correctly', () => {
+    render(<DnaStatCard label="Total Omset" value="Rp 120.000.000" subtext="Batch QC lolos" />);
+    expect(screen.getByText('Total Omset')).toBeInTheDocument();
+    expect(screen.getByText('Rp 120.000.000')).toBeInTheDocument();
+    expect(screen.getByText('Batch QC lolos')).toBeInTheDocument();
+  });
+
+  it('handles semantic variants (primary, success, warning, danger) without crashing', () => {
+    const { rerender, container } = render(
+      <DnaStatCard label="Primary" value="10" variant="primary" />
+    );
+    expect(container.firstChild).toHaveClass('border-blue-100/80');
+
+    rerender(<DnaStatCard label="Success" value="20" variant="success" />);
+    expect(container.firstChild).toHaveClass('border-emerald-100/80');
+
+    rerender(<DnaStatCard label="Warning" value="30" variant="warning" />);
+    expect(container.firstChild).toHaveClass('border-amber-100/80');
+
+    rerender(<DnaStatCard label="Danger" value="40" variant="danger" />);
+    expect(container.firstChild).toHaveClass('border-rose-100/80');
+  });
+
+  it('safely falls back to neutral style on invalid or undefined variant', () => {
+    // @ts-expect-error testing invalid variant at runtime
+    const { container } = render(<DnaStatCard label="Unknown" value="0" variant="nonexistent" />);
+    expect(container.firstChild).toHaveClass('border-slate-200');
+  });
+});
+

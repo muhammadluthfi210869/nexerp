@@ -14,32 +14,9 @@ import {
   CheckCircle2,
   ArrowRight
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import { DnaInput, DnaButton, DnaBadge, DnaPageContainer, DnaPageHeader, DnaDataTable, DnaTh, DnaTd, DnaTableRow, DnaTableHead, DnaTableBody, DnaSelect, DnaModal, DnaToolbar, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/dna";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 
 interface Bill {
   id: string;
@@ -202,69 +179,69 @@ export default function BayarPembelianPage() {
   ) || [];
 
   return (
-    <DashboardShell
-      title="BAYAR"
-      titleAccent="PEMBELIAN"
-      subtitle="Pembayaran Faktur Pembelian — Vendor Payment Terminal"
-    >
-      <TableWrapper
-        filters={
-          <div className="relative w-full max-w-md">
-            <DnaInput
-              icon={<Search className="h-4 w-4" />}
-              placeholder="Search by invoice or supplier..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        }
-      >
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice Number</TableHead>
-              <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</TableHead>
-              <TableHead className="py-4 px-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-              <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="BAYAR PEMBELIAN"
+        badge={<DnaBadge status="info">VENDOR PAYMENT</DnaBadge>}
+        subtitle="Pembayaran Faktur Pembelian — Vendor Payment Terminal"
+      />
+      <DnaToolbar>
+        <div className="relative w-full max-w-md">
+          <DnaInput
+            icon={<Search className="h-4 w-4" />}
+            placeholder="Search by invoice or supplier..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </DnaToolbar>
+      <DnaDataTable>
+        <table className="w-full">
+          <DnaTableHead>
+            <DnaTableRow>
+              <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice Number</DnaTh>
+              <DnaTh className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</DnaTh>
+              <DnaTh className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</DnaTh>
+              <DnaTh className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</DnaTh>
+              <DnaTh className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</DnaTh>
+              <DnaTh className="py-4 px-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+              <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Action</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filteredBills.map((bill) => (
-              <TableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                <TableCell className="pl-6 text-left">
+              <DnaTableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                <DnaTd className="pl-6 text-left">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                       <Receipt className="h-4 w-4" />
                     </div>
                     <span className="font-black text-slate-900 tracking-tight text-sm uppercase italic">{bill.billNumber}</span>
                   </div>
-                </TableCell>
-                <TableCell className="text-left">
+                </DnaTd>
+                <DnaTd className="text-left">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
                       <Building2 className="h-4 w-4 text-slate-400" />
                     </div>
                     <p className="font-black text-slate-900 text-xs uppercase italic">{bill.vendorName}</p>
                   </div>
-                </TableCell>
-                <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
+                </DnaTd>
+                <DnaTd className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
                   Rp {bill.totalAmount.toLocaleString("id-ID")}
-                </TableCell>
-                <TableCell className="text-right font-black text-emerald-600 text-xs font-mono tabular-nums">
+                </DnaTd>
+                <DnaTd className="text-right font-black text-emerald-600 text-xs font-mono tabular-nums">
                   Rp {bill.paidAmount.toLocaleString("id-ID")}
-                </TableCell>
-                <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
+                </DnaTd>
+                <DnaTd className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">
                   Rp {bill.remaining.toLocaleString("id-ID")}
-                </TableCell>
-                <TableCell className="text-center">
+                </DnaTd>
+                <DnaTd className="text-center">
                   <DnaBadge status={statusBadge(bill.status)}>
                     {statusLabel(bill.status)}
                   </DnaBadge>
-                </TableCell>
-                <TableCell className="pr-6 text-right">
+                </DnaTd>
+                <DnaTd className="pr-6 text-right">
                   <DnaButton
                     variant="primary"
                     size="sm"
@@ -273,29 +250,28 @@ export default function BayarPembelianPage() {
                   >
                     Bayar
                   </DnaButton>
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ))}
             {filteredBills.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-slate-400 italic">
+              <DnaTableRow>
+                <DnaTd colSpan={7} className="text-center py-10 text-slate-400 italic">
                   No bills found.
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             )}
-          </TableBody>
-        </Table>
-      </TableWrapper>
+          </DnaTableBody>
+        </table>
+      </DnaDataTable>
 
-      <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleCloseModal(); }}>
-        <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-8 bg-slate-900 text-white flex flex-row justify-between items-center">
-            <div>
-              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">Payment Terminal</DialogTitle>
-              <p className="text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em] mt-2">Purchase Payment Gateway v1.0</p>
-            </div>
-            <CreditCard className="h-12 w-12 text-emerald-500/80" />
-          </DialogHeader>
+      <DnaModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title="Payment Terminal"
+        subtitle="Purchase Payment Gateway v1.0"
+        badge={<DnaBadge status="info">BAYAR</DnaBadge>}
+        size="xl"
+      >
 
           <div className="p-8 space-y-6">
             {selectedBill && (
@@ -411,20 +387,23 @@ export default function BayarPembelianPage() {
               </DnaButton>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
-          <DialogFooter>
+        </DnaModal>
+      <DnaModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        title="Konfirmasi"
+        subtitle="Simpan data pembayaran"
+        badge={<DnaBadge status="warning">KONFIRMASI</DnaBadge>}
+        size="sm"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+          </div>
+        }
+      >
+        <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+      </DnaModal>
+    </DnaPageContainer>
   );
 }

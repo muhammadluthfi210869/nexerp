@@ -50,15 +50,13 @@ describe('useMarketingPrototypeBundle (regression)', () => {
     expect(mockOptions.staleTime).toBe(30 * 1000);
   });
 
-  it('uses a single stable query key (no user.id dependency)', () => {
-    // A3 fix: stable key prevents remount when user hydrates
+  it('isolates permission-scoped bundles by user id', () => {
     (useAuth as any).mockReturnValue({ user: { id: 'user-42' } });
     useMarketingPrototypeBundle();
-    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle']);
+    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle', 'user-42']);
 
-    // Same key regardless of user.id — auth gating is via `enabled`, not key
     (useAuth as any).mockReturnValue({ user: undefined });
     useMarketingPrototypeBundle();
-    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle']);
+    expect(mockOptions.queryKey).toEqual(['marketing-prototype-bundle', 'anonymous']);
   });
 });

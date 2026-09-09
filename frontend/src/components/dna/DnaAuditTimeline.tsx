@@ -7,8 +7,10 @@ import { DnaBadge } from "./DnaBadge";
 import { getSharedAuditLogs, SharedAuditLog } from "@/lib/shared-erp-flow";
 
 export interface DnaAuditTimelineProps {
-  entityId: string;
+  entityId?: string;
   logs?: SharedAuditLog[];
+  events?: any[];
+  items?: any[];
   compact?: boolean;
   className?: string;
 }
@@ -39,6 +41,7 @@ export function DnaAuditTimeline({
     }
 
     const loadLogs = () => {
+      if (!entityId) return;
       const found = getSharedAuditLogs(entityId);
       setLogs(found);
     };

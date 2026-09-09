@@ -5,23 +5,29 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   Search,
-  ClipboardCheck,
   CheckCircle2,
-  Clock,
   AlertTriangle,
-  Users,
   ListChecks,
   Target,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QueryLoading, QueryError } from "@/components/query-states";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
-  DnaDataTable,
+  TableWrapper,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
   DnaBadge,
-  DnaColumn,
-  DnaKpiItem,
-  DateFilterValue,
+  DnaInput,
+  StatCard,
 } from "@/components/dna";
+import { DnaDataTable, type DnaColumn, type DnaKpiItem } from "@/components/dna/DnaDataTable";
+import { type DateFilterValue } from "@/components/dna/DnaDateFilter";
 
 interface ChecklistProgress {
   id: string;
@@ -198,7 +204,7 @@ export default function ChecklistProgressPage() {
       type: "badge",
       sortable: true,
       width: "140px",
-      render: (val) => (
+      render: (val: any) => (
         <DnaBadge variant="blue">
           {String(val)}
         </DnaBadge>
@@ -210,7 +216,7 @@ export default function ChecklistProgressPage() {
       type: "text",
       sortable: true,
       width: "240px",
-      render: (val) => (
+      render: (val: any) => (
         <span className="font-semibold text-slate-900 dark:text-slate-100">
           {String(val)}
         </span>
@@ -222,7 +228,7 @@ export default function ChecklistProgressPage() {
       type: "text",
       sortable: true,
       width: "150px",
-      render: (val) => (
+      render: (val: any) => (
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-bold">
             {String(val).charAt(0)}
@@ -239,7 +245,7 @@ export default function ChecklistProgressPage() {
       type: "text",
       sortable: true,
       width: "200px",
-      render: (val, row) => (
+      render: (val: any, row: ChecklistProgress) => (
         <div className="space-y-1">
           <ProgressBar value={Number(val || 0)} />
           <p className="text-[10px] text-slate-400 font-medium">
@@ -254,7 +260,7 @@ export default function ChecklistProgressPage() {
       type: "date",
       sortable: true,
       width: "120px",
-      render: (val) => (
+      render: (val: any) => (
         <span className="font-mono text-slate-600 dark:text-slate-400 text-[11px]">
           {val ? String(val) : "—"}
         </span>
@@ -264,7 +270,7 @@ export default function ChecklistProgressPage() {
       key: "bpomRegNumber",
       header: "IZIN BPOM",
       width: "140px",
-      render: (val, row) => (
+      render: (val: any, row: ChecklistProgress) => (
         <div className="flex flex-col gap-0.5">
           {val ? (
             <>
@@ -312,7 +318,7 @@ export default function ChecklistProgressPage() {
       columns={columns}
       primaryKey="id"
       searchPlaceholder="Cari kode checklist, kategori, nama pengujian, PIC..."
-      searchFilter={(row, q) =>
+      searchFilter={(row: ChecklistProgress, q: string) =>
         row.code.toLowerCase().includes(q.toLowerCase()) ||
         row.category.toLowerCase().includes(q.toLowerCase()) ||
         row.name.toLowerCase().includes(q.toLowerCase()) ||

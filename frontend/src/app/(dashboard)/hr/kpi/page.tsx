@@ -3,9 +3,23 @@
 import { useState, useMemo } from "react";
 import { BarChart3, Calendar, Activity, Filter } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, KpiCard, DnaBadge, DnaButton } from "@/components/dna";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  StatCard,
+  KpiCard,
+  DnaBadge,
+  DnaButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/dna";
 
 interface KPIEntry {
   id: string;

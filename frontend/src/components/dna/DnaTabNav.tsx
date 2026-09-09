@@ -17,7 +17,8 @@ export type DnaTabItemType = DnaTabItem;
 export interface DnaTabNavProps {
   tabs: DnaTabItem[];
   activeTab: string;
-  onChange: (tabId: string) => void;
+  onChange?: (tabId: string) => void;
+  onTabChange?: (tabId: string) => void;
   className?: string;
   size?: "default" | "sm";
   variant?: "default" | "header";
@@ -33,11 +34,13 @@ export function DnaTabNav({
   tabs,
   activeTab,
   onChange,
+  onTabChange,
   className,
   size = "default",
   variant = "default",
 }: DnaTabNavProps) {
   const isCompact = size === "sm" || variant === "header";
+  const handleTabChange = onChange || onTabChange || (() => {});
 
   return (
     <div
@@ -54,7 +57,7 @@ export function DnaTabNav({
           <button
             key={tab.id}
             type="button"
-            onClick={() => onChange(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={cn(
               "rounded-lg font-bold transition-all shrink-0 cursor-pointer border-none flex items-center gap-1.5 whitespace-nowrap",
               isCompact ? "px-3 py-1.5 text-xs" : "h-[38px] px-4 text-[12px]",

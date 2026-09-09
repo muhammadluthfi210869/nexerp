@@ -11,6 +11,7 @@ export interface DnaModalProps {
   onClose: () => void;
   title: string;
   subtitle?: string;
+  description?: string;
   badge?: React.ReactNode;
   size?: DnaModalSize;
   maxWidth?: string;
@@ -41,6 +42,7 @@ export function DnaModal({
   onClose,
   title,
   subtitle,
+  description,
   badge,
   size = "xl",
   maxWidth,
@@ -98,8 +100,8 @@ export function DnaModal({
                 {title}
               </h3>
             </div>
-            {subtitle && (
-              <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+            {(subtitle || description) && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle || description}</p>
             )}
           </div>
           <button

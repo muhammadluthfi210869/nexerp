@@ -1,20 +1,9 @@
 import React from "react"
 import { cn } from "@/lib/utils"
 
-/**
- * DnaButton — Standardized button with 5 variants (primary, secondary, outline, ghost, danger).
- *
- * @example
- * <DnaButton variant="primary" onClick={handleSave}>Simpan</DnaButton>
- * <DnaButton variant="outline" icon={<Plus />}>Tambah Data</DnaButton>
- * <DnaButton variant="danger" loading={isDeleting}>Hapus</DnaButton>
- *
- * @see DNA_CHEATSHEET.md for usage patterns
- * @see /dna-visual/golden-reference/page.tsx for live reference
- */
 interface DnaButtonProps {
   variant: "primary" | "secondary" | "outline" | "ghost" | "danger"
-  size?: "sm" | "md" | "lg"
+  size?: "sm" | "md" | "lg" | "icon"
   icon?: React.ReactNode
   children?: React.ReactNode
   className?: string
@@ -41,6 +30,7 @@ const sizeClasses: Record<string, string> = {
   sm: "h-8 px-3 text-[9px]",
   md: "h-11 px-4 text-[10px]",
   lg: "h-14 px-8 text-[11px]",
+  icon: "h-8 w-8 p-0 flex items-center justify-center",
 }
 
 export function DnaButton({

@@ -30,6 +30,13 @@ export interface ChatMessage {
   msgId: string | null;
 }
 
+export interface GatewayStatus {
+  configured: boolean;
+  tokenConfigured: boolean;
+  configuredAccountCount: number;
+  live: boolean;
+}
+
 /**
  * List leads with WA phone (= conversations for the Inbox sidebar).
  */
@@ -41,6 +48,44 @@ export function useConversations() {
       return res.data;
     },
     refetchInterval: 30_000,
+  });
+}
+
+/**
+ * List real BusDev sales representatives.
+ */
+export function useBusDevs() {
+  return useQuery({
+    queryKey: ['marketing', 'omni-crm', 'busdevs'],
+    queryFn: async () => {
+      const res = await api.get<Array<{
+        id: string;
+        name: string;
+        status: 'AKTIF' | 'NON-AKTIF';
+        lastAssigned: string;
+        leadCount: number;
+        phone: string;
+        formattedPhone: string;
+        role: string;
+        specialty: string;
+        deviceModel: string;
+        whatsappAccountKey: string;
+        whatsappConfigured: boolean;
+      }>>('/marketing/omni-crm/conversations/busdevs');
+      return res.data;
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useGatewayStatus() {
+  return useQuery({
+    queryKey: ['marketing', 'omni-crm', 'gateway-status'],
+    queryFn: async () => {
+      const res = await api.get<GatewayStatus>('/marketing/omni-crm/conversations/gateway-status');
+      return res.data;
+    },
+    refetchInterval: 60_000,
   });
 }
 
@@ -70,7 +115,7 @@ export function useMessages(leadId: string | null) {
 export function useSendMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { leadId?: string; phone: string; message: string }) => {
+    mutationFn: async (data: { leadId?: string; phone: string; message: string; accountKey?: string; clientRequestId: string }) => {
       const res = await api.post<{
         ok: boolean;
         dispatchError: string | null;
@@ -84,6 +129,30 @@ export function useSendMessage() {
         qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'messages', vars.leadId] });
       }
       qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'conversations'] });
+    },
+  });
+}
+
+export function useUpdateLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      leadId: string;
+      workflowStatus?: string;
+      fullName?: string;
+      company?: string;
+      email?: string;
+      phone?: string;
+      notes?: string;
+      assignedTo?: string;
+    }) => {
+      const { leadId, ...payload } = data;
+      const res = await api.patch(`/lead-capture/${leadId}`, payload);
+      return res.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'conversations'] });
+      qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'messages', variables.leadId] });
     },
   });
 }

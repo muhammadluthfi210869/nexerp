@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { StatCard, TableWrapper, DnaBadge } from "@/components/dna";
+import { Card, StatCard, TableWrapper, DnaBadge } from "@/components/dna";
 
 function formatRupiah(value: number): string {
   if (!value) return "—";

@@ -3,15 +3,18 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Add Build Arguments
+RUN apk add --no-cache libc6-compat
+
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_TELEMETRY_DISABLED=1
 
+# Layer cache dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci --prefer-offline || npm install
 
+# Copy source and build Next.js
 COPY . .
-RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Runtime
@@ -20,8 +23,9 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Automatically leverage standalone output
+# Leverage Next.js standalone output
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

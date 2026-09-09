@@ -52,7 +52,18 @@ import {
   CheckCircle2,
   Palette,
   Dot,
-  Inbox
+  Inbox,
+  PackageCheck,
+  ShieldCheck,
+  FileCheck,
+  Kanban,
+  Gauge,
+  UserCog,
+  Award,
+  FileText,
+  CheckCheck,
+  Clock,
+  Calculator
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -95,10 +106,9 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     title: "OmniCRM",
     groupLabel: "MARKETING & CRM",
     icon: Users,
-    items: [
-      { name: "Core Engine", href: "/marketing/omni-crm", icon: Layers },
-      { name: "Lead Capture", href: "/marketing/omni-crm/lead-capture", icon: Inbox },
-    ]
+    isDirect: true,
+    href: "/marketing/omni-crm",
+    items: []
   },
   {
     id: "dm-social",
@@ -115,7 +125,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "TASK MANAGEMENT",
     icon: ClipboardList,
     isDirect: true,
-    href: "/marketing/management-task",
+    href: "/marketing/management-task/overview",
     items: []
   }
 ];
@@ -176,7 +186,7 @@ const FINANCE_SECTIONS: NavSection[] = [
     groupLabel: "OPERASIONAL KEUANGAN",
     icon: Truck,
     items: [
-      { name: "Vendor Master", href: "/master/vendors", icon: Building2 },
+      { name: "Vendor Master", href: "/master/suppliers", icon: Building2 },
       { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: FileSpreadsheet },
       { name: "DP Pembelian", href: "/finance/dp-pembelian", icon: DollarSign },
       { name: "Bayar Pembelian", href: "/finance/bayar-pembelian", icon: CreditCard },
@@ -192,8 +202,8 @@ const FINANCE_SECTIONS: NavSection[] = [
       { name: "Customer Master", href: "/master/customers", icon: Users },
       { name: "Faktur Penjualan", href: "/finance/faktur-penjualan", icon: FileSpreadsheet },
       { name: "DP Penjualan", href: "/finance/dp-penjualan", icon: DollarSign },
-      { name: "Report Penjualan", href: "/finance/report-penjualan", icon: BarChart3 },
-      { name: "AR Aging & Collections", href: "/finance/ar-aging", icon: History },
+      { name: "Report Penjualan", href: "/finance/reports", icon: BarChart3 },
+      { name: "AR Aging & Collections", href: "/finance/reports/ar-aging", icon: History },
     ]
   },
   {
@@ -202,10 +212,10 @@ const FINANCE_SECTIONS: NavSection[] = [
     groupLabel: "OPERASIONAL KEUANGAN",
     icon: Landmark,
     items: [
-      { name: "Kas Bank Masuk", href: "/finance/kas-bank-masuk", icon: Landmark },
-      { name: "Kas Bank Keluar", href: "/finance/kas-bank-keluar", icon: CreditCard },
-      { name: "Rekonsiliasi Bank", href: "/finance/rekonsiliasi", icon: RefreshCw, badge: "COA", badgeVariant: "info" },
-      { name: "Pengajuan Dana", href: "/finance/pengajuan-dana", icon: ClipboardList, badge: "4-TIER", badgeVariant: "purple" },
+      { name: "Kas Bank Masuk", href: "/finance/cash-in", icon: Landmark },
+      { name: "Kas Bank Keluar", href: "/finance/cash-out", icon: CreditCard },
+      { name: "Rekonsiliasi Bank", href: "/finance/bank-reconciliation", icon: RefreshCw, badge: "COA", badgeVariant: "info" },
+      { name: "Pengajuan Dana", href: "/finance/fund-requests", icon: ClipboardList, badge: "4-TIER", badgeVariant: "purple" },
     ]
   },
   // 3. AKUNTANSI & LAPORAN
@@ -245,7 +255,6 @@ const FINANCE_SECTIONS: NavSection[] = [
     icon: FolderTree,
     items: [
       { name: "Chart of Accounts (CoA)", href: "/finance/accounting/coa", icon: FileSpreadsheet },
-      { name: "CoA Jurnal Otomatis", href: "/finance/accounting/auto-journal", icon: FolderTree },
     ]
   }
 ];
@@ -272,7 +281,6 @@ const PURCHASE_SECTIONS: NavSection[] = [
     icon: FolderTree,
     items: [
       { name: "Barang", href: "/master/goods", icon: Package },
-      { name: "Kategori Supplier", href: "/master/categories", icon: Tags },
       { name: "Supplier", href: "/master/suppliers", icon: Building2 },
     ]
   },
@@ -283,8 +291,8 @@ const PURCHASE_SECTIONS: NavSection[] = [
     icon: CheckSquare,
     items: [
       { name: "Checklist Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
-      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
-      { name: "Checklist Tracking CRM", href: "/qc/checklist/tracking", icon: Layers, badge: "SCM", badgeVariant: "default" },
+      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History, badge: "SLA", badgeVariant: "critical" },
+      { name: "Checklist", href: "/checklist", icon: Layers, badge: "3 TABS", badgeVariant: "info" },
     ]
   },
   {
@@ -295,10 +303,11 @@ const PURCHASE_SECTIONS: NavSection[] = [
     items: [
       { name: "Permintaan Pembelian", href: "/scm/purchase-requests", icon: ClipboardList },
       { name: "Buat Pembelian (PO)", href: "/scm/pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
-      { name: "Faktur Pembelian", href: "/scm/faktur-pembelian", icon: CreditCard },
-      { name: "DP Pembelian", href: "/scm/purchasing/down-payment", icon: DollarSign },
+      { name: "Penerimaan Barang", href: "/scm/receiving", icon: PackageCheck },
       { name: "Retur Pembelian", href: "/scm/purchase-returns", icon: XCircle },
       { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", icon: Layers },
+      { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: CreditCard },
+      { name: "DP Pembelian", href: "/scm/purchasing/down-payment", icon: DollarSign },
       { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
     ]
   },
@@ -324,6 +333,7 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     groupLabel: "SALES & CRM",
     icon: Users,
     items: [
+      { name: "OmniCRM Coexistence", href: "/marketing/omni-crm", icon: Layers, badge: "LIVE", badgeVariant: "purple" },
       { name: "Buku Tamu", href: "/crm/buku-tamu", icon: ClipboardCheck },
       { name: "Client Sample", href: "/crm/client-sample", icon: FlaskConical },
       { name: "Client Produksi", href: "/crm/client-produksi", icon: Factory },
@@ -352,7 +362,6 @@ const BUSSDEV_SECTIONS: NavSection[] = [
       { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
       { name: "Barang", href: "/master/goods", icon: Package },
       { name: "Supplier", href: "/master/suppliers", icon: Building2 },
-      { name: "Kategori Supplier", href: "/master/categories", icon: Tags },
     ]
   },
   {
@@ -442,145 +451,239 @@ const RND_SECTIONS: NavSection[] = [
  * 6. 👑 SUPERADMIN / DIRECTOR (ALL GSERP MODULES IN ACCORDION STRUCTURE)
  */
 const SUPERADMIN_SECTIONS: NavSection[] = [
+  // ── 1. DASBOR UTAMA (Mother Bar Tunggal: Seluruh Dashboard, KPI Management & Project Control) ──
   {
     id: "sa-dashboard",
-    title: "Dasbor Sistem",
-    groupLabel: "DASBOR UTAMA",
+    title: "Dashboard",
+    groupLabel: "1. DASBOR UTAMA",
     icon: LayoutDashboard,
     items: [
+      { name: "Dashboard Executive", href: "/executive/dashboard", icon: LayoutDashboard },
+      { name: "Dashboard Notifikasi", href: "/executive/notifications", icon: Bell, badge: "LIVE", badgeVariant: "warning" },
+      { name: "KPI Management", href: "/kpi-management/department", icon: Gauge, badge: "KPI", badgeVariant: "info" },
+      { name: "Project Control", href: "/project-control", icon: Kanban },
+      { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
+      { name: "Dashboard Busdev", href: "/bussdev/dashboard", icon: Activity },
+      { name: "Dashboard R&D", href: "/rnd/dashboard", icon: Beaker },
       { name: "Dashboard SCM", href: "/scm/dashboard", icon: Truck },
-      { name: "Dashboard Finance", href: "/finance/dashboard", icon: LayoutDashboard },
       { name: "Dashboard Gudang", href: "/warehouse", icon: Warehouse },
       { name: "Dashboard Produksi", href: "/production", icon: Factory },
-      { name: "D. Jadwal Produksi", href: "/production/schedule", icon: History },
-      { name: "D. Penjualan Sample", href: "/bussdev/sample-sales", icon: FlaskConical },
-      { name: "D. Pelanggan", href: "/bussdev/kelola-pelanggan", icon: Users },
-      { name: "Project Control", href: "/project-control", icon: BarChart3 },
+      { name: "Dashboard Finance", href: "/finance/dashboard", icon: Landmark },
+      { name: "Dashboard HR", href: "/hr/dashboard", icon: Users },
     ]
   },
+
+  // ── 2. PERSETUJUAN (Approval Center — 8 Kategori Sesuai Legacy ERP) ──
   {
-    id: "sa-creative",
-    title: "Creative & Design",
-    groupLabel: "KREATIF",
-    icon: Palette,
+    id: "sa-approvals",
+    title: "Pusat Persetujuan",
+    groupLabel: "2. PERSETUJUAN",
+    icon: ShieldCheck,
+    badge: "APPROVAL",
+    badgeVariant: "purple",
     items: [
-      { name: "Artwork Approval", href: "/design/artwork-approval", icon: Palette, badge: "NEW", badgeVariant: "purple" },
-      { name: "Creative Board", href: "/creative/board", icon: Layers },
+      { name: "Pembelian", href: "/approvals/purchase", icon: FileCheck, badge: "~4", badgeVariant: "warning" },
+      { name: "Retur Pembelian", href: "/approvals/purchase-return", icon: XCircle, badge: "~1", badgeVariant: "warning" },
+      { name: "Penjualan Sample", href: "/approvals/sales-sample", icon: FlaskConical },
+      { name: "Penjualan Produk", href: "/approvals/sales", icon: FileSpreadsheet },
+      { name: "Retur Penjualan", href: "/approvals/sales-return", icon: RefreshCw },
+      { name: "Permintaan HPP", href: "/approvals/request-cogs", icon: Calculator, badge: "~2", badgeVariant: "warning" },
+      { name: "Permintaan Pembelian", href: "/approvals/purchase-request", icon: ClipboardList },
+      { name: "Permintaan Barang", href: "/approvals/goods-request", icon: PackageCheck, badge: "~6", badgeVariant: "warning" },
     ]
   },
-  {
-    id: "sa-master",
-    title: "Master Data",
-    groupLabel: "MASTER SISTEM",
-    icon: FolderTree,
-    items: [
-      { name: "Hak Akses (Roles)", href: "/master/roles", icon: ShieldAlert },
-      { name: "Pengguna (Users)", href: "/master/personnel", icon: Users },
-      { name: "CoA", href: "/finance/accounting/coa", icon: FileSpreadsheet },
-      { name: "CoA Jurnal Otomatis", href: "/finance/accounting/auto-journal", icon: FileSpreadsheet },
-      { name: "Gudang", href: "/master/warehouses", icon: Warehouse },
-      { name: "Barang", href: "/master/goods", icon: Package },
-      { name: "Kategori Supplier", href: "/master/categories", icon: Tags },
-      { name: "Supplier", href: "/master/suppliers", icon: Building2 },
-      { name: "Kelola Pelanggan", href: "/bussdev/kelola-pelanggan", icon: Users },
-    ]
-  },
+
+  // ── 3. UMUM DAN KENDALI (Tracking & Checklist) ──
   {
     id: "sa-tracking",
     title: "Umum & Kendali",
-    groupLabel: "KENDALI & TRACKING",
+    groupLabel: "3. UMUM DAN KENDALI",
     icon: CheckSquare,
     items: [
       { name: "Checklist Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
-      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
-      { name: "Checklist Tracking CRM", href: "/qc/checklist/tracking", icon: Layers, badge: "SCM", badgeVariant: "default" },
+      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History, badge: "SLA", badgeVariant: "critical" },
+      { name: "Checklist", href: "/checklist", icon: Layers, badge: "3 TABS", badgeVariant: "info" },
     ]
   },
+
+  // ── 4. MASTER DATA SISTEM ──
   {
-    id: "sa-purchase",
-    title: "Operasional: Pembelian",
-    groupLabel: "OPERASIONAL",
-    icon: Truck,
+    id: "sa-master",
+    title: "Master Data",
+    groupLabel: "4. MASTER SISTEM",
+    icon: FolderTree,
     items: [
-      { name: "Permintaan Pembelian", href: "/scm/purchase-requests", icon: ClipboardList },
-      { name: "Buat Pembelian", href: "/scm/pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
-      { name: "Faktur Pembelian", href: "/scm/faktur-pembelian", icon: CreditCard },
-      { name: "DP Pembelian", href: "/scm/purchasing/down-payment", icon: DollarSign },
-      { name: "Bayar Pembelian", href: "/finance/bayar-pembelian", icon: CreditCard },
-      { name: "Retur Pembelian", href: "/scm/purchase-returns", icon: XCircle },
-      { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", icon: Layers },
-      { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
+      { name: "Master Barang & Kategori", href: "/master/goods", icon: Package },
+      { name: "Supplier & Vendor", href: "/master/suppliers", icon: Building2 },
+      { name: "Pelanggan / Customer", href: "/master/customers", icon: Users },
+      { name: "Gudang & Lokasi", href: "/master/warehouses", icon: Warehouse },
+      { name: "Pengguna & Personel", href: "/master/personnel", icon: UserCog },
+      { name: "Chart of Accounts (CoA)", href: "/finance/accounting/coa", icon: FileSpreadsheet },
     ]
   },
-  {
-    id: "sa-rnd",
-    title: "Pra Produksi & Formulasi",
-    groupLabel: "OPERASIONAL",
-    icon: Beaker,
-    items: [
-      { name: "Formula Analytics", href: "/rnd/dashboard", icon: LayoutDashboard },
-      { name: "Sample Inbox (PNF)", href: "/rnd/inbox", icon: ClipboardCheck },
-      { name: "Formulasi Repository", href: "/rnd/repository", icon: Beaker },
-      { name: "Buat Formula Baru", href: "/rnd/formula/new", icon: PlusCircle },
-      { name: "Active Pipeline", href: "/rnd/pipeline", icon: FlaskConical },
-      { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical },
-      { name: "Revision Tracker", href: "/rnd/revision-tracker", icon: History },
-      { name: "Master INCI & Regulasi", href: "/rnd/master-inci", icon: FileSearch },
-      { name: "Digital Batch Record", href: "/production/batch-records", icon: Barcode },
-    ]
-  },
-  {
-    id: "sa-wh",
-    title: "Operasional: Gudang & Stok",
-    groupLabel: "OPERASIONAL",
-    icon: Warehouse,
-    items: [
-      { name: "Stok", href: "/warehouse/stok", icon: Box },
-      { name: "Mutasi Barang", href: "/warehouse/mutasi-stok", icon: RefreshCw },
-      { name: "Penyesuaian Stok", href: "/warehouse/adjustment", icon: Box },
-      { name: "Gudang & Lokasi", href: "/warehouse/gudang", icon: Warehouse },
-    ]
-  },
-  {
-    id: "sa-crm",
-    title: "Sales Pipeline (CRM)",
-    groupLabel: "OPERASIONAL",
-    icon: Users,
-    items: [
-      { name: "Buku Tamu", href: "/crm/buku-tamu", icon: ClipboardCheck },
-      { name: "Client Sample", href: "/crm/client-sample", icon: FlaskConical },
-      { name: "Client Produksi", href: "/crm/client-produksi", icon: Factory },
-      { name: "Client RO", href: "/crm/client-ro", icon: RefreshCw },
-      { name: "Client Lost", href: "/crm/client-lost", icon: UserX },
-    ]
-  },
+
+  // ── 5. PENJUALAN & CRM ──
   {
     id: "sa-sales",
-    title: "Operasional: Penjualan",
-    groupLabel: "OPERASIONAL",
+    title: "Penjualan & CRM",
+    groupLabel: "5. PENJUALAN & CRM",
     icon: Activity,
     items: [
+      { name: "Buku Tamu", href: "/bussdev/guest-book", icon: ClipboardCheck },
+      { name: "Leads OmniCRM", href: "/marketing/omni-crm", icon: Users, badge: "PRO", badgeVariant: "purple" },
+      { name: "Client Sample", href: "/bussdev/client-manager?tab=sample", icon: FlaskConical },
+      { name: "Client Produksi", href: "/bussdev/client-manager?tab=production", icon: PackageCheck },
+      { name: "Client RO", href: "/bussdev/client-manager?tab=ro", icon: RefreshCw },
+      { name: "Client Lost", href: "/bussdev/lost", icon: XCircle },
+      { name: "Penjualan (Sales Orders)", href: "/bussdev/sales-orders", icon: FileSpreadsheet },
       { name: "Penjualan Sample", href: "/bussdev/sample-sales", icon: FlaskConical },
-      { name: "Bayar Sample", href: "/finance/bayar-sample", icon: DollarSign },
-      { name: "DP Penjualan", href: "/finance/dp-penjualan", icon: DollarSign },
-      { name: "Faktur Penjualan", href: "/finance/faktur-penjualan", icon: CreditCard },
-      { name: "Bayar Penjualan", href: "/finance/bayar-penjualan", icon: CreditCard },
+      { name: "DP Penjualan", href: "/bussdev/down-payment", icon: DollarSign },
+      { name: "Faktur Penjualan", href: "/finance/faktur-penjualan", icon: FileSpreadsheet },
+      { name: "Bayar Penjualan", href: "/finance/bayar-penjualan", icon: Wallet },
       { name: "Retur Penjualan", href: "/bussdev/retur-penjualan", icon: XCircle },
+      { name: "Target Penjualan", href: "/bussdev/sales-target", icon: Gauge },
     ]
   },
+
+  // ── 6. PEMBELIAN & PENGADAAN (SCM) ──
+  {
+    id: "sa-purchasing",
+    title: "Pembelian (SCM)",
+    groupLabel: "6. PEMBELIAN & PENGADAAN",
+    icon: Truck,
+    items: [
+      { name: "Permintaan Pembelian (PR)", href: "/scm/purchase-requests", icon: ClipboardList },
+      { name: "Buat Pembelian (PO)", href: "/scm/pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
+      { name: "DP Pembelian", href: "/finance/dp-pembelian", icon: DollarSign },
+      { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: CreditCard },
+      { name: "Bayar Pembelian", href: "/finance/bayar-pembelian", icon: Wallet },
+      { name: "Retur Pembelian", href: "/scm/purchase-returns", icon: XCircle },
+      { name: "Kebutuhan Barang (MRP)", href: "/scm/kebutuhan-barang", icon: Layers },
+      { name: "Permintaan Barang", href: "/approvals/goods-request", icon: PackageCheck },
+    ]
+  },
+
+  // ── 7. GUDANG & LOGISTIK ──
+  {
+    id: "sa-warehouse",
+    title: "Gudang & Logistik",
+    groupLabel: "7. GUDANG & LOGISTIK",
+    icon: Warehouse,
+    items: [
+      { name: "Stok Barang & Bahan", href: "/warehouse/stok", icon: Box },
+      { name: "Pembelian Masuk (Inbound)", href: "/warehouse/inbound", icon: PackageCheck },
+      { name: "Pengiriman Barang (Release)", href: "/warehouse/release", icon: Truck },
+      { name: "Transfer Antar Gudang", href: "/warehouse/pindah-gudang", icon: RefreshCw },
+      { name: "Mutasi Stok", href: "/warehouse/mutasi-stok", icon: History },
+      { name: "Penyesuaian Stok", href: "/warehouse/adjustment", icon: Box },
+      { name: "Stok Opname", href: "/warehouse/opname", icon: ClipboardList },
+      { name: "Denah & Lokasi Gudang", href: "/warehouse/map", icon: Warehouse },
+    ]
+  },
+
+  // ── 8. PRA PRODUKSI & R&D ──
+  {
+    id: "sa-rnd",
+    title: "Pra Produksi & R&D",
+    groupLabel: "8. PRA PRODUKSI & R&D",
+    icon: Beaker,
+    items: [
+      { name: "Formulasi Repository", href: "/rnd/repository", icon: Beaker },
+      { name: "Buat Formula Baru", href: "/rnd/formula/new", icon: PlusCircle },
+      { name: "Penyesuaian Formulasi", href: "/production/formula-adjustment", icon: RefreshCw },
+      { name: "Permintaan HPP", href: "/rnd/repository?tab=hpp", icon: Calculator },
+      { name: "Sample Inbox (PNF)", href: "/rnd/inbox", icon: Inbox },
+      { name: "Batch Record (SPK)", href: "/production/batch-records", icon: Barcode },
+      { name: "Kelola Desain & Kemasan", href: "/design/artwork-approval", icon: Palette },
+      { name: "Jadwal Mixing", href: "/production/schedule?type=mixing", icon: History },
+      { name: "Jadwal Filling", href: "/production/schedule?type=filling", icon: History },
+      { name: "Jadwal Packaging", href: "/production/schedule?type=packaging", icon: History },
+      { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical },
+      { name: "Sertifikat Analisis (CoA)", href: "/qc/coa", icon: FileCheck },
+      { name: "Master INCI & Regulasi", href: "/rnd/master-inci", icon: FileSearch },
+    ]
+  },
+
+  // ── 9. PRODUKSI PABRIK ──
+  {
+    id: "sa-production",
+    title: "Produksi Pabrik",
+    groupLabel: "9. PRODUKSI PABRIK",
+    icon: Factory,
+    items: [
+      { name: "Work Orders (SPK)", href: "/production/work-orders", icon: FileSpreadsheet, badge: "SPK", badgeVariant: "warning" },
+      { name: "Jadwal Produksi (Gantt)", href: "/production/schedule", icon: History },
+      { name: "Produksi Mixing (Ruahan)", href: "/production/operations?stage=mixing", icon: Factory },
+      { name: "Produksi Filling (Primer)", href: "/production/operations?stage=filling", icon: Factory },
+      { name: "Produksi Packaging (Sekunder)", href: "/production/operations?stage=packaging", icon: Factory },
+      { name: "Inspeksi QC & Rilis APJ", href: "/qc/inspections", icon: ShieldCheck },
+      { name: "Permintaan Bahan Baku", href: "/production/warehouse", icon: Layers },
+    ]
+  },
+
+  // ── 10. KEUANGAN & AKUNTANSI ──
   {
     id: "sa-finance",
-    title: "Operasional: Akuntansi & Keuangan",
-    groupLabel: "OPERASIONAL",
+    title: "Keuangan & Akuntansi",
+    groupLabel: "10. KEUANGAN & AKUNTANSI",
     icon: Landmark,
     items: [
-      { name: "Jurnal Umum", href: "/finance/general-journal", icon: FileSpreadsheet },
-      { name: "Kas Bank Keluar", href: "/finance/cash-out", icon: CreditCard },
       { name: "Kas Bank Masuk", href: "/finance/cash-in", icon: Landmark },
-      { name: "Buku Besar", href: "/finance/ledger", icon: BookOpen },
-      { name: "Laba Rugi", href: "/finance/reports", icon: BarChart3 },
+      { name: "Kas Bank Keluar", href: "/finance/cash-out", icon: CreditCard },
+      { name: "Pengajuan Dana (Fund Request)", href: "/finance/fund-requests", icon: Wallet },
+      { name: "Jurnal Umum", href: "/finance/jurnal-umum", icon: FileSpreadsheet },
+      { name: "Rekonsiliasi Bank", href: "/finance/bank-reconciliation", icon: RefreshCw },
+      { name: "Client Escrow", href: "/finance/client-escrow", icon: Landmark },
+      { name: "Aset Tetap & Depresiasi", href: "/finance/assets", icon: Building2 },
+      { name: "Closing & Period Lock", href: "/finance/closing", icon: ShieldCheck },
+    ]
+  },
+
+  // ── 11. LAPORAN SISTEM ──
+  {
+    id: "sa-reports",
+    title: "Laporan",
+    groupLabel: "11. LAPORAN SISTEM",
+    icon: BarChart3,
+    items: [
+      { name: "Laporan Laba Rugi", href: "/finance/laba-rugi", icon: BarChart3 },
+      { name: "Buku Besar (General Ledger)", href: "/finance/ledger", icon: BookOpen },
       { name: "Neraca Saldo", href: "/finance/reports/trial-balance", icon: FileSpreadsheet },
-      { name: "Neraca", href: "/finance/reports/balance-sheet", icon: Scale },
+      { name: "Laporan Arus Kas", href: "/finance/reports/cash-flow", icon: Activity },
+      { name: "AR Aging (Piutang)", href: "/finance/reports/ar-aging", icon: History },
+      { name: "AP Aging (Hutang)", href: "/finance/ap-aging", icon: History },
+      { name: "Laporan Stok Persediaan", href: "/warehouse/stok", icon: Box },
+      { name: "Laporan Mutasi Barang", href: "/warehouse/mutasi-stok", icon: RefreshCw },
+      { name: "Laporan BusDev & Buku Tamu", href: "/bussdev/guest-book", icon: ClipboardCheck },
+    ]
+  },
+
+  // ── 12. SUMBER DAYA MANUSIA (HR) ──
+  {
+    id: "sa-hr",
+    title: "Human Resources (HR)",
+    groupLabel: "12. SUMBER DAYA MANUSIA",
+    icon: Users,
+    items: [
+      { name: "Pegawai & Rekrutmen", href: "/hr/recruitment", icon: UserCheck },
+      { name: "Presensi Live Attendance", href: "/hr/attendance", icon: Clock },
+      { name: "Evaluasi KPI Karyawan", href: "/hr/kpi", icon: Award },
+      { name: "Payroll Workbench", href: "/hr/payroll", icon: Wallet },
+      { name: "Izin, Cuti & Lembur", href: "/hr/tickets", icon: ClipboardList },
+    ]
+  },
+
+  // ── 13. SISTEM & PENGATURAN ──
+  {
+    id: "sa-system",
+    title: "Sistem & Konfigurasi",
+    groupLabel: "13. SISTEM & PENGATURAN",
+    icon: Cog,
+    items: [
+      { name: "Profil Perusahaan", href: "/system/company", icon: Building2 },
+      { name: "Audit Ledger Transaksi", href: "/system/audit-ledger", icon: FileSearch },
+      { name: "Daftar Request Perubahan", href: "/system/change-requests", icon: RefreshCw },
+      { name: "Pengaturan Sistem", href: "/system/settings", icon: Cog },
     ]
   }
 ];
@@ -619,6 +722,7 @@ export function Sidebar() {
 
   const isNavActive = (href: string) => {
     const [targetPath, targetQuery] = href.split("?");
+    if (targetPath.startsWith("/marketing/management-task") && pathname.startsWith("/marketing/management-task")) return true;
     if (targetPath !== pathname) return false;
     if (!targetQuery) return !searchParams.toString();
     return new URLSearchParams(targetQuery).toString() === searchParams.toString();

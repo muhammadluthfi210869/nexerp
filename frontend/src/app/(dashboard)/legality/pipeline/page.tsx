@@ -17,23 +17,23 @@ import {
   Building2,
   History
 } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import { 
+  TableWrapper, 
+  DnaBadge, 
+  DnaButton,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
-import {
+  DropdownMenuSeparator,
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton } from "@/components/dna";
+  DialogTitle
+} from "@/components/dna";
 
 export default function RegulatoryPipelinePage() {
   const queryClient = useQueryClient();

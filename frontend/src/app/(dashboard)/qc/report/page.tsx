@@ -4,8 +4,19 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StatCard, KpiCard, TableWrapper, SectionLabel, DnaBadge } from "@/components/dna";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow,
+  StatCard, 
+  KpiCard, 
+  TableWrapper, 
+  SectionLabel, 
+  DnaBadge 
+} from "@/components/dna";
 import { ShieldCheck, AlertTriangle, TrendingDown, FlaskConical, Loader2 } from "lucide-react";
 
 interface QCAudit {

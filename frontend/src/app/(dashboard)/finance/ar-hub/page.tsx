@@ -23,7 +23,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaStatCard, DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaSelect, TableWrapper } from "@/components/dna";
 import { 
   Table, 
   TableBody, 
@@ -33,7 +33,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // Static Data from Plan
 const STATIC_SALES_INVOICES = [
@@ -61,54 +60,58 @@ export default function ARHubPrototype() {
   };
 
   return (
-    <DashboardShell
-      title="PENERIMAAN"
-      titleAccent="PIUTANG"
-      subtitle="Enterprise Revenue Recognition & Collection Control"
-      actions={
-        <div className="flex gap-4">
-          <DnaButton 
-            variant="outline"
-            className="h-12 px-6 rounded-2xl uppercase tracking-tight text-[10px]"
-          >
-            <History className="mr-2 h-4 w-4 text-amber-500" /> Riwayat
-          </DnaButton>
-          <DnaButton 
-            variant="primary"
-            className="h-12 px-8 rounded-2xl tracking-tighter text-sm transition-all hover:scale-105"
-          >
-            <ShieldCheck className="mr-2 h-5 w-5" /> Validasi
-          </DnaButton>
-        </div>
-      }
-    >
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="PENERIMAAN PIUTANG"
+        subtitle="Enterprise Revenue Recognition & Collection Control"
+        actions={
+          <div className="flex gap-4">
+            <DnaButton
+              variant="outline"
+              className="h-12 px-6 rounded-2xl uppercase tracking-tight text-[10px]"
+            >
+              <History className="mr-2 h-4 w-4 text-amber-500" /> Riwayat
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              className="h-12 px-8 rounded-2xl tracking-tighter text-sm transition-all hover:scale-105"
+            >
+              <ShieldCheck className="mr-2 h-5 w-5" /> Validasi
+            </DnaButton>
+          </div>
+        }
+      />
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
           label="Total Receivables"
           value="Rp 125.4M"
-          subValue="+12.5% MTD"
+          delta={{ value: "+12.5% MTD", isPositive: true }}
           icon={<TrendingUp className="text-blue-600" />}
+          variant="blue"
         />
-        <StatCard
+        <DnaStatCard
           label="Overdue (30+ Days)"
           value="Rp 12.0M"
-          subValue="Risk Profile: Low"
+          delta={{ value: "Risk Profile: Low", isPositive: false }}
           icon={<CreditCard className="text-rose-600" />}
+          variant="rose"
         />
-        <StatCard
+        <DnaStatCard
           label="Collections (MTD)"
           value="Rp 89.2M"
-          subValue="70% Target Completion"
+          delta={{ value: "70% Target Completion", isPositive: true }}
           icon={<Wallet className="text-emerald-500" />}
+          variant="emerald"
         />
-        <StatCard
+        <DnaStatCard
           label="Sample Revenue"
           value="Rp 2.4M"
-          subValue="R&D Commitment"
+          delta={{ value: "R&D Commitment", isPositive: true }}
           icon={<FlaskConical className="text-amber-500" />}
+          variant="amber"
         />
-      </div>
+      </DnaKpiGrid>
 
       {/* Main Content Area */}
       <Tabs defaultValue="products" onValueChange={setActiveTab} className="w-full mt-6">
@@ -353,11 +356,14 @@ export default function ARHubPrototype() {
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Target Account</label>
                     <div className="relative">
                       <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <select className="w-full h-11 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs appearance-none focus:ring-4 focus:ring-blue-500/5 transition-all outline-none">
-                        <option>BCA Main (2640...)</option>
-                        <option>Mandiri Corporate</option>
-                        <option>Petty Cash (IDR)</option>
-                      </select>
+                      <DnaSelect
+                        placeholder="Pilih akun..."
+                        className="h-11 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs"
+                      >
+                        <option value="bca">BCA Main (2640...)</option>
+                        <option value="mandiri">Mandiri Corporate</option>
+                        <option value="petty">Petty Cash (IDR)</option>
+                      </DnaSelect>
                     </div>
                   </div>
                 </div>
@@ -413,11 +419,11 @@ export default function ARHubPrototype() {
         <div className="space-y-1">
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 italic">Owner Insight: Revenue Integrity</p>
           <p className="text-xs font-medium text-slate-500 leading-relaxed uppercase">
-            Sample revenue collection is critical for R&D overhead coverage. 
+            Sample revenue collection is critical for R&D overhead coverage.
             Ensure all <span className="text-blue-600 font-black">R&D Samples</span> with outstanding balances are flagged in the next executive pipeline review.
           </p>
         </div>
       </div>
-    </DashboardShell>
+    </DnaPageContainer>
   );
 }

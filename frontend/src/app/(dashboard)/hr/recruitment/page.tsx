@@ -3,9 +3,24 @@
 import { useState } from "react";
 import { Briefcase, Users, Clock, Plus, Eye, Send, CheckCircle2, Search, X } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  StatCard,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/dna";
 import { toast } from "sonner";
 
 type PositionStatus = "SENT" | "PENDING" | "DONE";

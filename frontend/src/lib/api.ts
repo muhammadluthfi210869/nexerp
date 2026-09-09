@@ -1,10 +1,11 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== 'undefined' &&
-   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? ''
-    : 'https://nexerp.id');
+// Browser traffic must always use the same-origin reverse proxy. Depending on a
+// build-time NEXT_PUBLIC_API_URL previously baked localhost into a production
+// bundle, so every user's laptop tried to call its own port 3002.
+const API_URL = typeof window !== "undefined"
+  ? "/api"
+  : process.env.NEXT_PUBLIC_API_URL || "http://backend:3001/v1";
 
 export const api = axios.create({
   baseURL: API_URL,

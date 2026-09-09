@@ -10,10 +10,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard } from "@/components/dna/StatCard";
-import { DataCard } from "@/components/dna/DataCard";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaBadge } from "@/components/dna/DnaBadge";
+import { DnaStatCard, DnaCard, TableWrapper as DnaDataTable, DnaBadge } from "@/components/dna";
 import {
   Warehouse,
   TrendingUp,
@@ -34,7 +31,7 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { DnaButton } from "@/components/dna/DnaButton";
 
 export default function GudangPage() {
   const [tab, setTab] = useState("overview");
@@ -113,14 +110,14 @@ export default function GudangPage() {
 
         <TabsContent value="overview" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Kapasitas" value={`${stats?.capacity?.utility || 0}%`} subValue="Storage Utility" icon={<Truck />} />
-            <StatCard label="Akurasi" value={`${typeof stats?.capacity?.accuracy === 'number' ? stats.capacity.accuracy.toFixed(1) : '0'}%`} subValue="Inventory Accuracy" icon={<CheckCircle2 />} />
-            <StatCard label="Turnover" value={`${stats?.turnover?.ratio || 0}x`} subValue="Turnover Ratio" icon={<RefreshCw />} />
-            <StatCard label="Dead Stock" value={`Rp ${(stats?.risk?.deadStock || 0).toLocaleString()}`} subValue="Risk Value" icon={<Package />} />
+            <DnaStatCard label="Kapasitas" value={`${stats?.capacity?.utility || 0}%`} subValue="Storage Utility" icon={<Truck />} />
+            <DnaStatCard label="Akurasi" value={`${typeof stats?.capacity?.accuracy === 'number' ? stats.capacity.accuracy.toFixed(1) : '0'}%`} subValue="Inventory Accuracy" icon={<CheckCircle2 />} />
+            <DnaStatCard label="Turnover" value={`${stats?.turnover?.ratio || 0}x`} subValue="Turnover Ratio" icon={<RefreshCw />} />
+            <DnaStatCard label="Dead Stock" value={`Rp ${(stats?.risk?.deadStock || 0).toLocaleString()}`} subValue="Risk Value" icon={<Package />} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <DataCard title="Penerimaan Terkini" dotColor="bg-blue-500">
+            <DnaCard title="Penerimaan Terkini" dotColor="bg-blue-500">
               <div className="space-y-4">
                 {inbounds?.slice(0, 5).map((grn: any) => (
                   <div key={grn.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -140,9 +137,9 @@ export default function GudangPage() {
                   <p className="text-center text-slate-400 text-xs font-bold uppercase italic py-6">No inbound records</p>
                 )}
               </div>
-            </DataCard>
+            </DnaCard>
 
-            <DataCard title="Transfer Terkini" dotColor="bg-indigo-500">
+            <DnaCard title="Transfer Terkini" dotColor="bg-indigo-500">
               <div className="space-y-4">
                 {transfers?.slice(0, 5).map((trf: any) => (
                   <div key={trf.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -162,19 +159,19 @@ export default function GudangPage() {
                   <p className="text-center text-slate-400 text-xs font-bold uppercase italic py-6">No transfer records</p>
                 )}
               </div>
-            </DataCard>
+            </DnaCard>
           </div>
         </TabsContent>
 
         <TabsContent value="penerimaan" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Total Penerimaan" value={String(inbounds?.length || 0)} subValue="All Time" icon={<LogIn />} />
-            <StatCard label="Completed" value={String(inbounds?.filter((g: any) => g.status === 'COMPLETED').length || 0)} subValue="Verified" icon={<CheckCircle2 />} />
-            <StatCard label="Pending" value={String(inbounds?.filter((g: any) => g.status !== 'COMPLETED').length || 0)} subValue="Awaiting" icon={<Clock />} />
-            <StatCard label="Suppliers" value={String(new Set(inbounds?.map((g: any) => g.supplier).filter(Boolean)).size || 0)} subValue="Active Vendors" icon={<Truck />} />
+            <DnaStatCard label="Total Penerimaan" value={String(inbounds?.length || 0)} subValue="All Time" icon={<LogIn />} />
+            <DnaStatCard label="Completed" value={String(inbounds?.filter((g: any) => g.status === 'COMPLETED').length || 0)} subValue="Verified" icon={<CheckCircle2 />} />
+            <DnaStatCard label="Pending" value={String(inbounds?.filter((g: any) => g.status !== 'COMPLETED').length || 0)} subValue="Awaiting" icon={<Clock />} />
+            <DnaStatCard label="Suppliers" value={String(new Set(inbounds?.map((g: any) => g.supplier).filter(Boolean)).size || 0)} subValue="Active Vendors" icon={<Truck />} />
           </div>
 
-          <TableWrapper>
+          <DnaDataTable>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -213,18 +210,18 @@ export default function GudangPage() {
                 </tbody>
               </table>
             </div>
-          </TableWrapper>
+          </DnaDataTable>
         </TabsContent>
 
         <TabsContent value="pengeluaran" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Total Release" value={String(releases?.length || 0)} subValue="All Requests" icon={<ArrowRightFromLine />} />
-            <StatCard label="Completed" value={String(releases?.filter((r: any) => r.status === 'COMPLETED').length || 0)} subValue="Fulfilled" icon={<CheckCircle2 />} />
-            <StatCard label="In Progress" value={String(releases?.filter((r: any) => r.status === 'PROCESSING').length || 0)} subValue="Active" icon={<RefreshCw />} />
-            <StatCard label="Pending" value={String(releases?.filter((r: any) => r.status === 'PENDING').length || 0)} subValue="Awaiting" icon={<Clock />} />
+            <DnaStatCard label="Total Release" value={String(releases?.length || 0)} subValue="All Requests" icon={<ArrowRightFromLine />} />
+            <DnaStatCard label="Completed" value={String(releases?.filter((r: any) => r.status === 'COMPLETED').length || 0)} subValue="Fulfilled" icon={<CheckCircle2 />} />
+            <DnaStatCard label="In Progress" value={String(releases?.filter((r: any) => r.status === 'PROCESSING').length || 0)} subValue="Active" icon={<RefreshCw />} />
+            <DnaStatCard label="Pending" value={String(releases?.filter((r: any) => r.status === 'PENDING').length || 0)} subValue="Awaiting" icon={<Clock />} />
           </div>
 
-          <TableWrapper>
+          <DnaDataTable>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -263,18 +260,18 @@ export default function GudangPage() {
                 </tbody>
               </table>
             </div>
-          </TableWrapper>
+          </DnaDataTable>
         </TabsContent>
 
         <TabsContent value="transfer" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Total Transfer" value={String(transfers?.length || 0)} subValue="All Orders" icon={<ArrowRightLeft />} />
-            <StatCard label="Completed" value={String(transfers?.filter((t: any) => t.status === 'COMPLETED').length || 0)} subValue="Synced" icon={<CheckCircle2 />} />
-            <StatCard label="Pending" value={String(transfers?.filter((t: any) => t.status === 'PENDING').length || 0)} subValue="Awaiting Exec" icon={<Clock />} />
-            <StatCard label="Items in Transit" value={String(transfers?.reduce((s: number, t: any) => s + (t.items?.length || 0), 0) || 0)} subValue="Total SKU" icon={<Boxes />} />
+            <DnaStatCard label="Total Transfer" value={String(transfers?.length || 0)} subValue="All Orders" icon={<ArrowRightLeft />} />
+            <DnaStatCard label="Completed" value={String(transfers?.filter((t: any) => t.status === 'COMPLETED').length || 0)} subValue="Synced" icon={<CheckCircle2 />} />
+            <DnaStatCard label="Pending" value={String(transfers?.filter((t: any) => t.status === 'PENDING').length || 0)} subValue="Awaiting Exec" icon={<Clock />} />
+            <DnaStatCard label="Items in Transit" value={String(transfers?.reduce((s: number, t: any) => s + (t.items?.length || 0), 0) || 0)} subValue="Total SKU" icon={<Boxes />} />
           </div>
 
-          <TableWrapper>
+          <DnaDataTable>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -314,18 +311,18 @@ export default function GudangPage() {
                 </tbody>
               </table>
             </div>
-          </TableWrapper>
+          </DnaDataTable>
         </TabsContent>
 
         <TabsContent value="mutasi" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Total Mutasi" value={String(mutations?.length || 0)} subValue="All Records" icon={<MoveHorizontal />} />
-            <StatCard label="Completed" value={String(mutations?.filter((m: any) => m.status === 'COMPLETED').length || 0)} subValue="Synced" icon={<CheckCircle2 />} />
-            <StatCard label="Pending" value={String(mutations?.filter((m: any) => m.status === 'PENDING').length || 0)} subValue="In Progress" icon={<Clock />} />
-            <StatCard label="SKU Affected" value={String(mutations?.reduce((s: number, m: any) => s + (m.items?.length || 0), 0) || 0)} subValue="Total Items" icon={<Boxes />} />
+            <DnaStatCard label="Total Mutasi" value={String(mutations?.length || 0)} subValue="All Records" icon={<MoveHorizontal />} />
+            <DnaStatCard label="Completed" value={String(mutations?.filter((m: any) => m.status === 'COMPLETED').length || 0)} subValue="Synced" icon={<CheckCircle2 />} />
+            <DnaStatCard label="Pending" value={String(mutations?.filter((m: any) => m.status === 'PENDING').length || 0)} subValue="In Progress" icon={<Clock />} />
+            <DnaStatCard label="SKU Affected" value={String(mutations?.reduce((s: number, m: any) => s + (m.items?.length || 0), 0) || 0)} subValue="Total Items" icon={<Boxes />} />
           </div>
 
-          <TableWrapper>
+          <DnaDataTable>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -364,19 +361,19 @@ export default function GudangPage() {
                 </tbody>
               </table>
             </div>
-          </TableWrapper>
+          </DnaDataTable>
         </TabsContent>
 
         <TabsContent value="requisition" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex justify-end">
             <a href="/scm/warehouse/requisition">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-6 h-11 font-black uppercase text-[11px] tracking-tighter shadow-xl shadow-blue-500/20">
-                <Plus className="w-4 h-4 mr-2" /> Tambah Baru
-              </Button>
+              <DnaButton variant="primary" icon={<Plus className="w-4 h-4" />} className="rounded-xl px-6 font-black uppercase text-[11px] tracking-tighter shadow-xl shadow-blue-500/20">
+                Tambah Baru
+              </DnaButton>
             </a>
           </div>
 
-          <TableWrapper>
+          <DnaDataTable>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -430,7 +427,7 @@ export default function GudangPage() {
                 </tbody>
               </table>
             </div>
-          </TableWrapper>
+          </DnaDataTable>
         </TabsContent>
       </Tabs>
     </DashboardShell>

@@ -17,18 +17,27 @@ import {
   XCircle,
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, StatCard, DataCard, DnaBadge, DnaButton, DnaInput, SectionLabel } from "@/components/dna";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
+import { 
+  TableWrapper, 
+  StatCard, 
+  DataCard, 
+  DnaBadge, 
+  DnaButton, 
+  DnaInput, 
+  SectionLabel,
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger,
+  Textarea,
+  Label,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  DialogFooter
+} from "@/components/dna";
 import { toast } from "sonner";
 
 const JENIS_DOKUMEN = ["Desain Label", "Desain Kemasan", "Formula", "BPOM", "Halal"] as const;

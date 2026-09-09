@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
-const STORAGE_KEY = 'erp_omnicrm_state_v1';
+export const OMNI_CRM_STORAGE_KEY = 'erp_omnicrm_real_v1';
 
 interface OmniCrmResponse {
   state: unknown | null;
@@ -41,12 +41,20 @@ export function useOmniCrmStateSync() {
 
   const { mutate: saveState } = useMutation({
     mutationFn: async (state: unknown) => {
-      const res = await api.put<OmniCrmResponse>('/marketing/omni-crm/state', { state });
+      const res = await api.put<OmniCrmResponse>('/marketing/omni-crm/state', {
+        state,
+        ...(lastSavedVersionRef.current !== null
+          ? { version: lastSavedVersionRef.current }
+          : {}),
+      });
       return res.data;
     },
     onSuccess: (data) => {
       lastSavedVersionRef.current = data.version;
       qc.setQueryData(['marketing', 'omni-crm', 'state'], data);
+    },
+    onError: () => {
+      void qc.invalidateQueries({ queryKey: ['marketing', 'omni-crm', 'state'] });
     },
   });
 
@@ -57,7 +65,7 @@ export function useOmniCrmStateSync() {
   // Hydration effect: on mount, sync backend ↔ localStorage once.
   useEffect(() => {
     if (isPending || !data) return;
-    const localRaw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    const localRaw = typeof window !== 'undefined' ? localStorage.getItem(OMNI_CRM_STORAGE_KEY) : null;
 
     if (data.state === null && localRaw) {
       // Backend empty, localStorage has data → migrate up.
@@ -68,11 +76,13 @@ export function useOmniCrmStateSync() {
       }
     } else if (data.state && !localRaw) {
       // Backend has data, localStorage empty → hydrate.
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.state));
+      localStorage.setItem(OMNI_CRM_STORAGE_KEY, JSON.stringify(data.state));
+      window.dispatchEvent(new CustomEvent('omni-crm-state-hydrated', { detail: data.state }));
       lastSavedVersionRef.current = data.version;
     } else if (data.state && localRaw) {
       // Both exist → trust backend (last writer).
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.state));
+      localStorage.setItem(OMNI_CRM_STORAGE_KEY, JSON.stringify(data.state));
+      window.dispatchEvent(new CustomEvent('omni-crm-state-hydrated', { detail: data.state }));
       lastSavedVersionRef.current = data.version;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,13 +94,9 @@ export function useOmniCrmStateSync() {
 
     let timer: ReturnType<typeof setTimeout> | null = null;
     const scheduleSave = (raw: string) => {
-      // eslint-disable-next-line no-console
-      console.log('[omni-sync] scheduleSave', raw?.slice(0, 80));
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         try {
-          // eslint-disable-next-line no-console
-          console.log('[omni-sync] firing saveState for', raw?.slice(0, 80));
           saveStateRef.current(JSON.parse(raw));
         } catch {
           // ignore
@@ -103,17 +109,15 @@ export function useOmniCrmStateSync() {
     //    from OmniCrmClient never reach the backend.
     const originalSetItem = window.localStorage.setItem.bind(window.localStorage);
     window.localStorage.setItem = function patched(key: string, value: string) {
-      // eslint-disable-next-line no-console
-      console.log('[omni-sync] setItem', key, value?.slice(0, 80));
       originalSetItem(key, value);
-      if (key === STORAGE_KEY && value) {
+      if (key === OMNI_CRM_STORAGE_KEY && value) {
         scheduleSave(value);
       }
     };
 
     // 2. Cross-tab: storage event listener (still works across windows).
     const handler = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY || !e.newValue) return;
+      if (e.key !== OMNI_CRM_STORAGE_KEY || !e.newValue) return;
       scheduleSave(e.newValue);
     };
     window.addEventListener('storage', handler);

@@ -24,18 +24,18 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
-import { DataCard } from "@/components/dna/DataCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
+  DnaBadge,
+  StatCard,
+  DataCard,
+  DnaButton,
+  DnaInput,
+  TableWrapper,
   Dialog,
   DialogContent,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+  Label,
+} from "@/components/dna";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
 interface StabilityStudy {
   id: string;

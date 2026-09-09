@@ -11,18 +11,8 @@ interface DashboardCardProps {
 }
 
 /**
- * DashboardCard — Macro card container for dashboard sections
- *
- * @scope DASHBOARD ONLY
- * @see /old_erp/ACUAN_DASHBOARD/VISUAL_DNA.md (Dashboard DNA contract)
- *
- * @deprecated — for dashboard use, migrate to `DnaStatCard` from
- *   `@/components/dna/DnaStatCard.tsx` for KPI cards, or use CSS module / inline
- *   styles matching the Aureon Matrix design language. DashboardCard has
- *   Dashboard-DNA-specific styling (24px rounded, CSS var borders) and will
- *   be removed in Sprint 9.
- *
  * MATCHES: reference `.macro-card` from erp-dreamlab-dashboard-fix.netlify.app
+ * The standard card container for ALL dashboard sections.
  * - border-radius: 24px
  * - padding: 2rem (p-8)
  * - hover lift: -4px + expanded shadow

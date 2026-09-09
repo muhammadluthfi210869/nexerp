@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, TableWrapper, DnaBadge } from "@/components/dna";
+import { DnaPageContainer, DnaPageHeader } from "@/components/dna";
+import { TableWrapper, DnaBadge } from "@/components/dna";
+import { DnaStatCard } from "@/components/dna";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -77,9 +78,9 @@ function PRTab() {
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<FileText className="text-blue-600" />} label="Total Permintaan" value={total} />
-        <StatCard icon={<Clock className="text-amber-600" />} label="Menunggu Approve" value={pending} />
-        <StatCard icon={<AlertTriangle className="text-rose-600" />} label="Mendesak" value={urgent} />
+        <DnaStatCard label="Total Permintaan" value={total} icon={<FileText className="text-blue-600" />} variant="blue" />
+        <DnaStatCard label="Menunggu Approve" value={pending} icon={<Clock className="text-amber-600" />} variant="amber" />
+        <DnaStatCard label="Mendesak" value={urgent} icon={<AlertTriangle className="text-rose-600" />} variant="critical" />
       </div>
       <TableWrapper>
         <Table>
@@ -161,9 +162,9 @@ function POTab() {
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<ShoppingCart className="text-blue-600" />} label="Total PO" value={totalPo} />
-        <StatCard icon={<Truck className="text-emerald-600" />} label="PO Aktif" value={activePo} />
-        <StatCard icon={<Wallet className="text-amber-600" />} label="Total Nilai" value={`Rp ${(totalValue / 1000000).toFixed(1)}jt`} />
+        <DnaStatCard label="Total PO" value={totalPo} icon={<ShoppingCart className="text-blue-600" />} variant="blue" />
+        <DnaStatCard label="PO Aktif" value={activePo} icon={<Truck className="text-emerald-600" />} variant="emerald" />
+        <DnaStatCard label="Total Nilai" value={`Rp ${(totalValue / 1000000).toFixed(1)}jt`} icon={<Wallet className="text-amber-600" />} variant="amber" />
       </div>
       <TableWrapper>
         <Table>
@@ -249,9 +250,9 @@ function ReceivingTab() {
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<Truck className="text-blue-600" />} label="Kedatangan Hari Ini" value={arrivalsToday} />
-        <StatCard icon={<AlertCircle className="text-amber-600" />} label="Menunggu QC" value={awaitingQc} />
-        <StatCard icon={<PackageCheck className="text-emerald-600" />} label="Terverifikasi" value={verified} />
+        <DnaStatCard label="Kedatangan Hari Ini" value={arrivalsToday} icon={<Truck className="text-blue-600" />} variant="blue" />
+        <DnaStatCard label="Menunggu QC" value={awaitingQc} icon={<AlertCircle className="text-amber-600" />} variant="amber" />
+        <DnaStatCard label="Terverifikasi" value={verified} icon={<PackageCheck className="text-emerald-600" />} variant="emerald" />
       </div>
       <TableWrapper>
         <Table>
@@ -328,9 +329,9 @@ function ReturnsTab() {
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<RotateCcw className="text-rose-600" />} label="Total Retur" value={totalReturns} />
-        <StatCard icon={<Clock className="text-amber-600" />} label="Menunggu" value={pendingReturns} />
-        <StatCard icon={<CheckCircle2 className="text-emerald-600" />} label="Selesai" value={completedReturns} />
+        <DnaStatCard label="Total Retur" value={totalReturns} icon={<RotateCcw className="text-rose-600" />} variant="critical" />
+        <DnaStatCard label="Menunggu" value={pendingReturns} icon={<Clock className="text-amber-600" />} variant="amber" />
+        <DnaStatCard label="Selesai" value={completedReturns} icon={<CheckCircle2 className="text-emerald-600" />} variant="emerald" />
       </div>
       <TableWrapper>
         <Table>
@@ -417,9 +418,9 @@ function PaymentsTab() {
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<CreditCard className="text-rose-600" />} label="Belum Dibayar" value={unpaid} />
-        <StatCard icon={<CheckCircle2 className="text-emerald-600" />} label="Lunas" value={paid} />
-        <StatCard icon={<Wallet className="text-amber-600" />} label="Outstanding" value={`Rp ${totalOutstanding.toLocaleString()}`} />
+        <DnaStatCard label="Belum Dibayar" value={unpaid} icon={<CreditCard className="text-rose-600" />} variant="critical" />
+        <DnaStatCard label="Lunas" value={paid} icon={<CheckCircle2 className="text-emerald-600" />} variant="emerald" />
+        <DnaStatCard label="Outstanding" value={`Rp ${totalOutstanding.toLocaleString()}`} icon={<Wallet className="text-amber-600" />} variant="amber" />
       </div>
       <TableWrapper>
         <Table>
@@ -502,9 +503,9 @@ function DPTab() {
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<DollarSign className="text-blue-600" />} label="Total DP" value={`Rp ${(totalDp / 1000000).toFixed(1)}jt`} />
-        <StatCard icon={<Clock className="text-amber-600" />} label="Belum Lunas" value={unpaidDp} />
-        <StatCard icon={<CheckCircle2 className="text-emerald-600" />} label="Lunas" value={paidDp} />
+        <DnaStatCard label="Total DP" value={`Rp ${(totalDp / 1000000).toFixed(1)}jt`} icon={<DollarSign className="text-blue-600" />} variant="blue" />
+        <DnaStatCard label="Belum Lunas" value={unpaidDp} icon={<Clock className="text-amber-600" />} variant="amber" />
+        <DnaStatCard label="Lunas" value={paidDp} icon={<CheckCircle2 className="text-emerald-600" />} variant="emerald" />
       </div>
       <TableWrapper>
         <Table>
@@ -570,11 +571,12 @@ const tabs = [
 
 export default function PembelianPage() {
   return (
-    <DashboardShell
-      title="Pembelian"
-      titleAccent="SCM"
-      subtitle="Manajemen Pembelian — Purchase Requests, Orders, Receiving, Returns & Payments"
-    >
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="PEMBELIAN"
+        subtitle="Manajemen Pembelian — Purchase Requests, Orders, Receiving, Returns & Payments"
+        badge={<span className="text-[11px] font-black uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">SCM</span>}
+      />
       <Tabs defaultValue="pr">
         <TabsList className="mb-6">
           {tabs.map((tab) => (
@@ -590,6 +592,6 @@ export default function PembelianPage() {
           </TabsContent>
         ))}
       </Tabs>
-    </DashboardShell>
+    </DnaPageContainer>
   );
 }

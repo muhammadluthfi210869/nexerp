@@ -21,16 +21,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { Label } from "@/components/ui/label";
-import { DataCard } from "@/components/dna/DataCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaInput } from "@/components/dna/DnaInput";
 import {
+  Label,
   Dialog,
   DialogContent,
-} from "@/components/ui/dialog";
+  DataCard,
+  DnaButton,
+  DnaInput,
+  DnaBadge,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 import DefectDetailModal from "@/components/qc/DefectDetailModal";
 import QcSignatureModal, { QcParameter } from "@/components/qc/QcSignatureModal";
 import QcNumpad from "@/components/qc/QcNumpad";

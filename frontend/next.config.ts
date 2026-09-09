@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
       "recharts",
     ],
   },
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl}/v1/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

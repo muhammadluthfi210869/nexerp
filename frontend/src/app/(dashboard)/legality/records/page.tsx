@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { 
   FileBadge, 
@@ -20,17 +19,23 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import {
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { 
+  TableWrapper, 
+  DnaBadge, 
+  DnaButton,
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton } from "@/components/dna";
+  Textarea,
+  Label
+} from "@/components/dna";
 
 export default function LegalityRecords() {
   const queryClient = useQueryClient();

@@ -283,7 +283,7 @@ export default function PurchaseApprovalPage() {
                         setPoShippingCost(Number(po.shippingCost || 0));
                         // Item 71: default source = STOCK if currentStock >= qty, else PO
                         const sources: Record<string, "PO" | "STOCK"> = {};
-                        (po.items || []).forEach((it: any) => {
+                        (po.items || []).forEach((it: any, idx: number) => {
                           sources[it.id || it.materialId || idx] =
                             Number(it.currentStock || 0) >= Number(it.quantity || it.qty || 0) ? "STOCK" : "PO";
                         });

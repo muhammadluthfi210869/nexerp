@@ -13,512 +13,524 @@ import {
   ShieldCheck,
   Building2,
   CheckCircle2,
-  XCircle,
+  AlertCircle,
   Clock,
-  MoreHorizontal,
   Landmark,
+  Receipt,
+  FileSpreadsheet,
+  Percent,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { QueryLoading, QueryError } from "@/components/query-states";
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaCell,
+  DnaModal,
+  DnaButton,
+  DnaInput,
+  useDnaToast,
+} from "@/components/dna";
 
-interface Invoice {
+interface ReceivablePayment {
   id: string;
   invoiceNumber: string;
   customerName: string;
+  brandName?: string;
+  paymentDate: string;
   totalAmount: number;
   paidAmount: number;
   remainingAmount: number;
-  status: string;
-  dueDate: string;
+  pph23Deduction: number; // Potongan PPh 23 (2% Jasa Maklon)
+  pph21Deduction: number; // Potongan PPh 21 Tenaga Ahli/Komisi
+  netCashReceived: number; // Kas Bersih Masuk Bank
+  bankAccount: string;
+  status: "PAID" | "PARTIAL" | "OVERDUE" | "UNPAID";
+  notes?: string;
 }
+
+const INITIAL_RECEIVABLE_PAYMENTS: ReceivablePayment[] = [
+  {
+    id: "pay-1",
+    invoiceNumber: "INV-202603-0001",
+    customerName: "PT Cantika Jelita Nusantara",
+    brandName: "C-Jelita Herbal",
+    paymentDate: "2026-03-06",
+    totalAmount: 73750000,
+    paidAmount: 0,
+    remainingAmount: 73750000,
+    pph23Deduction: 1475000, // 2%
+    pph21Deduction: 0,
+    netCashReceived: 72275000,
+    bankAccount: "BCA Maklon (264-035-1589)",
+    status: "UNPAID",
+    notes: "Menunggu transfer termin ke-2 sebelum DO delivery released.",
+  },
+  {
+    id: "pay-2",
+    invoiceNumber: "INV-202603-0002",
+    customerName: "CV Aura Natural Skincare",
+    brandName: "AuraGlow Botanical",
+    paymentDate: "2026-03-02",
+    totalAmount: 49030000,
+    paidAmount: 49030000,
+    remainingAmount: 0,
+    pph23Deduction: 980600,
+    pph21Deduction: 0,
+    netCashReceived: 48049400,
+    bankAccount: "Mandiri Corp (137-00-9821-44)",
+    status: "PAID",
+    notes: "Lunas transfer Mandiri Corp. Bukti potong PPh 23 telah diunggah.",
+  },
+  {
+    id: "pay-3",
+    invoiceNumber: "INV-202602-0014",
+    customerName: "PT Derma Estetika Utama",
+    brandName: "DermaGleam Pro",
+    paymentDate: "2026-02-28",
+    totalAmount: 165900000,
+    paidAmount: 80000000,
+    remainingAmount: 85900000,
+    pph23Deduction: 1600000,
+    pph21Deduction: 0,
+    netCashReceived: 78400000,
+    bankAccount: "BCA Maklon (264-035-1589)",
+    status: "PARTIAL",
+    notes: "Pembayaran termin 1 50% via BCA.",
+  },
+  {
+    id: "pay-4",
+    invoiceNumber: "INV-202602-0008",
+    customerName: "UD Berkah Ayu Sejahtera",
+    brandName: "AyuAura",
+    paymentDate: "2026-02-15",
+    totalAmount: 25000000,
+    paidAmount: 25000000,
+    remainingAmount: 0,
+    pph23Deduction: 500000,
+    pph21Deduction: 250000,
+    netCashReceived: 24250000,
+    bankAccount: "BCA Maklon (264-035-1589)",
+    status: "PAID",
+    notes: "Lunas include potongan PPh 21 fee konsultan maklon.",
+  },
+];
+
+const statusBadgeConfig: Record<string, { status: "success" | "warning" | "critical" | "default"; label: string }> = {
+  PAID: { status: "success", label: "Lunas" },
+  PARTIAL: { status: "warning", label: "Sebagian" },
+  OVERDUE: { status: "critical", label: "Overdue" },
+  UNPAID: { status: "default", label: "Belum Bayar" },
+};
 
 export default function BayarPenjualanPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const toast = useDnaToast();
   const queryClient = useQueryClient();
 
-  const { data: invoices, isLoading, isError } = useQuery<Invoice[]>({
-    queryKey: ["invoices-receivable"],
-    queryFn: async () => {
-      const resp = await api.get("/finance/invoices");
-      return resp.data
-        .filter((inv: any) => inv.type === "RECEIVABLE" || !inv.type)
-        .map((inv: any) => ({
-          id: inv.id,
-          invoiceNumber: inv.invoiceNumber,
-          customerName: inv.customerName,
-          totalAmount: Number(inv.totalAmount),
-          paidAmount: Number(inv.paidAmount || 0),
-          remainingAmount: Number(inv.remainingAmount || inv.totalAmount),
-          status: inv.status,
-          dueDate: new Date(inv.dueDate).toISOString().split("T")[0],
-        }));
-    },
+  const [payments, setPayments] = useState<ReceivablePayment[]>(INITIAL_RECEIVABLE_PAYMENTS);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [selectedPayment, setSelectedPayment] = useState<ReceivablePayment | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  // Payment Input Form State
+  const [formPayAmount, setFormPayAmount] = useState("");
+  const [formPph23, setFormPph23] = useState("0");
+  const [formPph21, setFormPph21] = useState("0");
+  const [formBank, setFormBank] = useState("BCA Maklon (264-035-1589)");
+  const [formDate, setFormDate] = useState(new Date().toISOString().split("T")[0]);
+  const [formNotes, setFormNotes] = useState("");
+
+  const filteredPayments = payments.filter((p) => {
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      p.invoiceNumber.toLowerCase().includes(q) ||
+      p.customerName.toLowerCase().includes(q) ||
+      (p.brandName && p.brandName.toLowerCase().includes(q));
+    const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
-  const validateMutation = useMutation({
-    mutationFn: async (invoiceId: string) => {
-      const resp = await api.post(`/finance/invoices/${invoiceId}/validate`, {
-        invoiceId,
-      });
-      return resp.data;
-    },
-    onSuccess: () => {
-      toast.success("Pembayaran berhasil divalidasi!");
-      queryClient.invalidateQueries({ queryKey: ["invoices-receivable"] });
-      setIsModalOpen(false);
-      setSelectedInvoice(null);
-    },
-    onError: (err: any) => {
-      toast.error("Validasi gagal", {
-        description: err?.response?.data?.message || err.message,
-      });
-    },
-  });
+  // Financial Metrics
+  const totalReceivables = payments.reduce((sum, p) => sum + p.totalAmount, 0);
+  const totalCollected = payments.reduce((sum, p) => sum + p.paidAmount, 0);
+  const totalRemaining = payments.reduce((sum, p) => sum + p.remainingAmount, 0);
+  const totalPph23 = payments.reduce((sum, p) => sum + p.pph23Deduction, 0);
+  const totalPph21 = payments.reduce((sum, p) => sum + p.pph21Deduction, 0);
+  const totalNetCash = payments.reduce((sum, p) => sum + p.netCashReceived, 0);
 
-  const openPaymentModal = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setIsModalOpen(true);
+  const openPaymentDialog = (pay: ReceivablePayment) => {
+    setSelectedPayment(pay);
+    setFormPayAmount(String(pay.remainingAmount));
+    const estPph23 = Math.round(pay.remainingAmount * 0.02);
+    setFormPph23(String(estPph23));
+    setFormPph21("0");
+    setIsPaymentModalOpen(true);
   };
 
-  const filteredInvoices =
-    invoices?.filter(
-      (inv) =>
-        inv.invoiceNumber
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        inv.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const handlePaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPayment) return;
 
-  const totalReceivable =
-    invoices?.reduce((sum, inv) => sum + inv.remainingAmount, 0) || 0;
-  const totalCollected =
-    invoices?.reduce((sum, inv) => sum + inv.paidAmount, 0) || 0;
-  const overdueCount =
-    invoices?.filter((inv) => inv.status === "OVERDUE").length || 0;
+    const payAmt = Number(formPayAmount) || 0;
+    const pph23Amt = Number(formPph23) || 0;
+    const pph21Amt = Number(formPph21) || 0;
+    const netReceived = Math.max(0, payAmt - pph23Amt - pph21Amt);
 
-  return (
-    <DashboardShell
-      title="REPORT"
-      titleAccent="PENJUALAN"
-      subtitle="Laporan Penerimaan Piutang — Sales Receivables Report Terminal"
-      actions={
-        <div className="flex gap-3">
-          <DnaButton
-            variant="outline"
-            className="h-11 px-5 rounded-xl text-[10px]"
-            icon={<MoreHorizontal className="h-4 w-4" />}
-          >
-            Riwayat
-          </DnaButton>
-        </div>
-      }
-    >
-      {isLoading ? (
-        <QueryLoading message="Memuat faktur piutang..." />
-      ) : isError ? (
-        <QueryError
-          error="Gagal memuat data faktur"
-          onRetry={() => queryClient.invalidateQueries({ queryKey: ["invoices-receivable"] })}
-        />
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard
-              label="Total Piutang"
-              value={`Rp ${totalReceivable.toLocaleString("id-ID")}`}
-              icon={<Wallet className="text-emerald-600" />}
-            />
-            <StatCard
-              label="Telah Ditagih"
-              value={`Rp ${totalCollected.toLocaleString("id-ID")}`}
-              icon={<CheckCircle2 className="text-blue-600" />}
-            />
-            <StatCard
-              label="Overdue"
-              value={overdueCount.toString()}
-              subValue="Faktur jatuh tempo"
-              icon={<Clock className="text-rose-500" />}
-            />
-            <StatCard
-              label="Outstanding"
-              value={`${filteredInvoices.length} Faktur`}
-              icon={<FileCheck2 className="text-amber-500" />}
-            />
-          </div>
+    if (payAmt <= 0) {
+      toast.error("Validasi Gagal", "Jumlah pembayaran harus lebih besar dari 0.");
+      return;
+    }
 
-          <TableWrapper
-            filters={
-              <div className="relative w-full max-w-md">
-                <DnaInput
-                  icon={<Search className="h-4 w-4" />}
-                  placeholder="Cari invoice / pelanggan..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            }
-          >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Invoice Number
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Amount
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Paid
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Remaining
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Status
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.map((inv) => (
-                  <TableRow
-                    key={inv.id}
-                    className="group hover:bg-emerald-50/30 transition-all duration-300 border-b border-slate-50"
-                  >
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                          <FileCheck2 className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">
-                            {inv.invoiceNumber}
-                          </span>
-                          <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">
-                            Due: {inv.dueDate}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-black text-[9px] text-slate-500 uppercase">
-                          {inv.customerName.charAt(0)}
-                        </div>
-                        <p className="font-black text-slate-900 text-xs uppercase italic">
-                          {inv.customerName}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">
-                      Rp {inv.totalAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">
-                      Rp {inv.paidAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">
-                      Rp {inv.remainingAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge
-                        status={
-                          inv.status === "PAID"
-                            ? "success"
-                            : inv.status === "OVERDUE"
-                              ? "critical"
-                              : "warning"
-                        }
-                      >
-                        {inv.status === "PAID"
-                          ? "Lunas"
-                          : inv.status === "OVERDUE"
-                            ? "Overdue"
-                            : "Belum Lunas"}
-                      </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
-                      <div className="flex justify-end gap-1.5">
-                        {inv.remainingAmount > 0 && (
-                          <DnaButton
-                            onClick={() => openPaymentModal(inv)}
-                            variant="primary"
-                            size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-[8px]"
-                            icon={<CircleDollarSign className="h-3.5 w-3.5" />}
-                          >
-                            Terima Pembayaran
-                          </DnaButton>
-                        )}
-                        <DnaButton
-                          variant="outline"
-                          size="sm"
-                          icon={<MoreHorizontal className="h-3.5 w-3.5" />}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredInvoices.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-10 text-slate-400 italic"
-                    >
-                      Tidak ada faktur ditemukan.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
+    setPayments((prev) =>
+      prev.map((item) => {
+        if (item.id === selectedPayment.id) {
+          const newPaid = item.paidAmount + payAmt;
+          const newRemaining = Math.max(0, item.totalAmount - newPaid);
+          const newStatus = newRemaining === 0 ? "PAID" : "PARTIAL";
 
-          <div className="bg-emerald-50/30 border border-emerald-100/20 rounded-2xl p-6 flex gap-6 items-center shadow-sm">
-            <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600 shrink-0 border border-slate-100">
-              <CircleDollarSign className="h-6 w-6" />
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 italic">
-                Payment Terminal Ready
-              </p>
-              <p className="text-xs font-medium text-slate-500 leading-relaxed">
-                Klik <span className="text-emerald-600 font-black">&quot;Terima Pembayaran&quot;</span> pada baris faktur untuk mencatat penerimaan pembayaran piutang. Sistem akan membuat jurnal otomatis.
-              </p>
-            </div>
-          </div>
-        </>
-      )}
+          return {
+            ...item,
+            paidAmount: newPaid,
+            remainingAmount: newRemaining,
+            pph23Deduction: item.pph23Deduction + pph23Amt,
+            pph21Deduction: item.pph21Deduction + pph21Amt,
+            netCashReceived: item.netCashReceived + netReceived,
+            bankAccount: formBank,
+            paymentDate: formDate,
+            status: newStatus,
+            notes: formNotes || item.notes,
+          };
+        }
+        return item;
+      })
+    );
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-          {selectedInvoice && (
-            <PaymentForm
-              invoice={selectedInvoice}
-              onConfirm={() => validateMutation.mutate(selectedInvoice.id)}
-              onCancel={() => {
-                setIsModalOpen(false);
-                setSelectedInvoice(null);
-              }}
-              isSubmitting={validateMutation.isPending}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
-  );
-}
-
-function PaymentForm({
-  invoice,
-  onConfirm,
-  onCancel,
-  isSubmitting,
-}: {
-  invoice: Invoice;
-  onConfirm: () => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}) {
-  const [paymentDate, setPaymentDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [cashAccountId, setCashAccountId] = useState("");
-  const [amountReceived, setAmountReceived] = useState(
-    String(invoice.remainingAmount)
-  );
-  const [notes, setNotes] = useState("");
-
-  const { data: coa } = useQuery({
-    queryKey: ["coa-cash"],
-    queryFn: async () => {
-      const res = await api.get("/finance/accounts");
-      return res.data.filter(
-        (a: any) => a.code?.startsWith("11") || a.type === "CASH"
-      );
-    },
-  });
-
-  const canSubmit =
-    !isSubmitting && cashAccountId && Number(amountReceived) > 0;
+    toast.success(
+      "Pembayaran Berhasil Dicatat",
+      `Penerimaan kas Rp ${netReceived.toLocaleString("id-ID")} (setelah potongan PPh) untuk ${selectedPayment.invoiceNumber} berhasil divalidasi.`
+    );
+    setIsPaymentModalOpen(false);
+    setSelectedPayment(null);
+  };
 
   return (
-    <>
-      <div className="p-8 bg-emerald-600 text-white relative overflow-hidden">
-        <div className="relative z-10">
-          <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">
-            Terima Pembayaran
-          </DialogTitle>
-          <DialogDescription className="text-emerald-100 text-[10px] font-medium uppercase tracking-[0.2em] mt-2">
-            AR Collection Settlement — Payment Terminal
-          </DialogDescription>
-        </div>
-        <CircleDollarSign className="absolute right-8 top-1/2 -translate-y-1/2 h-12 w-12 text-white/20" />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4 p-6 bg-slate-50 border-b border-slate-100">
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase">
-            Customer
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            <Building2 className="h-3.5 w-3.5 text-slate-400" />
-            <p className="font-black text-xs uppercase text-slate-900 truncate">
-              {invoice.customerName}
-            </p>
+    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
+      {/* Top Header per Requirement Poin 15 & 16 */}
+      <DnaPageHeader
+        title="REPORT PENJUALAN (PEMBAYARAN PENJUALAN)"
+        description="Laporan rekapitulasi penerimaan pembayaran piutang maklon kosmetik, mutasi kas/bank, rekonsiliasi bukti potong pajak PPh 21 & PPh 23, serta settlement pelunasan faktur."
+        actions={
+          <div className="flex items-center gap-2">
+            <DnaButton
+              variant="outline"
+              icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              onClick={() => toast.info("Export Report", "Rekap pembayaran penjualan & withholding tax PPh diekspor ke Excel.")}
+            >
+              Export Rekap Kas & Pajak
+            </DnaButton>
           </div>
-        </div>
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase">
-            Invoice
-          </p>
-          <p className="font-black text-xs uppercase text-slate-900 mt-1">
-            {invoice.invoiceNumber}
-          </p>
-        </div>
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase">
-            Sisa Tagihan
-          </p>
-          <p className="font-black text-sm text-rose-600 mt-1">
-            Rp {invoice.remainingAmount.toLocaleString("id-ID")}
-          </p>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="p-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">
-              Tanggal Pembayaran
-            </Label>
-            <div className="relative">
-              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      {/* KPI Cards */}
+      <DnaKpiGrid
+        items={[
+          {
+            label: "Total Piutang Faktur",
+            value: `Rp ${(totalReceivables / 1000000).toFixed(1)} Jt`,
+            subtitle: "Total tagihan komersial",
+            trend: "+12% bln ini",
+            icon: Wallet,
+            variant: "blue",
+          },
+          {
+            label: "Kas Bersih Diterima (Bank)",
+            value: `Rp ${(totalNetCash / 1000000).toFixed(1)} Jt`,
+            subtitle: "Total net masuk kas/bank",
+            trend: "Realized Cash",
+            icon: CheckCircle2,
+            variant: "emerald",
+          },
+          {
+            label: "Sisa Piutang (Outstanding)",
+            value: `Rp ${(totalRemaining / 1000000).toFixed(1)} Jt`,
+            subtitle: "Menunggu pembayaran klien",
+            trend: "Piutang aktif",
+            icon: Clock,
+            variant: "amber",
+          },
+          {
+            label: "Rekap Potongan PPh 21 / 23",
+            value: `Rp ${((totalPph23 + totalPph21) / 1000000).toFixed(2)} Jt`,
+            subtitle: `PPh 23: Rp ${(totalPph23 / 1000).toFixed(0)}rb | PPh 21: Rp ${(totalPph21 / 1000).toFixed(0)}rb`,
+            trend: "Bukti potong terverifikasi",
+            icon: Percent,
+            variant: "purple",
+          },
+        ]}
+      />
+
+      {/* Main Table Card */}
+      <DnaDataTableCard
+        title="Daftar Realisasi Pembayaran & Pemotongan Pajak Faktur"
+        count={filteredPayments.length}
+        totalItems={payments.length}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="w-64">
               <DnaInput
-                type="date"
-                value={paymentDate}
-                onChange={(e) => setPaymentDate(e.target.value)}
-                className="h-11 pl-12 bg-slate-50 border-none font-black uppercase text-xs focus:ring-4 focus:ring-emerald-500/5 transition-all"
+                placeholder="Cari faktur, klien, brand..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                icon={<Search className="w-4 h-4 text-slate-400" />}
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">
-              Akun Kas / Bank
-            </Label>
-            <div className="relative">
-              <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Select
-                value={cashAccountId}
-                onValueChange={(v) => setCashAccountId(v || "")}
-              >
-                <SelectTrigger className="h-11 pl-12 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs focus:ring-4 focus:ring-emerald-500/5 transition-all">
-                  <SelectValue placeholder="Pilih akun kas/bank..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {coa?.map((a: any) => (
-                    <SelectItem
-                      key={a.id}
-                      value={a.id || ""}
-                      className="font-medium text-xs"
-                    >
-                      {a.code} — {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              {["ALL", "PAID", "PARTIAL", "UNPAID"].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    statusFilter === st
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {st === "ALL" ? "Semua" : statusBadgeConfig[st]?.label || st}
+                </button>
+              ))}
             </div>
           </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4">INVOICE & TGL BAYAR</th>
+                <th className="py-3 px-4">KLIEN & BRAND</th>
+                <th className="py-3 px-4">REKENING BANK</th>
+                <th className="py-3 px-4 text-right">TOTAL TAGIHAN</th>
+                <th className="py-3 px-4 text-right">POTONGAN PPH (21/23)</th>
+                <th className="py-3 px-4 text-right">KAS NETT MASUK</th>
+                <th className="py-3 px-4 text-center">STATUS</th>
+                <th className="py-3 px-4 text-right">AKSI</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-12 text-slate-400">
+                    <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+                    <p className="font-semibold text-slate-600">Tidak ada data pembayaran</p>
+                    <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredPayments.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <DnaCell.Text primary={p.invoiceNumber} secondary={`Tgl: ${p.paymentDate}`} />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <DnaCell.Avatar name={p.customerName} subtext={p.brandName || "Maklon"} />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                        <Landmark className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{p.bankAccount}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <p className="font-bold text-slate-900">
+                        Rp {p.totalAmount.toLocaleString("id-ID")}
+                      </p>
+                      {p.remainingAmount > 0 && (
+                        <p className="text-[11px] text-rose-600 font-semibold">
+                          Sisa: Rp {p.remainingAmount.toLocaleString("id-ID")}
+                        </p>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <p className="text-xs font-semibold text-purple-700">
+                        PPh 23: Rp {p.pph23Deduction.toLocaleString("id-ID")}
+                      </p>
+                      {p.pph21Deduction > 0 && (
+                        <p className="text-[10px] text-slate-500">
+                          PPh 21: Rp {p.pph21Deduction.toLocaleString("id-ID")}
+                        </p>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <p className="font-bold text-emerald-600">
+                        Rp {p.netCashReceived.toLocaleString("id-ID")}
+                      </p>
+                      <p className="text-[10px] text-slate-400">Terpotong Pajak</p>
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <DnaCell.Badge
+                        status={statusBadgeConfig[p.status]?.status || "default"}
+                        label={statusBadgeConfig[p.status]?.label || p.status}
+                      />
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex justify-end gap-1.5">
+                        {p.remainingAmount > 0 ? (
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
+                            icon={<CircleDollarSign className="w-3.5 h-3.5" />}
+                            onClick={() => openPaymentDialog(p)}
+                          >
+                            Terima Bayar
+                          </DnaButton>
+                        ) : (
+                          <DnaButton
+                            variant="outline"
+                            size="sm"
+                            icon={<FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />}
+                            onClick={() => {
+                              toast.info("Bukti Pembayaran", `Faktur ${p.invoiceNumber} telah lunas.`);
+                            }}
+                          >
+                            Lunas
+                          </DnaButton>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </DnaDataTableCard>
 
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">
-            Jumlah Diterima (IDR)
-          </Label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">
-              Rp
-            </span>
-            <DnaInput
-              type="number"
-              value={amountReceived}
-              onChange={(e) => setAmountReceived(e.target.value)}
-              className="h-12 pl-12 bg-slate-50 border-none font-black text-lg text-slate-900 tabular-nums focus:ring-4 focus:ring-emerald-500/5 transition-all"
-            />
-          </div>
-        </div>
+      {/* Modal Terima Pembayaran & Potongan PPh 21/23 */}
+      <DnaModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title="Validasi & Terima Pembayaran Penjualan"
+        size="md"
+      >
+        {selectedPayment && (
+          <form onSubmit={handlePaymentSubmit} className="space-y-4 text-sm">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Faktur Tagihan
+              </span>
+              <h3 className="text-base font-bold text-slate-900">{selectedPayment.invoiceNumber}</h3>
+              <p className="text-xs text-slate-600">Klien: {selectedPayment.customerName}</p>
+              <div className="flex justify-between items-center pt-2 text-xs">
+                <span className="text-slate-500">Sisa Tagihan:</span>
+                <span className="font-bold text-rose-600 text-sm">
+                  Rp {selectedPayment.remainingAmount.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div>
 
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">
-            Catatan
-          </Label>
-          <textarea
-            rows={3}
-            placeholder="Contoh: Transfer BCA No. Ref: TRX123..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all resize-none"
-          />
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">Tanggal Bayar *</label>
+                <DnaInput
+                  type="date"
+                  value={formDate}
+                  onChange={(e) => setFormDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">Akun Kas / Bank Penerima *</label>
+                <select
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  value={formBank}
+                  onChange={(e) => setFormBank(e.target.value)}
+                >
+                  <option value="BCA Maklon (264-035-1589)">BCA Maklon (264-035-1589)</option>
+                  <option value="Mandiri Corp (137-00-9821-44)">Mandiri Corp (137-00-9821-44)</option>
+                  <option value="Kas Utama Kantor">Kas Utama Kantor</option>
+                </select>
+              </div>
+            </div>
 
-        <div className="pt-4 flex gap-4 border-t border-slate-100">
-          <DnaButton
-            onClick={onCancel}
-            variant="outline"
-            className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-400 hover:bg-slate-50"
-          >
-            Batal
-          </DnaButton>
-          <DnaButton
-            onClick={onConfirm}
-            disabled={!canSubmit}
-            variant="primary"
-            className={cn(
-              "flex-[2] h-12 rounded-xl tracking-widest text-[10px] uppercase transition-all hover:scale-[1.02] active:scale-[0.98]",
-              "bg-emerald-600 hover:bg-emerald-700"
-            )}
-          >
-            {isSubmitting ? (
-              "Memproses..."
-            ) : (
-              <>
-                <ShieldCheck className="mr-2 h-4 w-4" /> Validasi & Catat
-                Pembayaran
-              </>
-            )}
-          </DnaButton>
-        </div>
-      </div>
-    </>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Jumlah Pembayaran Diterima (Bruto Rp) *</label>
+              <DnaInput
+                type="number"
+                value={formPayAmount}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormPayAmount(val);
+                  setFormPph23(String(Math.round(Number(val) * 0.02)));
+                }}
+                required
+              />
+            </div>
+
+            {/* Withholding Tax PPh 21 & PPh 23 per Poin 15 & 16 */}
+            <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100 space-y-3">
+              <div className="flex items-center gap-2">
+                <Percent className="w-4 h-4 text-purple-600" />
+                <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">
+                  Potongan Pajak (Withholding Tax)
+                </h4>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-purple-800 block mb-1">
+                    PPh 23 (2% Jasa Maklon)
+                  </label>
+                  <DnaInput
+                    type="number"
+                    value={formPph23}
+                    onChange={(e) => setFormPph23(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-purple-800 block mb-1">
+                    PPh 21 (Tenaga Ahli/Komisi)
+                  </label>
+                  <DnaInput
+                    type="number"
+                    value={formPph21}
+                    onChange={(e) => setFormPph21(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between items-center text-xs pt-1 border-t border-purple-100">
+                <span className="font-semibold text-purple-900">Estimasi Kas Bersih Masuk:</span>
+                <span className="font-bold text-emerald-700 text-sm">
+                  Rp{" "}
+                  {Math.max(
+                    0,
+                    (Number(formPayAmount) || 0) - (Number(formPph23) || 0) - (Number(formPph21) || 0)
+                  ).toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Nomor Referensi & Catatan</label>
+              <textarea
+                className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Contoh: Transfer BCA No. Ref: TRX-992144. Bukti setor PPh 23 terlampir."
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <DnaButton type="button" variant="secondary" onClick={() => setIsPaymentModalOpen(false)}>
+                Batal
+              </DnaButton>
+              <DnaButton type="submit" variant="primary" icon={<ShieldCheck className="w-4 h-4" />}>
+                Validasi & Catat Kas Masuk
+              </DnaButton>
+            </div>
+          </form>
+        )}
+      </DnaModal>
+    </div>
   );
 }

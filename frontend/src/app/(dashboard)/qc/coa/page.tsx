@@ -22,16 +22,16 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { DataCard } from "@/components/dna/DataCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
+  Input,
   Dialog,
   DialogContent,
-} from "@/components/ui/dialog";
+  DnaBadge,
+  DataCard,
+  DnaButton,
+  TableWrapper,
+} from "@/components/dna";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function CoACenterPage() {
   const [search, setSearch] = useState("");

@@ -285,11 +285,11 @@ export default function ArtworkApprovalPage() {
     }
 
     // Auto-sync projects from LOCKED_ACTIVE SOs
-    const activeSos = getSharedSalesOrders().filter(s => s.status === "LOCKED_ACTIVE");
+    const activeSos = getSharedSalesOrders().filter((s: any) => s.status === "LOCKED_ACTIVE");
     let hasNew = false;
     const updated = [...currentProjects];
 
-    activeSos.forEach(so => {
+    activeSos.forEach((so: any) => {
       const exists = updated.some(p => p.clientName === so.customerName && p.productName === so.productName);
       if (!exists) {
         hasNew = true;
@@ -706,7 +706,7 @@ export default function ArtworkApprovalPage() {
               filteredProjects.map((project) => {
                 const activeVer = project.versions.find((v) => v.isAcc) || project.versions[project.versions.length - 1];
                 const matchedLegality = legalityTasks.find(
-                  (l) => l.customerName === project.clientName || l.productName === project.productName
+                  (l: any) => l.customerName === project.clientName || l.productName === project.productName
                 );
                 // Item 64: use project bpomNumber, fall back to legality match
                 const bpomNum = project.bpomNumber || matchedLegality?.bpomRegNumber;
@@ -1122,7 +1122,7 @@ export default function ArtworkApprovalPage() {
               <div className="space-y-4">
                 {(() => {
                   const matchedLegality = legalityTasks.find(
-                    (l) => l.customerName === selectedProject.clientName || l.productName === selectedProject.productName
+                    (l: any) => l.customerName === selectedProject.clientName || l.productName === selectedProject.productName
                   );
                   return (
                     <div className="space-y-3">

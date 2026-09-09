@@ -1,83 +1,36 @@
-/**
- * DNA Components — Canonical Index
- *
- * Per /VISUAL_DNA.md (Operational DNA contract) + /dna-visual/golden-reference (implementation).
- *
- * Components are exported from their CANONICAL source files (root for primitives,
- * layout/ for layout components, table/ for table components, cells/ for cell renderers).
- *
- * DnaLegacyCompat is DEPRECATED — only UNIQUE exports remain (DnaTh, DnaTableBody,
- * DnaTableRow, DnaTd, DnaTdNumber, DnaTdCode, DnaTabItem). Migrate your imports to
- * canonical versions where possible.
- *
- * @see /plan/NEX_ERP_REFACTOR_ROADMAP.md Phase 0 + Sprint 0.5
- */
-
-// ── PRIMITIVE COMPONENTS (root) ──
 export { DataCard } from "./DataCard";
 export { MetricRow } from "./MetricRow";
 export { SectionLabel } from "./SectionLabel";
 export { PageSection } from "./PageSection";
 export { TableWrapper } from "./TableWrapper";
-export { StatCard } from "./StatCard";        // Dashboard DNA (Aureon Matrix) — dashboards only
-export { KpiCard } from "./KpiCard";           // Operational DNA — operational pages (legacy)
-export { DashboardCard } from "./DashboardCard"; // Macro dashboard card
-export { DnaStatCard } from "./DnaStatCard";   // Operational DNA — KPI with subtle semantic tint (PREFERRED)
-export { DnaInfoCard } from "./DnaInfoCard";   // Operational DNA — info block for detail pages
-export { MasterPageShell } from "./MasterPageShell";  // Reusable shell for consolidated master pages (Batch 6.3)
-export type { DnaStatCardProps, DnaStatCardVariant } from "./DnaStatCard";
-export type { DnaInfoCardProps } from "./DnaInfoCard";
-export type {
-  MasterPageShellProps,
-  MasterStatItem,
-  MasterTab,
-} from "./MasterPageShell";
+export { StatCard } from "./StatCard";
+export { KpiCard } from "./KpiCard";
+export { DashboardCard } from "./DashboardCard";
+export { DashboardMetric, DashboardMetricGrid } from "./DashboardMetric";
 export { PipelineNode, PipelineRow } from "./PipelineNode";
-
-// ── BADGE / TABLE ACTIONS ──
-export { DnaBadge } from "./DnaBadge";
-export { DnaTableRowActions } from "./DnaTableRowActions";
-
-// ── INPUTS (root) ──
 export { DnaInput } from "./DnaInput";
 export { DnaButton } from "./DnaButton";
-export { DnaSelect } from "./DnaSelect";
-export { DnaTextarea } from "./DnaTextarea";
-export { DnaCheckbox } from "./DnaCheckbox";
+export { DnaBadge } from "./DnaBadge";
+export { TabButton, TabButtonGroup } from "./TabButton";
+export { FilterBar } from "./FilterBar";
 
-// ── FEEDBACK (root) ──
-export { DnaModal } from "./DnaModal";
-export { DnaDrawer } from "./DnaDrawer";
-export { DnaEmptyState, DnaLoadingSkeleton, DnaErrorState } from "./DnaFeedbackStates";
-export { DnaSlaBadge } from "./DnaSlaBadge";
-export { DnaProgress } from "./DnaProgress";
-export { DnaBulkActionBar } from "./DnaBulkActionBar";
-export { DnaAuditTimeline } from "./DnaAuditTimeline";
-export { DnaInternalThread } from "./DnaInternalThread";
+// ── NEW MODULAR DNA COMPONENTS ──
 
-// ── TAB / NAV (root) ──
-export { DnaTabNav } from "./DnaTabNav";
-export { DnaToolbar } from "./DnaToolbar";
-export { DnaDateFilter } from "./DnaDateFilter";
-export { DnaColumnFilter } from "./DnaColumnFilter";
-export type { ColumnOption, DnaColumnFilterProps } from "./DnaColumnFilter";
-
-// ── LAYOUT (canonical — replaces duplicate root DnaPageContainer / DnaKpiGrid) ──
+// Layout & Header
 export { DnaPageHeader } from "./layout/DnaPageHeader";
 export type { DnaPageHeaderProps, DnaPageTabItem } from "./layout/DnaPageHeader";
 export { DnaKpiGrid, DnaKpiCard } from "./layout/DnaKpiGrid";
 export type { DnaKpiGridProps, DnaKpiCardItem } from "./layout/DnaKpiGrid";
-export { DnaPageContainer } from "./DnaPageContainer";
 
-// ── TABLE (canonical — replaces duplicate root DnaTable / DnaPagination / DnaDataTable) ──
+// Table & Toolbar
+export { DnaDataTableCard } from "./table/DnaDataTableCard";
+export type { DnaDataTableCardProps } from "./table/DnaDataTableCard";
 export { DnaTableToolbar } from "./table/DnaTableToolbar";
 export type { DnaTableToolbarProps, DnaDateMode, DnaFilterColumnConfig } from "./table/DnaTableToolbar";
 export { DnaPagination } from "./table/DnaPagination";
 export type { DnaPaginationProps } from "./table/DnaPagination";
-export { DnaDataTableCard } from "./table/DnaDataTableCard";
-export type { DnaDataTableCardProps } from "./table/DnaDataTableCard";
 
-// ── CELL RENDERERS (canonical — DnaCell namespace, used by golden reference) ──
+// Standardized Cell DNA
 export { DnaCell, formatStatusTitleCase, getStatusBadgeStyle } from "./cells/DnaCell";
 export type {
   DnaCellCodeProps,
@@ -91,42 +44,144 @@ export type {
   DnaCellActionsProps,
 } from "./cells/DnaCell";
 
-// ── DnaTable PRIMITIVES (canonical — root version) ──
-export { DnaTable, DnaTableHead, DNA_TABLE_CLASSES } from "./DnaTable";
-
-// ── SPECIALIZED SEARCH-SELECTS (master data) ──
-export { CoaSelect } from "./CoaSelect";
-export { CustomerSelect } from "./CustomerSelect";
-export { SupplierSelect } from "./SupplierSelect";
-export { GoodsSelect } from "./GoodsSelect";
-export { CategorySelect } from "./CategorySelect";
-
-// ── UTILITIES ──
+// Utilities & Formatting
 export { formatRupiah } from "@/lib/utils";
 
-// ── DEPRECATED — DnaLegacyCompat ──
-// Only UNIQUE exports remain (no canonical version exists).
-// Migrate imports to canonical versions above.
+// Canonical Root DNA Components
+export { DnaPageContainer } from "./DnaPageContainer";
+export { DnaModal } from "./DnaModal";
+export { DnaDrawer } from "./DnaDrawer";
+export { DnaTabNav } from "./DnaTabNav";
+export type { DnaTabNavProps } from "./DnaTabNav";
+export { DnaToolbar } from "./DnaToolbar";
+export type { DnaToolbarProps } from "./DnaToolbar";
+export { DnaSelect } from "./DnaSelect";
+export type { DnaSelectProps } from "./DnaSelect";
+export { DnaTextarea } from "./DnaTextarea";
+export type { DnaTextareaProps } from "./DnaTextarea";
+export { DnaCheckbox } from "./DnaCheckbox";
 export {
+  DnaDialog,
+  DnaDialogContent,
+  DnaDialogHeader,
+  DnaDialogTitle,
+  DnaDialogDescription,
+  DnaDialogFooter,
+  DnaDialogClose,
+  DnaDialogTrigger,
+} from "./DnaDialog";
+export {
+  DnaSheet,
+  DnaSheetContent,
+  DnaSheetHeader,
+  DnaSheetTitle,
+  DnaSheetDescription,
+  DnaSheetFooter,
+  DnaSheetClose,
+  DnaSheetTrigger,
+} from "./DnaSheet";
+
+// Table primitives (canonical)
+export {
+  DnaTable,
+  DnaTableHead,
   DnaTh,
   DnaTableBody,
   DnaTableRow,
   DnaTd,
   DnaTdNumber,
   DnaTdCode,
+  DnaLoadingSkeleton,
+  DNA_TABLE_CLASSES,
+} from "./DnaTable";
+export type {
+  DnaThProps,
+  DnaTableRowProps,
+  DnaTdProps,
+  DnaTdNumberProps,
+  DnaTdCodeProps,
+} from "./DnaTable";
+
+// Specialized Selects
+export { CoaSelect } from "./CoaSelect";
+export { CustomerSelect } from "./CustomerSelect";
+export { SupplierSelect } from "./SupplierSelect";
+export { GoodsSelect } from "./GoodsSelect";
+export { CategorySelect } from "./CategorySelect";
+
+// Compatibility exports
+export {
   DnaTabItem,
+  DnaEmptyState,
 } from "./DnaLegacyCompat";
 
-// ── HISTORY ──
-// Previously in DnaLegacyCompat (now using canonical):
-//   DnaModal, DnaDrawer, DnaTabNav, DnaToolbar, DnaSelect, DnaTextarea,
-//   DnaCheckbox, DnaAuditTimeline, DnaPageContainer, DnaEmptyState
-// → Now exported from canonical root files (above). Pages importing these
-// from "@/components/dna" now get the canonical version automatically.
-//
-// DELETED (dead code):
-//   - DnaKpiGrid.tsx (root) → use layout/DnaKpiGrid.tsx
-//   - DnaPageHeader.tsx (root) → use layout/DnaPageHeader.tsx
-//   - DnaPagination.tsx (root) → use table/DnaPagination.tsx
-//   - DnaDataTable.tsx (930-line monster, not used by golden reference)
-//   - DashboardMetric.tsx (dead code)
+export { DnaAuditTimeline } from "./DnaAuditTimeline";
+
+export type {
+  DnaKpiItem,
+  DnaColumnDef,
+  DnaColumn,
+  DateFilterValue,
+} from "./DnaLegacyCompat";
+
+export { DnaColumnFilter } from "./DnaColumnFilter";
+export type { ColumnOption, DnaColumnFilterProps } from "./DnaColumnFilter";
+export { DnaDataTableCard as DnaDataTable } from "./table/DnaDataTableCard";
+
+// ── OPERATIONAL KPI & SHELL ──
+export { DnaStatCard } from "./DnaStatCard";
+export type { DnaStatCardProps, DnaStatCardVariant } from "./DnaStatCard";
+export { MasterPageShell } from "./MasterPageShell";
+export type { MasterPageShellProps, MasterStatItem, MasterTab } from "./MasterPageShell";
+export { ApprovalPageShell } from "./approval/ApprovalPageShell";
+export type { ApprovalColumn, ApprovalPageShellProps } from "./approval/ApprovalPageShell";
+export { ApprovalDetailModal } from "./approval/ApprovalDetailModal";
+export type { ApprovalDetailData } from "./approval/ApprovalDetailModal";
+export { DnaBulkActionBar } from "./DnaBulkActionBar";
+
+// ── RADIX / SHADCN PRIMITIVES RE-EXPORTS PER ADR-007 ──
+export * from "./DnaFieldCompat";
+
+// ── INTERACTIVE DNA ELEMENTS ──
+export {
+  DnaCurrencyInput,
+  DnaNumberInput,
+  DnaPercentageInput,
+  DnaDatePicker,
+  DnaSearchableSelect,
+  DnaSwitch,
+  DnaFormSection,
+  DnaCrudModal,
+  DnaConfirmDialog,
+  DnaVoidDialog,
+  DnaResultModal,
+  DnaPrintModal,
+  DnaPrintItem,
+  DnaPrintSignature,
+  DnaExportButton,
+  DnaLineItemsTable,
+  DnaWorkflowBar,
+  useDnaToast,
+  DnaCascadingAddress,
+  DnaInfoCard,
+  DnaCard,
+  DnaRadioGroup,
+  DnaStickyFooter,
+  DnaToastProvider,
+} from "./DnaInteractiveElements";
+
+export type {
+  DnaCurrencyInputProps,
+  DnaNumberInputProps,
+  DnaDatePickerProps,
+  DnaSelectOption,
+  DnaSearchableSelectProps,
+  DnaSwitchProps,
+  DnaConfirmVariant,
+  DnaPrintSignature as DnaPrintSignatureType,
+  DnaPrintItem as DnaPrintItemType,
+  DnaLineItem,
+  DnaWorkflowStage,
+  DnaWorkflowBarProps,
+  DnaStickyFooterProps,
+} from "./DnaInteractiveElements";

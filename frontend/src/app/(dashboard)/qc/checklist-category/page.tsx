@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { 
@@ -26,12 +26,14 @@ import {
   LayoutGrid
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { TableWrapper } from "@/components/dna/TableWrapper";
+import { 
+  Input, 
+  Card, 
+  DnaBadge, 
+  StatCard, 
+  DnaButton, 
+  TableWrapper 
+} from "@/components/dna";
 import { FormShell } from "@/components/layout/FormShell";
 
 // Static Data from Plan

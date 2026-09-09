@@ -26,15 +26,19 @@ export function toLocalDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`
 }
 
-export function parseLocalDate(value: string): Date {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day)
+export function parseLocalDate(value?: string | null): Date {
+  if (!value || typeof value !== "string") return new Date(NaN)
+  const parts = value.split("-").map(Number)
+  if (parts.length < 3 || parts.some((n) => Number.isNaN(n))) return new Date(NaN)
+  return new Date(parts[0], parts[1] - 1, parts[2])
 }
 
-export function calendarDayDiff(from: Date, to: Date): number {
+export function calendarDayDiff(from?: Date | null, to?: Date | null): number {
+  if (!from || !to) return 0
   const fromDate = new Date(from)
-  fromDate.setHours(0, 0, 0, 0)
   const toDate = new Date(to)
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) return 0
+  fromDate.setHours(0, 0, 0, 0)
   toDate.setHours(0, 0, 0, 0)
   return Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24))
 }

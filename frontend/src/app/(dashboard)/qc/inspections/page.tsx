@@ -10,12 +10,21 @@ import {
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaButton, DnaBadge, DnaInput } from "@/components/dna";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  DnaButton,
+  DnaBadge,
+  DnaInput,
+  TableWrapper,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/dna";
 
 const DEFECT_CATEGORIES = ["FISIK", "KIMIA", "MIKROBIOLOGI", "LABEL_DOKUMEN", "KEMASAN", "LAINNYA"] as const;
 const SEVERITY_LEVELS = ["MINOR", "MAJOR", "CRITICAL"] as const;

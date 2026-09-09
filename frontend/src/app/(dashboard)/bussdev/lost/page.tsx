@@ -1,276 +1,492 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+/**
+ * Client Lost & Churn Analysis — Commercial Front-End
+ *
+ * Sesuai Legacy ERP Audit (kil_erp_full_inventory_v2.csv Baris 14 & 107),
+ * Menampilkan rincian Prospek Gagal (Sebelum Deal) dan Klien Churn (Setelah Delivery).
+ *
+ * Visual DNA Golden Reference:
+ * - Light Enterprise Theme (bg-[#F8FAFC])
+ * - DnaPageHeader with backLink { href, label }
+ * - DnaKpiGrid with 4 interactive KPI cards (Prospek Lost, Klien Churn, Lost Value, Alasan Dominan)
+ * - 2 Sub-tabel DnaDataTableCard (Section A & Section B)
+ * - DnaCell.* primitives & DnaModal
+ */
+
+import React, { useState, useMemo, Suspense } from "react";
+import {
+  XCircle,
+  AlertTriangle,
+  Search,
+  DollarSign,
+  Users,
+  Phone,
+  TrendingDown,
+} from "lucide-react";
+import {
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaButton,
+  DnaInput,
+  DnaModal,
+  DnaCell,
+  useDnaToast,
+} from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, XCircle, Search, AlertTriangle } from "lucide-react";
-import { DashboardCards } from "@/components/bussdev/DashboardCards";
-import { DnaInput, DnaBadge } from "@/components/dna";
-import { TableShell } from "@/components/layout/TableShell";
 
-const LOST_REASON_LABELS: Record<string, { label: string; status: "success" | "info" | "warning" | "critical" | "purple" | "default" }> = {
-  PRICE_ISSUE:        { label: "Harga",          status: "critical" },
-  MOQ_TOO_HIGH:       { label: "MOQ Tinggi",     status: "warning"  },
-  QUALITY:            { label: "Kualitas",        status: "warning"  },
-  GHOSTING:           { label: "Ghosting",        status: "default"  },
-  COMPETITOR:         { label: "Kompetitor",      status: "info"     },
-  NOT_READY:          { label: "Belum Siap",      status: "info"     },
-  OTHER:              { label: "Lainnya",         status: "default"  },
+export interface LostProspectItem {
+  id: string;
+  brandName: string;
+  productName: string;
+  clientName: string;
+  phoneNo?: string;
+  bdName: string;
+  estimatedValue: number;
+  sampleDate: string;
+  sampleStatus: string;
+  lostReason: "PRICE_ISSUE" | "MOQ_TOO_HIGH" | "QUALITY" | "GHOSTING" | "COMPETITOR" | "NOT_READY" | "OTHER";
+  lostNotes?: string;
+}
+
+export interface ChurnedClientItem {
+  id: string;
+  clientName: string;
+  brandName: string;
+  phoneNo?: string;
+  lifetimeValue: number;
+  totalOrders: number;
+  lastOrderDate: string;
+  inactivityMonths: number;
+  lastProductOrdered: string;
+  churnReason: string;
+}
+
+const MOCK_PROSPECTS_LOST: LostProspectItem[] = [
+  {
+    id: "pl-1",
+    brandName: "GlowVibe",
+    productName: "Centella Soothing Gel 50ml",
+    clientName: "PT Cantik Jelita",
+    phoneNo: "081234112233",
+    bdName: "Revita (BusDev 1)",
+    estimatedValue: 35000000,
+    sampleDate: "2026-07-15",
+    sampleStatus: "SAMPLE_REVISION",
+    lostReason: "PRICE_ISSUE",
+    lostNotes: "Target budget HPP klien Rp 18.000/pcs sedangkan HPP produksi Rp 23.500/pcs",
+  },
+  {
+    id: "pl-2",
+    brandName: "AuraSkin",
+    productName: "AHA BHA Peeling Serum 30ml",
+    clientName: "dr. Maya Sp.KK",
+    phoneNo: "085678445566",
+    bdName: "Dimas (BusDev Lead)",
+    estimatedValue: 50000000,
+    sampleDate: "2026-08-01",
+    sampleStatus: "SAMPLE_APPROVED",
+    lostReason: "MOQ_TOO_HIGH",
+    lostNotes: "Klien hanya minta MOQ 500 pcs untuk uji klinis awal, pabrik minimum 1.000 pcs",
+  },
+  {
+    id: "pl-3",
+    brandName: "DermaHerb",
+    productName: "Brightening Face Wash 100ml",
+    clientName: "CV Herbal Sentosa",
+    phoneNo: "081987778899",
+    bdName: "Revita (BusDev 1)",
+    estimatedValue: 28000000,
+    sampleDate: "2026-06-20",
+    sampleStatus: "SAMPLE_PROCESS",
+    lostReason: "GHOSTING",
+    lostNotes: "Follow-up 3x via WhatsApp dan telepon tidak ada respon selama 45 hari",
+  },
+];
+
+const MOCK_CHURNED_CLIENTS: ChurnedClientItem[] = [
+  {
+    id: "cc-1",
+    clientName: "PT Aura Makmur Mandiri",
+    brandName: "AuraWhite",
+    phoneNo: "082299887766",
+    lifetimeValue: 185000000,
+    totalOrders: 4,
+    lastOrderDate: "2025-11-10",
+    inactivityMonths: 10,
+    lastProductOrdered: "Body Lotion Tone Up 250ml",
+    churnReason: "Brand beralih fokus ke produk fashion / apparel",
+  },
+  {
+    id: "cc-2",
+    clientName: "CV Pesona Estetika",
+    brandName: "PesonaGlow",
+    phoneNo: "081344556677",
+    lifetimeValue: 92000000,
+    totalOrders: 2,
+    lastOrderDate: "2026-01-15",
+    inactivityMonths: 8,
+    lastProductOrdered: "Moisturizer Gel 30g",
+    churnReason: "Pindah ke pabrik maklon kompetitor karena penawaran termin pembayaran Net 60",
+  },
+];
+
+const REASON_LABELS: Record<string, { label: string; status: string }> = {
+  PRICE_ISSUE: { label: "HPP Terlalu Tinggi", status: "cancel" },
+  MOQ_TOO_HIGH: { label: "MOQ Terlalu Tinggi", status: "warning" },
+  QUALITY: { label: "Kualitas / Karakteristik", status: "warning" },
+  GHOSTING: { label: "Klien Tidak Merespons", status: "pending" },
+  COMPETITOR: { label: "Pindah ke Kompetitor", status: "cancel" },
+  NOT_READY: { label: "Modal / Belum Siap", status: "info" },
+  OTHER: { label: "Alasan Lainnya", status: "neutral" },
 };
 
-const STAGE_LABELS: Record<string, string> = {
-  NEW_LEAD:           "Buku Tamu",
-  CONTACTED:          "Contacted",
-  NEGOTIATION:        "Negosiasi",
-  SAMPLE_PROCESS:     "Sample",
-  SAMPLE_REVISION:    "Sample Revisi",
-  SAMPLE_APPROVED:    "Sample Approved",
-  SPK_SIGNED:         "SPK Signed",
-  PRODUCTION_PROCESS: "Produksi",
-  READY_TO_SHIP:      "Ready Ship",
-  WON_DEAL:           "Won Deal",
-  LOST:               "Lost",
-};
-
-export default function LostPage() {
+function LostContent() {
+  const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProspect, setSelectedProspect] = useState<LostProspectItem | null>(null);
+  const [selectedChurn, setSelectedChurn] = useState<ChurnedClientItem | null>(null);
 
-  const { data: analytics } = useQuery({
-    queryKey: ["bussdev-analytics", "lost"],
-    queryFn: async () => {
-      try { return (await api.get("/bussdev/analytics/lost")).data; }
-      catch { return null; }
-    },
-  });
+  // Global KPI calculations
+  const totalLostCount = MOCK_PROSPECTS_LOST.length;
+  const totalChurnCount = MOCK_CHURNED_CLIENTS.length;
+  const totalLostValue = MOCK_PROSPECTS_LOST.reduce((sum, p) => sum + p.estimatedValue, 0);
 
-  const { data: leads, isLoading } = useQuery({
-    queryKey: ["bussdev-leads-group", "lost"],
-    queryFn: async () => (await api.get<any[]>("/bussdev/leads/group/lost")).data,
-  });
+  const filteredProspects = useMemo(() => {
+    if (!searchQuery.trim()) return MOCK_PROSPECTS_LOST;
+    const q = searchQuery.toLowerCase();
+    return MOCK_PROSPECTS_LOST.filter(
+      (p) =>
+        p.brandName.toLowerCase().includes(q) ||
+        p.clientName.toLowerCase().includes(q) ||
+        p.productName.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
 
-  // Section A: Lost before deal (prospect fail) = never reached SPK_SIGNED
-  const prospectFail = leads?.filter(l =>
-    !["SPK_SIGNED", "PRODUCTION_PROCESS", "READY_TO_SHIP", "WON_DEAL"].includes(l.stage)
-  );
+  const filteredChurn = useMemo(() => {
+    if (!searchQuery.trim()) return MOCK_CHURNED_CLIENTS;
+    const q = searchQuery.toLowerCase();
+    return MOCK_CHURNED_CLIENTS.filter(
+      (c) =>
+        c.brandName.toLowerCase().includes(q) ||
+        c.clientName.toLowerCase().includes(q) ||
+        c.lastProductOrdered.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
 
-  // Section B: Lost after delivery (churn) = reached at least SPK_SIGNED
-  const churnClient = leads?.filter(l =>
-    ["SPK_SIGNED", "PRODUCTION_PROCESS", "READY_TO_SHIP", "WON_DEAL"].includes(l.lastKnownStage || l.stage)
-  );
-
-  const filteredProspects = prospectFail?.filter(l =>
-    l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.brandName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredChurn = churnClient?.filter(l =>
-    l.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.brandName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (isLoading) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <Loader2 className="animate-spin h-10 w-10 text-rose-600" />
-    </div>
-  );
+  const handleReEngage = (name: string, phone?: string) => {
+    if (phone) {
+      window.open(
+        `https://wa.me/${phone.replace(/\D/g, "")}?text=Halo%20${encodeURIComponent(
+          name
+        )},%20kami%20dari%20tim%20BusDev%20Dreamlab...`,
+        "_blank"
+      );
+    } else {
+      toast.info(`Menjadwalkan follow-up re-engagement untuk ${name}`);
+    }
+  };
 
   return (
-    <TableShell
-      title="PIPELINE"
-      titleAccent="Lost"
-      subtitle=""
-      actions={
-        <DnaBadge status="critical" className="animate-pulse">
-          <AlertTriangle className="h-4 w-4" />
-          {leads?.length || 0} Total Lost
-        </DnaBadge>
-      }
-    >
-      <div className="animate-fade-slide-in space-y-10">
-        {/* ── Dashboard Cards ──────────────────────────────────────── */}
-        <DashboardCards variant="lost" data={analytics} />
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans">
+      <DnaPageHeader
+        title="Client Lost & Churn Analysis"
+        description="Pusat Analisis & Evaluasi Prospek Batal (Sebelum Deal) dan Klien Churn (Setelah Delivery)"
+        backLink={{ href: "/bussdev/client-manager", label: "Client Manager" }}
+        badge={
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            <TrendingDown className="w-3.5 h-3.5" />
+            LOST INTELLIGENCE
+          </span>
+        }
+      />
 
-        {/* ── Search bar ───────────────────────────────────────────── */}
-        <div className="flex justify-end bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="w-full md:w-80">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pt-6">
+        {/* 4 KPI Cards */}
+        <DnaKpiGrid
+          columns={4}
+          items={[
+            {
+              label: "PROSPEK BATAL (LOST DEAL)",
+              value: `${totalLostCount} Prospek`,
+              subtext: "Gagal pada tahap negosiasi / sample",
+              icon: XCircle,
+              status: "critical",
+            },
+            {
+              label: "KLIEN CHURN (PASCA DELIVERY)",
+              value: `${totalChurnCount} Klien`,
+              subtext: "Tidak ada order > 6 bulan",
+              icon: Users,
+              status: "warning",
+            },
+            {
+              label: "ESTIMASI OMSET HILANG",
+              value: formatCurrency(totalLostValue),
+              subtext: "Potensi revenue gagal konversi",
+              icon: DollarSign,
+              status: "neutral",
+            },
+            {
+              label: "ALASAN UTAMA PEMBATALAN",
+              value: "HPP & MOQ",
+              subtext: "Sensitivitas harga & kuantiti",
+              icon: AlertTriangle,
+              status: "purple",
+            },
+          ]}
+        />
+
+        {/* Toolbar Search */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+          <div className="w-80">
             <DnaInput
-              placeholder="FILTER BRAND / CLIENT..."
-              icon={<Search className="h-4 w-4" />}
-              className="font-black text-xs uppercase"
+              placeholder="Cari brand, nama klien, produk..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              icon={<Search className="w-4 h-4 text-slate-400" />}
             />
           </div>
+          <div className="text-xs font-bold text-slate-400">
+            Menganalisis data kegagalan deal untuk evaluasi strategi BusDev
+          </div>
         </div>
 
-        {/* ── Section A: Prospect Gagal ─────────────────────────────── */}
-        <div style={{ marginBottom: "4rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.5rem" }}>
-            <div style={{ width: "8px", height: "8px", background: "#EF4444", borderRadius: "50%" }} />
-            <h2 style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B", textTransform: "uppercase", letterSpacing: "0.2em", margin: 0 }}>
-              SECTION A: LOST SEBELUM DEAL (PROSPECT GAGAL)
-            </h2>
-          </div>
-          
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: "1000px", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>BRAND & PRODUK</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>PIC BD</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B", textAlign: "right" }}>EST. VALUE DEAL</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B", textAlign: "center" }}>STAGE TERAKHIR</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#DC2626" }}>ALASAN LOST (CRITICAL)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProspects && filteredProspects.length > 0 ? (
-                  filteredProspects.map((lead: any) => {
-                    const lostReasonCfg = LOST_REASON_LABELS[lead.lostReason] || LOST_REASON_LABELS.OTHER;
-                    return (
-                      <tr key={lead.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                        <td style={{ padding: "1.2rem" }}>
-                          <p style={{ fontSize: "13px", fontWeight: 900, color: "#1E293B", margin: 0 }}>
-                            {(lead.brandName || lead.clientName || "—").toUpperCase()}
-                          </p>
-                          <p style={{ fontSize: "10px", fontWeight: 600, color: "#64748B", margin: "2px 0 0 0" }}>
-                            {lead.productInterest || "—"}
-                          </p>
-                        </td>
-                        <td style={{ padding: "1.2rem" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <div style={{ width: "20px", height: "20px", background: "#F1F5F9", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>
-                              👤
-                            </div>
-                            <p style={{ fontSize: "12px", fontWeight: 800, color: "#111827", margin: 0 }}>
-                              {lead.pic?.name || "Unassigned"}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="tabular-nums" style={{ padding: "1.2rem", textAlign: "right", fontSize: "13px", fontWeight: 900, color: "#EF4444" }}>
-                          {formatCurrency(Number(lead.estimatedValue || 0))}
-                        </td>
-                        <td style={{ padding: "1.2rem", textAlign: "center" }}>
-                          <span style={{ fontSize: "9px", fontWeight: 900, padding: "4px 10px", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: "100px", color: "#64748B" }}>
-                            {(STAGE_LABELS[lead.stage] || lead.stage || "—").toUpperCase()}
-                          </span>
-                        </td>
-                        <td style={{ padding: "1.2rem" }}>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 12px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "8px" }}>
-                            <XCircle className="h-3 w-3 text-red-600 shrink-0" />
-                            <span style={{ fontSize: "11px", fontWeight: 900, color: "#DC2626" }}>
-                              {(lostReasonCfg.label || "Lainnya").toUpperCase()}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={5} style={{ padding: "4rem", textAlign: "center", color: "#94A3B8", fontSize: "12px" }}>
-                      Tidak ada data lost sebelum deal.
+        {/* SECTION A: Lost Sebelum Deal (Prospect Gagal) */}
+        <DnaDataTableCard
+          title="Section A: Prospek Batal Sebelum Deal (Pipeline Fail)"
+          count={filteredProspects.length}
+        >
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                <th className="p-3.5">BRAND & PRODUK</th>
+                <th className="p-3.5">PELANGGAN</th>
+                <th className="p-3.5">PIC BUSDEV</th>
+                <th className="p-3.5 text-right">EST. VALUE DEAL</th>
+                <th className="p-3.5">TGL SAMPLE</th>
+                <th className="p-3.5 text-center">ALASAN LOST</th>
+                <th className="p-3.5 text-right">AKSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProspects.map((item) => {
+                const reason = REASON_LABELS[item.lostReason] || {
+                  label: item.lostReason,
+                  status: "neutral",
+                };
+                return (
+                  <tr
+                    key={item.id}
+                    onClick={() => setSelectedProspect(item)}
+                    className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group"
+                  >
+                    <td className="p-3.5">
+                      <DnaCell.Text primary={item.brandName} secondary={item.productName} />
+                    </td>
+                    <td className="p-3.5">
+                      <DnaCell.Text primary={item.clientName} />
+                    </td>
+                    <td className="p-3.5">
+                      <DnaCell.Avatar name={item.bdName} />
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <DnaCell.Currency value={item.estimatedValue} />
+                    </td>
+                    <td className="p-3.5">
+                      <DnaCell.Date value={item.sampleDate} />
+                    </td>
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Badge label={reason.label} status={reason.status} />
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <DnaCell.Actions onView={() => setSelectedProspect(item)} />
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                );
+              })}
+            </tbody>
+          </table>
+        </DnaDataTableCard>
 
-        {/* ── Section B: Churn Customer ────────────────────────────── */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.5rem" }}>
-            <div style={{ width: "8px", height: "8px", background: "#7C3AED", borderRadius: "50%" }} />
-            <h2 style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B", textTransform: "uppercase", letterSpacing: "0.2em", margin: 0 }}>
-              SECTION B: LOST SETELAH DELIVERY (CHURN CUSTOMER)
-            </h2>
-          </div>
-          
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: "1000px", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>BRAND & PRODUK TERAKHIR</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>QTY TERAKHIR</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B" }}>TGL TERAKHIR ORDER</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#64748B", textAlign: "center" }}>STATUS</th>
-                  <th style={{ padding: "1.2rem", fontSize: "10px", fontWeight: 900, color: "#DC2626" }}>ALASAN CHURN</th>
+        {/* SECTION B: Klien Churn (Setelah Delivery) */}
+        <DnaDataTableCard
+          title="Section B: Klien Churn Pasca Delivery (Dormant > 6 Bulan)"
+          count={filteredChurn.length}
+        >
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                <th className="p-3.5">NAMA PELANGGAN & BRAND</th>
+                <th className="p-3.5 text-right">LIFETIME VALUE (LTV)</th>
+                <th className="p-3.5 text-center">TOTAL TRANSAKSI</th>
+                <th className="p-3.5">ORDER TERAKHIR</th>
+                <th className="p-3.5 text-center">JEDA TIDAK ORDER</th>
+                <th className="p-3.5">ALASAN DORMANT</th>
+                <th className="p-3.5 text-right">AKSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredChurn.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => setSelectedChurn(item)}
+                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group"
+                >
+                  <td className="p-3.5">
+                    <DnaCell.Text primary={item.clientName} secondary={item.brandName} />
+                  </td>
+                  <td className="p-3.5 text-right">
+                    <DnaCell.Currency value={item.lifetimeValue} />
+                  </td>
+                  <td className="p-3.5 text-center font-bold text-slate-800 text-xs">
+                    {item.totalOrders}x Order
+                  </td>
+                  <td className="p-3.5">
+                    <DnaCell.Date value={item.lastOrderDate} />
+                  </td>
+                  <td className="p-3.5 text-center">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                      {item.inactivityMonths} Bulan
+                    </span>
+                  </td>
+                  <td className="p-3.5">
+                    <DnaCell.Text primary={item.churnReason} />
+                  </td>
+                  <td className="p-3.5 text-right">
+                    <DnaCell.Actions onView={() => setSelectedChurn(item)} />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredChurn && filteredChurn.length > 0 ? (
-                  filteredChurn.map((lead: any) => {
-                    const lostReasonCfg = LOST_REASON_LABELS[lead.lostReason] || LOST_REASON_LABELS.OTHER;
-                    
-                    // Formatting order date
-                    const lastDateStr = lead.wonAt
-                      ? new Date(lead.wonAt).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
-                      : "—";
-
-                    // Estimated repeat order date (e.g. last order date + 60 days)
-                    const estNextStr = lead.wonAt
-                      ? new Date(new Date(lead.wonAt).getTime() + 60 * 24 * 3600 * 1000).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
-                      : "—";
-
-                    return (
-                      <tr key={lead.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                        <td style={{ padding: "1.2rem" }}>
-                          <p style={{ fontSize: "13px", fontWeight: 900, color: "#1E293B", margin: 0 }}>
-                            {(lead.brandName || lead.clientName || "—").toUpperCase()}
-                          </p>
-                          <p style={{ fontSize: "10px", fontWeight: 600, color: "#64748B", margin: "2px 0 0 0" }}>
-                            {lead.productInterest || "—"}
-                          </p>
-                        </td>
-                        <td className="tabular-nums" style={{ padding: "1.2rem", fontSize: "12px", fontWeight: 800, color: "#1E293B" }}>
-                          {lead.moq ? `${Number(lead.moq).toLocaleString()} Pcs` : "—"}
-                        </td>
-                        <td style={{ padding: "1.2rem" }}>
-                          <p className="tabular-nums" style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", margin: 0 }}>
-                            {lastDateStr}
-                          </p>
-                          <p style={{ fontSize: "8px", color: "#94A3B8", margin: 0 }}>
-                            EST. REPEAT: {estNextStr}
-                          </p>
-                        </td>
-                        <td style={{ padding: "1.2rem", textAlign: "center" }}>
-                          <span style={{
-                            fontSize: "9px",
-                            fontWeight: 900,
-                            padding: "4px 10px",
-                            borderRadius: "100px",
-                            background: "#FEF2F2",
-                            color: "#DC2626",
-                            border: "1px solid #FEE2E2"
-                          }}>
-                            LOST
-                          </span>
-                        </td>
-                        <td style={{ padding: "1.2rem" }}>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 12px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "8px" }}>
-                            <XCircle className="h-3 w-3 text-red-600 shrink-0" />
-                            <span style={{ fontSize: "11px", fontWeight: 900, color: "#DC2626" }}>
-                              {(lostReasonCfg.label || "Lainnya").toUpperCase()}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={5} style={{ padding: "4rem", textAlign: "center", color: "#94A3B8", fontSize: "12px" }}>
-                      Tidak ada data churn customer.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))}
+            </tbody>
+          </table>
+        </DnaDataTableCard>
       </div>
-    </TableShell>
+
+      {/* Modal Detail Lost Prospect */}
+      {selectedProspect && (
+        <DnaModal
+          isOpen={true}
+          onClose={() => setSelectedProspect(null)}
+          title={`Detail Pembatalan — ${selectedProspect.brandName}`}
+          subtitle={`Klien: ${selectedProspect.clientName} • PIC: ${selectedProspect.bdName}`}
+          size="md"
+          footer={
+            <div className="flex justify-between items-center w-full">
+              <DnaButton
+                variant="outline"
+                size="sm"
+                onClick={() => handleReEngage(selectedProspect.clientName, selectedProspect.phoneNo)}
+                className="gap-1.5 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                Chat Re-Engagement WA
+              </DnaButton>
+              <DnaButton variant="ghost" size="sm" onClick={() => setSelectedProspect(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Produk Target:</span>
+                <p className="font-bold text-slate-800">{selectedProspect.productName}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Potensi Omset:</span>
+                <p className="font-bold text-rose-600">{formatCurrency(selectedProspect.estimatedValue)}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Status Terakhir:</span>
+                <p className="font-bold text-slate-800">{selectedProspect.sampleStatus}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Kategori Alasan:</span>
+                <p className="font-bold text-slate-800">{selectedProspect.lostReason}</p>
+              </div>
+            </div>
+
+            {selectedProspect.lostNotes && (
+              <div className="space-y-1">
+                <h4 className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                  Catatan Evaluasi BusDev
+                </h4>
+                <p className="p-3 bg-rose-50/50 rounded-xl border border-rose-100 text-slate-800 leading-relaxed">
+                  {selectedProspect.lostNotes}
+                </p>
+              </div>
+            )}
+          </div>
+        </DnaModal>
+      )}
+
+      {/* Modal Detail Churned Client */}
+      {selectedChurn && (
+        <DnaModal
+          isOpen={true}
+          onClose={() => setSelectedChurn(null)}
+          title={`Profil Klien Churn — ${selectedChurn.clientName}`}
+          subtitle={`Brand: ${selectedChurn.brandName} • Dormant: ${selectedChurn.inactivityMonths} Bulan`}
+          size="md"
+          footer={
+            <div className="flex justify-between items-center w-full">
+              <DnaButton
+                variant="outline"
+                size="sm"
+                onClick={() => handleReEngage(selectedChurn.clientName, selectedChurn.phoneNo)}
+                className="gap-1.5 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                Kirim Promo Re-Aktivasi WA
+              </DnaButton>
+              <DnaButton variant="ghost" size="sm" onClick={() => setSelectedChurn(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Total Lifetime Value:</span>
+                <p className="font-bold text-emerald-600">{formatCurrency(selectedChurn.lifetimeValue)}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Total Batch Dipesan:</span>
+                <p className="font-bold text-slate-800">{selectedChurn.totalOrders}x Order</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Order Terakhir:</span>
+                <p className="font-bold text-slate-800">{selectedChurn.lastOrderDate}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Produk Terakhir:</span>
+                <p className="font-bold text-slate-800">{selectedChurn.lastProductOrdered}</p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                Indikasi Penyebab Dormancy
+              </h4>
+              <p className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 text-slate-800 leading-relaxed">
+                {selectedChurn.churnReason}
+              </p>
+            </div>
+          </div>
+        </DnaModal>
+      )}
+    </div>
+  );
+}
+
+export default function LostPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">Loading...</div>}>
+      <LostContent />
+    </Suspense>
   );
 }

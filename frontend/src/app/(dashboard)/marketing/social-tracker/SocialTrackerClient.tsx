@@ -1,38 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { 
-  BarChart3, 
-  Calendar as CalendarIcon, 
-  Eye, 
-  Filter, 
-  Globe, 
-  Grid, 
-  Layers, 
-  LayoutList, 
-  Lock, 
-  Search, 
-  Share2, 
-  Sparkles, 
-  Table, 
-  TrendingUp, 
-  Users, 
-  CheckCircle2, 
-  X, 
-  ExternalLink,
-  MessageSquare,
-  ThumbsUp,
-  Bookmark,
-  Zap,
-  Activity,
-  ShieldCheck,
-  Building2
-} from 'lucide-react';
-import { DashboardShell } from '@/components/layout/DashboardShell';
-import { DnaBadge } from '@/components/dna/DnaBadge';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   initialPosts, 
   initialMetaInsights, 
@@ -42,21 +10,127 @@ import {
   initialCampaignOkrs, 
   initialMetaAccount 
 } from './mockData';
-
 import { 
   PostItem, 
   PostStatus, 
   DatabaseViewType, 
   ViewFilter, 
-  SocialPlatform, 
-  ContentPillar 
+  ViewSort, 
+  MetaAccountConfig, 
+  MetaInsightsSummary,
+  SocialPlatform,
+  ContentPillar,
 } from './types';
+import { TableView } from './components/views/TableView';
+import { BoardView } from './components/views/BoardView';
+import { CalendarView } from './components/views/CalendarView';
+import { GalleryView } from './components/views/GalleryView';
+import { ListView } from './components/views/ListView';
+import { MetaAnalyticsView } from './components/views/MetaAnalyticsView';
+import { MetaApiHubView } from './components/views/MetaApiHubView';
+import { CampaignOkrsView } from './components/views/CampaignOkrsView';
+import { AiStudioView } from './components/views/AiStudioView';
+import { PostDrawer } from './components/PostDrawer';
+import { NewPostModal } from './components/NewPostModal';
+import { platformConfig, formatNumber } from './utils/notionStyles';
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaStatCard,
+  DnaTabNav,
+  DnaToolbar,
+  DnaButton,
+} from '@/components/dna';
+import {
+  Table,
+  LayoutGrid,
+  Calendar,
+  Image as ImageIcon,
+  List,
+  BarChart3,
+  Zap,
+  Target,
+  Sparkles,
+  Plus,
+  RefreshCw,
+  TrendingUp,
+  Sun,
+  Moon,
+} from 'lucide-react';
+import {
+  useCreateSocialPost,
+  useDeleteSocialPost,
+  useFetchMetaInsights,
+  useSocialPosts,
+  useUpdateSocialPost,
+} from '@/hooks/useSocialPlanner';
+
+const STORAGE_INSIGHTS_KEY = 'erp_notion_meta_insights_v2';
+const STORAGE_META_CONFIG_KEY = 'erp_notion_meta_config_v2';
+
+const PLATFORMS: { id: SocialPlatform | 'all'; label: string; icon: string }[] = [
+  { id: 'all', label: 'Semua Platform', icon: '🌐' },
+  { id: 'instagram', label: 'Instagram', icon: '📸' },
+  { id: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { id: 'facebook', label: 'Facebook', icon: '👥' },
+  { id: 'threads', label: 'Threads', icon: '🧵' },
+  { id: 'youtube', label: 'YouTube', icon: '▶️' },
+  { id: 'linkedin', label: 'LinkedIn', icon: '💼' },
+];
 
 export default function SocialTrackerClient() {
-  const [activeView, setActiveView] = useState<DatabaseViewType>('table');
-  const [selectedPost, setSelectedPost] = useState<PostItem | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const socialPostsQuery = useSocialPosts();
+  const createPostMutation = useCreateSocialPost();
+  const updatePostMutation = useUpdateSocialPost();
+  const deletePostMutation = useDeleteSocialPost();
+  const fetchMetaInsightsMutation = useFetchMetaInsights();
+  const updateTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
+  // Database View State
+  const [activeView, setActiveView] = useState<DatabaseViewType>('table');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Content Data State
+  const [posts, setPosts] = useState<PostItem[]>([]);
+
+  // Meta Insights State
+  const [insights, setInsights] = useState<MetaInsightsSummary>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_INSIGHTS_KEY);
+      if (saved) {
+        try {
+          return { ...JSON.parse(saved), accessToken: '' };
+        } catch (e) {
+          console.error('Failed to parse saved insights:', e);
+        }
+      }
+    }
+    return initialMetaInsights;
+  });
+
+  // Meta Account Config State
+  const [metaAccount, setMetaAccount] = useState<MetaAccountConfig>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_META_CONFIG_KEY);
+      if (saved) {
+        try {
+          return { ...JSON.parse(saved), accessToken: '' };
+        } catch (e) {
+          console.error('Failed to parse saved meta account:', e);
+        }
+      }
+    }
+    return initialMetaAccount;
+  });
+
+  const [campaignOkrs, setCampaignOkrs] = useState(initialCampaignOkrs);
+  const [dailyTrends, setDailyTrends] = useState(initialDailyTrends);
+  const [demographics, setDemographics] = useState(initialDemographics);
+  const [bestTimeSlots, setBestTimeSlots] = useState(initialBestTimeSlots);
+
+  // Filter & Sort State
   const [filter, setFilter] = useState<ViewFilter>({
     platform: 'all',
     status: 'all',
@@ -64,13 +138,277 @@ export default function SocialTrackerClient() {
     search: '',
   });
 
-  const posts = initialPosts;
-  const insights = initialMetaInsights;
-  const metaAccount = initialMetaAccount;
-  const campaignOkrs = initialCampaignOkrs;
-  const dailyTrends = initialDailyTrends;
-  const demographics = initialDemographics;
-  const bestTimeSlots = initialBestTimeSlots;
+  const [sort, setSort] = useState<ViewSort>({
+    field: 'scheduledDate',
+    direction: 'asc',
+  });
+
+  // Drawer & Modal State
+  const [selectedPost, setSelectedPost] = useState<PostItem | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isNewPostModalOpen, setIsNewPostModalOpen] = useState(false);
+  const [modalInitialStatus, setModalInitialStatus] = useState<PostStatus>('idea');
+  const [modalInitialDate, setModalInitialDate] = useState<string | undefined>(undefined);
+
+  // Syncing State
+  const [isSyncingMeta, setIsSyncingMeta] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // The database is authoritative. Mock posts are used only when the API actually fails.
+  useEffect(() => {
+    if (socialPostsQuery.data) setPosts(socialPostsQuery.data);
+    else if (socialPostsQuery.isError) setPosts(initialPosts);
+  }, [socialPostsQuery.data, socialPostsQuery.isError]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_INSIGHTS_KEY, JSON.stringify(insights));
+    }
+  }, [insights]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        STORAGE_META_CONFIG_KEY,
+        JSON.stringify({ ...metaAccount, accessToken: '' }),
+      );
+    }
+  }, [metaAccount]);
+
+  useEffect(() => {
+    const totals = posts.reduce(
+      (sum, post) => {
+        const performance = post.performance;
+        sum.reach += performance?.reach || 0;
+        sum.impressions += performance?.impressions || 0;
+        sum.interactions += (performance?.likes || 0) + (performance?.comments || 0)
+          + (performance?.shares || 0) + (performance?.saves || 0);
+        sum.videoViews += performance?.videoViews || 0;
+        sum.clicks += performance?.clicks || 0;
+        return sum;
+      },
+      { reach: 0, impressions: 0, interactions: 0, videoViews: 0, clicks: 0 },
+    );
+    setInsights((current) => ({
+      ...current,
+      totalReach: totals.reach,
+      impressions: totals.impressions,
+      websiteClicks: totals.clicks,
+      reelsViews: totals.videoViews,
+      engagementRate: totals.reach > 0
+        ? Number(((totals.interactions / totals.reach) * 100).toFixed(2))
+        : 0,
+      avgEngagementPerPost: posts.length > 0 ? Number((totals.interactions / posts.length).toFixed(2)) : 0,
+    }));
+  }, [posts]);
+
+  useEffect(() => () => {
+    updateTimers.current.forEach((timer) => clearTimeout(timer));
+    updateTimers.current.clear();
+  }, []);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Sync Meta Graph API Handler
+  const handleSyncMeta = async () => {
+    setIsSyncingMeta(true);
+    try {
+      if (!metaAccount.accessToken.trim()) {
+        showToast('ℹ️ Mode manual aktif. Tambahkan token hanya jika ingin sinkronisasi Meta.');
+        return;
+      }
+      const data = await fetchMetaInsightsMutation.mutateAsync({
+        accessToken: metaAccount.accessToken,
+        igAccountId: metaAccount.igAccountId || undefined,
+        pageId: metaAccount.pageId || undefined,
+      });
+      if (data.success) {
+        if (data.insights) setInsights(data.insights);
+        if (data.dailyTrends) setDailyTrends(data.dailyTrends);
+        if (data.demographics) setDemographics(data.demographics);
+        setMetaAccount((prev) => ({ ...prev, lastSyncTime: new Date().toISOString(), isConnected: true }));
+        showToast('✅ Data Meta Business Suite berhasil diperbarui!');
+      }
+    } catch {
+      showToast('Meta API belum dapat disinkronkan. Data manual tetap aman.');
+    } finally {
+      setIsSyncingMeta(false);
+    }
+  };
+
+  // Filter & Sort computation
+  const filteredAndSortedPosts = useMemo(() => {
+    return posts
+      .filter((post) => {
+        if (filter.platform && filter.platform !== 'all' && post.platform !== filter.platform) {
+          return false;
+        }
+        if (filter.status && filter.status !== 'all' && post.status !== filter.status) {
+          return false;
+        }
+        if (filter.pillar && filter.pillar !== 'all' && post.pillar !== filter.pillar) {
+          return false;
+        }
+        if (filter.search) {
+          const q = filter.search.toLowerCase();
+          const matchTitle = post.title.toLowerCase().includes(q);
+          const matchCaption = post.caption?.toLowerCase().includes(q);
+          const matchTags = post.hashtags.some((t) => t.toLowerCase().includes(q));
+          if (!matchTitle && !matchCaption && !matchTags) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (sort.field === 'scheduledDate') {
+          const dateA = new Date(a.scheduledDate).getTime();
+          const dateB = new Date(b.scheduledDate).getTime();
+          return sort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+        if (sort.field === 'performance.reach') {
+          const reachA = a.performance?.reach || 0;
+          const reachB = b.performance?.reach || 0;
+          return sort.direction === 'asc' ? reachA - reachB : reachB - reachA;
+        }
+        if (sort.field === 'performance.engagementRate') {
+          const engA = a.performance?.engagementRate || 0;
+          const engB = b.performance?.engagementRate || 0;
+          return sort.direction === 'asc' ? engA - engB : engB - engA;
+        }
+        if (sort.field === 'title') {
+          return sort.direction === 'asc'
+            ? a.title.localeCompare(b.title)
+            : b.title.localeCompare(a.title);
+        }
+        return 0;
+      });
+  }, [posts, filter, sort]);
+
+  // Post Actions
+  const handleOpenPost = (post: PostItem) => {
+    setSelectedPost(post);
+    setIsDrawerOpen(true);
+  };
+
+  const handleUpdateStatus = (postId: string, newStatus: PostStatus) => {
+    const current = posts.find((post) => post.id === postId);
+    if (!current) return;
+    const updated = { ...current, status: newStatus, updatedAt: new Date().toISOString() };
+    setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
+    updatePostMutation.mutate(
+      { id: postId, data: { status: newStatus } },
+      { onError: () => { setPosts((prev) => prev.map((post) => (post.id === postId ? current : post))); showToast('Status belum dapat disimpan.'); } },
+    );
+    showToast(`Status konten diubah ke: ${newStatus.toUpperCase()}`);
+  };
+
+  const handleUpdatePost = (updated: PostItem) => {
+    setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setSelectedPost(updated);
+    const existingTimer = updateTimers.current.get(updated.id);
+    if (existingTimer) clearTimeout(existingTimer);
+    updateTimers.current.set(updated.id, setTimeout(() => {
+      updatePostMutation.mutate(
+        { id: updated.id, data: updated },
+        {
+          onSuccess: (saved) => {
+            setPosts((prev) => prev.map((post) => (post.id === saved.id ? saved : post)));
+            setSelectedPost((current) => current?.id === saved.id ? saved : current);
+          },
+          onError: () => {
+            socialPostsQuery.refetch();
+            showToast('Perubahan belum dapat disimpan. Data akan dimuat ulang.');
+          },
+        },
+      );
+      updateTimers.current.delete(updated.id);
+    }, 350));
+  };
+
+  const handleDeletePost = (postId: string) => {
+    deletePostMutation.mutate(postId, {
+      onSuccess: () => {
+        setPosts((prev) => prev.filter((p) => p.id !== postId));
+        setIsDrawerOpen(false);
+        setSelectedPost(null);
+        showToast('Konten berhasil dihapus.');
+      },
+      onError: () => showToast('Konten belum dapat dihapus.'),
+    });
+  };
+
+  const handleAddNewPost = () => {
+    setModalInitialStatus('idea');
+    setModalInitialDate(undefined);
+    setIsNewPostModalOpen(true);
+  };
+
+  const handleAddNewPostWithStatus = (status: PostStatus) => {
+    setModalInitialStatus(status);
+    setModalInitialDate(undefined);
+    setIsNewPostModalOpen(true);
+  };
+
+  const handleAddNewPostForDate = (dateStr: string) => {
+    setModalInitialStatus('scheduled');
+    setModalInitialDate(dateStr);
+    setIsNewPostModalOpen(true);
+  };
+
+  const handleSaveNewPost = (newPost: PostItem) => {
+    createPostMutation.mutate(newPost, {
+      onSuccess: (saved) => {
+        setPosts((prev) => [saved, ...prev.filter((post) => post.id !== saved.id)]);
+        showToast('✨ Konten baru berhasil ditambahkan!');
+      },
+      onError: () => showToast('Konten baru belum dapat disimpan.'),
+    });
+  };
+
+  const handleInsertFromAiStudio = (aiPostPartial: Partial<PostItem>) => {
+    const newPost: PostItem = {
+      id: `post-${Date.now()}`,
+      title: aiPostPartial.title || 'Untitled Content',
+      platform: aiPostPartial.platform || 'instagram',
+      contentType: aiPostPartial.contentType || 'reel',
+      status: aiPostPartial.status || 'scripting',
+      scheduledDate: '2026-09-08T18:00',
+      pillar: aiPostPartial.pillar || 'Educational',
+      coverImage: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&auto=format&fit=crop&q=80',
+      caption: aiPostPartial.caption || '',
+      hooks: aiPostPartial.hooks || [],
+      cta: aiPostPartial.cta || 'Follow untuk tips harian!',
+      hashtags: aiPostPartial.hashtags || ['#socialmediaplanner', '#contentmarketing'],
+      targetAudience: aiPostPartial.targetAudience || 'Audience Indonesia',
+      notes: aiPostPartial.notes || '',
+      author: {
+        id: 'u-1',
+        name: 'Sarah Nabila',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        role: 'Social Media Lead',
+      },
+      checklist: [
+        { id: 'c-1', text: 'Scripting & Hook Validation', done: true },
+        { id: 'c-2', text: 'Visual Asset Creation', done: false },
+        { id: 'c-3', text: 'Schedule to Meta Suite', done: false },
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setActiveView('table');
+    createPostMutation.mutate(newPost, {
+      onSuccess: (saved) => {
+        setPosts((prev) => [saved, ...prev]);
+        setSelectedPost(saved);
+        setIsDrawerOpen(true);
+        showToast('✨ Konten dari AI Studio berhasil disimpan!');
+      },
+      onError: () => showToast('Konten AI belum dapat disimpan.'),
+    });
+  };
 
   const counts = {
     total: posts.length,
@@ -79,713 +417,317 @@ export default function SocialTrackerClient() {
     published: posts.filter((p) => p.status === 'published').length,
   };
 
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      if (filter.platform && filter.platform !== 'all' && post.platform !== filter.platform) return false;
-      if (filter.status && filter.status !== 'all' && post.status !== filter.status) return false;
-      if (filter.pillar && filter.pillar !== 'all' && post.pillar !== filter.pillar) return false;
-      if (filter.search) {
-        const q = filter.search.toLowerCase();
-        const matchTitle = post.title.toLowerCase().includes(q);
-        const matchCaption = post.caption?.toLowerCase().includes(q);
-        const matchTags = post.hashtags.some((t) => t.toLowerCase().includes(q));
-        if (!matchTitle && !matchCaption && !matchTags) return false;
-      }
-      return true;
-    });
-  }, [posts, filter]);
-
-  const handleOpenPost = (post: PostItem) => {
-    setSelectedPost(post);
-    setIsDrawerOpen(true);
-  };
-
-  const getStatusBadge = (status: PostStatus) => {
-    switch (status) {
-      case 'published':
-        return <DnaBadge status="success">PUBLISHED</DnaBadge>;
-      case 'scheduled':
-        return <DnaBadge status="info">SCHEDULED</DnaBadge>;
-      case 'review':
-        return <DnaBadge status="warning">IN REVIEW</DnaBadge>;
-      case 'scripting':
-        return <DnaBadge status="purple">SCRIPTING</DnaBadge>;
-      case 'idea':
-        return <DnaBadge status="default">IDEA</DnaBadge>;
-      default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
-    }
-  };
-
-  const getPlatformIcon = (platform: SocialPlatform) => {
-    switch (platform) {
-      case 'instagram':
-        return <span className="text-pink-500 font-bold text-xs">IG</span>;
-      case 'facebook':
-        return <span className="text-blue-600 font-bold text-xs">FB</span>;
-      case 'tiktok':
-        return <span className="text-slate-900 dark:text-white font-bold text-xs">TK</span>;
-      default:
-        return <span className="text-slate-500 font-bold text-xs">{platform.slice(0, 2).toUpperCase()}</span>;
-    }
-  };
-
   return (
-    <DashboardShell
-      title="Social Media Content & Meta Analytics Tracker"
-      subtitle="Notion-style Content Planner & Meta Suite Performance Insights (Read-Only Inspection Mode)"
-    >
-      <div className="space-y-5">
-        {/* Top Read-Only Banner & Header Stats */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 text-white rounded-2xl p-4 shadow-sm border border-slate-800">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold flex items-center gap-2">
-                <Globe className="w-4 h-4 text-blue-400" />
-                {metaAccount.pageName}
-              </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                {metaAccount.igUsername}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Cross-Platform Content Repository & Realtime Meta Insights Benchmark
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-700/60 text-xs text-amber-300">
-            <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="font-semibold text-[11px]">Mode Read-Only Aktif</span>
-            <span className="text-[10px] text-slate-400 hidden md:inline">(Input & Edit Dibatasi)</span>
-          </div>
+    <DnaPageContainer className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      {/* Toast notification banner */}
+      {toastMessage && (
+        <div className="fixed top-6 right-6 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-medium shadow-2xl border border-slate-700 animate-fade-in flex items-center gap-2">
+          <span>{toastMessage}</span>
         </div>
+      )}
 
-        {/* Compact Clean KPI Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Konten</p>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tabular-nums">{counts.total}</h3>
-              <p className="text-[10px] font-bold text-slate-400">{counts.published} Published</p>
-            </div>
-            <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300">
-              <Layers className="w-4 h-4" />
-            </div>
+      {/* Layer 01: Ultra-Clean Un-boxed Header */}
+      {/* Layer 01: Ultra-Clean Un-boxed Header */}
+      <DnaPageHeader
+        title="SOCIAL MEDIA PLANNER & TRACKER"
+        subtitle="Multi-Platform Content Calendar, Creative Briefing & Meta Graph API Integration"
+        breadcrumbs={[
+          { label: 'Marketing', href: '/marketing/dashboard' },
+          { label: 'Social Media Tracker' },
+        ]}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSyncMeta}
+              disabled={isSyncingMeta}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[12px] font-semibold shadow-2xs transition cursor-pointer disabled:opacity-50"
+              title="Tarik & Sinkronisasi Data dari Meta API"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingMeta ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
+              <span>{isSyncingMeta ? 'Sinkronisasi...' : 'Sync Meta API'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleAddNewPost()}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold shadow-2xs cursor-pointer transition"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Konten
+            </button>
           </div>
+        }
+      />
 
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Terjadwal</p>
-              <h3 className="text-xl sm:text-2xl font-black text-blue-600 tabular-nums">{counts.scheduled}</h3>
-              <p className="text-[10px] font-bold text-blue-500">Scheduled Feed</p>
-            </div>
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/60 rounded-xl text-blue-600">
-              <CalendarIcon className="w-4 h-4" />
-            </div>
-          </div>
+      {/* Layer 02: 4 KPI Metric Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
+        <DnaStatCard
+          label="KONTEN TERJADWAL"
+          value={`${counts.scheduled} Konten`}
+          subtext={`Dari total ${counts.total} ide & draft`}
+          icon={<Calendar className="w-4 h-4" />}
+          variant="blue"
+        />
+        <DnaStatCard
+          label="TOTAL META REACH"
+          value={formatNumber(insights.totalReach)}
+          subtext="Organik & Boosted Ads"
+          icon={<TrendingUp className="w-4 h-4" />}
+          variant="emerald"
+        />
+        <DnaStatCard
+          label="AVG ENGAGEMENT"
+          value={`${insights.engagementRate}%`}
+          subtext="Benchmark Maklon 2.1%"
+          icon={<Sparkles className="w-4 h-4" />}
+          variant="amber"
+        />
+        <DnaStatCard
+          label="CAMPAIGN OKRS"
+          value="76% On-Track"
+          subtext="Target Pertumbuhan Q3"
+          icon={<Target className="w-4 h-4" />}
+          variant="sky"
+        />
+      </div>
 
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Reach Meta</p>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tabular-nums">
-                {(insights.totalReach / 1000).toFixed(1)}K
-              </h3>
-              <p className="text-[10px] font-bold text-emerald-600">+{insights.reachGrowthPercent}% vs bln lalu</p>
-            </div>
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl text-emerald-600">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
+      {/* Layer 03: Bordered Tab Nav Container */}
+      <DnaTabNav
+        tabs={[
+          { id: 'table', label: 'Tabel', icon: Table },
+          { id: 'board', label: 'Kanban', icon: LayoutGrid },
+          { id: 'calendar', label: 'Kalender', icon: Calendar },
+          { id: 'gallery', label: 'Galeri', icon: ImageIcon },
+          { id: 'list', label: 'Daftar', icon: List },
+          { id: 'meta_analytics', label: 'Meta Analytics', icon: BarChart3 },
+          { id: 'api_hub', label: 'Meta API Hub', icon: Zap },
+          { id: 'campaign_okrs', label: 'Campaign OKRs', icon: Target },
+          { id: 'ai_studio', label: 'AI Copy Studio', icon: Sparkles },
+        ]}
+        activeTab={activeView}
+        onChange={(tabId) => setActiveView(tabId as DatabaseViewType)}
+        className="mt-[22px]"
+      />
 
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Avg Engagement</p>
-              <h3 className="text-xl sm:text-2xl font-black text-purple-600 tabular-nums">{insights.engagementRate}%</h3>
-              <p className="text-[10px] font-bold text-purple-500">+{insights.engagementGrowthPercent}% Growth</p>
-            </div>
-            <div className="p-2.5 bg-purple-50 dark:bg-purple-950/60 rounded-xl text-purple-600">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
+      {/* Layer 04: Filter Bar & Platform Pills */}
+      <div className="mt-[18px] space-y-2.5">
+        {/* Quick Platform Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1">
+            Platform:
+          </span>
+          {PLATFORMS.map((p) => {
+            const isActive = filter.platform === p.id;
+            const countForPlatform =
+              p.id === 'all'
+                ? posts.length
+                : posts.filter((item) => item.platform === p.id).length;
 
-        {/* Database View Switcher Tabs */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
-          <div className="flex items-center gap-1 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-            {[
-              { id: 'table', label: 'Table', icon: Table },
-              { id: 'board', label: 'Board', icon: Grid },
-              { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
-              { id: 'gallery', label: 'Gallery', icon: Layers },
-              { id: 'list', label: 'List', icon: LayoutList },
-              { id: 'meta_analytics', label: 'Meta Analytics', icon: BarChart3 },
-              { id: 'campaign_okrs', label: 'Campaign OKRs', icon: TrendingUp },
-              { id: 'api_hub', label: 'API Status', icon: Globe },
-            ].map((tab) => {
-              const IconComp = tab.icon;
-              const isActive = activeView === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveView(tab.id as DatabaseViewType)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setFilter((prev) => ({ ...prev, platform: p.id }))}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer shrink-0 border ${
+                  isActive
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <span>{p.icon}</span>
+                <span>{p.label}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                    isActive ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-500'
                   }`}
                 >
-                  <IconComp className="w-3.5 h-3.5" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search & Filters */}
-          {['table', 'board', 'calendar', 'gallery', 'list'].includes(activeView) && (
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 sm:w-56">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-                <Input
-                  type="text"
-                  placeholder="Cari postingan, hashtag..."
-                  value={filter.search}
-                  onChange={(e) => setFilter((prev) => ({ ...prev, search: e.target.value }))}
-                  className="pl-8 h-8 text-xs rounded-xl"
-                />
-              </div>
-
-              <select
-                value={filter.platform}
-                onChange={(e) => setFilter((prev) => ({ ...prev, platform: e.target.value as any }))}
-                className="h-8 px-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none"
-              >
-                <option value="all">Semua Platform</option>
-                <option value="instagram">Instagram</option>
-                <option value="facebook">Facebook</option>
-                <option value="tiktok">TikTok</option>
-              </select>
-            </div>
-          )}
+                  {countForPlatform}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* ACTIVE VIEW CONTENT */}
+        {/* Toolbar */}
+        <DnaToolbar
+          search={filter.search}
+          onSearchChange={(val) => setFilter((prev) => ({ ...prev, search: val }))}
+          searchPlaceholder="Cari judul konten, caption, atau hashtag..."
+          variant="card"
+          filters={
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Status Select */}
+              <select
+                value={filter.status}
+                onChange={(e) => setFilter((prev) => ({ ...prev, status: e.target.value as any }))}
+                className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-[12px] font-medium text-slate-700 hover:border-slate-300 focus:outline-none focus:border-blue-500 focus:bg-white"
+              >
+                <option value="all">Semua Status</option>
+                <option value="idea">💡 Ide</option>
+                <option value="draft">📝 Draft</option>
+                <option value="review">👀 Review</option>
+                <option value="scheduled">⏰ Scheduled</option>
+                <option value="published">✅ Published</option>
+              </select>
 
-        {/* 1. TABLE VIEW */}
+              {/* Pillar Select */}
+              <select
+                value={filter.pillar}
+                onChange={(e) => setFilter((prev) => ({ ...prev, pillar: e.target.value as any }))}
+                className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-[12px] font-medium text-slate-700 hover:border-slate-300 focus:outline-none focus:border-blue-500 focus:bg-white"
+              >
+                <option value="all">Semua Pillar</option>
+                <option value="Educational">📚 Educational</option>
+                <option value="Behind The Scene">🎬 Behind The Scene</option>
+                <option value="Promotion">🔥 Promotion</option>
+                <option value="Social Proof">⭐ Social Proof</option>
+                <option value="Entertainment">🎭 Entertainment</option>
+              </select>
+
+              {/* Sort Select */}
+              <select
+                value={`${sort.field}-${sort.direction}`}
+                onChange={(e) => {
+                  const [field, direction] = e.target.value.split('-') as [any, any];
+                  setSort({
+                    field: field === 'reach'
+                      ? 'performance.reach'
+                      : field === 'engagementRate'
+                        ? 'performance.engagementRate'
+                        : field,
+                    direction,
+                  });
+                }}
+                className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-[12px] font-medium text-slate-700 hover:border-slate-300 focus:outline-none focus:border-blue-500 focus:bg-white"
+              >
+                <option value="scheduledDate-asc">📅 Jadwal Terdekat</option>
+                <option value="scheduledDate-desc">📅 Jadwal Terjauh</option>
+                <option value="createdAt-desc">⏱️ Dibuat Terbaru</option>
+                <option value="reach-desc">👥 Reach Tertinggi</option>
+                <option value="engagementRate-desc">⭐ Engagement Tertinggi</option>
+              </select>
+            </div>
+          }
+          onReset={() => {
+            setFilter({
+              platform: 'all',
+              status: 'all',
+              pillar: 'all',
+              search: '',
+            });
+            setSort({ field: 'scheduledDate', direction: 'asc' });
+          }}
+          isFiltered={
+            filter.platform !== 'all' ||
+            filter.status !== 'all' ||
+            filter.pillar !== 'all' ||
+            !!filter.search
+          }
+        />
+      </div>
+
+      {/* Layer 05: Active Database View Body */}
+      <div className="mt-[18px]">
         {activeView === 'table' && (
-          <Card className="overflow-hidden border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-3">Judul Konten</th>
-                    <th className="p-3">Platform</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">Content Pillar</th>
-                    <th className="p-3">Jadwal Publish</th>
-                    <th className="p-3">Author</th>
-                    <th className="p-3">Reach / Likes</th>
-                    <th className="p-3 text-right">Detail</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredPosts.map((post) => (
-                    <tr
-                      key={post.id}
-                      onClick={() => handleOpenPost(post)}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
-                    >
-                      <td className="p-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
-                        {post.title}
-                      </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-[10px]">
-                          {getPlatformIcon(post.platform)}
-                          <span className="capitalize">{post.platform}</span>
-                        </span>
-                      </td>
-                      <td className="p-3">{getStatusBadge(post.status)}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                          {post.pillar}
-                        </span>
-                      </td>
-                      <td className="p-3 text-slate-500 font-medium">
-                        {new Date(post.scheduledDate).toLocaleString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                      <td className="p-3 text-slate-600 dark:text-slate-400 font-medium">{post.author.name}</td>
-                      <td className="p-3">
-                        {post.performance ? (
-                          <span className="font-bold text-slate-700 dark:text-slate-300 tabular-nums">
-                            {(post.performance.reach / 1000).toFixed(1)}k / {post.performance.likes}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 text-[10px] italic">Belum tayang</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenPost(post);
-                          }}
-                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-bold text-[11px]"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> Inspeksi
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <TableView
+            posts={filteredAndSortedPosts}
+            onOpenPost={handleOpenPost}
+            onUpdateStatus={handleUpdateStatus}
+            onAddNewPost={handleAddNewPost}
+          />
         )}
 
-        {/* 2. BOARD VIEW */}
         {activeView === 'board' && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 overflow-x-auto pb-3">
-            {(['idea', 'scripting', 'review', 'scheduled', 'published'] as PostStatus[]).map((status) => {
-              const statusPosts = filteredPosts.filter((p) => p.status === status);
-              return (
-                <div
-                  key={status}
-                  className="bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-200/80 dark:border-slate-800 space-y-2.5"
-                >
-                  <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-slate-800">
-                    <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                      {status}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 dark:bg-slate-800 font-extrabold text-slate-600 dark:text-slate-400">
-                      {statusPosts.length}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {statusPosts.map((post) => (
-                      <div
-                        key={post.id}
-                        onClick={() => handleOpenPost(post)}
-                        className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all cursor-pointer space-y-2"
-                      >
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="font-extrabold uppercase text-slate-400">{post.platform}</span>
-                          <span className="font-bold text-blue-600">{post.pillar}</span>
-                        </div>
-                        <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 line-clamp-2">
-                          {post.title}
-                        </h4>
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-700/50">
-                          <span className="font-medium">{post.author.name.split(' ')[0]}</span>
-                          <span>{new Date(post.scheduledDate).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <BoardView
+            posts={filteredAndSortedPosts}
+            onOpenPost={handleOpenPost}
+            onUpdateStatus={handleUpdateStatus}
+            onAddNewPostWithStatus={handleAddNewPostWithStatus}
+          />
         )}
 
-        {/* 3. CALENDAR VIEW */}
         {activeView === 'calendar' && (
-          <Card className="p-4 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 shadow-sm">
-            <div className="flex items-center justify-between border-b pb-2.5 border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                Kalender Publikasi Konten (Agustus - September 2026)
-              </h3>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Read-Only Grid</span>
-            </div>
-            <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-extrabold uppercase text-slate-400 pb-1">
-              <div>Sen</div>
-              <div>Sel</div>
-              <div>Rab</div>
-              <div>Kam</div>
-              <div>Jum</div>
-              <div>Sab</div>
-              <div>Min</div>
-            </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                const dayStr = day < 10 ? `0${day}` : `${day}`;
-                const dateKey = `2026-08-${dayStr}`;
-                const dayPosts = filteredPosts.filter((p) => p.scheduledDate.startsWith(dateKey));
-
-                return (
-                  <div
-                    key={day}
-                    className="min-h-20 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 flex flex-col justify-between"
-                  >
-                    <span className="font-bold text-[10px] text-slate-400 text-right">{day}</span>
-                    <div className="space-y-1">
-                      {dayPosts.map((p) => (
-                        <div
-                          key={p.id}
-                          onClick={() => handleOpenPost(p)}
-                          className="p-1 rounded-md bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-[9px] font-bold text-blue-800 dark:text-blue-200 truncate cursor-pointer hover:underline"
-                        >
-                          {p.title}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+          <CalendarView
+            posts={filteredAndSortedPosts}
+            onOpenPost={handleOpenPost}
+            onAddNewPostForDate={handleAddNewPostForDate}
+          />
         )}
 
-        {/* 4. GALLERY VIEW */}
         {activeView === 'gallery' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {filteredPosts.map((post) => (
-              <Card
-                key={post.id}
-                onClick={() => handleOpenPost(post)}
-                className="overflow-hidden border border-slate-200 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all cursor-pointer flex flex-col shadow-sm"
-              >
-                {post.coverImage && (
-                  <div className="h-36 w-full overflow-hidden relative">
-                    <img
-                      src={post.coverImage}
-                      alt={post.title}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-2 right-2">
-                      {getStatusBadge(post.status)}
-                    </div>
-                  </div>
-                )}
-                <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2">
-                  <div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                      <span className="uppercase font-extrabold text-blue-600">{post.platform}</span>
-                      <span className="font-bold">{post.pillar}</span>
-                    </div>
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 line-clamp-2">
-                      {post.title}
-                    </h4>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="font-medium">{post.author.name}</span>
-                    <span className="font-bold text-blue-600 hover:underline flex items-center gap-1 text-[10px]">
-                      <Eye className="w-3 h-3" /> Detail
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <GalleryView
+            posts={filteredAndSortedPosts}
+            onOpenPost={handleOpenPost}
+            onAddNewPost={handleAddNewPost}
+          />
         )}
 
-        {/* 5. LIST VIEW */}
         {activeView === 'list' && (
-          <div className="space-y-2.5">
-            {filteredPosts.map((post) => (
-              <Card
-                key={post.id}
-                onClick={() => handleOpenPost(post)}
-                className="p-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-blue-400 transition-colors cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm"
-              >
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(post.status)}
-                    <span className="text-[10px] font-extrabold text-blue-600 uppercase">{post.platform}</span>
-                    <span className="text-[10px] text-slate-400 font-bold">• {post.pillar}</span>
-                  </div>
-                  <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">{post.title}</h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-1">{post.caption}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right text-[11px] text-slate-500 hidden sm:block">
-                    <div className="font-semibold">{post.author.name}</div>
-                    <div className="text-[10px] text-slate-400">{new Date(post.scheduledDate).toLocaleDateString('id-ID')}</div>
-                  </div>
-                  <button className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    Inspeksi
-                  </button>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <ListView
+            posts={filteredAndSortedPosts}
+            onOpenPost={handleOpenPost}
+            onUpdateStatus={handleUpdateStatus}
+            onAddNewPost={handleAddNewPost}
+          />
         )}
 
-        {/* 6. META ANALYTICS VIEW */}
         {activeView === 'meta_analytics' && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Impressions Suite</span>
-                <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                  {(insights.impressions / 1000).toFixed(1)}K
-                </div>
-                <span className="text-[10px] text-emerald-600 font-bold">+{insights.impressionsGrowthPercent}% M-o-M</span>
-              </Card>
-              <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Profil Visits</span>
-                <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                  {insights.profileVisits.toLocaleString('id-ID')}
-                </div>
-                <span className="text-[10px] text-emerald-600 font-bold">Net Followers: +{insights.netFollowers}</span>
-              </Card>
-              <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Website Clicks</span>
-                <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                  {insights.websiteClicks.toLocaleString('id-ID')}
-                </div>
-                <span className="text-[10px] text-blue-600 font-bold">Link CTR Tinggi</span>
-              </Card>
-              <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Reels Total Views</span>
-                <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                  {(insights.reelsViews / 1000).toFixed(1)}K
-                </div>
-                <span className="text-[10px] text-purple-600 font-bold">Format Video Utama</span>
-              </Card>
-            </div>
-
-            {/* Demographics & Daily Trend */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
-                <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Users className="w-4 h-4 text-blue-600" /> Demografi Audiens Meta
-                </h3>
-                <div className="space-y-2.5 text-xs">
-                  {demographics.topCities.map((c) => (
-                    <div key={c.city} className="space-y-1">
-                      <div className="flex justify-between font-bold text-[11px]">
-                        <span>{c.city}</span>
-                        <span>{c.percent}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-blue-600 h-full rounded-full" style={{ width: `${c.percent}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
-                <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500" /> Best Time Slots Publishing
-                </h3>
-                <div className="space-y-2.5 text-xs">
-                  {bestTimeSlots.map((slot) => (
-                    <div key={slot.day} className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1.5">
-                      <span className="font-extrabold text-[11px] text-slate-900 dark:text-slate-100">{slot.day}</span>
-                      <div className="grid grid-cols-4 gap-2">
-                        {slot.hourScores.map((h) => (
-                          <div key={h.hour} className="p-1.5 bg-white dark:bg-slate-800 rounded-lg text-center border text-[10px]">
-                            <div className="font-extrabold text-blue-600">{h.hour}:00</div>
-                            <div className="text-[9px] text-slate-400">{h.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </div>
+          <MetaAnalyticsView
+            insights={insights}
+            dailyTrends={dailyTrends}
+            demographics={demographics}
+            bestTimeSlots={bestTimeSlots}
+            posts={posts}
+            metaAccount={metaAccount}
+            onSyncMeta={handleSyncMeta}
+            isSyncing={isSyncingMeta}
+            onOpenPost={handleOpenPost}
+          />
         )}
 
-        {/* 7. CAMPAIGN OKRS VIEW */}
-        {activeView === 'campaign_okrs' && (
-          <div className="space-y-3">
-            {campaignOkrs.map((okr) => {
-              const pct = Math.min(100, Math.round((okr.currentValue / okr.targetValue) * 100));
-              return (
-                <Card key={okr.id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-sm">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">{okr.targetMetric}</span>
-                      <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">{okr.title}</h3>
-                    </div>
-                    <DnaBadge status={okr.status === 'on_track' ? 'success' : 'warning'}>
-                      {okr.status.toUpperCase()}
-                    </DnaBadge>
-                  </div>
-                  <p className="text-[11px] text-slate-500">{okr.objective}</p>
-
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold">
-                      <span>Progress: {okr.currentValue.toLocaleString('id-ID')} / {okr.targetValue.toLocaleString('id-ID')} {okr.unit}</span>
-                      <span>{pct}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-blue-600 h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-
-        {/* 8. API HUB VIEW */}
         {activeView === 'api_hub' && (
-          <Card className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-5 shadow-sm">
-            <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Meta Graph API Integration Status</h3>
-                  <p className="text-[11px] text-slate-500">Live API Connection & Permissions Readout</p>
-                </div>
-              </div>
-              <DnaBadge status="success">CONNECTED & LIVE</DnaBadge>
-            </div>
+          <MetaApiHubView
+            metaAccount={metaAccount}
+            setMetaAccount={setMetaAccount}
+            onSyncMeta={handleSyncMeta}
+            isSyncing={isSyncingMeta}
+          />
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1">
-                <span className="font-extrabold text-[10px] uppercase text-slate-400">Facebook Page</span>
-                <div className="text-xs font-bold text-slate-900 dark:text-white">{metaAccount.pageName}</div>
-                <div className="text-[10px] text-slate-500">Page ID: {metaAccount.pageId}</div>
-              </div>
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1">
-                <span className="font-extrabold text-[10px] uppercase text-slate-400">Instagram Account</span>
-                <div className="text-xs font-bold text-pink-600">{metaAccount.igUsername}</div>
-                <div className="text-[10px] text-slate-500">Followers: {metaAccount.igFollowersCount.toLocaleString('id-ID')}</div>
-              </div>
-            </div>
+        {activeView === 'campaign_okrs' && (
+          <CampaignOkrsView
+            okrs={campaignOkrs}
+            posts={posts}
+            onOpenPost={handleOpenPost}
+          />
+        )}
 
-            <div className="space-y-1.5 text-xs">
-              <span className="font-extrabold text-[10px] uppercase text-slate-400">Active Meta Permissions:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {metaAccount.permissions.map((p) => (
-                  <span key={p} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono text-[10px]">
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </Card>
+        {activeView === 'ai_studio' && (
+          <AiStudioView onInsertAsNewPost={handleInsertFromAiStudio} />
         )}
       </div>
 
-      {/* POST INSPECTION DRAWER (READ ONLY) */}
-      {isDrawerOpen && selectedPost && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex justify-end animate-fade-in">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 h-full shadow-2xl p-5 overflow-y-auto space-y-5 flex flex-col justify-between border-l border-slate-200 dark:border-slate-800">
-            <div className="space-y-5">
-              {/* Top Bar */}
-              <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <DnaBadge status="default">READ-ONLY INSPECTION</DnaBadge>
-                  {getStatusBadge(selectedPost.status)}
-                </div>
-                <button
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+      {/* Notion Document / Post Drawer */}
+      <PostDrawer
+        post={selectedPost}
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setSelectedPost(null);
+        }}
+        onUpdatePost={handleUpdatePost}
+        onDeletePost={handleDeletePost}
+      />
 
-              {/* Cover & Title */}
-              {selectedPost.coverImage && (
-                <div className="h-40 w-full rounded-xl overflow-hidden">
-                  <img src={selectedPost.coverImage} alt={selectedPost.title} className="w-full h-full object-cover" />
-                </div>
-              )}
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-[10px] font-extrabold text-blue-600 uppercase">
-                  <span>{selectedPost.platform}</span>
-                  <span>•</span>
-                  <span>{selectedPost.pillar}</span>
-                </div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{selectedPost.title}</h2>
-              </div>
-
-              {/* Metadata */}
-              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs">
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Author:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">{selectedPost.author.name}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Jadwal Publish:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
-                    {new Date(selectedPost.scheduledDate).toLocaleString('id-ID')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Caption */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Caption Copywriter:</span>
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-mono whitespace-pre-wrap text-slate-700 dark:text-slate-300 leading-relaxed border border-slate-200 dark:border-slate-700/50">
-                  {selectedPost.caption}
-                </div>
-              </div>
-
-              {/* Hashtags */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Hashtags:</span>
-                <div className="flex flex-wrap gap-1">
-                  {selectedPost.hashtags.map((h) => (
-                    <span key={h} className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 text-[10px] font-bold">
-                      {h}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Checklist */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400">Checklist Produksi (Read-Only):</span>
-                <div className="space-y-1 text-xs">
-                  {selectedPost.checklist.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2">
-                      <CheckCircle2 className={`w-3.5 h-3.5 ${item.done ? 'text-emerald-600' : 'text-slate-300'}`} />
-                      <span className={item.done ? 'line-through text-slate-400 text-[11px]' : 'text-slate-700 dark:text-slate-300 text-[11px]'}>
-                        {item.text}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Performance if published */}
-              {selectedPost.performance && (
-                <div className="p-3.5 rounded-xl bg-slate-900 text-white space-y-2">
-                  <span className="text-[10px] font-extrabold text-blue-400 block uppercase tracking-wider">Live Meta Performance</span>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <div className="text-xs font-black">{(selectedPost.performance.reach / 1000).toFixed(1)}K</div>
-                      <div className="text-[9px] text-slate-400 uppercase">Reach</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-black">{selectedPost.performance.likes}</div>
-                      <div className="text-[9px] text-slate-400 uppercase">Likes</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-black">{selectedPost.performance.engagementRate}%</div>
-                      <div className="text-[9px] text-slate-400 uppercase">Engagement</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
-              <button
-                onClick={() => setIsDrawerOpen(false)}
-                className="w-full py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs"
-              >
-                Tutup Inspeksi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </DashboardShell>
+      {/* Quick Add Post Modal */}
+      <NewPostModal
+        isOpen={isNewPostModalOpen}
+        onClose={() => setIsNewPostModalOpen(false)}
+        onSave={handleSaveNewPost}
+        initialStatus={modalInitialStatus}
+        initialDate={modalInitialDate}
+      />
+    </DnaPageContainer>
   );
 }

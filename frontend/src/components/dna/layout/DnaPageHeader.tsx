@@ -14,6 +14,7 @@ export interface DnaPageTabItem {
 
 export interface DnaPageHeaderProps {
   title: string;
+  titleAccent?: string;
   subtitle?: string;
   description?: string;
   backLink?: {
@@ -24,6 +25,7 @@ export interface DnaPageHeaderProps {
   backText?: string;
   badge?: React.ReactNode;
   breadcrumbs?: any[];
+  breadcrumbItems?: any[];
   tabs?: DnaPageTabItem[];
   activeTab?: string;
   onTabChange?: (tabKey: string) => void;
@@ -38,6 +40,7 @@ export interface DnaPageHeaderProps {
 
 export function DnaPageHeader({
   title,
+  titleAccent,
   subtitle,
   description,
   backLink,
@@ -77,7 +80,7 @@ export function DnaPageHeader({
           </Link>
         )}
         <h1 className="text-[26px] md:text-[28px] font-black text-slate-900 tracking-tight uppercase">
-          {title}
+          {title} {titleAccent && <span className="text-amber-500 font-serif lowercase italic font-normal ml-1.5">{titleAccent}</span>}
         </h1>
         {effectiveSubtitle && (
           <p className="text-[12px] text-slate-500 mt-0.5">

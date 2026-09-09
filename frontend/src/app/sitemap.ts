@@ -1,27 +1,29 @@
-import { MetadataRoute } from 'next';
-import { prisma } from '@/lib/db';
+import type { MetadataRoute } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://nexerp.id';
-
   let articleEntries: MetadataRoute.Sitemap = [];
-  
-  try {
-    // Fetch articles for sitemap
-    const articles = await prisma.article.findMany({
-      select: { slug: true, updatedAt: true },
-    });
 
-    articleEntries = articles.map((article: any) => ({
-      url: `${baseUrl}/blog/${article.slug}`,
-      lastModified: article.updatedAt,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    }));
-  } catch (error) {
-    console.error('Sitemap build-time database fetch failed (expected during docker build):', error);
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api';
+    const res = await fetch(`${apiUrl}/v1/marketing/articles?limit=50`, {
+      next: { revalidate: 3600 },
+      headers: { Accept: 'application/json' },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const articles = Array.isArray(data) ? data : data.data || [];
+      articleEntries = articles.map((article: any) => ({
+        url: `${baseUrl}/blog/${article.slug}`,
+        lastModified: article.updatedAt ? new Date(article.updatedAt) : new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.7,
+      }));
+    }
+  } catch {
+    // Graceful fallback during build time
   }
 
   return [

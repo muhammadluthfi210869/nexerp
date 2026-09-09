@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard } from "@/components/dna";
+import { DnaPageContainer } from "@/components/dna";
+import { DnaPageHeader } from "@/components/dna";
+import { DnaStatCard } from "@/components/dna";
 import { Calendar, Factory, ClipboardList } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
@@ -22,34 +23,34 @@ export default async function ProductionDashboardPage() {
   const cards = data?.cards || {};
 
   return (
-    <DashboardShell
-      title="PRODUCTION"
-      titleAccent="DASHBOARD"
-      subtitle="Production management hub"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="PRODUCTION"
+        subtitle="Production management hub"
+      />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
+        <DnaStatCard
           label="Output"
           value={`${cards.achievement?.actual || 0} pcs`}
-          subValue={`${cards.achievement?.completedOrders || 0} completed`}
+          subtext={`${cards.achievement?.completedOrders || 0} completed`}
           icon={<Factory />}
         />
-        <StatCard
+        <DnaStatCard
           label="Quality Rate"
           value={`${100 - (cards.quality?.defectRate || 0)}%`}
-          subValue="Pass rate"
+          subtext="Pass rate"
           icon={<ClipboardList />}
         />
-        <StatCard
+        <DnaStatCard
           label="WIP"
           value={(data?.workshops?.queue || 0) + (data?.workshops?.mixing || 0) + (data?.workshops?.filling || 0) + (data?.workshops?.packing || 0)}
-          subValue="Work in Progress"
+          subtext="Work in Progress"
           icon={<Factory />}
         />
-        <StatCard
+        <DnaStatCard
           label="Active Schedules"
           value={cards.achievement?.totalOrders || 0}
-          subValue="In production"
+          subtext="In production"
           icon={<Calendar />}
         />
       </div>
@@ -71,6 +72,6 @@ export default async function ProductionDashboardPage() {
           <p className="text-[10px] text-slate-400 mt-1">Production Log & Documentation</p>
         </Link>
       </div>
-    </DashboardShell>
+    </DnaPageContainer>
   );
 }

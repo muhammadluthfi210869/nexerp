@@ -12,19 +12,21 @@ import {
   Trash2,
   Beaker
 } from "lucide-react";
-import {
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { 
+  TableWrapper, 
+  DnaBadge, 
+  DnaButton,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton } from "@/components/dna";
+  Label,
+  Input
+} from "@/components/dna";
 
 export default function MasterInciPage() {
   const queryClient = useQueryClient();

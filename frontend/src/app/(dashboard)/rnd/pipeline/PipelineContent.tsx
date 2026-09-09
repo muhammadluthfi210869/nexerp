@@ -5,20 +5,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { DataCard, StatCard, DnaInput, TableWrapper } from "@/components/dna";
+import {
+  DnaDialog,
+  DnaDialogContent,
+  DnaDialogTitle,
+  DnaDialogDescription,
+  DnaButton,
+  DnaTextarea,
+  DnaInput,
+  DnaStatCard,
+  DnaTabNav,
+  DnaCard,
+  TableWrapper,
+} from "@/components/dna";
 import { ModuleHeader } from "@/components/layout/ModuleHeader";
 import { cn } from "@/lib/utils";
 import {
@@ -79,12 +83,12 @@ const TAB_STAGES: Record<string, string[]> = {
 };
 
 const TABS = [
-  { key: "lab", label: "Active Lab", icon: FlaskIcon },
-  { key: "shipping", label: "Shipping", icon: Package },
-  { key: "review", label: "Review", icon: Eye },
+  { id: "lab", label: "Active Lab", icon: FlaskIcon },
+  { id: "shipping", label: "Shipping", icon: Package },
+  { id: "review", label: "Review", icon: Eye },
 ] as const;
 
-type TabKey = (typeof TABS)[number]["key"];
+type TabKey = (typeof TABS)[number]["id"];
 
 export function PipelineContent() {
   const queryClient = useQueryClient();
@@ -179,54 +183,44 @@ export function PipelineContent() {
         subtitle="Sample development workflow & stage management"
       />
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <StatCard
+      <div className="grid grid-cols-4 gap-3.5 mt-6">
+        <DnaStatCard
           label="In Development"
           value={labCount}
-          subValue="Active Lab"
+          subtext="Active Lab"
           icon={<Beaker className="h-5 w-5" />}
+          variant="blue"
         />
-        <StatCard
+        <DnaStatCard
           label="Ready to Ship"
           value={shipCount}
-          subValue="Awaiting Dispatch"
+          subtext="Awaiting Dispatch"
           icon={<Package className="h-5 w-5" />}
+          variant="amber"
         />
-        <StatCard
+        <DnaStatCard
           label="Pending Review"
           value={reviewCount}
-          subValue="Client Feedback"
+          subtext="Client Feedback"
           icon={<Eye className="h-5 w-5" />}
+          variant="sky"
         />
-        <StatCard
+        <DnaStatCard
           label="Approved"
           value={approvedCount}
-          subValue="Locked Deals"
+          subtext="Locked Deals"
           icon={<CheckCircle2 className="h-5 w-5" />}
+          variant="emerald"
         />
       </div>
 
-      <DataCard noShadow>
-        <div className="flex gap-0 border-b border-slate-200 -mx-8 px-8 mb-6">
-          {TABS.map((tab) => {
-            const TabIcon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "flex items-center gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 transition-all",
-                  isActive
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-slate-400 hover:text-slate-700"
-                )}
-              >
-                <TabIcon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
+      <DnaCard>
+        <div className="mb-6">
+          <DnaTabNav
+            tabs={TABS.map(t => ({ id: t.id, label: t.label, icon: t.icon }))}
+            activeTab={activeTab}
+            onTabChange={(id) => setActiveTab(id as TabKey)}
+          />
         </div>
 
         <div className="flex items-center justify-between mb-5">
@@ -383,16 +377,17 @@ export function PipelineContent() {
 
                       <td className="py-4 px-4 text-right">
                         {!isTerminal && (
-                          <Button
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
                             onClick={() => {
                               const nextStage = validStages[0];
                               if (nextStage) handleAdvanceClick(sample, nextStage);
                             }}
-                            className="h-8 px-4 rounded-xl font-black uppercase text-[9px] bg-blue-600 hover:bg-blue-700 text-white"
+                            icon={<Send className="h-3 w-3" />}
                           >
-                            <Send className="h-3 w-3 mr-1.5" />
                             Advance
-                          </Button>
+                          </DnaButton>
                         )}
                       </td>
                     </tr>
@@ -402,18 +397,18 @@ export function PipelineContent() {
             </tbody>
           </table>
         </TableWrapper>
-      </DataCard>
+      </DnaCard>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white border border-slate-200 shadow-sm rounded-2xl">
+      <DnaDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DnaDialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white border border-slate-200 shadow-sm rounded-2xl">
           <div className="p-5 space-y-4">
             <div className="space-y-1">
-              <DialogTitle className="text-base font-black text-slate-900 uppercase tracking-tight truncate">
+              <DnaDialogTitle className="text-base font-black text-slate-900 uppercase tracking-tight truncate">
                 {selectedSample?.productName || "Advance Stage"}
-              </DialogTitle>
-              <DialogDescription className="text-[9px] font-black text-slate-400 uppercase tracking-tight">
+              </DnaDialogTitle>
+              <DnaDialogDescription className="text-[9px] font-black text-slate-400 uppercase tracking-tight">
                 Confirm stage advancement
-              </DialogDescription>
+              </DnaDialogDescription>
             </div>
 
             <div className="flex items-center gap-3 py-3 px-4 bg-slate-50 rounded-xl">
@@ -438,7 +433,7 @@ export function PipelineContent() {
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
                 Notes <span className="text-slate-300">(optional)</span>
               </label>
-              <Textarea
+              <DnaTextarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add notes about this stage change..."
@@ -448,7 +443,7 @@ export function PipelineContent() {
           </div>
 
           <div className="p-4 pt-0 flex gap-2 justify-end">
-            <Button
+            <DnaButton
               variant="ghost"
               onClick={() => {
                 setConfirmOpen(false);
@@ -459,8 +454,9 @@ export function PipelineContent() {
               className="h-10 px-5 rounded-xl font-black uppercase text-[10px] text-slate-500"
             >
               Cancel
-            </Button>
-            <Button
+            </DnaButton>
+            <DnaButton
+              variant="primary"
               onClick={handleConfirmAdvance}
               disabled={advanceMutation.isPending}
               className="h-10 px-5 rounded-xl font-black uppercase text-[10px] bg-blue-600 hover:bg-blue-700 text-white"
@@ -471,10 +467,10 @@ export function PipelineContent() {
                 <Send className="h-3.5 w-3.5 mr-1.5" />
               )}
               Confirm
-            </Button>
+            </DnaButton>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DnaDialogContent>
+      </DnaDialog>
     </div>
   );
 }

@@ -1,687 +1,1322 @@
 "use client";
 
 /**
- * Master Barang — Consolidated Page (Daftar + Kelola)
+ * Master Barang & Kategori Barang — Unified Enterprise Data Hub
  *
- * Per Batch 6.3 user feedback: legacy ERP punya Daftar Barang + Kelola Barang
- * as 2 pages. Kita consolidated jadi 1 page dengan 2 tabs:
- *   - Tab 1: DAFTAR BARANG (read-only list — everyone can see)
- *   - Tab 2: KELOLA BARANG (CRUD with Sheet modal — admin/warehouse)
+ * Sesuai Legacy ERP Audit (kil_erp_full_inventory_v2.csv Baris 28-31)
+ * dan MASTER_DATA/BARANG.csv + KATEGORI-BARANG.csv.
  *
- * Special: Uses Sheet (side panel) for Add/Edit instead of Dialog karena
- * form Barang panjang (multi-section: Essential + Logistics + Batch QC +
- * Supplier/HPP). Sheet lebih cocok untuk form panjang.
+ * Fitur:
+ * - 2 Sub-nav Tab: "Master Barang" & "Kategori Barang"
+ * - Kolom Audit Legacy: Kode Barang, Nama Barang, Supplier Asal, Wujud Fisik, Real Stok, Harga Beli, Kategori, Sub Kategori, Satuan, Aging Barang, Aksi
+ * - 5-Layer Visual DNA Golden Reference Standard
+ * - 0 raw @/components/ui imports (Strict ADR-007)
  */
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
-  Plus,
   Package,
-  Activity,
-  AlertTriangle,
-  ShieldCheck,
-  Truck,
-  ArrowRightLeft,
-  FlaskConical,
-  Clock,
+  Tags,
+  Plus,
+  Search,
+  Filter,
+  Eye,
   Edit2,
   Trash2,
+  AlertTriangle,
+  Boxes,
+  Clock,
+  TrendingDown,
+  Layers,
+  Building2,
+  FileSpreadsheet,
+  CheckCircle2,
+  ExternalLink,
+  Sparkles,
+  RefreshCw,
+  FolderTree,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
-import { DnaInput } from "@/components/dna/DnaInput";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { TableWrapper } from "@/components/dna/TableWrapper";
 import {
-  MasterPageShell,
-  type MasterStatItem,
-  type MasterTab,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaBadge,
+  DnaButton,
+  DnaTabNav,
+  DnaInput,
+  DnaCurrencyInput,
+  DnaNumberInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaModal,
+  DnaConfirmDialog,
+  DnaCell,
+  useDnaToast,
 } from "@/components/dna";
-import { SectionDivider } from "@/components/layout/SectionDivider";
-import { SupplierHistorySection } from "@/components/scm/SupplierHistorySection";
-import { HppBreakdownCard } from "@/components/scm/HppBreakdownCard";
+import { api } from "@/lib/api";
 
-type Category = { id: string; name: string };
-type Account = { id: string; name: string; code: string };
-
-type InventoryBatch = {
+// ── Types ──
+export interface MasterBarangItem {
   id: string;
-  batchNumber: string;
-  currentStock: number;
-  expDate: string | null;
-  qcStatus: "GOOD" | "QUARANTINE" | "REJECT";
-  location?: { name: string };
-  supplier?: { name: string };
-};
+  kode: string;
+  nama: string;
+  supplierAsal: string;
+  wujudFisik: string;
+  realStok: number;
+  stokMin: number;
+  hargaBeli: number;
+  kategori: string;
+  kategoriKode: string; // BBK, KPR, KSR, BRU, BSJ, BPB, BJD
+  subKategori: string;
+  satuan: string;
+  agingHari: number;
+  imageUrl?: string;
+  akunPersediaan?: string;
+  akunCogs?: string;
+}
 
-type Good = {
+export interface KategoriBarangItem {
   id: string;
-  name: string;
-  code: string | null;
-  type: string;
-  unit: string;
-  usageUnit: string | null;
-  outMethod: "FIFO" | "FEFO";
-  leadTime: number;
-  isDummy: boolean;
-  unitPrice: number;
-  stockQty: number;
-  minLevel: number;
-  maxLevel: number;
-  reorderPoint: number;
-  categoryId: string | null;
-  category?: Category | null;
-  inventoryAccountId?: string | null;
-  salesAccountId?: string | null;
-  inventoryAccount?: Account | null;
-  salesAccount?: Account | null;
-  halalCertNo?: string | null;
-  halalExpDate?: string | null;
-  isHalalValidated: boolean;
-  physicalForm?: "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS";
-  inventories?: InventoryBatch[];
-};
+  kode: string;
+  kategori: string;
+  deskripsi: string;
+  totalSku: number;
+  akunPersediaan: string;
+  akunCogs: string;
+}
 
-const EMPTY_FORM = {
-  name: "",
-  code: "",
-  type: "RAW_MATERIAL",
-  unit: "KG",
-  usageUnit: "GRAM",
-  outMethod: "FIFO" as "FIFO" | "FEFO",
-  leadTime: 0,
-  isDummy: false,
-  unitPrice: 0,
-  minLevel: 0,
-  maxLevel: 0,
-  reorderPoint: 0,
-  categoryId: "",
-  inventoryAccountId: "",
-  salesAccountId: "",
-  halalCertNo: "",
-  halalExpDate: "",
-  isHalalValidated: false,
-  physicalForm: "PADAT" as "CAIR" | "SERBUK" | "BUTIRAN" | "PADAT" | "GAS",
-};
+// ── Seed Data from BARANG.csv & KATEGORI-BARANG.csv ──
+const INITIAL_CATEGORIES: KategoriBarangItem[] = [
+  { id: "cat-1", kode: "BBK", kategori: "Bahan Baku", deskripsi: "Bahan aktif, base, extract, dan zat kimia formulasi kosmetik", totalSku: 1845, akunPersediaan: "11310 - Persediaan Bahan Baku", akunCogs: "51010 - Beban Pokok Bahan Baku" },
+  { id: "cat-2", kode: "BRU", kategori: "Barang Ruahan", deskripsi: "Hasil olahan mixing curah yang siap dialirkan ke tahap filling", totalSku: 142, akunPersediaan: "11320 - Persediaan Barang Ruahan", akunCogs: "51020 - Beban Pokok Ruahan" },
+  { id: "cat-3", kode: "BSJ", kategori: "Barang Setengah Jadi", deskripsi: "Intermediate premix yang masih membutuhkan tahapan homogenisasi", totalSku: 68, akunPersediaan: "11330 - Persediaan Setengah Jadi", akunCogs: "51030 - Beban Pokok Setengah Jadi" },
+  { id: "cat-4", kode: "BPB", kategori: "Barang Pembantu", deskripsi: "Bahan penolong proses produksi, alkohol sanitasi, dan filter pad", totalSku: 89, akunPersediaan: "11340 - Persediaan Bahan Pembantu", akunCogs: "51040 - Biaya Overhead Pabrik" },
+  { id: "cat-5", kode: "KPR", kategori: "Kemasan Primer", deskripsi: "Wadah primer kontak langsung (botol serum, pot jar, tube PE, pump)", totalSku: 312, akunPersediaan: "11350 - Persediaan Kemasan Primer", akunCogs: "51050 - Beban Pokok Kemasan Primer" },
+  { id: "cat-6", kode: "KSR", kategori: "Kemasan Sekunder", deskripsi: "Packaging pelindung luar (inner box, kardus master, stiker label)", totalSku: 245, akunPersediaan: "11360 - Persediaan Kemasan Sekunder", akunCogs: "51060 - Beban Pokok Kemasan Sekunder" },
+  { id: "cat-7", kode: "BJD", kategori: "Barang Jadi", deskripsi: "Finished goods ber-BPOM yang siap didistribusikan ke klien maklon", totalSku: 96, akunPersediaan: "11370 - Persediaan Barang Jadi", akunCogs: "51070 - Beban Pokok Penjualan Produk" },
+];
 
-export default function MasterGoodsPage() {
-  // Consolidated tabs (Daftar vs Kelola)
-  const [activeTab, setActiveTab] = useState<"DAFTAR" | "KELOLA">("DAFTAR");
+const INITIAL_BARANG: MasterBarangItem[] = [
+  {
+    id: "brg-1",
+    kode: "BBK00001",
+    nama: "Hydro Marine Collagen",
+    supplierAsal: "DKSH",
+    wujudFisik: "Serbuk Putih Halus",
+    realStok: 45000,
+    stokMin: 10000,
+    hargaBeli: 1650,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Active",
+    satuan: "gr",
+    agingHari: 24,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-2",
+    kode: "BBK00002",
+    nama: "IPM (Isopropyl Myristate)",
+    supplierAsal: "Iberchem",
+    wujudFisik: "Cairan Bening Kental",
+    realStok: 120000,
+    stokMin: 25000,
+    hargaBeli: 125,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Base",
+    satuan: "gr",
+    agingHari: 45,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-3",
+    kode: "BBK00003",
+    nama: "Niacinamide PC Grade",
+    supplierAsal: "Benberg",
+    wujudFisik: "Kristal Putih Berkilau",
+    realStok: 85000,
+    stokMin: 15000,
+    hargaBeli: 142.3,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Active",
+    satuan: "gr",
+    agingHari: 15,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-4",
+    kode: "BBK00004",
+    nama: "Secret Water Base Essence",
+    supplierAsal: "Chemico",
+    wujudFisik: "Cairan Bening Encer",
+    realStok: 250000,
+    stokMin: 50000,
+    hargaBeli: 850,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Active",
+    satuan: "gr",
+    agingHari: 10,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-5",
+    kode: "BBK00006",
+    nama: "Centella Asiatica Extract (Cica)",
+    supplierAsal: "Megasetia",
+    wujudFisik: "Cairan Coklat Transparan",
+    realStok: 32000,
+    stokMin: 10000,
+    hargaBeli: 260,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Active",
+    satuan: "gr",
+    agingHari: 38,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-6",
+    kode: "BBK00010",
+    nama: "Alpha Arbutin Pure 99%",
+    supplierAsal: "DKSH",
+    wujudFisik: "Serbuk Kristal Putih",
+    realStok: 8500,
+    stokMin: 12000,
+    hargaBeli: 1500,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Active",
+    satuan: "gr",
+    agingHari: 62,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-7",
+    kode: "BBK00015",
+    nama: "Aloevera Pure Gel 100x",
+    supplierAsal: "Bahtera Adijaya",
+    wujudFisik: "Gel Kental Bening",
+    realStok: 74000,
+    stokMin: 20000,
+    hargaBeli: 625.1,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Base",
+    satuan: "gr",
+    agingHari: 18,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  },
+  {
+    id: "brg-8",
+    kode: "KPR00001",
+    nama: "Botol Pipet Kaca Amber 30ml",
+    supplierAsal: "PT Nilam Widuri",
+    wujudFisik: "Botol Kaca Coklat + Karet Pipet Hitam",
+    realStok: 12500,
+    stokMin: 5000,
+    hargaBeli: 3200,
+    kategori: "Kemasan Primer",
+    kategoriKode: "KPR",
+    subKategori: "Packaging",
+    satuan: "pcs",
+    agingHari: 30,
+    akunPersediaan: "11350 - Persediaan Kemasan Primer",
+    akunCogs: "51050 - Beban Pokok Kemasan Primer",
+  },
+  {
+    id: "brg-9",
+    kode: "KPR00002",
+    nama: "Pot Jar Acrylic Double Wall Gold 15g",
+    supplierAsal: "Prambanan Kencana",
+    wujudFisik: "Pot Jar Luar Gold Metalik, Inner PP Putih",
+    realStok: 3400,
+    stokMin: 5000,
+    hargaBeli: 5800,
+    kategori: "Kemasan Primer",
+    kategoriKode: "KPR",
+    subKategori: "Packaging",
+    satuan: "pcs",
+    agingHari: 42,
+    akunPersediaan: "11350 - Persediaan Kemasan Primer",
+    akunCogs: "51050 - Beban Pokok Kemasan Primer",
+  },
+  {
+    id: "brg-10",
+    kode: "KPR00003",
+    nama: "Tube Soft Touch White Matte 100ml",
+    supplierAsal: "SML Kemasan",
+    wujudFisik: "Tube PE Putih Doff + Flip Cap",
+    realStok: 15200,
+    stokMin: 4000,
+    hargaBeli: 2950,
+    kategori: "Kemasan Primer",
+    kategoriKode: "KPR",
+    subKategori: "Packaging",
+    satuan: "pcs",
+    agingHari: 21,
+    akunPersediaan: "11350 - Persediaan Kemasan Primer",
+    akunCogs: "51050 - Beban Pokok Kemasan Primer",
+  },
+  {
+    id: "brg-11",
+    kode: "KSR00001",
+    nama: "Inner Box Serum 30ml Doff Gold Emboss",
+    supplierAsal: "Percetakan Surya Gemilang",
+    wujudFisik: "Karton Ivory 350gsm Doff Laminasi",
+    realStok: 24500,
+    stokMin: 5000,
+    hargaBeli: 1100,
+    kategori: "Kemasan Sekunder",
+    kategoriKode: "KSR",
+    subKategori: "Packaging",
+    satuan: "pcs",
+    agingHari: 14,
+    akunPersediaan: "11360 - Persediaan Kemasan Sekunder",
+    akunCogs: "51060 - Beban Pokok Kemasan Sekunder",
+  },
+  {
+    id: "brg-12",
+    kode: "BRU00001",
+    nama: "Bulk Ruahan Facial Wash Brightening Batch-08",
+    supplierAsal: "Internal Mixing Lab",
+    wujudFisik: "Liquid Gel Bening Beraroma Mawar",
+    realStok: 450,
+    stokMin: 100,
+    hargaBeli: 65000,
+    kategori: "Barang Ruahan",
+    kategoriKode: "BRU",
+    subKategori: "Bulk Mixing",
+    satuan: "kg",
+    agingHari: 3,
+    akunPersediaan: "11320 - Persediaan Barang Ruahan",
+    akunCogs: "51020 - Beban Pokok Ruahan",
+  },
+  {
+    id: "brg-13",
+    kode: "BJD00001",
+    nama: "FYS Whitening Serum Niacinamide 30ml (Siap Kirim)",
+    supplierAsal: "Internal Packaging",
+    wujudFisik: "Botol Tersegel Shrink Seal Box",
+    realStok: 3500,
+    stokMin: 500,
+    hargaBeli: 42500,
+    kategori: "Barang Jadi",
+    kategoriKode: "BJD",
+    subKategori: "Finished Goods",
+    satuan: "botol",
+    agingHari: 5,
+    akunPersediaan: "11370 - Persediaan Barang Jadi",
+    akunCogs: "51070 - Beban Pokok Penjualan Produk",
+  },
+];
 
-  const [goods, setGoods] = useState<Good[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [editingGood, setEditingGood] = useState<Good | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ ...EMPTY_FORM });
+function MasterGoodsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const toast = useDnaToast();
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [goodsRes, catRes] = await Promise.all([
-        api.get("/scm/materials"),
-        api.get("/master/categories?type=GOODS"),
-      ]);
-      setGoods(goodsRes.data);
-      setCategories(catRes.data);
-    } catch {
-      toast.error("Failed to fetch data ecosystem");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGoodDetail = async (id: string) => {
-    try {
-      const res = await api.get(`/scm/materials/${id}`);
-      const good = res.data;
-      setEditingGood(good);
-      setFormData({
-        name: good.name,
-        code: good.code || "",
-        type: good.type,
-        unit: good.unit,
-        usageUnit: good.usageUnit || "GRAM",
-        outMethod: good.outMethod,
-        leadTime: good.leadTime,
-        isDummy: good.isDummy,
-        unitPrice: Number(good.unitPrice),
-        minLevel: good.minLevel,
-        maxLevel: good.maxLevel,
-        reorderPoint: good.reorderPoint,
-        categoryId: good.categoryId || "",
-        inventoryAccountId: good.inventoryAccountId || "",
-        salesAccountId: good.salesAccountId || "",
-        halalCertNo: good.halalCertNo || "",
-        halalExpDate: good.halalExpDate ? new Date(good.halalExpDate).toISOString().split("T")[0] : "",
-        isHalalValidated: good.isHalalValidated,
-        physicalForm: good.physicalForm || "PADAT",
-      });
-    } catch {
-      toast.error("Failure in retrieval of material intelligence");
-    }
-  };
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<string>(
+    tabParam === "categories" ? "categories" : "goods"
+  );
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (tabParam === "categories" || tabParam === "goods") {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
-  const handleUpdateStatus = async (batchId: string, status: string) => {
-    try {
-      await api.post(`/warehouse/batches/${batchId}/status`, {
-        status,
-        userId: "CURRENT_USER_ID",
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    router.replace(`/master/goods?tab=${tabId}`);
+  };
+
+  // ── State Data ──
+  const [goodsList, setGoodsList] = useState<MasterBarangItem[]>(INITIAL_BARANG);
+  const [categoriesList, setCategoriesList] = useState<KategoriBarangItem[]>(INITIAL_CATEGORIES);
+
+  // Filter & Search Barang
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("ALL");
+  const [selectedFilterColumn, setSelectedFilterColumn] = useState("kategori");
+  const [filterColumnValue, setFilterColumnValue] = useState("ALL");
+
+  // Sorting
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Selection
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Unique lists
+  const uniqueSuppliers = useMemo(() => Array.from(new Set(goodsList.map((g) => g.supplierAsal))), [goodsList]);
+
+  // Modal State Barang
+  const [isBarangModalOpen, setIsBarangModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedBarang, setSelectedBarang] = useState<MasterBarangItem | null>(null);
+  const [editingBarang, setEditingBarang] = useState<MasterBarangItem | null>(null);
+  const [barangToDelete, setBarangToDelete] = useState<MasterBarangItem | null>(null);
+
+  // Modal State Kategori
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<KategoriBarangItem | null>(null);
+
+  // Form State Barang
+  const [barangForm, setBarangForm] = useState({
+    kode: "",
+    nama: "",
+    supplierAsal: "",
+    wujudFisik: "",
+    realStok: 0,
+    stokMin: 0,
+    hargaBeli: 0,
+    kategori: "Bahan Baku",
+    kategoriKode: "BBK",
+    subKategori: "Active",
+    satuan: "gr",
+    agingHari: 1,
+    akunPersediaan: "11310 - Persediaan Bahan Baku",
+    akunCogs: "51010 - Beban Pokok Bahan Baku",
+  });
+
+  // Form State Kategori
+  const [categoryForm, setCategoryForm] = useState({
+    kode: "",
+    kategori: "",
+    deskripsi: "",
+    akunPersediaan: "",
+    akunCogs: "",
+  });
+
+  // ── Stats Calculations ──
+  const totalSku = goodsList.length;
+  const criticalStockCount = goodsList.filter((g) => g.realStok <= g.stokMin).length;
+  const activeRawMaterials = goodsList.filter((g) => g.kategoriKode === "BBK").length;
+  const totalValuation = goodsList.reduce((acc, curr) => acc + curr.realStok * curr.hargaBeli, 0);
+
+  // ── Filtered & Sorted Goods Pipeline ──
+  const filteredAndSortedGoods = useMemo(() => {
+    return goodsList
+      .filter((item) => {
+        if (selectedCategoryFilter === "CRITICAL" && item.realStok > item.stokMin) return false;
+        if (selectedCategoryFilter !== "ALL" && selectedCategoryFilter !== "CRITICAL" && item.kategoriKode !== selectedCategoryFilter) return false;
+        if (filterColumnValue !== "ALL") {
+          if (selectedFilterColumn === "kategori" && item.kategori !== filterColumnValue) return false;
+          if (selectedFilterColumn === "supplier" && item.supplierAsal !== filterColumnValue) return false;
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          return (
+            item.nama.toLowerCase().includes(q) ||
+            item.kode.toLowerCase().includes(q) ||
+            item.supplierAsal.toLowerCase().includes(q) ||
+            item.subKategori.toLowerCase().includes(q)
+          );
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (!sortColumn) return 0;
+        const dir = sortDirection === "asc" ? 1 : -1;
+        switch (sortColumn) {
+          case "kode":
+            return dir * a.kode.localeCompare(b.kode);
+          case "nama":
+            return dir * a.nama.localeCompare(b.nama);
+          case "supplierAsal":
+            return dir * a.supplierAsal.localeCompare(b.supplierAsal);
+          case "realStok":
+            return dir * (a.realStok - b.realStok);
+          case "hargaBeli":
+            return dir * (a.hargaBeli - b.hargaBeli);
+          case "kategori":
+            return dir * a.kategori.localeCompare(b.kategori);
+          case "agingHari":
+            return dir * (a.agingHari - b.agingHari);
+          default:
+            return 0;
+        }
       });
-      toast.success(`Batch status calibrated to ${status}`);
-      if (editingGood) fetchGoodDetail(editingGood.id);
-    } catch {
-      toast.error("QC Gate validation failure");
-    }
-  };
+  }, [
+    goodsList,
+    selectedCategoryFilter,
+    filterColumnValue,
+    selectedFilterColumn,
+    searchQuery,
+    sortColumn,
+    sortDirection,
+  ]);
 
-  const handleSubmit = (e: { preventDefault: () => void }): void => {
-    e.preventDefault();
-    setShowConfirm(true);
-  };
+  const totalEntries = filteredAndSortedGoods.length;
+  const totalPages = Math.ceil(totalEntries / pageSize) || 1;
+  const paginatedGoods = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredAndSortedGoods.slice(start, start + pageSize);
+  }, [filteredAndSortedGoods, currentPage, pageSize]);
 
-  const confirmSubmit = async () => {
-    setShowConfirm(false);
-    try {
-      if (editingGood) {
-        await api.put(`/scm/materials/${editingGood.id}`, formData);
-        toast.success("Product architecture updated");
-      } else {
-        await api.post("/scm/materials", formData);
-        toast.success("New product registered to ecosystem");
+  const handleHeaderSortToggle = (colKey: string) => {
+    if (sortColumn === colKey) {
+      if (sortDirection === "asc") setSortDirection("desc");
+      else {
+        setSortColumn(null);
+        setSortDirection("asc");
       }
-      setIsPanelOpen(false);
-      setEditingGood(null);
-      fetchData();
-    } catch {
-      toast.error("Constraint violation in product registration");
+    } else {
+      setSortColumn(colKey);
+      setSortDirection("asc");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/scm/materials/${id}`);
-      toast.success("Material deleted");
-      setDeletingId(null);
-      fetchData();
-    } catch {
-      toast.error("Failed to delete material");
+  const toggleSelectAll = () => {
+    if (selectedRowIds.length === paginatedGoods.length) setSelectedRowIds([]);
+    else setSelectedRowIds(paginatedGoods.map((g) => g.id));
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedRowIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  // ── Handlers Barang ──
+  const handleOpenCreateBarang = () => {
+    setEditingBarang(null);
+    setBarangForm({
+      kode: `BBK${String(goodsList.length + 1).padStart(5, "0")}`,
+      nama: "",
+      supplierAsal: "",
+      wujudFisik: "",
+      realStok: 0,
+      stokMin: 1000,
+      hargaBeli: 0,
+      kategori: "Bahan Baku",
+      kategoriKode: "BBK",
+      subKategori: "Active",
+      satuan: "gr",
+      agingHari: 1,
+      akunPersediaan: "11310 - Persediaan Bahan Baku",
+      akunCogs: "51010 - Beban Pokok Bahan Baku",
+    });
+    setIsBarangModalOpen(true);
+  };
+
+  const handleOpenEditBarang = (item: MasterBarangItem) => {
+    setEditingBarang(item);
+    setBarangForm({
+      kode: item.kode,
+      nama: item.nama,
+      supplierAsal: item.supplierAsal,
+      wujudFisik: item.wujudFisik,
+      realStok: item.realStok,
+      stokMin: item.stokMin,
+      hargaBeli: item.hargaBeli,
+      kategori: item.kategori,
+      kategoriKode: item.kategoriKode,
+      subKategori: item.subKategori,
+      satuan: item.satuan,
+      agingHari: item.agingHari,
+      akunPersediaan: item.akunPersediaan || "",
+      akunCogs: item.akunCogs || "",
+    });
+    setIsBarangModalOpen(true);
+  };
+
+  const handleSaveBarang = () => {
+    if (!barangForm.nama.trim() || !barangForm.kode.trim()) {
+      toast.error("Nama barang dan kode wajib diisi!");
+      return;
     }
+
+    if (editingBarang) {
+      setGoodsList((prev) =>
+        prev.map((g) =>
+          g.id === editingBarang.id
+            ? {
+                ...g,
+                ...barangForm,
+              }
+            : g
+        )
+      );
+      toast.success(`Barang ${barangForm.kode} berhasil diperbarui.`);
+    } else {
+      const newItem: MasterBarangItem = {
+        id: `brg-${Date.now()}`,
+        ...barangForm,
+      };
+      setGoodsList((prev) => [newItem, ...prev]);
+      toast.success(`Barang baru ${newItem.kode} berhasil ditambahkan.`);
+    }
+    setIsBarangModalOpen(false);
   };
 
-  const openNew = () => {
-    setEditingGood(null);
-    setFormData({ ...EMPTY_FORM });
-    setIsPanelOpen(true);
+  const handleDeleteBarang = () => {
+    if (!barangToDelete) return;
+    setGoodsList((prev) => prev.filter((g) => g.id !== barangToDelete.id));
+    toast.success(`Barang ${barangToDelete.kode} berhasil dihapus.`);
+    setBarangToDelete(null);
   };
 
-  const openEdit = (good: Good) => {
-    fetchGoodDetail(good.id);
-    setIsPanelOpen(true);
+  // ── Handlers Kategori ──
+  const handleOpenCreateCategory = () => {
+    setEditingCategory(null);
+    setCategoryForm({
+      kode: "",
+      kategori: "",
+      deskripsi: "",
+      akunPersediaan: "11310 - Persediaan",
+      akunCogs: "51010 - Beban Pokok",
+    });
+    setIsCategoryModalOpen(true);
   };
 
-  const filteredGoods = useMemo(() => {
-    if (!searchQuery) return goods;
-    const q = searchQuery.toLowerCase();
-    return goods.filter(
-      (g) =>
-        g.name.toLowerCase().includes(q) ||
-        (g.code?.toLowerCase() || "").includes(q)
-    );
-  }, [goods, searchQuery]);
+  const handleOpenEditCategory = (cat: KategoriBarangItem) => {
+    setEditingCategory(cat);
+    setCategoryForm({
+      kode: cat.kode,
+      kategori: cat.kategori,
+      deskripsi: cat.deskripsi,
+      akunPersediaan: cat.akunPersediaan,
+      akunCogs: cat.akunCogs,
+    });
+    setIsCategoryModalOpen(true);
+  };
 
-  // Stats
-  const totalSku = goods.length;
-  const criticalStock = goods.filter((g) => g.stockQty <= g.minLevel).length;
-  const dummyCount = goods.filter((g) => g.isDummy).length;
+  const handleSaveCategory = () => {
+    if (!categoryForm.kode.trim() || !categoryForm.kategori.trim()) {
+      toast.error("Kode prefix dan nama kategori wajib diisi!");
+      return;
+    }
 
-  const stats: [MasterStatItem, MasterStatItem, MasterStatItem, MasterStatItem] = [
-    { variant: "neutral", label: "Total SKU", value: totalSku, subtext: "Registered SKUs", icon: <Package /> },
-    { variant: "rose", label: "Critical Stock", value: criticalStock, subtext: "Requires Attention", icon: <AlertTriangle /> },
-    { variant: "amber", label: "Dummy Materials", value: dummyCount, subtext: "Simulation Data", icon: <FlaskConical /> },
-    { variant: "blue", label: "System Sync", value: "100%", subtext: "Ecosystem Integrity", icon: <Activity /> },
-  ];
-
-  const tabs: [MasterTab, MasterTab] = [
-    { key: "DAFTAR", label: "Daftar Barang", count: totalSku },
-    { key: "KELOLA", label: "Kelola Barang", count: criticalStock },
-  ];
-
-  // ── Tab content: DAFTAR (read-only) ──
-  const daftarContent = (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
-      <TableWrapper>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/75">
-              <TableRow className="hover:bg-transparent border-slate-200">
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Product Specification</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Category</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Logistics</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-right">Valuation</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center">Stock Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    Syncing Global Ledger...
-                  </TableCell>
-                </TableRow>
-              ) : filteredGoods.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-12 text-center text-slate-400">
-                    Tidak ada barang.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredGoods.map((good) => (
-                  <TableRow
-                    key={good.id}
-                    className="group hover:bg-slate-50/80 border-b border-slate-100"
-                  >
-                    <TableCell className="px-4 py-3.5">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 text-xs uppercase">{good.name}</span>
-                          {good.isDummy && <DnaBadge status="warning">DUMMY</DnaBadge>}
-                        </div>
-                        <span className="text-[11px] text-slate-500">{good.code || "PENDING_SKU"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3.5">
-                      <DnaBadge>{good.category?.name || "UNCATEGORIZED"}</DnaBadge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3.5">
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <ArrowRightLeft className="w-3 h-3 text-slate-400" />
-                          <span className="text-[11px] text-slate-500">{good.outMethod}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Truck className="w-3 h-3 text-slate-400" />
-                          <span className="text-[11px] text-slate-500">{good.leadTime} Days</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3.5 text-right">
-                      <span className="font-bold text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString("id-ID")}</span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
-                          {good.stockQty} {good.unit}
-                        </DnaBadge>
-                        {good.isHalalValidated && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </TableWrapper>
-    </div>
-  );
-
-  // ── Tab content: KELOLA (CRUD) ──
-  const kelolaContent = (
-    <>
-      <div className="flex items-center justify-end mb-3">
-        <DnaButton variant="primary" icon={<Plus />} onClick={openNew}>
-          Tambah Barang
-        </DnaButton>
-      </div>
-      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
-        <TableWrapper>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-slate-50/75">
-                <TableRow className="hover:bg-transparent border-slate-200">
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 w-10">#</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Product</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5">Category</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-right">Price</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center">Stock</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-4 py-3.5 text-center w-24">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-20 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                      Loading...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredGoods.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center text-slate-400">
-                      Tidak ada barang. Klik "Tambah Barang" untuk menambah.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredGoods.map((good, idx) => (
-                    <TableRow
-                      key={good.id}
-                      className="group hover:bg-slate-50/80 border-b border-slate-100"
-                    >
-                      <TableCell className="px-4 py-3.5 text-slate-400 tabular-nums">{idx + 1}</TableCell>
-                      <TableCell className="px-4 py-3.5">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 text-xs uppercase">{good.name}</span>
-                          <span className="text-[11px] text-slate-500">{good.code || "PENDING_SKU"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3.5">
-                        <DnaBadge>{good.category?.name || "UNCATEGORIZED"}</DnaBadge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3.5 text-right">
-                        <span className="font-bold text-slate-900 text-xs">Rp {Number(good.unitPrice).toLocaleString("id-ID")}</span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3.5 text-center">
-                        <DnaBadge status={good.stockQty <= good.minLevel ? "critical" : "default"}>
-                          {good.stockQty} {good.unit}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => openEdit(good)}
-                            className="w-7 h-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-center"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setDeletingId(good.id)}
-                            className="w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TableWrapper>
-      </div>
-    </>
-  );
+    if (editingCategory) {
+      setCategoriesList((prev) =>
+        prev.map((c) =>
+          c.id === editingCategory.id ? { ...c, ...categoryForm } : c
+        )
+      );
+      toast.success(`Kategori ${categoryForm.kode} berhasil diperbarui.`);
+    } else {
+      const newCat: KategoriBarangItem = {
+        id: `cat-${Date.now()}`,
+        totalSku: 0,
+        ...categoryForm,
+      };
+      setCategoriesList((prev) => [...prev, newCat]);
+      toast.success(`Kategori baru ${newCat.kode} berhasil ditambahkan.`);
+    }
+    setIsCategoryModalOpen(false);
+  };
 
   return (
-    <>
-      <MasterPageShell
-        title="BARANG"
-        badge={<DnaBadge status="info">MATERIALS</DnaBadge>}
-        subtitle="Master SKU & material. Tab Daftar = lihat semua barang. Tab Kelola = CRUD dengan Sheet panel."
-        tabs={tabs}
+    <div className="space-y-6 pb-20">
+      {/* Page Header */}
+      <DnaPageHeader
+        backLink={{ href: "/master", label: "Kembali ke Master Hub" }}
+        title="MASTER DATA BARANG & KATEGORI"
+        tabs={[
+          {
+            key: "goods",
+            label: "Master Barang",
+            count: goodsList.length,
+            icon: <Package className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "categories",
+            label: "Kategori Barang",
+            count: categoriesList.length,
+            icon: <Tags className="w-3.5 h-3.5" />,
+          },
+        ]}
         activeTab={activeTab}
-        onTabChange={(k) => setActiveTab(k as "DAFTAR" | "KELOLA")}
-        stats={stats}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari nama atau SKU..."
-        daftarContent={daftarContent}
-        kelolaContent={kelolaContent}
+        onTabChange={handleTabChange}
       />
 
-      {/* Sheet: Add/Edit Material (multi-section form) */}
-      <Sheet open={isPanelOpen} onOpenChange={setIsPanelOpen}>
-        <SheetContent side="right" className="sm:max-w-[700px] p-0 border-l border-slate-200 shadow-2xl bg-white flex flex-col h-full">
-          <SheetHeader className="p-8 bg-slate-800 text-white shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-600/20 rounded-xl">
-                <Package className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <SheetTitle className="text-sm font-bold uppercase tracking-tight text-white leading-none">
-                  {editingGood ? "Material Detail" : "Initialize Material"}
-                </SheetTitle>
-                <SheetDescription className="text-[11px] text-white/60 uppercase tracking-wider mt-1">
-                  Ecosystem Entry Protocol
-                </SheetDescription>
-              </div>
-            </div>
-          </SheetHeader>
+      {/* ── TAB 1: MASTER BARANG ── */}
+      {activeTab === "goods" && (
+        <div className="space-y-6">
+          {/* ── 02. MODULAR 4 KPI METRIC CARDS ── */}
+          <DnaKpiGrid
+            cards={[
+              {
+                key: "TOTAL",
+                title: "TOTAL SKU TERDAFTAR",
+                value: totalSku.toLocaleString("id-ID"),
+                deltaText: "Katalog aktif sistem inventory",
+                isDeltaPositive: true,
+                icon: <Package className="w-4 h-4" />,
+                iconBg: "bg-blue-50",
+                iconColor: "text-blue-600",
+                isSelected: selectedCategoryFilter === "ALL",
+                onClick: () => setSelectedCategoryFilter("ALL"),
+              },
+              {
+                key: "CRITICAL",
+                title: "STOK KRITIS (ROP ALERT)",
+                value: `${criticalStockCount} SKU`,
+                deltaText: `${criticalStockCount} butuh PO segera`,
+                isDeltaPositive: false,
+                icon: <AlertTriangle className="w-4 h-4" />,
+                iconBg: "bg-rose-50",
+                iconColor: "text-rose-600",
+                isSelected: selectedCategoryFilter === "CRITICAL",
+                onClick: () => setSelectedCategoryFilter(selectedCategoryFilter === "CRITICAL" ? "ALL" : "CRITICAL"),
+              },
+              {
+                key: "BBK",
+                title: "BAHAN BAKU (ACTIVE/BASE)",
+                value: `${activeRawMaterials} SKU`,
+                deltaText: "Formula ready di laboratorium",
+                isDeltaPositive: true,
+                icon: <Layers className="w-4 h-4" />,
+                iconBg: "bg-purple-50",
+                iconColor: "text-purple-600",
+                isSelected: selectedCategoryFilter === "BBK",
+                onClick: () => setSelectedCategoryFilter(selectedCategoryFilter === "BBK" ? "ALL" : "BBK"),
+              },
+              {
+                key: "VALUATION",
+                title: "VALUASI ASET BARANG",
+                value: `Rp ${(totalValuation / 1_000_000).toFixed(1)} Jt`,
+                deltaText: "Estimasi total persediaan gudang",
+                isDeltaPositive: true,
+                icon: <Boxes className="w-4 h-4" />,
+                iconBg: "bg-emerald-50",
+                iconColor: "text-emerald-600",
+                isSelected: false,
+              },
+            ]}
+          />
 
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <form onSubmit={handleSubmit} className="p-8 space-y-8">
-              <div className="space-y-6">
-                <SectionDivider number={1} title="Essential Architecture" />
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Name</Label>
-                    <DnaInput value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="border-none font-bold uppercase" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">SKU / Code</Label>
-                    <DnaInput value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="border-none font-bold uppercase" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</Label>
-                    <Select value={formData.categoryId || ""} onValueChange={(v) => setFormData({ ...formData, categoryId: v || "" })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue placeholder="SELECT" /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">{categories.map(c => <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Type</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as string })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">
-                        <SelectItem value="RAW_MATERIAL" className="text-xs font-bold uppercase">Raw Material</SelectItem>
-                        <SelectItem value="FINISHED_GOODS" className="text-xs font-bold uppercase">Finished Goods</SelectItem>
-                        <SelectItem value="PACKAGING" className="text-xs font-bold uppercase">Packaging</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Unit</Label>
-                    <Select value={formData.unit} onValueChange={(v) => setFormData({ ...formData, unit: v as string })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">
-                        <SelectItem value="KG" className="text-xs font-bold uppercase">KG</SelectItem>
-                        <SelectItem value="LITER" className="text-xs font-bold uppercase">Liter</SelectItem>
-                        <SelectItem value="PCS" className="text-xs font-bold uppercase">PCS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-5 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Physical Form</Label>
-                    <Select value={formData.physicalForm} onValueChange={(v) => setFormData({ ...formData, physicalForm: v as typeof formData.physicalForm })}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-none font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent className="border-none shadow-xl rounded-xl">
-                        <SelectItem value="CAIR" className="text-xs font-bold uppercase">Cair</SelectItem>
-                        <SelectItem value="SERBUK" className="text-xs font-bold uppercase">Serbuk</SelectItem>
-                        <SelectItem value="BUTIRAN" className="text-xs font-bold uppercase">Butiran</SelectItem>
-                        <SelectItem value="PADAT" className="text-xs font-bold uppercase">Padat</SelectItem>
-                        <SelectItem value="GAS" className="text-xs font-bold uppercase">Gas</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <SectionDivider number={2} title="Logistics Intelligence" />
-                <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[11px] font-bold text-slate-900 uppercase">Dummy Material</Label>
-                      <Switch checked={formData.isDummy} onCheckedChange={(v) => setFormData({ ...formData, isDummy: v })} />
+          {/* ── 03. MODULAR DATA TABLE CARD ── */}
+          <DnaDataTableCard
+            toolbarProps={{
+              searchQuery,
+              onSearchChange: setSearchQuery,
+              searchPlaceholder: "Cari kode, nama barang, supplier, wujud...",
+              filterColumns: [
+                {
+                  key: "kategori",
+                  label: "Kategori Barang",
+                  type: "select",
+                  options: categoriesList.map((c) => c.kategori),
+                },
+                {
+                  key: "supplier",
+                  label: "Supplier Rekanan",
+                  type: "select",
+                  options: uniqueSuppliers,
+                },
+              ],
+              selectedColumn: selectedFilterColumn,
+              onSelectColumn: (col) => {
+                setSelectedFilterColumn(col);
+                setFilterColumnValue("ALL");
+              },
+              filterValue: filterColumnValue,
+              onFilterValueChange: setFilterColumnValue,
+              actionButton: {
+                label: "Tambah Barang",
+                onClick: handleOpenCreateBarang,
+              },
+            }}
+            paginationProps={{
+              currentPage,
+              totalPages,
+              totalEntries,
+              pageSize,
+              onPageChange: setCurrentPage,
+            }}
+          >
+            <table className="w-full text-left border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  {/* Select All Checkbox */}
+                  <th className="p-3.5 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={paginatedGoods.length > 0 && selectedRowIds.length === paginatedGoods.length}
+                      onChange={toggleSelectAll}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </th>
+                  <th className="p-3.5 w-10 text-slate-400">#</th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                    onClick={() => handleHeaderSortToggle("kode")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>KODE BARANG</span>
+                      {sortColumn === "kode" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase">Lead Time (Days)</Label>
-                      <DnaInput type="number" value={formData.leadTime} onChange={(e) => setFormData({ ...formData, leadTime: Number(e.target.value) })} className="h-10 bg-white border-slate-200 font-bold" />
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[200px]"
+                    onClick={() => handleHeaderSortToggle("nama")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>NAMA BARANG</span>
+                      {sortColumn === "nama" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
                     </div>
-                  </div>
-                  <div className="space-y-4 border-l border-slate-200 pl-6">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-900 uppercase">Outbound Engine</Label>
-                      <Select value={formData.outMethod} onValueChange={(v) => setFormData({ ...formData, outMethod: v as "FIFO" | "FEFO" })}>
-                        <SelectTrigger className="h-10 bg-white border-slate-200 font-bold text-xs uppercase rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent className="border-none shadow-xl rounded-xl">
-                          <SelectItem value="FIFO" className="text-xs font-bold uppercase">FIFO</SelectItem>
-                          <SelectItem value="FEFO" className="text-xs font-bold uppercase">FEFO</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
+                    onClick={() => handleHeaderSortToggle("supplierAsal")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>SUPPLIER ASAL</span>
+                      {sortColumn === "supplierAsal" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase">Usage Unit</Label>
-                      <DnaInput value={formData.usageUnit || ""} onChange={(e) => setFormData({ ...formData, usageUnit: e.target.value })} className="h-10 bg-white border-slate-200 font-bold uppercase" />
+                  </th>
+                  <th className="p-3.5 min-w-[140px]">WUJUD FISIK</th>
+                  <th
+                    className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap"
+                    onClick={() => handleHeaderSortToggle("realStok")}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>REAL STOK</span>
+                      {sortColumn === "realStok" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {editingGood && (
-                <div className="space-y-6">
-                  <SectionDivider number={3} title="Batch Integrity & QC Release" />
-                  <div className="space-y-4">
-                    {editingGood.inventories && editingGood.inventories.length > 0 ? (
-                      editingGood.inventories.map((batch) => (
-                        <div key={batch.id} className="p-5 border border-slate-100 rounded-2xl flex items-center justify-between hover:shadow-sm transition-all">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "h-10 w-10 rounded-xl flex items-center justify-center",
-                              batch.qcStatus === "GOOD" ? "bg-emerald-50" : batch.qcStatus === "QUARANTINE" ? "bg-amber-50" : "bg-rose-50"
-                            )}>
-                              {batch.qcStatus === "GOOD" ? <ShieldCheck className="w-5 h-5 text-emerald-500" /> :
-                                batch.qcStatus === "QUARANTINE" ? <Clock className="w-5 h-5 text-amber-500" /> :
-                                <AlertTriangle className="w-5 h-5 text-rose-500" />}
-                            </div>
-                            <div>
-                              <p className="text-[11px] font-bold text-slate-900 uppercase">BATCH: {batch.batchNumber}</p>
-                              <p className="text-[11px] text-slate-500 mt-0.5">
-                                Qty: {batch.currentStock} {editingGood.unit} &middot; Loc: {batch.location?.name || "GEN_WAREHOUSE"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {batch.qcStatus === "QUARANTINE" && (
-                              <>
-                                <DnaButton variant="primary" size="sm" onClick={() => handleUpdateStatus(batch.id, "GOOD")}>Release</DnaButton>
-                                <DnaButton variant="danger" size="sm" onClick={() => handleUpdateStatus(batch.id, "REJECT")}>Reject</DnaButton>
-                              </>
+                  </th>
+                  <th
+                    className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap min-w-[120px]"
+                    onClick={() => handleHeaderSortToggle("hargaBeli")}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>HARGA BELI</span>
+                      {sortColumn === "hargaBeli" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                    onClick={() => handleHeaderSortToggle("kategori")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>KATEGORI</span>
+                      {sortColumn === "kategori" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="p-3.5 min-w-[110px]">SUB KATEGORI</th>
+                  <th className="p-3.5 text-center min-w-[70px]">SATUAN</th>
+                  <th
+                    className="p-3.5 text-center cursor-pointer hover:bg-slate-100/60 min-w-[100px]"
+                    onClick={() => handleHeaderSortToggle("agingHari")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span>AGING GUDANG</span>
+                      {sortColumn === "agingHari" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="p-3.5 text-center font-bold w-20 whitespace-nowrap">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paginatedGoods.length === 0 ? (
+                  <tr>
+                    <td colSpan={13} className="p-10 text-center text-slate-400">
+                      Tidak ada barang yang sesuai dengan kriteria filter saat ini.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedGoods.map((item, index) => {
+                    const isSelected = selectedRowIds.includes(item.id);
+                    const isCritical = item.realStok <= item.stokMin;
+                    return (
+                      <tr
+                        key={item.id}
+                        className={cn(
+                          "hover:bg-slate-50/80 transition-colors group",
+                          isSelected && "bg-blue-50/30"
+                        )}
+                      >
+                        <td className="p-3.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectRow(item.id)}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
+                        <td className="p-3.5 text-slate-400 tabular-nums">
+                          {(currentPage - 1) * pageSize + index + 1}
+                        </td>
+                        <td className="p-3.5 whitespace-nowrap">
+                          <DnaCell.Code
+                            value={item.kode}
+                            onClick={() => {
+                              setSelectedBarang(item);
+                              setIsDetailModalOpen(true);
+                            }}
+                          />
+                        </td>
+                        <td className="p-3.5">
+                          <DnaCell.Text
+                            primary={item.nama}
+                            secondary={item.akunPersediaan}
+                          />
+                        </td>
+                        <td className="p-3.5">
+                          <DnaCell.Text primary={item.supplierAsal} />
+                        </td>
+                        <td className="p-3.5 whitespace-nowrap">
+                          <span className="text-slate-600 text-[11px] bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                            {item.wujudFisik}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <div className="flex flex-col items-end">
+                            <span
+                              className={cn(
+                                "font-medium tabular-nums text-xs",
+                                isCritical ? "text-rose-600 font-bold" : "text-slate-800"
+                              )}
+                            >
+                              {item.realStok.toLocaleString("id-ID")} {item.satuan}
+                            </span>
+                            {isCritical && (
+                              <span className="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 mt-0.5">
+                                ROP Min: {item.stokMin.toLocaleString("id-ID")}
+                              </span>
                             )}
-                            <DnaBadge status={
-                              batch.qcStatus === "GOOD" ? "success" :
-                                batch.qcStatus === "QUARANTINE" ? "warning" :
-                                  "critical"
-                            }>
-                              {batch.qcStatus}
-                            </DnaBadge>
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase">No Active Batches in Inventory</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <DnaCell.Currency value={item.hargaBeli} />
+                        </td>
+                        <td className="p-3.5 whitespace-nowrap">
+                          <DnaCell.Badge status={item.kategori} />
+                        </td>
+                        <td className="p-3.5 text-slate-500 text-[11.5px] whitespace-nowrap">
+                          {item.subKategori}
+                        </td>
+                        <td className="p-3.5 text-center text-slate-500 font-mono text-[11px]">
+                          {item.satuan}
+                        </td>
+                        <td className="p-3.5 text-center whitespace-nowrap">
+                          <span
+                            className={cn(
+                              "text-[11px] font-medium",
+                              item.agingHari > 45 ? "text-amber-600 font-bold" : "text-slate-500"
+                            )}
+                          >
+                            {item.agingHari} Hari
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-center whitespace-nowrap">
+                          <DnaCell.Actions
+                            onView={() => {
+                              setSelectedBarang(item);
+                              setIsDetailModalOpen(true);
+                            }}
+                            onEdit={() => handleOpenEditBarang(item)}
+                            onDelete={() => setBarangToDelete(item)}
+                            viewTitle="Lihat Detail SKU"
+                            editTitle="Sunting Barang"
+                            deleteTitle="Hapus Barang"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </DnaDataTableCard>
+        </div>
+      )}
 
-              {editingGood && (
-                <div className="px-8 pb-4 space-y-4">
-                  <SectionDivider number={7} title="Supplier & HPP" />
-                  <SupplierHistorySection materialId={editingGood.id} />
-                  <HppBreakdownCard productId={editingGood.id} />
-                </div>
-              )}
-            </form>
+      {/* ── TAB 2: KATEGORI BARANG ── */}
+      {activeTab === "categories" && (
+        <div className="space-y-6">
+          <DnaDataTableCard
+            toolbarProps={{
+              searchPlaceholder: "Kategori klasifikasi inventory...",
+              actionButton: {
+                label: "Tambah Kategori",
+                onClick: handleOpenCreateCategory,
+              },
+            }}
+          >
+            <table className="w-full text-left border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  <th className="p-3.5 w-12 text-slate-400">#</th>
+                  <th className="p-3.5 min-w-[120px]">KODE PREFIX</th>
+                  <th className="p-3.5 min-w-[180px]">NAMA KATEGORI</th>
+                  <th className="p-3.5 min-w-[260px]">DESKRIPSI / RUANG LINGKUP</th>
+                  <th className="p-3.5 text-center min-w-[120px]">TOTAL SKU</th>
+                  <th className="p-3.5 min-w-[200px]">AKUN PERSEDIAAN (NERACA)</th>
+                  <th className="p-3.5 min-w-[200px]">AKUN COGS / BIAYA</th>
+                  <th className="p-3.5 text-center w-24">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {categoriesList.map((cat, idx) => (
+                  <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
+                    <td className="p-3.5">
+                      <DnaCell.Code value={cat.kode} />
+                    </td>
+                    <td className="p-3.5 font-bold text-slate-900 uppercase">{cat.kategori}</td>
+                    <td className="p-3.5 text-slate-600 max-w-xs">{cat.deskripsi}</td>
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Badge label={`${cat.totalSku} SKU`} status="info" />
+                    </td>
+                    <td className="p-3.5 text-slate-600 font-mono text-[11px]">{cat.akunPersediaan}</td>
+                    <td className="p-3.5 text-slate-600 font-mono text-[11px]">{cat.akunCogs}</td>
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Actions
+                        onEdit={() => handleOpenEditCategory(cat)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </DnaDataTableCard>
+        </div>
+      )}
+
+      {/* ── MODAL TAMBAH / EDIT BARANG ── */}
+      <DnaModal
+        isOpen={isBarangModalOpen}
+        onClose={() => setIsBarangModalOpen(false)}
+        title={editingBarang ? `Sunting Barang: ${editingBarang.kode}` : "Tambah Barang Baru"}
+        description="Lengkapi informasi master barang sesuai spesifikasi formulasi dan COA accounting"
+        size="lg"
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaInput
+              label="Kode Unik Barang *"
+              value={barangForm.kode}
+              onChange={(e) => setBarangForm({ ...barangForm, kode: e.target.value })}
+              placeholder="e.g. BBK00001"
+            />
+            <DnaInput
+              label="Nama Lengkap Barang *"
+              value={barangForm.nama}
+              onChange={(e) => setBarangForm({ ...barangForm, nama: e.target.value })}
+              placeholder="e.g. Hydro Marine Collagen"
+            />
           </div>
 
-          <SheetFooter className="p-8 bg-slate-50 border-t border-slate-200 shrink-0">
-            <DnaButton variant="outline" onClick={() => setIsPanelOpen(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" type="button" onClick={handleSubmit}>
-              {editingGood ? "Simpan" : "Tambah"}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DnaSelect
+              label="Kategori *"
+              value={barangForm.kategoriKode}
+              onChange={(val) => {
+                const found = categoriesList.find((c) => c.kode === val);
+                setBarangForm({
+                  ...barangForm,
+                  kategoriKode: val,
+                  kategori: found?.kategori || "Bahan Baku",
+                  akunPersediaan: found?.akunPersediaan || barangForm.akunPersediaan,
+                  akunCogs: found?.akunCogs || barangForm.akunCogs,
+                });
+              }}
+              options={categoriesList.map((c) => ({ value: c.kode, label: `${c.kode} - ${c.kategori}` }))}
+            />
+            <DnaInput
+              label="Sub Kategori (Active/Base/Packaging)"
+              value={barangForm.subKategori}
+              onChange={(e) => setBarangForm({ ...barangForm, subKategori: e.target.value })}
+              placeholder="Active, Base, Fragrance..."
+            />
+            <DnaSelect
+              label="Satuan Unit *"
+              value={barangForm.satuan}
+              onChange={(val) => setBarangForm({ ...barangForm, satuan: val })}
+              options={[
+                { value: "gr", label: "gr (Gram)" },
+                { value: "kg", label: "kg (Kilogram)" },
+                { value: "pcs", label: "pcs (Pieces)" },
+                { value: "botol", label: "botol (Botol)" },
+                { value: "tube", label: "tube (Tube)" },
+                { value: "pot", label: "pot (Pot Jar)" },
+                { value: "sak", label: "sak (Sak 25kg)" },
+                { value: "drum", label: "drum (Drum 200L)" },
+              ]}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaInput
+              label="Supplier Asal"
+              value={barangForm.supplierAsal}
+              onChange={(e) => setBarangForm({ ...barangForm, supplierAsal: e.target.value })}
+              placeholder="e.g. DKSH, Iberchem, Kemas Indah..."
+            />
+            <DnaInput
+              label="Wujud Fisik & Kondisi"
+              value={barangForm.wujudFisik}
+              onChange={(e) => setBarangForm({ ...barangForm, wujudFisik: e.target.value })}
+              placeholder="e.g. Serbuk Putih, Cairan Bening..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DnaCurrencyInput
+              label="Harga Beli (Rp) *"
+              value={barangForm.hargaBeli}
+              onChange={(val) => setBarangForm({ ...barangForm, hargaBeli: val })}
+            />
+            <DnaNumberInput
+              label="Real Stok Gudang"
+              value={barangForm.realStok}
+              onChange={(val: number) => setBarangForm({ ...barangForm, realStok: val })}
+            />
+            <DnaNumberInput
+              label="Stok Terendah (ROP Alert) *"
+              value={barangForm.stokMin}
+              onChange={(val: number) => setBarangForm({ ...barangForm, stokMin: val })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+            <DnaInput
+              label="Akun Persediaan (Neraca)"
+              value={barangForm.akunPersediaan}
+              onChange={(e) => setBarangForm({ ...barangForm, akunPersediaan: e.target.value })}
+            />
+            <DnaInput
+              label="Akun COGS / Beban Pokok"
+              value={barangForm.akunCogs}
+              onChange={(e) => setBarangForm({ ...barangForm, akunCogs: e.target.value })}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <DnaButton variant="ghost" onClick={() => setIsBarangModalOpen(false)}>
+              Batal
             </DnaButton>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+            <DnaButton variant="primary" onClick={handleSaveBarang}>
+              Simpan Data Barang
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
 
-      {/* Confirm Submit */}
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
-          <p>Yakin ingin menyimpan data barang ini?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ── MODAL DETAIL BARANG (AJAX/Pop-up Inspection) ── */}
+      <DnaModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        title={`Detail SKU: ${selectedBarang?.kode}`}
+        description="Spesifikasi teknis, supplier, pergerakan stok, dan parameter akuntansi"
+        size="lg"
+      >
+        {selectedBarang && (
+          <div className="space-y-4 py-2 text-xs">
+            <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="font-mono text-amber-400 font-bold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-900/50">
+                    {selectedBarang.kode}
+                  </span>
+                  <h3 className="text-base font-black text-slate-100 uppercase mt-1">
+                    {selectedBarang.nama}
+                  </h3>
+                  <p className="text-slate-400 text-[11px]">
+                    Kategori: <strong className="text-slate-200">{selectedBarang.kategori}</strong> • Sub-Kategori:{" "}
+                    <strong className="text-slate-200">{selectedBarang.subKategori}</strong>
+                  </p>
+                </div>
+                <DnaBadge status={selectedBarang.realStok <= selectedBarang.stokMin ? "critical" : "success"}>
+                  {selectedBarang.realStok <= selectedBarang.stokMin ? "STOK MENIPIS" : "STOK AMAN"}
+                </DnaBadge>
+              </div>
 
-      {/* Confirm Delete */}
-      <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hapus Barang</DialogTitle>
-          </DialogHeader>
-          <p>Yakin ingin menghapus barang ini?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setDeletingId(null)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={() => deletingId && handleDelete(deletingId)}>Ya, Hapus</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-800/80">
+                <div className="bg-slate-950/60 p-2.5 rounded-lg">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Real Stok</div>
+                  <div className="font-mono text-sm font-bold text-slate-100">
+                    {selectedBarang.realStok.toLocaleString("id-ID")} {selectedBarang.satuan}
+                  </div>
+                </div>
+                <div className="bg-slate-950/60 p-2.5 rounded-lg">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Stok Terendah</div>
+                  <div className="font-mono text-sm font-bold text-rose-400">
+                    {selectedBarang.stokMin.toLocaleString("id-ID")} {selectedBarang.satuan}
+                  </div>
+                </div>
+                <div className="bg-slate-950/60 p-2.5 rounded-lg">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Harga Beli Standar</div>
+                  <div className="font-mono text-sm font-bold text-emerald-400">
+                    Rp {selectedBarang.hargaBeli.toLocaleString("id-ID")}
+                  </div>
+                </div>
+                <div className="bg-slate-950/60 p-2.5 rounded-lg">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Aging di Gudang</div>
+                  <div className="font-mono text-sm font-bold text-amber-400">
+                    {selectedBarang.agingHari} Hari
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px]">
+                <div className="space-y-1">
+                  <span className="text-slate-400">Supplier Rekanan Terdaftar:</span>
+                  <div className="font-bold text-slate-200 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                    {selectedBarang.supplierAsal}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-400">Wujud Fisik & Karakteristik:</span>
+                  <div className="font-bold text-slate-200">{selectedBarang.wujudFisik}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-amber-500" /> Pemetaan Buku Besar (Chart of Accounts)
+              </span>
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div>
+                  <div className="text-slate-500 text-[10px]">Akun Persediaan (Asset)</div>
+                  <div className="font-mono text-slate-200 font-bold">{selectedBarang.akunPersediaan}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">Akun Beban Pokok (COGS)</div>
+                  <div className="font-mono text-slate-200 font-bold">{selectedBarang.akunCogs}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <DnaButton variant="ghost" onClick={() => setIsDetailModalOpen(false)}>
+                Tutup
+              </DnaButton>
+              <DnaButton
+                variant="primary"
+                icon={<Edit2 className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  setIsDetailModalOpen(false);
+                  handleOpenEditBarang(selectedBarang);
+                }}
+              >
+                Sunting Barang
+              </DnaButton>
+            </div>
+          </div>
+        )}
+      </DnaModal>
+
+      {/* ── MODAL TAMBAH / EDIT KATEGORI ── */}
+      <DnaModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        title={editingCategory ? `Sunting Kategori: ${editingCategory.kode}` : "Tambah Kategori Barang"}
+        description="Tentukan kode prefix taksonomi dan pemetaan akun buku besar akuntansi"
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <DnaInput
+            label="Kode Prefix Kategori (e.g. BBK, KPR, BJD) *"
+            value={categoryForm.kode}
+            onChange={(e) => setCategoryForm({ ...categoryForm, kode: e.target.value.toUpperCase() })}
+            placeholder="e.g. BBK"
+          />
+          <DnaInput
+            label="Nama Kategori *"
+            value={categoryForm.kategori}
+            onChange={(e) => setCategoryForm({ ...categoryForm, kategori: e.target.value })}
+            placeholder="e.g. Bahan Baku Formulasi"
+          />
+          <DnaTextarea
+            label="Deskripsi / Ruang Lingkup"
+            value={categoryForm.deskripsi}
+            onChange={(e) => setCategoryForm({ ...categoryForm, deskripsi: e.target.value })}
+            placeholder="Penjelasan cakupan kategori..."
+          />
+          <DnaInput
+            label="Akun Persediaan (Neraca) *"
+            value={categoryForm.akunPersediaan}
+            onChange={(e) => setCategoryForm({ ...categoryForm, akunPersediaan: e.target.value })}
+            placeholder="11310 - Persediaan Bahan Baku"
+          />
+          <DnaInput
+            label="Akun Beban Pokok (COGS) *"
+            value={categoryForm.akunCogs}
+            onChange={(e) => setCategoryForm({ ...categoryForm, akunCogs: e.target.value })}
+            placeholder="51010 - Beban Pokok Bahan Baku"
+          />
+
+          <div className="flex justify-end gap-2 pt-4">
+            <DnaButton variant="ghost" onClick={() => setIsCategoryModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleSaveCategory}>
+              Simpan Kategori
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+
+      {/* Confirmation Dialog Delete Barang */}
+      <DnaConfirmDialog
+        isOpen={!!barangToDelete}
+        onClose={() => setBarangToDelete(null)}
+        onConfirm={handleDeleteBarang}
+        title="Hapus Barang Master?"
+        description={`Apakah Anda yakin ingin menghapus barang ${barangToDelete?.kode} - ${barangToDelete?.nama}? Tindakan ini tidak dapat dibatalkan jika belum ada referensi transaksi.`}
+        confirmText="Hapus Permanen"
+        variant="critical"
+      />
+    </div>
+  );
+}
+
+export default function MasterGoodsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Master Barang...</div>}>
+      <MasterGoodsContent />
+    </Suspense>
   );
 }

@@ -27,18 +27,16 @@ import {
   Users2,
   X,
 } from "lucide-react";
-
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DnaButton, DnaInput } from "@/components/dna";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMarketingPrototypeBundle } from "@/components/marketing/use-marketing-prototype";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { toLocalDateString, parseLocalDate, calendarDayDiff } from "@/lib/utils";
 import { canonicalMember, sameMember } from "@/lib/marketing-members";
-import { toast } from "sonner";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-type TaskStatus = "Not started" | "Progress" | "Revision" | "Done";
+type TaskStatus = "Not started" | "Working on it" | "Revision" | "Done";
 
 type TaskAttachment = {
   id: string;
@@ -153,18 +151,18 @@ const memberLookup = memberConfigs.reduce<Record<string, MemberConfig>>((acc, me
   return acc;
 }, {});
 
-const statusGroups: TaskStatus[] = ["Not started", "Progress", "Revision", "Done"];
+const statusGroups: TaskStatus[] = ["Not started", "Working on it", "Revision", "Done"];
 
 const statusLabels: Record<TaskStatus, string> = {
   "Not started": "Not started",
-  Progress: "Progress",
+  "Working on it": "Working on it",
   Revision: "Revision",
   Done: "Done",
 };
 
 const statusStyles: Record<TaskStatus, { accent: string; pill: string; soft: string }> = {
   "Not started": { accent: "bg-slate-400", pill: "bg-slate-50 text-slate-600 border-slate-200", soft: "bg-slate-50/70" },
-  Progress: { accent: "bg-blue-500", pill: "bg-blue-50 text-blue-700 border-blue-100", soft: "bg-blue-50/70" },
+  "Working on it": { accent: "bg-blue-500", pill: "bg-blue-50 text-blue-700 border-blue-100", soft: "bg-blue-50/70" },
   Revision: { accent: "bg-rose-500", pill: "bg-rose-50 text-rose-700 border-rose-100", soft: "bg-rose-50/70" },
   Done: { accent: "bg-emerald-500", pill: "bg-emerald-50 text-emerald-700 border-emerald-100", soft: "bg-emerald-50/70" },
 };
@@ -242,12 +240,12 @@ function taskToDraft(task: TaskRow): TaskDraft {
   };
 }
 
-function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | null, projectId?: string): TaskRow {
+function draftToTask(taskId: string, draft: TaskDraft, viewerName?: string | null): TaskRow {
   const viewer = viewerName?.trim() || "System";
   return {
     id: taskId,
     title: draft.title.trim(),
-    projectId: projectId || "",
+    projectId: "local",
     project: draft.project.trim() || "Marketing",
     brand: draft.brand,
     // assignedBy/reviewer diisi viewer (manager) — bukan "System"/"" supaya
@@ -321,7 +319,7 @@ const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB — samakan dengan backen
 function attachmentContentUrl(taskId: string, attachmentId: string): string {
   const apiUrl =
     process.env.NEXT_PUBLIC_API_URL ||
-    (process.env.NEXT_PUBLIC_APP_ENV === "development" || (typeof window !== "undefined" && window.location.hostname === "localhost")
+    (typeof window !== "undefined" && window.location.hostname === "localhost"
       ? "http://localhost:3001"
       : "/api");
   return `${apiUrl}/marketing/prototype/tasks/${taskId}/attachments/${attachmentId}/content`;
@@ -415,55 +413,7 @@ function MetricMini({ label, value, tone = "default" }: { label: string; value: 
 
 export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) {
   const router = useRouter();
-  const { data: prototype, isLoading, isError } = useMarketingPrototypeBundle();
-
-  // --- useConfirm hook ---
-  const [confirmPending, setConfirmPending] = useState<{
-    title: string;
-    description: string;
-    confirmLabel?: string;
-    destructive?: boolean;
-    onConfirm: () => void | Promise<void>;
-  } | null>(null);
-
-  const askConfirm = (opts: Omit<NonNullable<typeof confirmPending>, 'onConfirm'> & { onConfirm: () => void | Promise<void> }) =>
-    setConfirmPending(opts);
-
-  const confirmDialog = confirmPending ? (
-    <Dialog open onOpenChange={(o) => { if (!o) setConfirmPending(null); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{confirmPending.title}</DialogTitle>
-          <DialogDescription>{confirmPending.description}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <button
-            type="button"
-            className="px-3 py-1.5 text-sm rounded border border-white/10 hover:bg-white/5"
-            onClick={() => setConfirmPending(null)}
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            className={
-              confirmPending.destructive
-                ? "px-3 py-1.5 text-sm rounded bg-red-600 hover:bg-red-500 text-white"
-                : "px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white"
-            }
-            onClick={async () => {
-              const p = confirmPending;
-              setConfirmPending(null);
-              await p.onConfirm();
-            }}
-          >
-            {confirmPending.confirmLabel ?? 'Konfirmasi'}
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  ) : null;
-  // --- end useConfirm ---
+  const { data: prototype } = useMarketingPrototypeBundle();
   const tasks = useMemo(() => (prototype?.tasks ?? []) as TaskRow[], [prototype?.tasks]);
   const projects = useMemo(() => (prototype?.projects ?? []) as Array<{ id: string; name: string; channel?: string }>, [prototype?.projects]);
   const profiles = useMemo(() => (prototype?.profiles ?? []) as ProfileRow[], [prototype?.profiles]);
@@ -492,7 +442,6 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
   const inlineEditTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   // Upload attachment (task) — guard klik ganda (BUG-B-05).
   const [attachmentsUploading, setAttachmentsUploading] = useState(false);
-  const [confirmDeleteFile, setConfirmDeleteFile] = useState<{ id: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialProjects = useMemo(() => {
@@ -633,14 +582,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   const projectOptions = useMemo(() => {
     const fromTasks = localTasks.map((task) => task.project);
-    return Array.from(
-      new Set(
-        [...localProjects, ...fromTasks]
-          .filter((value): value is string => typeof value === 'string' && value.length > 0)
-          .map((value) => value.trim())
-          .filter(Boolean)
-      )
-    ).sort((left, right) => left.localeCompare(right));
+    return Array.from(new Set([...localProjects, ...fromTasks].map((value) => value.trim()).filter(Boolean))).sort((left, right) =>
+      left.localeCompare(right),
+    );
   }, [localTasks, localProjects]);
 
   const monthOptions = useMemo(() => {
@@ -828,26 +772,21 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
   function setTaskField(taskId: string, field: keyof TaskRow, value: string) {
     // Optimistic update — tampilkan perubahan langsung.
-    let prevState: TaskRow[] | null = null;
-    setLocalTasks((current) => {
-      prevState = current;
-      return current.map((task) =>
+    setLocalTasks((current) =>
+      current.map((task) =>
         task.id === taskId ? { ...task, [field]: value } : task,
-      );
-    });
+      ),
+    );
 
     // Status memakai endpoint khusus & tidak perlu debounce (select fire sekali).
     if (field === "status") {
       api.patch(`/marketing/prototype/tasks/${taskId}/status`, { status: value, note: `Status changed to ${value}` })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-          toast.success("Status diperbarui");
-        })
+        .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
         .catch((err) => {
           console.error("[InlineEdit] Status update failed:", err?.response?.status);
-          if (prevState) setLocalTasks(prevState);
+          // Rollback via refetch server (bukan snapshot closure yang stale).
           queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-          toast.error(`Gagal mengubah status! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
+          alert(`Gagal mengubah status! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
         });
       return;
     }
@@ -865,20 +804,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     }
 
     // Debounce persist (400 ms) untuk edit inline — satu request per jeda
-    // ketik, bukan per keystroke.
+    // ketik, bukan per keystroke. Rollback gagal = refetch server (P5.1).
     const timerKey = `${taskId}:${field}`;
     const existing = inlineEditTimers.current[timerKey];
     if (existing) clearTimeout(existing);
     inlineEditTimers.current[timerKey] = setTimeout(() => {
       delete inlineEditTimers.current[timerKey];
-      const capturedPrev = prevState;
       api.patch(`/marketing/prototype/tasks/${taskId}`, { [field]: value })
         .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
         .catch((err) => {
           console.error("[InlineEdit] Update failed:", field, err?.response?.status);
-          if (capturedPrev) setLocalTasks(capturedPrev);
           queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-          toast.error(`Gagal menyimpan perubahan! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
+          alert(`Gagal menyimpan perubahan! Silakan coba lagi. (${err?.response?.status || 'Network error'})`);
         });
     }, 400);
   }
@@ -912,21 +849,18 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // member sendiri / overview manager — pic = diri sendiri).
     // Validasi tanggal (BUG-U3/P5.2): dueDate tidak boleh lebih awal dari startDate.
     if (globalQuickAdd.dueDate < globalQuickAdd.startDate) {
-      toast.error("Due date tidak boleh lebih awal dari start date.");
+      alert("Due date tidak boleh lebih awal dari start date.");
       return;
     }
     setQuickAddSaving(true);
 
     const pic = globalQuickAdd.pic.trim() || "Aurel";
     const viewer = viewerName?.trim() || "System";
-    const matchedProject = projects.find(
-      (p) => p.name.trim().toLowerCase() === globalQuickAdd.project.trim().toLowerCase()
-    );
 
     const newTask = {
       id: `local-${Date.now()}`,
       title: globalQuickAdd.title.trim(),
-      projectId: matchedProject?.id || "",
+      projectId: "local",
       project: globalQuickAdd.project.trim() || "Marketing",
       brand: globalQuickAdd.brand,
       assignedBy: viewer,
@@ -947,11 +881,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // Persist to backend so other users see it. Setelah sukses, id lokal
     // diganti id server dari respons (BUG-S3/P4.3) supaya status berikutnya
     // (edit/delete) memakai id yang benar.
-    const payload = {
-      ...newTask,
-      projectId: matchedProject?.id || undefined,
-    };
-    api.post("/marketing/prototype/tasks", payload).then((res) => {
+    api.post("/marketing/prototype/tasks", newTask).then((res) => {
       const savedId = res?.data?.id;
       if (savedId && savedId !== newTask.id) {
         setLocalTasks((current) => current.map((t) => (t.id === newTask.id ? { ...t, id: savedId } : t)));
@@ -967,7 +897,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       console.error("[QuickAdd] Failed to save task:", err?.response?.status, err?.response?.data);
       // Rollback: remove the local-only task on failure
       setLocalTasks((current) => current.filter((t) => t.id !== newTask.id));
-      toast.error(`Gagal menyimpan task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+      alert(`Gagal menyimpan task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
       setQuickAddSaving(false);
     });
   }
@@ -980,7 +910,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // hanya manager). Edit task tetap dibatasi untuk non-manager.
     // Validasi tanggal (BUG-U3/P5.2).
     if (draft.dueDate < draft.startDate) {
-      toast.error("Due date tidak boleh lebih awal dari start date.");
+      alert("Due date tidak boleh lebih awal dari start date.");
       setDrawerSaving(false);
       return;
     }
@@ -988,18 +918,13 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     // Resolusi target EDIT difresh dari localTasks (bukan snapshot `selectedTask`
     // yang bisa stale): jika id task lokal sudah diganti id server saat drawer
     // terbuka, kita tetap menemukan task-nya dan PATCH (bukan POST duplikat).
-    const matchedProject = projects.find(
-      (p) => p.name.trim().toLowerCase() === draft.project.trim().toLowerCase()
-    );
     const isEdit = drawerMode === "edit" && Boolean(selectedTaskId);
     const editBase = isEdit ? localTasks.find((task) => task.id === selectedTaskId) : undefined;
     const nextTask = editBase
-      ? { ...editBase, ...draftToTask(editBase.id, draft, viewerName, matchedProject?.id || editBase.projectId) }
-      : draftToTask(`local-${Date.now()}`, draft, viewerName, matchedProject?.id);
+      ? { ...editBase, ...draftToTask(editBase.id, draft, viewerName) }
+      : draftToTask(`local-${Date.now()}`, draft, viewerName);
 
-    let prevDrawerState: TaskRow[] | null = null;
     setLocalTasks((current) => {
-      prevDrawerState = current;
       if (editBase) {
         return current.map((task) => (task.id === editBase.id ? nextTask : task));
       }
@@ -1008,16 +933,11 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
 
     setDrawerOpen(false);
 
-    // Persist to backend.
+    // Persist to backend. Rollback gagal = invalidate/refetch dari server,
+    // BUKAN snapshot closure yang stale (BUG-U2/P5.1).
     const persistPromise = editBase
-      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, {
-          ...draft,
-          projectId: matchedProject?.id || undefined,
-        })
-      : api.post("/marketing/prototype/tasks", {
-          ...nextTask,
-          projectId: matchedProject?.id || undefined,
-        });
+      ? api.patch(`/marketing/prototype/tasks/${editBase.id}`, draft)
+      : api.post("/marketing/prototype/tasks", nextTask);
 
     persistPromise
       .then((res) => {
@@ -1033,9 +953,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       })
       .catch((err) => {
         console.error("[SaveDrawer] Failed:", err?.response?.status, err?.response?.data);
-        if (prevDrawerState) setLocalTasks(prevDrawerState);
+        // Rollback via refetch server.
         queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-        toast.error(`Gagal ${editBase ? 'update' : 'menyimpan'} task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+        alert(`Gagal ${editBase ? 'update' : 'menyimpan'} task! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
         setDrawerSaving(false);
       });
   }
@@ -1048,7 +968,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     if (attachmentsUploading) return Promise.resolve();
     // Pre-check ukuran (BUG-B-01) — backend tetap enforcer final.
     if (file.size > MAX_ATTACHMENT_SIZE) {
-      toast.error("File terlalu besar (maks 10 MB).");
+      alert("File terlalu besar (maks 10 MB).");
       return Promise.resolve();
     }
 
@@ -1076,7 +996,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
       .catch((err) => {
         console.error("[Attachment] Upload failed:", err?.response?.status, err?.response?.data);
         setAttachmentsUploading(false);
-        toast.error(`Gagal upload file! ${err?.response?.data?.message ?? (err?.response?.status ? `Server: ${err?.response?.status}` : "Koneksi terputus")}`);
+        alert(`Gagal upload file! ${err?.response?.data?.message ?? (err?.response?.status ? `Server: ${err?.response?.status}` : "Koneksi terputus")}`);
       });
   }
 
@@ -1089,45 +1009,38 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     }
   }
 
-  function deleteAttachment(attachmentId: string, fileName?: string) {
+  function deleteAttachment(attachmentId: string) {
     if (!selectedTask || selectedTask.id.startsWith("local-")) return;
-    setConfirmDeleteFile({ id: attachmentId, name: fileName ?? "file ini" });
+    if (!window.confirm("Hapus file ini?")) return;
+    api
+      .delete(`/marketing/prototype/tasks/${selectedTask.id}/attachments/${attachmentId}`)
+      .then((res) => {
+        const updated = res?.data;
+        if (updated?.id) {
+          setLocalTasks((current) =>
+            current.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)),
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+      })
+      .catch((err) => {
+        console.error("[Attachment] Delete failed:", err?.response?.status, err?.response?.data);
+        alert(`Gagal hapus file! ${err?.response?.data?.message ?? (err?.response?.status ? `Server: ${err?.response?.status}` : "Koneksi terputus")}`);
+      });
   }
 
-  async function handleDeleteFile(attachmentId: string) {
-    if (!selectedTask) return;
-    try {
-      const res = await api.delete(`/marketing/prototype/tasks/${selectedTask.id}/attachments/${attachmentId}`);
-      const updated = res?.data;
-      if (updated?.id) {
-        setLocalTasks((current) =>
-          current.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)),
-        );
-      }
+  function deleteTask(taskId: string) {
+    // Hapus di server dulu; baru hapus lokal setelah sukses. Kalau gagal,
+    // refetch server sebagai rollback (task tetap ada) (BUG-U8/P5.7).
+    api.delete(`/marketing/prototype/tasks/${taskId}`).then(() => {
+      setLocalTasks((current) => current.filter((task) => task.id !== taskId));
+      setDrawerOpen(false);
       queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-    } catch (err: any) {
-      console.error("[Attachment] Delete failed:", err?.response?.status, err?.response?.data);
-      toast.error(`Gagal hapus file! ${err?.response?.data?.message ?? (err?.response?.status ? `Server: ${err?.response?.status}` : "Koneksi terputus")}`);
-    }
-  }
-
-  async function deleteTask(taskId: string) {
-    // Optimistic update — capture prev state for rollback on failure.
-    let prevState: TaskRow[] | null = null;
-    setLocalTasks((current) => {
-      prevState = current;
-      return current.filter((task) => task.id !== taskId);
+    }).catch((err) => {
+      console.error("[Delete] Failed:", err?.response?.status, err?.response?.data);
+      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
+      alert(`Gagal hapus task! ${err?.response?.status}: ${err?.response?.data?.message ?? ''}`);
     });
-    setDrawerOpen(false);
-    try {
-      await api.delete(`/marketing/prototype/tasks/${taskId}`);
-      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-    } catch (err) {
-      console.error("[Delete] Failed:", (err as any)?.response?.status, (err as any)?.response?.data);
-      if (prevState) setLocalTasks(prevState);
-      queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] });
-      toast.error(`Gagal hapus task! ${(err as any)?.response?.status}: ${(err as any)?.response?.data?.message ?? ''}`);
-    }
   }
 
   const title = selectedMember?.slug === "overview" ? "Management Task" : selectedMember?.label ?? "Management Task";
@@ -1139,67 +1052,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
     router.push(`/marketing/management-task/${memberSlug}`);
   };
 
-  // Error state
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-center space-y-3" data-testid="board-error" role="alert">
-        <div className="text-4xl">⚠️</div>
-        <h3 className="text-lg font-semibold">Gagal memuat data</h3>
-        <p className="text-sm text-slate-400">Periksa koneksi dan coba lagi.</p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="mt-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium"
-        >
-          Muat Ulang
-        </button>
-      </div>
-    );
-  }
-
-  // Loading state — show skeleton until real data arrives
-  if (isLoading) {
-    return (
-      <div className="space-y-4 p-6" data-testid="board-loading" aria-busy="true">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {['Not started', 'Working on it', 'Revision', 'Done'].map((status) => (
-            <div key={status} className="rounded-2xl border border-white/10 p-4 space-y-3">
-              <div className="h-5 w-24 rounded bg-white/10 animate-pulse" />
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 rounded-xl bg-white/5 animate-pulse" />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Empty state — no tasks yet
-  if (!isLoading && localTasks.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-center space-y-4" data-testid="board-empty">
-        <div className="text-4xl">📋</div>
-        <h3 className="text-lg font-semibold">Belum ada task</h3>
-        <p className="text-sm text-slate-400 max-w-sm">
-          Klik tombol <span className="font-mono">+ Tambah Task</span> di header untuk membuat task pertama.
-        </p>
-        {isManager && (
-          <button
-            type="button"
-            onClick={() => openCreateDrawer()}
-            className="mt-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium"
-          >
-            + Tambah Task
-          </button>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div data-marketing-page="management-task" className="space-y-6 px-4 py-6 sm:px-6 lg:px-10">
+    <DashboardShell title={title} titleAccent="Hub" subtitle={subtitle}>
+      <div data-marketing-page="management-task" className="space-y-6">
         <div data-marketing-surface="toolbar" className="flex flex-wrap items-end justify-between gap-4 rounded-[28px] border border-slate-200 bg-white/90 px-6 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)] backdrop-blur">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Marketing / Management Task</p>
@@ -1636,7 +1491,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   className={`h-9 w-full rounded-full border px-3 text-[10px] font-bold uppercase tracking-wider outline-none ${
                                     task.status === "Done" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                                     task.status === "Revision" ? "bg-rose-50 text-rose-700 border-rose-200" :
-                                    task.status === "Progress" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                    task.status === "Working on it" ? "bg-blue-50 text-blue-700 border-blue-200" :
                                     "bg-slate-100 text-slate-600 border-slate-200"
                                   }`}
                                 >
@@ -1679,13 +1534,9 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    askConfirm({
-                                      title: 'Hapus task?',
-                                      description: `Task "${task.title}" akan dihapus permanen.`,
-                                      destructive: true,
-                                      confirmLabel: 'Hapus',
-                                      onConfirm: () => deleteTask(task.id),
-                                    });
+                                    if (window.confirm(`Hapus task "${task.title}"?`)) {
+                                      deleteTask(task.id);
+                                    }
                                   }}
                                   className="text-slate-400 hover:text-rose-600 transition p-1.5 hover:bg-slate-100 rounded-md"
                                   title="Delete task"
@@ -1714,24 +1565,24 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
         ) : null}
       </div>
 
-      <Dialog open={drawerOpen} onOpenChange={(open) => setDrawerOpen(open)}>
-        <DialogContent className="w-full max-w-4xl bg-white p-0 text-slate-900">
+      <Sheet open={drawerOpen} onOpenChange={(open) => setDrawerOpen(open)}>
+        <SheetContent side="right" className="w-full border-l border-slate-200 bg-white p-0 text-slate-900 sm:max-w-[680px]">
           <div className="flex h-full flex-col">
-            <DialogHeader className="border-b border-slate-100 bg-slate-50/80 px-6 py-5 text-left">
+            <SheetHeader className="border-b border-slate-100 bg-slate-50/80 px-6 py-5 text-left">
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
+                  <SheetTitle className="text-xl font-bold tracking-tight text-slate-900">
                     {drawerMode === "create" ? "New Task" : selectedTask?.title ?? "Task Detail"}
-                  </DialogTitle>
-                  <DialogDescription className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  </SheetTitle>
+                  <SheetDescription className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     {drawerMode === "create" ? "Create a new task" : "Edit task details"}
-                  </DialogDescription>
+                  </SheetDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
                     draft.status === "Done" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                     draft.status === "Revision" ? "bg-rose-50 text-rose-700 border-rose-200" :
-                    draft.status === "Progress" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                    draft.status === "Working on it" ? "bg-blue-50 text-blue-700 border-blue-200" :
                     "bg-slate-100 text-slate-600 border-slate-200"
                   }`}>
                     {statusLabels[draft.status]}
@@ -1745,7 +1596,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   </button>
                 </div>
               </div>
-            </DialogHeader>
+            </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {/* Notes — di ATAS karena isi utama. Field backend = `brief`; diubah
@@ -1970,7 +1821,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
               </div>
             </div>
 
-            <DialogFooter className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
+            <SheetFooter className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                 <div className="flex items-center gap-2">
                   {drawerMode === "edit" && selectedTask ? (
@@ -1988,10 +1839,10 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                   </DnaButton>
                 </div>
               </div>
-            </DialogFooter>
+            </SheetFooter>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Project Manager Modal */}
       {isProjectManagerOpen && (
@@ -2033,7 +1884,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                     })
                     .catch((err) => {
                       console.error("[ProjectManager] Add failed:", err?.response?.status, err?.response?.data);
-                      toast.error(`Gagal tambah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+                      alert(`Gagal tambah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
                     });
                 }}
                 className="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-4 text-[11px] font-bold uppercase tracking-wider text-white hover:bg-blue-700 transition"
@@ -2071,7 +1922,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                               .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
                               .catch((err) => {
                                 console.error("[ProjectManager] Edit failed:", err?.response?.status, err?.response?.data);
-                                toast.error(`Gagal ubah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+                                alert(`Gagal ubah project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
                               });
                           }}
                           className="text-emerald-600 hover:text-emerald-700 font-bold text-[11px] px-2 py-1"
@@ -2105,20 +1956,15 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
                             onClick={() => {
                               const project = projects.find((p) => p.name === projectName);
                               if (!project) return;
-                              askConfirm({
-                                title: 'Hapus project?',
-                                description: `Project "${projectName}" dan task di dalamnya akan dihapus. Task tidak dipindah.`,
-                                destructive: true,
-                                confirmLabel: 'Hapus',
-                                onConfirm: () => {
-                                  api.delete(`/marketing/prototype/projects/${project.id}`)
-                                    .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
-                                    .catch((err) => {
-                                      console.error("[ProjectManager] Delete failed:", err?.response?.status, err?.response?.data);
-                                      toast.error(`Gagal hapus project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
-                                    });
-                                },
-                              });
+                              if (!window.confirm(`Hapus project "${projectName}"? Task di dalamnya dipindah ke project lain.`)) return;
+                              // Hapus project via API backend (P3.3) — task di
+                              // dalamnya otomatis di-reassign oleh backend.
+                              api.delete(`/marketing/prototype/projects/${project.id}`)
+                                .then(() => queryClient.invalidateQueries({ queryKey: ["marketing-prototype-bundle"] }))
+                                .catch((err) => {
+                                  console.error("[ProjectManager] Delete failed:", err?.response?.status, err?.response?.data);
+                                  alert(`Gagal hapus project! ${err?.response?.status ? `Server: ${err?.response?.status}` : 'Koneksi terputus'}`);
+                                });
                             }}
                             className="text-slate-400 hover:text-rose-600 p-1 hover:bg-slate-50 rounded"
                           >
@@ -2134,40 +1980,7 @@ export function ManagementTaskBoard({ activeMember }: ManagementTaskBoardProps) 
           </div>
         </div>
       )}
-
-      {/* Confirm dialog for task/project delete */}
-      {confirmDialog}
-
-      {/* Confirm dialog for file delete */}
-      <Dialog open={!!confirmDeleteFile} onOpenChange={(o) => { if (!o) setConfirmDeleteFile(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hapus file?</DialogTitle>
-            <DialogDescription>File "{confirmDeleteFile?.name}" akan dihapus permanen.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded border border-white/10 hover:bg-white/5"
-              onClick={() => setConfirmDeleteFile(null)}
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded bg-red-600 hover:bg-red-500 text-white"
-              onClick={async () => {
-                const target = confirmDeleteFile;
-                setConfirmDeleteFile(null);
-                if (target) await handleDeleteFile(target.id);
-              }}
-            >
-              Hapus
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    </DashboardShell>
   );
 }
 

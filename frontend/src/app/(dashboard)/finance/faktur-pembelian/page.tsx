@@ -5,8 +5,7 @@ import {
   DnaPageContainer,
   DnaPageHeader,
   DnaKpiGrid,
-  KpiCard,
-  TableWrapper,
+  DnaStatCard,
   DnaTable,
   DnaTableHead,
   DnaTh,
@@ -394,28 +393,28 @@ export default function PurchaseBillsPage() {
 
       {/* 2. Visual DNA KPI Grid */}
       <DnaKpiGrid>
-        <KpiCard
+        <DnaStatCard
           label="Total Faktur Tagihan"
           value={totalBillsCount}
           subtext="Seluruh faktur pengadaan"
           variant="blue"
           icon={<FileText className="w-4 h-4" />}
         />
-        <KpiCard
+        <DnaStatCard
           label="Tagihan Belum Dibayar"
           value={unpaidCount}
           subtext="Menunggu jadwal pembayaran"
           variant="rose"
           icon={<Clock className="w-4 h-4" />}
         />
-        <KpiCard
+        <DnaStatCard
           label="Tagihan Sudah Lunas"
           value={paidCount}
           subtext="Selesai dibayar kas/bank"
           variant="emerald"
           icon={<CheckCircle2 className="w-4 h-4" />}
         />
-        <KpiCard
+        <DnaStatCard
           label="Total Saldo Hutang"
           value={`Rp ${formatRupiah(totalUnpaidNominal).split(",")[0]}`}
           subtext="Total kewajiban terbuka"
@@ -459,74 +458,68 @@ export default function PurchaseBillsPage() {
       </div>
 
       {/* 4. Table with custom invoice date, procurement category, discount & unpaid reason */}
-      <TableWrapper
-        filters={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari faktur, supplier, PO..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                icon={<Search className="w-3.5 h-3.5 text-slate-400" />}
-              />
-            </div>
-            <DnaColumnFilter
-              columns={billColumnOptions}
-              selectedColumnId={filterColumn}
-              filterValue={columnFilterVal}
-              onColumnChange={(col) => {
-                setFilterColumn(col);
-                const colDef = billColumnOptions.find((c) => c.id === col);
-                if (colDef?.type === "sort") {
-                  setColumnFilterVal("asc");
-                  setSortConfig({ key: col, direction: "asc" });
-                } else {
-                  setColumnFilterVal("ALL");
-                }
-                setCurrentPage(1);
-              }}
-              onValueChange={(val) => {
-                setColumnFilterVal(val);
-                const colDef = billColumnOptions.find((c) => c.id === filterColumn);
-                if (colDef?.type === "sort") {
-                  if (val === "asc" || val === "desc") {
-                    setSortConfig({ key: filterColumn, direction: val });
-                  } else {
-                    setSortConfig(null);
-                  }
-                }
-                setCurrentPage(1);
-              }}
-            />
-            {isFilterActive && (
-              <DnaButton
-                variant="ghost"
-                size="sm"
-                onClick={handleResetFilter}
-              >
-                Reset Filter
-              </DnaButton>
-            )}
-          </div>
-        }
-        pagination={
-          <DnaPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filtered.length}
-            pageSize={entriesPerPage}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(ps) => {
-              setEntriesPerPage(ps);
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="w-64">
+          <DnaInput
+            placeholder="Cari faktur, supplier, PO..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
+            icon={<Search className="w-3.5 h-3.5 text-slate-400" />}
           />
-        }
-      >
-        <DnaTable>
+        </div>
+        <DnaColumnFilter
+          columns={billColumnOptions}
+          selectedColumnId={filterColumn}
+          filterValue={columnFilterVal}
+          onColumnChange={(col) => {
+            setFilterColumn(col);
+            const colDef = billColumnOptions.find((c) => c.id === col);
+            if (colDef?.type === "sort") {
+              setColumnFilterVal("asc");
+              setSortConfig({ key: col, direction: "asc" });
+            } else {
+              setColumnFilterVal("ALL");
+            }
+            setCurrentPage(1);
+          }}
+          onValueChange={(val) => {
+            setColumnFilterVal(val);
+            const colDef = billColumnOptions.find((c) => c.id === filterColumn);
+            if (colDef?.type === "sort") {
+              if (val === "asc" || val === "desc") {
+                setSortConfig({ key: filterColumn, direction: val });
+              } else {
+                setSortConfig(null);
+              }
+            }
+            setCurrentPage(1);
+          }}
+        />
+        {isFilterActive && (
+          <DnaButton
+            variant="ghost"
+            size="sm"
+            onClick={handleResetFilter}
+          >
+            Reset Filter
+          </DnaButton>
+        )}
+      </div>
+      <DnaPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        pageSize={entriesPerPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(ps) => {
+          setEntriesPerPage(ps);
+          setCurrentPage(1);
+        }}
+      />
+      <DnaTable>
           <DnaTableHead>
             <tr>
               <DnaTh align="center" className="w-10">#</DnaTh>
@@ -627,7 +620,17 @@ export default function PurchaseBillsPage() {
             )}
           </DnaTableBody>
         </DnaTable>
-      </TableWrapper>
+      <DnaPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        pageSize={entriesPerPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(ps) => {
+          setEntriesPerPage(ps);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* 5. Detail Modal (DnaModal) with Purchased Items Table + Discount Column */}
       {selectedBill && (
@@ -725,8 +728,7 @@ export default function PurchaseBillsPage() {
                 Rincian Barang & Diskon Pembelian
               </div>
 
-              <TableWrapper>
-                <DnaTable>
+              <DnaTable>
                   <DnaTableHead>
                     <tr>
                       <DnaTh align="center" className="w-10">#</DnaTh>
@@ -763,7 +765,6 @@ export default function PurchaseBillsPage() {
                     ))}
                   </DnaTableBody>
                 </DnaTable>
-              </TableWrapper>
               
               <div className="p-3.5 bg-slate-50 dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5 text-xs mt-3">
                 <div className="flex justify-between text-slate-600 dark:text-slate-400">

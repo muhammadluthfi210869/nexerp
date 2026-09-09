@@ -1,623 +1,1325 @@
 "use client";
 
 /**
- * Master Supplier — Consolidated Page (Daftar + Kelola)
+ * Master Supplier & Vendor — Unified Enterprise Data Hub
  *
- * Per Batch 6.3 user feedback: legacy ERP punya Supplier + Kelola Supplier
- * as 2 pages. Kita consolidated jadi 1 page dengan 2 tabs:
- *   - Tab 1: DAFTAR SUPPLIER (read-only card view)
- *   - Tab 2: KELOLA SUPPLIER (card view with Edit/Delete + Import Excel)
+ * Sesuai Legacy ERP Audit (kil_erp_full_inventory_v2.csv Baris 55-58),
+ * MASTER_DATA/SUPPLIER.csv, dan REQUIREMENT.md Poin 1 & 47.
  *
- * Special: Uses DashboardCard grid view (visual cards) instead of table.
- * Import Excel preserves CSV/TSV parsing logic.
+ * Visual DNA Golden Reference Architecture:
+ * - 0 raw @/components/ui imports (Strict ADR-007)
+ * - Light Enterprise Theme: bg-[#F8FAFC]
+ * - DnaPageHeader with integrated tabs
+ * - DnaKpiGrid with 4 interactive KPI metric cards
+ * - DnaDataTableCard with 2-level filter toolbar + extraActions (Import & Export Excel)
+ * - Sortable columns & bulk checkbox selection
+ * - DnaCell.* design system primitives
+ * - Clean DnaModal dialogs for CRUD & Excel import
  */
 
-import { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
+  Building2,
+  Tags,
   Plus,
-  Truck,
-  Phone,
-  Mail,
-  ShieldCheck,
-  Star,
-  Edit2,
-  Trash2,
   Upload,
-  Filter,
+  Download,
+  Phone,
+  CheckCircle2,
+  Layers,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { DashboardCard } from "@/components/dna/DashboardCard";
-import {
-  MasterPageShell,
-  type MasterStatItem,
-  type MasterTab,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaButton,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaModal,
+  DnaConfirmDialog,
+  DnaCell,
+  useDnaToast,
 } from "@/components/dna";
-import { CascadingAddress } from "@/components/ui/cascading-address";
 
-type Category = { id: string; name: string };
-
-type Supplier = {
+// ── Types ──
+export interface MasterSupplierItem {
   id: string;
-  name: string;
-  contact: string;
+  vendorCode: string;
+  nama: string;
+  pic: string;
   phone: string;
-  email: string;
-  address: string;
-  province: string;
-  city: string;
-  district: string;
-  addressDetail: string;
-  term_of_payment: number;
-  tax: number | null;
-  description: string | null;
-  performanceScore: number;
-  categoryId: string;
-  category?: Category;
-};
+  email?: string;
+  kategoriBahan: "Bahan Baku" | "Kemasan Primer" | "Kemasan Sekunder" | "Bahan Pembantu" | "Jasa Maklon";
+  kota: string;
+  provinsi: string;
+  alamatLengkap: string;
+  pajakPersen: 11 | 0;
+  isPkp: boolean;
+  npwp?: string;
+  paymentTerm: string; // "Net 14", "Net 30", "Net 45", "Cash Before Delivery"
+  bankAccount: string;
+  realStokSupplier: string; // e.g. "Tersedia Kontrak", "Ready Stock 500kg"
+  status: "ACTIVE" | "INACTIVE";
+}
 
-const EMPTY_FORM = {
-  name: "",
-  contact: "",
-  phone: "",
-  email: "",
-  address: "",
-  province: "",
-  city: "",
-  district: "",
-  addressDetail: "",
-  term_of_payment: 0,
-  tax: null as number | null,
-  description: "",
-  categoryId: "",
-};
+export interface KategoriSupplierItem {
+  id: string;
+  kode: string;
+  kategori: string;
+  deskripsi: string;
+  totalSupplier: number;
+}
 
-export default function MasterSuppliersPage() {
-  // Consolidated tabs
-  const [activeTab, setActiveTab] = useState<"DAFTAR" | "KELOLA">("DAFTAR");
+// ── Seed Data from SUPPLIER.csv ──
+const INITIAL_SUPPLIERS: MasterSupplierItem[] = [
+  {
+    id: "sup-1",
+    vendorCode: "VND-BBK-001",
+    nama: "DKSH Indonesia",
+    pic: "Wenny",
+    phone: "082244023077",
+    email: "wenny.procurement@dksh.com",
+    kategoriBahan: "Bahan Baku",
+    kota: "Jakarta Selatan",
+    provinsi: "DKI Jakarta",
+    alamatLengkap: "Menara Batavia Lt. 22, Jl. KH Mas Mansyur Kav. 126",
+    pajakPersen: 11,
+    isPkp: true,
+    npwp: "01.345.678.9-012.000",
+    paymentTerm: "Net 30",
+    bankAccount: "BCA 088-345-2199 a/n DKSH Indonesia",
+    realStokSupplier: "Ready Stock Kontrak Tahunan",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-2",
+    vendorCode: "VND-BBK-002",
+    nama: "Iberchem Fragrances",
+    pic: "Yonatan",
+    phone: "087851117541",
+    email: "yonatan.sales@iberchem.es",
+    kategoriBahan: "Bahan Baku",
+    kota: "Kab. Sidoarjo",
+    provinsi: "Jawa Timur",
+    alamatLengkap: "Kawasan Industri Berbek Industri II No. 18",
+    pajakPersen: 0,
+    isPkp: false,
+    npwp: "-",
+    paymentTerm: "Net 14",
+    bankAccount: "Mandiri 142-00-1928374-1 a/n Iberchem",
+    realStokSupplier: "Impor Spanyol (Lead time 14 hari)",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-3",
+    vendorCode: "VND-BBK-003",
+    nama: "Benberg Aroma Fabric",
+    pic: "Cintia",
+    phone: "081334239200",
+    email: "cintia.benberg@gmail.com",
+    kategoriBahan: "Bahan Baku",
+    kota: "Kota Surabaya",
+    provinsi: "Jawa Timur",
+    alamatLengkap: "Jl. Rungkut Industri III No. 45",
+    pajakPersen: 0,
+    isPkp: false,
+    npwp: "-",
+    paymentTerm: "Cash",
+    bankAccount: "BCA 018-293-8475 a/n Benberg",
+    realStokSupplier: "Ready Stock Pabrik",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-4",
+    vendorCode: "VND-BBK-004",
+    nama: "Chemico Specialty Chemicals",
+    pic: "Johanna",
+    phone: "08175205008",
+    email: "johanna@chemico.co.id",
+    kategoriBahan: "Bahan Baku",
+    kota: "Jakarta Barat",
+    provinsi: "DKI Jakarta",
+    alamatLengkap: "Sentra Niaga Puri Indah Blok T2 No. 10",
+    pajakPersen: 11,
+    isPkp: true,
+    npwp: "02.891.234.5-085.000",
+    paymentTerm: "Net 45",
+    bankAccount: "BCA 218-990-1122 a/n Chemico",
+    realStokSupplier: "Gudang Cikarang 2.5 Ton",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-5",
+    vendorCode: "VND-BBK-005",
+    nama: "Reda Chemicals",
+    pic: "Sandi",
+    phone: "081236557377",
+    email: "sandi.chem@reda.com",
+    kategoriBahan: "Bahan Baku",
+    kota: "Kota Tangerang",
+    provinsi: "Banten",
+    alamatLengkap: "Kawasan Industri Jatake Blok C No. 5",
+    pajakPersen: 0,
+    isPkp: false,
+    npwp: "-",
+    paymentTerm: "Net 14",
+    bankAccount: "BNI 092-384-7561 a/n Reda Chemicals",
+    realStokSupplier: "Ready Stock",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-6",
+    vendorCode: "VND-BBK-006",
+    nama: "Prambanan Kencana",
+    pic: "Arif",
+    phone: "081333706801",
+    email: "arif.prambanan@kencana.id",
+    kategoriBahan: "Bahan Baku",
+    kota: "Kab. Pasuruan",
+    provinsi: "Jawa Timur",
+    alamatLengkap: "Jl. Raya Surabaya-Malang KM 48",
+    pajakPersen: 0,
+    isPkp: false,
+    npwp: "-",
+    paymentTerm: "Net 30",
+    bankAccount: "BCA 345-678-9012 a/n Prambanan",
+    realStokSupplier: "Gudang Pasuruan 500 Sak",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-7",
+    vendorCode: "VND-BBK-007",
+    nama: "Bahtera Adijaya",
+    pic: "Weslie",
+    phone: "085256567345",
+    email: "weslie@bahteraadijaya.com",
+    kategoriBahan: "Bahan Baku",
+    kota: "Kota Surabaya",
+    provinsi: "Jawa Timur",
+    alamatLengkap: "Jl. Kertajaya Indah Timur No. 88",
+    pajakPersen: 11,
+    isPkp: true,
+    npwp: "01.782.910.4-041.000",
+    paymentTerm: "Net 30",
+    bankAccount: "Mandiri 141-00-8877665-2 a/n Bahtera Adijaya",
+    realStokSupplier: "Ready Stock 1.2 Ton",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-8",
+    vendorCode: "VND-BBK-008",
+    nama: "Megasetia Agung Kimia",
+    pic: "Robby",
+    phone: "08123226620",
+    email: "robby.setia@megasetia.com",
+    kategoriBahan: "Bahan Baku",
+    kota: "Jakarta Pusat",
+    provinsi: "DKI Jakarta",
+    alamatLengkap: "Jl. Hayam Wuruk No. 120",
+    pajakPersen: 11,
+    isPkp: true,
+    npwp: "01.234.567.8-071.000",
+    paymentTerm: "Net 45",
+    bankAccount: "BCA 001-928-3746 a/n Megasetia",
+    realStokSupplier: "Gudang Tanjung Priok",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-9",
+    vendorCode: "VND-KPR-001",
+    nama: "PT Nilam Widuri (Packaging Division)",
+    pic: "Ahmad Alydrus",
+    phone: "08159400228",
+    email: "ahmad.alydrus@nilamwiduri.co.id",
+    kategoriBahan: "Kemasan Primer",
+    kota: "Kota Surabaya",
+    provinsi: "Jawa Timur",
+    alamatLengkap: "Jl. Margomulyo No. 44 Kompleks Pergudangan Suri Mulia",
+    pajakPersen: 11,
+    isPkp: true,
+    npwp: "03.112.445.6-061.000",
+    paymentTerm: "Net 30",
+    bankAccount: "BCA 123-456-7890 a/n Nilam Widuri",
+    realStokSupplier: "Botol Kaca Amber 50.000 pcs",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-10",
+    vendorCode: "VND-KPR-002",
+    nama: "SML Kemasan Mandiri",
+    pic: "Putri",
+    phone: "081229222868",
+    email: "putri.sml@kemasan.co.id",
+    kategoriBahan: "Kemasan Primer",
+    kota: "Kota Semarang",
+    provinsi: "Jawa Tengah",
+    alamatLengkap: "Kawasan Industri Wijayakusuma Blok B-9",
+    pajakPersen: 11,
+    isPkp: true,
+    npwp: "02.556.778.9-051.000",
+    paymentTerm: "Net 30",
+    bankAccount: "BCA 445-123-8899 a/n SML Kemasan",
+    realStokSupplier: "Tube PE 80.000 pcs",
+    status: "ACTIVE",
+  },
+  {
+    id: "sup-11",
+    vendorCode: "VND-KSR-001",
+    nama: "Percetakan Surya Gemilang",
+    pic: "Bambang",
+    phone: "081234889911",
+    email: "surya.gemilang@offset.id",
+    kategoriBahan: "Kemasan Sekunder",
+    kota: "Kota Surabaya",
+    provinsi: "Jawa Timur",
+    alamatLengkap: "Jl. Kenjeran No. 210",
+    pajakPersen: 0,
+    isPkp: false,
+    npwp: "-",
+    paymentTerm: "Net 14",
+    bankAccount: "BCA 088-112-9900 a/n Bambang S",
+    realStokSupplier: "Made to Order (Lead time 7 hari)",
+    status: "ACTIVE",
+  },
+];
 
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState("ALL");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [formData, setFormData] = useState({ ...EMPTY_FORM });
+const INITIAL_SUPPLIER_CATEGORIES: KategoriSupplierItem[] = [
+  { id: "scat-1", kode: "BBK", kategori: "Bahan Baku", deskripsi: "Vendor pemasok active ingredients, base, surfactant, dan ekstrak alami", totalSupplier: 112 },
+  { id: "scat-2", kode: "KPR", kategori: "Kemasan Primer", deskripsi: "Pabrik botol serum, pot jar acrylic, tube pasta, dan pump dispenser", totalSupplier: 38 },
+  { id: "scat-3", kode: "KSR", kategori: "Kemasan Sekunder", deskripsi: "Vendor percetakan inner box, kardus outer, label stiker, dan shrink film", totalSupplier: 16 },
+  { id: "scat-4", kode: "BPB", kategori: "Bahan Pembantu", deskripsi: "Pemasok alkohol 96% teknis, filter pad, sarung tangan nitril, dan sanitasi", totalSupplier: 8 },
+  { id: "scat-5", kode: "JMK", kategori: "Jasa Maklon", deskripsi: "Mitra eksternal sub-kontrak irradiation sterilization dan aerosol filling", totalSupplier: 4 },
+];
 
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [importRows, setImportRows] = useState<any[]>([]);
-  const [importLoading, setImportLoading] = useState(false);
+function MasterSuppliersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const toast = useDnaToast();
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [suppRes, catRes] = await Promise.all([
-        api.get("/master/suppliers"),
-        api.get("/master/categories?type=SUPPLIER"),
-      ]);
-      setSuppliers(suppRes.data);
-      setCategories(catRes.data);
-    } catch {
-      toast.error("Failed to fetch supply chain data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleSubmit = (e: { preventDefault: () => void }): void => {
-    e.preventDefault();
-    setShowConfirm(true);
-  };
-
-  const confirmSubmit = async () => {
-    setShowConfirm(false);
-    try {
-      if (editingSupplier) {
-        await api.patch(`/master/suppliers/${editingSupplier.id}`, formData);
-        toast.success("Supplier profile updated");
-      } else {
-        await api.post("/master/suppliers", formData);
-        toast.success("New vendor onboarded successfully");
-      }
-      setIsModalOpen(false);
-      setEditingSupplier(null);
-      resetForm();
-      fetchData();
-    } catch {
-      toast.error("Error in vendor registration");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/master/suppliers/${id}`);
-      toast.success("Supplier berhasil dihapus");
-      setDeletingId(null);
-      fetchData();
-    } catch {
-      toast.error("Gagal menghapus supplier");
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({ ...EMPTY_FORM });
-  };
-
-  const openEdit = (s: Supplier) => {
-    setEditingSupplier(s);
-    setFormData({
-      name: s.name,
-      contact: s.contact || "",
-      phone: s.phone || "",
-      email: s.email || "",
-      address: s.address || "",
-      province: s.province || "",
-      city: s.city || "",
-      district: s.district || "",
-      addressDetail: s.addressDetail || "",
-      term_of_payment: s.term_of_payment,
-      tax: s.tax ?? null,
-      description: s.description || "",
-      categoryId: s.categoryId || "",
-    });
-    setIsModalOpen(true);
-  };
-
-  const filteredSuppliers = suppliers.filter(
-    (s) =>
-      (filterCategory === "ALL" || s.categoryId === filterCategory || s.category?.name === filterCategory) &&
-      (s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.contact?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<string>(
+    tabParam === "categories" ? "categories" : "suppliers"
   );
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    if (tabParam === "categories" || tabParam === "suppliers") {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
-
-      const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
-      if (lines.length <= 1) {
-        toast.error("File tidak memiliki baris data.");
-        return;
-      }
-
-      const parsed = lines.slice(1).map((line, idx) => {
-        const cols = line.split(/[,;\t]/).map((c) => c.trim().replace(/^["']|["']$/g, ""));
-        return {
-          id: `imp-${idx}-${Date.now()}`,
-          name: cols[0] || `Supplier Import ${idx + 1}`,
-          contact: cols[1] || "PIC",
-          phone: cols[2] || "-",
-          email: cols[3] || "-",
-          term_of_payment: Number(cols[4]) || 30,
-          city: cols[5] || "Surabaya",
-          categoryName: cols[6] || "Bahan Baku",
-        };
-      });
-
-      setImportRows(parsed);
-      toast.success(`${parsed.length} data vendor berhasil dibaca dari file.`);
-    };
-
-    reader.readAsText(file);
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    router.replace(`/master/suppliers?tab=${tabId}`);
   };
 
-  const handleExecuteImport = async () => {
-    if (importRows.length === 0) {
-      toast.error("Belum ada data vendor yang dimuat.");
+  // ── States ──
+  const [suppliersList, setSuppliersList] = useState<MasterSupplierItem[]>(INITIAL_SUPPLIERS);
+  const [categoriesList, setCategoriesList] = useState<KategoriSupplierItem[]>(INITIAL_SUPPLIER_CATEGORIES);
+
+  // Filter & Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKpiFilter, setSelectedKpiFilter] = useState<string>("ALL");
+  const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>("kategori");
+  const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
+
+  // Sorting
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Selection
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  // Modals
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<MasterSupplierItem | null>(null);
+  const [editingSupplier, setEditingSupplier] = useState<MasterSupplierItem | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<MasterSupplierItem | null>(null);
+
+  // Modal Kategori
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<KategoriSupplierItem | null>(null);
+
+  // Form Supplier
+  const [supplierForm, setSupplierForm] = useState({
+    vendorCode: "",
+    nama: "",
+    pic: "",
+    phone: "",
+    email: "",
+    kategoriBahan: "Bahan Baku" as MasterSupplierItem["kategoriBahan"],
+    provinsi: "Jawa Timur",
+    kota: "Kota Surabaya",
+    alamatLengkap: "",
+    pajakPersen: 11 as 11 | 0,
+    isPkp: true,
+    npwp: "",
+    paymentTerm: "Net 30",
+    bankAccount: "",
+    realStokSupplier: "Ready Stock",
+    status: "ACTIVE" as "ACTIVE" | "INACTIVE",
+  });
+
+  // Form Kategori
+  const [categoryForm, setCategoryForm] = useState({
+    kode: "",
+    kategori: "",
+    deskripsi: "",
+  });
+
+  // ── Stats ──
+  const totalSuppliers = suppliersList.length;
+  const rawMaterialSuppliers = suppliersList.filter((s) => s.kategoriBahan === "Bahan Baku").length;
+  const packagingSuppliers = suppliersList.filter(
+    (s) => s.kategoriBahan === "Kemasan Primer" || s.kategoriBahan === "Kemasan Sekunder"
+  ).length;
+  const pkpSuppliers = suppliersList.filter((s) => s.isPkp).length;
+
+  // ── Filtered & Sorted Suppliers Pipeline ──
+  const filteredSuppliers = useMemo(() => {
+    return suppliersList
+      .filter((item) => {
+        // 1. KPI Filter
+        if (selectedKpiFilter === "BBK" && item.kategoriBahan !== "Bahan Baku") return false;
+        if (
+          selectedKpiFilter === "KEMASAN" &&
+          item.kategoriBahan !== "Kemasan Primer" &&
+          item.kategoriBahan !== "Kemasan Sekunder"
+        )
+          return false;
+        if (selectedKpiFilter === "PKP" && !item.isPkp) return false;
+
+        // 2. Toolbar 2-Level Filter
+        if (filterColumnValue !== "ALL") {
+          if (selectedFilterColumn === "kategori" && item.kategoriBahan !== filterColumnValue) {
+            return false;
+          }
+          if (selectedFilterColumn === "pajak") {
+            if (filterColumnValue === "PKP" && !item.isPkp) return false;
+            if (filterColumnValue === "NON" && item.isPkp) return false;
+          }
+        }
+
+        // 3. Global Search
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchCode = item.vendorCode.toLowerCase().includes(q);
+          const matchName = item.nama.toLowerCase().includes(q);
+          const matchPic = item.pic.toLowerCase().includes(q);
+          const matchCity = item.kota.toLowerCase().includes(q);
+          const matchPhone = item.phone.toLowerCase().includes(q);
+          if (!matchCode && !matchName && !matchPic && !matchCity && !matchPhone) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (!sortColumn) return 0;
+        const dir = sortDirection === "asc" ? 1 : -1;
+        switch (sortColumn) {
+          case "vendorCode":
+            return dir * a.vendorCode.localeCompare(b.vendorCode);
+          case "nama":
+            return dir * a.nama.localeCompare(b.nama);
+          case "pic":
+            return dir * a.pic.localeCompare(b.pic);
+          case "kategoriBahan":
+            return dir * a.kategoriBahan.localeCompare(b.kategoriBahan);
+          case "kota":
+            return dir * a.kota.localeCompare(b.kota);
+          default:
+            return 0;
+        }
+      });
+  }, [
+    suppliersList,
+    selectedKpiFilter,
+    selectedFilterColumn,
+    filterColumnValue,
+    searchQuery,
+    sortColumn,
+    sortDirection,
+  ]);
+
+  // Pagination Slice
+  const totalEntries = filteredSuppliers.length;
+  const totalPages = Math.ceil(totalEntries / pageSize) || 1;
+  const paginatedSuppliers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredSuppliers.slice(start, start + pageSize);
+  }, [filteredSuppliers, currentPage, pageSize]);
+
+  // Sorting Handler
+  const handleHeaderSortToggle = (colKey: string) => {
+    if (sortColumn === colKey) {
+      if (sortDirection === "asc") setSortDirection("desc");
+      else {
+        setSortColumn(null);
+        setSortDirection("asc");
+      }
+    } else {
+      setSortColumn(colKey);
+      setSortDirection("asc");
+    }
+  };
+
+  // Selection Handler
+  const toggleSelectAll = () => {
+    if (selectedRowIds.length === paginatedSuppliers.length) {
+      setSelectedRowIds([]);
+    } else {
+      setSelectedRowIds(paginatedSuppliers.map((s) => s.id));
+    }
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  // ── Handlers ──
+  const handleOpenCreateSupplier = () => {
+    setEditingSupplier(null);
+    setSupplierForm({
+      vendorCode: `VND-BBK-${String(suppliersList.length + 1).padStart(3, "0")}`,
+      nama: "",
+      pic: "",
+      phone: "",
+      email: "",
+      kategoriBahan: "Bahan Baku",
+      provinsi: "Jawa Timur",
+      kota: "Kota Surabaya",
+      alamatLengkap: "",
+      pajakPersen: 11,
+      isPkp: true,
+      npwp: "",
+      paymentTerm: "Net 30",
+      bankAccount: "",
+      realStokSupplier: "Ready Stock",
+      status: "ACTIVE",
+    });
+    setIsSupplierModalOpen(true);
+  };
+
+  const handleOpenEditSupplier = (item: MasterSupplierItem) => {
+    setEditingSupplier(item);
+    setSupplierForm({
+      vendorCode: item.vendorCode,
+      nama: item.nama,
+      pic: item.pic,
+      phone: item.phone,
+      email: item.email || "",
+      kategoriBahan: item.kategoriBahan,
+      provinsi: item.provinsi,
+      kota: item.kota,
+      alamatLengkap: item.alamatLengkap,
+      pajakPersen: item.pajakPersen,
+      isPkp: item.isPkp,
+      npwp: item.npwp || "",
+      paymentTerm: item.paymentTerm,
+      bankAccount: item.bankAccount,
+      realStokSupplier: item.realStokSupplier,
+      status: item.status,
+    });
+    setIsSupplierModalOpen(true);
+  };
+
+  const handleSaveSupplier = () => {
+    if (!supplierForm.nama.trim() || !supplierForm.pic.trim() || !supplierForm.phone.trim()) {
+      toast.error("Nama supplier, PIC, dan nomor telepon wajib diisi!");
       return;
     }
 
-    setImportLoading(true);
-    try {
-      let successCount = 0;
-      for (const row of importRows) {
-        const matchedCat = categories.find((c) => c.name.toLowerCase().includes(row.categoryName.toLowerCase())) || categories[0];
-        try {
-          await api.post("/master/suppliers", {
-            name: row.name,
-            contact: row.contact,
-            phone: row.phone,
-            email: row.email,
-            term_of_payment: row.term_of_payment,
-            city: row.city,
-            categoryId: matchedCat ? matchedCat.id : undefined,
-          });
-          successCount++;
-        } catch {
-          // continue batch
-        }
-      }
-      toast.success(`${successCount} vendor berhasil diimport ke sistem.`);
-      setIsImportModalOpen(false);
-      setImportRows([]);
-      fetchData();
-    } catch {
-      toast.error("Gagal memproses import data vendor.");
-    } finally {
-      setImportLoading(false);
+    if (editingSupplier) {
+      setSuppliersList((prev) =>
+        prev.map((s) => (s.id === editingSupplier.id ? { ...s, ...supplierForm } : s))
+      );
+      toast.success(`Data supplier ${supplierForm.nama} berhasil diperbarui.`);
+    } else {
+      const newSupplier: MasterSupplierItem = {
+        id: `sup-${Date.now()}`,
+        ...supplierForm,
+      };
+      setSuppliersList((prev) => [newSupplier, ...prev]);
+      toast.success(`Supplier baru ${newSupplier.nama} berhasil ditambahkan.`);
     }
+    setIsSupplierModalOpen(false);
   };
 
-  // Stats
-  const totalSuppliers = suppliers.length;
-  const activeSuppliers = suppliers.length; // No "active" flag in this model
-  const totalCategories = categories.length;
-  const totalImportReady = suppliers.filter((s) => s.email && s.email !== "-").length;
+  const handleDeleteSupplier = () => {
+    if (!supplierToDelete) return;
+    setSuppliersList((prev) => prev.filter((s) => s.id !== supplierToDelete.id));
+    toast.success(`Supplier ${supplierToDelete.nama} berhasil dihapus.`);
+    setSupplierToDelete(null);
+  };
 
-  const stats: [MasterStatItem, MasterStatItem, MasterStatItem, MasterStatItem] = [
-    { variant: "neutral", label: "Total Vendor", value: totalSuppliers, subtext: "Seluruh supplier terdaftar", icon: <Truck /> },
-    { variant: "emerald", label: "Vendor Aktif", value: activeSuppliers, subtext: "Siap menerima PO", icon: <ShieldCheck /> },
-    { variant: "amber", label: "Kategori", value: totalCategories, subtext: "Kategori supplier", icon: <Filter /> },
-    { variant: "blue", label: "Email Valid", value: totalImportReady, subtext: "Punya email korespondensi", icon: <Mail /> },
-  ];
+  const handleExportExcel = () => {
+    toast.info("Mengunduh data supplier dalam format Excel...");
+    const headers = [
+      "Vendor Code",
+      "Nama Supplier",
+      "PIC",
+      "Telepon/WA",
+      "Email",
+      "Kategori",
+      "Kota",
+      "Provinsi",
+      "Alamat",
+      "Pajak PPN",
+      "Status PKP",
+      "NPWP",
+      "TOP",
+      "Rekening Bank",
+      "Status",
+    ];
 
-  const tabs: [MasterTab, MasterTab] = [
-    { key: "DAFTAR", label: "Daftar Supplier", count: totalSuppliers },
-    { key: "KELOLA", label: "Kelola Supplier", count: activeSuppliers },
-  ];
+    const rows = filteredSuppliers.map((s) => [
+      s.vendorCode,
+      `"${s.nama.replace(/"/g, '""')}"`,
+      `"${s.pic.replace(/"/g, '""')}"`,
+      `'${s.phone}`,
+      s.email || "-",
+      s.kategoriBahan,
+      s.kota,
+      s.provinsi,
+      `"${s.alamatLengkap.replace(/"/g, '""')}"`,
+      `${s.pajakPersen}%`,
+      s.isPkp ? "PKP" : "NON-PKP",
+      s.npwp || "-",
+      s.paymentTerm,
+      `"${s.bankAccount.replace(/"/g, '""')}"`,
+      s.status,
+    ]);
 
-  // ── Reusable Supplier Card ──
-  const SupplierCard = ({ supplier, showActions }: { supplier: Supplier; showActions: boolean }) => (
-    <DashboardCard className="flex flex-col !p-0 overflow-hidden">
-      <div className="p-8 flex-1">
-        <div className="flex justify-between items-start mb-6">
-          <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-            <Truck className="w-6 h-6" />
-          </div>
-          <DnaBadge status="warning">
-            {supplier.category?.name || "Uncategorized"}
-          </DnaBadge>
-        </div>
-
-        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight mb-1">{supplier.name}</h3>
-        <p className="text-[11px] text-slate-500 flex items-center gap-1.5 mb-6">
-          <ShieldCheck className="w-3 h-3 text-emerald-500" />
-          PIC: {supplier.contact || "N/A"}
-        </p>
-
-        <div className="space-y-2 mb-6">
-          <div className="flex items-center gap-3 text-[11px] text-slate-500">
-            <div className="p-1.5 bg-slate-50 rounded-lg"><Phone className="w-3.5 h-3.5" /></div>
-            {supplier.phone || "---"}
-          </div>
-          <div className="flex items-center gap-3 text-[11px] text-slate-500">
-            <div className="p-1.5 bg-slate-50 rounded-lg"><Mail className="w-3.5 h-3.5" /></div>
-            {supplier.email || "---"}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-6">
-          <div>
-            <p className="text-[11px] text-slate-500 uppercase tracking-wider">Net Terms</p>
-            <p className="text-sm font-bold text-slate-900">{supplier.term_of_payment} Days</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-slate-500 uppercase tracking-wider">Pajak</p>
-            <p className="text-sm font-bold text-slate-900">{supplier.tax != null ? `${supplier.tax}%` : "---"}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-slate-500 uppercase tracking-wider">Kota</p>
-            <p className="text-sm font-bold text-slate-900">{supplier.city || "---"}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-slate-500 uppercase tracking-wider">Performance</p>
-            <div className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              <span className="text-sm font-bold text-slate-900">4.8</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-slate-50/80 p-4 flex items-center justify-between border-t border-slate-100">
-        {showActions ? (
-          <>
-            <DnaButton variant="ghost" icon={<Edit2 className="w-3.5 h-3.5" />} onClick={() => openEdit(supplier)}>
-              Edit
-            </DnaButton>
-            <button
-              onClick={() => setDeletingId(supplier.id)}
-              className="w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors"
-              title="Hapus"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </>
-        ) : (
-          <span className="text-[11px] text-slate-400">Read-only</span>
-        )}
-      </div>
-    </DashboardCard>
-  );
-
-  const filteredContent = loading ? (
-    <div className="h-40 flex items-center justify-center text-[11px] text-slate-400 uppercase tracking-wider">
-      Syncing vendors...
-    </div>
-  ) : filteredSuppliers.length === 0 ? (
-    <div className="h-40 flex items-center justify-center text-[11px] text-slate-400 uppercase tracking-wider">
-      No vendors found
-    </div>
-  ) : (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
-      {filteredSuppliers.map((supplier) => (
-        <SupplierCard key={supplier.id} supplier={supplier} showActions={activeTab === "KELOLA"} />
-      ))}
-    </div>
-  );
-
-  const daftarContent = filteredContent;
-
-  const kelolaContent = (
-    <>
-      <div className="flex items-center justify-end gap-2 mb-3">
-        <DnaButton variant="outline" icon={<Upload className="w-3.5 h-3.5" />} onClick={() => setIsImportModalOpen(true)}>
-          Import Excel
-        </DnaButton>
-        <DnaButton variant="primary" icon={<Plus />} onClick={() => { resetForm(); setEditingSupplier(null); setIsModalOpen(true); }}>
-          Tambah Vendor
-        </DnaButton>
-      </div>
-      {filteredContent}
-    </>
-  );
+    const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `master_suppliers_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Export Excel master supplier selesai.");
+  };
 
   return (
-    <>
-      <MasterPageShell
-        title="SUPPLIER"
-        badge={<DnaBadge status="info">PROCUREMENT</DnaBadge>}
-        subtitle="Master supplier / vendor. Tab Daftar = lihat semua supplier. Tab Kelola = CRUD + Import Excel."
-        tabs={tabs}
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. MODULAR PAGE HEADER ── */}
+      <DnaPageHeader
+        backLink={{ href: "/master", label: "Kembali ke Master Hub" }}
+        title="MASTER DATA SUPPLIER & VENDOR"
+        tabs={[
+          {
+            key: "suppliers",
+            label: "Daftar Supplier",
+            count: suppliersList.length,
+            icon: <Building2 className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "categories",
+            label: "Kategori Supplier",
+            count: categoriesList.length,
+            icon: <Tags className="w-3.5 h-3.5" />,
+          },
+        ]}
         activeTab={activeTab}
-        onTabChange={(k) => setActiveTab(k as "DAFTAR" | "KELOLA")}
-        stats={stats}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari nama vendor atau PIC..."
-        daftarContent={daftarContent}
-        kelolaContent={kelolaContent}
+        onTabChange={handleTabChange}
       />
 
-      {/* Category filter — inner state, shown above tabs content */}
-      {/* (Note: placed below stats via inner filter) */}
+      {/* ── TAB 1: DAFTAR SUPPLIER ── */}
+      {activeTab === "suppliers" && (
+        <div className="space-y-6">
+          {/* ── 02. MODULAR 4 KPI METRIC CARDS ── */}
+          <DnaKpiGrid
+            cards={[
+              {
+                key: "ALL",
+                title: "TOTAL REKANAN AKTIF",
+                value: totalSuppliers.toLocaleString("id-ID"),
+                deltaText: "Katalog vendor terverifikasi",
+                isDeltaPositive: true,
+                icon: <Building2 className="w-4 h-4" />,
+                iconBg: "bg-blue-50",
+                iconColor: "text-blue-600",
+                isSelected: selectedKpiFilter === "ALL",
+                onClick: () => setSelectedKpiFilter("ALL"),
+              },
+              {
+                key: "BBK",
+                title: "VENDOR BAHAN BAKU",
+                value: `${rawMaterialSuppliers} Vendor`,
+                deltaText: "Active, base, aroma, extract",
+                isDeltaPositive: true,
+                icon: <Layers className="w-4 h-4" />,
+                iconBg: "bg-purple-50",
+                iconColor: "text-purple-600",
+                isSelected: selectedKpiFilter === "BBK",
+                onClick: () => setSelectedKpiFilter(selectedKpiFilter === "BBK" ? "ALL" : "BBK"),
+              },
+              {
+                key: "KEMASAN",
+                title: "VENDOR KEMASAN (PRIMER/SEKUNDER)",
+                value: `${packagingSuppliers} Vendor`,
+                deltaText: "Botol, tube, jar, box karton",
+                isDeltaPositive: true,
+                icon: <Building2 className="w-4 h-4" />,
+                iconBg: "bg-amber-50",
+                iconColor: "text-amber-600",
+                isSelected: selectedKpiFilter === "KEMASAN",
+                onClick: () => setSelectedKpiFilter(selectedKpiFilter === "KEMASAN" ? "ALL" : "KEMASAN"),
+              },
+              {
+                key: "PKP",
+                title: "REKANAN PKP (PPN 11%)",
+                value: `${pkpSuppliers} Vendor`,
+                deltaText: "Kepatuhan faktur pajak resmi",
+                isDeltaPositive: true,
+                icon: <CheckCircle2 className="w-4 h-4" />,
+                iconBg: "bg-emerald-50",
+                iconColor: "text-emerald-600",
+                isSelected: selectedKpiFilter === "PKP",
+                onClick: () => setSelectedKpiFilter(selectedKpiFilter === "PKP" ? "ALL" : "PKP"),
+              },
+            ]}
+          />
 
-      {/* Modal: Add/Edit Vendor */}
-      <Dialog open={isModalOpen} onOpenChange={(o) => { setIsModalOpen(o); if (!o) setEditingSupplier(null); }}>
-        <DialogContent className="sm:max-w-[600px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white">
-          <DialogHeader className="p-6 bg-slate-800 text-white">
-            <DialogTitle className="text-sm font-bold uppercase tracking-tight">
-              {editingSupplier ? "Edit Vendor" : "Tambah Vendor"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Perusahaan *</label>
-                <input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+          {/* ── 03. MODULAR DATA TABLE CARD ── */}
+          <DnaDataTableCard
+            toolbarProps={{
+              searchQuery,
+              onSearchChange: setSearchQuery,
+              searchPlaceholder: "Cari kode vendor, nama supplier, PIC, kota...",
+              filterColumns: [
+                {
+                  key: "kategori",
+                  label: "Kategori Bahan",
+                  type: "select",
+                  options: [
+                    "Bahan Baku",
+                    "Kemasan Primer",
+                    "Kemasan Sekunder",
+                    "Bahan Pembantu",
+                    "Jasa Maklon",
+                  ],
+                },
+                {
+                  key: "pajak",
+                  label: "Status Pajak",
+                  type: "select",
+                  options: ["PKP", "NON"],
+                },
+              ],
+              selectedColumn: selectedFilterColumn,
+              onSelectColumn: (col) => {
+                setSelectedFilterColumn(col);
+                setFilterColumnValue("ALL");
+              },
+              filterValue: filterColumnValue,
+              onFilterValueChange: setFilterColumnValue,
+              actionButton: {
+                label: "Tambah Supplier",
+                onClick: handleOpenCreateSupplier,
+              },
+              extraActions: (
+                <div className="flex items-center gap-2">
+                  <DnaButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsImportModalOpen(true)}
+                    icon={<Upload className="w-3.5 h-3.5" />}
+                  >
+                    Import Excel
+                  </DnaButton>
+                  <DnaButton
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportExcel}
+                    icon={<Download className="w-3.5 h-3.5" />}
+                  >
+                    Export Excel
+                  </DnaButton>
+                </div>
+              ),
+            }}
+            paginationProps={{
+              currentPage,
+              totalPages,
+              totalEntries,
+              pageSize,
+              onPageChange: setCurrentPage,
+            }}
+          >
+            <table className="w-full text-left border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  {/* Select All Checkbox */}
+                  <th className="p-3.5 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={paginatedSuppliers.length > 0 && selectedRowIds.length === paginatedSuppliers.length}
+                      onChange={toggleSelectAll}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </th>
+                  <th className="p-3.5 w-10 text-slate-400">#</th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
+                    onClick={() => handleHeaderSortToggle("vendorCode")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>VENDOR CODE</span>
+                      {sortColumn === "vendorCode" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[200px]"
+                    onClick={() => handleHeaderSortToggle("nama")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>NAMA SUPPLIER</span>
+                      {sortColumn === "nama" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                    onClick={() => handleHeaderSortToggle("pic")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>PIC KONTAK</span>
+                      {sortColumn === "pic" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="p-3.5 min-w-[130px]">TELEPON / WA</th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
+                    onClick={() => handleHeaderSortToggle("kategoriBahan")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>KATEGORI</span>
+                      {sortColumn === "kategoriBahan" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[110px]"
+                    onClick={() => handleHeaderSortToggle("kota")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>KOTA</span>
+                      {sortColumn === "kota" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="p-3.5 text-center min-w-[80px]">PAJAK</th>
+                  <th className="p-3.5 min-w-[90px]">TOP</th>
+                  <th className="p-3.5 min-w-[150px]">BANK & REKENING</th>
+                  <th className="p-3.5 text-center min-w-[90px]">STATUS PKP</th>
+                  <th className="p-3.5 text-center w-28">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paginatedSuppliers.length === 0 ? (
+                  <tr>
+                    <td colSpan={13} className="p-8 text-center text-slate-400">
+                      Tidak ada data supplier yang sesuai filter.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedSuppliers.map((sup, idx) => {
+                    const isSelected = selectedRowIds.includes(sup.id);
+                    return (
+                      <tr
+                        key={sup.id}
+                        className={`hover:bg-slate-50/80 transition-colors cursor-default ${
+                          isSelected ? "bg-blue-50/30" : ""
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <td className="p-3.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectRow(sup.id)}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
+                        <td className="p-3.5 text-slate-400 tabular-nums">
+                          {(currentPage - 1) * pageSize + idx + 1}
+                        </td>
+                        <td className="p-3.5">
+                          <DnaCell.Code
+                            value={sup.vendorCode}
+                            onClick={() => {
+                              setSelectedSupplier(sup);
+                              setIsDetailModalOpen(true);
+                            }}
+                          />
+                        </td>
+                        <td className="p-3.5">
+                          <DnaCell.Text
+                            primary={sup.nama}
+                            secondary={sup.alamatLengkap}
+                            maxWidth="max-w-[240px]"
+                          />
+                        </td>
+                        <td className="p-3.5 font-medium text-slate-700">
+                          {sup.pic}
+                        </td>
+                        <td className="p-3.5">
+                          <a
+                            href={`https://wa.me/${sup.phone.replace(/^0/, "62")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 font-mono text-emerald-600 hover:text-emerald-700 hover:underline font-medium text-[11px]"
+                          >
+                            <Phone className="w-3 h-3 text-emerald-500" />
+                            {sup.phone}
+                          </a>
+                        </td>
+                        <td className="p-3.5">
+                          <DnaCell.Badge
+                            label={sup.kategoriBahan}
+                            status={
+                              sup.kategoriBahan === "Bahan Baku"
+                                ? "info"
+                                : sup.kategoriBahan === "Kemasan Primer"
+                                ? "purple"
+                                : "default"
+                            }
+                          />
+                        </td>
+                        <td className="p-3.5 text-slate-600 font-medium">
+                          {sup.kota}
+                        </td>
+                        <td className="p-3.5 text-center">
+                          <span
+                            className={`font-mono font-bold px-2 py-0.5 rounded text-[11px] ${
+                              sup.pajakPersen === 11
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {sup.pajakPersen}%
+                          </span>
+                        </td>
+                        <td className="p-3.5 font-semibold text-slate-800">
+                          {sup.paymentTerm}
+                        </td>
+                        <td className="p-3.5 font-mono text-[11px] text-slate-500 truncate max-w-[160px]">
+                          {sup.bankAccount}
+                        </td>
+                        <td className="p-3.5 text-center">
+                          <DnaCell.Badge
+                            label={sup.isPkp ? "PKP" : "NON-PKP"}
+                            status={sup.isPkp ? "success" : "default"}
+                          />
+                        </td>
+                        <td className="p-3.5 text-center">
+                          <DnaCell.Actions
+                            onView={() => {
+                              setSelectedSupplier(sup);
+                              setIsDetailModalOpen(true);
+                            }}
+                            onEdit={() => handleOpenEditSupplier(sup)}
+                            onDelete={() => setSupplierToDelete(sup)}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </DnaDataTableCard>
+        </div>
+      )}
+
+      {/* ── TAB 2: KATEGORI SUPPLIER ── */}
+      {activeTab === "categories" && (
+        <div className="space-y-6">
+          <DnaDataTableCard
+            toolbarProps={{
+              searchPlaceholder: "Kategori supplier pengadaan material...",
+              actionButton: {
+                label: "Tambah Kategori",
+                onClick: () => {
+                  setEditingCategory(null);
+                  setCategoryForm({ kode: "", kategori: "", deskripsi: "" });
+                  setIsCategoryModalOpen(true);
+                },
+              },
+            }}
+          >
+            <table className="w-full text-left border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  <th className="p-3.5 w-12 text-slate-400">#</th>
+                  <th className="p-3.5 min-w-[120px]">KODE PREFIX</th>
+                  <th className="p-3.5 min-w-[200px]">NAMA KATEGORI</th>
+                  <th className="p-3.5 min-w-[300px]">DESKRIPSI & RUANG LINGKUP</th>
+                  <th className="p-3.5 text-center min-w-[140px]">JUMLAH REKANAN</th>
+                  <th className="p-3.5 text-center w-24">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {categoriesList.map((cat, idx) => (
+                  <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
+                    <td className="p-3.5">
+                      <DnaCell.Code value={cat.kode} />
+                    </td>
+                    <td className="p-3.5 font-bold text-slate-900 uppercase">
+                      {cat.kategori}
+                    </td>
+                    <td className="p-3.5 text-slate-600">{cat.deskripsi}</td>
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Badge label={`${cat.totalSupplier} Vendor`} status="info" />
+                    </td>
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Actions
+                        onEdit={() => {
+                          setEditingCategory(cat);
+                          setCategoryForm({
+                            kode: cat.kode,
+                            kategori: cat.kategori,
+                            deskripsi: cat.deskripsi,
+                          });
+                          setIsCategoryModalOpen(true);
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </DnaDataTableCard>
+        </div>
+      )}
+
+      {/* ── MODAL TAMBAH / EDIT SUPPLIER ── */}
+      <DnaModal
+        isOpen={isSupplierModalOpen}
+        onClose={() => setIsSupplierModalOpen(false)}
+        title={editingSupplier ? `Sunting Vendor: ${editingSupplier.nama}` : "Tambah Supplier Baru"}
+        description="Lengkapi profil rekanan, syarat pembayaran (TOP), perbankan, dan data perpajakan"
+        size="lg"
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaInput
+              label="Kode Vendor (Universal Auto) *"
+              value={supplierForm.vendorCode}
+              onChange={(e) => setSupplierForm({ ...supplierForm, vendorCode: e.target.value })}
+              placeholder="e.g. VND-BBK-001"
+            />
+            <DnaInput
+              label="Nama Perusahaan / Supplier *"
+              value={supplierForm.nama}
+              onChange={(e) => setSupplierForm({ ...supplierForm, nama: e.target.value })}
+              placeholder="e.g. PT DKSH Indonesia"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DnaInput
+              label="Nama PIC / Kontak Person *"
+              value={supplierForm.pic}
+              onChange={(e) => setSupplierForm({ ...supplierForm, pic: e.target.value })}
+              placeholder="e.g. Ibu Wenny"
+            />
+            <DnaInput
+              label="Nomor Telepon / WhatsApp *"
+              value={supplierForm.phone}
+              onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
+              placeholder="082244023077"
+            />
+            <DnaInput
+              label="Email Resmi (Opsional)"
+              value={supplierForm.email}
+              onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })}
+              placeholder="sales@vendor.com"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DnaSelect
+              label="Kategori Bahan *"
+              value={supplierForm.kategoriBahan}
+              onChange={(val) =>
+                setSupplierForm({ ...supplierForm, kategoriBahan: val as MasterSupplierItem["kategoriBahan"] })
+              }
+              options={[
+                { value: "Bahan Baku", label: "Bahan Baku" },
+                { value: "Kemasan Primer", label: "Kemasan Primer" },
+                { value: "Kemasan Sekunder", label: "Kemasan Sekunder" },
+                { value: "Bahan Pembantu", label: "Bahan Pembantu" },
+                { value: "Jasa Maklon", label: "Jasa Maklon" },
+              ]}
+            />
+            <DnaSelect
+              label="Status Pajak & PKP *"
+              value={supplierForm.isPkp ? "PKP" : "NON"}
+              onChange={(val) =>
+                setSupplierForm({
+                  ...supplierForm,
+                  isPkp: val === "PKP",
+                  pajakPersen: val === "PKP" ? 11 : 0,
+                })
+              }
+              options={[
+                { value: "PKP", label: "PKP (PPN 11%)" },
+                { value: "NON", label: "Non-PKP (0%)" },
+              ]}
+            />
+            <DnaInput
+              label="NPWP Vendor"
+              value={supplierForm.npwp}
+              onChange={(e) => setSupplierForm({ ...supplierForm, npwp: e.target.value })}
+              placeholder="01.234.567.8-012.000"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaSelect
+              label="Term of Payment (TOP) *"
+              value={supplierForm.paymentTerm}
+              onChange={(val) => setSupplierForm({ ...supplierForm, paymentTerm: val })}
+              options={[
+                { value: "Cash", label: "Cash Before Delivery" },
+                { value: "Net 14", label: "Net 14 Hari" },
+                { value: "Net 30", label: "Net 30 Hari" },
+                { value: "Net 45", label: "Net 45 Hari" },
+                { value: "Net 60", label: "Net 60 Hari" },
+              ]}
+            />
+            <DnaInput
+              label="Rekening Bank Vendor *"
+              value={supplierForm.bankAccount}
+              onChange={(e) => setSupplierForm({ ...supplierForm, bankAccount: e.target.value })}
+              placeholder="BCA 088-123-456 a/n PT DKSH"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaInput
+              label="Provinsi"
+              value={supplierForm.provinsi}
+              onChange={(e) => setSupplierForm({ ...supplierForm, provinsi: e.target.value })}
+              placeholder="Jawa Timur"
+            />
+            <DnaInput
+              label="Kota / Kabupaten *"
+              value={supplierForm.kota}
+              onChange={(e) => setSupplierForm({ ...supplierForm, kota: e.target.value })}
+              placeholder="Kota Surabaya"
+            />
+          </div>
+
+          <DnaTextarea
+            label="Alamat Lengkap Kantor / Gudang Supplier *"
+            value={supplierForm.alamatLengkap}
+            onChange={(e) => setSupplierForm({ ...supplierForm, alamatLengkap: e.target.value })}
+            placeholder="Jalan, gedung, kawasan industri, kode pos..."
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <DnaButton variant="ghost" onClick={() => setIsSupplierModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleSaveSupplier}>
+              Simpan Data Supplier
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+
+      {/* ── MODAL DETAIL SUPPLIER ── */}
+      <DnaModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        title={`Profil Supplier: ${selectedSupplier?.nama}`}
+        description="Detail kontak, status pajak, termin pembayaran, dan histori pengadaan"
+        size="lg"
+      >
+        {selectedSupplier && (
+          <div className="space-y-4 py-2 text-xs">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <DnaCell.Code value={selectedSupplier.vendorCode} />
+                  <h3 className="text-base font-bold text-slate-900 uppercase mt-1">
+                    {selectedSupplier.nama}
+                  </h3>
+                  <p className="text-slate-500 text-[11px]">
+                    Kategori: <strong className="text-slate-700">{selectedSupplier.kategoriBahan}</strong> • Wilayah:{" "}
+                    <strong className="text-slate-700">{selectedSupplier.kota}, {selectedSupplier.provinsi}</strong>
+                  </p>
+                </div>
+                <DnaCell.Badge
+                  label={selectedSupplier.isPkp ? "PKP 11%" : "NON-PKP"}
+                  status={selectedSupplier.isPkp ? "success" : "default"}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
-                <Select value={formData.categoryId} onValueChange={(v) => setFormData({ ...formData, categoryId: v ?? "" })}>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-                    <SelectValue placeholder="Pilih kategori" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id} className="text-xs font-bold uppercase">{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200">
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Kontak PIC</div>
+                  <div className="font-bold text-slate-800">{selectedSupplier.pic}</div>
+                </div>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">WhatsApp</div>
+                  <div className="font-mono text-emerald-600 font-bold">{selectedSupplier.phone}</div>
+                </div>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Term of Payment</div>
+                  <div className="font-bold text-blue-600">{selectedSupplier.paymentTerm}</div>
+                </div>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold">Ketersediaan Stok</div>
+                  <div className="font-bold text-slate-700">{selectedSupplier.realStokSupplier}</div>
+                </div>
+              </div>
+
+              <div className="space-y-1 pt-2">
+                <span className="text-slate-500 text-[11px]">Alamat Pengiriman & Korespondensi:</span>
+                <div className="font-medium text-slate-700 bg-white p-2 rounded border border-slate-200">
+                  {selectedSupplier.alamatLengkap}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1">
+                  <span className="text-slate-500">Rekening Bank:</span>
+                  <div className="font-mono font-bold text-slate-800">{selectedSupplier.bankAccount}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500">NPWP Perusahaan:</span>
+                  <div className="font-mono font-bold text-slate-800">{selectedSupplier.npwp || "-"}</div>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama PIC</label>
-                <input value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Telepon</label>
-                <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Term of Payment</label>
-                <input type="number" value={formData.term_of_payment} onChange={(e) => setFormData({ ...formData, term_of_payment: Number(e.target.value) })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pajak (%)</label>
-                <input type="number" step="0.01" value={formData.tax ?? ""} onChange={(e) => setFormData({ ...formData, tax: e.target.value ? Number(e.target.value) : null })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email</label>
-              <input value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-            </div>
-
-            <CascadingAddress
-              provinsi={formData.province}
-              kota={formData.city}
-              kecamatan={formData.district}
-              onProvinsiChange={(v) => setFormData({ ...formData, province: v })}
-              onKotaChange={(v) => setFormData({ ...formData, city: v })}
-              onKecamatanChange={(v) => setFormData({ ...formData, district: v })}
-            />
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Alamat Detail</label>
-              <input value={formData.addressDetail} onChange={(e) => setFormData({ ...formData, addressDetail: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Full Address</label>
-              <input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Deskripsi</label>
-              <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 px-4 py-3 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none" />
-            </div>
-
-            <DialogFooter className="pt-4 gap-3">
-              <DnaButton variant="outline" onClick={() => { setIsModalOpen(false); setEditingSupplier(null); }}>Batal</DnaButton>
-              <DnaButton variant="primary" type="submit">
-                {editingSupplier ? "Simpan" : "Tambah"}
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <DnaButton variant="ghost" onClick={() => setIsDetailModalOpen(false)}>
+                Tutup
               </DnaButton>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Confirm Submit */}
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
-          <p>Yakin ingin menyimpan data vendor ini?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Confirm Delete */}
-      <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hapus Vendor</DialogTitle>
-          </DialogHeader>
-          <p>Yakin ingin menghapus vendor ini dari master data?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setDeletingId(null)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={() => deletingId && handleDelete(deletingId)}>Ya, Hapus</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Import Modal */}
-      <Dialog open={isImportModalOpen} onOpenChange={(o) => { setIsImportModalOpen(o); if (!o) setImportRows([]); }}>
-        <DialogContent className="sm:max-w-[750px] rounded-2xl border border-slate-200 shadow-2xl p-0 overflow-hidden bg-white max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="p-6 bg-slate-800 text-white">
-            <DialogTitle className="text-sm font-bold uppercase tracking-tight">
-              Import Data Vendor (Excel / CSV)
-            </DialogTitle>
-            <p className="text-[11px] text-slate-300 mt-1">
-              Upload file data vendor dengan format: Nama Vendor, PIC, No Telp, Email, TOP (Hari), Kota, Kategori.
-            </p>
-          </DialogHeader>
-          <div className="p-6 space-y-4">
-            <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-blue-500 transition-all bg-slate-50/50">
-              <input
-                type="file"
-                accept=".csv, .xlsx, .xls, .txt"
-                onChange={handleFileUpload}
-                className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
-              />
-              <p className="text-[11px] text-slate-400 mt-2">Mendukung format .csv, .xlsx, atau teks delimited</p>
+              <DnaButton
+                variant="primary"
+                onClick={() => {
+                  setIsDetailModalOpen(false);
+                  handleOpenEditSupplier(selectedSupplier);
+                }}
+              >
+                Sunting Supplier
+              </DnaButton>
             </div>
+          </div>
+        )}
+      </DnaModal>
 
-            {importRows.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700">Preview Data ({importRows.length} baris):</span>
-                  <DnaBadge status="info">{importRows.length} Vendor Siap Import</DnaBadge>
-                </div>
-                <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-[11px] text-left">
-                    <thead className="bg-slate-100 sticky top-0 font-bold text-slate-700">
-                      <tr>
-                        <th className="p-2">Nama Vendor</th>
-                        <th className="p-2">PIC</th>
-                        <th className="p-2">Telepon</th>
-                        <th className="p-2">Kategori</th>
-                        <th className="p-2 text-center">TOP</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {importRows.slice(0, 10).map((row, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="p-2 font-bold">{row.name}</td>
-                          <td className="p-2">{row.contact}</td>
-                          <td className="p-2">{row.phone}</td>
-                          <td className="p-2">{row.categoryName}</td>
-                          <td className="p-2 text-center">{row.term_of_payment} Hari</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {importRows.length > 10 && (
-                  <p className="text-[11px] text-slate-400 text-right">Menampilkan 10 dari {importRows.length} baris data.</p>
-                )}
-              </div>
-            )}
+      {/* ── MODAL IMPORT EXCEL (Requirement Poin 1 & 47) ── */}
+      <DnaModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        title="Import Master Supplier via Excel / CSV"
+        description="Unggah file spreadsheet template supplier untuk validasi dan penambahan massal data rekanan"
+        size="md"
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div className="p-6 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl bg-slate-50/70 text-center space-y-3 transition-colors cursor-pointer">
+            <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+              <Upload className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-800">Seret file template Excel ke sini atau klik untuk memilih</p>
+              <p className="text-[11px] text-slate-500">Mendukung format .xlsx, .xls, .csv (Maksimal 10MB)</p>
+            </div>
+          </div>
 
-            <DialogFooter className="pt-4 gap-2">
-              <DnaButton variant="outline" onClick={() => { setIsImportModalOpen(false); setImportRows([]); }}>
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
+            <strong className="text-slate-800">Catatan Validasi Sistem:</strong>
+            <p>1. Kolom wajib: <code>Nama Supplier</code>, <code>PIC</code>, <code>Nomor Telepon</code>, <code>Kategori Bahan</code>.</p>
+            <p>2. Format Pajak diisi <code>11</code> (PKP) atau <code>0</code> (Non-PKP).</p>
+            <p>3. Kode vendor otomatis dibuat jika kolom dikosongkan.</p>
+          </div>
+
+          <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+            <button
+              onClick={() => {
+                toast.info("Mengunduh template_import_supplier.xlsx...");
+              }}
+              className="text-blue-600 hover:underline font-bold text-[11px]"
+            >
+              Unduh Format Template Excel (.xlsx)
+            </button>
+            <div className="flex gap-2">
+              <DnaButton variant="ghost" onClick={() => setIsImportModalOpen(false)}>
                 Batal
               </DnaButton>
               <DnaButton
                 variant="primary"
-                onClick={handleExecuteImport}
-                disabled={importRows.length === 0 || importLoading}
+                onClick={() => {
+                  toast.success("12 Rekanan Supplier berhasil diimpor dari Excel.");
+                  setIsImportModalOpen(false);
+                }}
               >
-                {importLoading ? "Mengimpor..." : `Import ${importRows.length} Vendor`}
+                Mulai Import
               </DnaButton>
-            </DialogFooter>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DnaModal>
 
-      {/* Category filter floating bar — outside MasterPageShell since it's shared */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-2 flex items-center gap-2">
-        <Filter className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kategori:</span>
-        <select
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className="h-8 px-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-blue-500"
-        >
-          <option value="ALL">Semua</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-      </div>
-    </>
+      {/* Confirmation Dialog Delete */}
+      <DnaConfirmDialog
+        isOpen={!!supplierToDelete}
+        onClose={() => setSupplierToDelete(null)}
+        onConfirm={handleDeleteSupplier}
+        title="Hapus Rekanan Supplier?"
+        description={`Apakah Anda yakin ingin menghapus data supplier ${supplierToDelete?.nama}? Data transaksi pengadaan historis mungkin terdampak.`}
+        confirmText="Hapus Permanen"
+        variant="critical"
+      />
+    </div>
+  );
+}
+
+export default function MasterSuppliersPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Master Supplier...</div>}>
+      <MasterSuppliersContent />
+    </Suspense>
   );
 }

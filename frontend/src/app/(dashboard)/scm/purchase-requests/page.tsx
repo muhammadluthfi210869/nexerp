@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -23,8 +22,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DnaButton, DnaBadge, DnaInput, DnaStatCard, TableWrapper, DnaTextarea as Textarea, DnaButton as Button } from "@/components/dna";
 import {
   Select,
   SelectContent,
@@ -51,7 +50,7 @@ import {
   User
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DnaPageContainer, DnaPageHeader } from "@/components/dna";
 
 interface PRItem {
   materialId: string;
@@ -356,7 +355,7 @@ export default function PurchaseRequestsPage() {
                   placeholder="Alasan permintaan (contoh: Untuk Batch 502, Skincare Line)" 
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e: any) => setNotes(e.target.value)}
                 />
               </div>
 
@@ -375,10 +374,10 @@ export default function PurchaseRequestsPage() {
     >
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard icon={<FileText className="text-blue-600" />} label="Total Permintaan" value={requests?.length || 0} />
-        <StatCard icon={<Clock className="text-amber-600" />} label="Menunggu Approve" value={requests?.filter(r => r.status === 'DRAFT').length || 0} />
-        <StatCard icon={<AlertTriangle className="text-rose-600" />} label="Mendesak" value={requests?.filter(r => r.priority === 'URGENT').length || 0} />
-        <StatCard icon={<CheckCircle2 className="text-emerald-600" />} label="Sudah Dipesan" value={requests?.filter(r => r.status === 'ORDERED').length || 0} />
+        <DnaStatCard label="Total Permintaan" value={requests?.length || 0} icon={<FileText className="text-blue-600" />} variant="blue" />
+        <DnaStatCard label="Menunggu Approve" value={requests?.filter(r => r.status === 'DRAFT').length || 0} icon={<Clock className="text-amber-600" />} variant="amber" />
+        <DnaStatCard label="Mendesak" value={requests?.filter(r => r.priority === 'URGENT').length || 0} icon={<AlertTriangle className="text-rose-600" />} variant="critical" />
+        <DnaStatCard label="Sudah Dipesan" value={requests?.filter(r => r.status === 'ORDERED').length || 0} icon={<CheckCircle2 className="text-emerald-600" />} variant="emerald" />
       </div>
 
       {/* DATA TABLE */}
@@ -509,7 +508,7 @@ export default function PurchaseRequestsPage() {
             <Label className="text-[9px] font-black text-slate-400 uppercase">Alasan Penolakan</Label>
             <Textarea
               value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
+              onChange={(e: any) => setRejectReason(e.target.value)}
               placeholder="Alasan mengapa ditolak..."
               className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium resize-none"
               rows={3}

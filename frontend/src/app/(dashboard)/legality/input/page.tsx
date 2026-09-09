@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileCheck, 
   FlaskConical, 
@@ -20,14 +19,19 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, DnaButton } from "@/components/dna";
-import {
+import { 
+  DataCard, 
+  DnaButton,
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  DialogFooter
+} from "@/components/dna";
 
 export default function ComplianceInput() {
   const queryClient = useQueryClient();

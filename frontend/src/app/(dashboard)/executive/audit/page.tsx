@@ -16,19 +16,20 @@ import {
   Lock,
   Fingerprint,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import {
+  Input,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { DnaButton, DnaBadge } from "@/components/dna";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { StatCard } from "@/components/dna/StatCard";
-import { KpiCard } from "@/components/dna/KpiCard";
+  DnaButton,
+  DnaBadge,
+  TableWrapper,
+  StatCard,
+  KpiCard,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { format } from "date-fns";
 

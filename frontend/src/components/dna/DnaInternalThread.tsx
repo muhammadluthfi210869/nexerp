@@ -140,7 +140,7 @@ export function DnaInternalThread({
           </div>
         ) : (
           notes.map((note) => {
-            const roleBadge = ROLE_BADGE_MAP[note.authorRole] || "slate";
+            const roleBadge = (note.authorRole && ROLE_BADGE_MAP[note.authorRole]) || "slate";
             const isUrgent = note.urgency === "URGENT";
             const isImportant = note.urgency === "PENTING";
 

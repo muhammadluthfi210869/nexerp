@@ -3,9 +3,21 @@
 import { useState } from "react";
 import { Wallet, FileText, CheckCircle2, DollarSign, Eye, Plus, Search, ShieldCheck } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaBadge, DnaButton } from "@/components/dna";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  StatCard,
+  DnaBadge,
+  DnaButton,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/dna";
 
 type PayrollStatus = "DRAFT" | "AUTHORIZED" | "PAID";
 

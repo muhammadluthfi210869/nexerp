@@ -1,555 +1,713 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Package,
-  Calendar,
+  Search,
+  RotateCcw,
+  Eye,
   FileText,
-  ArrowRight,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Calendar,
+  User,
+  SlidersHorizontal,
   ChevronDown,
   ChevronRight,
-  User,
-  RotateCcw,
+  ListOrdered,
+  Layers,
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, TableWrapper } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+  DnaPageHeader,
+  DnaStatCard,
+  DnaBadge,
+  DnaButton,
+  DnaDataTableCard,
+  DnaTable,
+  DnaTableHead,
+  DNA_TABLE_CLASSES,
+  DnaCell,
+  DnaPagination,
+  DnaExportButton,
+  DnaModal,
+  useDnaToast,
+} from "@/components/dna";
 import { cn } from "@/lib/utils";
 
-// Milestone sub-item — each belongs to a PO group
-export interface ChecklistSubItem {
+// ── ROW DATA TYPE (EXACT GAMBAR 1) ──
+export interface ChecklistProgressRow {
   id: string;
-  milestone: string;
+  soNumber: string;
+  brand: string;
+  product: string;
+  customer: string;
+  kategori: string;
+  tanggalMulai: string;
+  tanggalSelesai: string;
+  status: "Pending" | "Process" | "Done";
+  isInputDesign?: boolean; // For PIC Mas Edi tab
   pic: string;
-  deadline: string;
-  estimasiDeadline?: string;
-  status: "COMPLETED" | "IN_PROGRESS" | "PENDING" | "OVERDUE";
+  bpomNumber?: string;
+  bpomStatus?: string;
   notes?: string;
-  updatedAt?: string;
-  updatedBy?: string;
+  subMilestones?: Array<{
+    urutan: number;
+    kategori: string;
+    pic: string;
+    deadline: string;
+    estimasi: string;
+    status: "Pending" | "Process" | "Done";
+    notes?: string;
+  }>;
 }
 
-// Grouped by PO — one row per SO in the main table
-export interface ChecklistGroup {
-  id: string;
-  poNumber: string;
-  supplier: string;
-  pic: string; // main PIC for this PO
-  subItems: ChecklistSubItem[];
-  updatedAt?: string;
-  updatedBy?: string;
-  fotoKemasanUrl?: string; // Item 88: thumbnail foto kemasan
-}
-
-const PIC_DIVISI = "SCM";
-
-const INITIAL_DATA: ChecklistGroup[] = [
+// ── DATASET FROM GAMBAR 1 SCREENSHOT ──
+const INITIAL_PROGRESS_ROWS: ChecklistProgressRow[] = [
   {
-    id: "g1",
-    poNumber: "PO-202609-0033",
-    supplier: "PT Chemikas Mandiri",
-    pic: "Nike Febriyanti",
-    fotoKemasanUrl: "https://placehold.co/120x120/7c3aed/white?text=Botol+30ml",
-    subItems: [
-      { id: "m1-1", milestone: "MoU (Kontrak Maklon)", pic: "Nike Febriyanti", deadline: "2026-09-05", status: "COMPLETED", updatedAt: "2026-09-05", updatedBy: "Nike Febriyanti" },
-      { id: "m1-2", milestone: "Design Kemasan (Drafting)", pic: "Edi (Creative)", deadline: "2026-09-10", estimasiDeadline: "2026-09-12", status: "IN_PROGRESS", notes: "Draft layout menunggu approval klien" },
-      { id: "m1-3", milestone: "Sample & Lab Test", pic: "Dr. Hendra (QC)", deadline: "2026-09-15", estimasiDeadline: "2026-09-14", status: "PENDING" },
-      { id: "m1-4", milestone: "BPOM NA (Notifikasi)", pic: "Cipta (Regulasi)", deadline: "2026-09-28", status: "PENDING" },
-      { id: "m1-5", milestone: "Production", pic: "Nur Kholilah (Produksi)", deadline: "2026-10-10", status: "PENDING" },
-      { id: "m1-6", milestone: "Packaging", pic: "Budi Santoso (Gudang)", deadline: "2026-10-20", status: "PENDING" },
-      { id: "m1-7", milestone: "Packaging Materials Received", pic: "Nike Febriyanti", deadline: "2026-10-18", status: "PENDING" },
-      { id: "m1-8", milestone: "Ship / Delivery", pic: "Agus Pratama (Logistik)", deadline: "2026-10-25", status: "PENDING" },
+    id: "cp-1",
+    soNumber: "SO-202609-000001",
+    brand: "YSMAVELLE",
+    product: "White body lotion",
+    customer: "Risma Pujayani",
+    kategori: "Bahan Kemas",
+    tanggalMulai: "2026-09-03",
+    tanggalSelesai: "2026-11-25",
+    status: "Pending",
+    pic: "Nike Febriyanti (SCM)",
+    bpomNumber: "NA18260100912",
+    bpomStatus: "Proses Uji Laboratorium",
+    notes: "Menunggu approval penawaran harga vendor botol pump 250ml.",
+    subMilestones: [
+      { urutan: 1, kategori: "Desain Logo", pic: "Edi (Creative)", deadline: "2026-09-08", estimasi: "2026-09-07", status: "Done" },
+      { urutan: 2, kategori: "Desain Kemasan", pic: "Edi (Creative)", deadline: "2026-09-15", estimasi: "2026-09-16", status: "Process" },
+      { urutan: 3, kategori: "Bahan Kemas", pic: "Nike (SCM)", deadline: "2026-10-05", estimasi: "2026-10-10", status: "Pending", notes: "Konfirmasi sampel fisik botol" },
+      { urutan: 4, kategori: "Mixing Produksi", pic: "Nur Kholilah (Produksi)", deadline: "2026-10-25", estimasi: "2026-10-25", status: "Pending" },
+      { urutan: 5, kategori: "Delivery Kirim", pic: "Agus Pratama (Logistik)", deadline: "2026-11-25", estimasi: "2026-11-25", status: "Pending" },
     ],
   },
   {
-    id: "g2",
-    poNumber: "PO-202609-0032",
-    supplier: "CV Packindo Lestari",
-    pic: "Nike Febriyanti",
-    fotoKemasanUrl: "https://placehold.co/120x120/059669/white?text=Kemasan+Box",
-    subItems: [
-      { id: "m2-1", milestone: "Quality Check", pic: "Dr. Hendra (QC)", deadline: "2026-09-08", estimasiDeadline: "2026-09-09", status: "OVERDUE", notes: "Kemasan tidak sesuai spec" },
-      { id: "m2-2", milestone: "Goods Receipt (GR)", pic: "Budi Santoso (Gudang)", deadline: "2026-09-12", status: "PENDING" },
-    ],
+    id: "cp-2",
+    soNumber: "SO-202609-000001",
+    brand: "YSMAVELLE",
+    product: "White body lotion",
+    customer: "Risma Pujayani",
+    kategori: "Label",
+    tanggalMulai: "2026-09-03",
+    tanggalSelesai: "2026-11-25",
+    status: "Pending",
+    isInputDesign: true,
+    pic: "Edi (Creative)",
+    bpomNumber: "NA18260100912",
+    bpomStatus: "Drafting Label BPOM",
+    notes: "Review teks klaim halal dan nomor NA pada stiker label.",
   },
   {
-    id: "g3",
-    poNumber: "PO-202609-0031",
-    supplier: "PT Aroma Essentia Prima",
-    pic: "Nur Kholilah",
-    subItems: [
-      { id: "m3-1", milestone: "Customs Clearance", pic: "Agus Pratama (Logistik)", deadline: "2026-09-20", status: "PENDING" },
-      { id: "m3-2", milestone: "Warehouse Receipt", pic: "Budi Santoso (Gudang)", deadline: "2026-09-22", status: "PENDING" },
-    ],
+    id: "cp-3",
+    soNumber: "SO-202608-000018",
+    brand: "SIGVIOLET",
+    product: "DEAL - SHAMPOO SIGVIOLET",
+    customer: "Djafar Shodiq (Sigviolet)",
+    kategori: "Bahan Kemas",
+    tanggalMulai: "2026-08-23",
+    tanggalSelesai: "2026-09-10",
+    status: "Pending",
+    pic: "Nike Febriyanti (SCM)",
+    notes: "Pengiriman botol shampoo 100ml dari supplier terlambat 3 hari.",
   },
   {
-    id: "g4",
-    poNumber: "PO-202609-0030",
-    supplier: "PT Botolindo Utama",
-    pic: "Nike Febriyanti",
-    fotoKemasanUrl: "https://placehold.co/120x120/dc2626/white?text=Dropper",
-    subItems: [
-      { id: "m4-1", milestone: "Final QC Pass", pic: "Dr. Hendra (QC)", deadline: "2026-09-05", estimasiDeadline: "2026-09-04", status: "COMPLETED", updatedAt: "2026-09-04", updatedBy: "Dr. Hendra" },
-      { id: "m4-2", milestone: "Packaging Materials Received", pic: "Budi Santoso (Gudang)", deadline: "2026-09-06", status: "COMPLETED", updatedAt: "2026-09-06", updatedBy: "Budi Santoso" },
-      { id: "m4-3", milestone: "Pack & Ship", pic: "Agus Pratama (Logistik)", deadline: "2026-09-08", status: "COMPLETED", updatedAt: "2026-09-08", updatedBy: "Agus Pratama" },
-    ],
+    id: "cp-4",
+    soNumber: "SO-202609-000005",
+    brand: "LAWO",
+    product: "DARKSPOT CREAM",
+    customer: "RAHMAT TUNGGAK (LAWO)",
+    kategori: "Label",
+    tanggalMulai: "2026-09-01",
+    tanggalSelesai: "2026-09-21",
+    status: "Process",
+    isInputDesign: true,
+    pic: "Edi (Creative)",
+    notes: "Sedang proses proofing cetak label silver foil.",
+  },
+  {
+    id: "cp-5",
+    soNumber: "SO-202608-000017",
+    brand: "DRNZK DJ GLOW",
+    product: "DJ GLOW COLLAGEN BRIGHTENING SERUM",
+    customer: "prof dr Noor Zaman Khan",
+    kategori: "Label",
+    tanggalMulai: "2026-08-19",
+    tanggalSelesai: "2026-09-08",
+    status: "Process",
+    isInputDesign: true,
+    pic: "Edi (Creative)",
+    notes: "Proses approval cetak offset warna gradasi.",
+  },
+  {
+    id: "cp-6",
+    soNumber: "SO-202608-000017",
+    brand: "DRNZK DJ GLOW",
+    product: "DJ GLOW COLLAGEN BRIGHTENING SERUM",
+    customer: "prof dr Noor Zaman Khan",
+    kategori: "Box",
+    tanggalMulai: "2026-08-19",
+    tanggalSelesai: "2026-09-08",
+    status: "Process",
+    pic: "Nike Febriyanti (SCM)",
+    notes: "Cetak hard box hologram 1.000 pcs selesai 80%.",
+  },
+  {
+    id: "cp-7",
+    soNumber: "SO-202608-000017",
+    brand: "DRNZK DJ GLOW",
+    product: "DJ GLOW COLLAGEN BRIGHTENING DAY CREAM",
+    customer: "prof dr Noor Zaman Khan",
+    kategori: "Box",
+    tanggalMulai: "2026-08-19",
+    tanggalSelesai: "2026-09-08",
+    status: "Process",
+    pic: "Nike Febriyanti (SCM)",
+  },
+  {
+    id: "cp-8",
+    soNumber: "SO-202608-000017",
+    brand: "DRNZK DJ GLOW",
+    product: "DJ GLOW COLLAGEN BRIGHTENING NIGHT CREAM",
+    customer: "prof dr Noor Zaman Khan",
+    kategori: "Box",
+    tanggalMulai: "2026-08-19",
+    tanggalSelesai: "2026-09-08",
+    status: "Process",
+    pic: "Nike Febriyanti (SCM)",
+  },
+  {
+    id: "cp-9",
+    soNumber: "SO-202608-000017",
+    brand: "DRNZK DJ GLOW",
+    product: "DJ GLOW COLLAGEN BRIGHTENING FACIAL WASH",
+    customer: "prof dr Noor Zaman Khan",
+    kategori: "Box",
+    tanggalMulai: "2026-08-19",
+    tanggalSelesai: "2026-09-08",
+    status: "Process",
+    pic: "Nike Febriyanti (SCM)",
+  },
+  {
+    id: "cp-10",
+    soNumber: "SO-202608-000009",
+    brand: "JO&LA",
+    product: "Sky",
+    customer: "Benny gunawan",
+    kategori: "Label",
+    tanggalMulai: "2026-08-13",
+    tanggalSelesai: "2026-11-04",
+    status: "Process",
+    isInputDesign: true,
+    pic: "Edi (Creative)",
+    notes: "Layouting packaging dan botol tester parfum.",
   },
 ];
 
 export default function ChecklistProgressPage() {
-  // Item 57: one row per SO; Item 58: PIC filter tab
-  const [data, setData] = useState<ChecklistGroup[]>(INITIAL_DATA);
-  const [tab, setTab] = useState<"semua" | "pic-saya">("semua");
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["g1"]));
-  const [editingEstimasi, setEditingEstimasi] = useState<{ groupId: string; subId: string; value: string } | null>(null);
-  const [pendingDialog, setPendingDialog] = useState<{ groupId: string; subId: string } | null>(null);
-  const [pendingNotes, setPendingNotes] = useState("");
-  const [revertDialog, setRevertDialog] = useState<{ groupId: string; subId: string } | null>(null);
-  const [currentUser, setCurrentUser] = useState("Nike Febriyanti"); // mock current user
+  const { showToast } = useDnaToast();
 
-  // Item 58: filter by PIC
-  const filteredData = tab === "pic-saya"
-    ? data.filter(g => g.pic === currentUser)
-    : data;
+  const [items, setItems] = useState<ChecklistProgressRow[]>(INITIAL_PROGRESS_ROWS);
+  const [activeTab, setActiveTab] = useState<"MAIN" | "INPUT_DESIGN">("MAIN");
+  const [viewMode, setViewMode] = useState<"ALL" | "PIC_ONLY">("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Item 60: sort sub-items chronologically (by urutan for known milestones, fallback by deadline)
-  const sortedSubItems = (subItems: ChecklistSubItem[]) =>
-    [...subItems].sort((a, b) => {
-      const order: Record<string, number> = {
-        "MoU (Kontrak Maklon)": 1,
-        "Design Kemasan (Drafting)": 2,
-        "Sample & Lab Test": 3,
-        "BPOM NA (Notifikasi)": 4,
-        "Production": 5,
-        "Packaging Materials Received": 6,
-        "Packaging": 7,
-        "Ship / Delivery": 8,
-        "Quality Check": 9,
-        "Goods Receipt (GR)": 10,
-        "Customs Clearance": 11,
-        "Warehouse Receipt": 12,
-        "Final QC Pass": 13,
-        "Pack & Ship": 14,
-      };
-      const oA = order[a.milestone] ?? 99;
-      const oB = order[b.milestone] ?? 99;
-      if (oA !== oB) return oA - oB;
-      return (a.deadline || "").localeCompare(b.deadline || "");
-    });
+  // Detail Modal State
+  const [selectedItem, setSelectedItem] = useState<ChecklistProgressRow | null>(null);
 
-  const toggleGroup = (id: string) => {
-    setExpandedGroups(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+  // Stats for KPI cards
+  const stats = useMemo(() => {
+    const totalSo = new Set(items.map((i) => i.soNumber)).size;
+    const pendingItems = items.filter((i) => i.status === "Pending").length;
+    const designItems = items.filter((i) => i.isInputDesign).length;
+    const processItems = items.filter((i) => i.status === "Process").length;
+    return { totalSo, pendingItems, designItems, processItems };
+  }, [items]);
 
-  // Item 79: save estimasi
-  const handleSaveEstimasi = () => {
-    if (!editingEstimasi) return;
-    setData(prev => prev.map(g => {
-      if (g.id !== editingEstimasi.groupId) return g;
-      return {
-        ...g,
-        subItems: g.subItems.map(s =>
-          s.id === editingEstimasi.subId ? { ...s, estimasiDeadline: editingEstimasi.value } : s
-        ),
-      };
-    }));
-    setEditingEstimasi(null);
-    toast.success("Estimasi deadline berhasil disimpan.");
-  };
+  // Filtered dataset
+  const filteredData = useMemo(() => {
+    return items.filter((item) => {
+      // Tab filter
+      if (activeTab === "INPUT_DESIGN" && !item.isInputDesign) return false;
 
-  // Item 59: validate all-done before marking one done
-  const canMarkDone = (group: ChecklistGroup, subId: string): boolean => {
-    const subs = group.subItems;
-    const target = subs.find(s => s.id === subId);
-    if (!target) return false;
-    // Item 63: "Packaging" needs "Packaging Materials Received" done first
-    if (target.milestone === "Packaging") {
-      const packagingMat = subs.find(s => s.milestone === "Packaging Materials Received");
-      if (!packagingMat || packagingMat.status !== "COMPLETED") {
-        toast.error('Tidak bisa selesaikan "Packaging" sebelum "Packaging Materials Received" selesai.');
+      // View mode (PIC ONLY vs ALL)
+      if (viewMode === "PIC_ONLY" && !item.pic.toLowerCase().includes("scm") && !item.pic.toLowerCase().includes("nike")) {
         return false;
       }
-    }
-    // Other sub-items: all must be done except the target itself
-    const others = subs.filter(s => s.id !== subId);
-    const allOthersDone = others.every(s => s.status === "COMPLETED");
-    if (!allOthersDone) {
-      toast.error("Tidak bisa selesaikan sebelum sub-item lain selesai.");
-      return false;
-    }
-    return true;
-  };
 
-  const handleMarkDone = (groupId: string, subId: string) => {
-    const group = data.find(g => g.id === groupId);
-    if (!group) return;
-    if (!canMarkDone(group, subId)) return;
-    const now = new Date().toISOString().split("T")[0];
-    setData(prev => prev.map(g => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        updatedAt: now,
-        updatedBy: currentUser,
-        subItems: g.subItems.map(s =>
-          s.id === subId ? { ...s, status: "COMPLETED" as const, updatedAt: now, updatedBy: currentUser } : s
-        ),
-      };
-    }));
-    toast.success("Milestone berhasil ditandai selesai.");
-  };
+      // Status filter
+      if (statusFilter !== "ALL" && item.status !== statusFilter) return false;
 
-  // Item 61: PENDING requires notes
-  const handleMarkPending = () => {
-    if (!pendingDialog || !pendingNotes.trim()) {
-      toast.error("Catatan wajib diisi saat mengubah status ke PENDING.");
-      return;
-    }
-    const now = new Date().toISOString().split("T")[0];
-    setData(prev => prev.map(g => {
-      if (g.id !== pendingDialog.groupId) return g;
-      return {
-        ...g,
-        updatedAt: now,
-        updatedBy: currentUser,
-        subItems: g.subItems.map(s =>
-          s.id === pendingDialog.subId
-            ? { ...s, status: "PENDING" as const, notes: pendingNotes, updatedAt: now, updatedBy: currentUser }
-            : s
-        ),
-      };
-    }));
-    setPendingDialog(null);
-    setPendingNotes("");
-    toast.success("Status berhasil diubah ke PENDING.");
-  };
+      // Search query
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase();
+        const matchSo = item.soNumber.toLowerCase().includes(q);
+        const matchBrand = item.brand.toLowerCase().includes(q);
+        const matchProduct = item.product.toLowerCase().includes(q);
+        const matchCustomer = item.customer.toLowerCase().includes(q);
+        const matchKategori = item.kategori.toLowerCase().includes(q);
+        const matchPic = item.pic.toLowerCase().includes(q);
+        if (!matchSo && !matchBrand && !matchProduct && !matchCustomer && !matchKategori && !matchPic) {
+          return false;
+        }
+      }
 
-  // Item 62: DONE can be reverted to PROCESS/DELAY
-  const handleRevert = () => {
-    if (!revertDialog) return;
-    const now = new Date().toISOString().split("T")[0];
-    setData(prev => prev.map(g => {
-      if (g.id !== revertDialog.groupId) return g;
-      return {
-        ...g,
-        updatedAt: now,
-        updatedBy: currentUser,
-        subItems: g.subItems.map(s =>
-          s.id === revertDialog.subId
-            ? { ...s, status: "IN_PROGRESS" as const, updatedAt: now, updatedBy: currentUser }
-            : s
-        ),
-      };
-    }));
-    setRevertDialog(null);
-    toast.success("Milestone dikembalikan ke proses.");
-  };
+      return true;
+    });
+  }, [items, activeTab, viewMode, statusFilter, searchQuery]);
 
-  const overdueCount = data.reduce((sum, g) =>
-    sum + g.subItems.filter(s => s.status === "OVERDUE").length, 0);
+  // Paginated dataset
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, page, pageSize]);
 
-  const getStatusBadge = (status: ChecklistSubItem["status"]) => {
-    const cfg: Record<ChecklistSubItem["status"], { label: string; cls: string }> = {
-      COMPLETED: { label: "SELESAI", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-      IN_PROGRESS: { label: "DALAM PROSES", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-      PENDING: { label: "PENDING", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-      OVERDUE: { label: "TERLAMBAT", cls: "bg-rose-50 text-rose-700 border-rose-200" },
-    };
-    const c = cfg[status];
-    return <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border", c.cls)}>{c.label}</span>;
-  };
-
-  const groupProgress = (group: ChecklistGroup) => {
-    const done = group.subItems.filter(s => s.status === "COMPLETED").length;
-    return Math.round((done / group.subItems.length) * 100);
-  };
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
 
   return (
-    <DashboardShell
-      title="CHECKLIST"
-      titleAccent="TRACKING"
-      subtitle="Pantau milestone dan estimasi deadline pengadaan"
-      actions={
-        <div className="flex items-center gap-3">
-          {/* Item 58: Toggle tab */}
-          <div className="flex bg-slate-100 rounded-lg p-0.5 gap-0.5">
-            <button
-              onClick={() => setTab("semua")}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all",
-                tab === "semua"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              )}
-            >
-              Semua
-            </button>
-            <button
-              onClick={() => setTab("pic-saya")}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all flex items-center gap-1.5",
-                tab === "pic-saya"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              )}
-            >
-              <User className="w-3 h-3" />
-              Kebutuhan PIC Saya
-            </button>
-          </div>
-          <DnaBadge status={overdueCount > 0 ? "critical" : "info"}>
-            {overdueCount} Melebihi Batas
-          </DnaBadge>
-        </div>
-      }
-    >
-      {/* Item 57 + 60: Grouped table, sorted chronologically */}
-      <TableWrapper>
-        <Table className="table-dense">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase w-8">#</TableHead>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">No. PO</TableHead>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">Supplier</TableHead>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase">PIC</TableHead>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Foto Kemasan</TableHead>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Progress</TableHead>
-              <TableHead className="py-3 px-4 text-table-header text-slate-400 uppercase text-center">Detail</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-slate-400 text-xs">
-                  Tidak ada data checklist ditemukan.
-                </TableCell>
-              </TableRow>
-            ) : filteredData.map((group, gIdx) => (
-              <>
-                {/* Main row — Item 57: 1 row per SO */}
-                <TableRow key={group.id} className="bg-white hover:bg-slate-50/50 transition-all border-b">
-                  <TableCell className="py-3 px-4">
-                    <button onClick={() => toggleGroup(group.id)} className="p-1 rounded hover:bg-slate-100 transition-colors">
-                      {expandedGroups.has(group.id)
-                        ? <ChevronDown className="w-4 h-4 text-slate-400" />
-                        : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                    </button>
-                  </TableCell>
-                  <TableCell className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="font-black text-xs uppercase italic text-slate-900">{group.poNumber}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 px-4 font-medium text-xs text-slate-700">{group.supplier}</TableCell>
-                  <TableCell className="py-3 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-bold">
-                        {group.pic.charAt(0)}
-                      </div>
-                      <span className="text-xs text-slate-600">{group.pic}</span>
-                    </div>
-                  </TableCell>
-                  {/* Item 88: Foto Kemasan thumbnail */}
-                  <TableCell className="py-3 px-4 text-center">
-                    {group.fotoKemasanUrl ? (
-                      <a
-                        href={group.fotoKemasanUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Lihat foto kemasan"
-                      >
-                        <img
-                          src={group.fotoKemasanUrl}
-                          alt="Kemasan"
-                          className="w-10 h-10 object-cover rounded-lg border border-slate-200 hover:ring-2 hover:ring-purple-400 transition-all"
-                        />
-                      </a>
-                    ) : (
-                      <div className="w-10 h-10 mx-auto bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center">
-                        <Package className="w-4 h-4 text-slate-300" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-3 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={cn("h-full rounded-full transition-all",
-                            groupProgress(group) >= 80 ? "bg-emerald-500" :
-                            groupProgress(group) >= 50 ? "bg-amber-500" : "bg-rose-500"
-                          )}
-                          style={{ width: `${groupProgress(group)}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500">{groupProgress(group)}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 px-4 text-center">
-                    <span className="text-[10px] text-slate-400">
-                      {expandedGroups.has(group.id) ? "Sembunyikan" : "Lihat"} {group.subItems.length} milestone
-                    </span>
-                  </TableCell>
-                </TableRow>
-
-                {/* Sub-items rows — Item 60: chronological order */}
-                {expandedGroups.has(group.id) && sortedSubItems(group.subItems).map((sub) => (
-                  <TableRow key={sub.id} className={cn(
-                    "transition-all border-b border-dashed",
-                    expandedGroups.has(group.id) ? "bg-slate-50/30 hover:bg-slate-50/60" : "hidden"
-                  )}>
-                    <TableCell className="py-2 px-4" />
-                    <TableCell className="py-2 px-4">
-                      <span className="text-[10px] text-slate-400 italic ml-4">└ {sub.milestone}</span>
-                    </TableCell>
-                    <TableCell className="py-2 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 text-slate-400" />
-                        <span className={cn("text-[11px]", sub.status === "OVERDUE" ? "text-rose-600 font-bold" : "text-slate-500")}>
-                          {sub.deadline}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-2 px-4 text-[11px] text-slate-500">{sub.pic}</TableCell>
-                    <TableCell className="py-2 px-4">
-                      {/* Item 79: estimasiDeadline */}
-                      {editingEstimasi?.groupId === group.id && editingEstimasi?.subId === sub.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <DnaInput
-                            type="date"
-                            value={editingEstimasi.value}
-                            onChange={e => setEditingEstimasi({ ...editingEstimasi, value: e.target.value })}
-                            className="w-32 h-7 text-[10px]"
-                          />
-                          <DnaButton variant="primary" size="sm" className="h-7 text-[10px] px-2" onClick={handleSaveEstimasi}>Simpan</DnaButton>
-                          <DnaButton variant="ghost" size="sm" className="h-7 text-[10px] px-2" onClick={() => setEditingEstimasi(null)}>Batal</DnaButton>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setEditingEstimasi({ groupId: group.id, subId: sub.id, value: sub.estimasiDeadline || "" })}
-                          className="text-[11px] font-semibold text-blue-600 hover:text-blue-800"
-                        >
-                          {sub.estimasiDeadline || <span className="text-slate-400 italic">+ Est. deadline</span>}
-                        </button>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-2 px-4 text-center">
-                      {getStatusBadge(sub.status)}
-                    </TableCell>
-                    <TableCell className="py-2 px-4 text-right" colSpan={1}>
-                      {/* Item 59, 61, 62, 63: action buttons */}
-                      <div className="flex items-center justify-end gap-1">
-                        {/* Item 59/63: Done button */}
-                        {sub.status !== "COMPLETED" && (
-                          <button
-                            onClick={() => handleMarkDone(group.id, sub.id)}
-                            className="px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded transition-colors border border-emerald-200"
-                            title="Tandai selesai"
-                          >
-                            ✓ Selesai
-                          </button>
-                        )}
-                        {/* Item 61: PENDING */}
-                        {sub.status !== "PENDING" && (
-                          <button
-                            onClick={() => { setPendingDialog({ groupId: group.id, subId: sub.id }); setPendingNotes(sub.notes || ""); }}
-                            className="px-2 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded transition-colors border border-amber-200"
-                            title="Tandai pending"
-                          >
-                            ⏱ Pending
-                          </button>
-                        )}
-                        {/* Item 62: Revert dari DONE ke IN_PROGRESS */}
-                        {sub.status === "COMPLETED" && (
-                          <button
-                            onClick={() => {
-                              if (confirm(`Yakin kembalikan "${sub.milestone}" ke proses?`)) {
-                                const now = new Date().toISOString().split("T")[0];
-                                setData(prev => prev.map(g => {
-                                  if (g.id !== group.id) return g;
-                                  return {
-                                    ...g,
-                                    updatedAt: now,
-                                    updatedBy: currentUser,
-                                    subItems: g.subItems.map(s =>
-                                      s.id === sub.id ? { ...s, status: "IN_PROGRESS" as const, updatedAt: now, updatedBy: currentUser } : s
-                                    ),
-                                  };
-                                }));
-                                toast.success("Milestone dikembalikan ke proses.");
-                              }
-                            }}
-                            className="px-2 py-1 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition-colors border border-slate-200"
-                            title="Kembalikan ke proses"
-                          >
-                            <RotateCcw className="w-3 h-3 inline" />
-                          </button>
-                        )}
-                        {/* Show change log if available (Item 61: tanggal perubahan) */}
-                        {sub.updatedAt && (
-                          <span className="text-[9px] text-slate-400 ml-1" title={`Diubah oleh ${sub.updatedBy}`}>
-                            {sub.updatedAt}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </>
-            ))}
-          </TableBody>
-        </Table>
-      </TableWrapper>
-
-      {/* Item 61: Dialog catatan wajib untuk PENDING */}
-      <Dialog open={!!pendingDialog} onOpenChange={o => { if (!o) { setPendingDialog(null); setPendingNotes(""); } }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-amber-600" />
-              Ubah ke Status PENDING
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <Label className="text-xs font-semibold text-slate-700">Catatan wajib diisi *</Label>
-            <Textarea
-              value={pendingNotes}
-              onChange={e => setPendingNotes(e.target.value)}
-              placeholder="Alasan mengapa milestone ini ditandai pending..."
-              rows={3}
-              className="text-xs"
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. UNBOXED PAGE HEADER (DNA SPEC) ── */}
+      <DnaPageHeader
+        title="CHECKLIST PROGRESS (KIL ERP)"
+        badge={<DnaBadge status="info">PROGRESS CONTROL</DnaBadge>}
+        subtitle="Pemantauan alur progres checklist SO maklon, tahapan bahan kemas, label, box, serta dokumen legalitas BPOM."
+        breadcrumbItems={[
+          { label: "Dashboard", href: "/executive/dashboard" },
+          { label: "Umum & Kendali", href: "/scm/checklist-progress" },
+          { label: "Checklist Progress" },
+        ]}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <DnaExportButton
+              onExport={(type: string) => {
+                showToast({
+                  type: "success",
+                  title: `Ekspor ${type.toUpperCase()} Berhasil`,
+                  message: `Data ${filteredData.length} checklist progress berhasil diunduh.`,
+                });
+              }}
             />
           </div>
-          <DialogFooter className="gap-2">
-            <DnaButton variant="ghost" size="sm" onClick={() => { setPendingDialog(null); setPendingNotes(""); }}>Batal</DnaButton>
-            <DnaButton variant="primary" size="sm" onClick={handleMarkPending}>Simpan & Pending</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+        }
+      />
+
+      {/* ── 02. 4-KPI STAT CARDS ROW ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <DnaStatCard
+          label="Total SO Aktif"
+          value={stats.totalSo}
+          subtext="Sales Order dalam pengerjaan"
+          variant="default"
+        />
+        <DnaStatCard
+          label="Item Pending (Notifikasi)"
+          value={stats.pendingItems}
+          subtext="Perlu tindakan verifikasi cepat"
+          variant="danger"
+        />
+        <DnaStatCard
+          label="Checklist Input Design"
+          value={stats.designItems}
+          subtext="PIC Mas Edi (Creative Design)"
+          variant="warning"
+        />
+        <DnaStatCard
+          label="Sedang Berjalan (Process)"
+          value={stats.processItems}
+          subtext="Tahapan produksi & kemasan"
+          variant="success"
+        />
+      </div>
+
+      {/* ── 03. NAVBAR TABS & TOGGLE FILTER (SESUAI LEGACY CSV & GAMBAR 1) ── */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+        {/* Navbar Tabs: Main | Input Design */}
+        <div className="inline-flex p-1 bg-slate-100 border border-slate-200 rounded-xl">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("MAIN");
+              setPage(1);
+            }}
+            className={cn(
+              "px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+              activeTab === "MAIN"
+                ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            Main Checklist
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("INPUT_DESIGN");
+              setPage(1);
+            }}
+            className={cn(
+              "px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+              activeTab === "INPUT_DESIGN"
+                ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            <span>Input Design (PIC Mas Edi)</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-mono">
+              {stats.designItems}
+            </span>
+          </button>
+        </div>
+
+        {/* Filter Controls: Toggle Versi Keseluruhan vs PIC & Status */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Toggle Versi Keseluruhan vs Khusus PIC */}
+          <div className="inline-flex p-0.5 bg-slate-200/80 rounded-lg border border-slate-300 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setViewMode("ALL")}
+              className={cn(
+                "px-2.5 py-1 rounded-md transition-all cursor-pointer",
+                viewMode === "ALL" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              Versi Keseluruhan
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("PIC_ONLY")}
+              className={cn(
+                "px-2.5 py-1 rounded-md transition-all cursor-pointer",
+                viewMode === "PIC_ONLY" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              Khusus Kebutuhan PIC
+            </button>
+          </div>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs focus:outline-hidden cursor-pointer"
+          >
+            <option value="ALL">Semua Status</option>
+            <option value="Pending">Pending (Notifikasi)</option>
+            <option value="Process">Process</option>
+            <option value="Done">Done</option>
+          </select>
+
+          {/* Reset Filter */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("MAIN");
+              setViewMode("ALL");
+              setStatusFilter("ALL");
+              setSearchQuery("");
+              setPage(1);
+              showToast({ type: "info", title: "Filter Direset", message: "Menampilkan seluruh checklist progress." });
+            }}
+            className="h-8 px-2.5 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200 bg-white flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── 04. DATA TABLE (EXACT GAMBAR 1 STRUCTURE) ── */}
+      <DnaDataTableCard
+        title="TABEL CHECKLIST PROGRESS MAKLON"
+        count={filteredData.length}
+        badge={<DnaBadge status="neutral">GSERP KIL SPEC</DnaBadge>}
+        actions={
+          <div className="flex items-center gap-3">
+            {/* Show entries selector */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span>Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="h-8 px-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-hidden"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span>entries</span>
+            </div>
+
+            {/* Search input */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20 w-48 placeholder:text-slate-400 font-medium"
+              />
+            </div>
+          </div>
+        }
+      >
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <th className={cn(DNA_TABLE_CLASSES.th, "w-12 text-center")}>#</th>
+              <th className={DNA_TABLE_CLASSES.th}>No. Sales</th>
+              <th className={DNA_TABLE_CLASSES.th}>Brand/Produk</th>
+              <th className={DNA_TABLE_CLASSES.th}>Customer</th>
+              <th className={DNA_TABLE_CLASSES.th}>Kategori</th>
+              <th className={DNA_TABLE_CLASSES.th}>Tanggal Mulai</th>
+              <th className={DNA_TABLE_CLASSES.th}>Tanggal Selesai</th>
+              <th className={cn(DNA_TABLE_CLASSES.th, "text-center")}>Status</th>
+              <th className={cn(DNA_TABLE_CLASSES.th, "text-center w-24")}>#</th>
+            </tr>
+          </DnaTableHead>
+          <tbody className={DNA_TABLE_CLASSES.tbody}>
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="py-12 text-center text-slate-500">
+                  <AlertCircle className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm font-semibold text-slate-700">Tidak ada data checklist ditemukan</p>
+                  <p className="text-xs text-slate-400">Silakan sesuaikan filter status atau kata kunci pencarian.</p>
+                </td>
+              </tr>
+            ) : (
+              paginatedData.map((item, idx) => (
+                <tr key={item.id} className={DNA_TABLE_CLASSES.tr}>
+                  {/* # */}
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center font-mono text-slate-400 text-xs")}>
+                    {(page - 1) * pageSize + idx + 1}
+                  </td>
+
+                  {/* No. Sales */}
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <div className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span className="font-mono font-bold text-xs text-blue-700 hover:underline cursor-pointer">
+                        {item.soNumber}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Brand / Produk (Stacked layout per Gambar 1) */}
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <div>
+                      <p className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                        {item.brand}
+                      </p>
+                      <p className="text-[11.5px] text-slate-600 font-medium">
+                        {item.product}
+                      </p>
+                    </div>
+                  </td>
+
+                  {/* Customer */}
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <span className="text-xs font-semibold text-slate-800">
+                      {item.customer}
+                    </span>
+                  </td>
+
+                  {/* Kategori Badge (Blue per Gambar 1) */}
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-600 text-white shadow-2xs">
+                      {item.kategori}
+                    </span>
+                  </td>
+
+                  {/* Tanggal Mulai */}
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <span className="font-mono text-xs text-slate-700">
+                      {item.tanggalMulai}
+                    </span>
+                  </td>
+
+                  {/* Tanggal Selesai */}
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <span className="font-mono text-xs text-slate-700">
+                      {item.tanggalSelesai}
+                    </span>
+                  </td>
+
+                  {/* Status Badge (Pending: Rose/Red, Process: Amber/Orange, Done: Emerald) */}
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
+                    <span
+                      className={cn(
+                        "inline-block px-2.5 py-0.5 rounded text-[10.5px] font-bold shadow-2xs",
+                        item.status === "Pending"
+                          ? "bg-rose-900/80 text-rose-100 border border-rose-800"
+                          : item.status === "Process"
+                          ? "bg-amber-600 text-amber-50 border border-amber-500"
+                          : "bg-emerald-700 text-emerald-50 border border-emerald-600"
+                      )}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+
+                  {/* # Action Icons (Eye + List per Gambar 1) */}
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
+                    <div className="flex items-center justify-center gap-1">
+                      {/* Eye / View Modal */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedItem(item)}
+                        className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors shadow-2xs cursor-pointer"
+                        title="Lihat Detail SO"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* List / Timeline Modal */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedItem(item)}
+                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-colors shadow-2xs cursor-pointer"
+                        title="Rincian Kronologis"
+                      >
+                        <ListOrdered className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </DnaTable>
+
+        {/* ── PAGINATION BAR ── */}
+        <DnaPagination
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={filteredData.length}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(1);
+          }}
+        />
+      </DnaDataTableCard>
+
+      {/* ── DETAIL MODAL (1 SO = 1 CHECKLIST UTAMA DENGAN RINCIAN KRONOLOGIS PER SO) ── */}
+      <DnaModal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        title={`Detail Checklist Progress: ${selectedItem?.soNumber}`}
+        subtitle={`Klien: ${selectedItem?.customer} • Brand: ${selectedItem?.brand} (${selectedItem?.product})`}
+        size="lg"
+      >
+        {selectedItem && (
+          <div className="space-y-4">
+            {/* Header info */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 text-xs">
+              <div>
+                <p className="text-slate-400 font-medium">Customer Klien:</p>
+                <p className="font-bold text-slate-800">{selectedItem.customer}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 font-medium">Nomor Izin BPOM:</p>
+                <p className="font-mono font-bold text-blue-700">{selectedItem.bpomNumber || "Dalam Proses Pengajuan"}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 font-medium">PIC Penanggung Jawab:</p>
+                <p className="font-bold text-slate-800">{selectedItem.pic}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 font-medium">Status Keseluruhan:</p>
+                <span className="font-bold text-amber-700">{selectedItem.status}</span>
+              </div>
+            </div>
+
+            {selectedItem.notes && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                <div>
+                  <span className="font-bold">Catatan Kendala: </span>
+                  <span>{selectedItem.notes}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Rincian Kronologis Tahapan (Sesuai Legacy ERP Poin 36, 54, 55, 64-67) */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="bg-slate-100/80 px-3.5 py-2 border-b border-slate-200 text-xs font-bold text-slate-700">
+                Rincian Kronologis Seluruh Kategori SO (Urutan Proses Sesuai SOP)
+              </div>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                  <tr>
+                    <th className="px-3 py-2 text-center w-10">#</th>
+                    <th className="px-3 py-2">Kategori Milestone</th>
+                    <th className="px-3 py-2">PIC Penanggung Jawab</th>
+                    <th className="px-3 py-2 font-mono">Target Deadline</th>
+                    <th className="px-3 py-2 font-mono">Estimasi</th>
+                    <th className="px-3 py-2 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(selectedItem.subMilestones || [
+                    { urutan: 1, kategori: "Desain Logo", pic: "Edi (Creative)", deadline: "2026-09-08", estimasi: "2026-09-07", status: "Done" as const },
+                    { urutan: 2, kategori: "HKI Merek", pic: "Cipta (Legal)", deadline: "2026-09-14", estimasi: "2026-09-14", status: "Done" as const },
+                    { urutan: 3, kategori: "BPOM NA", pic: "Cipta (Regulasi)", deadline: "2026-09-28", estimasi: "2026-09-28", status: "Process" as const },
+                    { urutan: 4, kategori: "Bahan Baku & Kemas", pic: "Nike (SCM)", deadline: "2026-10-15", estimasi: "2026-10-18", status: "Pending" as const },
+                    { urutan: 5, kategori: "Mixing Produksi", pic: "Nur Kholilah", deadline: "2026-10-28", estimasi: "2026-10-28", status: "Pending" as const },
+                    { urutan: 6, kategori: "Delivery", pic: "Agus Pratama", deadline: "2026-11-25", estimasi: "2026-11-25", status: "Pending" as const },
+                  ]).map((sub) => (
+                    <tr key={sub.urutan} className="hover:bg-slate-50/60">
+                      <td className="px-3 py-2 text-center font-mono text-slate-400">{sub.urutan}</td>
+                      <td className="px-3 py-2 font-semibold text-slate-800">{sub.kategori}</td>
+                      <td className="px-3 py-2 font-medium text-slate-700">{sub.pic}</td>
+                      <td className="px-3 py-2 font-mono text-slate-600">{sub.deadline}</td>
+                      <td className="px-3 py-2 font-mono text-slate-500">{sub.estimasi}</td>
+                      <td className="px-3 py-2 text-center">
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs",
+                            sub.status === "Done"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              : sub.status === "Process"
+                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                              : "bg-rose-100 text-rose-800 border border-rose-200"
+                          )}
+                        >
+                          {sub.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <DnaButton variant="secondary" onClick={() => setSelectedItem(null)}>
+                Tutup Detail
+              </DnaButton>
+            </div>
+          </div>
+        )}
+      </DnaModal>
+    </div>
   );
 }

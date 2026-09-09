@@ -3,8 +3,17 @@
 import { useState, useMemo } from "react";
 import { Clock, UserCheck, AlertTriangle, MapPin, Search, CalendarDays } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaBadge, DnaButton } from "@/components/dna";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  StatCard,
+  DnaBadge,
+  DnaButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/dna";
 
 type AttendanceStatus = "ON_TIME" | "LATE" | "OUTSIDE_GEOFENCE";
 

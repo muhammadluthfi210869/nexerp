@@ -6,13 +6,15 @@ import { cn } from "@/lib/utils";
 
 // ── 1. CODE CELL (WO, PO, SKU, No Referensi) ──
 export interface DnaCellCodeProps {
-  value: string;
+  value?: string;
+  children?: React.ReactNode;
   onClick?: () => void;
   className?: string;
   subtitle?: string;
 }
 
-export function DnaCellCode({ value, onClick, className, subtitle }: DnaCellCodeProps) {
+export function DnaCellCode({ value, children, onClick, className, subtitle }: DnaCellCodeProps) {
+  const displayVal = children !== undefined ? children : value;
   return (
     <div className={cn("flex flex-col", className)}>
       <span
@@ -24,7 +26,7 @@ export function DnaCellCode({ value, onClick, className, subtitle }: DnaCellCode
             : "text-slate-800"
         )}
       >
-        {value}
+        {displayVal}
       </span>
       {subtitle && (
         <span className="text-[10px] text-slate-400 font-normal">
@@ -40,11 +42,12 @@ export interface DnaCellTextProps {
   primary: string;
   secondary?: string;
   className?: string;
+  maxWidth?: string;
 }
 
-export function DnaCellText({ primary, secondary, className }: DnaCellTextProps) {
+export function DnaCellText({ primary, secondary, className, maxWidth }: DnaCellTextProps) {
   return (
-    <div className={cn("flex flex-col min-w-0 max-w-[280px] break-words whitespace-normal leading-tight", className)}>
+    <div className={cn("flex flex-col min-w-0 break-words whitespace-normal leading-tight", maxWidth || "max-w-[280px]", className)}>
       <span className="text-[12px] font-medium text-slate-900 leading-snug">
         {primary}
       </span>
@@ -57,9 +60,9 @@ export function DnaCellText({ primary, secondary, className }: DnaCellTextProps)
   );
 }
 
-// ── 3. BADGE / STATUS CELL (Soft rounded-full pill, Title Case, no underscore) ──
 export interface DnaCellBadgeProps {
-  status: string;
+  status?: string;
+  label?: string;
   className?: string;
 }
 
@@ -71,28 +74,29 @@ export function formatStatusTitleCase(status: string): string {
 }
 
 export function getStatusBadgeStyle(status: string): string {
-  const normalized = status.toLowerCase().replace(/_/g, " ");
-  if (normalized.includes("finish") || normalized.includes("selesai") || normalized.includes("approved") || normalized.includes("lunas")) {
+  const normalized = (status || "").toLowerCase().replace(/_/g, " ");
+  if (normalized.includes("finish") || normalized.includes("selesai") || normalized.includes("approved") || normalized.includes("lunas") || normalized.includes("pkp") || normalized.includes("active")) {
     return "bg-emerald-50 text-emerald-700 border-emerald-200/80";
   }
-  if (normalized.includes("mix") || normalized.includes("progress") || normalized.includes("proses") || normalized.includes("active")) {
+  if (normalized.includes("mix") || normalized.includes("progress") || normalized.includes("proses") || normalized.includes("bbk") || normalized.includes("info")) {
     return "bg-sky-50 text-sky-700 border-sky-200/80";
   }
-  if (normalized.includes("wait") || normalized.includes("tunggu") || normalized.includes("material") || normalized.includes("hold")) {
+  if (normalized.includes("wait") || normalized.includes("tunggu") || normalized.includes("material") || normalized.includes("hold") || normalized.includes("kemasan")) {
     return "bg-amber-50 text-amber-800 border-amber-200/80";
   }
   if (normalized.includes("pending") || normalized.includes("review") || normalized.includes("draft")) {
     return "bg-orange-50 text-orange-800 border-orange-200/80";
   }
-  if (normalized.includes("cancel") || normalized.includes("reject") || normalized.includes("batal") || normalized.includes("gagal")) {
+  if (normalized.includes("cancel") || normalized.includes("reject") || normalized.includes("batal") || normalized.includes("gagal") || normalized.includes("non")) {
     return "bg-rose-50 text-rose-700 border-rose-200/80";
   }
   return "bg-slate-50 text-slate-700 border-slate-200/80";
 }
 
-export function DnaCellBadge({ status, className }: DnaCellBadgeProps) {
-  const displayLabel = formatStatusTitleCase(status);
-  const styleClass = getStatusBadgeStyle(status);
+export function DnaCellBadge({ status, label, className }: DnaCellBadgeProps) {
+  const actualStatus = status || label || "";
+  const displayLabel = label || formatStatusTitleCase(actualStatus);
+  const styleClass = getStatusBadgeStyle(actualStatus);
 
   return (
     <span
@@ -134,12 +138,19 @@ export function DnaCellProgress({ value, colorClass = "bg-blue-600", className }
 // ── 5. AVATAR CELL (Inisial Bulat + Nama PIC/Klien) ──
 export interface DnaCellAvatarProps {
   name: string;
+  subtext?: string;
   initial?: string;
   avatarBg?: string;
   className?: string;
 }
 
-export function DnaCellAvatar({ name, initial, avatarBg = "bg-slate-100 text-slate-700", className }: DnaCellAvatarProps) {
+export function DnaCellAvatar({
+  name,
+  subtext,
+  initial,
+  avatarBg = "bg-slate-100 text-slate-700",
+  className,
+}: DnaCellAvatarProps) {
   const displayInitial = initial || (name ? name.charAt(0).toUpperCase() : "?");
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
@@ -151,9 +162,16 @@ export function DnaCellAvatar({ name, initial, avatarBg = "bg-slate-100 text-sla
       >
         {displayInitial}
       </div>
-      <span className="text-[12px] font-medium text-slate-800 truncate max-w-[150px]">
-        {name}
-      </span>
+      <div className="flex flex-col min-w-0">
+        <span className="text-[12px] font-medium text-slate-800 truncate max-w-[180px]">
+          {name}
+        </span>
+        {subtext && (
+          <span className="text-[10.5px] text-slate-400 font-mono truncate max-w-[180px]">
+            {subtext}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -280,13 +298,23 @@ export function DnaCellActions({
 // ── EXPORT AS A NAMESPACED OBJECT ──
 export const DnaCell = {
   Code: DnaCellCode,
+  code: DnaCellCode,
   Text: DnaCellText,
+  text: DnaCellText,
   Badge: DnaCellBadge,
+  badge: DnaCellBadge,
   Status: DnaCellBadge,
+  status: DnaCellBadge,
   Progress: DnaCellProgress,
+  progress: DnaCellProgress,
   Avatar: DnaCellAvatar,
+  avatar: DnaCellAvatar,
   Number: DnaCellNumber,
+  number: DnaCellNumber,
   Currency: DnaCellCurrency,
+  currency: DnaCellCurrency,
   Date: DnaCellDate,
+  date: DnaCellDate,
   Actions: DnaCellActions,
+  actions: DnaCellActions,
 };
