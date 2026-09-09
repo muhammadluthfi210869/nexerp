@@ -18,6 +18,10 @@ const compression = require('compression');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Public reverse proxy maps /api/* to /v1/*; keep this contract stable for
+  // every browser bundle and existing integration.
+  app.setGlobalPrefix('v1');
+
   // Enable Global Response Standardization
   app.useGlobalFilters(new GlobalExceptionFilter());
 

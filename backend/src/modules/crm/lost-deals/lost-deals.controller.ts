@@ -14,7 +14,7 @@ import { Roles } from '../../auth/roles.decorator';
 import { UserRole, User } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('crm/lost-deals')
+@Controller(['crm/lost-deals', 'v1/crm/lost-deals'])
 export class LostDealsController {
   constructor(private readonly lostDealsService: LostDealsService) {}
 

@@ -10,15 +10,23 @@ $archivePath = Join-Path $root "deploy-marketing-only.tar.gz"
 
 $marketingPaths = @(
   # Marketing-specific
+  "frontend/Dockerfile",
   "frontend/src/app/(dashboard)/marketing",
   "frontend/src/components/marketing",
   "frontend/src/components/layout/Sidebar.tsx",
   "frontend/src/components/layout/FormShell.tsx",
-  "frontend/src/components/dna/StatCard.tsx",
+  "frontend/src/components/dna",
+  "frontend/src/lib/marketing-members.ts",
+  "frontend/src/lib/utils.ts",
+  "backend/package.json",
+  "backend/package-lock.json",
   "backend/src/modules/marketing",
   "backend/src/modules/analytics/services/analytics.service.ts",
   "backend/data/marketing-prototype-state.json",
-  "deploy-remote.sh",
+  "backend/init-db.sh",
+  "backend/prisma/seed-master.ts",
+  "backend/prisma/migrations",
+  "backend/prisma/schema/marketing.prisma",
   # Prisma schema fix (HEAD has duplicate models)
   "backend/prisma/schema/production.prisma",
   "backend/prisma/schema/qc.prisma",
@@ -51,8 +59,8 @@ function Copy-OverlayPath {
       Remove-Item -LiteralPath $destination -Recurse -Force
     }
 
-    Ensure-ParentDirectory -DestinationPath (Join-Path $destination "placeholder")
-    Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+    Ensure-ParentDirectory -DestinationPath $destination
+    Copy-Item -LiteralPath $source -Destination (Split-Path -Parent $destination) -Recurse -Force
     return
   }
 
@@ -88,8 +96,7 @@ try {
       "frontend",
       "docker-compose.prod.yml",
       "nginx.conf",
-      "setup_hetzner.sh",
-      "deploy-remote.sh"
+      "setup_hetzner.sh"
     )
 
     & tar -czf $archivePath @packageEntries
@@ -105,21 +112,22 @@ try {
 
   if (-not $CreateArchiveOnly) {
     Write-Host ""
-    Write-Host "=== DEPLOYING TO SERVER ===" -ForegroundColor Cyan
+    Write-Host "=== DEPLOYING TO BIZNET SERVER ===" -ForegroundColor Cyan
 
-    $IP = "5.223.80.88"
-    $User = "root"
+    $IP = "103.93.134.215"
+    $User = "dreamlab"
+    $RemoteDir = "/home/dreamlab/nexerp"
 
-    Write-Host "Uploading to Hetzner..." -ForegroundColor Yellow
-    scp $archivePath "${User}@${IP}:/root/deploy.tar.gz"
+    Write-Host "Uploading to Biznet ($IP)..." -ForegroundColor Yellow
+    scp $archivePath "${User}@${IP}:/home/${User}/deploy.tar.gz"
 
     if ($LASTEXITCODE -ne 0) {
       Write-Host "SCP UPLOAD FAILED!" -ForegroundColor Red
       exit 1
     }
 
-    Write-Host "Extracting + deploying on server..." -ForegroundColor Yellow
-    $RemoteCmd = "cd /root && tar -xzf deploy.tar.gz && bash deploy-remote.sh"
+    Write-Host "Extracting + deploying on Biznet server..." -ForegroundColor Yellow
+    $RemoteCmd = "cd $RemoteDir && tar -xzf ~/deploy.tar.gz && sudo docker compose -p production-light up -d --build backend frontend && sudo docker image prune -f"
 
     ssh "${User}@${IP}" $RemoteCmd
 

@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Post,
   Param,
@@ -25,7 +25,7 @@ import {
 } from './dto/requisition.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('v1/warehouse')
+@Controller(['warehouse', 'v1/warehouse'])
 export class WarehouseController {
   constructor(
     private readonly warehouseService: WarehouseService,

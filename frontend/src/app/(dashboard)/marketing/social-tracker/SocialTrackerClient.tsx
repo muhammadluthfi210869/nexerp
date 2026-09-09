@@ -2,15 +2,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  initialPosts, 
-  initialMetaInsights, 
-  initialDailyTrends, 
-  initialDemographics, 
-  initialBestTimeSlots, 
-  initialCampaignOkrs, 
-  initialMetaAccount 
-} from './mockData';
-import { 
   PostItem, 
   PostStatus, 
   DatabaseViewType, 
@@ -18,6 +9,10 @@ import {
   ViewSort, 
   MetaAccountConfig, 
   MetaInsightsSummary,
+  MetaDailyTrend,
+  DemographicData,
+  BestTimeSlot,
+  CampaignOKR,
   SocialPlatform,
   ContentPillar,
 } from './types';
@@ -65,8 +60,19 @@ import {
   useUpdateSocialPost,
 } from '@/hooks/useSocialPlanner';
 
-const STORAGE_INSIGHTS_KEY = 'erp_notion_meta_insights_v2';
-const STORAGE_META_CONFIG_KEY = 'erp_notion_meta_config_v2';
+const EMPTY_META_ACCOUNT: MetaAccountConfig = {
+  accessToken: '',
+  pageId: '',
+  pageName: '',
+  igAccountId: '',
+  igUsername: '',
+  profilePictureUrl: '',
+  isConnected: false,
+  isLiveApi: false,
+  permissions: [],
+  followersCount: 0,
+  igFollowersCount: 0,
+};
 
 const PLATFORMS: { id: SocialPlatform | 'all'; label: string; icon: string }[] = [
   { id: 'all', label: 'Semua Platform', icon: '🌐' },
@@ -96,39 +102,16 @@ export default function SocialTrackerClient() {
   const [posts, setPosts] = useState<PostItem[]>([]);
 
   // Meta Insights State
-  const [insights, setInsights] = useState<MetaInsightsSummary>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_INSIGHTS_KEY);
-      if (saved) {
-        try {
-          return { ...JSON.parse(saved), accessToken: '' };
-        } catch (e) {
-          console.error('Failed to parse saved insights:', e);
-        }
-      }
-    }
-    return initialMetaInsights;
-  });
+  const [insights, setInsights] = useState<MetaInsightsSummary | null>(null);
 
   // Meta Account Config State
-  const [metaAccount, setMetaAccount] = useState<MetaAccountConfig>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_META_CONFIG_KEY);
-      if (saved) {
-        try {
-          return { ...JSON.parse(saved), accessToken: '' };
-        } catch (e) {
-          console.error('Failed to parse saved meta account:', e);
-        }
-      }
-    }
-    return initialMetaAccount;
-  });
+  const [metaAccount, setMetaAccount] = useState<MetaAccountConfig>(EMPTY_META_ACCOUNT);
 
-  const [campaignOkrs, setCampaignOkrs] = useState(initialCampaignOkrs);
-  const [dailyTrends, setDailyTrends] = useState(initialDailyTrends);
-  const [demographics, setDemographics] = useState(initialDemographics);
-  const [bestTimeSlots, setBestTimeSlots] = useState(initialBestTimeSlots);
+  const [campaignOkrs] = useState<CampaignOKR[]>([]);
+  const [dailyTrends, setDailyTrends] = useState<MetaDailyTrend[]>([]);
+  const [demographics, setDemographics] = useState<DemographicData | null>(null);
+  const [bestTimeSlots] = useState<BestTimeSlot[]>([]);
+  const [insightsSyncedAt, setInsightsSyncedAt] = useState<string | null>(null);
 
   // Filter & Sort State
   const [filter, setFilter] = useState<ViewFilter>({
@@ -154,53 +137,11 @@ export default function SocialTrackerClient() {
   const [isSyncingMeta, setIsSyncingMeta] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // The database is authoritative. Mock posts are used only when the API actually fails.
+  // The database is authoritative. API failures must never reveal sample data.
   useEffect(() => {
     if (socialPostsQuery.data) setPosts(socialPostsQuery.data);
-    else if (socialPostsQuery.isError) setPosts(initialPosts);
+    else if (socialPostsQuery.isError) setPosts([]);
   }, [socialPostsQuery.data, socialPostsQuery.isError]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_INSIGHTS_KEY, JSON.stringify(insights));
-    }
-  }, [insights]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(
-        STORAGE_META_CONFIG_KEY,
-        JSON.stringify({ ...metaAccount, accessToken: '' }),
-      );
-    }
-  }, [metaAccount]);
-
-  useEffect(() => {
-    const totals = posts.reduce(
-      (sum, post) => {
-        const performance = post.performance;
-        sum.reach += performance?.reach || 0;
-        sum.impressions += performance?.impressions || 0;
-        sum.interactions += (performance?.likes || 0) + (performance?.comments || 0)
-          + (performance?.shares || 0) + (performance?.saves || 0);
-        sum.videoViews += performance?.videoViews || 0;
-        sum.clicks += performance?.clicks || 0;
-        return sum;
-      },
-      { reach: 0, impressions: 0, interactions: 0, videoViews: 0, clicks: 0 },
-    );
-    setInsights((current) => ({
-      ...current,
-      totalReach: totals.reach,
-      impressions: totals.impressions,
-      websiteClicks: totals.clicks,
-      reelsViews: totals.videoViews,
-      engagementRate: totals.reach > 0
-        ? Number(((totals.interactions / totals.reach) * 100).toFixed(2))
-        : 0,
-      avgEngagementPerPost: posts.length > 0 ? Number((totals.interactions / posts.length).toFixed(2)) : 0,
-    }));
-  }, [posts]);
 
   useEffect(() => () => {
     updateTimers.current.forEach((timer) => clearTimeout(timer));
@@ -225,15 +166,22 @@ export default function SocialTrackerClient() {
         igAccountId: metaAccount.igAccountId || undefined,
         pageId: metaAccount.pageId || undefined,
       });
-      if (data.success) {
-        if (data.insights) setInsights(data.insights);
-        if (data.dailyTrends) setDailyTrends(data.dailyTrends);
-        if (data.demographics) setDemographics(data.demographics);
-        setMetaAccount((prev) => ({ ...prev, lastSyncTime: new Date().toISOString(), isConnected: true }));
-        showToast('✅ Data Meta Business Suite berhasil diperbarui!');
+      if (!data.success || !data.insights) {
+        throw new Error('Meta API belum mengembalikan kontrak analytics yang dapat diverifikasi.');
       }
+      const syncedAt = new Date().toISOString();
+      setInsights(data.insights);
+      setDailyTrends(data.dailyTrends || []);
+      setDemographics(data.demographics || null);
+      setInsightsSyncedAt(syncedAt);
+      setMetaAccount((prev) => ({ ...prev, lastSyncTime: syncedAt, isConnected: true, isLiveApi: true }));
+      showToast('✅ Data Meta Business Suite berhasil diperbarui dari API.');
     } catch {
-      showToast('Meta API belum dapat disinkronkan. Data manual tetap aman.');
+      setInsights(null);
+      setDailyTrends([]);
+      setDemographics(null);
+      setInsightsSyncedAt(null);
+      showToast('Meta API belum dapat disinkronkan. Tidak ada angka fallback yang ditampilkan.');
     } finally {
       setIsSyncingMeta(false);
     }
@@ -460,6 +408,12 @@ export default function SocialTrackerClient() {
         }
       />
 
+      {socialPostsQuery.isError && (
+        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800">
+          Data content planner tidak tersedia karena API gagal dimuat. Data contoh tidak ditampilkan.
+        </div>
+      )}
+
       {/* Layer 02: 4 KPI Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
         <DnaStatCard
@@ -471,22 +425,22 @@ export default function SocialTrackerClient() {
         />
         <DnaStatCard
           label="TOTAL META REACH"
-          value={formatNumber(insights.totalReach)}
-          subtext="Organik & Boosted Ads"
+          value={insights ? formatNumber(insights.totalReach) : '—'}
+          subtext={insightsSyncedAt ? `Meta API • ${new Date(insightsSyncedAt).toLocaleString('id-ID')}` : 'Belum ada data API terverifikasi'}
           icon={<TrendingUp className="w-4 h-4" />}
           variant="emerald"
         />
         <DnaStatCard
           label="AVG ENGAGEMENT"
-          value={`${insights.engagementRate}%`}
-          subtext="Benchmark Maklon 2.1%"
+          value={insights ? `${insights.engagementRate}%` : '—'}
+          subtext={insightsSyncedAt ? 'Sumber: Meta Graph API' : 'Belum ada data API terverifikasi'}
           icon={<Sparkles className="w-4 h-4" />}
           variant="amber"
         />
         <DnaStatCard
           label="CAMPAIGN OKRS"
-          value="76% On-Track"
-          subtext="Target Pertumbuhan Q3"
+          value={campaignOkrs.length > 0 ? `${campaignOkrs.length} OKR` : '—'}
+          subtext="API Campaign OKR belum tersedia"
           icon={<Target className="w-4 h-4" />}
           variant="sky"
         />
@@ -680,6 +634,7 @@ export default function SocialTrackerClient() {
             bestTimeSlots={bestTimeSlots}
             posts={posts}
             metaAccount={metaAccount}
+            syncedAt={insightsSyncedAt}
             onSyncMeta={handleSyncMeta}
             isSyncing={isSyncingMeta}
             onOpenPost={handleOpenPost}

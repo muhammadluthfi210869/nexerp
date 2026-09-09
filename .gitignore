@@ -19,6 +19,13 @@ frontend/.env
 # Backups and archives
 *.zip
 *.tar.gz
+_backup*
+_archive/
+backups-*/
+old_erp/
+tmp/
+deploy-*.tar.gz
+omnicrm-*.zip
 
 # Logs
 *.log
@@ -30,6 +37,6 @@ backend_out.txt
 .idea/
 .DS_Store
 
-# Playwright
+# Playwright & Tests
 playwright-report/
 test-results/

@@ -15,7 +15,7 @@ import { InboundsService } from '../services/inbounds.service';
 import { CreateInboundDto, UpdateInboundStatusDto } from '../dto/inbound.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('scm/inbounds')
+@Controller(['scm/inbounds', 'v1/scm/inbounds'])
 export class InboundsController {
   constructor(private readonly inboundsService: InboundsService) {}
 

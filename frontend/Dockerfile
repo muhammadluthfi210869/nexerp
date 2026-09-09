@@ -1,9 +1,7 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
-
-RUN apk add --no-cache libc6-compat
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
@@ -11,14 +9,15 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Layer cache dependencies
 COPY package*.json ./
-RUN npm ci --prefer-offline || npm install
+RUN npm install
+RUN npm install lightningcss-linux-x64-gnu @tailwindcss/oxide-linux-x64-gnu || true
 
 # Copy source and build Next.js
 COPY . .
 RUN npm run build
 
 # Stage 2: Runtime
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
 

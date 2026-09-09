@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Param,
@@ -16,7 +16,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UserRole, User } from '@prisma/client';
 
 @ApiTags('scm')
-@Controller('v1/scm')
+@Controller(['scm', 'v1/scm'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ScmController {
   constructor(private readonly scmService: ScmService) {}
@@ -112,9 +112,11 @@ export class ScmController {
   ) {
     return this.scmService.updateHppStatus(id, body.status, body.calculatedHpp);
   }
+
   @Get('purchase-approval/pending-count')
   @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Get pending purchase approval count' })
   async getPendingApprovalCount() {
     return this.scmService.getPendingApprovalCount();
-  }}
+  }
+}

@@ -204,6 +204,7 @@ export default function ProductionSchedulePage() {
   const [formTargetQty, setFormTargetQty] = useState<number>(5000);
   const [formOperator, setFormOperator] = useState("Hendra Wijaya");
   const [formNotes, setFormNotes] = useState("");
+  const [localSchedules, setLocalSchedules] = useState<ProductionScheduleItem[]>(FALLBACK_SCHEDULES);
 
   const { data: serverSchedules } = useQuery({
     queryKey: ["production-schedules"],
@@ -212,7 +213,7 @@ export default function ProductionSchedulePage() {
         const res = await api.get("/production/step-logs");
         const unwrapped = unwrapResponse(res);
         if (Array.isArray(unwrapped) && unwrapped.length > 0) {
-          return unwrapped.map((item, idx) => ({
+          const mapped: ProductionScheduleItem[] = unwrapped.map((item, idx) => ({
             id: item.id || `sch-${idx}`,
             code: item.code || `SCH-MIX-${String(idx + 80).padStart(3, "0")}`,
             spkCode: item.spkCode || item.woCode || "SPK-2026-0042",
@@ -231,6 +232,8 @@ export default function ProductionSchedulePage() {
             status: (item.status || "IN_PROGRESS") as any,
             notes: item.notes || ""
           }));
+          setLocalSchedules(mapped);
+          return mapped;
         }
       } catch (err) {
         console.warn("Using fallback schedules", err);
@@ -239,7 +242,7 @@ export default function ProductionSchedulePage() {
     }
   });
 
-  const schedules = serverSchedules || FALLBACK_SCHEDULES;
+  const schedules = localSchedules;
 
   const filteredSchedules = useMemo(() => {
     return schedules.filter((sch) => {

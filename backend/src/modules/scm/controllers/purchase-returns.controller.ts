@@ -18,7 +18,7 @@ import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 
-@Controller('scm/purchase-returns')
+@Controller(['scm/purchase-returns', 'v1/scm/purchase-returns'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PurchaseReturnsController {
   constructor(private readonly service: PurchaseReturnsService) {}

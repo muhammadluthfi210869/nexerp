@@ -20,7 +20,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('scm/goods-requirements')
 @ApiBearerAuth()
-@Controller('scm/goods-requirements')
+@Controller(['scm/goods-requirements', 'v1/scm/goods-requirements'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class GoodsRequirementController {
   constructor(private readonly service: GoodsRequirementService) {}

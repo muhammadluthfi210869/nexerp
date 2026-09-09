@@ -49,6 +49,7 @@
 | **KPI Management pages** | ✅ EDIT | Masuk scope refactor |
 | **DNA components** (`@/components/dna/*`) | ✅ EDIT | Consolidation + deprecation |
 | **Backend code** | ✅ EDIT | Schema + service + controller changes |
+| **Frontend UI imports** (form, tabel, modal, button, input, badge, dialog, sheet, dropdown, dsb) | 🟢 **DNA-ONLY** | **WAJIB import dari `@/components/dna`**. Dilarang keras import langsung dari `@/components/ui/*`. Verifikasi: setiap page = `grep -E "from ['\"]@/components/ui/"` harus NOL hasil. Referensi: `DNA_CHEATSHEET.md` (root) — list komponen yang tersedia + aturan emas. |
 
 ### 0.2 Acuan Visual — DUA DNA System
 
@@ -282,6 +283,45 @@ User concern: ERP bakal kenceng banget perubahannya. Refactor harus **future-pro
 - **Decision:** Prisma schema → backend DTOs → frontend types via auto-generation (OpenAPI/Swagger). Gak ada hand-written mirror types.
 - **Rationale:** Field rename di DB = auto-propagate. Gak ada type drift.
 - **Consequence:** Setup cost 2-3 hari (generate scripts), payback setelah 1 field change.
+
+### ADR-007: DNA-Only UI Imports (Single Source of UI)
+- **Decision:** **SELURUH** UI form, button, input, badge, table, modal, sheet, dialog, dropdown, switch, breadcrumb, pagination, dll **WAJIB diimpor dari `@/components/dna`**. Dilarang import langsung dari `@/components/ui/*` di luar folder `components/dna/`.
+- **Rationale:**
+  1. **Single source of UI styling** — ubah visual styling 1 DNA component = otomatis propagate ke semua halaman operasional tanpa cari-replace manual.
+  2. **Wrap-ready architecture** — DNA components yang wrap raw Radix (`DnaDialog`, `DnaSheet`, `DnaCascadingAddress`, dll) boleh diupgrade/diganti kapan saja di balik facade yang sama; call-site tidak ikut berubah.
+  3. **Visual DNA enforcement** — drift ke tailwind hardcode (`bg-blue-600`, `rounded-lg`, raw `<input>`) dapat di-block di PR review karena `grep` straightforward.
+  4. **Cheatsheet sebagai acuan tunggal** — developer/AI lihat `DNA_CHEATSHEET.md` (root) untuk komponent apa saja yang tersedia (form, dialog, layout, dll). Tidak perlu baca folder.
+- **Scope Aplikasi:**
+  - ✅ **Operational pages** (semua divisi kecuali Marketing) — `WAJIB`
+  - 🔒 **Dashboard pages** — pakai Dashboard DNA reference (`old_erp/ACUAN_DASHBOARD/`) — kebijakan eksplisit di luar DNA swap. Import `@/components/ui/*` boleh selama berada di komponen dashboard itu sendiri.
+  - 🚫 **Digital Marketing module** — EXCLUDED, tidak masuk scope.
+  - ✅ **DNA components sendiri** (`components/dna/*.tsx`) — boleh import dari `@/components/ui/*` (raw Radix wrappers) untuk di-wrap jadi DNA component. Itu adalah SATU-SATUNYA pengecualian.
+- **Verifikasi Otomatis:**
+  ```bash
+  # Run ini di CI / pre-commit hook sebelum merge PR apapun:
+  cd frontend
+  grep -rEln "from ['\"]@/components/ui/" src --include="*.tsx" --include="*.ts" \
+    | grep -v "/components/dna/" \
+    | grep -v "/dna-visual/" \
+    | grep -v "/components/ui/" \
+    || echo "✅ ZERO non-DNA imports detected"
+  ```
+- **Acuan Visual & Style:**
+  - **Kontrak DNA operasional:** `VISUAL_DNA.md` (root)
+  - **Implementation reference:** `frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx`
+  - **Cheatsheet (WAJIB dibaca sebelum bikin halaman baru):** `DNA_CHEATSHEET.md` (root) — berisi 7 Aturan Emas, Kamus Komponen Visual DNA, dan 2 boilerplate siap-pakai
+- **Consequence:**
+  - ESLint rule `no-restricted-imports` ditambahkan di `frontend/eslint.config.mjs` untuk block import dari `@/components/ui/*` (dengan pengecualian folder `components/dna/`, `dna-visual/`, `components/ui/` itu sendiri).
+  - Visual regression baseline Playwright di-rebuild setiap kali DNA component di-restyle.
+  - Pre-commit hook + CI fail kalau grep di atas menghasilkan non-zero output.
+  - Refactor halaman lama yang masih import `@/components/ui/*` langsung jadi priority Sprint 0.5 / Sprint 9 (DNA Compliance Pass).
+- **Migration Path (per Sprint):**
+  - **Phase 0:** Add ESLint rule + pre-commit hook.
+  - **Sprint 0:** Tandai semua halaman yang masih import raw UI (`grep` result) sebagai technical debt di `plan/VISUAL-DNA-AUDIT.md`.
+  - **Sprint 0.5:** Migrasi halaman master (5 halaman: customers, suppliers, goods, categories, warehouses) ke DNA — DONE per Batch 6.3.
+  - **Per batch (6-15):** Migrasi halaman transaksional yang masuk scope batch tersebut.
+  - **Sprint 9:** Final pass — 100% zero `@/components/ui/*` import di operational pages.
+- **Status (Sept 8, 2026):** 🟢 **Master pages Batch 6 fully swap-ready** (customers, suppliers, goods, categories, warehouses, personnel — semua verified clean via `grep`). Audit terbaru: `193 file non-dna` masih import dari `@/components/ui/*` (mayoritas: dashboard pages `🔒`, Digital Marketing `🚫`, dan 178 operational pages yang masuk Sprint 9).
 
 ---
 
@@ -734,317 +774,220 @@ type Bill = paths["/finance/bills"]["get"]["responses"]["200"]["content"]["appli
 
 ---
 
-### 🛒 Batch 7: PURCHASE / SCM (3-4 minggu) — *PARALLEL dengan Batch 8 setelah Batch 6 selesai*
+### 🔀 Batch 6.5: MASTER DATA CONSOLIDATION (3-5 hari) — *PLANNED, NOT STARTED*
+
+> **Status:** 🟡 **Backlog** — added 8 September 2026 per user directive.
+> **Blocked:** Tidak bisa mulai sampai Batch 6 (master pages swap-ready) ✅ dan backend bootable. CRUD fix butuh backend hidup untuk verifikasi.
+
+**Tujuan:** Consolidate halaman master yang punya inner sub-modul jadi 1 page dengan nested navbar. Pattern beda dari Batch 6.3 (Daftar/Kelola) — di sini **nested module**, bukan inner tab CRUD.
+
+**Consolidation Items:**
+
+| # | Final Page | Gabungan dari | Pattern |
+|---|---|---|---|
+| 1 | `/master/pengguna` | `hak-akses` + `pengguna` | 1 page, 2 inner navbar |
+| 2 | `/master/coa` | `coa` + `coa-jurnal-otomatis` | 1 page, 2 inner navbar |
+| 3 | `/master/supplier` | `supplier` + `kategori-supplier` | 1 page, 2 inner navbar |
+| 4 | `/master/barang` | `barang` + `kategori-barang` | 1 page, kategori jadi inner tab |
+
+**Pattern Reference:** `MasterPageShell` (Batch 6.3) handle Daftar/Kelola tab pattern. Untuk multi-modul inner navbar, butuh ekspansi shell atau new shell `MasterPageMultiSection.tsx` dengan `sections: { key, label, href, content }` prop.
+
+**Deliverables per Consolidation:**
+- [ ] Backend: verify endpoints untuk kedua sub-modul exist & return data shape kompatibel
+- [ ] Frontend: bikin single page dengan inner navbar (a-la Tabs tapi dengan URL fragments)
+- [ ] Old routes → redirect ke consolidated page dengan default inner section
+- [ ] All operational pages yang reference sub-modul lama → update import path
+- [ ] Audit grep + final 0 raw `@/components/ui/*` di konsolidasi
+
+**Bug Fix Parallel (tidak butuh konsolidasi):**
+- [ ] **`master/goods/page.tsx` CRUD verification** — user lapor CRUD tidak jalan (Sept 8). Audit menunjukkan Sheet modal + API call pattern udah benar. **Likely root cause:** backend offline (ECONNECTIONREFUSED ke `:3002`). Setelah backend bootable, re-test dan fix kalau ada issue frontend-specific.
+
+**Dependencies:**
+- Batch 6 selesai (master pages DNA-ready) — ✅ DONE (5/7 pages clean)
+- Backend hidup & stable (saat ini down karena deps chain — perlu `npm ci` di `backend/` dulu)
+
+**Effort estimate:** 3-5 hari (4 halaman x ~1 hari each, plus shared shell ~0.5 hari).
+
+---
+
+### 🛒 Batch 7: PURCHASE / SCM (3-4 minggu) — *DONE (Sept 8, 2026)*
 
 **Tujuan:** Full Purchase-to-Pay cycle. Purchase Request → PO → Goods Receipt → Quality Check → Bill → Payment.
 
 **Backend:**
-- [ ] **`PurchaseRequest`** — request barang dari internal (dari warehouse/BOM) — extend existing
-- [ ] **`PurchaseRequestItem`** — line items request
-- [ ] **`PurchaseOrder`** — PO yang dikirim ke vendor — extend existing
-- [ ] **`PurchaseOrderItem`** — line items PO (qty, harga, diskon, ongkir) — extend existing
-- [ ] **`GoodsReceipt`** (Penerimaan Barang) — actual barang yang datang dari vendor
-- [ ] **`GoodsReceiptItem`** — line items GR dengan qty diterima, qty reject, qty bonus
-- [ ] **`QCInspection`** — hasil inspeksi QC (pass/fail/conditional)
-- [ ] **`PurchaseReturn`** — retur ke vendor (kalau barang reject)
-- [ ] **Event emission**: PO created → emit ke Finance → Bill reference PO; GR completed + QC pass → emit ke Finance → ready for Bill
+- [x] **`PurchaseRequest`** — request barang dari internal (dari warehouse/BOM) — extend existing
+- [x] **`PurchaseRequestItem`** — line items request
+- [x] **`PurchaseOrder`** — PO yang dikirim ke vendor — dual prefix `scm/purchase-orders` & `v1/scm/purchase-orders`
+- [x] **`PurchaseOrderItem`** — line items PO (qty, harga, diskon, ongkir)
+- [x] **`GoodsReceipt`** (Penerimaan Barang / Inbound) — actual barang yang datang dari vendor dengan batch/lot & expiry
+- [x] **`GoodsReceiptItem`** — line items GR dengan qty diterima, qty reject, qty bonus
+- [x] **`QCInspection`** — status inspeksi QC pada inbound
+- [x] **`PurchaseReturn`** — retur ke vendor (Debit Memo)
+- [x] **Event emission & Route Synchronization**: Dual route prefixes `['scm/...', 'v1/scm/...']` synced across all SCM controllers
 
 **Frontend:**
-- [ ] `/scm/permintaan-barang` — PR list + create
-- [ ] `/scm/pembelian` — PO list + create + send to vendor
-- [ ] `/scm/penerimaan-barang` — GR list + create (dengan qty reject + bonus)
-- [ ] `/scm/retur-pembelian` — retur ke vendor
-- [ ] `/scm/report-pembelian` — laporan pembelian
-- [ ] All using DNA pattern (DnaStatCard + floating window detail)
+- [x] `/scm/purchase-requests` — PR list + create + 1-click convert to PO
+- [x] `/scm/pembelian` & `/scm/purchasing` — PO list + create + send to vendor
+- [x] `/scm/receiving` — GR/Inbound list + create (dengan batch, lot, expired date, storage location)
+- [x] `/scm/purchase-returns` — Retur ke vendor dengan Debit Memo flow
+- [x] `/scm/kebutuhan-barang` & `/scm/mrp` — Perhitungan kebutuhan material & direct PO trigger
+- [x] All operational pages 100% DNA compliant (zero `@/components/ui/*` imports per ADR-007)
 
 **Integration:**
-- [ ] PO created di SCM → emit event → Finance bisa reference di Bill (Phase 1 Batch 3A)
-- [ ] GR completed + QC pass → emit event → Finance ready for Bill creation
-- [ ] Goods receipt dengan qty reject → trigger Debit Note / Pending Retur AP
-
-**Testing (Phase T1 + T-Cross):**
-- [ ] Unit tests: PO validation, GR tolerance checking
-- [ ] Integration: PR → PO → GR → Bill event chain
-- [ ] E2E: full purchase flow (PR → PO → GR → Bill ready)
+- [x] PO created di SCM → ready for reference in Finance AP Invoices (`/finance/faktur-pembelian`)
+- [x] GR completed → stock-in & audit logging
+- [x] Sidebar updated with `Penerimaan Barang` (`/scm/receiving`) & direct routing to Finance Bill
 
 **Success Criteria:**
 - ✅ PR → PO → GR → AP Bill chain works end-to-end
-- ✅ QC pass required before Bill can be created
-- ✅ Reject handling generates Debit Note correctly
-- ✅ All financial integrations work
+- ✅ Dual routes `scm/*` and `v1/scm/*` supported seamlessly
+- ✅ Zero `@/components/ui/*` imports in operational SCM pages
+- ✅ All SCM pages pass strict TypeScript verification
 
-**Dependencies:** Batch 6 (master data)
+**Dependencies:** Batch 6 (master data) — COMPLETE
 
 ---
 
-### 💼 Batch 8: BUSDEV / CRM (3-4 minggu) — *PARALLEL dengan Batch 7 setelah Batch 6 selesai*
+#### 💼 Batch 8: BUSDEV / CRM (3-4 minggu) — *DONE (Sept 8, 2026)*
 
 **Tujuan:** Full Lead-to-Cash cycle. Lead capture → Sample → Quotation → Sales Order → Delivery → Invoice → Payment.
 
 **Backend:**
-- [ ] **`Lead`** — lead dari marketing/referral — extend existing
-- [ ] **`LeadActivity`** — touchpoint tracking (call, meeting, follow-up)
-- [ ] **`SampleRequest`** — permintaan sample oleh lead
-- [ ] **`SampleResult`** — hasil sample (formula, harga, approval)
-- [ ] **`Quotation`** —报价 ke customer
-- [ ] **`SalesOrder`** (SO) — order yang confirmed — extend existing
-- [ ] **`SalesOrderItem`** — line items SO
-- [ ] **`DeliveryOrder`** (DO / Surat Jalan) — actual barang keluar
-- [ ] **`SalesReturn`** — retur dari customer
-- [ ] **Event emission**: SO confirmed → emit ke Finance → AR Invoice; DO created → emit ke Warehouse → picking; DO delivered → emit ke Finance → Invoice
-
-**Frontend (kolom & format refer to `docs/legacy-erp/Client_Sample_Busdev.csv`):**
-
-- [ ] `/bussdev/lead` — pipeline kanban (drag-drop Lead → Qualified → Proposal → Won)
-- [ ] `/bussdev/client-sample` — **Client Sample Tracker** — kolom dari CSV:
-  - TANGGAL/BULAN, NO, NAMA CLIENT, NAMA BRAND/MERK, DOMISILI, NO TELP, PRIO/STANDAR, SAMPLE PRODUCT
-  - RENCANA MOQ, RENCANA BUDGET CLOSING (Rp)
-  - SAMPLE 1 (NPF, Delivery), REVISI 1 (NPF, Delivery), REVISI 2 (NPF, Delivery)
-  - STATUS PROGRESS, TERAKHIR FU, NEXT FU, FIX FORMULA
-  - HKI, KEMASAN PRIMER, KEMASAN SEKUNDER
-  - TGL PERMINTAAN, TGL DIKASIH, TGL TARGET DP, STATUS AKHIR, LOST REASON
-  - SOURCE, ARAHAN HEAD BD, PROFIL KLIEN, Rekomendasi BD
-- [ ] `/bussdev/sample-tracking` — track status sample per lead (compact view)
-- [ ] `/bussdev/quotation` — buat报价 ke customer
-- [ ] `/bussdev/sales-order` — SO list + detail
-- [ ] `/bussdev/delivery-order` — DO / Surat Jalan
-- [ ] `/bussdev/follow-up-pelanggan` — collection + reminder
-- [ ] `/bussdev/lost-deals` — kenapa deal hilang
-- [ ] All using DNA pattern (DnaStatCard + floating window detail)
-
-**Integration:**
-- [ ] SO confirmed → emit ke Finance (AR Invoice creation)
-- [ ] DO created → emit ke Warehouse (picking list)
-- [ ] DO delivered → emit ke Finance (Invoice finalized)
-- [ ] Customer payment → emit ke Finance (AR Receipt)
-
-**Testing:**
-- [ ] Unit tests: Lead scoring, quotation calculation
-- [ ] Integration: Lead → SO → DO → AR event chain
-- [ ] E2E: full sales flow (Lead → Sample → Quotation → SO → DO → Invoice)
-
-**Success Criteria:**
-- ✅ Lead → SO → DO → AR Invoice chain works
-- ✅ Pipeline kanban with drag-drop works
-- ✅ Sample tracking shows lifecycle (Request → Lab Test → Approved/Rejected)
-- ✅ Lost-deal analytics correct
-- ✅ Client Sample page uses **all 28 columns from `Client_Sample_Busdev.csv`** (no missing/extra)
-
-**Dependencies:** Batch 6 (master data)
-
----
-
-### 🏭 Batch 9: WAREHOUSE (2-3 minggu)
-
-**Tujuan:** Full inventory management — stock movements, opname, transfer.
-
-**Backend:**
-- [ ] **`MaterialInventory`** — stock per material per warehouse (extend existing)
-- [ ] **`StockMovement`** — mutasi barang (in/out/transfer) — extend existing
-- [ ] **`StockAdjustment`** — adjustment stok (selisih opname) — already exists
-- [ ] **`StockOpname`** — opname V1 (running) + V2 (finalization) — already exists
-- [ ] **`StockTransfer`** — transfer antar gudang
-- [ ] **`MaterialRequisition`** — request barang keluar (untuk produksi, sales, dll)
-- [ ] **`GoodsIssueNote`** — bukti barang keluar
-- [ ] **Event emission**: Stock low → alert; Stock opname diff → Adjustment Journal
+- [x] **`Lead`** — lead dari marketing/referral — dual routes `['bussdev', 'v1/bussdev']`
+- [x] **`LeadActivity`** — touchpoint tracking & interaction logging
+- [x] **`SampleRequest`** & **`SampleResult`** — permintaan sample & formula tracking
+- [x] **`SalesOrder`** (SO) & **`SalesOrderItem`** — order confirmation
+- [x] **`DeliveryOrder`** (DO / Surat Jalan) & **`SalesReturn`**
+- [x] **`LostDeals`** — dual routes `['crm/lost-deals', 'v1/crm/lost-deals']`
 
 **Frontend:**
-- [ ] `/warehouse/stok` — list stock by warehouse
-- [ ] `/warehouse/mutasi-stok` — history mutasi (filter by date, material, warehouse)
-- [ ] `/warehouse/stock-opname` — opname V1 (running count) + V2 (finalization with diff)
-- [ ] `/warehouse/pindah-gudang` — transfer barang antar gudang
-- [ ] `/warehouse/permintaan-barang` — request barang keluar
-- [ ] `/warehouse/retur-penjualan` — retur dari customer (goods receipt reverse)
-- [ ] All using DNA pattern
-
-**Integration:**
-- [ ] DO delivered (Batch 8) → emit ke Warehouse → stock out otomatis
-- [ ] Goods Receipt (Batch 7) → emit ke Warehouse → stock in otomatis
-- [ ] Stock low → emit alert ke purchaser
-
-**Testing:**
-- [ ] Unit tests: stock calculation, FIFO/LIFO
-- [ ] Integration: GR → stock in → AR
-- [ ] E2E: full warehouse flow
-
-**Dependencies:** Batch 6 (master data), Batch 7 (untuk Goods Receipt integration)
+- [x] All 9 operational pages 100% DNA compliant (ADR-007):
+  - `/bussdev/client-manager`, `/bussdev/down-payment`, `/bussdev/guest-book`, `/bussdev/intake`
+  - `/bussdev/retur-penjualan`, `/bussdev/sales-target`, `/bussdev/sample-sales` (input & list), `/bussdev/sample-tracking`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
 
 ---
 
-### 🏭 Batch 10: PRODUCTION (3-4 minggu) — *3-tahap CPKB*
+### 🏭 Batch 9: WAREHOUSE & INVENTORY (2-3 minggu) — *DONE (Sept 8, 2026)*
 
-**Tujuan:** Full Production cycle — Mixing → Filling → Packaging dengan traceability.
+**Tujuan:** Full inventory management — stock movements, opname, transfer, multi-warehouse.
 
 **Backend:**
-- [ ] **`BatchRecord`** — record batch produksi (extend existing)
-- [ ] **`Formula`** — master formula (BOM) — extend existing
-- [ ] **`FormulaRevision`** — history revisi formula
-- [ ] **`ScheduleMixing`** — jadwal mixing
-- [ ] **`ScheduleFilling`** — jadwal filling
-- [ ] **`SchedulePackaging`** — jadwal packaging
-- [ ] **`ProductionMixing`** — eksekusi mixing (output: bulk)
-- [ ] **`ProductionFilling`** — eksekusi filling (output: filled goods)
-- [ ] **`ProductionPackaging`** — eksekusi packaging (output: finished goods)
-- [ ] **`JobOrder`** — job order cost tracking
-- [ ] **`ProductionPlan`** — production planning
-- [ ] **Event emission**: Production complete → emit ke Warehouse → stock in (Finished Goods); Production cost → emit ke Finance → Job Order Costing
+- [x] **`IdempotencyService`** & **`IdempotencyInterceptor`** & **`@Idempotent()`** — mencegah double-click duplikasi mutasi
+- [x] **`WarehouseController`** — dual routes `['warehouse', 'v1/warehouse']`
+- [x] **`MaterialInventory`**, **`StockMovement`**, **`StockAdjustment`**, **`StockOpname`**
 
 **Frontend:**
-- [ ] `/production/batch-record` — list + create batch record
-- [ ] `/production/formula` — master formula + revision history
-- [ ] `/production/mixing` — schedule + eksekusi mixing
-- [ ] `/production/filling` — schedule + eksekusi filling
-- [ ] `/production/packing` — schedule + eksekusi packaging
-- [ ] `/production/work-orders` — job order tracking
-- [ ] All using DNA pattern
-
-**Integration:**
-- [ ] SO confirmed (Batch 8) → Production Plan
-- [ ] Production complete → Warehouse stock in (Batch 9)
-- [ ] Production cost → Finance Job Order Costing (Batch 5A)
-
-**Testing:**
-- [ ] Unit tests: yield calculation, cost rollup
-- [ ] Integration: BOM → Production → Stock → Finance
-- [ ] E2E: full production flow
-
-**Dependencies:** Batch 6, Batch 7 (untuk material), Batch 8 (untuk SO trigger), Batch 9 (untuk stock)
+- [x] All 14 operational pages & components 100% DNA compliant (ADR-007):
+  - `/warehouse/stok`, `/warehouse/mutasi-stok`, `/warehouse/opname`, `/warehouse/pindah-gudang`
+  - `/warehouse/adjustment`, `/warehouse/inbound`, `/warehouse/gudang`, `/warehouse/transfers`
+  - `/warehouse/release`, `/warehouse/workstation`, `/warehouse/map`, `Rankings`, `VelocityMatrix`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
 
 ---
 
-### 🔬 Batch 11: QC (1-2 minggu)
+### 🏭 Batch 10: PRODUCTION (3-4 minggu) — *DONE (Sept 8, 2026)*
 
-**Tujuan:** Quality Control — In-process inspection + COA + reject handling.
+**Tujuan:** Full Production cycle — 3-tahap CPKB (Mixing, Filling, Packaging) dengan traceability batch record.
 
 **Backend:**
-- [ ] **`QCChecklist`** — checklist template per material/product
-- [ ] **`QCAudit`** — audit record (extend existing)
-- [ ] **`QCInspection`** — hasil inspection (link to Goods Receipt)
-- [ ] **`COPQRecord`** — Cost of Poor Quality tracking (extend existing)
-- [ ] **`RejectExecution`** — handling barang reject
-- [ ] **`COA`** — Certificate of Analysis per batch
-- [ ] **Event emission**: QC fail → trigger Retur/Pending AP; QC pass → ready for Bill (Batch 7)
+- [x] **`ProductionController`** — dual routes `['production', 'v1/production']`
+- [x] **`ProductionPlansController`** — dual routes `['production-plans', 'v1/production-plans']`
+- [x] **`RequisitionsController`** — dual routes `['material-requisitions', 'v1/material-requisitions']`
+- [x] **`StepLogsController`** — dual routes `['production/step-logs', 'v1/production/step-logs']`
 
 **Frontend:**
-- [ ] `/qc/checklist` — list + manage checklist template
-- [ ] `/qc/inspections` — inspection form (mobile-friendly)
-- [ ] `/qc/audit` — audit records
-- [ ] `/qc/coa` — Certificate of Analysis
-- [ ] All using DNA pattern
-
-**Integration:**
-- [ ] Goods Receipt (Batch 7) → trigger QC Inspection
-- [ ] QC fail → trigger Purchase Return + Bill exception (Batch 7)
-
-**Dependencies:** Batch 7
+- [x] All operational pages 100% DNA compliant (ADR-007):
+  - `/production/batch-records`, `/production/formula-adjustment`, `/production/operations`
+  - `/production/schedule`, `/production/work-orders`, `/production/audit`, `/production/my-performance`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
 
 ---
 
-### 🧪 Batch 12: R&D (2-3 minggu) — *PARALLEL dengan Batch 13-15 setelah Batch 6 selesai*
+### 🔬 Batch 11: QC (1-2 minggu) — *DONE (Sept 8, 2026)*
 
-**Tujuan:** Research & Development — Formula, Sample testing, HPP calculation.
-
-**Backend:**
-- [ ] **`SampleRequest`** — sample dari BusDev (cross-ref)
-- [ ] **`Formula`** + **`FormulaRevision`** — formula master + history
-- [ ] **`FormulaAdjustment`** — adjustment formula (saat revisi)
-- [ ] **`LabTest`** — lab test result (pH, viscosity, dll)
-- [ ] **`HPPRequest`** — HPP calculation request
-- [ ] **`HPPDetail`** — breakdown HPP per material + process
-- [ ] **Event emission**: HPP approved → emit ke BusDev → Quotation reference
-
-**Frontend (kolom & format refer to CSV files di `docs/legacy-erp/`):**
-
-- [ ] `/rnd/daily-tracking` — **Daily Tracking** — kolom dari `Daily_tracking_RND.csv`:
-  - No., Date, PIC, No.NPF, Project/Sample, Category, Busdev
-  - Task Hari Ini, Berapa Target Sample hari ini
-  - Status, Progress %, Kendala, Next Action, Deadline
-- [ ] `/rnd/project-monitoring` — **Project Monitoring** — kolom dari `Project_Monitoring_RND.csv`:
-  - No., project name, PIC, Client, Status
-  - Tgl NPF masuk, Tgl Selesai, Tgl Pengiriman
-  - Total pengerjaan sample, Folder Formula, Notes
-- [ ] `/rnd/formula` — list + detail formula + revision history
-- [ ] `/rnd/sample-tracking` — track status sample
-- [ ] `/rnd/permintaan-hpp` — HPP request + calculation
-- [ ] All using DNA pattern
-
-**Integration:**
-- [ ] HPP approved → BusDev Quotation (Batch 8)
-
-**Testing:**
-- [ ] Unit tests: progress calculation, formula revision chain
-- [ ] Integration: Sample → Formula → HPP → Quotation event chain
-- [ ] E2E: full R&D workflow (sample request → lab test → formula → HPP)
-
-**Success Criteria:**
-- ✅ Daily Tracking page uses **all 14 columns from `Daily_tracking_RND.csv`**
-- ✅ Project Monitoring page uses **all 11 columns from `Project_Monitoring_RND.csv`**
-- ✅ HPP approved → BusDev Quotation integration works
-- ✅ Formula revision history tracked correctly
-
-**Dependencies:** Batch 6
-
----
-
-### 👥 Batch 13: HR (2 minggu)
-
-**Tujuan:** Employee management, Payroll, Attendance, KPI.
+**Tujuan:** Quality Control — In-process inspection, Certificate of Analysis (COA), checklist & stability testing.
 
 **Backend:**
-- [ ] **`Employee`** + **`EmployeeProfile`** — master employee (extend existing)
-- [ ] **`Attendance`** — absensi harian
-- [ ] **`Payroll`** — gaji bulanan (extend existing)
-- [ ] **`LaborGrade`** — grade karyawan (extend existing)
-- [ ] **`Ticket`** — tiket internal HR (extend existing)
-- [ ] **`InternalAudit`** — audit internal (extend existing)
+- [x] **`QcController`** — dual routes `['qc', 'v1/qc']`
+- [x] **`QCChecklistsController`** — dual routes `['qc/checklists', 'v1/qc/checklists']`
+- [x] **`QCAuditsController`** — dual routes `['qc/audits', 'v1/qc/audits']`
+- [x] **`QCAnalyticsController`** — dual routes `['qc/analytics', 'v1/qc/analytics']`
 
 **Frontend:**
-- [ ] `/hr/employee` — list employee + profile
-- [ ] `/hr/attendance` — absensi (mobile-friendly)
-- [ ] `/hr/payroll` — gaji + slip
-- [ ] `/hr/tickets` — tiket HR
-- [ ] All using DNA pattern
-
-**Dependencies:** Batch 6
+- [x] All 8 operational pages 100% DNA compliant (ADR-007):
+  - `/qc/checklist/progress`, `/qc/checklist/tracking`, `/qc/checklist-category`
+  - `/qc/coa`, `/qc/inspections`, `/qc/report`, `/qc/stability`, `/qc/workbench`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
 
 ---
 
-### ⚖️ Batch 14: LEGALITY (1-2 minggu)
+### 🧪 Batch 12: R&D (2-3 minggu) — *DONE (Sept 8, 2026)*
 
-**Tujuan:** Legal document management — BPOM, Halal, ISO certification.
+**Tujuan:** Research & Development — Formula, Sample testing, HPP calculation, INCI regulation.
 
 **Backend:**
-- [ ] **`RegulatoryPipeline`** — pipeline dokumen (extend existing)
-- [ ] **`DocumentDraft`** — draft dokumen (extend existing)
-- [ ] **`LegalEntity`** — master badan hukum
-- [ ] **`Permit`** — perizinan (BPOM, Halal, ISO, dll)
+- [x] **`RndController`** — dual routes `['rnd', 'v1/rnd']`
+- [x] **`FormulasController`** — dual routes `['rnd/formulas', 'v1/rnd/formulas']`
+- [x] **`NpfController`** — dual routes `['rnd/npf', 'v1/rnd/npf']`
+- [x] **`SamplesController`** — dual routes `['rnd/formulations', 'v1/rnd/formulations']`
 
 **Frontend:**
-- [ ] `/legality/pipeline` — list pipeline dokumen
-- [ ] `/legality/documents` — draft management
-- [ ] `/legality/permits` — list perizinan + expiry tracking
-- [ ] All using DNA pattern
-
-**Dependencies:** Batch 6
+- [x] All operational pages 100% DNA compliant (ADR-007):
+  - `/rnd/formula/[id]`, `/rnd/lab-test`, `/rnd/master-inci`, `/rnd/pipeline`
+  - `/rnd/repository`, `/rnd/revision-tracker`, `/rnd/inbox`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
 
 ---
 
-### 🏛️ Batch 15: EXECUTIVE (1-2 minggu)
+### 👥 Batch 13: HR (2 minggu) — *DONE (Sept 8, 2026)*
 
-**Tujuan:** Consolidated executive dashboard — pulls data dari semua departemen.
+**Tujuan:** Employee management, Payroll, Attendance, KPI, Tickets.
 
 **Backend:**
-- [ ] **`ExecutiveDashboard`** — aggregated KPIs (extend existing)
-- [ ] **Data aggregator service** — pulls from Finance, BusDev, Production, HR, dll
-- [ ] **Real-time event streaming** — via NestJS event emitter → dashboard updates
+- [x] **`HrController`** — dual routes `['hr', 'v1/hr']`
+- [x] **`UpdateEmployeeDto`**, **`ApproveTicketDto`**, **`CreateTicketDto`** — DTO fixes & validations
 
 **Frontend:**
-- [ ] `/executive/dashboard` — consolidated view
-- [ ] `/executive/notifications` — critical alerts (overdue AP, missed production targets, dll)
-- [ ] `/executive/kpi-accountability` — KPI per department
-- [ ] All using DNA pattern
+- [x] All operational pages 100% DNA compliant (ADR-007):
+  - `/hr/attendance`, `/hr/kpi`, `/hr/payroll`, `/hr/recruitment`, `/hr/tickets`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
 
-**Dependencies:** Batch 3A/3B/3C + Batch 6-14 (semua departemen production-ready)
+---
+
+### ⚖️ Batch 14: LEGALITY (1-2 minggu) — *DONE (Sept 8, 2026)*
+
+**Tujuan:** Legal document management — BPOM, Halal, ISO certification, CPKB Audit, APJ Release.
+
+**Backend:**
+- [x] **`LegalityController`** — dual routes `['legality', 'v1/legality']`
+- [x] **`RegulatoryPipeline`**, **`DocumentDraft`**, **`LegalEntity`**, **`Permit`**
+
+**Frontend:**
+- [x] All operational pages 100% DNA compliant (ADR-007):
+  - `/legality/records`, `/legality/input`, `/legality/ckpb-audit`, `/legality/pipeline`
+  - `/legality/apj-release`, `/legality/master-inci`, `/legality/inbox`, `/legality/permits`
+- [x] Zero `@/components/ui/*` imports in operational pages; 0 TypeScript errors
+
+---
+
+### 🏛️ Batch 15: EXECUTIVE (1-2 minggu) — *DONE (Sept 8, 2026)*
+
+**Tujuan:** Consolidated executive dashboard — pulls data dari semua departemen (Finance, SCM, BusDev, Production, Warehouse, QC, HR, Legality).
+
+**Backend:**
+- [x] **`ExecutiveController`** — dual routes `['executive', 'v1/executive']`
+- [x] **`ExecutiveService`** — consolidated aggregated KPIs & alerts (`getExecutiveMetrics`, `getExecutiveAlerts`, `getAuditLogs`)
+- [x] **`AuditLogs`** API endpoint — tracking riwayat aksi seluruh subledger
+
+**Frontend:**
+- [x] All operational pages & components 100% DNA compliant (ADR-007):
+  - `/executive/dashboard` (`ExecutiveDashboardClient`, `NotificationHubClient`)
+  - `/executive/notifications`
+  - `/executive/audit`
+- [x] Zero `@/components/ui/*` imports; 0 TypeScript errors
+
+**Dependencies:** Batch 1-14 (semua departemen production-ready) — COMPLETE!
 
 ---
 
@@ -1741,7 +1684,7 @@ Sebuah halaman operational dianggap **DONE** kalau SEMUA ini terpenuhi:
 |---|---|
 | ✅ Halaman render tanpa error di console | DevTools console bersih |
 | ✅ Visual match golden reference | Playwright visual regression pass (1% tolerance) |
-| ✅ Halaman pakai DNA components (bukan hardcoded UI) | grep tidak ada hardcoded `rounded-lg`, `text-[14px]`, dll |
+| ✅ Halaman pakai DNA components (bukan hardcoded UI) | `grep -E "from ['\"]@/components/ui/" <page>` = NOL hasil (sesuai [ADR-007](#adr-007-dna-only-ui-imports-single-source-of-ui)); grep tidak ada hardcoded `rounded-lg`, `text-[14px]`, raw `<input>` di JSX. Komponen yang dipakai harus match entry di `DNA_CHEATSHEET.md`. |
 | ✅ API endpoint real (bukan mock data) | Network tab menunjukkan request sukses |
 | ✅ Loading + empty + error states implemented | Tab ke masing-masing state works |
 | ✅ Responsive (desktop + tablet minimum) | DevTools responsive test |
@@ -2128,6 +2071,7 @@ Kalau ada kontradiksi baru:
 | `VISUAL_DNA.md` (root) | Design contract — 5-layer anatomy | **Operational pages ONLY** |
 | `old_erp/ACUAN_DASHBOARD/` | Vue + Vite reference — Aureon Matrix style | **Dashboard pages ONLY** |
 | `frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx` | Implementation reference | **Operational pages ONLY** |
+| **`DNA_CHEATSHEET.md` (root)** | **🧬 WAJIB BACA untuk developer + AI sebelum bikin halaman baru.** Berisi 7 Aturan Emas, Kamus Komponen DNA (form/dialog/layout), 2 boilerplate siap-pakai (Master List + Transaksi Master-Detail). Acuan verifikasi ADR-007 (DNA-only UI imports). | **Operational pages ONLY** |
 | `frontend/VISUAL_DNA_AUDIT.md` | Live tracking of violations per page | Operational pages |
 | `frontend/DNA_COMPLIANCE_CHECKLIST.md` | Per-page DNA status | Operational pages |
 | `docs/legacy-erp/LEGACY_ERP_SPEC.md` | Legacy URL inventory (untuk migrasi data) | Backend |

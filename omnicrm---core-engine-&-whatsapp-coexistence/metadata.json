@@ -1,0 +1,7 @@
+{
+  "name": "OmniCRM - Dreamlab Maklon Kosmetik & WhatsApp Coexistence",
+  "description": "Dreamlab Maklon Kosmetik CRM Core Engine untuk manajemen leads, filter sumber trafik (Google Ads, Meta Ads, Link Tree, Google Organic, Junk Leads), pipeline stage overview (Cold, Warm, Hot, Sample, Junk), WhatsApp Coexistence, dan Klaviyo-style audience segmentation broadcast.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

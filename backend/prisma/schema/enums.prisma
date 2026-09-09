@@ -42,6 +42,9 @@ enum LeadSource {
   LINKTREE
   GOOGLE
   OFFLINE
+  WEBSITE
+  DIRECT
+  REFERRAL
 }
 
 enum LeadStatus {

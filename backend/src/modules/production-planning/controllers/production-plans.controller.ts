@@ -20,7 +20,7 @@ import {
 import { CreateStepLogDto } from '../dto/step-log.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('production-plans')
+@Controller(['production-plans', 'v1/production-plans'])
 export class ProductionPlansController {
   constructor(private readonly plansService: ProductionPlansService) {}
 

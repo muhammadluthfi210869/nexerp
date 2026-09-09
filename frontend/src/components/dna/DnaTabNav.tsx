@@ -67,7 +67,13 @@ export function DnaTabNav({
             )}
           >
             {IconComponent && (
-              <IconComponent className={cn(isCompact ? "w-3.5 h-3.5" : "w-4 h-4", isActive ? "text-white" : "text-slate-400")} />
+              React.isValidElement(IconComponent) ? (
+                IconComponent
+              ) : (
+                React.createElement(IconComponent as any, {
+                  className: cn(isCompact ? "w-3.5 h-3.5" : "w-4 h-4", isActive ? "text-white" : "text-slate-400"),
+                })
+              )
             )}
             <span>{tab.label}</span>
             {tab.badge !== undefined && (

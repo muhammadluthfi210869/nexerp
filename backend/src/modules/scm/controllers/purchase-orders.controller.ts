@@ -24,7 +24,7 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 @ApiTags('scm')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('v1/scm/purchase-orders')
+@Controller(['scm/purchase-orders', 'v1/scm/purchase-orders'])
 export class PurchaseOrdersController {
   constructor(private readonly poService: PurchaseOrdersService) {}
 
@@ -75,4 +75,5 @@ export class PurchaseOrdersController {
   @ApiOperation({ summary: 'Get HPP breakdown for a material' })
   getHppBreakdown(@Param('id') id: string) {
     return this.poService.getHppBreakdown(id);
-  }}
+  }
+}

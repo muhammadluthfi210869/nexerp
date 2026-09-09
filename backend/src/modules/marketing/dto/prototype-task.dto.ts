@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsArray, IsUrl, IsISO8601, IsNumber, IsDateString, MaxLength, MinLength, IsIn, ArrayMaxSize, Matches } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsArray, IsUrl, IsISO8601, IsNumber, IsDateString, MaxLength, MinLength, IsIn, ArrayMaxSize, Matches, ValidateIf } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateTaskDto {
@@ -46,8 +46,8 @@ export class CreateTaskDto {
   priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
 
   @IsOptional()
-  @IsIn(['Not started', 'Working on it', 'Revision', 'Done'])
-  status?: 'Not started' | 'Working on it' | 'Revision' | 'Done';
+  @IsIn(['Not started', 'Working on it', 'Progress', 'In Progress', 'Revision', 'Done'])
+  status?: 'Not started' | 'Working on it' | 'Progress' | 'In Progress' | 'Revision' | 'Done';
 
   @IsOptional()
   @IsIn(['Healthy', 'Watch', 'Late'])
@@ -106,9 +106,10 @@ export class CreateTaskDto {
   brief?: string;
 
   @IsOptional()
+  @ValidateIf((o) => typeof o.link === 'string' && o.link.trim().length > 0)
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   @MaxLength(500)
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @Transform(({ value }) => (typeof value === 'string' && value.trim() === '' ? undefined : (typeof value === 'string' ? value.trim() : value)))
   link?: string;
 
   @IsOptional()
@@ -161,8 +162,8 @@ export class UpdateTaskDto {
   priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
 
   @IsOptional()
-  @IsIn(['Not started', 'Working on it', 'Revision', 'Done'])
-  status?: 'Not started' | 'Working on it' | 'Revision' | 'Done';
+  @IsIn(['Not started', 'Working on it', 'Progress', 'In Progress', 'Revision', 'Done'])
+  status?: 'Not started' | 'Working on it' | 'Progress' | 'In Progress' | 'Revision' | 'Done';
 
   @IsOptional()
   @IsString()
@@ -185,9 +186,10 @@ export class UpdateTaskDto {
   brief?: string;
 
   @IsOptional()
+  @ValidateIf((o) => typeof o.link === 'string' && o.link.trim().length > 0)
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   @MaxLength(500)
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @Transform(({ value }) => (typeof value === 'string' && value.trim() === '' ? undefined : (typeof value === 'string' ? value.trim() : value)))
   link?: string;
 
   @IsOptional()
@@ -198,8 +200,8 @@ export class UpdateTaskDto {
 }
 
 export class UpdateTaskStatusDto {
-  @IsIn(['Not started', 'Working on it', 'Revision', 'Done'])
-  status!: 'Not started' | 'Working on it' | 'Revision' | 'Done';
+  @IsIn(['Not started', 'Working on it', 'Progress', 'In Progress', 'Revision', 'Done'])
+  status!: 'Not started' | 'Working on it' | 'Progress' | 'In Progress' | 'Revision' | 'Done';
 
   @IsOptional()
   @IsString()

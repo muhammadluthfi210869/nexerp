@@ -33,7 +33,7 @@ import { UserRole, SOStatus } from '@prisma/client';
 
 @ApiTags('bussdev')
 @ApiBearerAuth()
-@Controller('bussdev')
+@Controller(['bussdev', 'v1/bussdev'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class BussdevController {
   constructor(private readonly bussdevService: BussdevService) {}

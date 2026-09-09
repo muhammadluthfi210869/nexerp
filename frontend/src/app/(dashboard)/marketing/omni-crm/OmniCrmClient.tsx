@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BentoOverview } from './components/BentoOverview';
 import { PipelineKanban } from './components/PipelineKanban';
 import { BusDevManager } from './components/BusDevManager';
@@ -24,15 +24,12 @@ import {
   MessageSquare,
   Radio,
   Terminal,
-  RotateCcw,
   UserPlus,
   LayoutGrid,
   Settings,
   Sparkles,
   TrendingUp,
-  ChevronDown,
   CheckCircle2,
-  Check,
   RefreshCw,
 } from 'lucide-react';
 
@@ -48,7 +45,6 @@ import type {
 } from './types';
 import { INITIAL_STATE, FIVE_STAGE_FUNNEL } from './initialState';
 import {
-  intakeGuestbook,
   toggleBusdevStatus,
   moveLeadStage,
   syncWhatsappMessage,
@@ -76,21 +72,12 @@ import {
   useDreamlabRrSummary,
 } from '@/hooks/useOmniCrmConversations';
 import { useOmniCrmStateSync } from '@/hooks/useOmniCrmState';
+import { useAuth } from '@/hooks/useAuth';
 
 const STORAGE_KEY = 'erp_omnicrm_real_v1';
 
-// Default user is Super Admin
-const DEFAULT_ACCOUNT: AppAccount = {
-  id: 'admin',
-  name: 'DREAMLAB MASTER ADMIN',
-  role: 'SUPER_ADMIN',
-  isSuperAdmin: true,
-  phone: '6281100001111',
-  avatar: '👑',
-  whatsappAccountKey: 'BUSDEV_1',
-};
-
 export default function OmniCrmClient() {
+  const { user: authenticatedUser } = useAuth();
   const [state, setState] = useState<CRMState>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -167,9 +154,6 @@ export default function OmniCrmClient() {
     return INITIAL_STATE;
   });
 
-  // Current logged in account context (Super Admin vs individual BusDev)
-  const [currentUser, setCurrentUser] = useState<AppAccount>(DEFAULT_ACCOUNT);
-
   const [activeTab, setActiveTab] = useState<
     'bento' | 'kanban' | 'whatsapp' | 'busdev' | 'broadcast' | 'console'
   >('bento');
@@ -187,21 +171,6 @@ export default function OmniCrmClient() {
   // Floating Notification Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Multi-Account Switcher State
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const accountMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close account menu on click outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
-        setIsAccountMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   // Calculated KPI Metrics for Layer 02 Stat Cards
   const activeBusDevCount = (state.busDevs || []).filter((b) => b.status === 'AKTIF').length;
   const totalLeads = (state.leads || []).length;
@@ -211,8 +180,8 @@ export default function OmniCrmClient() {
   const totalPipelineValue = (state.leads || []).reduce((acc, l) => acc + (l.value || 0), 0);
 
   // Real Backend API Queries & Mutations (Meta Cloud API Integration)
-  const { data: serverConversations, refetch: refetchConversations, isFetching: isSyncingBackend } = useConversations();
-  const { data: serverBusDevs } = useBusDevs();
+  const { data: serverConversations, refetch: refetchConversations, isFetching: isSyncingBackend, isError: conversationsError } = useConversations();
+  const { data: serverBusDevs, isError: busDevsError } = useBusDevs();
   const sendMutation = useSendMessage();
   const intakeMutation = useIntakeGuestbook();
   const updateLeadMutation = useUpdateLead();
@@ -220,6 +189,22 @@ export default function OmniCrmClient() {
   const { data: activeServerThread } = useMessages(selectedLeadForChatId);
   const syncDreamlabRrMutation = useSyncDreamlabRr();
   useOmniCrmStateSync();
+
+  const matchedBusDev = (serverBusDevs || []).find((busDev) =>
+    busDev.name.toLowerCase().includes((authenticatedUser?.fullName || '').toLowerCase()) ||
+    (authenticatedUser?.fullName || '').toLowerCase().includes(busDev.name.toLowerCase()),
+  );
+  const isSuperAdmin = Boolean(
+    authenticatedUser?.roles?.some((role) => ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR'].includes(role)),
+  );
+  const currentUser: AppAccount = {
+    id: authenticatedUser?.id || '',
+    name: authenticatedUser?.fullName || authenticatedUser?.email || 'Pengguna belum terautentikasi',
+    role: isSuperAdmin ? 'SUPER_ADMIN' : 'BUSDEV',
+    phone: matchedBusDev?.phone || '',
+    isSuperAdmin,
+    whatsappAccountKey: matchedBusDev?.whatsappAccountKey,
+  };
 
   const handleSyncWebsiteRr = async () => {
     try {
@@ -294,7 +279,7 @@ export default function OmniCrmClient() {
 
   // Sync Real BusDevs from Backend Database
   useEffect(() => {
-    if (!serverBusDevs || !Array.isArray(serverBusDevs) || serverBusDevs.length === 0) return;
+    if (!serverBusDevs || !Array.isArray(serverBusDevs)) return;
     setState((prevState) => ({
       ...prevState,
       busDevs: serverBusDevs as any,
@@ -306,15 +291,6 @@ export default function OmniCrmClient() {
     if (!serverConversations || !Array.isArray(serverConversations)) return;
 
     setState((prevState) => {
-      // Filter out any legacy dummy mock leads (e.g. lead_28981912, dr. Maya, Neil Royan, etc.)
-      const cleanedExistingLeads = (prevState.leads || []).filter(
-        (l) =>
-          !l.id.startsWith('lead_28') &&
-          !l.id.startsWith('lead_11') &&
-          !l.id.startsWith('lead_10') &&
-          !l.id.startsWith('lead_junk')
-      );
-      const existingLeadIds = new Set(cleanedExistingLeads.map((l) => l.id));
       const newLeads: Lead[] = [];
       const newMessages: WhatsAppMessage[] = [];
 
@@ -353,10 +329,7 @@ export default function OmniCrmClient() {
           isAnswered: conv.lastDirection === 'OUTBOUND',
         };
 
-        if (!existingLeadIds.has(realLead.id)) {
-          newLeads.push(realLead);
-          existingLeadIds.add(realLead.id);
-        }
+        newLeads.push(realLead);
 
         if (conv.lastMessage) {
           newMessages.push({
@@ -372,7 +345,8 @@ export default function OmniCrmClient() {
         }
       }
 
-      const mergedLeads = [...newLeads, ...cleanedExistingLeads];
+      // PostgreSQL conversations are authoritative. Never merge browser/demo leads.
+      const mergedLeads = newLeads;
 
       // Dynamic calculation of trafficSources
       const updatedTrafficSources = (prevState.trafficSources || []).map((src) => {
@@ -398,10 +372,15 @@ export default function OmniCrmClient() {
         ...prevState,
         leads: mergedLeads,
         trafficSources: updatedTrafficSources,
-        messages: [...newMessages, ...(prevState.messages || []).filter((m) => !m.id.startsWith('msg_10') && !m.id.startsWith('msg_11') && !m.id.startsWith('msg_12'))],
+        messages: newMessages,
       };
     });
   }, [serverConversations]);
+
+  useEffect(() => {
+    if (!conversationsError) return;
+    setState((previous) => ({ ...previous, leads: [], messages: [] }));
+  }, [conversationsError]);
 
   // The selected conversation uses the complete canonical database history,
   // replacing the sidebar preview message for that lead.
@@ -452,30 +431,22 @@ export default function OmniCrmClient() {
   }, [currentUser, state.leads]);
 
   // CORE ENGINE HANDLERS
-  const handleIntakeGuestbook = (params: IntakeGuestbookParams) => {
-    const result = intakeGuestbook(state, params);
-    setState(result.newState);
-    setSelectedLeadForChatId(result.newLead.id);
-    showToast(result.log.resultSummary);
-
-    // Call Real Backend API in background if phone is provided
-    if (params.phone) {
-      intakeMutation.mutate(
-        {
-          name: params.name,
-          phone: params.phone,
-          source: params.source,
-          notes: params.notes,
-        },
-        {
-          onSuccess: (res) => {
-            console.log('[Backend Intake Sync OK]', res);
-          },
-          onError: (err) => {
-            console.warn('[Backend Intake Sync Failed/Mock Active]', err);
-          },
-        }
-      );
+  const handleIntakeGuestbook = async (params: IntakeGuestbookParams) => {
+    if (!params.phone) {
+      showToast('Nomor WhatsApp wajib diisi agar prospek dapat disimpan ke server.');
+      return;
+    }
+    try {
+      const result = await intakeMutation.mutateAsync({
+        name: params.name,
+        phone: params.phone,
+        source: params.source,
+        notes: params.notes,
+      });
+      await refetchConversations();
+      showToast(`Prospek ${result.trackingCode} berhasil disimpan ke server.`);
+    } catch (error) {
+      showToast(`Prospek gagal disimpan: ${(error as Error).message}`);
     }
   };
 
@@ -643,45 +614,6 @@ export default function OmniCrmClient() {
     showToast('Berhasil menerapkan 5-Stage Core Funnel (COLD - WARM - HOT - SAMPLE - CLIENT DEAL) ke semua pipeline!');
   };
 
-  const handleResetState = () => {
-    if (window.confirm('Reset database kembali ke kondisi awal Dreamlab CRM?')) {
-      setState(INITIAL_STATE);
-      setCurrentUser(DEFAULT_ACCOUNT);
-      setSelectedLeadForChatId(INITIAL_STATE.leads[0]?.id || null);
-      showToast('Database Mock berhasil direset ke kondisi awal!');
-    }
-  };
-
-  const handleSimulateIntake = (count: number) => {
-    const sampleNames = [
-      'Brand Kosmetik Glow',
-      'CV Herbal Alam Sejahtera',
-      'PT Cantik Nusantara',
-      'Skincare Organik Indonesia',
-      'Brand Serum Premium',
-    ];
-    const sampleSources = ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Buku Tamu Booth A'];
-    let currentState = state;
-    for (let i = 0; i < count; i++) {
-      const randomName =
-        sampleNames[Math.floor(Math.random() * sampleNames.length)] +
-        ` #${Math.floor(Math.random() * 900 + 100)}`;
-      const randomPhone = `6281${Math.floor(10000000 + Math.random() * 90000000)}`;
-      const randomSource = sampleSources[Math.floor(Math.random() * sampleSources.length)];
-      const res = intakeGuestbook(currentState, {
-        name: randomName,
-        phone: randomPhone,
-        source: randomSource,
-        pipeline_id: 'pipe_round_robin',
-        notes: 'Inquiry maklon kosmetik baru.',
-        value: 30000000,
-      });
-      currentState = res.newState;
-    }
-    setState(currentState);
-    showToast(`Berhasil mensimulasikan ${count} lead masuk secara rotasi Round-Robin ${(state.busDevs || []).length} BusDev!`);
-  };
-
   // Tool Invoker from Engine Console
   const handleExecuteToolByName = (toolName: string, params: Record<string, any>) => {
     switch (toolName) {
@@ -733,96 +665,14 @@ export default function OmniCrmClient() {
         ]}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            {/* Multi-Account Switcher */}
-            <div className="relative" ref={accountMenuRef}>
-              <button
-                type="button"
-                id="btn-account-switcher"
-                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                className="flex items-center gap-2 h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-[12px] font-semibold shadow-2xs cursor-pointer transition-colors"
-                title="Ganti Akun & Nomor WhatsApp"
-              >
-                <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
-                    currentUser.isSuperAdmin ? 'bg-blue-600' : 'bg-emerald-600'
-                  }`}
-                >
-                  {currentUser.isSuperAdmin ? '👑' : currentUser.name.charAt(0)}
-                </div>
-                <div className="text-left hidden sm:block">
-                  <span className="font-bold text-[12px] truncate max-w-[120px] block leading-tight">
-                    {currentUser.name}
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-mono block leading-tight">
-                    {currentUser.isSuperAdmin ? 'SUPER ADMIN' : currentUser.phone}
-                  </span>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              </button>
-
-              {isAccountMenuOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="px-3 py-1.5 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    Pilih Akun WhatsApp
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentUser(DEFAULT_ACCOUNT);
-                      setIsAccountMenuOpen(false);
-                      showToast('Beralih akun: Super Admin (Akses Penuh Semua Chat)');
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 transition cursor-pointer ${
-                      currentUser.isSuperAdmin ? 'bg-blue-50/50 font-bold text-blue-700' : 'text-slate-700'
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                      👑
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold truncate">DREAMLAB MASTER ADMIN</div>
-                      <div className="text-[10px] text-slate-500 font-mono">Akses Semua Chat & Gateway</div>
-                    </div>
-                    {currentUser.isSuperAdmin && <Check className="w-4 h-4 text-blue-600" />}
-                  </button>
-
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-t border-slate-100 mt-1">
-                    BusDev Representative
-                  </div>
-                  {(state.busDevs || []).map((busdev) => (
-                    <button
-                      key={busdev.id}
-                      type="button"
-                      onClick={() => {
-                        setCurrentUser({
-                          id: busdev.id,
-                          name: busdev.name,
-                          role: 'BUSDEV',
-                          phone: busdev.phone || '6281200000000',
-                          avatar: busdev.avatar || '👤',
-                          specialty: busdev.specialty,
-                          isSuperAdmin: false,
-                          whatsappAccountKey: busdev.whatsappAccountKey,
-                        });
-                        setIsAccountMenuOpen(false);
-                        showToast(`Beralih akun: ${busdev.name} (Khusus Nomor ${busdev.formattedPhone || busdev.phone})`);
-                      }}
-                      className={`w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 transition cursor-pointer ${
-                        currentUser.id === busdev.id ? 'bg-emerald-50/50 font-bold text-emerald-700' : 'text-slate-700'
-                      }`}
-                    >
-                      <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
-                        {busdev.avatar || busdev.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold truncate">{busdev.name}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{busdev.formattedPhone || busdev.phone}</div>
-                      </div>
-                      {currentUser.id === busdev.id && <Check className="w-4 h-4 text-emerald-600" />}
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center gap-2 h-9 px-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold shadow-2xs">
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${currentUser.isSuperAdmin ? 'bg-blue-600' : 'bg-emerald-600'}`}>
+                {currentUser.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="text-left hidden sm:block">
+                <span className="font-bold text-[12px] truncate max-w-[150px] block leading-tight">{currentUser.name}</span>
+                <span className="text-[10px] text-slate-500 block leading-tight">Akun terautentikasi</span>
+              </div>
             </div>
 
             <button
@@ -841,15 +691,6 @@ export default function OmniCrmClient() {
               title="Salesbot Automation Flow"
             >
               <Sparkles className="w-4 h-4 text-blue-600" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResetState}
-              className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs flex items-center justify-center cursor-pointer"
-              title="Reset Demo State"
-            >
-              <RotateCcw className="w-4 h-4 text-slate-500" />
             </button>
 
             <button
@@ -878,6 +719,12 @@ export default function OmniCrmClient() {
         }
       />
 
+      {(conversationsError || busDevsError) && (
+        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800">
+          Data OmniCRM tidak tersedia karena API gagal dimuat. Angka lama atau data contoh tidak ditampilkan.
+        </div>
+      )}
+
       {/* Layer 02: 4 KPI Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
         <DnaStatCard
@@ -889,8 +736,8 @@ export default function OmniCrmClient() {
         />
         <DnaStatCard
           label="ESTIMASI PIPELINE"
-          value={totalPipelineValue > 0 ? `Rp ${(totalPipelineValue / 1000000).toFixed(0)} Jt` : 'Rp 1.85 M'}
-          subtext="5-Stage Funnel Aktif"
+          value={totalPipelineValue > 0 ? `Rp ${(totalPipelineValue / 1000000).toFixed(0)} Jt` : '—'}
+          subtext={totalPipelineValue > 0 ? 'Sumber: database prospek' : 'Nilai pipeline belum tersedia dari API'}
           icon={<TrendingUp className="w-4 h-4" />}
           variant="emerald"
         />
@@ -985,7 +832,6 @@ export default function OmniCrmClient() {
             state={state}
             currentUser={currentUser}
             onToggleBusdev={handleToggleBusdev}
-            onSimulateIntake={handleSimulateIntake}
           />
         )}
 
@@ -1048,9 +894,6 @@ export default function OmniCrmClient() {
         onClose={() => setIsSalesbotOpen(false)}
         state={state}
         onSaveFlow={handleSaveAutomationFlow}
-        onSimulateInboundMessage={(leadId, msg) => {
-          handleSyncWhatsapp(leadId, msg, 'INBOUND', 'WHATSAPP_CLIENT');
-        }}
       />
 
       {/* Realtime Toast Notification */}

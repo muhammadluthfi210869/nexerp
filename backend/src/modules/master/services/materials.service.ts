@@ -1,4 +1,4 @@
-﻿import { Logger, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Logger, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
 
@@ -95,12 +95,25 @@ export class MaterialsService {
       where: { id },
       include: {
         category: true,
+        inventoryAccount: true,
+        salesAccount: true,
+        inventories: {
+          include: { location: true, supplier: true },
+          orderBy: { lastRestock: 'desc' },
+        },
       },
     });
     if (!item || item.deletedAt) {
       throw new NotFoundException('Material not found');
     }
     return item;
+  }
+
+  private sanitizeUuid(val?: string | null): string | null {
+    if (!val || typeof val !== 'string') return null;
+    const trimmed = val.trim();
+    if (trimmed === '' || trimmed === 'ALL' || trimmed.toLowerCase() === 'null') return null;
+    return trimmed;
   }
 
   async create(dto: CreateMaterialDto) {
@@ -113,22 +126,38 @@ export class MaterialsService {
       }
     }
 
+    const categoryId = this.sanitizeUuid(dto.categoryId);
+    const inventoryAccountId = this.sanitizeUuid(dto.inventoryAccountId);
+    const salesAccountId = this.sanitizeUuid(dto.salesAccountId);
+
     return this.prisma.materialItem.create({
       data: {
         code: dto.code || undefined,
         name: dto.name,
         type: (dto.type as any) || 'RAW_MATERIAL',
         unit: dto.unit || 'pcs',
-        unitPrice: dto.unitPrice || 0,
-        minLevel: dto.minLevel || 0,
-        maxLevel: dto.maxLevel || 100000,
-        reorderPoint: dto.reorderPoint || 10,
-        categoryId: dto.categoryId || null,
+        usageUnit: dto.usageUnit || null,
+        outMethod: (dto.outMethod as any) || 'FIFO',
+        leadTime: dto.leadTime !== undefined ? Number(dto.leadTime) : 0,
+        unitPrice: dto.unitPrice !== undefined ? Number(dto.unitPrice) : 0,
+        stockQty: dto.stockQty !== undefined ? Number(dto.stockQty) : 0,
+        minLevel: dto.minLevel !== undefined ? Number(dto.minLevel) : 0,
+        maxLevel: dto.maxLevel !== undefined ? Number(dto.maxLevel) : 100000,
+        reorderPoint: dto.reorderPoint !== undefined ? Number(dto.reorderPoint) : 10,
+        categoryId,
+        inventoryAccountId,
+        salesAccountId,
         inciName: dto.inciName || null,
         status: (dto.status as any) || 'ACTIVE',
+        physicalForm: dto.physicalForm || null,
+        halalCertNo: dto.halalCertNo || null,
+        halalExpDate: dto.halalExpDate ? new Date(dto.halalExpDate) : null,
+        isHalalValidated: Boolean(dto.isHalalValidated),
       },
       include: {
         category: true,
+        inventoryAccount: true,
+        salesAccount: true,
       },
     });
   }
@@ -155,16 +184,30 @@ export class MaterialsService {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.type !== undefined && { type: dto.type as any }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
-        ...(dto.unitPrice !== undefined && { unitPrice: dto.unitPrice }),
-        ...(dto.minLevel !== undefined && { minLevel: dto.minLevel }),
-        ...(dto.maxLevel !== undefined && { maxLevel: dto.maxLevel }),
-        ...(dto.reorderPoint !== undefined && { reorderPoint: dto.reorderPoint }),
-        ...(dto.categoryId !== undefined && { categoryId: dto.categoryId || null }),
+        ...(dto.usageUnit !== undefined && { usageUnit: dto.usageUnit || null }),
+        ...(dto.outMethod !== undefined && { outMethod: dto.outMethod as any }),
+        ...(dto.leadTime !== undefined && { leadTime: Number(dto.leadTime) }),
+        ...(dto.unitPrice !== undefined && { unitPrice: Number(dto.unitPrice) }),
+        ...(dto.stockQty !== undefined && { stockQty: Number(dto.stockQty) }),
+        ...(dto.minLevel !== undefined && { minLevel: Number(dto.minLevel) }),
+        ...(dto.maxLevel !== undefined && { maxLevel: Number(dto.maxLevel) }),
+        ...(dto.reorderPoint !== undefined && { reorderPoint: Number(dto.reorderPoint) }),
+        ...(dto.categoryId !== undefined && { categoryId: this.sanitizeUuid(dto.categoryId) }),
+        ...(dto.inventoryAccountId !== undefined && { inventoryAccountId: this.sanitizeUuid(dto.inventoryAccountId) }),
+        ...(dto.salesAccountId !== undefined && { salesAccountId: this.sanitizeUuid(dto.salesAccountId) }),
         ...(dto.inciName !== undefined && { inciName: dto.inciName || null }),
         ...(dto.status !== undefined && { status: dto.status as any }),
+        ...(dto.physicalForm !== undefined && { physicalForm: dto.physicalForm || null }),
+        ...(dto.halalCertNo !== undefined && { halalCertNo: dto.halalCertNo || null }),
+        ...(dto.halalExpDate !== undefined && {
+          halalExpDate: dto.halalExpDate ? new Date(dto.halalExpDate) : null,
+        }),
+        ...(dto.isHalalValidated !== undefined && { isHalalValidated: Boolean(dto.isHalalValidated) }),
       },
       include: {
         category: true,
+        inventoryAccount: true,
+        salesAccount: true,
       },
     });
   }

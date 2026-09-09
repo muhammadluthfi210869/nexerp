@@ -402,3 +402,104 @@ model MarketingProject {
 
   @@map("marketing_projects")
 }
+
+// ── Notion Social Media Planner & Meta Hub ───────────────────────────────
+
+model SocialPost {
+  id             String                @id @default(uuid()) @db.Uuid
+  title          String                @db.VarChar(255)
+  platform       String                @default("instagram") @db.VarChar(50) // instagram, facebook, tiktok, threads, youtube, linkedin
+  contentType    String                @default("single_post") @db.VarChar(50) // reel, carousel, single_post, story, video, live
+  status         String                @default("idea") @db.VarChar(50) // idea, scripting, review, scheduled, published, archived
+  scheduledDate  DateTime?
+  publishedDate  DateTime?
+  pillar         String                @default("Educational") @db.VarChar(100)
+  caption        String                @default("") @db.Text
+  hooks          String[]              @default([])
+  cta            String                @default("") @db.VarChar(255)
+  hashtags       String[]              @default([])
+  coverImage     String?               @db.Text
+  mediaUrls      String[]              @default([])
+  authorName     String                @default("Marketing Team") @db.VarChar(100)
+  authorAvatar   String?               @db.Text
+  authorRole     String                @default("Content Creator") @db.VarChar(100)
+  metaPostId     String?               @db.VarChar(100)
+  metaPermalink  String?               @db.Text
+  notes          String?               @db.Text
+  targetAudience String?               @db.VarChar(255)
+  campaign       String?               @db.VarChar(255)
+  calloutText    String?               @db.Text
+  calloutEmoji   String?               @db.VarChar(20)
+  
+  // Performance metrics cache
+  reach          Int                   @default(0)
+  impressions    Int                   @default(0)
+  likes          Int                   @default(0)
+  comments       Int                   @default(0)
+  shares         Int                   @default(0)
+  saves          Int                   @default(0)
+  videoViews     Int                   @default(0)
+  clicks         Int                   @default(0)
+  engagementRate Decimal               @default(0) @db.Decimal(5, 2)
+  viralityScore  Int                   @default(0)
+  costPerResult  Decimal               @default(0) @db.Decimal(12, 2)
+
+  checklist      SocialChecklistItem[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([platform])
+  @@index([status])
+  @@index([scheduledDate])
+  @@map("social_posts")
+}
+
+model SocialChecklistItem {
+  id        String     @id @default(uuid()) @db.Uuid
+  postId    String     @db.Uuid
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  text      String     @db.VarChar(255)
+  done      Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([postId])
+  @@map("social_checklist_items")
+}
+
+model CampaignOkr {
+  id              String   @id @default(uuid()) @db.Uuid
+  title           String   @db.VarChar(255)
+  objective       String   @db.Text
+  targetMetric    String   @db.VarChar(100)
+  currentValue    Decimal  @default(0) @db.Decimal(15, 2)
+  targetValue     Decimal  @default(0) @db.Decimal(15, 2)
+  unit            String   @default("") @db.VarChar(50)
+  startDate       DateTime?
+  endDate         DateTime?
+  status          String   @default("on_track") @db.VarChar(50)
+  color           String   @default("#1877F2") @db.VarChar(50)
+  associatedPosts String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("campaign_okrs")
+}
+
+model MetaAccountConfig {
+  id                String   @id @default("singleton") @db.VarChar(50)
+  accessToken       String   @default("") @db.Text
+  pageId            String   @default("") @db.VarChar(100)
+  pageName          String   @default("Dreamlab Indonesia") @db.VarChar(255)
+  igAccountId       String   @default("") @db.VarChar(100)
+  igUsername        String   @default("@dreamlab.official") @db.VarChar(255)
+  profilePictureUrl String?  @db.Text
+  isConnected       Boolean  @default(false)
+  isLiveApi         Boolean  @default(false)
+  tokenExpiresAt    DateTime?
+  followersCount    Int      @default(0)
+  igFollowersCount  Int      @default(0)
+  updatedAt         DateTime @updatedAt
+
+  @@map("meta_account_configs")
+}

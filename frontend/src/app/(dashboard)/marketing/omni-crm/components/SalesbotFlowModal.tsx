@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   X,
   Bot,
-  Play,
   Check,
   Plus,
   Trash2,
@@ -13,7 +12,6 @@ import {
   FolderKanban,
   MessageSquare,
   ShieldCheck,
-  Zap,
 } from 'lucide-react';
 import { CRMState, AutomationFlow, AutomationRuleCondition } from '../types';
 
@@ -22,7 +20,6 @@ interface SalesbotFlowModalProps {
   onClose: () => void;
   state: CRMState;
   onSaveFlow: (flow: AutomationFlow) => void;
-  onSimulateInboundMessage?: (leadId: string, message: string) => void;
 }
 
 export const SalesbotFlowModal: React.FC<SalesbotFlowModalProps> = ({
@@ -30,7 +27,6 @@ export const SalesbotFlowModal: React.FC<SalesbotFlowModalProps> = ({
   onClose,
   state,
   onSaveFlow,
-  onSimulateInboundMessage,
 }) => {
   const flows = state.automationFlows || [];
   const activeFlow =
@@ -49,18 +45,6 @@ export const SalesbotFlowModal: React.FC<SalesbotFlowModalProps> = ({
       setConditions(activeFlow.conditions || []);
     }
   }, [activeFlow]);
-
-  // Simulation test message input
-  const [testInput, setTestInput] = useState(
-    'Halo Dreamlab, saya lihat iklan di Meta Ads dan tertarik maklon serum retinol untuk brand saya.'
-  );
-  const [testResult, setTestResult] = useState<{
-    matchedNode?: number;
-    stageName?: string;
-    pipelineName?: string;
-    tag?: string;
-    reply?: string;
-  } | null>(null);
 
   if (!isOpen) return null;
 
@@ -112,42 +96,6 @@ export const SalesbotFlowModal: React.FC<SalesbotFlowModalProps> = ({
     };
     onSaveFlow(updatedFlow);
     onClose();
-  };
-
-  const handleRunSimulation = () => {
-    const lowerInput = testInput.toLowerCase();
-    let matched: AutomationRuleCondition | undefined;
-
-    for (const cond of conditions) {
-      if (cond.isFallback) continue;
-      const kw = (cond.keywordMatch || '').toLowerCase();
-      if (kw && lowerInput.includes(kw)) {
-        matched = cond;
-        break;
-      }
-    }
-
-    if (!matched) {
-      matched = conditions.find((c) => c.isFallback);
-    }
-
-    if (matched) {
-      const pipe = state.pipelines.find((p) => p.id === matched?.targetPipelineId);
-      const stage = pipe?.stages.find((s) => s.id === matched?.targetStageId);
-
-      setTestResult({
-        matchedNode: matched.nodeIndex,
-        stageName: stage?.name || matched.targetStageId,
-        pipelineName: pipe?.name || matched.targetPipelineId,
-        tag: matched.autoTag,
-        reply: matched.greetingReply,
-      });
-
-      // Also trigger mock message sync if available
-      if (onSimulateInboundMessage && state.leads.length > 0) {
-        onSimulateInboundMessage(state.leads[0].id, testInput);
-      }
-    }
   };
 
   return (
@@ -343,45 +291,6 @@ export const SalesbotFlowModal: React.FC<SalesbotFlowModalProps> = ({
             </div>
           </div>
 
-          {/* Test Simulator Bar */}
-          <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
-            <span className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-blue-600" />
-              <span>Simulasi Uji Percakapan Salesbot</span>
-            </span>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={testInput}
-                onChange={(e) => setTestInput(e.target.value)}
-                placeholder="Ketik pesan percobaan dari prospek..."
-                className="flex-1 bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleRunSimulation}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
-              >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>Uji Routing</span>
-              </button>
-            </div>
-
-            {testResult && (
-              <div className="p-3 bg-white rounded-xl border border-blue-200 text-xs space-y-1">
-                <div className="font-bold text-emerald-700 flex items-center gap-1">
-                  <Check className="w-4 h-4" />
-                  <span>Kondisi Cocok (Node #{testResult.matchedNode})</span>
-                </div>
-                <div className="text-slate-700">
-                  Dialihkan ke: <strong>{testResult.stageName}</strong> | Tag: <strong>[{testResult.tag}]</strong>
-                </div>
-                <div className="text-slate-600 italic">
-                  Balasan Otomatis: "{testResult.reply}"
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

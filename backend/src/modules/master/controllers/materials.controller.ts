@@ -1,7 +1,8 @@
-﻿import {
+import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -16,7 +17,7 @@ import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
 
 @ApiTags('Master Data - Materials / Barang')
 @ApiBearerAuth()
-@Controller('v1/master/materials')
+@Controller(['master/materials', 'v1/master/materials'])
 @UseGuards(JwtAuthGuard)
 export class MaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}
@@ -55,6 +56,12 @@ export class MaterialsController {
   @ApiOperation({ summary: 'Create a new material / goods item' })
   create(@Body() dto: CreateMaterialDto) {
     return this.materialsService.create(dto);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Replace an existing material / goods item' })
+  replace(@Param('id') id: string, @Body() dto: UpdateMaterialDto) {
+    return this.materialsService.update(id, dto);
   }
 
   @Patch(':id')

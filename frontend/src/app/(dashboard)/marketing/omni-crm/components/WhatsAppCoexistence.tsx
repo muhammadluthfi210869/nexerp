@@ -6,7 +6,6 @@ import {
   User,
   CheckCheck,
   PhoneCall,
-  Sparkles,
   MessageSquare,
   Shield,
   ArrowRightLeft,
@@ -96,9 +95,6 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
   const [activeLeadTab, setActiveLeadTab] = useState<'utama' | 'form' | 'statistik' | 'media' | 'produk'>('utama');
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [newTagText, setNewTagText] = useState('');
-  const [isAiSuggesting, setIsAiSuggesting] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
-  const [showAiModal, setShowAiModal] = useState(false);
   const [filterMode, setFilterMode] = useState<'open' | 'all' | 'unread' | 'mine'>('open');
   const [sourceFilter, setSourceFilter] = useState<string>('ALL');
   const [busDevFilter, setBusDevFilter] = useState<string>('ALL');
@@ -229,17 +225,8 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
     e.preventDefault();
     if (!chatComposerText.trim() || !activeLead) return;
 
-    const direction: MessageDirection =
-      activeChannelMode === 'WHATSAPP_CLIENT' ? 'INBOUND' : 'OUTBOUND';
-
-    onSendMessage(activeLead.id, chatComposerText.trim(), direction, activeChannelMode);
+    onSendMessage(activeLead.id, chatComposerText.trim(), 'OUTBOUND', activeChannelMode);
     setChatComposerText('');
-  };
-
-  // Handle Quick Client simulation
-  const handleQuickClientMessage = (text: string) => {
-    if (!activeLead) return;
-    onSendMessage(activeLead.id, text, 'INBOUND', 'WHATSAPP_CLIENT');
   };
 
   // Handle Quick Outbound Phone send
@@ -265,23 +252,6 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
   const handleStageChange = (newStageId: string) => {
     if (!activeLead || !onMoveLead) return;
     onMoveLead(activeLead.id, activeLead.pipelineId, newStageId, 'Diubah dari Kommo Chat Interface');
-  };
-
-  // Generate AI Suggestions
-  const handleTriggerAiAssistant = () => {
-    if (!activeLead) return;
-    setIsAiSuggesting(true);
-    setShowAiModal(true);
-
-    setTimeout(() => {
-      const suggestions = [
-        `Halo Kak ${activeLead.name}! Baik, untuk formulasi maklon dan sliding box tester sudah kami siapkan detailnya. Mau kami kirimkan draft SPK dan estimasi timeline produksinya?`,
-        `Siap Kak ${activeLead.name}! Terkait varian ke-2, tim R&D lab Dreamlab kami bisa buatkan sample dengan aroma yang sama namun formulasi lebih ringan. Kapan kira-kira tester ingin kami kirimkan ke alamat kantor Anda?`,
-        `Terima kasih konfirmasinya Kak! Kami pastikan seluruh sertifikasi BPOM, Halal, dan standar CPKB Grade A kami kawal tuntas dari legalitas hingga produk siap edar.`,
-      ];
-      setAiSuggestions(suggestions);
-      setIsAiSuggesting(false);
-    }, 400);
   };
 
   const copyPhoneNumber = (phone: string) => {
@@ -901,16 +871,6 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                 </div>
               </div>
 
-              {/* AI Chat Assistant Helper Button */}
-              <button
-                type="button"
-                onClick={handleTriggerAiAssistant}
-                className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
-                title="Rekomendasi Balasan Cerdas AI"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>Rekomendasi AI</span>
-              </button>
             </div>
 
             {/* Messages Chat Area */}
@@ -965,32 +925,6 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                 })
               )}
               <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick Client Replies Simulation Bar */}
-            <div className="px-3 py-1.5 bg-slate-50 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto text-[10px]">
-              <span className="text-slate-400 font-bold shrink-0">Simulasi Klien:</span>
-              <button
-                type="button"
-                onClick={() => handleQuickClientMessage('box nya sliding, botol yg kemarin')}
-                className="h-6 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-slate-700 text-[10px] font-medium whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
-              >
-                "box nya sliding..."
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickClientMessage('Bisa kirimkan tester sampelnya ke Jakarta Selatan?')}
-                className="h-6 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-slate-700 text-[10px] font-medium whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
-              >
-                "Kirim tester sampel..."
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickClientMessage('Berapa estimasi HPP per botol untuk MOQ 2000 pcs?')}
-                className="h-6 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-slate-700 text-[10px] font-medium whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
-              >
-                "Tanya estimasi HPP..."
-              </button>
             </div>
 
             {/* Message Composer */}
@@ -1195,57 +1129,6 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                 Kirim CRM
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* AI SUGGESTION MODAL */}
-      {showAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-orange-100 text-orange-700 rounded-lg">
-                  <Sparkles className="w-4 h-4" />
-                </span>
-                <h3 className="text-sm font-extrabold text-slate-900">
-                  Rekomendasi Balasan Cerdas AI (Dreamlab Formulasi)
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowAiModal(false)}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {isAiSuggesting ? (
-              <div className="p-8 text-center text-slate-500 text-xs flex flex-col items-center gap-2">
-                <RefreshCw className="w-6 h-6 animate-spin text-orange-500" />
-                <span>Menganalisis riwayat obrolan & spesifikasi maklon...</span>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {aiSuggestions.map((suggestion, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 bg-slate-50 hover:bg-blue-50/60 border border-slate-200 rounded-xl text-xs text-slate-800 transition-colors space-y-2"
-                  >
-                    <p className="leading-relaxed">{suggestion}</p>
-                    <button
-                      onClick={() => {
-                        setChatComposerText(suggestion);
-                        setShowAiModal(false);
-                      }}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold shadow-xs cursor-pointer"
-                    >
-                      Gunakan Draf Ini
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}

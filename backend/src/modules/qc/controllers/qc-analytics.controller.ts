@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 import { QCAuditsService } from '../services/qc-audits.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('qc/analytics')
+@Controller(['qc/analytics', 'v1/qc/analytics'])
 export class QCAnalyticsController {
   constructor(private readonly qcService: QCAuditsService) {}
 

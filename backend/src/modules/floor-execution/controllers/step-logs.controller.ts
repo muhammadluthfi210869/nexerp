@@ -8,7 +8,7 @@ import { ProductionExecutionService } from '../services/production-execution.ser
 import { CreateStepLogDto } from '../dto/create-step-log.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('production/step-logs')
+@Controller(['production/step-logs', 'v1/production/step-logs'])
 export class StepLogsController {
   constructor(
     private readonly stepLogsService: StepLogsService,

@@ -27,6 +27,7 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
       marketingTask: {
         findUnique: jest.fn(),
         findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -50,6 +51,7 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
       user: {
         findMany: jest.fn().mockResolvedValue([]),
         findFirst: jest.fn(),
+        findUnique: jest.fn(),
       },
       $transaction: jest.fn(),
     };
@@ -146,6 +148,24 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
         }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('resolves the Zarka board alias to the real Zarkasi account', async () => {
+      mockPrisma.user.findUnique.mockImplementation(({ where }: any) =>
+        where.email === 'zarkasi@nexerp.id'
+          ? Promise.resolve({ id: 'zarkasi-uuid', email: where.email, fullName: 'Zarkasi' })
+          : Promise.resolve(null),
+      );
+      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(mockPrisma));
+      mockPrisma.marketingTask.create.mockImplementation(async ({ data }: any) => ({ id: 'task-1', ...data }));
+
+      await service.createTask(adminViewer, { title: 'Alias task', pic: 'Zarka' });
+
+      expect(mockPrisma.marketingTask.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ picId: 'zarkasi-uuid', assigneeId: 'zarkasi-uuid' }),
+        }),
+      );
+    });
   });
 
   // ---- updateTaskStatus ----
@@ -198,6 +218,33 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
       const bundle = await service.getBundle(aurelViewer);
 
       expect(bundle.viewer.isManager).toBe(false);
+    });
+
+    it('filters by viewer before pagination and orders newest tasks first', async () => {
+      await service.getBundle(aurelViewer);
+
+      expect(mockPrisma.marketingTask.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ OR: expect.any(Array) }),
+          take: 200,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        }),
+      );
+      expect(mockPrisma.marketingTask.count).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ OR: expect.any(Array) }) }),
+      );
+    });
+
+    it('manager pagination is also deterministic and includes the newest writes', async () => {
+      await service.getBundle(adminViewer);
+
+      expect(mockPrisma.marketingTask.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+          take: 200,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        }),
+      );
     });
   });
 });

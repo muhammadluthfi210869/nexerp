@@ -18,7 +18,7 @@ import { SubjectiveScoreDto } from './dto/subjective-score.dto';
 
 @ApiTags('hr')
 @ApiBearerAuth()
-@Controller('hr')
+@Controller(['hr', 'v1/hr'])
 export class HrController {
   constructor(private readonly hrService: HrService) {}
 

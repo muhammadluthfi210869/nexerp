@@ -8,6 +8,7 @@ import { ScmModule } from '../scm/scm.module';
 import { StockLedgerService } from './services/stock-ledger.service';
 import { RequisitionService } from './services/requisition.service';
 import { StockIntelligenceService } from './services/stock-intelligence.service';
+import { IdempotencyService } from '../../common/idempotency/idempotency.service';
 
 @Module({
   imports: [PrismaModule, ScmModule, forwardRef(() => FinanceModule)],
@@ -16,6 +17,7 @@ import { StockIntelligenceService } from './services/stock-intelligence.service'
     StockLedgerService,
     RequisitionService,
     StockIntelligenceService,
+    IdempotencyService,
   ],
   controllers: [WarehouseController],
   exports: [WarehouseService, StockLedgerService, StockIntelligenceService],

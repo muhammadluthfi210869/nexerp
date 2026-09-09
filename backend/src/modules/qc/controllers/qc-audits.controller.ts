@@ -16,7 +16,7 @@ import { QCAuditsService } from '../services/qc-audits.service';
 import { CreateQCAuditDto } from '../dto/create-audit.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('qc/audits')
+@Controller(['qc/audits', 'v1/qc/audits'])
 export class QCAuditsController {
   constructor(private readonly qcService: QCAuditsService) {}
 

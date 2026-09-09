@@ -22,7 +22,7 @@ model Warehouse {
   locations             WarehouseLocation[]
   fromRequisitions      MaterialRequisitionHeader[] @relation("FromWarehouse")
   toRequisitions        MaterialRequisitionHeader[] @relation("ToWarehouse")
-  warehouseAccess       WarehouseAccess[]        @relation("WarehouseAccessWarehouse")
+  warehouseAccess       WarehouseAccess[]           @relation("WarehouseAccessWarehouse")
 
   @@map("warehouses")
 }
@@ -44,39 +44,39 @@ model WarehouseLocation {
 }
 
 model MaterialItem {
-  id                   String                    @id @default(uuid()) @db.Uuid
+  id                   String                     @id @default(uuid()) @db.Uuid
   name                 String
   type                 MaterialType
   unit                 String
-  unitPrice            Decimal                   @db.Decimal(15, 2)
-  minLevel             Decimal                   @db.Decimal(15, 2)
-  maxLevel             Decimal                   @db.Decimal(15, 2)
-  maxHoldHours         Int?                      @default(72)
-  reorderPoint         Decimal                   @db.Decimal(15, 2)
-  isCritical           Boolean                   @default(false)
-  status               MaterialStatus            @default(ACTIVE)
+  unitPrice            Decimal                    @db.Decimal(15, 2)
+  minLevel             Decimal                    @db.Decimal(15, 2)
+  maxLevel             Decimal                    @db.Decimal(15, 2)
+  maxHoldHours         Int?                       @default(72)
+  reorderPoint         Decimal                    @db.Decimal(15, 2)
+  isCritical           Boolean                    @default(false)
+  status               MaterialStatus             @default(ACTIVE)
   /// @note This field is a CACHE. Truth is derived from InventoryTransaction.
-  stockQty             Decimal                   @default(0) @db.Decimal(15, 2)
+  stockQty             Decimal                    @default(0) @db.Decimal(15, 2)
   lastSyncedAt         DateTime?
-  code                 String?                   @unique
+  code                 String?                    @unique
   usageUnit            String?
-  outMethod            OutboundMethod            @default(FIFO)
-  leadTime             Int                       @default(0)
-  categoryId           String?                   @db.Uuid
-  inventoryAccountId   String?                   @db.Uuid
-  salesAccountId       String?                   @db.Uuid
+  outMethod            OutboundMethod             @default(FIFO)
+  leadTime             Int                        @default(0)
+  categoryId           String?                    @db.Uuid
+  inventoryAccountId   String?                    @db.Uuid
+  salesAccountId       String?                    @db.Uuid
   inciName             String?
   halalCertNo          String?
   halalExpDate         DateTime?
-  isHalalValidated     Boolean                   @default(false)
+  isHalalValidated     Boolean                    @default(false)
   halalCertUrl         String?
   deletedAt            DateTime?
   bahanType            String?
   physicalForm         String?
   conditionNotes       String?
-  primaryUnitId        String?                   @db.Uuid  // Reference to MasterUnit (added Batch 6)
-  unitMaster           MasterUnit?               @relation("MaterialUnit", fields: [primaryUnitId], references: [id])
-  imageUrl             String?  // Photo URL (per BARANG.csv)
+  primaryUnitId        String?                    @db.Uuid // Reference to MasterUnit (added Batch 6)
+  unitMaster           MasterUnit?                @relation("MaterialUnit", fields: [primaryUnitId], references: [id])
+  imageUrl             String? // Photo URL (per BARANG.csv)
   autoCalculatedHpp    Float?
   manualOverrideHpp    Float?
   boms                 BillOfMaterial[]
@@ -84,9 +84,9 @@ model MaterialItem {
   inboundItems         InboundItem[]
   transactions         InventoryTransaction[]
   inventories          MaterialInventory[]
-  category             MasterCategory?           @relation("GoodsToCategory", fields: [categoryId], references: [id])
-  inventoryAccount     Account?                  @relation("InventoryAccount", fields: [inventoryAccountId], references: [id])
-  salesAccount         Account?                  @relation("SalesAccount", fields: [salesAccountId], references: [id])
+  category             MasterCategory?            @relation("GoodsToCategory", fields: [categoryId], references: [id])
+  inventoryAccount     Account?                   @relation("InventoryAccount", fields: [inventoryAccountId], references: [id])
+  salesAccount         Account?                   @relation("SalesAccount", fields: [salesAccountId], references: [id])
   requisitions         MaterialRequisition[]
   valuations           MaterialValuation[]
   poItems              PurchaseOrderItem[]
@@ -105,8 +105,8 @@ model MaterialItem {
   rejectExecutions     RejectExecution[]
   emergencyRequests    EmergencyPurchaseRequest[]
 
-  
-  supplierHistory      ProductSupplierHistory[]
+  supplierHistory ProductSupplierHistory[]
+
   @@index([type])
   @@map("material_items")
 }
@@ -126,32 +126,32 @@ model MaterialValuation {
 }
 
 model Supplier {
-  id               String              @id @default(uuid()) @db.Uuid
+  id               String                   @id @default(uuid()) @db.Uuid
   name             String
   contact          String?
   phone            String?
   email            String?
-  isBlacklisted    Boolean             @default(false)
+  isBlacklisted    Boolean                  @default(false)
   address          String?
   province         String?
   city             String?
   district         String?
   addressDetail    String?
-  termOfPayment    Int                 @default(0)
-  categoryId       String?             @db.Uuid
-  performanceScore Float               @default(0)
+  termOfPayment    Int                      @default(0)
+  categoryId       String?                  @db.Uuid
+  performanceScore Float                    @default(0)
   deletedAt        DateTime?
-  createdAt        DateTime            @default(now())
+  createdAt        DateTime                 @default(now())
   inventories      MaterialInventory[]
   pos              PurchaseOrder[]
   prs              PurchaseRequest[]
   invoices         Invoice[]
-  bills            Bill[]            @relation("SupplierBills")
-  downPayments     DownPayment[]     @relation("SupplierDownPayments")
-  apPayments       APPayment[]       @relation("SupplierAPPayments")
+  bills            Bill[]                   @relation("SupplierBills")
+  downPayments     DownPayment[]            @relation("SupplierDownPayments")
+  apPayments       APPayment[]              @relation("SupplierAPPayments")
   returns          PurchaseReturn[]
-  category         MasterCategory?     @relation("SupplierToCategory", fields: [categoryId], references: [id])
-  supplierHistory ProductSupplierHistory[]
+  category         MasterCategory?          @relation("SupplierToCategory", fields: [categoryId], references: [id])
+  supplierHistory  ProductSupplierHistory[]
 
   @@map("suppliers")
 }
@@ -189,33 +189,33 @@ model PurchaseRequestItem {
 }
 
 model PurchaseOrder {
-  id             String              @id @default(uuid()) @db.Uuid
-  poNumber       String              @unique
-  supplierId     String?             @db.Uuid
-  scmId          String?             @db.Uuid
-  status         POStatus            @default(ORDERED)
-  totalValue     Decimal             @default(0) @db.Decimal(15, 2)
-  currencyId     String?             @db.Uuid
-  estArrival     DateTime?           @db.Date
-  dueDate        DateTime?           @db.Date
-  taxPercent     Decimal?            @db.Decimal(5, 2)
-  notes          String?
-  deletedAt      DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime?           @updatedAt
-  leadId         String?             @db.Uuid
-  version        Int                 @default(1)
-  discountManual Float               @default(0)
-  discountRounding Float             @default(0)
-  shippingCost   Float               @default(0)
-  items          PurchaseOrderItem[]
-  currency       Currency?           @relation(fields: [currencyId], references: [id])
-  lead           SalesLead?          @relation(fields: [leadId], references: [id])
-  scm            User?               @relation("SCMProcessor", fields: [scmId], references: [id])
-  supplier       Supplier?           @relation(fields: [supplierId], references: [id])
-  inbounds       WarehouseInbound[]
-  invoices       Invoice[]
-  journalEntries JournalEntry[]
+  id               String              @id @default(uuid()) @db.Uuid
+  poNumber         String              @unique
+  supplierId       String?             @db.Uuid
+  scmId            String?             @db.Uuid
+  status           POStatus            @default(ORDERED)
+  totalValue       Decimal             @default(0) @db.Decimal(15, 2)
+  currencyId       String?             @db.Uuid
+  estArrival       DateTime?           @db.Date
+  dueDate          DateTime?           @db.Date
+  taxPercent       Decimal?            @db.Decimal(5, 2)
+  notes            String?
+  deletedAt        DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime?           @updatedAt
+  leadId           String?             @db.Uuid
+  version          Int                 @default(1)
+  discountManual   Float               @default(0)
+  discountRounding Float               @default(0)
+  shippingCost     Float               @default(0)
+  items            PurchaseOrderItem[]
+  currency         Currency?           @relation(fields: [currencyId], references: [id])
+  lead             SalesLead?          @relation(fields: [leadId], references: [id])
+  scm              User?               @relation("SCMProcessor", fields: [scmId], references: [id])
+  supplier         Supplier?           @relation(fields: [supplierId], references: [id])
+  inbounds         WarehouseInbound[]
+  invoices         Invoice[]
+  journalEntries   JournalEntry[]
 
   @@index([supplierId, status])
   @@index([createdAt(sort: Desc)])
@@ -232,8 +232,8 @@ model PurchaseOrderItem {
   totalPrice  Decimal       @db.Decimal(15, 2)
   receivedQty Decimal       @default(0) @db.Decimal(15, 2)
   taxId       String?       @db.Uuid
-  source         String              @default("PO")
-  qtyRounded     Float?
+  source      String        @default("PO")
+  qtyRounded  Float?
   material    MaterialItem  @relation(fields: [materialId], references: [id])
   po          PurchaseOrder @relation(fields: [poId], references: [id])
   tax         TaxRate?      @relation(fields: [taxId], references: [id])
@@ -313,7 +313,7 @@ model InboundItem {
 
 model MasterCategory {
   id          String         @id @default(uuid()) @db.Uuid
-  code        String         @unique  // BBK, BRU, dll (added per CSV ref)
+  code        String         @unique // BBK, BRU, dll (added per CSV ref)
   name        String
   description String?
   type        String
@@ -447,39 +447,38 @@ model StockOpnameItem {
 
 /// Emergency Purchase Request (EPR Cito) Ã¢â‚¬â€ Shortage reporting & critical stock bypass
 model EmergencyPurchaseRequest {
-  id            String       @id @default(uuid()) @db.Uuid
-  eprNumber     String       @unique
-  materialId    String       @db.Uuid
-  shortageQty   Decimal      @db.Decimal(15, 2)
-  currentStock  Decimal      @db.Decimal(15, 2)
-  requiredQty   Decimal      @db.Decimal(15, 2)
-  urgencyLevel  String       @default("CITO_CRITICAL")
+  id            String   @id @default(uuid()) @db.Uuid
+  eprNumber     String   @unique
+  materialId    String   @db.Uuid
+  shortageQty   Decimal  @db.Decimal(15, 2)
+  currentStock  Decimal  @db.Decimal(15, 2)
+  requiredQty   Decimal  @db.Decimal(15, 2)
+  urgencyLevel  String   @default("CITO_CRITICAL")
   reason        String
-  status        String       @default("PENDING_PO")
-  targetPoId   String?      @db.Uuid
+  status        String   @default("PENDING_PO")
+  targetPoId    String?  @db.Uuid
   notes         String?
-  requestedById String?      @db.Uuid
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  requestedById String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  material      MaterialItem @relation(fields: [materialId], references: [id])
-  requestedBy   User?        @relation("EprRequester", fields: [requestedById], references: [id])
+  material    MaterialItem @relation(fields: [materialId], references: [id])
+  requestedBy User?        @relation("EprRequester", fields: [requestedById], references: [id])
 
   @@index([materialId])
   @@index([status])
   @@map("emergency_purchase_requests")
 }
 
-
 model ProductSupplierHistory {
-  id                  String   @id @default(uuid()) @db.Uuid
-  productId           String
-  supplierId          String
-  firstSeenAt         DateTime @default(now())
-  lastPurchaseAt      DateTime?
-  totalQtyPurchased   Float    @default(0)
-  product             MaterialItem @relation(fields: [productId], references: [id])
-  supplier            Supplier @relation(fields: [supplierId], references: [id])
+  id                String       @id @default(uuid()) @db.Uuid
+  productId         String
+  supplierId        String
+  firstSeenAt       DateTime     @default(now())
+  lastPurchaseAt    DateTime?
+  totalQtyPurchased Float        @default(0)
+  product           MaterialItem @relation(fields: [productId], references: [id])
+  supplier          Supplier     @relation(fields: [supplierId], references: [id])
 
   @@unique([productId, supplierId])
   @@map("product_supplier_history")

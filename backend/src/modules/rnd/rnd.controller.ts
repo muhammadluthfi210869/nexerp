@@ -21,7 +21,7 @@ import { Roles } from '../auth/roles.decorator';
 @ApiTags('rnd')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('rnd')
+@Controller(['rnd', 'v1/rnd'])
 export class RndController {
   constructor(private readonly rndService: RndService) {}
 

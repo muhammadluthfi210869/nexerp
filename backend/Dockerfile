@@ -17,7 +17,8 @@ RUN npm run build
 # Compile seed files
 RUN npx tsc prisma/seed-master.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true
 RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true
-RUN for f in prisma/seed-*.ts; do npx tsc "$f" --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true; done
+# Historical one-off seed scripts are not runtime dependencies. Compiling every
+# seed-*.ts made production builds spend minutes on known-obsolete schemas.
 
 # Stage 2: Runtime
 FROM node:20-alpine

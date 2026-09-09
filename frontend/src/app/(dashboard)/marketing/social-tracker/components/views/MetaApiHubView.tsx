@@ -49,6 +49,8 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
       });
       const data = res.data;
       if (data.success) {
+        const account = data.accounts?.[0];
+        const instagram = account?.instagram_business_account;
         setTestResult({
           success: true,
           message: `Koneksi Berhasil! Terhubung ke Meta User: ${data.user?.name || 'Authorized Account'}`,
@@ -59,8 +61,14 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
         setMetaAccount((prev) => ({
           ...prev,
           accessToken: tokenInput,
-          pageId: pageIdInput,
-          igAccountId: igIdInput,
+          pageId: account?.id || pageIdInput,
+          pageName: account?.name || '',
+          igAccountId: instagram?.id || igIdInput,
+          igUsername: instagram?.username || '',
+          profilePictureUrl: instagram?.profile_picture_url || '',
+          followersCount: 0,
+          igFollowersCount: Number(instagram?.followers_count || 0),
+          permissions: [],
           isConnected: true,
           isLiveApi: true,
         }));
@@ -145,19 +153,12 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
           <div className="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-xl">
             <span className="text-[11px] text-zinc-400 font-medium block">Mode Koneksi:</span>
             <div className="flex items-center gap-2 mt-1">
-              <button
-                onClick={() => setMetaAccount((prev) => ({ ...prev, isLiveApi: !prev.isLiveApi }))}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
-                  metaAccount.isLiveApi
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
-                }`}
-              >
-                {metaAccount.isLiveApi ? '🟢 Live Meta Graph API' : '🟡 Simulated Sandbox'}
-              </button>
+              <span className={`px-2.5 py-1 rounded text-xs font-semibold ${metaAccount.isConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-200 text-zinc-700'}`}>
+                {metaAccount.isConnected ? 'Terverifikasi server' : 'Belum diverifikasi'}
+              </span>
             </div>
             <span className="text-[10px] text-zinc-400 block mt-1">
-              {metaAccount.isLiveApi ? 'Mengambil data langsung dari server Meta' : 'Menggunakan dataset benchmark Meta Suite'}
+              Status hanya berubah setelah server berhasil memverifikasi koneksi Meta.
             </span>
           </div>
         </div>
@@ -268,6 +269,11 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          {metaAccount.permissions.length === 0 && (
+            <div className="col-span-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+              Scope permission belum diaudit oleh server. Tidak ada permission yang diklaim sebagai granted.
+            </div>
+          )}
           {metaAccount.permissions.map((perm) => (
             <div key={perm} className="flex items-center gap-2.5 p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-lg">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />

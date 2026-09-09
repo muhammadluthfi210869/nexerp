@@ -90,20 +90,23 @@ export class MarketingPrototypeController {
   }
 
   @Post('projects')
-  @Roles(...MANAGER_WRITE_ROLES)
+  // Role guard is deliberately coarse here: some Management Task managers
+  // (for example Revita) retain the DIGIMAR role. The service performs the
+  // authoritative per-user manager check via ensureManager().
+  @Roles(...MEMBER_ROLES)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   createProject(@Req() req: any, @Body() body: CreateProjectDto) {
     return this.service.createProject(req.user, body);
   }
 
   @Patch('projects/:id')
-  @Roles(...MANAGER_WRITE_ROLES)
+  @Roles(...MEMBER_ROLES)
   updateProject(@Req() req: any, @Param('id') id: string, @Body() body: UpdateProjectDto) {
     return this.service.updateProject(req.user, id, body);
   }
 
   @Delete('projects/:id')
-  @Roles(...MANAGER_WRITE_ROLES)
+  @Roles(...MEMBER_ROLES)
   deleteProject(@Req() req: any, @Param('id') id: string) {
     return this.service.deleteProject(req.user, id);
   }

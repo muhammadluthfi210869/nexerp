@@ -5,11 +5,7 @@ import {
   UserX,
   Clock,
   Briefcase,
-  Sparkles,
-  Zap,
-  ArrowRight,
   ShieldCheck,
-  RotateCw,
   Info,
   Smartphone,
   Check,
@@ -24,14 +20,12 @@ interface BusDevManagerProps {
   state: CRMState;
   currentUser?: AppAccount;
   onToggleBusdev: (userId: string, isActive: boolean) => void;
-  onSimulateIntake: (count: number) => void;
 }
 
 export const BusDevManager: React.FC<BusDevManagerProps> = ({
   state,
   currentUser,
   onToggleBusdev,
-  onSimulateIntake,
 }) => {
   const busDevsList = state.busDevs || [];
   const nextEligible = getNextRoundRobinBusDev(busDevsList);
@@ -106,32 +100,6 @@ export const BusDevManager: React.FC<BusDevManagerProps> = ({
               </p>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Quick Intake Simulator */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-blue-600" />
-          <span className="text-[12px] font-semibold text-slate-800">
-            Simulasi Lead Masuk ke Round Robin Pool:
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onSimulateIntake(1)}
-            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold rounded-xl shadow-2xs cursor-pointer transition-colors"
-          >
-            +1 Lead Baru
-          </button>
-          <button
-            type="button"
-            onClick={() => onSimulateIntake(5)}
-            className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 text-[12px] font-semibold rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-colors"
-          >
-            +5 Batch Leads
-          </button>
         </div>
       </div>
 

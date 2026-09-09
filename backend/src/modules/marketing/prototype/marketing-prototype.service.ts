@@ -28,6 +28,7 @@ const LEGACY_STATUS_MAP: Record<string, TaskStatus> = {
   Backlog: 'Not started',
   'To Do': 'Not started',
   'In Progress': 'Working on it',
+  Progress: 'Working on it',
   'Waiting Approval': 'Revision',
   Revision: 'Revision',
   Done: 'Done',
@@ -894,6 +895,11 @@ export class MarketingPrototypeService {
       assignedByUserId = actorUser?.id ?? null;
     }
 
+    const ownerId = viewer?.id ?? picUserId ?? assignedByUserId;
+    if (!ownerId) {
+      throw new ForbiddenException('Authenticated task owner could not be resolved');
+    }
+
     const startDate = input.startDate ? parseTaskDate(input.startDate, 'startDate') : now;
     const dueDate = input.dueDate ? parseTaskDate(input.dueDate, 'dueDate') : now;
     if (startDate && dueDate && startDate.getTime() > dueDate.getTime()) {
@@ -902,9 +908,10 @@ export class MarketingPrototypeService {
 
     return this.prisma.$transaction(async (tx) => {
       const task = await tx.marketingTask.create({
-        // @ts-expect-error -- Prisma's CreateInput vs UncheckedCreateInput union rejects flat FK cols
         data: {
           taskCode: id,
+          ownerId,
+          assigneeId: picUserId,
           title: input.title ?? 'Untitled task',
           projectId: input.projectId ?? project?.id,
           channel: input.channel ?? 'General',

@@ -9,6 +9,10 @@ import { OmniCrmStateController } from './omni-crm/omni-crm-state.controller';
 import { OmniCrmStateService } from './omni-crm/omni-crm-state.service';
 import { OmniCrmConversationController } from './omni-crm/omni-crm-conversation.controller';
 import { OmniCrmConversationService } from './omni-crm/omni-crm-conversation.service';
+import { SocialPlannerController } from './social-planner/social-planner.controller';
+import { SocialPlannerService } from './social-planner/social-planner.service';
+import { DreamlabRrSyncService } from './omni-crm/dreamlab-rr-sync.service';
+
 @Module({
   imports: [PrismaModule, LeadCaptureModule],
   providers: [
@@ -16,13 +20,16 @@ import { OmniCrmConversationService } from './omni-crm/omni-crm-conversation.ser
     MarketingPrototypeService,
     OmniCrmStateService,
     OmniCrmConversationService,
+    DreamlabRrSyncService,
+    SocialPlannerService,
   ],
   controllers: [
     MarketingController,
     MarketingPrototypeController,
     OmniCrmStateController,
     OmniCrmConversationController,
+    SocialPlannerController,
   ],
-  exports: [MarketingService, MarketingPrototypeService],
+  exports: [MarketingService, MarketingPrototypeService, SocialPlannerService, DreamlabRrSyncService],
 })
 export class MarketingModule {}

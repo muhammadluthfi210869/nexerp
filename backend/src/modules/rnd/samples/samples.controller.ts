@@ -15,7 +15,7 @@ import { Roles } from '../../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('rnd/formulations')
+@Controller(['rnd/formulations', 'v1/rnd/formulations'])
 export class SamplesController {
   constructor(private readonly rndService: RndService) {}
 
