@@ -613,11 +613,12 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     items: [
       { name: "Work Orders (SPK)", href: "/production/work-orders", icon: FileSpreadsheet, badge: "SPK", badgeVariant: "warning" },
       { name: "Jadwal Produksi (Gantt)", href: "/production/schedule", icon: History },
-      { name: "Produksi Mixing (Ruahan)", href: "/production/operations?stage=mixing", icon: Factory },
-      { name: "Produksi Filling (Primer)", href: "/production/operations?stage=filling", icon: Factory },
-      { name: "Produksi Packaging (Sekunder)", href: "/production/operations?stage=packaging", icon: Factory },
-      { name: "Inspeksi QC & Rilis APJ", href: "/qc/inspections", icon: ShieldCheck },
-      { name: "Permintaan Bahan Baku", href: "/production/warehouse", icon: Layers },
+      { name: "Produksi Mixing (Ruahan)", href: "/production/mixing", icon: Factory },
+      { name: "Produksi Filling (Primer)", href: "/production/filling", icon: Factory },
+      { name: "Produksi Packaging (Sekunder)", href: "/production/packaging", icon: Factory },
+      { name: "Inspeksi QC & Rilis APJ", href: "/production/qc-release", icon: ShieldCheck },
+      { name: "Permintaan Bahan Baku", href: "/production/material-requisition", icon: Layers },
+      { name: "Detail & Cetak SPK", href: "/production/spk", icon: FileSpreadsheet },
     ]
   },
 
