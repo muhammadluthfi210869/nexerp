@@ -1,184 +1,182 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+import {
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  FileSpreadsheet,
+  Printer,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  RefreshCw,
+  Building2,
+  PieChart
+} from "lucide-react";
 import {
   DnaPageContainer,
   DnaPageHeader,
-  DnaStatCard,
   DnaKpiGrid,
+  DnaStatCard,
   DnaDataTableCard,
   DnaButton,
+  DnaBadge,
   formatRupiah,
+  useDnaToast
 } from "@/components/dna";
-import { DollarSign, ArrowDownRight, ArrowUpRight, FileSpreadsheet, Activity } from "lucide-react";
-
-interface CashFlowItem {
-  category: "OPERATING" | "INVESTING" | "FINANCING";
-  name: string;
-  amount: number;
-}
-
-const SAMPLE_CASH_FLOW: CashFlowItem[] = [
-  // Aktivitas Operasi
-  { category: "OPERATING", name: "Penerimaan Kas dari Pelanggan (Trade AR)", amount: 1850000000 },
-  { category: "OPERATING", name: "Penerimaan Uang Muka Penjualan (DP Pelanggan)", amount: 450000000 },
-  { category: "OPERATING", name: "Pembayaran Kas ke Pemasok Bahan Baku & Kemasan", amount: -980000000 },
-  { category: "OPERATING", name: "Pembayaran Upah & Gaji Karyawan Pabrik", amount: -280000000 },
-  { category: "OPERATING", name: "Pembayaran Beban Listrik, Air, & Utilitas Pabrik", amount: -75000000 },
-  { category: "OPERATING", name: "Pembayaran Pajak (PPh 23 & PPN Bersih)", amount: -45000000 },
-
-  // Aktivitas Investasi
-  { category: "INVESTING", name: "Perolehan Mesin Homogenizer Baru", amount: -150000000 },
-  { category: "INVESTING", name: "Perolehan Aset Tak Berwujud (Sertifikasi ISO & Halal)", amount: -35000000 },
-
-  // Aktivitas Pendanaan
-  { category: "FINANCING", name: "Penerimaan Modal Tambahan Pemegang Saham", amount: 200000000 },
-  { category: "FINANCING", name: "Pembayaran Dividen / Prive", amount: -50000000 },
-];
 
 export default function CashFlowReportPage() {
-  const [items, setItems] = useState<CashFlowItem[]>(SAMPLE_CASH_FLOW);
-  const [period, setPeriod] = useState("2026-08");
+  const toast = useDnaToast();
+  const [period, setPeriod] = useState("2026-09");
 
-  const opTotal = items.filter((i) => i.category === "OPERATING").reduce((acc, i) => acc + i.amount, 0);
-  const invTotal = items.filter((i) => i.category === "INVESTING").reduce((acc, i) => acc + i.amount, 0);
-  const finTotal = items.filter((i) => i.category === "FINANCING").reduce((acc, i) => acc + i.amount, 0);
-  const netCashFlow = opTotal + invTotal + finTotal;
-
-  const beginningCash = 835000000;
-  const endingCash = beginningCash + netCashFlow;
+  const cashBeginning = 1850000000;
+  const cashOperating = 485000000;
+  const cashInvesting = -120000000;
+  const cashFinancing = -150000000;
+  const netCashChange = cashOperating + cashInvesting + cashFinancing;
+  const cashEnding = cashBeginning + netCashChange;
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Laporan Arus Kas (Cash Flow Statement)"
-        subtitle="Laporan pergerakan kas masuk dan kas keluar dari aktivitas operasi, investasi, dan pendanaan"
-        breadcrumbs={[{ label: "Finance", href: "/finance/dashboard" }, { label: "Laporan Arus Kas" }]}
+        description="Analisis pergerakan likuiditas tunai dari Aktivitas Operasional, Investasi Mesin & Fasilitas, serta Pendanaan."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Net Cash Flow Positif (+{formatRupiah(netCashChange)})</span>
+          </div>
+        }
         actions={
-          <DnaButton variant="secondary" onClick={() => alert("Laporan Arus Kas (.xlsx) berhasil diekspor.")}>
-            <FileSpreadsheet className="h-4 w-4 mr-1.5" /> Ekspor Excel
-          </DnaButton>
+          <div className="flex items-center gap-2">
+            <input
+              type="month"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-medium"
+            />
+            <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => toast.success("Exporting Arus Kas ke Excel...")}>
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Export Excel
+            </DnaButton>
+          </div>
         }
       />
 
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Arus Kas Bersih Operasi (CFO)"
-          value={formatRupiah(opTotal)}
-          variant="emerald"
-          icon={<Activity className="h-4 w-4" />}
-          delta={{ value: "Penerimaan SO vs Pengadaan", isPositive: true }}
+          label="Saldo Kas Awal Periode"
+          value={formatRupiah(cashBeginning)}
+          icon={<Wallet className="w-5 h-5 text-slate-600" />}
+          subtext="Per 01 September 2026"
+          variant="default"
         />
         <DnaStatCard
-          label="Arus Kas Investasi (CFI)"
-          value={formatRupiah(invTotal)}
-          variant="amber"
-          icon={<ArrowUpRight className="h-4 w-4" />}
-          delta={{ value: "Belanja Mesin & Sertifikasi", isPositive: false }}
+          label="Arus Kas Operasional (CFO)"
+          value={formatRupiah(cashOperating)}
+          icon={<ArrowUpRight className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "+Inflow Sehat", isPositive: true }}
+          subtext="Penerimaan Pelanggan - Supplier"
+          variant="success"
         />
         <DnaStatCard
-          label="Arus Kas Pendanaan (CFF)"
-          value={formatRupiah(finTotal)}
-          variant="blue"
-          icon={<DollarSign className="h-4 w-4" />}
-          delta={{ value: "Setoran Modal Bersih", isPositive: true }}
+          label="Arus Kas Investasi & Finansial"
+          value={formatRupiah(cashInvesting + cashFinancing)}
+          icon={<ArrowDownRight className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "Capex & Cicilan", isPositive: false }}
+          subtext="Beli Mesin & Pelunasan Bank"
+          variant="warning"
         />
         <DnaStatCard
-          label="Kenaikan / (Penurunan) Kas"
-          value={formatRupiah(netCashFlow)}
-          variant="slate"
-          delta={{ value: `Kas Akhir: ${formatRupiah(endingCash)}`, isPositive: netCashFlow >= 0 }}
+          label="Saldo Kas Akhir (Cash Ending)"
+          value={formatRupiah(cashEnding)}
+          icon={<Building2 className="w-5 h-5 text-blue-600" />}
+          delta={{ value: "+11.6% Net Growth", isPositive: true }}
+          subtext="Total Likuiditas Kas & Bank"
+          variant="info"
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard title="Rincian Aliran Kas Masuk dan Keluar (Metode Langsung)">
-        <div className="overflow-x-auto p-4 space-y-6">
-          {/* Operasi */}
-          <div>
-            <h4 className="text-[13px] font-bold text-slate-900 border-b border-slate-200 pb-2 mb-3">
-              1. ARUS KAS DARI AKTIVITAS OPERASI
-            </h4>
-            <div className="space-y-2">
-              {items
-                .filter((i) => i.category === "OPERATING")
-                .map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-[12px] py-1 border-b border-slate-100">
-                    <span className="text-slate-700">{item.name}</span>
-                    <span className={`font-mono font-medium ${item.amount >= 0 ? "text-slate-900" : "text-rose-600"}`}>
-                      {item.amount < 0 ? `(${formatRupiah(Math.abs(item.amount))})` : formatRupiah(item.amount)}
-                    </span>
-                  </div>
-                ))}
-              <div className="flex justify-between text-[12px] font-bold pt-2 text-slate-900">
-                <span>Arus Kas Bersih yang Dihasilkan dari Aktivitas Operasi</span>
-                <span className="font-mono text-emerald-700">{formatRupiah(opTotal)}</span>
-              </div>
-            </div>
+      <div className="space-y-6">
+        <DnaDataTableCard title="1. Arus Kas dari Aktivitas Operasional (Operating Activities)">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <tbody className="divide-y divide-slate-100">
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Penerimaan Kas dari Pelanggan Maklon & Pembeli Produk</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">Rp 1.450.000.000</td>
+                </tr>
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Kas kepada Pemasok Bahan Baku & Bahan Kemas</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 620.000.000)</td>
+                </tr>
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Gaji, Upah Kerja & Tunjangan BPJS Karyawan</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 245.000.000)</td>
+                </tr>
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Biaya Operasional, Utilitas Listrik & Administrasi</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 100.000.000)</td>
+                </tr>
+                <tr className="bg-emerald-50/60 font-bold border-t border-emerald-300">
+                  <td className="px-3.5 py-3 text-emerald-950 font-extrabold">ARUS KAS BERSIH DARI OPERASIONAL:</td>
+                  <td className="px-3.5 py-3 text-right text-emerald-900 font-black">{formatRupiah(cashOperating)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </DnaDataTableCard>
 
-          {/* Investasi */}
-          <div>
-            <h4 className="text-[13px] font-bold text-slate-900 border-b border-slate-200 pb-2 mb-3">
-              2. ARUS KAS DARI AKTIVITAS INVESTASI
-            </h4>
-            <div className="space-y-2">
-              {items
-                .filter((i) => i.category === "INVESTING")
-                .map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-[12px] py-1 border-b border-slate-100">
-                    <span className="text-slate-700">{item.name}</span>
-                    <span className={`font-mono font-medium ${item.amount >= 0 ? "text-slate-900" : "text-rose-600"}`}>
-                      {item.amount < 0 ? `(${formatRupiah(Math.abs(item.amount))})` : formatRupiah(item.amount)}
-                    </span>
-                  </div>
-                ))}
-              <div className="flex justify-between text-[12px] font-bold pt-2 text-slate-900">
-                <span>Arus Kas Bersih yang Digunakan untuk Aktivitas Investasi</span>
-                <span className="font-mono text-amber-700">({formatRupiah(Math.abs(invTotal))})</span>
-              </div>
-            </div>
+        <DnaDataTableCard title="2. Arus Kas dari Aktivitas Investasi (Investing Activities)">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <tbody className="divide-y divide-slate-100">
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembelian Mesin Homogenizer High Shear R&D Baru</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 85.000.000)</td>
+                </tr>
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Upgrade Sistem HVAC & Ruang Bersih Cleanroom Pabrik</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 35.000.000)</td>
+                </tr>
+                <tr className="bg-amber-50/60 font-bold border-t border-amber-300">
+                  <td className="px-3.5 py-3 text-amber-950 font-extrabold">ARUS KAS BERSIH DARI INVESTASI:</td>
+                  <td className="px-3.5 py-3 text-right text-amber-900 font-black">({formatRupiah(Math.abs(cashInvesting))})</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </DnaDataTableCard>
 
-          {/* Pendanaan */}
-          <div>
-            <h4 className="text-[13px] font-bold text-slate-900 border-b border-slate-200 pb-2 mb-3">
-              3. ARUS KAS DARI AKTIVITAS PENDANAAN
-            </h4>
-            <div className="space-y-2">
-              {items
-                .filter((i) => i.category === "FINANCING")
-                .map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-[12px] py-1 border-b border-slate-100">
-                    <span className="text-slate-700">{item.name}</span>
-                    <span className={`font-mono font-medium ${item.amount >= 0 ? "text-slate-900" : "text-rose-600"}`}>
-                      {item.amount < 0 ? `(${formatRupiah(Math.abs(item.amount))})` : formatRupiah(item.amount)}
-                    </span>
-                  </div>
-                ))}
-              <div className="flex justify-between text-[12px] font-bold pt-2 text-slate-900">
-                <span>Arus Kas Bersih dari Aktivitas Pendanaan</span>
-                <span className="font-mono text-blue-700">{formatRupiah(finTotal)}</span>
-              </div>
-            </div>
+        <DnaDataTableCard title="3. Arus Kas dari Aktivitas Pendanaan (Financing Activities)">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <tbody className="divide-y divide-slate-100">
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Pokok Pinjaman Investasi Bank BCA</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 150.000.000)</td>
+                </tr>
+                <tr className="bg-rose-50/60 font-bold border-t border-rose-300">
+                  <td className="px-3.5 py-3 text-rose-950 font-extrabold">ARUS KAS BERSIH DARI PENDANAAN:</td>
+                  <td className="px-3.5 py-3 text-right text-rose-900 font-black">({formatRupiah(Math.abs(cashFinancing))})</td>
+                </tr>
+                <tr className="bg-blue-100/70 font-black border-t-2 border-blue-500">
+                  <td className="px-3.5 py-3.5 text-blue-950 font-black text-sm">TOTAL KENAIKAN BERSIH KAS & SALDO AKHIR:</td>
+                  <td className="px-3.5 py-3.5 text-right text-blue-950 font-black text-sm">{formatRupiah(cashEnding)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-
-          {/* Saldo Kas */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-[13px]">
-            <div className="flex justify-between text-slate-600">
-              <span>Saldo Kas Awal Periode</span>
-              <span className="font-mono font-semibold text-slate-900">{formatRupiah(beginningCash)}</span>
-            </div>
-            <div className="flex justify-between text-slate-600">
-              <span>Kenaikan Bersih Kas & Setara Kas</span>
-              <span className="font-mono font-semibold text-emerald-700">+{formatRupiah(netCashFlow)}</span>
-            </div>
-            <div className="flex justify-between font-bold border-t border-slate-200 pt-2 text-[14px] text-slate-900">
-              <span>Saldo Kas Akhir Periode (Konsolidasi Giro BCA, Mandiri & Kas Pabrik)</span>
-              <span className="font-mono text-blue-600">{formatRupiah(endingCash)}</span>
-            </div>
-          </div>
-        </div>
-      </DnaDataTableCard>
+        </DnaDataTableCard>
+      </div>
     </DnaPageContainer>
   );
 }

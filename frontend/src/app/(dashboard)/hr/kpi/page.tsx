@@ -1,181 +1,188 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { BarChart3, Calendar, Activity, Filter } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
-  StatCard,
-  KpiCard,
-  DnaBadge,
+  Award,
+  TrendingUp,
+  Target,
+  Search,
+  Filter,
+  Eye,
+  Star,
+  CheckCircle2,
+  FileSpreadsheet,
+  Printer,
+  Sparkles
+} from "lucide-react";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
   DnaButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  DnaBadge,
+  DnaModal,
+  formatRupiah,
+  useDnaToast
 } from "@/components/dna";
 
-interface KPIEntry {
+interface KpiScorecard {
   id: string;
-  employee: string;
-  division: string;
-  objective: number;
-  subjective: number;
-  finalScore: number;
-  period: string;
+  empName: string;
+  empRole: string;
+  department: string;
+  targetKpi: string;
+  achievement: number; // percentage
+  grade: "A" | "B+" | "B" | "C";
+  bonusEligible: boolean;
 }
 
-const DIVISIONS = ["All", "Produksi", "QC", "R&D", "Marketing", "Warehouse", "SCM", "Finance", "HR", "Creative"];
-
-const KPI_DATA: KPIEntry[] = [
-  { id: "KPI-001", employee: "Budi Santoso", division: "Produksi", objective: 88, subjective: 85, finalScore: 87.1, period: "Q1 2026" },
-  { id: "KPI-002", employee: "Siti Rahayu", division: "QC", objective: 92, subjective: 90, finalScore: 91.4, period: "Q1 2026" },
-  { id: "KPI-003", employee: "Ahmad Fauzi", division: "R&D", objective: 76, subjective: 80, finalScore: 77.2, period: "Q1 2026" },
-  { id: "KPI-004", employee: "Dewi Lestari", division: "HR", objective: 95, subjective: 92, finalScore: 94.1, period: "Q1 2026" },
-  { id: "KPI-005", employee: "Rudi Hartono", division: "Warehouse", objective: 65, subjective: 70, finalScore: 66.5, period: "Q1 2026" },
-  { id: "KPI-006", employee: "Fitri Handayani", division: "Marketing", objective: 82, subjective: 78, finalScore: 80.8, period: "Q1 2026" },
-  { id: "KPI-007", employee: "Agus Prasetyo", division: "Produksi", objective: 70, subjective: 65, finalScore: 68.5, period: "Q1 2026" },
-  { id: "KPI-008", employee: "Linda Kusuma", division: "Finance", objective: 90, subjective: 88, finalScore: 89.4, period: "Q1 2026" },
-  { id: "KPI-009", employee: "Hendra Gunawan", division: "SCM", objective: 73, subjective: 75, finalScore: 73.6, period: "Q1 2026" },
-  { id: "KPI-010", employee: "Maya Sari", division: "Creative", objective: 85, subjective: 82, finalScore: 84.1, period: "Q1 2026" },
+const FALLBACK_KPIS: KpiScorecard[] = [
+  { id: "1", empName: "Budi Santoso", empRole: "Supervisor Mixing", department: "Produksi", targetKpi: "Zero Batch Scrap & OEE > 85%", achievement: 94.5, grade: "A", bonusEligible: true },
+  { id: "2", empName: "Rian Saputra", empRole: "R&D Formulator", department: "R&D", targetKpi: "Lead Time Sample < 5 Hari", achievement: 91.0, grade: "A", bonusEligible: true },
+  { id: "3", empName: "Siti Rahmawati", empRole: "QC Inspector", department: "QC", targetKpi: "COA Release SLA < 24 Jam", achievement: 88.0, grade: "B+", bonusEligible: true },
+  { id: "4", empName: "Dewi Lestari", empRole: "BusDev Maklon", department: "BusDev", targetKpi: "Monthly Deals > Rp 800 Juta", achievement: 102.5, grade: "A", bonusEligible: true },
 ];
 
-function getScoreBadge(score: number): "success" | "warning" | "critical" {
-  if (score >= 85) return "success";
-  if (score >= 70) return "warning";
-  return "critical";
-}
-
-export default function KPIPage() {
-  const [divisionFilter, setDivisionFilter] = useState("All");
-
-  const filtered = useMemo(() => {
-    if (divisionFilter === "All") return KPI_DATA;
-    return KPI_DATA.filter((k) => k.division === divisionFilter);
-  }, [divisionFilter]);
-
-  const avgScore = Math.round(KPI_DATA.reduce((sum, k) => sum + k.finalScore, 0) / KPI_DATA.length);
-  const activePeriod = "Q1 2026";
-  const eventCount = KPI_DATA.length;
+export default function HrKpiPage() {
+  const toast = useDnaToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [period, setPeriod] = useState("Q3-2026");
 
   return (
-    <DashboardShell
-      title="KPI"
-      titleAccent="Engine"
-      subtitle="Employee Performance Scoring & Objective Tracking"
-      actions={
-        <DnaButton variant="primary" icon={<BarChart3 className="stroke-[3px]" />}>
-          RUN ASSESSMENT
-        </DnaButton>
-      }
-    >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <KpiCard
-            label="Avg KPI Score"
-            value={`${avgScore}`}
-            targetPct={avgScore}
-            icon={<BarChart3 className="text-blue-500" />}
-          />
-          <StatCard
-            label="Active Period"
-            value={activePeriod}
-            icon={<Calendar className="text-purple-500" />}
-          />
-          <StatCard
-            label="Event Count"
-            value={eventCount}
-            subValue="scored entries"
-            icon={<Activity className="text-emerald-500" />}
-          />
-        </div>
-
-        {/* Filter + Table */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-44">
-                <Select value={divisionFilter} onValueChange={(v: string | null) => setDivisionFilter(v ?? "")}>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] uppercase">
-                    <Filter className="w-3.5 h-3.5 mr-2 text-slate-400" />
-                    <SelectValue placeholder="Filter Division" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-slate-200">
-                    {DIVISIONS.map((d) => (
-                      <SelectItem key={d} value={d} className="font-medium text-xs uppercase cursor-pointer hover:bg-slate-50">
-                        {d}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                {filtered.length} records
-              </span>
-            </div>
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="Evaluasi Kinerja & KPI Karyawan (Performance Scorecard)"
+        description="Sistem penilaian KPI 360 derajat, pencapaian target SLA operasional, kalkulasi bonus kinerja, dan grading."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200 font-semibold">
+            <Award className="w-3.5 h-3.5" />
+            <span>Periode Review: {period}</span>
           </div>
-
-          <div className="rounded-[24px] border border-slate-200 shadow-sm overflow-hidden bg-white">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50/50 border-b border-slate-100">
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Employee</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Division</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Objective (70%)</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Subjective (30%)</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Final Score</TableHead>
-                    <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Period</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-wider py-8">
-                        Tidak ada data KPI ditemukan
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filtered.map((row) => (
-                      <TableRow key={row.id} className="group hover:bg-slate-50/50 transition-all">
-                        <TableCell>
-                          <p className="text-[11px] font-black text-slate-900 uppercase">{row.employee}</p>
-                        </TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-[9px] font-black text-slate-700 bg-slate-100 rounded px-2 py-0.5 uppercase">
-                            {row.division}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.objective}</p>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.subjective}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <DnaBadge status={getScoreBadge(row.finalScore)}>
-                            {row.finalScore.toFixed(1)}
-                          </DnaBadge>
-                        </TableCell>
-                        <TableCell>
-                          <p className="text-[11px] font-medium text-slate-400 uppercase">{row.period}</p>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-semibold"
+            >
+              <option value="Q3-2026">Kuartal 3 (Q3 2026)</option>
+              <option value="Q2-2026">Kuartal 2 (Q2 2026)</option>
+              <option value="Q1-2026">Kuartal 1 (Q1 2026)</option>
+            </select>
+            <DnaButton variant="primary" size="md" onClick={() => toast.success("Kalkulasi Rekap Bonus Kinerja Q3 Selesai")}>
+              <Sparkles className="w-4 h-4 mr-1.5" />
+              Proses Grading & Bonus
+            </DnaButton>
           </div>
+        }
+      />
+
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Rata-rata Skor KPI Pabrik"
+          value="92.4%"
+          icon={<Target className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "+3.2% vs Q2", isPositive: true }}
+          subtext="Target Perusahaan Tercapai"
+          variant="success"
+        />
+        <DnaStatCard
+          label="Karyawan Grade A (Top)"
+          value="38 Orang"
+          icon={<Award className="w-5 h-5 text-purple-600" />}
+          subtext="Skor Pencapaian > 90%"
+          variant="purple"
+        />
+        <DnaStatCard
+          label="Karyawan Eligible Bonus"
+          value="112 Orang"
+          icon={<Star className="w-5 h-5 text-blue-600" />}
+          delta={{ value: "90.3% Headcount", isPositive: true }}
+          subtext="Memenuhi Syarat Insentif"
+          variant="info"
+        />
+        <DnaStatCard
+          label="Perlu Pembinaan (Grade C)"
+          value="2 Orang"
+          icon={<TrendingUp className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "PIP Program", isPositive: false }}
+          subtext="Coaching & Mentoring Khusus"
+          variant="warning"
+        />
+      </DnaKpiGrid>
+
+      <DnaDataTableCard
+        title="Scorecard Pencapaian KPI Karyawan"
+        badge={<DnaBadge variant="default">{FALLBACK_KPIS.length} Dinilai</DnaBadge>}
+        customToolbar={
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari karyawan / departemen..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-3">Nama Pegawai</th>
+                <th className="px-3.5 py-3">Jabatan & Departemen</th>
+                <th className="px-3.5 py-3">Indikator Kunci (Key KPI)</th>
+                <th className="px-3.5 py-3 text-right">Pencapaian (%)</th>
+                <th className="px-3.5 py-3 text-center">Grade</th>
+                <th className="px-3.5 py-3 text-center">Status Insentif</th>
+                <th className="px-3.5 py-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {FALLBACK_KPIS.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{item.empName}</td>
+                  <td className="px-3.5 py-2.5">
+                    <div className="font-semibold text-slate-800">{item.empRole}</div>
+                    <div className="text-[10px] text-slate-500">{item.department}</div>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-slate-700">{item.targetKpi}</td>
+                  <td className="px-3.5 py-2.5 text-right font-extrabold text-emerald-700">
+                    {item.achievement}%
+                  </td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <span className="font-black text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                      {item.grade}
+                    </span>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaBadge variant={item.bonusEligible ? "success" : "warning"}>
+                      {item.bonusEligible ? "Eligible Bonus" : "Standard"}
+                    </DnaBadge>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => toast.success(`Detail KPI ${item.empName} dibuka`)}
+                    >
+                      Detail 360°
+                    </DnaButton>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
-    </DashboardShell>
+      </DnaDataTableCard>
+    </DnaPageContainer>
   );
 }

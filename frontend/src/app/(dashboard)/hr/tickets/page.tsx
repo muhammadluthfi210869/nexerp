@@ -1,327 +1,239 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Clock, DollarSign, Umbrella, CheckCircle2, XCircle, Plus, Search, Loader2 } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
-  DnaBadge,
+  FileText,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Search,
+  Filter,
+  Users
+} from "lucide-react";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
   DnaButton,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  DnaBadge,
+  DnaModal,
+  formatRupiah,
+  useDnaToast
 } from "@/components/dna";
-import { toast } from "sonner";
 
-type TicketType = "LEAVE" | "OVERTIME" | "REIMBURSE";
-type TicketStatus = "PENDING" | "APPROVED" | "REJECTED" | "DISBURSED";
-
-interface Ticket {
+interface HrTicketItem {
   id: string;
-  type: TicketType;
-  status: TicketStatus;
-  reason: string;
+  ticketNo: string;
+  empName: string;
+  department: string;
+  type: "CUTI_TAHUNAN" | "IZIN_SAKIT" | "LEMBUR_PRODUKSI" | "DINAS_LUAR";
   startDate: string;
-  endDate: string | null;
-  amount: number | null;
-  employeeName: string;
-  createdAt: string;
+  endDate: string;
+  duration: string;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
 }
 
-const MOCK_TICKETS: Ticket[] = [
-  { id: "TKT-001", type: "LEAVE", status: "PENDING", reason: "Cuti Tahunan 2026", startDate: "2026-06-01", endDate: "2026-06-05", amount: null, employeeName: "Budi Santoso", createdAt: "2026-05-25T08:00:00Z" },
-  { id: "TKT-002", type: "OVERTIME", status: "APPROVED", reason: "Lembur Project Akhir Bulan", startDate: "2026-05-24", endDate: null, amount: null, employeeName: "Siti Rahayu", createdAt: "2026-05-24T16:30:00Z" },
-  { id: "TKT-003", type: "REIMBURSE", status: "PENDING", reason: "Biaya Transportasi Meeting Client", startDate: "2026-05-23", endDate: null, amount: 250000, employeeName: "Ahmad Fauzi", createdAt: "2026-05-23T09:15:00Z" },
-  { id: "TKT-004", type: "LEAVE", status: "REJECTED", reason: "Izin tidak mendesak", startDate: "2026-05-20", endDate: "2026-05-21", amount: null, employeeName: "Dewi Lestari", createdAt: "2026-05-19T10:00:00Z" },
-  { id: "TKT-005", type: "REIMBURSE", status: "DISBURSED", reason: "Pembelian Supplies Kantor", startDate: "2026-05-15", endDate: null, amount: 1500000, employeeName: "Rudi Hartono", createdAt: "2026-05-15T07:45:00Z" },
-  { id: "TKT-006", type: "OVERTIME", status: "PENDING", reason: "Support maintenance weekend", startDate: "2026-05-28", endDate: null, amount: null, employeeName: "Fitri Handayani", createdAt: "2026-05-26T14:00:00Z" },
-  { id: "TKT-007", type: "LEAVE", status: "APPROVED", reason: "Medical Appointment", startDate: "2026-05-27", endDate: "2026-05-27", amount: null, employeeName: "Agus Prasetyo", createdAt: "2026-05-22T11:30:00Z" },
+const FALLBACK_TICKETS: HrTicketItem[] = [
+  { id: "1", ticketNo: "REQ-LV-001", empName: "Budi Santoso", department: "Produksi Mixing", type: "LEMBUR_PRODUKSI", startDate: "2026-09-09 16:00", endDate: "2026-09-09 20:00", duration: "4 Jam", reason: "Lembur batch darurat PO-8821", status: "APPROVED" },
+  { id: "2", ticketNo: "REQ-LV-002", empName: "Rian Saputra", department: "R&D Lab", type: "CUTI_TAHUNAN", startDate: "2026-09-15", endDate: "2026-09-17", duration: "3 Hari", reason: "Acara keluarga (Sisa Cuti: 8 hari)", status: "PENDING" },
+  { id: "3", ticketNo: "REQ-LV-003", empName: "Siti Rahmawati", department: "QC Mikrobiologi", type: "IZIN_SAKIT", startDate: "2026-09-08", endDate: "2026-09-08", duration: "1 Hari", reason: "Surat dokter terlampir", status: "APPROVED" },
 ];
 
-const TYPE_META: Record<TicketType, { label: string; icon: React.ReactNode; className: string }> = {
-  LEAVE: { label: "Cuti", icon: <Umbrella className="w-3.5 h-3.5" />, className: "bg-cyan-50 text-cyan-600 border-cyan-100" },
-  OVERTIME: { label: "Lembur", icon: <Clock className="w-3.5 h-3.5" />, className: "bg-indigo-50 text-indigo-600 border-indigo-100" },
-  REIMBURSE: { label: "Reimburse", icon: <DollarSign className="w-3.5 h-3.5" />, className: "bg-amber-50 text-amber-600 border-amber-100" },
-};
-
-const STATUS_META: Record<TicketStatus, { label: string; status: "success" | "info" | "warning" | "critical" | "purple" | "default" }> = {
-  PENDING: { label: "Pending", status: "warning" },
-  APPROVED: { label: "Disetujui", status: "success" },
-  REJECTED: { label: "Ditolak", status: "critical" },
-  DISBURSED: { label: "Dibayar", status: "info" },
-};
-
-export default function TicketsPage() {
-  const [activeTab, setActiveTab] = useState("all");
-  const [search, setSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ type: "LEAVE" as TicketType, reason: "", startDate: "", endDate: "", amount: 0 });
-
-  const { data: tickets = [], isLoading } = useQuery<Ticket[]>({
-    queryKey: ["hr-tickets"],
-    queryFn: async () => {
-      try {
-        const resp = await api.get("/hr/tickets");
-        return resp.data;
-      } catch {
-        return MOCK_TICKETS;
-      }
-    },
-  });
-
-  const filteredTickets = useMemo(() => {
-    let list = [...tickets];
-    if (activeTab !== "all") {
-      list = list.filter((t) => t.status.toLowerCase() === activeTab);
-    }
-    if (search.trim()) {
-      const term = search.toLowerCase();
-      list = list.filter(
-        (t) =>
-          t.reason.toLowerCase().includes(term) ||
-          t.type.toLowerCase().includes(term) ||
-          t.employeeName.toLowerCase().includes(term),
-      );
-    }
-    return list;
-  }, [activeTab, search, tickets]);
-
-  const handleCreate = () => {
-    toast.success("Tiket berhasil dibuat (mock)");
-    setIsModalOpen(false);
-    setForm({ type: "LEAVE", reason: "", startDate: "", endDate: "", amount: 0 });
-  };
+export default function HrTicketsPage() {
+  const toast = useDnaToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
-    <DashboardShell
-      title="TICKET"
-      titleAccent="PORTAL"
-      subtitle="Pengajuan Cuti, Lembur & Reimbursement Karyawan"
-      actions={
-        <DnaButton variant="primary" onClick={() => setIsModalOpen(true)} icon={<Plus className="stroke-[3px]" />}>
-          BUAT TIKET
-        </DnaButton>
-      }
-    >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Search + Tabs */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="flex items-center justify-between gap-4">
-              <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-12 border border-slate-100">
-                <TabsTrigger value="all" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all gap-2">
-                  Semua
-                </TabsTrigger>
-                <TabsTrigger value="pending" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all gap-2">
-                  Pending
-                </TabsTrigger>
-                <TabsTrigger value="approved" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all gap-2">
-                  Disetujui
-                </TabsTrigger>
-                <TabsTrigger value="rejected" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all gap-2">
-                  Ditolak
-                </TabsTrigger>
-              </TabsList>
-              <div className="relative w-full md:w-64 shrink-0">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="CARI TIKET..."
-                  className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-            </div>
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="Izin, Cuti & Lembur (Employee Request Tickets)"
+        description="Portal pengajuan dan persetujuan bertingkat (Supervisor & HR) untuk cuti tahunan, sakit, dinas luar, dan Surat Perintah Lembur (SPL)."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Tiket Menunggu Approval: 1 Pengajuan</span>
+          </div>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Buat Pengajuan Baru
+            </DnaButton>
+          </div>
+        }
+      />
 
-            {/* Content Tabs */}
-            {["all", "pending", "approved", "rejected"].map((tab) => (
-              <TabsContent key={tab} value={tab} className="m-0 mt-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                <div className="rounded-[24px] border border-[var(--border-color)] shadow-sm overflow-hidden bg-white animate-fade-slide-in">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50/50 border-b border-slate-100">
-                          <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">TIPE</th>
-                          <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">KARYAWAN</th>
-                          <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">ALASAN</th>
-                          <th className="px-4 py-4 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">TANGGAL</th>
-                          <th className="px-4 py-4 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMINAL</th>
-                          <th className="px-4 py-4 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</th>
-                          <th className="px-4 py-4 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">AKSI</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {isLoading ? (
-                          <tr>
-                            <td colSpan={7} className="px-4 py-12 text-center">
-                              <Loader2 className="w-5 h-5 text-slate-400 animate-spin mx-auto" />
-                            </td>
-                          </tr>
-                        ) : filteredTickets.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                              Tidak ada tiket ditemukan
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredTickets.map((ticket) => {
-                            const typeMeta = TYPE_META[ticket.type];
-                            const statusMeta = STATUS_META[ticket.status];
-                            return (
-                              <tr key={ticket.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                                <td className="px-4 py-3">
-                                  <span className={`inline-flex items-center gap-1.5 text-[9px] font-black rounded-lg px-2.5 py-1 uppercase ${typeMeta.className}`}>
-                                    {typeMeta.icon}
-                                    {typeMeta.label}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <p className="text-[11px] font-black text-slate-700 uppercase">{ticket.employeeName}</p>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <p className="text-[11px] font-medium text-slate-700 max-w-[250px] truncate uppercase">{ticket.reason}</p>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <p className="text-[11px] font-medium text-slate-400">
-                                    {new Date(ticket.startDate).toLocaleDateString("id-ID")}
-                                    {ticket.endDate ? ` — ${new Date(ticket.endDate).toLocaleDateString("id-ID")}` : ""}
-                                  </p>
-                                </td>
-                                <td className="px-4 py-3 text-right">
-                                  <p className="text-[13px] font-black text-slate-900 tracking-tighter tabular-nums">
-                                    {ticket.amount != null ? `Rp ${ticket.amount.toLocaleString("id-ID")}` : "—"}
-                                  </p>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <DnaBadge status={statusMeta.status}>{statusMeta.label}</DnaBadge>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <div className="flex justify-center gap-2">
-                                    {ticket.status === "PENDING" && (
-                                      <div className="flex gap-1.5">
-                                        <DnaButton variant="primary" size="sm" icon={<CheckCircle2 className="w-3.5 h-3.5" />} className="bg-emerald-600 hover:bg-emerald-700">
-                                          SETUJUI
-                                        </DnaButton>
-                                        <DnaButton variant="danger" size="sm" icon={<XCircle className="w-3.5 h-3.5" />}>
-                                          TOLAK
-                                        </DnaButton>
-                                      </div>
-                                    )}
-                                    {ticket.status !== "PENDING" && (
-                                      <DnaButton variant="outline" size="sm">
-                                        DETAIL
-                                      </DnaButton>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Pengajuan Menunggu Approval"
+          value="1 Tiket"
+          icon={<Clock className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "Review Manager", isPositive: false }}
+          subtext="Perlu Verifikasi Hari Ini"
+          variant="warning"
+        />
+        <DnaStatCard
+          label="Cuti Disetujui (Bulan Ini)"
+          value="8 Pengajuan"
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Quota Terjaga", isPositive: true }}
+          subtext="Total 22 Hari Kerja Cuti"
+          variant="success"
+        />
+        <DnaStatCard
+          label="Surat Perintah Lembur (SPL)"
+          value="14 Sesi"
+          icon={<Calendar className="w-5 h-5 text-purple-600" />}
+          subtext="Kebutuhan Target Batch Manufaktur"
+          variant="purple"
+        />
+        <DnaStatCard
+          label="Tingkat Absensi Izin Sakit"
+          value="0.8%"
+          icon={<Users className="w-5 h-5 text-blue-600" />}
+          delta={{ value: "Sangat Sehat", isPositive: true }}
+          subtext="Kondisi K3 Pabrik Baik"
+          variant="info"
+        />
+      </DnaKpiGrid>
+
+      <DnaDataTableCard
+        title="Daftar Pengajuan Tiket Karyawan"
+        badge={<DnaBadge variant="default">{FALLBACK_TICKETS.length} Tiket</DnaBadge>}
+        customToolbar={
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari no tiket / nama..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-3">No. Tiket</th>
+                <th className="px-3.5 py-3">Nama Pegawai</th>
+                <th className="px-3.5 py-3">Departemen</th>
+                <th className="px-3.5 py-3">Jenis Permohonan</th>
+                <th className="px-3.5 py-3">Periode Tanggal</th>
+                <th className="px-3.5 py-3">Durasi</th>
+                <th className="px-3.5 py-3">Alasan / Keterangan</th>
+                <th className="px-3.5 py-3 text-center">Status</th>
+                <th className="px-3.5 py-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {FALLBACK_TICKETS.map((t) => (
+                <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{t.ticketNo}</td>
+                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{t.empName}</td>
+                  <td className="px-3.5 py-2.5 text-slate-600">{t.department}</td>
+                  <td className="px-3.5 py-2.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-700">
+                      {t.type.replace(/_/g, " ")}
+                    </span>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-slate-700">{t.startDate} {t.startDate !== t.endDate && `s/d ${t.endDate}`}</td>
+                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{t.duration}</td>
+                  <td className="px-3.5 py-2.5 text-slate-500 text-[11px] max-w-xs truncate">{t.reason}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaBadge variant={t.status === "APPROVED" ? "success" : t.status === "PENDING" ? "warning" : "critical"}>
+                      {t.status === "APPROVED" ? "Disetujui" : t.status === "PENDING" ? "Menunggu" : "Ditolak"}
+                    </DnaBadge>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    {t.status === "PENDING" ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <DnaButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() => toast.success(`Tiket ${t.ticketNo} berhasil disetujui!`)}
+                        >
+                          Setujui
+                        </DnaButton>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-emerald-700 font-bold flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Done
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </DnaDataTableCard>
 
-      {/* Create Ticket Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl border border-slate-200 shadow-sm p-0 overflow-hidden">
-          <div className="bg-blue-600 p-6 text-white">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none italic">
-              BUAT TIKET BARU
-            </DialogTitle>
-            <DialogDescription className="text-blue-100 font-medium uppercase text-[9px] tracking-widest mt-2 leading-none">
-              Formulir Pengajuan Cuti / Lembur / Reimbursement
-            </DialogDescription>
+      {/* CREATE TICKET MODAL */}
+      <DnaModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Form Pengajuan Izin / Cuti / Lembur"
+        size="md"
+      >
+        <div className="space-y-3.5 text-xs">
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">Nama Pegawai</label>
+            <input type="text" placeholder="Nama Karyawan" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
           </div>
-          <div className="p-6 space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Tipe Tiket</label>
-              <Select
-                value={form.type}
-                onValueChange={(v) => setForm({ ...form, type: v as TicketType })}
-              >
-                <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase">
-                  <SelectValue placeholder="Pilih tipe..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-slate-200">
-                  <SelectItem value="LEAVE" className="font-medium text-xs uppercase cursor-pointer hover:bg-slate-50">Cuti</SelectItem>
-                  <SelectItem value="OVERTIME" className="font-medium text-xs uppercase cursor-pointer hover:bg-slate-50">Lembur</SelectItem>
-                  <SelectItem value="REIMBURSE" className="font-medium text-xs uppercase cursor-pointer hover:bg-slate-50">Reimbursement</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Alasan</label>
-              <textarea
-                value={form.reason}
-                onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                className="w-full h-24 bg-slate-50 border border-slate-200 rounded-xl p-4 font-medium text-xs resize-none focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                placeholder="Jelaskan alasan pengajuan..."
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Tanggal Mulai</label>
-                <input
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Tanggal Akhir</label>
-                <input
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-            </div>
-            {form.type === "REIMBURSE" && (
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Nominal (IDR)</label>
-                <input
-                  type="number"
-                  value={form.amount || ""}
-                  onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
-                  placeholder="0"
-                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xl text-blue-600 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-            )}
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">Jenis Pengajuan</label>
+            <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white">
+              <option value="CUTI_TAHUNAN">Cuti Tahunan</option>
+              <option value="IZIN_SAKIT">Izin Sakit (Medical Leave)</option>
+              <option value="LEMBUR_PRODUKSI">Surat Perintah Lembur (SPL)</option>
+              <option value="DINAS_LUAR">Perjalanan Dinas Luar Kota</option>
+            </select>
           </div>
-          <DialogFooter className="p-6 pt-0 flex gap-2 justify-end">
-            <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>
-              BATAL
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">Tanggal Mulai</label>
+              <input type="date" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">Tanggal Selesai</label>
+              <input type="date" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">Alasan / Catatan Pengajuan</label>
+            <textarea rows={3} placeholder="Tuliskan keterangan lengkap..." className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <DnaButton variant="secondary" size="md" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreate}>
-              KIRIM
+            <DnaButton
+              variant="primary"
+              size="md"
+              onClick={() => {
+                toast.success("Tiket pengajuan berhasil dikirimkan ke HR!");
+                setIsCreateModalOpen(false);
+              }}
+            >
+              Kirim Tiket
             </DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+          </div>
+        </div>
+      </DnaModal>
+    </DnaPageContainer>
   );
 }

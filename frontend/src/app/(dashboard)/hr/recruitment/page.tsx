@@ -1,217 +1,239 @@
 "use client";
 
-import { useState } from "react";
-import { Briefcase, Users, Clock, Plus, Eye, Send, CheckCircle2, Search, X } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
-  StatCard,
-  DnaBadge,
+  Users,
+  Briefcase,
+  UserPlus,
+  Search,
+  Filter,
+  Eye,
+  Mail,
+  Phone,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Plus,
+  FileSpreadsheet,
+  Printer
+} from "lucide-react";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
   DnaButton,
-  DnaInput,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  DnaBadge,
+  DnaModal,
+  formatRupiah,
+  useDnaToast
 } from "@/components/dna";
-import { toast } from "sonner";
 
-type PositionStatus = "SENT" | "PENDING" | "DONE";
-
-interface Position {
+interface EmployeeCandidate {
   id: string;
+  name: string;
   position: string;
-  department: string;
-  candidates: number;
-  status: PositionStatus;
-  daysOpen: number;
-  createdAt: string;
+  department: "PRODUKSI" | "QC_QA" | "RND" | "FINANCE" | "BUSDEV" | "WAREHOUSE";
+  appliedDate: string;
+  stage: "SCREENING" | "INTERVIEW_HR" | "INTERVIEW_USER" | "OFFERING" | "HIRED";
+  experience: string;
+  phone: string;
 }
 
-const POSITION_DATA: Position[] = [
-  { id: "REQ-001", position: "QC Supervisor", department: "QC", candidates: 12, status: "SENT", daysOpen: 14, createdAt: "2026-05-12" },
-  { id: "REQ-002", position: "R&D Formulation Specialist", department: "R&D", candidates: 8, status: "PENDING", daysOpen: 28, createdAt: "2026-04-28" },
-  { id: "REQ-003", position: "Produksi Operator", department: "Produksi", candidates: 24, status: "DONE", daysOpen: 7, createdAt: "2026-05-19" },
-  { id: "REQ-004", position: "Marketing Brand Manager", department: "Marketing", candidates: 5, status: "SENT", daysOpen: 21, createdAt: "2026-05-05" },
-  { id: "REQ-005", position: "Warehouse Lead", department: "Warehouse", candidates: 3, status: "PENDING", daysOpen: 35, createdAt: "2026-04-21" },
-  { id: "REQ-006", position: "Finance Staff", department: "Finance", candidates: 15, status: "DONE", daysOpen: 10, createdAt: "2026-05-16" },
+const FALLBACK_CANDIDATES: EmployeeCandidate[] = [
+  { id: "1", name: "Rian Saputra, S.Farm", position: "Formulator R&D Skincare", department: "RND", appliedDate: "2026-09-05", stage: "INTERVIEW_USER", experience: "3 thn Lab Kosmetik", phone: "0812-4455-6677" },
+  { id: "2", name: "Siti Rahmawati, S.Si", position: "Analis Kimia QC Mikrobiologi", department: "QC_QA", appliedDate: "2026-09-03", stage: "OFFERING", experience: "2 thn Lab Pengujian", phone: "0813-8899-0011" },
+  { id: "3", name: "Bayu Pratama, S.T", position: "Supervisor Mixing & Bulk", department: "PRODUKSI", appliedDate: "2026-09-01", stage: "HIRED", experience: "5 thn Manufaktur Farmasi", phone: "0811-2233-4455" },
+  { id: "4", name: "Dewi Lestari, S.E", position: "Senior Account Executive BusDev", department: "BUSDEV", appliedDate: "2026-08-28", stage: "INTERVIEW_HR", experience: "4 thn B2B Maklon", phone: "0856-7788-9900" },
 ];
 
-const STATUS_META: Record<PositionStatus, { label: string; status: "success" | "info" | "warning" | "purple" | "default" }> = {
-  SENT: { label: "Sent", status: "info" },
-  PENDING: { label: "Pending", status: "warning" },
-  DONE: { label: "Done", status: "success" },
-};
-
-export default function RecruitmentPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ position: "", department: "" });
-
-  const openPositions = POSITION_DATA.filter((p) => p.status !== "DONE").length;
-  const totalCandidates = POSITION_DATA.reduce((sum, p) => sum + p.candidates, 0);
-  const avgDaysOpen = Math.round(POSITION_DATA.reduce((sum, p) => sum + p.daysOpen, 0) / POSITION_DATA.length);
-
-  const handleCreate = () => {
-    if (!form.position.trim() || !form.department.trim()) {
-      toast.error("Lengkapi semua field");
-      return;
-    }
-    toast.success(`Posisi "${form.position}" berhasil dibuat (mock)`);
-    setIsModalOpen(false);
-    setForm({ position: "", department: "" });
-  };
+export default function HrRecruitmentPage() {
+  const toast = useDnaToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
-    <DashboardShell
-      title="Recruitment"
-      titleAccent="Pipeline"
-      subtitle="Position Requisition Tracking & Candidate Pipeline"
-      actions={
-        <DnaButton variant="primary" onClick={() => setIsModalOpen(true)} icon={<Plus className="stroke-[3px]" />}>
-          CREATE POSITION
-        </DnaButton>
-      }
-    >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
-            label="Open Positions"
-            value={openPositions}
-            icon={<Briefcase className="text-blue-500" />}
-          />
-          <StatCard
-            label="Total Candidates"
-            value={totalCandidates}
-            icon={<Users className="text-purple-500" />}
-          />
-          <StatCard
-            label="Time to Fill (Avg)"
-            value={`${avgDaysOpen} Days`}
-            icon={<Clock className="text-amber-500" />}
-          />
-        </div>
-
-        {/* Table */}
-        <div className="rounded-[24px] border border-slate-200 shadow-sm overflow-hidden bg-white">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 border-b border-slate-100">
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Position</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Department</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Candidates</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Status</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Days Open</TableHead>
-                  <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {POSITION_DATA.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-wider py-8">
-                      Tidak ada posisi rekrutmen ditemukan
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  POSITION_DATA.map((row) => (
-                    <TableRow key={row.id} className="group hover:bg-slate-50/50 transition-all">
-                      <TableCell>
-                        <p className="text-[11px] font-black text-slate-900 uppercase">{row.position}</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{row.id}</p>
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black text-slate-700 bg-slate-100 rounded px-2 py-0.5 uppercase">
-                          {row.department}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.candidates}</p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <DnaBadge status={STATUS_META[row.status].status}>
-                          {STATUS_META[row.status].label}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="text-[13px] font-black text-slate-900 tabular-nums">{row.daysOpen}</p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <DnaButton variant="outline" size="sm" icon={<Eye className="w-3.5 h-3.5" />}>
-                            DETAIL
-                          </DnaButton>
-                          {row.status === "PENDING" && (
-                            <DnaButton variant="primary" size="sm" icon={<Send className="w-3.5 h-3.5" />}>
-                              SEND
-                            </DnaButton>
-                          )}
-                          {row.status === "SENT" && (
-                            <DnaButton variant="secondary" size="sm" icon={<CheckCircle2 className="w-3.5 h-3.5" />} className="bg-emerald-600 hover:bg-emerald-700">
-                              CLOSE
-                            </DnaButton>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="Pegawai & Rekrutmen (Talent Acquisition & Employees)"
+        description="Manajemen pipeline rekrutmen kandidat, lowongan kerja pabrik kosmetik, dan database profil pegawai aktif."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <Users className="w-3.5 h-3.5" />
+            <span>Total Pegawai Aktif: 124 Karyawan</span>
           </div>
-        </div>
-      </div>
-
-      {/* Create Position Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl border border-slate-200 shadow-sm p-0 overflow-hidden">
-          <div className="bg-blue-600 p-6 text-white">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none italic">
-              CREATE POSITION
-            </DialogTitle>
-            <DialogDescription className="text-blue-100 font-medium uppercase text-[9px] tracking-widest mt-2 leading-none">
-              Formulir Pembukaan Posisi Rekrutmen Baru
-            </DialogDescription>
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Position Name</label>
-              <input
-                type="text"
-                value={form.position}
-                onChange={(e) => setForm({ ...form, position: e.target.value })}
-                placeholder="e.g. QC Supervisor"
-                className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Department</label>
-              <input
-                type="text"
-                value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.target.value })}
-                placeholder="e.g. QC"
-                className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-              />
-            </div>
-          </div>
-          <DialogFooter className="p-6 pt-0 flex gap-2 justify-end">
-            <DnaButton variant="outline" onClick={() => setIsModalOpen(false)}>
-              CANCEL
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
+              <UserPlus className="w-4 h-4 mr-1.5" />
+              Buka Lowongan / Input Pelamar
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreate}>
-              CREATE
+          </div>
+        }
+      />
+
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Total Karyawan Aktif"
+          value="124 Orang"
+          icon={<Users className="w-5 h-5 text-blue-600" />}
+          delta={{ value: "+3 Karyawan Baru", isPositive: true }}
+          subtext="Headcount Manufaktur & Office"
+          variant="info"
+        />
+        <DnaStatCard
+          label="Pelamar Aktif (Pipeline)"
+          value="16 Kandidat"
+          icon={<Briefcase className="w-5 h-5 text-purple-600" />}
+          delta={{ value: "4 Lowongan Buka", isPositive: true }}
+          subtext="Screening s/d Offering"
+          variant="purple"
+        />
+        <DnaStatCard
+          label="Jadwal Interview Minggu Ini"
+          value="6 Sesi"
+          icon={<Calendar className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "HR & User Panel", isPositive: true }}
+          subtext="Lab R&D dan Line Produksi"
+          variant="warning"
+        />
+        <DnaStatCard
+          label="Retensi Karyawan (12 Bln)"
+          value="96.8%"
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Turnover Rendah", isPositive: true }}
+          subtext="Benchmarking Industri Baik"
+          variant="success"
+        />
+      </DnaKpiGrid>
+
+      <DnaDataTableCard
+        title="Pipeline Pelamar & Rekrutmen Terkini"
+        badge={<DnaBadge variant="default">{FALLBACK_CANDIDATES.length} Pelamar</DnaBadge>}
+        customToolbar={
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari kandidat / posisi..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-3">Nama Kandidat</th>
+                <th className="px-3.5 py-3">Posisi Dilamar</th>
+                <th className="px-3.5 py-3">Departemen</th>
+                <th className="px-3.5 py-3">Pengalaman</th>
+                <th className="px-3.5 py-3">Kontak WA</th>
+                <th className="px-3.5 py-3">Tgl Daftar</th>
+                <th className="px-3.5 py-3 text-center">Tahapan Seleksi</th>
+                <th className="px-3.5 py-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {FALLBACK_CANDIDATES.map((c) => (
+                <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{c.name}</td>
+                  <td className="px-3.5 py-2.5 font-semibold text-blue-700">{c.position}</td>
+                  <td className="px-3.5 py-2.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-medium text-slate-700">
+                      {c.department}
+                    </span>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-slate-600">{c.experience}</td>
+                  <td className="px-3.5 py-2.5 font-mono text-slate-600">{c.phone}</td>
+                  <td className="px-3.5 py-2.5 text-slate-500">{c.appliedDate}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaBadge
+                      variant={
+                        c.stage === "HIRED"
+                          ? "success"
+                          : c.stage === "OFFERING"
+                          ? "purple"
+                          : c.stage.includes("INTERVIEW")
+                          ? "info"
+                          : "default"
+                      }
+                    >
+                      {c.stage.replace(/_/g, " ")}
+                    </DnaBadge>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => toast.success(`Detail rekrutmen ${c.name} dibuka`)}
+                    >
+                      Review
+                    </DnaButton>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DnaDataTableCard>
+
+      <DnaModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Input Data Pelamar / Posisi Rekrutmen Baru"
+        size="md"
+      >
+        <div className="space-y-3.5 text-xs">
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">Nama Lengkap Kandidat</label>
+            <input type="text" placeholder="e.g. Amanda Putri, S.Farm" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">Posisi Lowongan</label>
+              <input type="text" placeholder="e.g. QC Inspector" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">Departemen</label>
+              <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white">
+                <option value="PRODUKSI">Produksi Manufaktur</option>
+                <option value="QC_QA">Quality Control & QA</option>
+                <option value="RND">R&D Lab & Formulasi</option>
+                <option value="FINANCE">Finance & Accounting</option>
+                <option value="BUSDEV">Business Development</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">Nomor WhatsApp</label>
+            <input type="text" placeholder="0812-xxxx-xxxx" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs" />
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <DnaButton variant="secondary" size="md" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
             </DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+            <DnaButton
+              variant="primary"
+              size="md"
+              onClick={() => {
+                toast.success("Data kandidat berhasil ditambahkan!");
+                setIsCreateModalOpen(false);
+              }}
+            >
+              Simpan Kandidat
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+    </DnaPageContainer>
   );
 }

@@ -1,183 +1,257 @@
 "use client";
 
-import { useState } from "react";
-import { Wallet, FileText, CheckCircle2, DollarSign, Eye, Plus, Search, ShieldCheck } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
-  StatCard,
-  DnaBadge,
+  Wallet,
+  DollarSign,
+  FileSpreadsheet,
+  Printer,
+  Search,
+  Filter,
+  Eye,
+  CheckCircle2,
+  Lock,
+  Building2,
+  Calendar
+} from "lucide-react";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
   DnaButton,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  DnaBadge,
+  DnaModal,
+  formatRupiah,
+  useDnaToast
 } from "@/components/dna";
 
-type PayrollStatus = "DRAFT" | "AUTHORIZED" | "PAID";
-
-interface Payroll {
+interface PayrollItem {
   id: string;
-  period: string;
-  status: PayrollStatus;
-  totalDisbursement: number;
-  authorizedBy: string;
-  authorizedAt: string;
-  employeeCount: number;
+  empId: string;
+  empName: string;
+  department: string;
+  basicSalary: number;
+  allowance: number;
+  overtime: number;
+  deductions: number;
+  netSalary: number;
+  bankAccount: string;
+  status: "DRAFT" | "CALCULATED" | "APPROVED" | "PAID";
 }
 
-const PAYROLL_DATA: Payroll[] = [
-  { id: "PR-001", period: "Januari 2026", status: "PAID", totalDisbursement: 485_000_000, authorizedBy: "Rina Wijaya", authorizedAt: "2026-02-01", employeeCount: 142 },
-  { id: "PR-002", period: "Februari 2026", status: "PAID", totalDisbursement: 492_000_000, authorizedBy: "Rina Wijaya", authorizedAt: "2026-03-01", employeeCount: 144 },
-  { id: "PR-003", period: "Maret 2026", status: "AUTHORIZED", totalDisbursement: 478_000_000, authorizedBy: "Rina Wijaya", authorizedAt: "2026-04-01", employeeCount: 140 },
-  { id: "PR-004", period: "April 2026", status: "AUTHORIZED", totalDisbursement: 501_000_000, authorizedBy: "Rina Wijaya", authorizedAt: "2026-05-01", employeeCount: 146 },
-  { id: "PR-005", period: "Mei 2026", status: "DRAFT", totalDisbursement: 0, authorizedBy: "", authorizedAt: "", employeeCount: 145 },
+const FALLBACK_PAYROLL: PayrollItem[] = [
+  { id: "1", empId: "EMP-001", empName: "Budi Santoso", department: "Produksi", basicSalary: 6500000, allowance: 1200000, overtime: 850000, deductions: 250000, netSalary: 8300000, bankAccount: "BCA 521-998811", status: "APPROVED" },
+  { id: "2", empId: "EMP-002", empName: "Rian Saputra", department: "R&D", basicSalary: 8000000, allowance: 1500000, overtime: 0, deductions: 320000, netSalary: 9180000, bankAccount: "Mandiri 137-009911", status: "APPROVED" },
+  { id: "3", empId: "EMP-003", empName: "Siti Rahmawati", department: "QC", basicSalary: 5500000, allowance: 900000, overtime: 400000, deductions: 180000, netSalary: 6620000, bankAccount: "BCA 521-112233", status: "APPROVED" },
+  { id: "4", empId: "EMP-004", empName: "Dewi Lestari", department: "BusDev", basicSalary: 7000000, allowance: 2000000, overtime: 0, deductions: 280000, netSalary: 8720000, bankAccount: "BCA 521-778899", status: "APPROVED" },
 ];
 
-const STATUS_META: Record<PayrollStatus, { label: string; status: "success" | "info" | "warning" | "purple" | "default" }> = {
-  DRAFT: { label: "Draft", status: "warning" },
-  AUTHORIZED: { label: "Authorized", status: "purple" },
-  PAID: { label: "Paid", status: "success" },
-};
+export default function HrPayrollPage() {
+  const toast = useDnaToast();
+  const [period, setPeriod] = useState("2026-09");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSlip, setSelectedSlip] = useState<PayrollItem | null>(null);
 
-export default function PayrollPage() {
-  const [activeTab, setActiveTab] = useState("all");
-
-  const filteredPayroll = activeTab === "all"
-    ? PAYROLL_DATA
-    : PAYROLL_DATA.filter((p) => p.status.toLowerCase() === activeTab);
+  const totalGross = FALLBACK_PAYROLL.reduce((acc, r) => acc + r.basicSalary + r.allowance + r.overtime, 0);
+  const totalDeductions = FALLBACK_PAYROLL.reduce((acc, r) => acc + r.deductions, 0);
+  const totalNet = FALLBACK_PAYROLL.reduce((acc, r) => acc + r.netSalary, 0);
 
   return (
-    <DashboardShell
-      title="Payroll"
-      titleAccent="Worksheet"
-      subtitle="Monthly Payroll Processing & Disbursement Control"
-      actions={
-        <DnaButton variant="primary" icon={<Plus className="stroke-[3px]" />}>
-          GENERATE DRAFT
-        </DnaButton>
-      }
-    >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <StatCard
-            label="Total Payroll (MTD)"
-            value="Rp 478 Jt"
-            icon={<Wallet className="text-blue-500" />}
-          />
-          <StatCard
-            label="Draft Payrolls"
-            value="1"
-            icon={<FileText className="text-amber-500" />}
-          />
-          <StatCard
-            label="Authorized"
-            value="2"
-            icon={<ShieldCheck className="text-purple-500" />}
-          />
-          <StatCard
-            label="Paid"
-            value="2"
-            icon={<DollarSign className="text-emerald-500" />}
-          />
-        </div>
-
-        {/* Tabs + Table */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-12 border border-slate-100">
-              <TabsTrigger value="all" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all">
-                Semua
-              </TabsTrigger>
-              <TabsTrigger value="draft" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all">
-                Draft
-              </TabsTrigger>
-              <TabsTrigger value="authorized" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all">
-                Authorized
-              </TabsTrigger>
-              <TabsTrigger value="paid" className="rounded-xl px-5 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[9px] tracking-widest transition-all">
-                Paid
-              </TabsTrigger>
-            </TabsList>
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="Payroll Workbench & Penggajian (Salary Processing)"
+        description="Kalkulasi otomatis gaji pokok, tunjangan keahlian, upah lembur, potongan BPJS/PPh 21, dan cetak slip gaji."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Payroll Batch Approved & Ready for Bank Transfer</span>
           </div>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <input
+              type="month"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-medium"
+            />
+            <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Rekap
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => toast.success("Menjalankan Batch Transfer Gaji via Bank BCA...")}>
+              <Wallet className="w-4 h-4 mr-1.5" />
+              Transfer Batch Gaji
+            </DnaButton>
+          </div>
+        }
+      />
 
-          {["all", "draft", "authorized", "paid"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
-              <div className="rounded-[24px] border border-slate-200 shadow-sm overflow-hidden bg-white">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50/50 border-b border-slate-100">
-                        <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Period</TableHead>
-                        <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Status</TableHead>
-                        <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Total Disbursement</TableHead>
-                        <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Employees</TableHead>
-                        <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Authorized By</TableHead>
-                        <TableHead className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredPayroll.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-wider py-8">
-                            Tidak ada data payroll ditemukan
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredPayroll.map((row) => (
-                          <TableRow key={row.id} className="group hover:bg-slate-50/50 transition-all">
-                            <TableCell>
-                              <p className="text-[11px] font-black text-slate-900 uppercase">{row.period}</p>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <DnaBadge status={STATUS_META[row.status].status}>
-                                {STATUS_META[row.status].label}
-                              </DnaBadge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <p className="text-[13px] font-black text-slate-900 tracking-tighter tabular-nums">
-                                {row.totalDisbursement > 0
-                                  ? `Rp ${(row.totalDisbursement / 1_000_000).toFixed(0)} Jt`
-                                  : "—"}
-                              </p>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <p className="text-[11px] font-bold text-slate-600">{row.employeeCount}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="text-[11px] font-medium text-slate-700 uppercase">
-                                {row.authorizedBy || "—"}
-                              </p>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex justify-center gap-2">
-                                <DnaButton variant="outline" size="sm" icon={<Eye className="w-3.5 h-3.5" />}>
-                                  DETAIL
-                                </DnaButton>
-                                {row.status === "DRAFT" && (
-                                  <DnaButton variant="primary" size="sm" className="bg-purple-600 hover:bg-purple-700">
-                                    AUTHORIZE
-                                  </DnaButton>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </div>
-    </DashboardShell>
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Total Net Payroll"
+          value={formatRupiah(totalNet)}
+          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Periode Sep 2026", isPositive: true }}
+          subtext="Total Transfer ke 124 Pegawai"
+          variant="success"
+        />
+        <DnaStatCard
+          label="Total Gaji Pokok & Tunjangan"
+          value={formatRupiah(totalGross)}
+          icon={<Wallet className="w-5 h-5 text-blue-600" />}
+          subtext="Gross Base & Allowances"
+          variant="info"
+        />
+        <DnaStatCard
+          label="Total Potongan (BPJS & Pajak)"
+          value={formatRupiah(totalDeductions)}
+          icon={<Building2 className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "BPJS TK & Kes", isPositive: true }}
+          subtext="Disetorkan ke Kas Negara"
+          variant="warning"
+        />
+        <DnaStatCard
+          label="Status Batch Payroll"
+          value="Disetujui 100%"
+          icon={<CheckCircle2 className="w-5 h-5 text-purple-600" />}
+          delta={{ value: "Ready to Disburse", isPositive: true }}
+          subtext="Disahkan GM & Direktur"
+          variant="purple"
+        />
+      </DnaKpiGrid>
+
+      <DnaDataTableCard
+        title="Daftar Rincian Penggajian Karyawan"
+        badge={<DnaBadge variant="default">{FALLBACK_PAYROLL.length} Rekening</DnaBadge>}
+        customToolbar={
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari NIK / nama karyawan..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-3">NIK</th>
+                <th className="px-3.5 py-3">Nama Pegawai</th>
+                <th className="px-3.5 py-3">Departemen</th>
+                <th className="px-3.5 py-3 text-right">Gaji Pokok</th>
+                <th className="px-3.5 py-3 text-right">Tunjangan</th>
+                <th className="px-3.5 py-3 text-right">Lembur</th>
+                <th className="px-3.5 py-3 text-right">Potongan</th>
+                <th className="px-3.5 py-3 text-right">Gaji Bersih (THP)</th>
+                <th className="px-3.5 py-3">Rekening Bank</th>
+                <th className="px-3.5 py-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {FALLBACK_PAYROLL.map((row) => (
+                <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3.5 py-2.5 font-mono text-slate-600 font-bold">{row.empId}</td>
+                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{row.empName}</td>
+                  <td className="px-3.5 py-2.5 text-slate-600">{row.department}</td>
+                  <td className="px-3.5 py-2.5 text-right font-medium text-slate-800">{formatRupiah(row.basicSalary)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-medium text-emerald-700">{formatRupiah(row.allowance)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-medium text-blue-700">{row.overtime > 0 ? formatRupiah(row.overtime) : "-"}</td>
+                  <td className="px-3.5 py-2.5 text-right font-medium text-rose-700">({formatRupiah(row.deductions)})</td>
+                  <td className="px-3.5 py-2.5 text-right font-extrabold text-emerald-800 text-xs">{formatRupiah(row.netSalary)}</td>
+                  <td className="px-3.5 py-2.5 font-mono text-slate-600 text-[11px]">{row.bankAccount}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaButton variant="secondary" size="sm" onClick={() => setSelectedSlip(row)}>
+                      <Printer className="w-3.5 h-3.5 mr-1" />
+                      Slip Gaji
+                    </DnaButton>
+                  </td>
+                </tr>
+              ))}
+              <tr className="bg-emerald-50/75 font-black border-t-2 border-emerald-300">
+                <td colSpan={3} className="px-3.5 py-3 text-emerald-950 font-black text-right">TOTAL PENGGAJIAN:</td>
+                <td colSpan={4} className="px-3.5 py-3 text-right text-slate-600 font-bold">Net Total:</td>
+                <td className="px-3.5 py-3 text-right text-emerald-950 font-black text-sm">{formatRupiah(totalNet)}</td>
+                <td colSpan={2}></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </DnaDataTableCard>
+
+      {/* SLIP GAJI MODAL */}
+      <DnaModal
+        isOpen={!!selectedSlip}
+        onClose={() => setSelectedSlip(null)}
+        title={`Slip Gaji Elektronik: ${selectedSlip?.empName} (${selectedSlip?.empId})`}
+        size="md"
+      >
+        <div className="space-y-3.5 text-xs p-2">
+          <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
+            <div>
+              <p className="font-bold text-slate-900 text-sm">PT AUREON COSMETICS INDONESIA</p>
+              <p className="text-slate-500 text-[11px]">Kawasan Industri Manufaktur Kosmetik CPKB</p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">LUNAS TRANSFER</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-lg">
+            <div>Nama: <strong>{selectedSlip?.empName}</strong></div>
+            <div>Departemen: <strong>{selectedSlip?.department}</strong></div>
+            <div>NIK: <strong>{selectedSlip?.empId}</strong></div>
+            <div>Rekening: <strong>{selectedSlip?.bankAccount}</strong></div>
+          </div>
+          <div className="space-y-1.5 pt-1">
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span>Gaji Pokok:</span>
+              <strong className="text-slate-900">{selectedSlip ? formatRupiah(selectedSlip.basicSalary) : "0"}</strong>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span>Tunjangan Keahlian & Transport:</span>
+              <strong className="text-emerald-700">+{selectedSlip ? formatRupiah(selectedSlip.allowance) : "0"}</strong>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span>Upah Lembur Resmi:</span>
+              <strong className="text-blue-700">+{selectedSlip ? formatRupiah(selectedSlip.overtime) : "0"}</strong>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span>Potongan BPJS & PPh 21:</span>
+              <strong className="text-rose-700">-{selectedSlip ? formatRupiah(selectedSlip.deductions) : "0"}</strong>
+            </div>
+            <div className="flex justify-between py-2 bg-emerald-50 px-2 rounded-lg font-black text-sm text-emerald-950">
+              <span>TOTAL TAKE HOME PAY (THP):</span>
+              <span>{selectedSlip ? formatRupiah(selectedSlip.netSalary) : "0"}</span>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <DnaButton variant="secondary" size="md" onClick={() => setSelectedSlip(null)}>
+              Tutup
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              size="md"
+              onClick={() => {
+                toast.success("Mencetak Slip Gaji PDF...");
+                window.print();
+              }}
+            >
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Slip Gaji
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+    </DnaPageContainer>
   );
 }
