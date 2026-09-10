@@ -680,7 +680,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     icon: Cog,
     items: [
       { name: "Profil Perusahaan", href: "/pembelian/company", icon: Building2 },
-      { name: "Audit Ledger Transaksi", href: "/system/audit-ledger", icon: FileSearch },
+      { name: "Audit Ledger Transaksi", href: "/finance/audit-ledger", icon: FileSearch },
       { name: "Daftar Request Perubahan", href: "/pembelian/change-requests", icon: RefreshCw },
       { name: "Pengaturan Sistem", href: "/system/settings", icon: Cog },
     ]
