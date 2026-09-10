@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 // Import Departmental Views (We will use the actual page components or variants)
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import CommercialDashboard from "../commercial/page";
-import RndDashboard from "../../rnd/dashboard/page";
+import RndDashboard from "../../samples/rnd-dashboard/page";
 import ProductionFloor from "../production-floor/page";
 import FinanceDashboard from "../finance/page";
 

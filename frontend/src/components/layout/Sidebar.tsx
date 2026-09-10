@@ -387,7 +387,7 @@ const RND_SECTIONS: NavSection[] = [
     groupLabel: "DASBOR",
     icon: LayoutDashboard,
     items: [
-      { name: "Formula Analytics", href: "/rnd/dashboard", icon: LayoutDashboard },
+      { name: "Formula Analytics", href: "/samples/rnd-dashboard", icon: LayoutDashboard },
       { name: "Active Pipeline", href: "/rnd/pipeline", icon: FlaskConical, badge: "FLOW", badgeVariant: "purple" },
       { name: "D. Jadwal Produksi", href: "/production/schedule", icon: History },
       { name: "Project Control", href: "/project-control", icon: BarChart3 },
@@ -400,11 +400,11 @@ const RND_SECTIONS: NavSection[] = [
     groupLabel: "PRA PRODUKSI",
     icon: Beaker,
     items: [
-      { name: "Sample Inbox (PNF)", href: "/rnd/inbox", icon: ClipboardCheck, badge: "NEW", badgeVariant: "warning" },
-      { name: "Formulasi Repository", href: "/rnd/repository", icon: Beaker },
-      { name: "Buat Formulasi Baru", href: "/rnd/formula/new", icon: PlusCircle },
+      { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: ClipboardCheck, badge: "NEW", badgeVariant: "warning" },
+      { name: "Formulasi Repository", href: "/samples/repository", icon: Beaker },
+      { name: "Buat Formulasi Baru", href: "/samples/formula/new", icon: PlusCircle },
       { name: "Penyesuaian Formulasi", href: "/production/formula-adjustment", icon: Layers },
-      { name: "Permintaan HPP (COGS)", href: "/rnd/repository?tab=hpp", icon: DollarSign },
+      { name: "Permintaan HPP (COGS)", href: "/samples/repository?tab=hpp", icon: DollarSign },
       { name: "Digital Batch Record", href: "/production/batch-records", icon: Barcode },
     ]
   },
@@ -416,7 +416,7 @@ const RND_SECTIONS: NavSection[] = [
     icon: FlaskConical,
     items: [
       { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical, badge: "LAB", badgeVariant: "info" },
-      { name: "Revision Tracker", href: "/rnd/revision-tracker", icon: History, badge: "REV", badgeVariant: "warning" },
+      { name: "Revision Tracker", href: "/samples/revision-tracker", icon: History, badge: "REV", badgeVariant: "warning" },
       { name: "Master INCI & Regulasi", href: "/rnd/master-inci", icon: FileSearch },
     ]
   },
@@ -464,7 +464,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Project Control", href: "/project-control", icon: Kanban },
       { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
       { name: "Dashboard Busdev", href: "/bussdev/dashboard", icon: Activity },
-      { name: "Dashboard R&D", href: "/rnd/dashboard", icon: Beaker },
+      { name: "Dashboard R&D", href: "/samples/rnd-dashboard", icon: Beaker },
       { name: "Dashboard SCM", href: "/scm/dashboard", icon: Truck },
       { name: "Dashboard Gudang", href: "/warehouse", icon: Warehouse },
       { name: "Dashboard Produksi", href: "/production", icon: Factory },
@@ -588,11 +588,11 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     groupLabel: "8. PRA PRODUKSI & R&D",
     icon: Beaker,
     items: [
-      { name: "Formulasi Repository", href: "/rnd/repository", icon: Beaker },
-      { name: "Buat Formula Baru", href: "/rnd/formula/new", icon: PlusCircle },
+      { name: "Formulasi Repository", href: "/samples/repository", icon: Beaker },
+      { name: "Buat Formula Baru", href: "/samples/formula/new", icon: PlusCircle },
       { name: "Penyesuaian Formulasi", href: "/production/formula-adjustment", icon: RefreshCw },
-      { name: "Permintaan HPP", href: "/rnd/repository?tab=hpp", icon: Calculator },
-      { name: "Sample Inbox (PNF)", href: "/rnd/inbox", icon: Inbox },
+      { name: "Permintaan HPP", href: "/samples/repository?tab=hpp", icon: Calculator },
+      { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: Inbox },
       { name: "Batch Record (SPK)", href: "/production/batch-records", icon: Barcode },
       { name: "Kelola Desain & Kemasan", href: "/design/artwork-approval", icon: Palette },
       { name: "Jadwal Mixing", href: "/production/schedule?type=mixing", icon: History },
