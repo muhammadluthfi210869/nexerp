@@ -666,10 +666,10 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     groupLabel: "12. SUMBER DAYA MANUSIA",
     icon: Users,
     items: [
-      { name: "Pegawai & Rekrutmen", href: "/hr/recruitment", icon: UserCheck },
-      { name: "Presensi Live Attendance", href: "/hr/attendance", icon: Clock },
+      { name: "Pegawai & Rekrutmen", href: "/master/hr-recruitment", icon: UserCheck },
+      { name: "Presensi Live Attendance", href: "/master/hr-attendance", icon: Clock },
       { name: "Evaluasi KPI Karyawan", href: "/hr/kpi", icon: Award },
-      { name: "Payroll Workbench", href: "/hr/payroll", icon: Wallet },
+      { name: "Payroll Workbench", href: "/master/hr-payroll", icon: Wallet },
       { name: "Izin, Cuti & Lembur", href: "/hr/tickets", icon: ClipboardList },
     ]
   },
