@@ -159,8 +159,8 @@ const DESIGN_SECTIONS: NavSection[] = [
     groupLabel: "KENDALI & TRACKING",
     icon: CheckSquare,
     items: [
-      { name: "Tracking Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
-      { name: "Tracking Checklist", href: "/project-control/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
+      { name: "Tracking Progress", href: "/quality/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
+      { name: "Tracking Checklist", href: "/quality/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
     ]
   }
 ];
@@ -290,9 +290,9 @@ const PURCHASE_SECTIONS: NavSection[] = [
     groupLabel: "KENDALI & TRACKING",
     icon: CheckSquare,
     items: [
-      { name: "Checklist Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
-      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History, badge: "SLA", badgeVariant: "critical" },
-      { name: "Checklist", href: "/checklist", icon: Layers, badge: "3 TABS", badgeVariant: "info" },
+      { name: "Checklist Progress", href: "/quality/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
+      { name: "Checklist Tracking", href: "/quality/checklist-tracking", icon: History, badge: "SLA", badgeVariant: "critical" },
+      { name: "Checklist", href: "/quality/checklist", icon: Layers, badge: "3 TABS", badgeVariant: "info" },
     ]
   },
   {
@@ -370,8 +370,8 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     groupLabel: "KENDALI & TRACKING",
     icon: CheckSquare,
     items: [
-      { name: "Checklist Progress", href: "/scm/checklist-progress", icon: CheckSquare },
-      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History },
+      { name: "Checklist Progress", href: "/quality/checklist-progress", icon: CheckSquare },
+      { name: "Checklist Tracking", href: "/quality/checklist-tracking", icon: History },
     ]
   }
 ];
@@ -415,7 +415,7 @@ const RND_SECTIONS: NavSection[] = [
     groupLabel: "LAB & MUTU",
     icon: FlaskConical,
     items: [
-      { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical, badge: "LAB", badgeVariant: "info" },
+      { name: "Pengujian Lab & Stabilitas", href: "/quality/lab-test", icon: FlaskConical, badge: "LAB", badgeVariant: "info" },
       { name: "Revision Tracker", href: "/samples/revision-tracker", icon: History, badge: "REV", badgeVariant: "warning" },
     ]
   },
@@ -426,8 +426,8 @@ const RND_SECTIONS: NavSection[] = [
     groupLabel: "KENDALI & TRACKING",
     icon: CheckSquare,
     items: [
-      { name: "Daily Tracking Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
-      { name: "Project Monitoring & SLA", href: "/project-control/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
+      { name: "Daily Tracking Progress", href: "/quality/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
+      { name: "Project Monitoring & SLA", href: "/quality/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
       { name: "Monitoring Projek Master", href: "/samples/project-control", icon: BarChart3 },
     ]
   },
@@ -499,9 +499,9 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     groupLabel: "3. UMUM DAN KENDALI",
     icon: CheckSquare,
     items: [
-      { name: "Checklist Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
-      { name: "Checklist Tracking", href: "/project-control/checklist-tracking", icon: History, badge: "SLA", badgeVariant: "critical" },
-      { name: "Checklist", href: "/checklist", icon: Layers, badge: "3 TABS", badgeVariant: "info" },
+      { name: "Checklist Progress", href: "/quality/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
+      { name: "Checklist Tracking", href: "/quality/checklist-tracking", icon: History, badge: "SLA", badgeVariant: "critical" },
+      { name: "Checklist", href: "/quality/checklist", icon: Layers, badge: "3 TABS", badgeVariant: "info" },
     ]
   },
 

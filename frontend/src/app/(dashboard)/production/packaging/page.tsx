@@ -265,7 +265,7 @@ export default function ProductionPackagingPage() {
         }
         actions={
           <div className="flex items-center gap-2">
-            <Link href="/production/qc-release">
+            <Link href="/quality/qc-release">
               <DnaButton variant="secondary" size="md">
                 <ShieldCheck className="w-4 h-4 mr-1.5" />
                 Gerbang Rilis APJ
@@ -420,7 +420,7 @@ export default function ProductionPackagingPage() {
                         </DnaButton>
 
                         {item.status === "READY_APJ" && (
-                          <Link href="/production/qc-release">
+                          <Link href="/quality/qc-release">
                             <DnaButton variant="primary" size="sm" title="Serahkan ke Rilis APJ">
                               Rilis APJ
                             </DnaButton>
