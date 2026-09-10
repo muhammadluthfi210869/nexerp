@@ -23,7 +23,7 @@
 | Hyper-Alignment (per-divisi) | 0% | ⚪ Not started |
 | Track A: Hybrid Routes | 100% | ✅ DONE (9/11 functions migrated, /exec excluded per scope, 133 pages) |
 | Track B: Backend Lint | 8% | 🟡 Paused (TS regression) |
-| Track C: Frontend Lint | 0% | ⚪ Queued after A |
+| Track C: Frontend Lint | 0% | 🟡 Config updated (no-unused-vars enabled), 7243 warnings need manual refactor |
 
 ### Commit Trajectory (Sesi Ini)
 
@@ -338,6 +338,7 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 - [x] **2026-09-10**: 1 hybrid function complete (/samples/, 22 pages migrated)
 - [x] **2026-09-10**: Phase 0 production freeze complete (VPS SSH + DB backup+restore PASS)
 - [x] **2026-09-10**: Track A COMPLETE - 10 hybrid functions migrated (133 pages)
+- [x] **2026-09-10**: Track C frontend config updated (no-unused-vars enabled, future-proofing)
 - [ ] **Target**: Backend lint 2116 → 0
 - [ ] **Target**: Track A complete (165+ batches)
 - [ ] **Target**: Track C complete (frontend lint)
