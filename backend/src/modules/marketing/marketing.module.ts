@@ -12,6 +12,8 @@ import { OmniCrmConversationService } from './omni-crm/omni-crm-conversation.ser
 import { SocialPlannerController } from './social-planner/social-planner.controller';
 import { SocialPlannerService } from './social-planner/social-planner.service';
 import { DreamlabRrSyncService } from './omni-crm/dreamlab-rr-sync.service';
+import { CanonicalMarketingController } from './canonical/canonical-marketing.controller';
+import { CanonicalMarketingService } from './canonical/canonical-marketing.service';
 
 @Module({
   imports: [PrismaModule, LeadCaptureModule],
@@ -22,6 +24,7 @@ import { DreamlabRrSyncService } from './omni-crm/dreamlab-rr-sync.service';
     OmniCrmConversationService,
     DreamlabRrSyncService,
     SocialPlannerService,
+    CanonicalMarketingService,
   ],
   controllers: [
     MarketingController,
@@ -29,7 +32,14 @@ import { DreamlabRrSyncService } from './omni-crm/dreamlab-rr-sync.service';
     OmniCrmStateController,
     OmniCrmConversationController,
     SocialPlannerController,
+    CanonicalMarketingController,
   ],
-  exports: [MarketingService, MarketingPrototypeService, SocialPlannerService, DreamlabRrSyncService],
+  exports: [
+    MarketingService,
+    MarketingPrototypeService,
+    SocialPlannerService,
+    DreamlabRrSyncService,
+    CanonicalMarketingService,
+  ],
 })
 export class MarketingModule {}

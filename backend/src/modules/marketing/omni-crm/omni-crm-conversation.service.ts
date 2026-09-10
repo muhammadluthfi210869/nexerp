@@ -22,7 +22,10 @@ import { OutboundCounterService } from '../../lead-capture/outbound-counter.serv
 @Injectable()
 export class OmniCrmConversationService {
   private readonly logger = new Logger(OmniCrmConversationService.name);
-  private readonly completedRequests = new Map<string, { expiresAt: number; result: unknown }>();
+  private readonly completedRequests = new Map<
+    string,
+    { expiresAt: number; result: unknown }
+  >();
   private readonly inFlightRequests = new Map<string, Promise<unknown>>();
 
   constructor(
@@ -48,10 +51,7 @@ export class OmniCrmConversationService {
       where: {
         ...(assignedTo ? { assignedTo } : {}),
       },
-      orderBy: [
-        { updatedAt: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
       take: limit,
       include: {
         messages: {
@@ -71,10 +71,13 @@ export class OmniCrmConversationService {
       source: l.source || l.utmSource || 'Website Inbound',
       status: l.status,
       workflowStatus: l.workflowStatus,
-      lastMessageAt: l.messages[0]?.createdAt || l.contactedAt || l.updatedAt || l.createdAt,
+      lastMessageAt:
+        l.messages[0]?.createdAt || l.contactedAt || l.updatedAt || l.createdAt,
       lastMessage: l.messages[0]?.body || l.waMessage || null,
-      lastDirection: l.messages[0]?.direction || (l.waMessage ? 'INBOUND' : null),
-      messageCount: l._count.messages > 0 ? l._count.messages : (l.waMessage ? 1 : 0),
+      lastDirection:
+        l.messages[0]?.direction || (l.waMessage ? 'INBOUND' : null),
+      messageCount:
+        l._count.messages > 0 ? l._count.messages : l.waMessage ? 1 : 0,
       assignedName: l.assignedName,
       assignedBusDevId: l.assignedTo,
       createdAt: l.createdAt,
@@ -110,8 +113,12 @@ export class OmniCrmConversationService {
     const tokenConfigured = Boolean(
       process.env.META_WHATSAPP_ACCESS_TOKEN || process.env.USER_TOKEN,
     );
-    const configuredAccounts = Array.from({ length: 20 }, (_, index) => index + 1)
-      .filter((number) => Boolean(process.env[`BUSDEV_${number}_PHONE_NUMBER_ID`]));
+    const configuredAccounts = Array.from(
+      { length: 20 },
+      (_, index) => index + 1,
+    ).filter((number) =>
+      Boolean(process.env[`BUSDEV_${number}_PHONE_NUMBER_ID`]),
+    );
 
     return {
       configured: tokenConfigured && configuredAccounts.length > 0,
@@ -212,17 +219,19 @@ export class OmniCrmConversationService {
     message: string;
     accountKey?: string;
   }) {
-
     // Resolve or create lead
     const lead = params.leadId
-      ? await this.prisma.leadCapture.findUnique({ where: { id: params.leadId } })
+      ? await this.prisma.leadCapture.findUnique({
+          where: { id: params.leadId },
+        })
       : null;
     if (params.leadId && !lead) {
       throw new NotFoundException('Lead tidak ditemukan');
     }
     if (!lead) {
       // Auto-create orphan lead (consistent with inbound flow)
-      const trackingCode = 'DL' + Math.random().toString(36).slice(2, 10).toUpperCase();
+      const trackingCode =
+        'DL' + Math.random().toString(36).slice(2, 10).toUpperCase();
       const created = await this.prisma.leadCapture.create({
         data: {
           trackingCode,
@@ -231,15 +240,29 @@ export class OmniCrmConversationService {
           status: 'PENDING',
         },
       });
-      return this.dispatchAndPersist(created.id, params.phone, params.message, params.accountKey);
+      return this.dispatchAndPersist(
+        created.id,
+        params.phone,
+        params.message,
+        params.accountKey,
+      );
     }
     if (!lead.phone) {
       await this.prisma.leadCapture.update({
         where: { id: lead.id },
-        data: { phone: params.phone, status: 'WA_CONTACTED', contactedAt: new Date() },
+        data: {
+          phone: params.phone,
+          status: 'WA_CONTACTED',
+          contactedAt: new Date(),
+        },
       });
     }
-    return this.dispatchAndPersist(lead.id, params.phone, params.message, params.accountKey);
+    return this.dispatchAndPersist(
+      lead.id,
+      params.phone,
+      params.message,
+      params.accountKey,
+    );
   }
 
   /**
@@ -252,7 +275,8 @@ export class OmniCrmConversationService {
     message: string,
     accountKey = 'BUSDEV_1',
   ) {
-    const rawToken = process.env.META_WHATSAPP_ACCESS_TOKEN || process.env.USER_TOKEN;
+    const rawToken =
+      process.env.META_WHATSAPP_ACCESS_TOKEN || process.env.USER_TOKEN;
     const token = (rawToken || '').replace(/^['"]|['"]$/g, '').trim();
     if (!/^BUSDEV_[1-9][0-9]?$/.test(accountKey)) {
       throw new BadRequestException('Akun WhatsApp tidak valid');
@@ -262,11 +286,17 @@ export class OmniCrmConversationService {
 
     if (!token) {
       this.logger.error('❌ META_WHATSAPP_ACCESS_TOKEN missing — cannot send');
-      throw new ServiceUnavailableException('Gateway WhatsApp belum dikonfigurasi');
+      throw new ServiceUnavailableException(
+        'Gateway WhatsApp belum dikonfigurasi',
+      );
     }
     if (!phoneNumberId) {
-      this.logger.error(`❌ No phone number id configured (${accountKey}_PHONE_NUMBER_ID)`);
-      throw new ServiceUnavailableException(`Nomor WhatsApp ${accountKey} belum dikonfigurasi`);
+      this.logger.error(
+        `❌ No phone number id configured (${accountKey}_PHONE_NUMBER_ID)`,
+      );
+      throw new ServiceUnavailableException(
+        `Nomor WhatsApp ${accountKey} belum dikonfigurasi`,
+      );
     }
 
     const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
@@ -292,7 +322,9 @@ export class OmniCrmConversationService {
       if (!resp.ok) {
         const dispatchError = data?.error?.message || `HTTP ${resp.status}`;
         this.logger.error(`❌ Meta API error: ${dispatchError}`);
-        throw new BadGatewayException(`Meta WhatsApp menolak pesan: ${dispatchError}`);
+        throw new BadGatewayException(
+          `Meta WhatsApp menolak pesan: ${dispatchError}`,
+        );
       } else {
         metaMsgId = data?.messages?.[0]?.id || null;
         this.logger.log(`✅ WA sent to ${phone} (msgId=${metaMsgId})`);

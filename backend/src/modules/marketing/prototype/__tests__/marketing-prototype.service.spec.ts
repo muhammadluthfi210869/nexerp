@@ -1,7 +1,11 @@
 // @ts-nocheck — tsconfig.json doesn't include @types/jest in its types[] so
 // describe/it/expect/jest are unresolved. Jest runtime works fine; this only
 // silences the diagnostic.
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { MarketingPrototypeService } from '../marketing-prototype.service';
 
 describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () => {
@@ -34,6 +38,7 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
       },
       marketingTaskAttachment: {
         findUnique: jest.fn(),
+        aggregate: jest.fn().mockResolvedValue({ _sum: { sizeKb: 0 } }),
         create: jest.fn(),
         delete: jest.fn(),
       },
@@ -62,13 +67,20 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
   describe('addAttachment', () => {
     it('records the uploader id from viewer context', async () => {
       mockPrisma.marketingTask.findUnique.mockResolvedValue({
-        id: 'task-1', status: 'Not started', pic: null, project: null,
+        id: 'task-1',
+        status: 'Not started',
+        pic: { fullName: 'Aurel' },
+        reviewer: null,
+        assignedBy: null,
       });
       mockPrisma.$transaction.mockImplementation(async (cb: any) => {
         return cb(mockPrisma);
       });
       mockPrisma.marketingTaskAttachment.create.mockResolvedValue({
-        id: 'att-1', taskId: 'task-1', name: 'x.png', uploadedById: 'aurel-uuid',
+        id: 'att-1',
+        taskId: 'task-1',
+        name: 'x.png',
+        uploadedById: 'aurel-uuid',
       });
 
       await service.addAttachment(aurelViewer, 'task-1', {
@@ -87,29 +99,44 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
 
     it('throws NotFoundException when task is not visible to viewer', async () => {
       mockPrisma.marketingTask.findUnique.mockResolvedValue({
-        id: 'task-1', status: 'Not started', pic: null, project: null,
+        id: 'task-1',
+        status: 'Not started',
+        pic: null,
+        project: null,
       });
 
       await expect(
         service.addAttachment(aurelViewer, 'task-1', {
-          originalname: 'x.png', mimetype: 'image/png', size: 1024, path: '/tmp/x.png',
+          originalname: 'x.png',
+          mimetype: 'image/png',
+          size: 1024,
+          path: '/tmp/x.png',
         }),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('sanitizes filename in history note (no CR/LF/Tab, 200ch max)', async () => {
       mockPrisma.marketingTask.findUnique.mockResolvedValue({
-        id: 'task-1', status: 'Not started', pic: { fullName: 'Aurel' },
+        id: 'task-1',
+        status: 'Not started',
+        pic: { fullName: 'Aurel' },
       });
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(mockPrisma));
-      mockPrisma.marketingTaskAttachment.create.mockResolvedValue({ id: 'att-1' });
+      mockPrisma.$transaction.mockImplementation(async (cb: any) =>
+        cb(mockPrisma),
+      );
+      mockPrisma.marketingTaskAttachment.create.mockResolvedValue({
+        id: 'att-1',
+      });
 
       await service.addAttachment(aurelViewer, 'task-1', {
         originalname: 'evil\r\nfile\tname.png',
-        mimetype: 'image/png', size: 1024, path: '/tmp/x.png',
+        mimetype: 'image/png',
+        size: 1024,
+        path: '/tmp/x.png',
       });
 
-      const historyCall = mockPrisma.marketingTaskHistory.create.mock.calls[0][0];
+      const historyCall =
+        mockPrisma.marketingTaskHistory.create.mock.calls[0][0];
       expect(historyCall.data.note).not.toMatch(/[\r\n\t]/);
     });
   });
@@ -119,12 +146,18 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
     it('generates UUID-derived taskCode (collision-free)', async () => {
       mockPrisma.marketingTask.findMany.mockResolvedValue([]);
       mockPrisma.user.findFirst.mockResolvedValue(null);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(mockPrisma));
+      mockPrisma.$transaction.mockImplementation(async (cb: any) =>
+        cb(mockPrisma),
+      );
       mockPrisma.marketingTask.create.mockResolvedValue({
-        id: 'task-1', taskCode: 'TSK-ABC123',
+        id: 'task-1',
+        taskCode: 'TSK-ABC123',
       });
 
-      const result = await service.createTask(adminViewer, { title: 'Test', pic: 'Aurel' });
+      const result = await service.createTask(adminViewer, {
+        title: 'Test',
+        pic: 'Aurel',
+      });
 
       expect(result.taskCode).toMatch(/^TSK-[A-F0-9]+$/);
       expect(result.taskCode.length).toBeGreaterThan(4);
@@ -150,19 +183,29 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
     });
 
     it('resolves the Zarka board alias to the real Zarkasi account', async () => {
-      mockPrisma.user.findUnique.mockImplementation(({ where }: any) =>
-        where.email === 'zarkasi@nexerp.id'
-          ? Promise.resolve({ id: 'zarkasi-uuid', email: where.email, fullName: 'Zarkasi' })
-          : Promise.resolve(null),
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 'zarkasi-uuid',
+        email: 'zarkasi@nexerp.id',
+        fullName: 'Zarkasi',
+      });
+      mockPrisma.$transaction.mockImplementation(async (cb: any) =>
+        cb(mockPrisma),
       );
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(mockPrisma));
-      mockPrisma.marketingTask.create.mockImplementation(async ({ data }: any) => ({ id: 'task-1', ...data }));
+      mockPrisma.marketingTask.create.mockImplementation(
+        async ({ data }: any) => ({ id: 'task-1', ...data }),
+      );
 
-      await service.createTask(adminViewer, { title: 'Alias task', pic: 'Zarka' });
+      await service.createTask(adminViewer, {
+        title: 'Alias task',
+        pic: 'Zarka',
+      });
 
       expect(mockPrisma.marketingTask.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ picId: 'zarkasi-uuid', assigneeId: 'zarkasi-uuid' }),
+          data: expect.objectContaining({
+            picId: 'zarkasi-uuid',
+            assigneeId: 'zarkasi-uuid',
+          }),
         }),
       );
     });
@@ -172,8 +215,12 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
   describe('updateTaskStatus', () => {
     it('writes history and update atomically (in $transaction)', async () => {
       mockPrisma.marketingTask.findUnique.mockResolvedValue({
-        id: 'task-1', status: 'Not started', pic: { fullName: 'Aurel' },
-        project: null, reviewer: null, assignedBy: null,
+        id: 'task-1',
+        status: 'Not started',
+        pic: { fullName: 'Aurel' },
+        project: null,
+        reviewer: null,
+        assignedBy: null,
       });
       mockPrisma.$transaction.mockResolvedValue([{}, {}]);
 
@@ -187,12 +234,20 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
   describe('addTaskComment', () => {
     it('uses task.status as history.toStatus (never null)', async () => {
       mockPrisma.marketingTask.findUnique.mockResolvedValue({
-        id: 'task-1', status: 'Not started', pic: { fullName: 'Aurel' },
-        reviewer: null, assignedBy: null,
+        id: 'task-1',
+        status: 'Not started',
+        pic: { fullName: 'Aurel' },
+        reviewer: null,
+        assignedBy: null,
       });
       mockPrisma.$transaction.mockResolvedValue([{}, {}]);
 
-      await service.addTaskComment(aurelViewer, 'task-1', 'Aurel', 'Test comment');
+      await service.addTaskComment(
+        aurelViewer,
+        'task-1',
+        'Aurel',
+        'Test comment',
+      );
 
       expect(mockPrisma.$transaction).toHaveBeenCalled();
     });
@@ -226,12 +281,14 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
       expect(mockPrisma.marketingTask.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ OR: expect.any(Array) }),
-          take: 200,
+          take: 50,
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         }),
       );
       expect(mockPrisma.marketingTask.count).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ OR: expect.any(Array) }) }),
+        expect.objectContaining({
+          where: expect.objectContaining({ OR: expect.any(Array) }),
+        }),
       );
     });
 
@@ -241,7 +298,7 @@ describe('MarketingPrototypeService — regression suite (post Wave 1-3)', () =>
       expect(mockPrisma.marketingTask.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {},
-          take: 200,
+          take: 50,
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         }),
       );

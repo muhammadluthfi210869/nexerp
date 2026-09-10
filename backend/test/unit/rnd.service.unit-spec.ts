@@ -56,14 +56,20 @@ describe('RndService — Unit', () => {
           revisionCount: 0,
           picId: 'P-1',
           pic: { name: 'Staff A' },
-          lead: { clientName: 'Client', brandName: 'Brand', pic: { name: 'BD' } },
+          lead: {
+            clientName: 'Client',
+            brandName: 'Brand',
+            pic: { name: 'BD' },
+          },
           stageLogs: [{ leftAt: null, enteredAt: new Date() }],
           formulas: [{ version: 1 }],
         },
       ]);
-      prisma.user.findMany = jest.fn().mockResolvedValue([
-        { id: 'P-1', fullName: 'Staff A', email: 'a@test.com' },
-      ]);
+      prisma.user.findMany = jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'P-1', fullName: 'Staff A', email: 'a@test.com' },
+        ]);
 
       const result = await service.getDashboardMetrics();
 

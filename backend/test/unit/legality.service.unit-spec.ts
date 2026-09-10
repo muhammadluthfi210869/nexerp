@@ -13,9 +13,18 @@ describe('LegalityService — Dashboard/HKI Unit', () => {
   beforeEach(async () => {
     prisma = TestModule.mockPrisma();
     prisma.legalTimelineLog = { create: jest.fn() };
-    prisma.halalRecord = { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn(), update: jest.fn() };
+    prisma.halalRecord = {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    };
     prisma.legalStaff = { findMany: jest.fn() };
-    prisma.regulatoryPipeline = { findMany: jest.fn(), findFirst: jest.fn(), count: jest.fn() };
+    prisma.regulatoryPipeline = {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      count: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,7 +61,16 @@ describe('LegalityService — Dashboard/HKI Unit', () => {
       const today = new Date();
       const soonDate = new Date(today.getTime() + 30 * 86400000);
       prisma.hkiRecord.findMany = jest.fn().mockResolvedValue([
-        { id: 'H-1', hkiId: 'HKI-001', brandName: 'Brand', expiryDate: soonDate, status: LegalStatus.IN_PROGRESS, applicationDate: new Date(), stage: 'DRAFT', pic: null },
+        {
+          id: 'H-1',
+          hkiId: 'HKI-001',
+          brandName: 'Brand',
+          expiryDate: soonDate,
+          status: LegalStatus.IN_PROGRESS,
+          applicationDate: new Date(),
+          stage: 'DRAFT',
+          pic: null,
+        },
       ]);
       prisma.bpomRecord.findMany = jest.fn().mockResolvedValue([]);
       prisma.halalRecord.findMany = jest.fn().mockResolvedValue([]);

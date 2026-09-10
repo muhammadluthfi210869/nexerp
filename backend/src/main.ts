@@ -12,7 +12,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const compression = require('compression');
 
 async function bootstrap() {
@@ -52,7 +51,8 @@ async function bootstrap() {
     origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    allowedHeaders:
+      'Content-Type, Accept, Authorization, X-Requested-With, Idempotency-Key, X-Idempotency-Key',
   });
 
   // --- SWAGGER CONFIGURATION (Dev Only) ---

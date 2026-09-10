@@ -22,7 +22,10 @@ export class CategoriesService {
   }
 
   async create(dto: CreateCategoryDto) {
-    const code = dto.code || dto.name.substring(0, 3).toUpperCase() + Math.floor(100 + Math.random() * 900);
+    const code =
+      dto.code ||
+      dto.name.substring(0, 3).toUpperCase() +
+        Math.floor(100 + Math.random() * 900);
     return this.prisma.masterCategory.create({
       data: {
         code,

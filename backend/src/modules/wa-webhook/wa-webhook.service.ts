@@ -14,8 +14,13 @@ export class WaWebhookService {
   /**
    * Verify webhook — dipanggil Meta saat setup webhook
    */
-  verifyToken(mode: string | null, token: string | null, challenge: string | null): string | null {
-    const VERIFY_TOKEN = process.env.WA_WEBHOOK_VERIFY_TOKEN || 'dreamlab_secret_2026';
+  verifyToken(
+    mode: string | null,
+    token: string | null,
+    challenge: string | null,
+  ): string | null {
+    const VERIFY_TOKEN =
+      process.env.WA_WEBHOOK_VERIFY_TOKEN || 'dreamlab_secret_2026';
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
       this.logger.log('✅ Webhook verified by Meta');
       return challenge;
@@ -30,7 +35,7 @@ export class WaWebhookService {
   async handleIncoming(body: any) {
     try {
       this.logger.log('📩 WA Webhook received');
-      
+
       // Kalau bukan message entry, skip
       if (!body?.entry?.[0]?.changes?.[0]?.value) {
         return { status: 'ignored' };
@@ -46,9 +51,9 @@ export class WaWebhookService {
 
       for (const msg of messages) {
         if (msg.type === 'text') {
-          const phone = msg.from;         // Nomor pengirim
-          const text = msg.text.body;     // Isi pesan
-          const msgId = msg.id;           // WhatsApp message id (anti-duplikat webhook)
+          const phone = msg.from; // Nomor pengirim
+          const text = msg.text.body; // Isi pesan
+          const msgId = msg.id; // WhatsApp message id (anti-duplikat webhook)
           const profileName = contacts?.[0]?.profile?.name || 'Unknown';
 
           this.logger.log(`📨 WA from ${phone}: "${text.slice(0, 50)}"`);
@@ -70,12 +75,20 @@ export class WaWebhookService {
             // Tracking code gak ketemu — upsert orphan lead dengan dedup
             this.logger.warn(`⚠️ No tracking code in message from ${phone}`);
             try {
-              const orphan = await this.leadCapture.upsertOrphanLead(phone, profileName, text, msgId);
+              const orphan = await this.leadCapture.upsertOrphanLead(
+                phone,
+                profileName,
+                text,
+                msgId,
+              );
               if (orphan?.id) {
                 void this.autoGreet.sendAutoGreeting(orphan.id, 'Tim Dreamlab');
               }
             } catch (err) {
-              this.logger.error(`❌ Failed to process orphan lead for ${phone}:`, err);
+              this.logger.error(
+                `❌ Failed to process orphan lead for ${phone}:`,
+                err,
+              );
             }
           }
         }
@@ -93,7 +106,10 @@ export class WaWebhookService {
               msgId,
             );
           } catch (err) {
-            this.logger.error(`❌ Failed to process interactive message from ${phone}:`, err);
+            this.logger.error(
+              `❌ Failed to process interactive message from ${phone}:`,
+              err,
+            );
           }
         }
       }
@@ -121,21 +137,44 @@ export class WaWebhookService {
       }
 
       const phone = this.pick(data, [
-        'from', 'sender', 'phone', 'wa_id', 'msisdn',
-        'from_number', 'sender_number', 'source',
+        'from',
+        'sender',
+        'phone',
+        'wa_id',
+        'msisdn',
+        'from_number',
+        'sender_number',
+        'source',
       ]);
       const text = this.pick(data, [
-        'text', 'message', 'body', 'content', 'message_body', 'message_text', 'pesan',
+        'text',
+        'message',
+        'body',
+        'content',
+        'message_body',
+        'message_text',
+        'pesan',
       ]);
       const name = this.pick(data, [
-        'name', 'profileName', 'sender_name', 'contact_name', 'pushname',
+        'name',
+        'profileName',
+        'sender_name',
+        'contact_name',
+        'pushname',
       ]);
       const msgId = this.pick(data, [
-        'id', 'message_id', 'msg_id', 'messageId', 'webhook_id', 'event_id',
+        'id',
+        'message_id',
+        'msg_id',
+        'messageId',
+        'webhook_id',
+        'event_id',
       ]);
 
       if (!phone || !text) {
-        this.logger.warn(`⚠️ Gateway payload tidak lengkap: phone=${!!phone} text=${!!text}`);
+        this.logger.warn(
+          `⚠️ Gateway payload tidak lengkap: phone=${!!phone} text=${!!text}`,
+        );
         return { status: 'incomplete', required: ['phone', 'text'] };
       }
 
@@ -143,7 +182,9 @@ export class WaWebhookService {
       const digits = phone.replace(/\D/g, '');
       const phone62 = digits.startsWith('0')
         ? '62' + digits.slice(1)
-        : digits.startsWith('62') ? digits : '62' + digits;
+        : digits.startsWith('62')
+          ? digits
+          : '62' + digits;
 
       this.logger.log(`📨 Gateway from ${phone62}: "${text.slice(0, 50)}"`);
 
@@ -159,7 +200,12 @@ export class WaWebhookService {
           msgId: msgId || undefined,
         });
       } else {
-        const orphan = await this.leadCapture.upsertOrphanLead(phone62, name || 'Unknown', text, msgId || undefined);
+        const orphan = await this.leadCapture.upsertOrphanLead(
+          phone62,
+          name || 'Unknown',
+          text,
+          msgId || undefined,
+        );
         if (orphan?.id) {
           void this.autoGreet.sendAutoGreeting(orphan.id, 'Tim Dreamlab');
         }

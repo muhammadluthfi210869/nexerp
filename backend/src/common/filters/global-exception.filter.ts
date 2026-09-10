@@ -11,7 +11,7 @@ const corsHeaders = (request: Request) => ({
   'Access-Control-Allow-Origin': request.headers.origin || '*',
   'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   'Access-Control-Allow-Headers':
-    'Content-Type, Accept, Authorization, X-Requested-With',
+    'Content-Type, Accept, Authorization, X-Requested-With, Idempotency-Key, X-Idempotency-Key',
   'Access-Control-Allow-Credentials': 'true',
 });
 

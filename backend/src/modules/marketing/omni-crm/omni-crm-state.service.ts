@@ -10,7 +10,9 @@ export class OmniCrmStateService {
   }
 
   async upsert(ownerId: string, state: unknown, expectedVersion?: number) {
-    const existing = await this.prisma.omniCrmState.findUnique({ where: { ownerId } });
+    const existing = await this.prisma.omniCrmState.findUnique({
+      where: { ownerId },
+    });
     if (!existing) {
       return this.prisma.omniCrmState.create({
         data: { ownerId, state: state as any, version: 1 },

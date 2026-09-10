@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductProfitabilitiesDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   productId: string;
 
-  @ApiProperty({ example: "Product X" })
+  @ApiProperty({ example: 'Product X' })
   productName: string;
 
-  @ApiProperty({ example: "2026-09-01" })
+  @ApiProperty({ example: '2026-09-01' })
   period: string;
 
   @ApiProperty({ example: 50000000 })

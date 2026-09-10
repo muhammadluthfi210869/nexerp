@@ -405,7 +405,9 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
           leadId: lead.id,
           productName: 'Revision Sync Audit',
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       await markAsPaid(sample.id, lead.id);
@@ -428,7 +430,9 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
           leadId: lead.id,
           productName: 'Revision Done Audit',
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       await markAsPaid(sample.id, lead.id);
@@ -468,7 +472,9 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
           leadId: lead.id,
           productName: 'Velocity Audit',
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       await markAsPaid(sample.id, lead.id);
@@ -501,14 +507,16 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
           leadId: lead.id,
           productName: 'Revision API Audit',
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
 
       const revisions = await rndService.getRevisions();
 
       // NOT_STARTED samples should appear
-      const found = revisions.find(r => r.id === sample.id);
+      const found = revisions.find((r) => r.id === sample.id);
       expect(found).toBeTruthy();
       expect(found!.revisionStatus).toBe(RevisionStatus.NOT_STARTED);
     });
@@ -521,7 +529,9 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
           leadId: lead.id,
           productName: 'Revision History Audit',
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       await markAsPaid(sample.id, lead.id);
@@ -530,7 +540,7 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
       await rndService.completeRevision(sample.id);
 
       const history = await rndService.getRevisionHistory();
-      const found = history.find(r => r.id === sample.id);
+      const found = history.find((r) => r.id === sample.id);
       expect(found).toBeTruthy();
       expect(found!.revisionStatus).toBe(RevisionStatus.DONE);
     });

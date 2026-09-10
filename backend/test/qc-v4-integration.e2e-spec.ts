@@ -19,13 +19,8 @@ describe('QC V4 Integration Tests', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        PrismaModule,
-        EventEmitterModule.forRoot(),
-      ],
-      providers: [
-        QCAuditsService,
-      ],
+      imports: [PrismaModule, EventEmitterModule.forRoot()],
+      providers: [QCAuditsService],
     }).compile();
 
     qcAuditsService = module.get<QCAuditsService>(QCAuditsService);
@@ -144,7 +139,9 @@ describe('QC V4 Integration Tests', () => {
   }, 15000);
 
   // ───────── Helper: Create user for QC officer ─────────
-  async function createQcUser(override?: Partial<{ email: string; managerPin: string }>) {
+  async function createQcUser(
+    override?: Partial<{ email: string; managerPin: string }>,
+  ) {
     const id = randomUUID();
     const email = override?.email || `qcuser-${uid()}@qcv4-test.local`;
     const data: any = {
@@ -581,10 +578,10 @@ describe('QC V4 Integration Tests', () => {
           leadId: lead.id,
           productName: 'Pareto Sample',
           sampleCode: `QC-V4-PARETO-${uid()}`,
-        targetFunction: 'QC Test',
-        textureReq: 'Smooth',
-        colorReq: 'White',
-        aromaReq: 'None',
+          targetFunction: 'QC Test',
+          textureReq: 'Smooth',
+          colorReq: 'White',
+          aromaReq: 'None',
         },
       });
       const so = await prisma.salesOrder.create({
@@ -605,7 +602,10 @@ describe('QC V4 Integration Tests', () => {
           soId: so.id,
         },
       });
-      const stepLog = await createStepLog(plan.id, { inputQty: 100, qtyQuarantine: 100 });
+      const stepLog = await createStepLog(plan.id, {
+        inputQty: 100,
+        qtyQuarantine: 100,
+      });
 
       await prisma.qCAudit.create({
         data: {
@@ -720,8 +720,12 @@ describe('QC V4 Integration Tests', () => {
       const goodEntry = result.find((r) => r.supplierId === goodSupplier.id);
       expect(badEntry).toBeTruthy();
       expect(goodEntry).toBeTruthy();
-      expect(badEntry!.rejectRate).toBeGreaterThanOrEqual(goodEntry!.rejectRate);
-      expect(result.indexOf(badEntry!)).toBeLessThan(result.indexOf(goodEntry!));
+      expect(badEntry!.rejectRate).toBeGreaterThanOrEqual(
+        goodEntry!.rejectRate,
+      );
+      expect(result.indexOf(badEntry!)).toBeLessThan(
+        result.indexOf(goodEntry!),
+      );
     });
 
     // B3: funnel-degradation per stage
@@ -744,10 +748,10 @@ describe('QC V4 Integration Tests', () => {
           leadId: lead.id,
           productName: 'Funnel Sample',
           sampleCode: `QC-V4-FUNNEL-${uid()}`,
-        targetFunction: 'QC Test',
-        textureReq: 'Smooth',
-        colorReq: 'White',
-        aromaReq: 'None',
+          targetFunction: 'QC Test',
+          textureReq: 'Smooth',
+          colorReq: 'White',
+          aromaReq: 'None',
         },
       });
       const so = await prisma.salesOrder.create({
@@ -873,13 +877,9 @@ describe('QC V4 Integration Tests', () => {
 
     // B5: rework-hold-log filters by disposition
     it('B5: getReworkHoldLog should only include REWORK/SORTING/USE_AS_IS dispositions', async () => {
-      const dispositions: Array<'REWORK' | 'SCRAP' | 'RETURN_TO_VENDOR' | 'USE_AS_IS' | 'SORTING'> = [
-        'REWORK',
-        'SCRAP',
-        'RETURN_TO_VENDOR',
-        'USE_AS_IS',
-        'SORTING',
-      ];
+      const dispositions: Array<
+        'REWORK' | 'SCRAP' | 'RETURN_TO_VENDOR' | 'USE_AS_IS' | 'SORTING'
+      > = ['REWORK', 'SCRAP', 'RETURN_TO_VENDOR', 'USE_AS_IS', 'SORTING'];
 
       for (const disp of dispositions) {
         await prisma.qCAudit.create({
@@ -895,7 +895,9 @@ describe('QC V4 Integration Tests', () => {
 
       const result = await qcAuditsService.getReworkHoldLog();
 
-      const dispositionsInResult = [...new Set(result.map((r) => r.disposition))];
+      const dispositionsInResult = [
+        ...new Set(result.map((r) => r.disposition)),
+      ];
       expect(dispositionsInResult).not.toContain('SCRAP');
       expect(dispositionsInResult).not.toContain('RETURN_TO_VENDOR');
       expect(dispositionsInResult).toContain('REWORK');

@@ -16,7 +16,11 @@ import {
   InvoiceType,
 } from '@prisma/client';
 import { IdGeneratorService } from '../../system/id-generator.service';
-import { ApproveDraftDto, RejectDraftDto, UpdateDraftDto } from '../dto/draft.dto';
+import {
+  ApproveDraftDto,
+  RejectDraftDto,
+  UpdateDraftDto,
+} from '../dto/draft.dto';
 
 @Injectable()
 export class DocumentAutomationService {
@@ -43,20 +47,26 @@ export class DocumentAutomationService {
     workOrderId: string;
     loggedBy: string;
   }) {
-    this.logger.log(`[DOC_AUTO] Production completed: generating Final Invoice + DO drafts`);
+    this.logger.log(
+      `[DOC_AUTO] Production completed: generating Final Invoice + DO drafts`,
+    );
     await this.generateFinalInvoiceDraft(payload.workOrderId);
     await this.generateDeliveryOrderDraft(payload.workOrderId);
   }
 
   @OnEvent('sales_order.activated')
   async handleSalesOrderActivated(payload: { salesOrderId: string }) {
-    this.logger.log(`[DOC_AUTO] SO Activated: generating Goods Requirement + PR drafts`);
+    this.logger.log(
+      `[DOC_AUTO] SO Activated: generating Goods Requirement + PR drafts`,
+    );
     await this.generateGoodsRequirementDraft(payload.salesOrderId);
   }
 
   @OnEvent('delivery_order.created')
   async handleDeliveryOrderCreated(payload: { deliveryOrderId: string }) {
-    this.logger.log(`[DOC_AUTO] DO Created: generating Surat Jalan + Delivery Journal drafts`);
+    this.logger.log(
+      `[DOC_AUTO] DO Created: generating Surat Jalan + Delivery Journal drafts`,
+    );
     await this.generateSuratJalanDraft(payload.deliveryOrderId);
     await this.generateDeliveryJournalDraft(payload.deliveryOrderId);
   }
@@ -67,7 +77,9 @@ export class DocumentAutomationService {
     newStatus: string;
   }) {
     if (payload.newStatus === 'NEGOTIATION') {
-      this.logger.log(`[DOC_AUTO] Lead moved to NEGOTIATION: generating Quotation draft`);
+      this.logger.log(
+        `[DOC_AUTO] Lead moved to NEGOTIATION: generating Quotation draft`,
+      );
       await this.generateQuotationDraft(payload.leadId);
     }
   }
@@ -95,7 +107,9 @@ export class DocumentAutomationService {
         sourceType: SourceDocumentType.SALES_ORDER,
         sourceId: leadId,
         documentType: DocumentType.QUOTATION,
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
       },
     });
 
@@ -117,19 +131,23 @@ export class DocumentAutomationService {
           productInterest: lead.productInterest,
           estimatedValue: Number(lead.estimatedValue),
           picName: lead.brandName,
-          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
           paymentTerms: 'DP 30% + Pelunasan saat barang siap',
           items: lead.sampleRequests[0]?.billOfMaterials?.map((bom: any) => ({
             productName: bom.materialName || lead.productInterest,
             quantity: 1,
             unitPrice: Number(bom.estimatedCost || 0),
             subtotal: Number(bom.estimatedCost || 0),
-          })) || [{
-            productName: lead.productInterest,
-            quantity: lead.moq || 1,
-            unitPrice: Number(lead.estimatedValue) / (lead.moq || 1),
-            subtotal: Number(lead.estimatedValue),
-          }],
+          })) || [
+            {
+              productName: lead.productInterest,
+              quantity: lead.moq || 1,
+              unitPrice: Number(lead.estimatedValue) / (lead.moq || 1),
+              subtotal: Number(lead.estimatedValue),
+            },
+          ],
           notes: `Quotation untuk ${lead.brandName} — ${lead.productInterest}`,
         },
       },
@@ -156,7 +174,9 @@ export class DocumentAutomationService {
         sourceType: SourceDocumentType.SALES_ORDER,
         sourceId: salesOrderId,
         documentType: DocumentType.INVOICE_DP,
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
       },
     });
 
@@ -178,7 +198,9 @@ export class DocumentAutomationService {
           category: 'RECEIVABLE',
           amountDue: dpAmount,
           outstandingAmount: dpAmount,
-          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          dueDate: new Date(
+            Date.now() + 14 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
           soId: salesOrderId,
           clientName: so.lead?.clientName || 'Unknown',
           brandName: so.brandName,
@@ -195,7 +217,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] DP Invoice draft created: ${draft.draftNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] DP Invoice draft created: ${draft.draftNumber}`,
+    );
     this.eventEmitter.emit('document.draft_created', {
       draftId: draft.id,
       documentType: DocumentType.INVOICE_DP,
@@ -227,13 +251,17 @@ export class DocumentAutomationService {
         sourceType: SourceDocumentType.WORK_ORDER,
         sourceId: workOrderId,
         documentType: DocumentType.INVOICE_FINAL,
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
       },
     });
 
     if (existing) return;
 
-    const finalAmount = wo.actualCogs ? Number(wo.actualCogs) : Number(so.totalAmount) * 0.7;
+    const finalAmount = wo.actualCogs
+      ? Number(wo.actualCogs)
+      : Number(so.totalAmount) * 0.7;
     const draftNumber = await this.idGenerator.generateId('INV');
 
     const draft = await this.prisma.documentDraft.create({
@@ -268,7 +296,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] Final Invoice draft created: ${draft.draftNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] Final Invoice draft created: ${draft.draftNumber}`,
+    );
     return draft;
   }
 
@@ -288,7 +318,9 @@ export class DocumentAutomationService {
         sourceType: SourceDocumentType.SALES_ORDER,
         sourceId: salesOrderId,
         documentType: DocumentType.GOODS_REQUIREMENT,
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
       },
     });
 
@@ -320,7 +352,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] Goods Requirement draft created: ${draft.draftNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] Goods Requirement draft created: ${draft.draftNumber}`,
+    );
     return draft;
   }
 
@@ -346,7 +380,9 @@ export class DocumentAutomationService {
         sourceType: SourceDocumentType.WORK_ORDER,
         sourceId: workOrderId,
         documentType: DocumentType.DELIVERY_ORDER,
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
       },
     });
 
@@ -383,7 +419,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] Delivery Order draft created: ${draft.draftNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] Delivery Order draft created: ${draft.draftNumber}`,
+    );
     return draft;
   }
 
@@ -414,7 +452,9 @@ export class DocumentAutomationService {
         sourceType: SourceDocumentType.DELIVERY_ORDER,
         sourceId: deliveryOrderId,
         documentType: DocumentType.SURAT_JALAN,
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
       },
     });
 
@@ -434,7 +474,9 @@ export class DocumentAutomationService {
           clientName: so.lead?.clientName || 'Unknown',
           brandName: so.brandName,
           shippingAddress: so.lead?.addressDetail || so.lead?.city || '-',
-          shipDate: doObj.shippedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          shipDate:
+            doObj.shippedAt?.toISOString().split('T')[0] ||
+            new Date().toISOString().split('T')[0],
           vehicleNumber: '',
           driverName: '',
           items: so.items.map((item: any) => ({
@@ -448,7 +490,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] Surat Jalan draft created: ${draft.draftNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] Surat Jalan draft created: ${draft.draftNumber}`,
+    );
     return draft;
   }
 
@@ -494,7 +538,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] Delivery Journal draft created: ${draft.draftNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] Delivery Journal draft created: ${draft.draftNumber}`,
+    );
     return draft;
   }
 
@@ -502,7 +548,11 @@ export class DocumentAutomationService {
   // DRAFT MANAGEMENT (CRUD + Approval Flow)
   // ──────────────────────────────────────────────
 
-  async findAll(filters?: { documentType?: string; status?: string; sourceType?: string }) {
+  async findAll(filters?: {
+    documentType?: string;
+    status?: string;
+    sourceType?: string;
+  }) {
     const where: any = {};
     if (filters?.documentType) where.documentType = filters.documentType;
     if (filters?.status) where.status = filters.status;
@@ -585,14 +635,25 @@ export class DocumentAutomationService {
   }
 
   async getStats() {
-    const [total, drafts, reviewing, approved, rejected, converted] = await Promise.all([
-      this.prisma.documentDraft.count(),
-      this.prisma.documentDraft.count({ where: { status: DocumentDraftStatus.DRAFT } }),
-      this.prisma.documentDraft.count({ where: { status: DocumentDraftStatus.REVIEWING } }),
-      this.prisma.documentDraft.count({ where: { status: DocumentDraftStatus.APPROVED } }),
-      this.prisma.documentDraft.count({ where: { status: DocumentDraftStatus.REJECTED } }),
-      this.prisma.documentDraft.count({ where: { status: DocumentDraftStatus.CONVERTED } }),
-    ]);
+    const [total, drafts, reviewing, approved, rejected, converted] =
+      await Promise.all([
+        this.prisma.documentDraft.count(),
+        this.prisma.documentDraft.count({
+          where: { status: DocumentDraftStatus.DRAFT },
+        }),
+        this.prisma.documentDraft.count({
+          where: { status: DocumentDraftStatus.REVIEWING },
+        }),
+        this.prisma.documentDraft.count({
+          where: { status: DocumentDraftStatus.APPROVED },
+        }),
+        this.prisma.documentDraft.count({
+          where: { status: DocumentDraftStatus.REJECTED },
+        }),
+        this.prisma.documentDraft.count({
+          where: { status: DocumentDraftStatus.CONVERTED },
+        }),
+      ]);
 
     return { total, drafts, reviewing, approved, rejected, converted };
   }
@@ -611,7 +672,9 @@ export class DocumentAutomationService {
     const now = new Date();
     const expiredDrafts = await this.prisma.documentDraft.findMany({
       where: {
-        status: { in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING] },
+        status: {
+          in: [DocumentDraftStatus.DRAFT, DocumentDraftStatus.REVIEWING],
+        },
         autoApproveAt: { lte: now },
       },
     });
@@ -644,7 +707,7 @@ export class DocumentAutomationService {
   // ──────────────────────────────────────────────
 
   private async executeApprovedDraft(draft: any) {
-    const payload = draft.payload as any;
+    const payload = draft.payload;
 
     try {
       switch (draft.documentType) {
@@ -664,13 +727,19 @@ export class DocumentAutomationService {
         case DocumentType.QUOTATION:
         case DocumentType.SURAT_JALAN:
         case DocumentType.PURCHASE_REQUEST:
-          this.logger.log(`[DOC_AUTO] Draft ${draft.documentType} approved — no auto-conversion needed`);
+          this.logger.log(
+            `[DOC_AUTO] Draft ${draft.documentType} approved — no auto-conversion needed`,
+          );
           break;
         default:
-          this.logger.warn(`[DOC_AUTO] No executor for document type: ${draft.documentType}`);
+          this.logger.warn(
+            `[DOC_AUTO] No executor for document type: ${draft.documentType}`,
+          );
       }
     } catch (error: any) {
-      this.logger.error(`[DOC_AUTO] Failed to execute draft ${draft.draftNumber}: ${error?.message || error}`);
+      this.logger.error(
+        `[DOC_AUTO] Failed to execute draft ${draft.draftNumber}: ${error?.message || error}`,
+      );
     }
   }
 
@@ -694,10 +763,15 @@ export class DocumentAutomationService {
 
     await this.prisma.documentDraft.update({
       where: { id: draft.id },
-      data: { finalDocumentId: invoice.id, status: DocumentDraftStatus.CONVERTED },
+      data: {
+        finalDocumentId: invoice.id,
+        status: DocumentDraftStatus.CONVERTED,
+      },
     });
 
-    this.logger.log(`[DOC_AUTO] Invoice created from draft: ${invoice.invoiceNumber}`);
+    this.logger.log(
+      `[DOC_AUTO] Invoice created from draft: ${invoice.invoiceNumber}`,
+    );
     return invoice;
   }
 
@@ -726,7 +800,9 @@ export class DocumentAutomationService {
       data: { finalDocumentId: gr.id, status: DocumentDraftStatus.CONVERTED },
     });
 
-    this.logger.log(`[DOC_AUTO] Goods Requirement created from draft: ${gr.code}`);
+    this.logger.log(
+      `[DOC_AUTO] Goods Requirement created from draft: ${gr.code}`,
+    );
     return gr;
   }
 
@@ -742,10 +818,15 @@ export class DocumentAutomationService {
 
     await this.prisma.documentDraft.update({
       where: { id: draft.id },
-      data: { finalDocumentId: doObj.id, status: DocumentDraftStatus.CONVERTED },
+      data: {
+        finalDocumentId: doObj.id,
+        status: DocumentDraftStatus.CONVERTED,
+      },
     });
 
-    this.logger.log(`[DOC_AUTO] Delivery Order created from draft: ${doObj.id}`);
+    this.logger.log(
+      `[DOC_AUTO] Delivery Order created from draft: ${doObj.id}`,
+    );
     return doObj;
   }
 
@@ -768,7 +849,9 @@ export class DocumentAutomationService {
       },
     });
 
-    this.logger.log(`[DOC_AUTO] Journal Entry created from draft: ${journal.reference}`);
+    this.logger.log(
+      `[DOC_AUTO] Journal Entry created from draft: ${journal.reference}`,
+    );
     return journal;
   }
 }

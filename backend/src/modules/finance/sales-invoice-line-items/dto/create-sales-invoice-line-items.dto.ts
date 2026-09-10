@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSalesInvoiceLineItemsDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   invoiceId: string;
 
-  @ApiProperty({ example: "PROD001" })
+  @ApiProperty({ example: 'PROD001' })
   itemCode: string;
 
-  @ApiProperty({ example: "Product X" })
+  @ApiProperty({ example: 'Product X' })
   itemName: string;
 
   @ApiProperty({ example: 10 })
   qty: number;
 
-  @ApiProperty({ example: "PCS" })
+  @ApiProperty({ example: 'PCS' })
   unit: string;
 
   @ApiProperty({ example: 100000 })

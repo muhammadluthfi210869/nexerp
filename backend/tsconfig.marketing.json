@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "incremental": false,
+    "noEmit": true,
+    "sourceMap": false,
+    "types": ["node"]
+  },
+  "include": [
+    "src/modules/marketing/prototype/**/*.ts",
+    "src/modules/marketing/social-planner/**/*.ts",
+    "src/modules/marketing/canonical/**/*.ts",
+    "src/modules/marketing/dto/prototype-task.dto.ts",
+    "src/prisma/prisma/prisma.service.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/modules/marketing/**/*.spec.ts",
+    "src/modules/marketing/**/__tests__/**"
+  ]
+}

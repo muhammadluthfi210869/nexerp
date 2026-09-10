@@ -55,7 +55,10 @@ export class TodoController {
   @Patch('boards/:id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Update board' })
-  updateBoard(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateBoardDto) {
+  updateBoard(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateBoardDto,
+  ) {
     return this.todoService.updateBoard(id, dto);
   }
 
@@ -70,19 +73,30 @@ export class TodoController {
 
   @Post('boards/:id/tasks')
   @ApiOperation({ summary: 'Create a task in board' })
-  createTask(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CreateTaskDto) {
+  createTask(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateTaskDto,
+  ) {
     return this.todoService.createTask(id, dto);
   }
 
   @Patch('tasks/:id/status')
   @ApiOperation({ summary: 'Update task status (drag & drop)' })
-  updateTaskStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTaskStatusDto) {
+  updateTaskStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaskStatusDto,
+  ) {
     return this.todoService.updateTaskStatus(id, dto);
   }
 
   @Patch('tasks/:id')
-  @ApiOperation({ summary: 'Update task (title/description/assignee/labels/status)' })
-  updateTask(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTaskDto) {
+  @ApiOperation({
+    summary: 'Update task (title/description/assignee/labels/status)',
+  })
+  updateTask(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
     return this.todoService.updateTask(id, dto);
   }
 

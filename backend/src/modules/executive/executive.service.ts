@@ -486,7 +486,9 @@ export class ExecutiveService {
           ipAddress: a.ipAddress || '127.0.0.1',
           timestamp: a.createdAt?.toISOString() || new Date().toISOString(),
           status: 'SUCCESS',
-          details: a.description || (a.payload ? JSON.stringify(a.payload) : 'Transaction updated'),
+          details:
+            a.description ||
+            (a.payload ? JSON.stringify(a.payload) : 'Transaction updated'),
         }));
       }
     } catch {
@@ -494,15 +496,15 @@ export class ExecutiveService {
     }
     return [
       {
-        id: "1",
-        action: "UPDATE",
-        entity: "FinancialPeriod",
-        entityId: "FP-2026-003",
-        user: "System (Auto)",
-        ipAddress: "127.0.0.1",
+        id: '1',
+        action: 'UPDATE',
+        entity: 'FinancialPeriod',
+        entityId: 'FP-2026-003',
+        user: 'System (Auto)',
+        ipAddress: '127.0.0.1',
         timestamp: new Date().toISOString(),
-        status: "SUCCESS",
-        details: "Period synchronization checked",
+        status: 'SUCCESS',
+        details: 'Period synchronization checked',
       },
     ];
   }

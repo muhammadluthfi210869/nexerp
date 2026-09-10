@@ -70,18 +70,18 @@ describe('ProductionService — Unit', () => {
 
     it('should start production and create log', async () => {
       prisma.materialRequisition.findMany = jest.fn().mockResolvedValue([]);
-      prisma.workOrder.findUnique = jest
-        .fn()
-        .mockResolvedValue({
-          id: mockWoId,
-          targetQty: 500,
-          woNumber: 'WO-001',
-          lead: { designTasks: [{ isFinal: true }] },
-        });
+      prisma.workOrder.findUnique = jest.fn().mockResolvedValue({
+        id: mockWoId,
+        targetQty: 500,
+        woNumber: 'WO-001',
+        lead: { designTasks: [{ isFinal: true }] },
+      });
       prisma.workOrder.update = jest
         .fn()
         .mockResolvedValue({ woNumber: 'WO-001', stage: 'MIXING' });
-      prisma.productionLog.create = jest.fn().mockResolvedValue({ id: 'LOG-1' });
+      prisma.productionLog.create = jest
+        .fn()
+        .mockResolvedValue({ id: 'LOG-1' });
       prisma.machine.update = jest.fn();
 
       const result = await service.startProduction(
@@ -179,7 +179,9 @@ describe('ProductionService — Unit', () => {
       prisma.productionLog.create = jest
         .fn()
         .mockResolvedValue({ id: 'LOG-1' });
-      idGenerator.generateStageId = jest.fn().mockResolvedValue('LOG-FINAL-001');
+      idGenerator.generateStageId = jest
+        .fn()
+        .mockResolvedValue('LOG-FINAL-001');
       prisma.machine.update = jest.fn();
 
       await service.submitStageLog(mockWoId, baseDto);
@@ -198,7 +200,9 @@ describe('ProductionService — Unit', () => {
       });
       prisma.productionLog.findFirst = jest.fn().mockResolvedValue(null);
       prisma.productionLog.create = jest.fn();
-      idGenerator.generateStageId = jest.fn().mockResolvedValue('LOG-FINAL-001');
+      idGenerator.generateStageId = jest
+        .fn()
+        .mockResolvedValue('LOG-FINAL-001');
       prisma.machine.update = jest.fn();
 
       await service.submitStageLog(mockWoId, baseDto);
@@ -220,7 +224,9 @@ describe('ProductionService — Unit', () => {
       });
       prisma.productionLog.findFirst = jest.fn().mockResolvedValue(null);
       prisma.productionLog.create = jest.fn();
-      idGenerator.generateStageId = jest.fn().mockResolvedValue('LOG-FINAL-001');
+      idGenerator.generateStageId = jest
+        .fn()
+        .mockResolvedValue('LOG-FINAL-001');
       legalityService.checkProductionGate = jest
         .fn()
         .mockResolvedValue({ allowed: false, reason: 'BPOM not approved' });
@@ -342,7 +348,12 @@ describe('ProductionService — Unit', () => {
       prisma.qCAudit.create = jest.fn().mockResolvedValue({ id: 'AUDIT-1' });
       prisma.$transaction = jest.fn((fn: any) => fn(prisma));
 
-      const result = await service.submitAudit('LOG-1', 'QC-USER', 'GOOD', 'Pass');
+      const result = await service.submitAudit(
+        'LOG-1',
+        'QC-USER',
+        'GOOD',
+        'Pass',
+      );
 
       expect(result.id).toBe('AUDIT-1');
       expect(prisma.workOrder.update).toHaveBeenCalledWith(
@@ -437,9 +448,11 @@ describe('ProductionService — Unit', () => {
 
   describe('getMachineOEE', () => {
     it('should calculate OEE with no logs (default 100)', async () => {
-      prisma.machine.findMany = jest.fn().mockResolvedValue([
-        { id: 'M-1', name: 'Mixer A', isActive: true, productionLogs: [] },
-      ]);
+      prisma.machine.findMany = jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'M-1', name: 'Mixer A', isActive: true, productionLogs: [] },
+        ]);
 
       const result = await service.getMachineOEE();
 

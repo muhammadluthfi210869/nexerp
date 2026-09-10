@@ -7,7 +7,11 @@ export class SuppliersService {
   constructor(private prisma: PrismaService) {}
 
   // Item 50: Find suppliers with optional bahanType filter
-  async findAll(query?: { search?: string; categoryId?: string; bahanType?: string }) {
+  async findAll(query?: {
+    search?: string;
+    categoryId?: string;
+    bahanType?: string;
+  }) {
     const search = query?.search?.trim();
     const categoryId = query?.categoryId;
     const bahanType = query?.bahanType;
@@ -132,8 +136,12 @@ export class SuppliersService {
         ...(dto.address !== undefined && { address: dto.address }),
         ...(dto.city !== undefined && { city: dto.city }),
         ...(dto.province !== undefined && { province: dto.province }),
-        ...(dto.termOfPayment !== undefined && { termOfPayment: Number(dto.termOfPayment) }),
-        ...(dto.categoryId !== undefined && { categoryId: dto.categoryId || null }),
+        ...(dto.termOfPayment !== undefined && {
+          termOfPayment: Number(dto.termOfPayment),
+        }),
+        ...(dto.categoryId !== undefined && {
+          categoryId: dto.categoryId || null,
+        }),
       },
       include: {
         category: true,

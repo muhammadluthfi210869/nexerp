@@ -1695,7 +1695,9 @@ export class ProductionService {
           (d: any) => d.category === 'BULK',
         );
         if (bulkComponent && bulkComponent.qtyTheoretical) {
-          const actualBulk = Number(bulkComponent.qtyActual ?? bulkComponent.qtyTheoretical);
+          const actualBulk = Number(
+            bulkComponent.qtyActual ?? bulkComponent.qtyTheoretical,
+          );
           const theoreticalBulk = Number(bulkComponent.qtyTheoretical);
           const targetPcs = Number(schedule.targetQty);
 

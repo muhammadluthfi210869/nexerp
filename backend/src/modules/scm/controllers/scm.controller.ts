@@ -93,19 +93,35 @@ export class ScmController {
   }
 
   @Get('hpp-requests')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE, UserRole.RND, UserRole.COMMERCIAL)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.FINANCE,
+    UserRole.RND,
+    UserRole.COMMERCIAL,
+  )
   async getHppRequests() {
     return this.scmService.getHppRequests();
   }
 
   @Post('hpp-requests')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.RND, UserRole.COMMERCIAL)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.RND,
+    UserRole.COMMERCIAL,
+  )
   async createHppRequest(@Body() dto: any) {
     return this.scmService.createHppRequest(dto);
   }
 
   @Patch('hpp-requests/:id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE, UserRole.DIRECTOR)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.FINANCE,
+    UserRole.DIRECTOR,
+  )
   async updateHppStatus(
     @Param('id') id: string,
     @Body() body: { status: string; calculatedHpp?: number },

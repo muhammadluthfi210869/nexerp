@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { WaWebhookService } from './wa-webhook.service';
 
 @Controller('wa-webhook')

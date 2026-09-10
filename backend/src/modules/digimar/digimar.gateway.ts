@@ -12,11 +12,17 @@ import { Logger } from '@nestjs/common';
 @WebSocketGateway({
   namespace: '/digimar',
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['https://nexerp.id', 'https://www.nexerp.id', 'https://dreamlab.id'],
+    origin: process.env.CORS_ORIGIN?.split(',') ?? [
+      'https://nexerp.id',
+      'https://www.nexerp.id',
+      'https://dreamlab.id',
+    ],
     credentials: true,
   },
 })
-export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class DigimarGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(DigimarGateway.name);
   private refreshInterval: NodeJS.Timeout | null = null;
@@ -54,7 +60,9 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
         this.logger.log('Auto-refresh stopped (no clients)');
       }
     } catch (err) {
-      this.logger.warn(`Error checking remaining sockets: ${(err as Error).message}`);
+      this.logger.warn(
+        `Error checking remaining sockets: ${(err as Error).message}`,
+      );
     }
   }
 
@@ -92,8 +100,14 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
   }
 
   @SubscribeMessage('subscribe:weekly')
-  async handleWeeklySubscribe(client: Socket, payload: { month?: string; platform?: string }) {
-    const data = await this.digimarService.getWeekly(payload?.month, payload?.platform);
+  async handleWeeklySubscribe(
+    client: Socket,
+    payload: { month?: string; platform?: string },
+  ) {
+    const data = await this.digimarService.getWeekly(
+      payload?.month,
+      payload?.platform,
+    );
     client.emit('digimar:weekly', data);
   }
 

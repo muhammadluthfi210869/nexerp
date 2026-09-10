@@ -186,7 +186,12 @@ export class FinanceService {
     const accountMap = new Map(accounts.map((a) => [a.id, a]));
     const expenseLines = dto.lines.map((l) => {
       const acc = accountMap.get(l.accountId);
-      return acc && (acc.code.startsWith('6') || acc.code.startsWith('12') || acc.code.startsWith('15'));
+      return (
+        acc &&
+        (acc.code.startsWith('6') ||
+          acc.code.startsWith('12') ||
+          acc.code.startsWith('15'))
+      );
     });
 
     if (
@@ -578,7 +583,10 @@ export class FinanceService {
     bankAccount?: string;
     notes?: string;
   }) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.id);
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        dto.id,
+      );
 
     if (dto.type === 'SAMPLE') {
       let lead: any = null;
@@ -629,7 +637,9 @@ export class FinanceService {
             amount: lead.estimatedValue || 0,
             isValidated: true,
             validatedBy: dto.verifiedBy,
-            notes: dto.notes || `Sample payment verified for lead ${lead.clientName} (${lead.brandName || ''})`,
+            notes:
+              dto.notes ||
+              `Sample payment verified for lead ${lead.clientName} (${lead.brandName || ''})`,
             metadata: {
               sampleId: sample?.id || lead.id,
               isFoc: !!dto.isFoc,
@@ -1241,10 +1251,7 @@ export class FinanceService {
   async getAllFundRequests(userId?: string) {
     const where: any = {};
     if (userId) {
-      where.OR = [
-        { requesterId: userId },
-        { approvedById: userId },
-      ];
+      where.OR = [{ requesterId: userId }, { approvedById: userId }];
     }
     return this.prisma.fundRequest.findMany({
       where,
@@ -1705,22 +1712,34 @@ export class FinanceService {
       // SAMPLE â†’ Penjualan - sample (4101) or Unearned Revenue (2102), DP_ORDER â†’ Penjualan di terima di muka (2102)
       let creditAccountId = '';
       if (type === ArPaymentType.SAMPLE) {
-        const acc = await tx.account.findFirst({ where: { OR: [{ code: '4101' }, { code: '2102' }, { code: '2300' }] } });
+        const acc = await tx.account.findFirst({
+          where: { OR: [{ code: '4101' }, { code: '2102' }, { code: '2300' }] },
+        });
         creditAccountId = acc?.id || '';
       } else {
-        const acc = await tx.account.findFirst({ where: { OR: [{ code: '2102' }, { code: '2301' }] } });
+        const acc = await tx.account.findFirst({
+          where: { OR: [{ code: '2102' }, { code: '2301' }] },
+        });
         creditAccountId = acc?.id || '';
       }
 
       // 2. Determine Supporting Accounts
       // 6224 = Bank Admin Fee, 2301 = PPN / Hutang Pajak
-      const adminAcc = await tx.account.findFirst({ where: { OR: [{ code: '6224' }, { code: '8100' }] } });
-      const ppnAcc = await tx.account.findFirst({ where: { OR: [{ code: '2301' }, { code: '2201' }, { code: '2105' }] } });
+      const adminAcc = await tx.account.findFirst({
+        where: { OR: [{ code: '6224' }, { code: '8100' }] },
+      });
+      const ppnAcc = await tx.account.findFirst({
+        where: { OR: [{ code: '2301' }, { code: '2201' }, { code: '2105' }] },
+      });
 
       if (bankAdminFee > 0 && !adminAcc)
-        throw new BadRequestException('Account 6224/8100 (Admin Fee) not found');
+        throw new BadRequestException(
+          'Account 6224/8100 (Admin Fee) not found',
+        );
       if (taxAmount > 0 && !ppnAcc)
-        throw new BadRequestException('Account 2301/2201 (Tax Account) not found');
+        throw new BadRequestException(
+          'Account 2301/2201 (Tax Account) not found',
+        );
 
       // 3. Calculate Base Amount
       const baseAmount = actualAmount + bankAdminFee - taxAmount;
@@ -2098,7 +2117,9 @@ export class FinanceService {
         const acc = l.account;
         const isCashAccount =
           acc.type === AccountType.ASSET &&
-          (acc.code.startsWith('111') || acc.code.startsWith('112') || acc.code.startsWith('11'));
+          (acc.code.startsWith('111') ||
+            acc.code.startsWith('112') ||
+            acc.code.startsWith('11'));
 
         if (isCashAccount) {
           // This line is a movement in cash
@@ -2311,7 +2332,7 @@ export class FinanceService {
     const shippingCost = po.shippingCost || 0;
 
     let subtotal = 0;
-    let rejectAmount = 0;
+    const rejectAmount = 0;
 
     // For each PO item, we would ideally have qtyBagus/qtyReject from inbound QC
     // Since those fields don't exist on POItem yet, we use quantity as proxy
@@ -2323,7 +2344,8 @@ export class FinanceService {
       subtotal += itemTotal;
     }
 
-    const payableAmount = subtotal - discountManual - discountRounding + shippingCost;
+    const payableAmount =
+      subtotal - discountManual - discountRounding + shippingCost;
 
     return {
       payableAmount: Math.max(0, payableAmount),
@@ -2335,4 +2357,5 @@ export class FinanceService {
         rejectAmount,
       },
     };
-  }}
+  }
+}

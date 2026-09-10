@@ -12,8 +12,14 @@ export function num(val: unknown): number | null {
   if (typeof val === 'number') return isNaN(val) ? null : val;
 
   const trimmed = String(val).trim();
-  if (trimmed === '' || trimmed === '-' || trimmed === 'N/A' ||
-      trimmed === '#DIV/0!' || trimmed === '#REF!' || trimmed === '#VALUE!') {
+  if (
+    trimmed === '' ||
+    trimmed === '-' ||
+    trimmed === 'N/A' ||
+    trimmed === '#DIV/0!' ||
+    trimmed === '#REF!' ||
+    trimmed === '#VALUE!'
+  ) {
     return null;
   }
   // Indonesian locale: comma = decimal separator, remove dots (thousands)
@@ -34,7 +40,12 @@ export function pct(val: unknown): number | null {
   if (typeof val === 'number') return isNaN(val) ? null : val;
 
   const trimmed = String(val).trim();
-  if (trimmed === '' || trimmed === '-' || trimmed === 'N/A' || trimmed === '#DIV/0!') {
+  if (
+    trimmed === '' ||
+    trimmed === '-' ||
+    trimmed === 'N/A' ||
+    trimmed === '#DIV/0!'
+  ) {
     return null;
   }
   // Remove % sign
@@ -73,5 +84,7 @@ export function findRowByMonth(rows: string[][], month: string): number | null {
  * Find all rows for a given month
  */
 export function findRowsByMonth(rows: string[][], month: string): string[][] {
-  return rows.filter(r => r[0] && r[0].trim().toLowerCase() === month.toLowerCase());
+  return rows.filter(
+    (r) => r[0] && r[0].trim().toLowerCase() === month.toLowerCase(),
+  );
 }

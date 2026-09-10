@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsOptional,
-  IsUUID,
-  IsArray,
-  IsIn,
-} from 'class-validator';
+import { IsString, IsOptional, IsUUID, IsArray, IsIn } from 'class-validator';
 
 export const ALLOWED_TASK_STATUSES = [
   'TODO',

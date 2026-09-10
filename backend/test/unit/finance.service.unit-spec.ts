@@ -94,7 +94,14 @@ describe('FinanceService — Unit', () => {
           id: 'j1',
           reference: 'JRN-001',
           description: 'Test Journal',
-          lines: [{ accountId: 'a1', debit: 100, credit: 0, account: { code: '1100' } }],
+          lines: [
+            {
+              accountId: 'a1',
+              debit: 100,
+              credit: 0,
+              account: { code: '1100' },
+            },
+          ],
         },
       ];
       mockPrisma.journalEntry.findMany.mockResolvedValue(mockJournals);
@@ -191,7 +198,12 @@ describe('FinanceService — Unit', () => {
     it('throws BadRequestException when expense journal has no proof attachment', async () => {
       mockPrisma.financialPeriod.findFirst.mockResolvedValue(null);
       mockPrisma.account.findMany.mockResolvedValue([
-        { id: 'a1', code: '6102', name: 'Beban Selisih Persediaan', type: 'EXPENSE' },
+        {
+          id: 'a1',
+          code: '6102',
+          name: 'Beban Selisih Persediaan',
+          type: 'EXPENSE',
+        },
         { id: 'a2', code: '1100', name: 'Kas', type: 'ASSET' },
       ]);
 

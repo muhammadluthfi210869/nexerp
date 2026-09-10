@@ -34,27 +34,45 @@ describe('Document Flow — Event Integration', () => {
       findFirst: jest.fn().mockResolvedValue(null),
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn(),
-      create: jest.fn().mockImplementation((args: any) =>
-        Promise.resolve({ id: 'draft-' + Math.random(), ...args.data })
-      ),
-      update: jest.fn().mockImplementation((args: any) => Promise.resolve(args.data)),
+      create: jest
+        .fn()
+        .mockImplementation((args: any) =>
+          Promise.resolve({ id: 'draft-' + Math.random(), ...args.data }),
+        ),
+      update: jest
+        .fn()
+        .mockImplementation((args: any) => Promise.resolve(args.data)),
       count: jest.fn().mockResolvedValue(0),
     },
-    invoice: { create: jest.fn().mockImplementation((args: any) =>
-      Promise.resolve({ id: 'inv-' + Math.random(), ...args.data })
-    )},
-    goodsRequirement: { create: jest.fn().mockImplementation((args: any) =>
-      Promise.resolve({ id: 'gr-' + Math.random(), ...args.data })
-    )},
-    journalEntry: { create: jest.fn().mockImplementation((args: any) =>
-      Promise.resolve({ id: 'jrn-' + Math.random(), ...args.data })
-    )},
+    invoice: {
+      create: jest
+        .fn()
+        .mockImplementation((args: any) =>
+          Promise.resolve({ id: 'inv-' + Math.random(), ...args.data }),
+        ),
+    },
+    goodsRequirement: {
+      create: jest
+        .fn()
+        .mockImplementation((args: any) =>
+          Promise.resolve({ id: 'gr-' + Math.random(), ...args.data }),
+        ),
+    },
+    journalEntry: {
+      create: jest
+        .fn()
+        .mockImplementation((args: any) =>
+          Promise.resolve({ id: 'jrn-' + Math.random(), ...args.data }),
+        ),
+    },
   };
 
   const mockIdGenerator = {
-    generateId: jest.fn().mockImplementation((prefix: string) =>
-      Promise.resolve(`${prefix}-2606-001`)
-    ),
+    generateId: jest
+      .fn()
+      .mockImplementation((prefix: string) =>
+        Promise.resolve(`${prefix}-2606-001`),
+      ),
   };
 
   beforeAll(async () => {
@@ -84,32 +102,44 @@ describe('Document Flow — Event Integration', () => {
     jest.clearAllMocks();
     prisma.documentDraft.findFirst.mockResolvedValue(null);
     prisma.documentDraft.create.mockImplementation((args: any) =>
-      Promise.resolve({ id: 'draft-' + Math.random(), ...args.data })
+      Promise.resolve({ id: 'draft-' + Math.random(), ...args.data }),
     );
   });
 
-  const waitForEvents = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
+  const waitForEvents = (ms = 200) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   // C1-C2: Lead Status Events
   describe('lead.status.changed event', () => {
     it('C1: NEGOTIATION → Quotation draft created', async () => {
       prisma.salesLead.findUnique.mockResolvedValue({
-        id: 'lead-1', clientName: 'PT Test', brandName: 'Brand',
-        productInterest: 'Serum', estimatedValue: 100000000, moq: 1000, sampleRequests: [],
+        id: 'lead-1',
+        clientName: 'PT Test',
+        brandName: 'Brand',
+        productInterest: 'Serum',
+        estimatedValue: 100000000,
+        moq: 1000,
+        sampleRequests: [],
       });
 
       await eventEmitter.emitAsync('lead.status.changed', {
-        leadId: 'lead-1', previousStatus: 'CONTACTED', newStatus: 'NEGOTIATION',
+        leadId: 'lead-1',
+        previousStatus: 'CONTACTED',
+        newStatus: 'NEGOTIATION',
       });
       await waitForEvents();
 
       expect(prisma.documentDraft.create).toHaveBeenCalled();
-      expect(prisma.documentDraft.create.mock.calls[0][0].data.documentType).toBe(DocumentType.QUOTATION);
+      expect(
+        prisma.documentDraft.create.mock.calls[0][0].data.documentType,
+      ).toBe(DocumentType.QUOTATION);
     });
 
     it('C2: CONTACTED → No draft created', async () => {
       await eventEmitter.emitAsync('lead.status.changed', {
-        leadId: 'lead-1', previousStatus: 'NEW_LEAD', newStatus: 'CONTACTED',
+        leadId: 'lead-1',
+        previousStatus: 'NEW_LEAD',
+        newStatus: 'CONTACTED',
       });
       await waitForEvents();
 
@@ -121,33 +151,60 @@ describe('Document Flow — Event Integration', () => {
   describe('sales_order.created event', () => {
     it('C3: SO Created → DP Invoice draft', async () => {
       prisma.salesOrder.findUnique.mockResolvedValue({
-        id: 'so-1', orderNumber: 'SO-001', totalAmount: 100000000, brandName: 'Brand',
+        id: 'so-1',
+        orderNumber: 'SO-001',
+        totalAmount: 100000000,
+        brandName: 'Brand',
         lead: { clientName: 'PT Test' },
-        items: [{ productName: 'Serum', quantity: 1000, unitPrice: 100000, subtotal: 100000000 }],
+        items: [
+          {
+            productName: 'Serum',
+            quantity: 1000,
+            unitPrice: 100000,
+            subtotal: 100000000,
+          },
+        ],
         tax: null,
       });
 
-      await eventEmitter.emitAsync('sales_order.created', { salesOrderId: 'so-1' });
+      await eventEmitter.emitAsync('sales_order.created', {
+        salesOrderId: 'so-1',
+      });
       await waitForEvents();
 
       expect(prisma.documentDraft.create).toHaveBeenCalled();
-      expect(prisma.documentDraft.create.mock.calls[0][0].data.documentType).toBe(DocumentType.INVOICE_DP);
+      expect(
+        prisma.documentDraft.create.mock.calls[0][0].data.documentType,
+      ).toBe(DocumentType.INVOICE_DP);
     });
   });
 
   describe('sales_order.activated event', () => {
     it('C4: SO Activated → Goods Requirement draft', async () => {
       prisma.salesOrder.findUnique.mockResolvedValue({
-        id: 'so-1', orderNumber: 'SO-001', brandName: 'Brand',
+        id: 'so-1',
+        orderNumber: 'SO-001',
+        brandName: 'Brand',
         lead: { clientName: 'PT Test' },
-        items: [{ productName: 'Serum', materialItem: { name: 'AHA', unit: 'KG' }, materialItemId: 'm1', quantity: 100 }],
+        items: [
+          {
+            productName: 'Serum',
+            materialItem: { name: 'AHA', unit: 'KG' },
+            materialItemId: 'm1',
+            quantity: 100,
+          },
+        ],
       });
 
-      await eventEmitter.emitAsync('sales_order.activated', { salesOrderId: 'so-1' });
+      await eventEmitter.emitAsync('sales_order.activated', {
+        salesOrderId: 'so-1',
+      });
       await waitForEvents();
 
       expect(prisma.documentDraft.create).toHaveBeenCalled();
-      expect(prisma.documentDraft.create.mock.calls[0][0].data.documentType).toBe(DocumentType.GOODS_REQUIREMENT);
+      expect(
+        prisma.documentDraft.create.mock.calls[0][0].data.documentType,
+      ).toBe(DocumentType.GOODS_REQUIREMENT);
     });
   });
 
@@ -155,16 +212,34 @@ describe('Document Flow — Event Integration', () => {
   describe('production.qc_final_passed event', () => {
     it('C5: QC Passed → Final Invoice + DO drafts', async () => {
       prisma.workOrder.findUnique.mockResolvedValue({
-        id: 'wo-1', woNumber: 'WO-001', actualCogs: 70000000, lead: { clientName: 'PT' },
-        plan: { so: {
-          id: 'so-1', orderNumber: 'SO-001', totalAmount: 100000000, brandName: 'Brand',
-          lead: { clientName: 'PT', addressDetail: 'Jak', city: 'Jak' },
-          items: [{ productName: 'Serum', quantity: 1000, unitPrice: 100000, subtotal: 100000000 }],
-          tax: null,
-        }},
+        id: 'wo-1',
+        woNumber: 'WO-001',
+        actualCogs: 70000000,
+        lead: { clientName: 'PT' },
+        plan: {
+          so: {
+            id: 'so-1',
+            orderNumber: 'SO-001',
+            totalAmount: 100000000,
+            brandName: 'Brand',
+            lead: { clientName: 'PT', addressDetail: 'Jak', city: 'Jak' },
+            items: [
+              {
+                productName: 'Serum',
+                quantity: 1000,
+                unitPrice: 100000,
+                subtotal: 100000000,
+              },
+            ],
+            tax: null,
+          },
+        },
       });
 
-      await eventEmitter.emitAsync('production.qc_final_passed', { workOrderId: 'wo-1', loggedBy: 'tester' });
+      await eventEmitter.emitAsync('production.qc_final_passed', {
+        workOrderId: 'wo-1',
+        loggedBy: 'tester',
+      });
       await waitForEvents(300);
 
       expect(prisma.documentDraft.create).toHaveBeenCalledTimes(2);
@@ -181,18 +256,26 @@ describe('Document Flow — Event Integration', () => {
   describe('delivery_order.created event', () => {
     it('C6: DO Created → Surat Jalan + Journal drafts', async () => {
       prisma.deliveryOrder.findUnique.mockResolvedValue({
-        id: 'do-1', shippedAt: new Date(),
+        id: 'do-1',
+        shippedAt: new Date(),
         workOrder: {
-          woNumber: 'WO-001', actualCogs: 70000000, lead: { clientName: 'PT' },
-          plan: { so: {
-            orderNumber: 'SO-001', brandName: 'Brand',
-            lead: { clientName: 'PT', city: 'Jak' },
-            items: [{ productName: 'Serum', quantity: 1000 }],
-          }},
+          woNumber: 'WO-001',
+          actualCogs: 70000000,
+          lead: { clientName: 'PT' },
+          plan: {
+            so: {
+              orderNumber: 'SO-001',
+              brandName: 'Brand',
+              lead: { clientName: 'PT', city: 'Jak' },
+              items: [{ productName: 'Serum', quantity: 1000 }],
+            },
+          },
         },
       });
 
-      await eventEmitter.emitAsync('delivery_order.created', { deliveryOrderId: 'do-1' });
+      await eventEmitter.emitAsync('delivery_order.created', {
+        deliveryOrderId: 'do-1',
+      });
       await waitForEvents(300);
 
       expect(prisma.documentDraft.create).toHaveBeenCalledTimes(2);
@@ -209,18 +292,22 @@ describe('Document Flow — Event Integration', () => {
   describe('duplicate prevention', () => {
     it('C7: same event twice → only 1 draft', async () => {
       prisma.salesLead.findUnique.mockResolvedValue({
-        id: 'lead-1', clientName: 'PT', sampleRequests: [],
+        id: 'lead-1',
+        clientName: 'PT',
+        sampleRequests: [],
       });
       prisma.documentDraft.findFirst.mockResolvedValueOnce(null);
       prisma.documentDraft.findFirst.mockResolvedValueOnce({ id: 'existing' });
 
       await eventEmitter.emitAsync('lead.status.changed', {
-        leadId: 'lead-1', newStatus: 'NEGOTIATION',
+        leadId: 'lead-1',
+        newStatus: 'NEGOTIATION',
       });
       await waitForEvents();
 
       await eventEmitter.emitAsync('lead.status.changed', {
-        leadId: 'lead-1', newStatus: 'NEGOTIATION',
+        leadId: 'lead-1',
+        newStatus: 'NEGOTIATION',
       });
       await waitForEvents();
 

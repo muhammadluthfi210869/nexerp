@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBillLineItemsDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   billId: string;
 
-  @ApiProperty({ example: "BBK00028" })
+  @ApiProperty({ example: 'BBK00028' })
   itemCode: string;
 
-  @ApiProperty({ example: "Raw Material X" })
+  @ApiProperty({ example: 'Raw Material X' })
   itemName: string;
 
   @ApiProperty({ example: 100 })
   quantity: number;
 
-  @ApiProperty({ example: "PCS" })
+  @ApiProperty({ example: 'PCS' })
   unit: string;
 
   @ApiProperty({ example: 10000 })

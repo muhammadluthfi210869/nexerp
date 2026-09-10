@@ -24,5 +24,5 @@ export interface ContentData {
   rows: ContentRow[];
   instagram: ContentRow[];
   tiktok: ContentRow[];
-  bestContent: ContentRow[];  // sorted by engagement
+  bestContent: ContentRow[]; // sorted by engagement
 }

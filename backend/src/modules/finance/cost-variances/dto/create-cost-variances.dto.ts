@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCostVariancesDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   jobOrderId: string;
 
-  @ApiProperty({ example: "MATERIAL" })
+  @ApiProperty({ example: 'MATERIAL' })
   varianceType: string;
 
   @ApiProperty({ example: 1000000 })

@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDepreciationSchedulesDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   assetId: string;
 
-  @ApiProperty({ example: "2026-09-01" })
+  @ApiProperty({ example: '2026-09-01' })
   period: string;
 
   @ApiProperty({ example: 5833333 })

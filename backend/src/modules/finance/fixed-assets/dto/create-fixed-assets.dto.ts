@@ -1,19 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateFixedAssetsDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "FA-2026-0001" })
+  @ApiProperty({ example: 'FA-2026-0001' })
   assetNumber: string;
 
-  @ApiProperty({ example: "Mobil Alphard" })
+  @ApiProperty({ example: 'Mobil Alphard' })
   assetName: string;
 
-  @ApiProperty({ example: "Kendaraan" })
+  @ApiProperty({ example: 'Kendaraan' })
   assetCategory: string;
 
-  @ApiProperty({ example: "2026-01-15" })
+  @ApiProperty({ example: '2026-01-15' })
   acquisitionDate: string;
 
   @ApiProperty({ example: 400000000 })
@@ -25,6 +25,6 @@ export class CreateFixedAssetsDto {
   @ApiProperty({ example: 50000000 })
   salvageValue: number;
 
-  @ApiProperty({ example: "ACTIVE" })
+  @ApiProperty({ example: 'ACTIVE' })
   status: string;
 }

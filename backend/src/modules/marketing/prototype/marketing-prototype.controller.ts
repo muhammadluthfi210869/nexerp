@@ -3,7 +3,23 @@
 // Those types aren't exported by design; the controller is a thin wrapper and
 // runtime works fine. Add explicit Promise<unknown> annotations if you want
 // strict emission.
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Req, Res, UploadedFile, UseFilters, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  Param,
+  Patch,
+  Post,
+  Req,
+  Res,
+  UploadedFile,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -29,10 +45,16 @@ import {
 // Idempotency cache: prevent double-click duplicate task/comment creation.
 // ponytail: in-memory Map; sufficient for single-instance dev. For HA/prod,
 // use a Redis-backed store keyed by (idempotencyKey + endpoint).
-const idempotencyCache = new Map<string, { result: unknown; expiresAt: number }>();
+const idempotencyCache = new Map<
+  string,
+  { result: unknown; expiresAt: number }
+>();
 const IDEMPOTENCY_TTL_MS = 60_000;
 
-function checkIdempotency(key: string | undefined, endpoint: string): { result: unknown; isReplay: boolean } | null {
+function checkIdempotency(
+  key: string | undefined,
+  endpoint: string,
+): { result: unknown; isReplay: boolean } | null {
   if (!key) return null;
   const fullKey = `${endpoint}:${key}`;
   const cached = idempotencyCache.get(fullKey);
@@ -43,7 +65,11 @@ function checkIdempotency(key: string | undefined, endpoint: string): { result: 
   return null;
 }
 
-function recordIdempotency(key: string | undefined, endpoint: string, result: unknown): void {
+function recordIdempotency(
+  key: string | undefined,
+  endpoint: string,
+  result: unknown,
+): void {
   if (!key) return;
   idempotencyCache.set(`${endpoint}:${key}`, {
     result,
@@ -53,11 +79,20 @@ function recordIdempotency(key: string | undefined, endpoint: string, result: un
 
 // Route tulis yang benar-benar manager-only (service juga enforce via
 // ensureManager): reset, project CRUD, delete task, settings.
-const MANAGER_WRITE_ROLES = [UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING];
+const MANAGER_WRITE_ROLES = [
+  UserRole.SUPER_ADMIN,
+  UserRole.HEAD_OPS,
+  UserRole.MARKETING,
+];
 // Route yang boleh dilakukan semua member (termasuk DIGIMAR): baca,
 // update status/komentar, DAN membuat task sendiri. Service `createTask`
 // memaksa non-manager menugaskan ke dirinya sendiri (pic = sendiri).
-const MEMBER_ROLES = [UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING, UserRole.DIGIMAR];
+const MEMBER_ROLES = [
+  UserRole.SUPER_ADMIN,
+  UserRole.HEAD_OPS,
+  UserRole.MARKETING,
+  UserRole.DIGIMAR,
+];
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('marketing/prototype')
@@ -101,7 +136,11 @@ export class MarketingPrototypeController {
 
   @Patch('projects/:id')
   @Roles(...MEMBER_ROLES)
-  updateProject(@Req() req: any, @Param('id') id: string, @Body() body: UpdateProjectDto) {
+  updateProject(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: UpdateProjectDto,
+  ) {
     return this.service.updateProject(req.user, id, body);
   }
 
@@ -134,7 +173,11 @@ export class MarketingPrototypeController {
 
   @Patch('tasks/:id')
   @Roles(...MEMBER_ROLES)
-  updateTask(@Req() req: any, @Param('id') id: string, @Body() body: UpdateTaskDto) {
+  updateTask(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: UpdateTaskDto,
+  ) {
     return this.service.updateTask(req.user, id, body);
   }
 
@@ -149,7 +192,11 @@ export class MarketingPrototypeController {
 
   @Patch('tasks/:id/status')
   @Roles(...MEMBER_ROLES)
-  updateStatus(@Req() req: any, @Param('id') id: string, @Body() body: UpdateTaskStatusDto) {
+  updateStatus(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: UpdateTaskStatusDto,
+  ) {
     return this.service.updateTaskStatus(req.user, id, body.status, body.note);
   }
 
@@ -164,7 +211,12 @@ export class MarketingPrototypeController {
   ) {
     const cached = checkIdempotency(idempotencyKey, 'POST /tasks/:id/comment');
     if (cached) return cached.result;
-    const result = this.service.addTaskComment(req.user, id, body.author, body.body);
+    const result = this.service.addTaskComment(
+      req.user,
+      id,
+      body.author,
+      body.body,
+    );
     recordIdempotency(idempotencyKey, 'POST /tasks/:id/comment', result);
     return result;
   }
@@ -189,7 +241,10 @@ export class MarketingPrototypeController {
     if (!file) {
       throw new BadRequestException('File wajib dikirim pada field "file"');
     }
-    const cached = checkIdempotency(idempotencyKey, 'POST /tasks/:id/attachments');
+    const cached = checkIdempotency(
+      idempotencyKey,
+      'POST /tasks/:id/attachments',
+    );
     if (cached) return cached.result;
     const result = this.service.addAttachment(req.user, id, {
       originalname: file.originalname,
@@ -219,7 +274,11 @@ export class MarketingPrototypeController {
     @Param('attachmentId') attachmentId: string,
     @Res() res: any,
   ) {
-    const result = await this.service.getAttachmentContent(req.user, id, attachmentId);
+    const result = await this.service.getAttachmentContent(
+      req.user,
+      id,
+      attachmentId,
+    );
     const safeName = result.name.replace(/["\r\n]/g, '');
     res.setHeader('Content-Type', result.type || 'application/octet-stream');
     res.setHeader('X-Content-Type-Options', 'nosniff');

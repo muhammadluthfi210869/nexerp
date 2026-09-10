@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { open, rm } from 'fs/promises';
 import { createReadStream } from 'fs';
 import { extname, join, relative, resolve, sep } from 'path';
@@ -64,8 +69,22 @@ interface MarketingTask {
   link?: string;
   tags: string[];
   comments: Array<{ author: string; body: string; createdAt: string }>;
-  history: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
-  attachments: Array<{ id: string; name: string; type: string; sizeKb: number; path: string; uploadedBy: string; createdAt: string }>;
+  history: Array<{
+    at: string;
+    by: string;
+    from?: string;
+    to: string;
+    note: string;
+  }>;
+  attachments: Array<{
+    id: string;
+    name: string;
+    type: string;
+    sizeKb: number;
+    path: string;
+    uploadedBy: string;
+    createdAt: string;
+  }>;
 }
 
 interface MarketingProject {
@@ -153,13 +172,17 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function avg(values: number[]) {
-  return Math.round(values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1));
+  return Math.round(
+    values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1),
+  );
 }
 
 function parseTaskDate(value: string, fieldName: string): Date | null {
   if (!value) return null;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new BadRequestException(`${fieldName} harus berformat YYYY-MM-DD (got: ${value})`);
+    throw new BadRequestException(
+      `${fieldName} harus berformat YYYY-MM-DD (got: ${value})`,
+    );
   }
   const d = new Date(value + 'T00:00:00');
   if (Number.isNaN(d.getTime())) {
@@ -187,7 +210,7 @@ function calcQualityScore(discipline: number, revisionCount: number) {
 
 function calcProductivityScore(assigned: number) {
   const days = workingDaysInMonth();
-  return Math.round(clamp(((assigned / Math.max(days, 1)) / 3) * 100, 0, 100));
+  return Math.round(clamp((assigned / Math.max(days, 1) / 3) * 100, 0, 100));
 }
 
 function normalizeIdentity(value?: string | null) {
@@ -208,6 +231,27 @@ function memberIdForName(name: string): string {
   return canonicalMember(name).toLowerCase();
 }
 
+function identityAliasesFor(name: string): string[] {
+  const normalized = normalizeIdentity(name);
+  const canonical = memberIdForName(name);
+  return Array.from(
+    new Set(
+      [normalized, canonical, ...(viewerAliases[canonical] ?? [])].filter(
+        Boolean,
+      ),
+    ),
+  );
+}
+
+function userIdentityWhere(name: string) {
+  return {
+    OR: identityAliasesFor(name).flatMap((alias) => [
+      { fullName: { equals: alias, mode: 'insensitive' as const } },
+      { email: { startsWith: `${alias}@`, mode: 'insensitive' as const } },
+    ]),
+  };
+}
+
 function fmtDate(d: Date | string | null | undefined): string {
   if (!d) return '';
   if (typeof d === 'string') return d.slice(0, 10);
@@ -215,7 +259,11 @@ function fmtDate(d: Date | string | null | undefined): string {
 }
 
 /** Convert Prisma task row (dueDate: Date|null) → SlaTaskShape (dueDate: string) */
-function toSlaShape(task: any): { status: string; dueDate: string; completedAt?: string } {
+function toSlaShape(task: any): {
+  status: string;
+  dueDate: string;
+  completedAt?: string;
+} {
   return {
     status: task.status as string,
     dueDate: fmtDate(task.dueDate),
@@ -239,10 +287,14 @@ function mapTaskRow(task: any): MarketingTask {
     pic: task.pic?.fullName ?? null,
     reviewer: task.reviewer?.fullName ?? null,
     priority: task.priority as TaskPriority,
-    startDate: task.startDate ? toLocalDateString(new Date(task.startDate)) : '',
+    startDate: task.startDate
+      ? toLocalDateString(new Date(task.startDate))
+      : '',
     dueDate: task.dueDate ? toLocalDateString(new Date(task.dueDate)) : '',
-    status: (LEGACY_STATUS_MAP[task.status] ?? task.status) as TaskStatus,
-    completedAt: task.completedAt ? new Date(task.completedAt).toISOString() : undefined,
+    status: LEGACY_STATUS_MAP[task.status] ?? task.status,
+    completedAt: task.completedAt
+      ? new Date(task.completedAt).toISOString()
+      : undefined,
     sla,
     estimatedHours: task.estimatedHours ?? 0,
     actualHours: task.actualHours ?? 0,
@@ -287,8 +339,11 @@ function mapProjectRow(p: any, tasks: any[] = []): MarketingProject {
     start: p.startDate ? toLocalDateString(new Date(p.startDate)) : '',
     deadline: p.deadline ? toLocalDateString(new Date(p.deadline)) : '',
     progress: p.progress ?? 0,
-    openTasks: tasks.filter(t => t.projectId === p.id && t.status !== 'Done').length,
-    pendingApproval: tasks.filter(t => t.projectId === p.id && t.status === 'Revision').length,
+    openTasks: tasks.filter((t) => t.projectId === p.id && t.status !== 'Done')
+      .length,
+    pendingApproval: tasks.filter(
+      (t) => t.projectId === p.id && t.status === 'Revision',
+    ).length,
     status: p.status ?? 'On Track',
     summary: p.summary ?? '',
     blockers: p.blockers ? p.blockers.split('; ').filter(Boolean) : [],
@@ -305,18 +360,44 @@ export class MarketingPrototypeService {
     const roles = viewer?.roles ?? [];
 
     let prototypeName: string | null = null;
-    if (viewerAliases.revi.includes(fullName) || email === 'revita@nexerp.id') prototypeName = 'Revi';
-    else if (viewerAliases.zarka.includes(fullName) || email === 'zarkasi@dreamlab.com' || email === 'zarkasi@nexerp.id') prototypeName = 'Zarka';
-    else if (viewerAliases.gusti.includes(fullName) || email === 'gusti@dreamlab.com' || email === 'gusti@nexerp.id') prototypeName = 'Gusti';
-    else if (viewerAliases.aurel.includes(fullName) || email === 'aurel@nexerp.id' || email === 'aurel@dreamlab.com') prototypeName = 'Aurel';
-    else if (viewerAliases.luthfi.includes(fullName) || email === 'luthfi@nexerp.id' || email === 'luthfi@dreamlab.com') prototypeName = 'Luthfi';
-    else if (viewerAliases.rahmat.includes(fullName) || email.startsWith('rahmat@')) prototypeName = 'Rahmat';
-    else if (roles.some(role => managerRoleSet.has(role))) prototypeName = headOfMarketing;
+    if (viewerAliases.revi.includes(fullName) || email === 'revita@nexerp.id')
+      prototypeName = 'Revi';
+    else if (
+      viewerAliases.zarka.includes(fullName) ||
+      email === 'zarkasi@dreamlab.com' ||
+      email === 'zarkasi@nexerp.id'
+    )
+      prototypeName = 'Zarka';
+    else if (
+      viewerAliases.gusti.includes(fullName) ||
+      email === 'gusti@dreamlab.com' ||
+      email === 'gusti@nexerp.id'
+    )
+      prototypeName = 'Gusti';
+    else if (
+      viewerAliases.aurel.includes(fullName) ||
+      email === 'aurel@nexerp.id' ||
+      email === 'aurel@dreamlab.com'
+    )
+      prototypeName = 'Aurel';
+    else if (
+      viewerAliases.luthfi.includes(fullName) ||
+      email === 'luthfi@nexerp.id' ||
+      email === 'luthfi@dreamlab.com'
+    )
+      prototypeName = 'Luthfi';
+    else if (
+      viewerAliases.rahmat.includes(fullName) ||
+      email.startsWith('rahmat@')
+    )
+      prototypeName = 'Rahmat';
+    else if (roles.some((role) => managerRoleSet.has(role)))
+      prototypeName = headOfMarketing;
 
     const isManager =
       email === 'revita@nexerp.id' ||
       viewerAliases.revi.includes(fullName) ||
-      roles.some(role => managerRoleSet.has(role)) ||
+      roles.some((role) => managerRoleSet.has(role)) ||
       email === 'zaki@dreamlab.com' ||
       email === 'zaki@nexerp.id' ||
       email === 'admin@dreamlab.com' ||
@@ -330,23 +411,32 @@ export class MarketingPrototypeService {
       Luthfi: viewerAliases.luthfi,
       Rahmat: viewerAliases.rahmat,
     };
-    const aliases = prototypeName ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])] : [];
+    const aliases = prototypeName
+      ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])]
+      : [];
 
-    const delegated = prototypeName ? (DELEGATED_MANAGER_SCOPE[prototypeName] ?? []) : [];
-    const managedMembers = isManager ? team.map(m => m.id) : delegated;
+    const delegated = prototypeName
+      ? (DELEGATED_MANAGER_SCOPE[prototypeName] ?? [])
+      : [];
+    const managedMembers = isManager ? team.map((m) => m.id) : delegated;
 
     return {
       isManager,
       prototypeName,
-      aliases: Array.from(new Set(aliases.map(v => normalizeIdentity(v)).filter(Boolean))),
+      aliases: Array.from(
+        new Set(aliases.map((v) => normalizeIdentity(v)).filter(Boolean)),
+      ),
       managedMembers,
     };
   }
 
   private canManageTask(task: any, scope: ViewerScope) {
     if (scope.isManager) return true;
-    if (scope.aliases.includes(normalizeIdentity(task.pic?.fullName ?? ''))) return true;
-    return scope.managedMembers.includes(memberIdForName(task.pic?.fullName ?? ''));
+    if (scope.aliases.includes(normalizeIdentity(task.pic?.fullName ?? '')))
+      return true;
+    return scope.managedMembers.includes(
+      memberIdForName(task.pic?.fullName ?? ''),
+    );
   }
 
   private isVisibleToViewer(task: any, scope: ViewerScope) {
@@ -355,7 +445,7 @@ export class MarketingPrototypeService {
     const picName = task.pic?.fullName ?? '';
     const reviewerName = task.reviewer?.fullName ?? '';
     const assignedByName = task.assignedBy?.fullName ?? '';
-    const visibleByAlias = [picName, reviewerName, assignedByName].some(v =>
+    const visibleByAlias = [picName, reviewerName, assignedByName].some((v) =>
       scope.aliases.includes(normalizeIdentity(v)),
     );
     if (visibleByAlias) return true;
@@ -365,71 +455,128 @@ export class MarketingPrototypeService {
   private ensureManager(viewer?: ViewerContext) {
     const scope = this.resolveViewer(viewer);
     if (!scope.isManager) {
-      throw new ForbiddenException('Only Head of Marketing can manage task registry changes');
+      throw new ForbiddenException(
+        'Only Head of Marketing can manage task registry changes',
+      );
     }
     return scope;
   }
 
-  async getBundle(viewer?: ViewerContext, options: { page?: number; limit?: number } = {}) {
+  async getBundle(
+    viewer?: ViewerContext,
+    options: { page?: number; limit?: number } = {},
+  ) {
     const scope = this.resolveViewer(viewer);
     const page = Math.max(1, options.page ?? 1);
     const limit = Math.min(200, Math.max(1, options.limit ?? 50));
     const skip = (page - 1) * limit;
 
+    // Resolve viewer scope before pagination. Filtering an already paginated,
+    // un-ordered result can hide newer tasks and returns a misleading total.
+    const scopedIdentityNames = scope.isManager
+      ? []
+      : Array.from(
+          new Set([
+            ...scope.aliases,
+            ...scope.managedMembers.flatMap((member) =>
+              identityAliasesFor(member),
+            ),
+          ]),
+        );
+    const scopedUsers =
+      scope.isManager || scopedIdentityNames.length === 0
+        ? []
+        : await this.prisma.user.findMany({
+            where: {
+              OR: scopedIdentityNames.flatMap((identity) => [
+                {
+                  fullName: { equals: identity, mode: 'insensitive' as const },
+                },
+                {
+                  email: {
+                    startsWith: `${identity}@`,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              ]),
+            },
+            select: { id: true },
+          });
+    const scopedUserIds = scopedUsers.map((user) => user.id);
+    const taskWhere = scope.isManager
+      ? {}
+      : {
+          OR: [
+            { picId: { in: scopedUserIds } },
+            { reviewerId: { in: scopedUserIds } },
+            { assignedById: { in: scopedUserIds } },
+          ],
+        };
+
     const [rawTasks, totalCount] = await Promise.all([
       this.prisma.marketingTask.findMany({
+        where: taskWhere,
         skip,
         take: limit,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         select: {
-        id: true,
-        taskCode: true,
-        title: true,
-        projectId: true,
-        channel: true,
-        category: true,
-        brand: true,
-        priority: true,
-        startDate: true,
-        dueDate: true,
-        completedAt: true,
-        status: true,
-        estimatedHours: true,
-        actualHours: true,
-        revisionCount: true,
-        checklistDone: true,
-        checklistTotal: true,
-        brief: true,
-        link: true,
-        tags: true,
-        project: { select: { name: true } },
-        pic: { select: { fullName: true } },
-        reviewer: { select: { fullName: true } },
-        assignedBy: { select: { fullName: true } },
-        attachments: {
-          select: {
-            id: true, name: true, type: true, sizeKb: true, path: true, createdAt: true,
-            uploadedBy: { select: { fullName: true } },
+          id: true,
+          taskCode: true,
+          title: true,
+          projectId: true,
+          channel: true,
+          category: true,
+          brand: true,
+          priority: true,
+          startDate: true,
+          dueDate: true,
+          completedAt: true,
+          status: true,
+          estimatedHours: true,
+          actualHours: true,
+          revisionCount: true,
+          checklistDone: true,
+          checklistTotal: true,
+          brief: true,
+          link: true,
+          tags: true,
+          project: { select: { name: true } },
+          pic: { select: { fullName: true } },
+          reviewer: { select: { fullName: true } },
+          assignedBy: { select: { fullName: true } },
+          attachments: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              sizeKb: true,
+              path: true,
+              createdAt: true,
+              uploadedBy: { select: { fullName: true } },
+            },
+          },
+          comments: {
+            select: {
+              body: true,
+              createdAt: true,
+              author: { select: { fullName: true } },
+            },
+          },
+          history: {
+            select: {
+              at: true,
+              fromStatus: true,
+              toStatus: true,
+              note: true,
+              by: { select: { fullName: true } },
+            },
           },
         },
-        comments: {
-          select: {
-            body: true, createdAt: true,
-            author: { select: { fullName: true } },
-          },
-        },
-        history: {
-          select: {
-            at: true, fromStatus: true, toStatus: true, note: true,
-            by: { select: { fullName: true } },
-          },
-        },
-      },
-    }),
-      this.prisma.marketingTask.count(),
+      }),
+      this.prisma.marketingTask.count({ where: taskWhere }),
     ]);
 
-    const visibleTasks = rawTasks.filter(task => this.isVisibleToViewer(task, scope));
-    const tasks = visibleTasks.map(mapTaskRow);
+    const tasks = rawTasks.map(mapTaskRow);
 
     const rawProjects = await this.prisma.marketingProject.findMany({
       select: {
@@ -447,27 +594,58 @@ export class MarketingPrototypeService {
         owner: { select: { fullName: true } },
       },
     });
-    const visibleProjectIds = new Set(tasks.map(t => t.projectId).filter(Boolean));
+    const visibleProjectIds = new Set(
+      tasks.map((t) => t.projectId).filter(Boolean),
+    );
     const projects = rawProjects
-      .filter(p => scope.isManager || visibleProjectIds.has(p.id))
-      .map(p => mapProjectRow(p, rawTasks));
+      .filter((p) => scope.isManager || visibleProjectIds.has(p.id))
+      .map((p) => mapProjectRow(p, rawTasks));
 
     // KPI calculation (reused from original, now queries DB)
-    const calcBrandKpi = (profileName: string, brandFilter: 'Dreamlab' | 'Toribio') => {
-      const brandTasks = tasks.filter(t => canonicalMember(t.pic ?? '') === profileName && t.brand === brandFilter);
+    const calcBrandKpi = (
+      profileName: string,
+      brandFilter: 'Dreamlab' | 'Toribio',
+    ) => {
+      const brandTasks = tasks.filter(
+        (t) =>
+          canonicalMember(t.pic ?? '') === profileName &&
+          t.brand === brandFilter,
+      );
       const brandTotal = brandTasks.length;
-      const brandDone = brandTasks.filter(t => t.status === 'Done').length;
+      const brandDone = brandTasks.filter((t) => t.status === 'Done').length;
       const brandLate = brandTasks.filter(
-        t => t.status === 'Done' && t.completedAt && calendarDayDiff(parseLocalDate(t.completedAt.slice(0, 10)), parseLocalDate(t.dueDate)) > 0,
+        (t) =>
+          t.status === 'Done' &&
+          t.completedAt &&
+          calendarDayDiff(
+            parseLocalDate(t.completedAt.slice(0, 10)),
+            parseLocalDate(t.dueDate),
+          ) > 0,
       ).length;
-      const brandInProgress = brandTasks.filter(t => t.status !== 'Done').length;
+      const brandInProgress = brandTasks.filter(
+        (t) => t.status !== 'Done',
+      ).length;
       const brandOnTime = Math.max(brandDone - brandLate, 0);
-      const brandProgress = brandTotal > 0 ? Math.round((brandDone / brandTotal) * 100) : 0;
-      return { total: brandTotal, done: brandDone, late: brandLate, inProgress: brandInProgress, onTime: brandOnTime, progress: brandProgress };
+      const brandProgress =
+        brandTotal > 0 ? Math.round((brandDone / brandTotal) * 100) : 0;
+      return {
+        total: brandTotal,
+        done: brandDone,
+        late: brandLate,
+        inProgress: brandInProgress,
+        onTime: brandOnTime,
+        progress: brandProgress,
+      };
     };
 
     // Performance per member — scoped to viewer so non-managers never see other members' KPIs
-    const allMemberNames = [...new Set([...tasks.map(t => t.pic), ...tasks.map(t => t.reviewer)].filter(Boolean))];
+    const allMemberNames = [
+      ...new Set(
+        [...tasks.map((t) => t.pic), ...tasks.map((t) => t.reviewer)].filter(
+          Boolean,
+        ),
+      ),
+    ];
     const visibleMemberNames = allMemberNames.filter((name): name is string => {
       if (!name) return false;
       if (scope.isManager) return true;
@@ -475,54 +653,93 @@ export class MarketingPrototypeService {
       if (scope.aliases.includes(canonical.toLowerCase())) return true;
       return scope.managedMembers.includes(canonical.toLowerCase());
     });
-    const performance = visibleMemberNames.map(name => {
-      if (!name) return null;
-      const memberTasks = tasks.filter(t => canonicalMember(t.pic ?? '') === canonicalMember(name));
-      const taskCount = memberTasks.length;
-      const completedTasks = memberTasks.filter(t => t.status === 'Done');
-      const completed = completedTasks.length;
-      const late = completedTasks.filter(
-        t => t.completedAt && calendarDayDiff(parseLocalDate(t.completedAt.slice(0, 10)), parseLocalDate(t.dueDate)) > 0,
-      ).length;
-      const overdue = memberTasks.filter(
-        t => t.status !== 'Done' && calendarDayDiff(new Date(), parseLocalDate(t.dueDate)) > 0,
-      ).length;
-      const revision = memberTasks.filter(t => t.status === 'Revision').length;
-      const discipline = avg(memberTasks.map(t => calcDisciplinePoints(t)));
-      const quality = calcQualityScore(discipline, revision);
-      const productivity = calcProductivityScore(taskCount);
-      const completion = taskCount > 0 ? Math.round((completed / taskCount) * 100) : 0;
-      const overall = Math.round(completion * 0.4 + discipline * 0.3 + quality * 0.15 + productivity * 0.15);
+    const performance = visibleMemberNames
+      .map((name) => {
+        if (!name) return null;
+        const memberTasks = tasks.filter(
+          (t) => canonicalMember(t.pic ?? '') === canonicalMember(name),
+        );
+        const taskCount = memberTasks.length;
+        const completedTasks = memberTasks.filter((t) => t.status === 'Done');
+        const completed = completedTasks.length;
+        const late = completedTasks.filter(
+          (t) =>
+            t.completedAt &&
+            calendarDayDiff(
+              parseLocalDate(t.completedAt.slice(0, 10)),
+              parseLocalDate(t.dueDate),
+            ) > 0,
+        ).length;
+        const overdue = memberTasks.filter(
+          (t) =>
+            t.status !== 'Done' &&
+            calendarDayDiff(new Date(), parseLocalDate(t.dueDate)) > 0,
+        ).length;
+        const revision = memberTasks.filter(
+          (t) => t.status === 'Revision',
+        ).length;
+        const discipline = avg(memberTasks.map((t) => calcDisciplinePoints(t)));
+        const quality = calcQualityScore(discipline, revision);
+        const productivity = calcProductivityScore(taskCount);
+        const completion =
+          taskCount > 0 ? Math.round((completed / taskCount) * 100) : 0;
+        const overall = Math.round(
+          completion * 0.4 +
+            discipline * 0.3 +
+            quality * 0.15 +
+            productivity * 0.15,
+        );
 
-      return {
-        name: canonicalMember(name),
-        assigned: taskCount,
-        completed,
-        onTime: Math.max(completed - late, 0),
-        late,
-        overdue,
-        revision,
-        completionScore: completion,
-        disciplineScore: discipline,
-        qualityScore: quality,
-        productivityScore: productivity,
-        overallKpi: overall,
-        history: [
-          { period: 'W1', kpi: clamp(overall - 8, 0, 100), discipline: clamp(discipline - 6, 0, 100) },
-          { period: 'W2', kpi: clamp(overall - 4, 0, 100), discipline: clamp(discipline - 3, 0, 100) },
-          { period: 'W3', kpi: clamp(overall - 1, 0, 100), discipline: clamp(discipline - 1, 0, 100) },
-          { period: 'W4', kpi: clamp(overall + 2, 0, 100), discipline: clamp(discipline + 2, 0, 100) },
-          { period: 'W5', kpi: clamp(overall + 4, 0, 100), discipline: clamp(discipline + 4, 0, 100) },
-          { period: 'W6', kpi: overall, discipline },
-        ],
-      };
-    }).filter(Boolean);
+        return {
+          name: canonicalMember(name),
+          assigned: taskCount,
+          completed,
+          onTime: Math.max(completed - late, 0),
+          late,
+          overdue,
+          revision,
+          completionScore: completion,
+          disciplineScore: discipline,
+          qualityScore: quality,
+          productivityScore: productivity,
+          overallKpi: overall,
+          history: [
+            {
+              period: 'W1',
+              kpi: clamp(overall - 8, 0, 100),
+              discipline: clamp(discipline - 6, 0, 100),
+            },
+            {
+              period: 'W2',
+              kpi: clamp(overall - 4, 0, 100),
+              discipline: clamp(discipline - 3, 0, 100),
+            },
+            {
+              period: 'W3',
+              kpi: clamp(overall - 1, 0, 100),
+              discipline: clamp(discipline - 1, 0, 100),
+            },
+            {
+              period: 'W4',
+              kpi: clamp(overall + 2, 0, 100),
+              discipline: clamp(discipline + 2, 0, 100),
+            },
+            {
+              period: 'W5',
+              kpi: clamp(overall + 4, 0, 100),
+              discipline: clamp(discipline + 4, 0, 100),
+            },
+            { period: 'W6', kpi: overall, discipline },
+          ],
+        };
+      })
+      .filter(Boolean);
 
     const summary = {
-      activeProjects: projects.filter(p => p.status !== 'Completed').length,
-      openTasks: tasks.filter(t => t.status !== 'Done').length,
-      waitingApproval: tasks.filter(t => t.status === 'Revision').length,
-      averageKpi: avg(performance.map(m => m!.overallKpi)),
+      activeProjects: projects.filter((p) => p.status !== 'Completed').length,
+      openTasks: tasks.filter((t) => t.status !== 'Done').length,
+      waitingApproval: tasks.filter((t) => t.status === 'Revision').length,
+      averageKpi: avg(performance.map((m) => m!.overallKpi)),
     };
 
     // Monthly performance: 6 bulan terakhir (terakhir s.d. bulan ini)
@@ -534,14 +751,31 @@ export class MarketingPrototypeService {
       const ym = d.toISOString().slice(0, 7);
       recentMonths.push(ym);
     }
-    const monthlyPerformance = recentMonths.map(month => {
-      const monthTasks = tasks.filter(t => t.dueDate && t.dueDate.slice(0, 7) === month);
-      const monthDone = monthTasks.filter(t => t.status === 'Done').length;
-      const monthOnTime = monthTasks.filter(t =>
-        t.status === 'Done' && t.completedAt && calendarDayDiff(parseLocalDate(t.completedAt.slice(0, 10)), parseLocalDate(t.dueDate)) <= 0,
+    const monthlyPerformance = recentMonths.map((month) => {
+      const monthTasks = tasks.filter(
+        (t) => t.dueDate && t.dueDate.slice(0, 7) === month,
+      );
+      const monthDone = monthTasks.filter((t) => t.status === 'Done').length;
+      const monthOnTime = monthTasks.filter(
+        (t) =>
+          t.status === 'Done' &&
+          t.completedAt &&
+          calendarDayDiff(
+            parseLocalDate(t.completedAt.slice(0, 10)),
+            parseLocalDate(t.dueDate),
+          ) <= 0,
       ).length;
-      const monthScore = monthTasks.length > 0 ? Math.round((monthDone / monthTasks.length) * 100) : 0;
-      return { month, score: monthScore, done: monthDone, total: monthTasks.length, onTime: monthOnTime };
+      const monthScore =
+        monthTasks.length > 0
+          ? Math.round((monthDone / monthTasks.length) * 100)
+          : 0;
+      return {
+        month,
+        score: monthScore,
+        done: monthDone,
+        total: monthTasks.length,
+        onTime: monthOnTime,
+      };
     });
     // Tandai sebagai sudah dipakai (dikirim via response)
     void monthlyPerformance;
@@ -550,15 +784,34 @@ export class MarketingPrototypeService {
     const profiles = await this.prisma.user.findMany({
       where: {
         OR: [
-          { fullName: { in: team.map(t => t.name) } },
-          { email: { in: ['revita@nexerp.id', 'zarkasi@nexerp.id', 'gusti@nexerp.id', 'aurel@nexerp.id', 'luthfi@nexerp.id', 'rahmat@nexerp.id', 'zarkasi@dreamlab.com', 'gusti@dreamlab.com', 'aurel@dreamlab.com', 'luthfi@dreamlab.com', 'rahmat@dreamlab.com'] } },
+          { fullName: { in: team.map((t) => t.name) } },
+          {
+            email: {
+              in: [
+                'revita@nexerp.id',
+                'zarkasi@nexerp.id',
+                'gusti@nexerp.id',
+                'aurel@nexerp.id',
+                'luthfi@nexerp.id',
+                'rahmat@nexerp.id',
+                'zarkasi@dreamlab.com',
+                'gusti@dreamlab.com',
+                'aurel@dreamlab.com',
+                'luthfi@dreamlab.com',
+                'rahmat@dreamlab.com',
+              ],
+            },
+          },
         ],
       },
       select: { id: true, fullName: true, email: true },
     });
 
-    const profilesData = profiles.map(u => {
-      const memberPerf = performance.find(m => m && canonicalMember(m.name) === canonicalMember(u.fullName ?? ''));
+    const profilesData = profiles.map((u) => {
+      const memberPerf = performance.find(
+        (m) =>
+          m && canonicalMember(m.name) === canonicalMember(u.fullName ?? ''),
+      );
       return {
         id: u.id,
         name: u.fullName ?? '',
@@ -596,10 +849,17 @@ export class MarketingPrototypeService {
       reports: {
         averageKpi: summary.averageKpi,
         teamSize: scope.isManager ? profiles.length : performance.length,
-        kpiHistory: performance.filter(Boolean).map(m => ({ name: m!.name, history: m!.history })),
+        kpiHistory: performance
+          .filter(Boolean)
+          .map((m) => ({ name: m!.name, history: m!.history })),
         monthlyPerformance,
       },
-      pagination: { page, limit, total: totalCount, hasMore: skip + rawTasks.length < totalCount },
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        hasMore: skip + rawTasks.length < totalCount,
+      },
     };
   }
 
@@ -640,14 +900,31 @@ export class MarketingPrototypeService {
 
   async getSettings() {
     return {
-      weights: { completion: 40, discipline: 30, quality: 15, productivity: 15 },
-      workingHours: { start: '08:00', end: '17:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+      weights: {
+        completion: 40,
+        discipline: 30,
+        quality: 15,
+        productivity: 15,
+      },
+      workingHours: {
+        start: '08:00',
+        end: '17:00',
+        days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      },
       projectCategories: [
-        'performance_marketing', 'organic_growth', 'content_production',
-        'retention_crm', 'conversion_optimization', 'brand_building',
-        'commercial_activation', 'analytics_reporting',
+        'performance_marketing',
+        'organic_growth',
+        'content_production',
+        'retention_crm',
+        'conversion_optimization',
+        'brand_building',
+        'commercial_activation',
+        'analytics_reporting',
       ],
-      appearance: { departmentDefaultTheme: 'professional', allowUserOverride: true },
+      appearance: {
+        departmentDefaultTheme: 'professional',
+        allowUserOverride: true,
+      },
     };
   }
 
@@ -666,30 +943,47 @@ export class MarketingPrototypeService {
   }
 
   async updateUiThemePreference(viewer: ViewerContext | undefined, input: any) {
-    return { preference: input.preference ?? 'follow-department', departmentDefaultTheme: 'professional', allowUserOverride: true, canManageAppearance: this.resolveViewer(viewer).isManager };
+    return {
+      preference: input.preference ?? 'follow-department',
+      departmentDefaultTheme: 'professional',
+      allowUserOverride: true,
+      canManageAppearance: this.resolveViewer(viewer).isManager,
+    };
   }
 
   async updateUiThemeDefault(viewer: ViewerContext | undefined, input: any) {
     const scope = this.ensureManager(viewer);
-    return { preference: 'follow-department', departmentDefaultTheme: input.departmentDefaultTheme ?? 'professional', allowUserOverride: input.allowUserOverride ?? true, canManageAppearance: scope.isManager };
+    return {
+      preference: 'follow-department',
+      departmentDefaultTheme: input.departmentDefaultTheme ?? 'professional',
+      allowUserOverride: input.allowUserOverride ?? true,
+      canManageAppearance: scope.isManager,
+    };
   }
 
   async getProfile(viewer: ViewerContext | undefined, id: string) {
     const bundle = await this.getBundle(viewer);
-    return bundle.profiles.find(p => p.id === id) ?? null;
+    return bundle.profiles.find((p) => p.id === id) ?? null;
   }
 
-  async updateTaskStatus(viewer: ViewerContext | undefined, id: string, status: TaskStatus, note = 'Status updated') {
+  async updateTaskStatus(
+    viewer: ViewerContext | undefined,
+    id: string,
+    status: TaskStatus,
+    note = 'Status updated',
+  ) {
     const scope = this.resolveViewer(viewer);
 
     const task = await this.prisma.marketingTask.findUnique({
       where: { id },
       include: { pic: true, reviewer: true, assignedBy: true },
     });
-    if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
 
-    const canonicalStatus = (LEGACY_STATUS_MAP[status] ?? status) as TaskStatus;
-    if (!isCanonicalStatus(canonicalStatus) || canonicalStatus === task.status) return task;
+    const canonicalStatus = LEGACY_STATUS_MAP[status] ?? status;
+    if (!isCanonicalStatus(canonicalStatus) || canonicalStatus === task.status)
+      return task;
 
     const now = new Date();
     const historyEntry = {
@@ -700,7 +994,10 @@ export class MarketingPrototypeService {
       note,
       at: now,
     };
-    const updateData: any = { status: canonicalStatus, sla: deriveSla({ ...toSlaShape(task), status: canonicalStatus }) };
+    const updateData: any = {
+      status: canonicalStatus,
+      sla: deriveSla({ ...toSlaShape(task), status: canonicalStatus }),
+    };
     // F3: auto-increment revisionCount when transitioning TO Revision
     if (canonicalStatus === 'Revision' && task.status !== 'Revision') {
       updateData.revisionCount = (task.revisionCount ?? 0) + 1;
@@ -719,25 +1016,56 @@ export class MarketingPrototypeService {
     return updated;
   }
 
-  async updateTask(viewer: ViewerContext | undefined, id: string, input: MarketingTaskInput) {
+  async updateTask(
+    viewer: ViewerContext | undefined,
+    id: string,
+    input: MarketingTaskInput,
+  ) {
     const scope = this.resolveViewer(viewer);
 
     const task = await this.prisma.marketingTask.findUnique({
       where: { id },
       include: { pic: true, project: true },
     });
-    if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
 
-    const canEditFull = scope.isManager || scope.managedMembers.includes(memberIdForName(task.pic?.fullName ?? ''));
+    const canEditFull =
+      scope.isManager ||
+      scope.managedMembers.includes(memberIdForName(task.pic?.fullName ?? ''));
 
     // Scope leak guard
     if (!scope.isManager && input.pic !== undefined) {
-      const newPicOk = scope.aliases.includes(normalizeIdentity(input.pic)) ||
+      const newPicOk =
+        scope.aliases.includes(normalizeIdentity(input.pic)) ||
         scope.managedMembers.includes(memberIdForName(input.pic));
-      if (!newPicOk) throw new ForbiddenException('Can only reassign tasks to yourself or your managed members');
+      if (!newPicOk)
+        throw new ForbiddenException(
+          'Can only reassign tasks to yourself or your managed members',
+        );
     }
 
-    const ALLOWED = ['title', 'projectId', 'channel', 'category', 'brand', 'pic', 'reviewer', 'priority', 'startDate', 'dueDate', 'status', 'estimatedHours', 'actualHours', 'revisionCount', 'checklistDone', 'checklistTotal', 'brief', 'link', 'tags'];
+    const ALLOWED = [
+      'title',
+      'projectId',
+      'channel',
+      'category',
+      'brand',
+      'pic',
+      'reviewer',
+      'priority',
+      'startDate',
+      'dueDate',
+      'status',
+      'estimatedHours',
+      'actualHours',
+      'revisionCount',
+      'checklistDone',
+      'checklistTotal',
+      'brief',
+      'link',
+      'tags',
+    ];
 
     const updateData: any = {};
 
@@ -757,12 +1085,7 @@ export class MarketingPrototypeService {
       }
       if (input.pic !== undefined) {
         const picUser = await this.prisma.user.findFirst({
-          where: {
-            OR: [
-              { fullName: { equals: input.pic, mode: 'insensitive' } },
-              { email: { startsWith: `${input.pic.toLowerCase()}@` } },
-            ],
-          },
+          where: userIdentityWhere(input.pic),
         });
         updateData.picId = picUser?.id ?? null;
       }
@@ -770,13 +1093,18 @@ export class MarketingPrototypeService {
         updateData.brief = input.notes;
       }
     } else {
-      const disallowed = Object.keys(input).filter(k => k !== 'startDate' && k !== 'status');
+      const disallowed = Object.keys(input).filter(
+        (k) => k !== 'startDate' && k !== 'status',
+      );
       if (disallowed.length > 0) {
-        console.warn(`[updateTask] Member ${viewer?.id ?? 'anon'} tried to edit disallowed fields: ${disallowed.join(', ')}`);
+        console.warn(
+          `[updateTask] Member ${viewer?.id ?? 'anon'} tried to edit disallowed fields: ${disallowed.join(', ')}`,
+        );
       }
-      if (input.startDate !== undefined) updateData.startDate = parseTaskDate(input.startDate, 'startDate');
+      if (input.startDate !== undefined)
+        updateData.startDate = parseTaskDate(input.startDate, 'startDate');
       if (input.status !== undefined && input.status !== task.status) {
-        const canonical = (LEGACY_STATUS_MAP[input.status] ?? input.status) as TaskStatus;
+        const canonical = LEGACY_STATUS_MAP[input.status] ?? input.status;
         if (isCanonicalStatus(canonical)) updateData.status = canonical;
       }
       if (Object.keys(updateData).length === 0) {
@@ -784,7 +1112,10 @@ export class MarketingPrototypeService {
       }
     }
 
-    if (updateData.status === 'Done' || (updateData.status === undefined && task.status === 'Done')) {
+    if (
+      updateData.status === 'Done' ||
+      (updateData.status === undefined && task.status === 'Done')
+    ) {
       updateData.completedAt = task.completedAt ?? new Date();
       updateData.checklistDone = task.checklistTotal;
     } else if (updateData.status && updateData.status !== 'Done') {
@@ -792,23 +1123,44 @@ export class MarketingPrototypeService {
     }
 
     // Cross-validate startDate vs dueDate (dueDate from DB row, not yet overwritten)
-    if (updateData.startDate && task.dueDate && updateData.startDate.getTime() > task.dueDate.getTime()) {
+    if (
+      updateData.startDate &&
+      task.dueDate &&
+      updateData.startDate.getTime() > task.dueDate.getTime()
+    ) {
       throw new BadRequestException('startDate tidak boleh setelah dueDate');
     }
 
     const mergedForSla = {
       status: (updateData.status ?? task.status) as string,
-      dueDate: updateData.dueDate ? fmtDate(updateData.dueDate) : fmtDate(task.dueDate),
-      completedAt: updateData.completedAt ? fmtDate(updateData.completedAt) : (task.completedAt ? fmtDate(task.completedAt) : undefined),
+      dueDate: updateData.dueDate
+        ? fmtDate(updateData.dueDate)
+        : fmtDate(task.dueDate),
+      completedAt: updateData.completedAt
+        ? fmtDate(updateData.completedAt)
+        : task.completedAt
+          ? fmtDate(task.completedAt)
+          : undefined,
     };
     updateData.sla = deriveSla(mergedForSla);
 
     const byId = viewer?.id ?? null;
-    const changedKeys = Object.keys(updateData).filter(k => k !== 'sla' && k !== 'completedAt' && k !== 'checklistDone');
-    const note = changedKeys.length ? `Task updated (${changedKeys.join(', ')})` : 'Task updated';
+    const changedKeys = Object.keys(updateData).filter(
+      (k) => k !== 'sla' && k !== 'completedAt' && k !== 'checklistDone',
+    );
+    const note = changedKeys.length
+      ? `Task updated (${changedKeys.join(', ')})`
+      : 'Task updated';
     return this.prisma.$transaction(async (tx) => {
       await tx.marketingTaskHistory.create({
-        data: { taskId: task.id, byId, fromStatus: task.status, toStatus: updateData.status ?? task.status, note, at: new Date() },
+        data: {
+          taskId: task.id,
+          byId,
+          fromStatus: task.status,
+          toStatus: updateData.status ?? task.status,
+          note,
+          at: new Date(),
+        },
       });
       return tx.marketingTask.update({ where: { id }, data: updateData });
     });
@@ -822,7 +1174,9 @@ export class MarketingPrototypeService {
     });
     if (!task) throw new NotFoundException('Task tidak ditemukan');
     if (!this.canManageTask(task, scope)) {
-      throw new ForbiddenException('Only the manager or delegated manager of this task can delete it');
+      throw new ForbiddenException(
+        'Only the manager or delegated manager of this task can delete it',
+      );
     }
     await this.prisma.marketingTaskHistory.create({
       data: {
@@ -836,26 +1190,36 @@ export class MarketingPrototypeService {
     });
     await this.prisma.marketingTask.delete({ where: { id } });
     // Clean up attachment files — order: DB delete first, then rm; on failure file orphans but DB is clean
-    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true })
-      .catch((err) => console.warn(`[deleteTask] orphan cleanup failed for task ${id}:`, err));
+    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true }).catch(
+      (err) =>
+        console.warn(`[deleteTask] orphan cleanup failed for task ${id}:`, err),
+    );
     return true;
   }
 
-  async createTask(viewer: ViewerContext | undefined, input: MarketingTaskInput & { id?: string }) {
+  async createTask(
+    viewer: ViewerContext | undefined,
+    input: MarketingTaskInput & { id?: string },
+  ) {
     const scope = this.resolveViewer(viewer);
     if (!scope.isManager && !scope.prototypeName) {
       throw new ForbiddenException('Only team members can create tasks');
     }
 
-    let assignee = input.pic ?? scope.prototypeName ?? '';
-    const assigneeOk = scope.isManager || scope.aliases.includes(normalizeIdentity(assignee)) ||
+    const assignee = input.pic ?? scope.prototypeName ?? '';
+    const assigneeOk =
+      scope.isManager ||
+      scope.aliases.includes(normalizeIdentity(assignee)) ||
       scope.managedMembers.includes(memberIdForName(assignee));
     if (!assigneeOk) {
-      throw new ForbiddenException('Members can only create tasks assigned to themselves or their managed members');
+      throw new ForbiddenException(
+        'Members can only create tasks assigned to themselves or their managed members',
+      );
     }
 
     const actor = scope.prototypeName ?? headOfMarketing;
-    const status = (LEGACY_STATUS_MAP[input.status ?? 'Not started'] ?? 'Not started') as TaskStatus;
+    const status =
+      LEGACY_STATUS_MAP[input.status ?? 'Not started'] ?? 'Not started';
     const now = new Date();
 
     let id = input.id;
@@ -866,18 +1230,15 @@ export class MarketingPrototypeService {
     }
 
     const project = input.projectId
-      ? await this.prisma.marketingProject.findUnique({ where: { id: input.projectId } })
+      ? await this.prisma.marketingProject.findUnique({
+          where: { id: input.projectId },
+        })
       : null;
 
     let picUserId: string | null = null;
     if (assignee) {
       const picUser = await this.prisma.user.findFirst({
-        where: {
-          OR: [
-            { fullName: { equals: assignee, mode: 'insensitive' } },
-            { email: { startsWith: `${assignee.toLowerCase()}@` } },
-          ],
-        },
+        where: userIdentityWhere(assignee),
       });
       picUserId = picUser?.id ?? null;
     }
@@ -897,11 +1258,17 @@ export class MarketingPrototypeService {
 
     const ownerId = viewer?.id ?? picUserId ?? assignedByUserId;
     if (!ownerId) {
-      throw new ForbiddenException('Authenticated task owner could not be resolved');
+      throw new ForbiddenException(
+        'Authenticated task owner could not be resolved',
+      );
     }
 
-    const startDate = input.startDate ? parseTaskDate(input.startDate, 'startDate') : now;
-    const dueDate = input.dueDate ? parseTaskDate(input.dueDate, 'dueDate') : now;
+    const startDate = input.startDate
+      ? parseTaskDate(input.startDate, 'startDate')
+      : now;
+    const dueDate = input.dueDate
+      ? parseTaskDate(input.dueDate, 'dueDate')
+      : now;
     if (startDate && dueDate && startDate.getTime() > dueDate.getTime()) {
       throw new BadRequestException('startDate tidak boleh setelah dueDate');
     }
@@ -915,11 +1282,13 @@ export class MarketingPrototypeService {
           title: input.title ?? 'Untitled task',
           projectId: input.projectId ?? project?.id,
           channel: input.channel ?? 'General',
-          category: input.category ?? (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
-          brand: (input.brand ?? 'Dreamlab') as 'Dreamlab' | 'Toribio',
+          category:
+            input.category ??
+            (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
+          brand: input.brand ?? 'Dreamlab',
           assignedById: assignedByUserId,
           picId: picUserId,
-          priority: (input.priority ?? 'Medium') as TaskPriority,
+          priority: input.priority ?? 'Medium',
           startDate,
           dueDate,
           status,
@@ -940,29 +1309,60 @@ export class MarketingPrototypeService {
       });
 
       await tx.marketingTaskHistory.create({
-        data: { taskId: task.id, byId: assignedByUserId, fromStatus: null, toStatus: status, note: 'Task created', at: now },
+        data: {
+          taskId: task.id,
+          byId: assignedByUserId,
+          fromStatus: null,
+          toStatus: status,
+          note: 'Task created',
+          at: now,
+        },
       });
 
       return task;
     });
   }
 
-  async addAttachment(viewer: ViewerContext | undefined, taskId: string, file: any) {
+  async addAttachment(
+    viewer: ViewerContext | undefined,
+    taskId: string,
+    file: any,
+  ) {
     const scope = this.resolveViewer(viewer);
     const uploaderId = viewer?.id ?? null;
     const ext = extname(file.originalname).toLowerCase().slice(1);
+
+    // Authorize before quota and file inspection work. Include the relations
+    // used by isVisibleToViewer; selecting only id/status made every member
+    // task appear invisible.
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        status: true,
+        pic: { select: { fullName: true } },
+        reviewer: { select: { fullName: true } },
+        assignedBy: { select: { fullName: true } },
+      },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope)) {
+      await rm(file.path, { force: true }).catch(() => undefined);
+      throw new NotFoundException('Task tidak ditemukan');
+    }
 
     // D3: per-user 500 MB / 24 h upload quota
     if (uploaderId) {
       const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
       const MAX_USER_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB
-      const recentUploads = await this.prisma.marketingTaskAttachment.aggregate({
-        where: {
-          uploadedById: uploaderId,
-          createdAt: { gte: new Date(Date.now() - TWENTY_FOUR_HOURS_MS) },
+      const recentUploads = await this.prisma.marketingTaskAttachment.aggregate(
+        {
+          where: {
+            uploadedById: uploaderId,
+            createdAt: { gte: new Date(Date.now() - TWENTY_FOUR_HOURS_MS) },
+          },
+          _sum: { sizeKb: true },
         },
-        _sum: { sizeKb: true },
-      });
+      );
       const usedKb = recentUploads._sum.sizeKb ?? 0;
       const newTotalKb = usedKb + Math.ceil(file.size / 1024);
       if (newTotalKb * 1024 > MAX_USER_UPLOAD_BYTES) {
@@ -982,19 +1382,13 @@ export class MarketingPrototypeService {
         await handle.close();
         if (!hasValidImageMagic(buf.subarray(0, 16), ext)) {
           await rm(file.path, { force: true }).catch(() => undefined);
-          throw new BadRequestException('Isi file tidak cocok dengan ekstensi gambar yang dikirim');
+          throw new BadRequestException(
+            'Isi file tidak cocok dengan ekstensi gambar yang dikirim',
+          );
         }
-      } catch { /* file may not exist in test */ }
-    }
-
-    // Snapshot current task status so history.toStatus stays valid (NOT NULL column).
-    const task = await this.prisma.marketingTask.findUnique({
-      where: { id: taskId },
-      select: { id: true, status: true },
-    });
-    if (!task || !this.isVisibleToViewer(task, scope)) {
-      await rm(file.path, { force: true }).catch(() => undefined);
-      throw new NotFoundException('Task tidak ditemukan');
+      } catch {
+        /* file may not exist in test */
+      }
     }
 
     const attachment = await this.prisma.$transaction(async (tx) => {
@@ -1004,14 +1398,25 @@ export class MarketingPrototypeService {
           name: file.originalname,
           type: EXT_TO_MIME[ext] ?? 'application/octet-stream',
           sizeKb: Math.max(Math.round(file.size / 1024), 0),
-          path: relative(resolve(UPLOADS_ROOT), resolve(file.path)).split(sep).join('/'),
+          path: relative(resolve(UPLOADS_ROOT), resolve(file.path))
+            .split(sep)
+            .join('/'),
           uploadedById: uploaderId,
         },
       });
 
-      const safeName = file.originalname.replace(/[\r\n\t]/g, ' ').slice(0, 200);
+      const safeName = file.originalname
+        .replace(/[\r\n\t]/g, ' ')
+        .slice(0, 200);
       await tx.marketingTaskHistory.create({
-        data: { taskId, byId: uploaderId, fromStatus: null, toStatus: task.status ?? 'Not started', note: `Attachment added: ${safeName}`, at: new Date() },
+        data: {
+          taskId,
+          byId: uploaderId,
+          fromStatus: null,
+          toStatus: task.status ?? 'Not started',
+          note: `Attachment added: ${safeName}`,
+          at: new Date(),
+        },
       });
 
       return a;
@@ -1020,10 +1425,18 @@ export class MarketingPrototypeService {
     return attachment;
   }
 
-  async deleteAttachment(viewer: ViewerContext | undefined, taskId: string, attachmentId: string) {
+  async deleteAttachment(
+    viewer: ViewerContext | undefined,
+    taskId: string,
+    attachmentId: string,
+  ) {
     const scope = this.resolveViewer(viewer);
-    const task = await this.prisma.marketingTask.findUnique({ where: { id: taskId }, include: { pic: true } });
-    if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id: taskId },
+      include: { pic: true },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
 
     const att = await this.prisma.marketingTaskAttachment.findUnique({
       where: { id: attachmentId },
@@ -1033,47 +1446,74 @@ export class MarketingPrototypeService {
 
     const isUploader =
       att.uploadedById === (viewer?.id ?? null) ||
-      normalizeIdentity(att.uploadedBy?.fullName ?? '') === normalizeIdentity(scope.prototypeName ?? '');
-    const managedOk = scope.managedMembers.includes(memberIdForName(task.pic?.fullName ?? ''));
+      normalizeIdentity(att.uploadedBy?.fullName ?? '') ===
+        normalizeIdentity(scope.prototypeName ?? '');
+    const managedOk = scope.managedMembers.includes(
+      memberIdForName(task.pic?.fullName ?? ''),
+    );
     if (!scope.isManager && !isUploader && !managedOk) {
-      throw new ForbiddenException('Hanya pengunggah, manager, atau delegated manager task ini yang dapat menghapus file');
+      throw new ForbiddenException(
+        'Hanya pengunggah, manager, atau delegated manager task ini yang dapat menghapus file',
+      );
     }
 
-    await this.prisma.marketingTaskAttachment.delete({ where: { id: attachmentId } });
+    await this.prisma.marketingTaskAttachment.delete({
+      where: { id: attachmentId },
+    });
     if (att.path) {
       const full = resolve(UPLOADS_ROOT, att.path);
       if (full.startsWith(resolve(UPLOADS_ROOT))) {
-        rm(full, { force: true }).catch((err) => console.warn(`[deleteAttachment] file cleanup failed for ${attachmentId}:`, err));
+        rm(full, { force: true }).catch((err) =>
+          console.warn(
+            `[deleteAttachment] file cleanup failed for ${attachmentId}:`,
+            err,
+          ),
+        );
       }
     }
     return true;
   }
 
-  async getAttachmentContent(viewer: ViewerContext | undefined, taskId: string, attachmentId: string) {
+  async getAttachmentContent(
+    viewer: ViewerContext | undefined,
+    taskId: string,
+    attachmentId: string,
+  ) {
     const scope = this.resolveViewer(viewer);
     const task = await this.prisma.marketingTask.findUnique({
       where: { id: taskId },
       include: { pic: true, reviewer: true, assignedBy: true },
     });
-    if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
 
-    const att = await this.prisma.marketingTaskAttachment.findUnique({ where: { id: attachmentId } });
+    const att = await this.prisma.marketingTaskAttachment.findUnique({
+      where: { id: attachmentId },
+    });
     if (!att || !att.path) throw new NotFoundException('File tidak ditemukan');
-    if (!att.path.startsWith('tasks/') || att.path.includes('..')) throw new NotFoundException('File tidak ditemukan');
+    if (!att.path.startsWith('tasks/') || att.path.includes('..'))
+      throw new NotFoundException('File tidak ditemukan');
 
     const full = resolve(UPLOADS_ROOT, att.path);
-    if (!full.startsWith(resolve(UPLOADS_ROOT))) throw new NotFoundException('File tidak ditemukan');
+    if (!full.startsWith(resolve(UPLOADS_ROOT)))
+      throw new NotFoundException('File tidak ditemukan');
 
     return { stream: createReadStream(full), type: att.type, name: att.name };
   }
 
-  async addTaskComment(viewer: ViewerContext | undefined, id: string, author: string, body: string) {
+  async addTaskComment(
+    viewer: ViewerContext | undefined,
+    id: string,
+    author: string,
+    body: string,
+  ) {
     const scope = this.resolveViewer(viewer);
     const task = await this.prisma.marketingTask.findUnique({
       where: { id },
       include: { pic: true, reviewer: true, assignedBy: true },
     });
-    if (!task || !this.isVisibleToViewer(task, scope)) throw new NotFoundException('Task tidak ditemukan');
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
 
     const authorId = viewer?.id ?? null;
     await this.prisma.$transaction([
@@ -1081,18 +1521,32 @@ export class MarketingPrototypeService {
         data: { taskId: id, authorId, body, createdAt: new Date() },
       }),
       this.prisma.marketingTaskHistory.create({
-        data: { taskId: id, byId: authorId, fromStatus: null, toStatus: task.status ?? 'Not started', note: 'Comment added', at: new Date() },
+        data: {
+          taskId: id,
+          byId: authorId,
+          fromStatus: null,
+          toStatus: task.status ?? 'Not started',
+          note: 'Comment added',
+          at: new Date(),
+        },
       }),
     ]);
     return this.prisma.marketingTask.findUnique({
       where: { id },
-      include: { pic: true, reviewer: true, assignedBy: true, comments: { include: { author: true } } },
+      include: {
+        pic: true,
+        reviewer: true,
+        assignedBy: true,
+        comments: { include: { author: true } },
+      },
     });
   }
 
   async markAllNotificationsRead(viewer?: ViewerContext) {
     // TODO: implement once marketingNotification model is confirmed in schema
-    console.warn('[markAllNotificationsRead] not yet implemented — marketingNotification model needs verification');
+    console.warn(
+      '[markAllNotificationsRead] not yet implemented — marketingNotification model needs verification',
+    );
     return [];
   }
 
@@ -1122,13 +1576,20 @@ export class MarketingPrototypeService {
     });
   }
 
-  async updateProject(viewer: ViewerContext | undefined, id: string, input: any) {
+  async updateProject(
+    viewer: ViewerContext | undefined,
+    id: string,
+    input: any,
+  ) {
     this.ensureManager(viewer);
     return this.prisma.marketingProject.update({
       where: { id },
       data: {
         ...input,
-        progress: input.progress !== undefined ? clamp(Number(input.progress), 0, 100) : undefined,
+        progress:
+          input.progress !== undefined
+            ? clamp(Number(input.progress), 0, 100)
+            : undefined,
         blockers: input.blockers ? input.blockers.join('; ') : undefined,
       },
     });

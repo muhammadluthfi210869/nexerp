@@ -1,4 +1,9 @@
-import { Logger, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Logger,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
 
@@ -7,7 +12,13 @@ export class MaterialsService {
   private readonly logger = new Logger(MaterialsService.name);
   constructor(private prisma: PrismaService) {}
 
-  async findAll(query?: { search?: string; categoryId?: string; type?: string; limit?: number; page?: number }) {
+  async findAll(query?: {
+    search?: string;
+    categoryId?: string;
+    type?: string;
+    limit?: number;
+    page?: number;
+  }) {
     const search = query?.search?.trim();
     const categoryId = query?.categoryId;
     const type = query?.type;
@@ -112,7 +123,8 @@ export class MaterialsService {
   private sanitizeUuid(val?: string | null): string | null {
     if (!val || typeof val !== 'string') return null;
     const trimmed = val.trim();
-    if (trimmed === '' || trimmed === 'ALL' || trimmed.toLowerCase() === 'null') return null;
+    if (trimmed === '' || trimmed === 'ALL' || trimmed.toLowerCase() === 'null')
+      return null;
     return trimmed;
   }
 
@@ -122,7 +134,9 @@ export class MaterialsService {
         where: { code: dto.code },
       });
       if (existing) {
-        throw new BadRequestException(`Material code '${dto.code}' already exists`);
+        throw new BadRequestException(
+          `Material code '${dto.code}' already exists`,
+        );
       }
     }
 
@@ -143,7 +157,8 @@ export class MaterialsService {
         stockQty: dto.stockQty !== undefined ? Number(dto.stockQty) : 0,
         minLevel: dto.minLevel !== undefined ? Number(dto.minLevel) : 0,
         maxLevel: dto.maxLevel !== undefined ? Number(dto.maxLevel) : 100000,
-        reorderPoint: dto.reorderPoint !== undefined ? Number(dto.reorderPoint) : 10,
+        reorderPoint:
+          dto.reorderPoint !== undefined ? Number(dto.reorderPoint) : 10,
         categoryId,
         inventoryAccountId,
         salesAccountId,
@@ -163,7 +178,9 @@ export class MaterialsService {
   }
 
   async update(id: string, dto: UpdateMaterialDto) {
-    const existing = await this.prisma.materialItem.findUnique({ where: { id } });
+    const existing = await this.prisma.materialItem.findUnique({
+      where: { id },
+    });
     if (!existing || existing.deletedAt) {
       throw new NotFoundException('Material not found');
     }
@@ -173,7 +190,9 @@ export class MaterialsService {
         where: { code: dto.code },
       });
       if (codeTaken) {
-        throw new BadRequestException(`Material code '${dto.code}' already exists`);
+        throw new BadRequestException(
+          `Material code '${dto.code}' already exists`,
+        );
       }
     }
 
@@ -184,25 +203,43 @@ export class MaterialsService {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.type !== undefined && { type: dto.type as any }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
-        ...(dto.usageUnit !== undefined && { usageUnit: dto.usageUnit || null }),
+        ...(dto.usageUnit !== undefined && {
+          usageUnit: dto.usageUnit || null,
+        }),
         ...(dto.outMethod !== undefined && { outMethod: dto.outMethod as any }),
         ...(dto.leadTime !== undefined && { leadTime: Number(dto.leadTime) }),
-        ...(dto.unitPrice !== undefined && { unitPrice: Number(dto.unitPrice) }),
+        ...(dto.unitPrice !== undefined && {
+          unitPrice: Number(dto.unitPrice),
+        }),
         ...(dto.stockQty !== undefined && { stockQty: Number(dto.stockQty) }),
         ...(dto.minLevel !== undefined && { minLevel: Number(dto.minLevel) }),
         ...(dto.maxLevel !== undefined && { maxLevel: Number(dto.maxLevel) }),
-        ...(dto.reorderPoint !== undefined && { reorderPoint: Number(dto.reorderPoint) }),
-        ...(dto.categoryId !== undefined && { categoryId: this.sanitizeUuid(dto.categoryId) }),
-        ...(dto.inventoryAccountId !== undefined && { inventoryAccountId: this.sanitizeUuid(dto.inventoryAccountId) }),
-        ...(dto.salesAccountId !== undefined && { salesAccountId: this.sanitizeUuid(dto.salesAccountId) }),
+        ...(dto.reorderPoint !== undefined && {
+          reorderPoint: Number(dto.reorderPoint),
+        }),
+        ...(dto.categoryId !== undefined && {
+          categoryId: this.sanitizeUuid(dto.categoryId),
+        }),
+        ...(dto.inventoryAccountId !== undefined && {
+          inventoryAccountId: this.sanitizeUuid(dto.inventoryAccountId),
+        }),
+        ...(dto.salesAccountId !== undefined && {
+          salesAccountId: this.sanitizeUuid(dto.salesAccountId),
+        }),
         ...(dto.inciName !== undefined && { inciName: dto.inciName || null }),
         ...(dto.status !== undefined && { status: dto.status as any }),
-        ...(dto.physicalForm !== undefined && { physicalForm: dto.physicalForm || null }),
-        ...(dto.halalCertNo !== undefined && { halalCertNo: dto.halalCertNo || null }),
+        ...(dto.physicalForm !== undefined && {
+          physicalForm: dto.physicalForm || null,
+        }),
+        ...(dto.halalCertNo !== undefined && {
+          halalCertNo: dto.halalCertNo || null,
+        }),
         ...(dto.halalExpDate !== undefined && {
           halalExpDate: dto.halalExpDate ? new Date(dto.halalExpDate) : null,
         }),
-        ...(dto.isHalalValidated !== undefined && { isHalalValidated: Boolean(dto.isHalalValidated) }),
+        ...(dto.isHalalValidated !== undefined && {
+          isHalalValidated: Boolean(dto.isHalalValidated),
+        }),
       },
       include: {
         category: true,
@@ -213,7 +250,9 @@ export class MaterialsService {
   }
 
   async remove(id: string) {
-    const existing = await this.prisma.materialItem.findUnique({ where: { id } });
+    const existing = await this.prisma.materialItem.findUnique({
+      where: { id },
+    });
     if (!existing) throw new NotFoundException('Material not found');
 
     return this.prisma.materialItem.update({
@@ -242,7 +281,9 @@ export class MaterialsService {
         materialId,
         po: { status: 'APPROVED', updatedAt: { gte: ninetyDaysAgo } },
       },
-      include: { po: { select: { poNumber: true, updatedAt: true, supplier: true } } },
+      include: {
+        po: { select: { poNumber: true, updatedAt: true, supplier: true } },
+      },
       orderBy: { po: { updatedAt: 'desc' } },
     });
 
@@ -275,6 +316,11 @@ export class MaterialsService {
       manualOverrideHpp: product?.manualOverrideHpp,
       effectiveHpp: product?.manualOverrideHpp ?? product?.autoCalculatedHpp,
       breakdown,
-      summary: { totalQty, totalValue, averageHpp: totalQty > 0 ? totalValue / totalQty : null },
+      summary: {
+        totalQty,
+        totalValue,
+        averageHpp: totalQty > 0 ? totalValue / totalQty : null,
+      },
     };
-  }}
+  }
+}

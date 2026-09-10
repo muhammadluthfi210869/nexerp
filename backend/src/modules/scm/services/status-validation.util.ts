@@ -21,18 +21,20 @@ export function validateNextStatus(
   nextStatus: string,
   milestoneHistory: MilestoneEntry[],
 ): StatusValidationResult {
-  if (nextStatus !== "DONE") {
+  if (nextStatus !== 'DONE') {
     return { valid: true };
   }
 
   const pendingMilestones = milestoneHistory
-    .filter((m) => m.status !== "DONE")
+    .filter((m) => m.status !== 'DONE')
     .map((m) => m.name);
 
   if (pendingMilestones.length > 0) {
     return {
       valid: false,
-      error: "Tidak bisa set DONE karena milestone belum selesai: " + pendingMilestones.join(", "),
+      error:
+        'Tidak bisa set DONE karena milestone belum selesai: ' +
+        pendingMilestones.join(', '),
       blockedBy: pendingMilestones,
     };
   }

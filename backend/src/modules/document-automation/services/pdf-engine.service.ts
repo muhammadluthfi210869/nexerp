@@ -53,10 +53,12 @@ export class PdfEngineService {
       </style>
     `;
 
-    const payload = data as Record<string, any>;
+    const payload = data;
     const items = payload.items || [];
     const subtotal = items.reduce(
-      (sum: number, item: any) => sum + (item.subtotal || (item.quantity || 0) * (item.unitPrice || 0) || 0),
+      (sum: number, item: any) =>
+        sum +
+        (item.subtotal || (item.quantity || 0) * (item.unitPrice || 0) || 0),
       0,
     );
     const tax = payload.taxRate ? subtotal * (payload.taxRate / 100) : 0;
@@ -77,19 +79,85 @@ export class PdfEngineService {
       .join('');
 
     const templateMap: Record<string, () => string> = {
-      QUOTATION: () => this.quotationTemplate(companyInfo, documentNumber, payload, itemsRows, subtotal, tax, total, baseStyle),
-      INVOICE_DP: () => this.invoiceTemplate(companyInfo, documentNumber, payload, itemsRows, subtotal, tax, total, baseStyle, 'DOWN PAYMENT (DP)'),
-      INVOICE_FINAL: () => this.invoiceTemplate(companyInfo, documentNumber, payload, itemsRows, subtotal, tax, total, baseStyle, 'FINAL PAYMENT'),
-      DELIVERY_ORDER: () => this.deliveryOrderTemplate(companyInfo, documentNumber, payload, itemsRows, baseStyle),
-      SURAT_JALAN: () => this.suratJalanTemplate(companyInfo, documentNumber, payload, itemsRows, baseStyle),
-      PURCHASE_REQUEST: () => this.purchaseRequestTemplate(companyInfo, documentNumber, payload, itemsRows, baseStyle),
-      GOODS_REQUIREMENT: () => this.purchaseRequestTemplate(companyInfo, documentNumber, payload, itemsRows, baseStyle),
-      JOURNAL_ENTRY: () => this.journalTemplate(companyInfo, documentNumber, payload, baseStyle),
+      QUOTATION: () =>
+        this.quotationTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          subtotal,
+          tax,
+          total,
+          baseStyle,
+        ),
+      INVOICE_DP: () =>
+        this.invoiceTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          subtotal,
+          tax,
+          total,
+          baseStyle,
+          'DOWN PAYMENT (DP)',
+        ),
+      INVOICE_FINAL: () =>
+        this.invoiceTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          subtotal,
+          tax,
+          total,
+          baseStyle,
+          'FINAL PAYMENT',
+        ),
+      DELIVERY_ORDER: () =>
+        this.deliveryOrderTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          baseStyle,
+        ),
+      SURAT_JALAN: () =>
+        this.suratJalanTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          baseStyle,
+        ),
+      PURCHASE_REQUEST: () =>
+        this.purchaseRequestTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          baseStyle,
+        ),
+      GOODS_REQUIREMENT: () =>
+        this.purchaseRequestTemplate(
+          companyInfo,
+          documentNumber,
+          payload,
+          itemsRows,
+          baseStyle,
+        ),
+      JOURNAL_ENTRY: () =>
+        this.journalTemplate(companyInfo, documentNumber, payload, baseStyle),
     };
 
     const renderer = templateMap[documentType];
     if (!renderer) {
-      return this.genericTemplate(companyInfo, documentNumber, payload, baseStyle);
+      return this.genericTemplate(
+        companyInfo,
+        documentNumber,
+        payload,
+        baseStyle,
+      );
     }
     return renderer();
   }
@@ -342,8 +410,14 @@ export class PdfEngineService {
       )
       .join('');
 
-    const totalDebit = lines.reduce((sum: number, l: any) => sum + (l.debit || 0), 0);
-    const totalCredit = lines.reduce((sum: number, l: any) => sum + (l.credit || 0), 0);
+    const totalDebit = lines.reduce(
+      (sum: number, l: any) => sum + (l.debit || 0),
+      0,
+    );
+    const totalCredit = lines.reduce(
+      (sum: number, l: any) => sum + (l.credit || 0),
+      0,
+    );
 
     return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">${baseStyle}</head><body>

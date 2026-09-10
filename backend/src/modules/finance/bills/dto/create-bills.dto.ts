@@ -1,27 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBillsDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "FP-202609-000001" })
+  @ApiProperty({ example: 'FP-202609-000001' })
   billNumber: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   vendorId: string;
 
-  @ApiProperty({ example: "2026-09-08" })
+  @ApiProperty({ example: '2026-09-08' })
   billDate: string;
 
-  @ApiProperty({ example: "2026-10-08" })
+  @ApiProperty({ example: '2026-10-08' })
   dueDate: string;
 
   @ApiProperty({ example: 1000000 })
   totalAmount: number;
 
-  @ApiProperty({ example: "DRAFT" })
+  @ApiProperty({ example: 'DRAFT' })
   status: string;
 
-  @ApiProperty({ example: "PO-202609-001", required: false })
+  @ApiProperty({ example: 'PO-202609-001', required: false })
   poNumber?: string;
 }

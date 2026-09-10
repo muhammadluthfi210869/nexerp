@@ -15,18 +15,56 @@ describe('WarehouseService — Stats/Catalog/Inbounds Unit', () => {
   beforeEach(async () => {
     prisma = TestModule.mockPrisma();
     prisma.warehouseLocation = { findMany: jest.fn() };
-    prisma.warehouseInbound = { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), count: jest.fn() };
+    prisma.warehouseInbound = {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+    };
     prisma.materialRequisition = { count: jest.fn() };
-    prisma.stockOpname = { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() };
-    prisma.stockAdjustment = { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() };
-    prisma.transferOrder = { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() };
+    prisma.stockOpname = {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    };
+    prisma.stockAdjustment = {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    };
+    prisma.transferOrder = {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    };
     prisma.warehouse = { findFirst: jest.fn() };
     prisma.supplier = { findFirst: jest.fn() };
     prisma.account = { findFirst: jest.fn() };
     prisma.materialValuation = { findFirst: jest.fn(), create: jest.fn() };
-    prisma.materialItem = { ...prisma.materialItem, findUnique: jest.fn(), update: jest.fn() };
-    prisma.inventoryTransaction = { ...prisma.inventoryTransaction, findMany: jest.fn(), create: jest.fn(), aggregate: jest.fn() };
-    prisma.materialInventory = { ...prisma.materialInventory, findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn(), update: jest.fn(), count: jest.fn(), aggregate: jest.fn() };
+    prisma.materialItem = {
+      ...prisma.materialItem,
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    };
+    prisma.inventoryTransaction = {
+      ...prisma.inventoryTransaction,
+      findMany: jest.fn(),
+      create: jest.fn(),
+      aggregate: jest.fn(),
+    };
+    prisma.materialInventory = {
+      ...prisma.materialInventory,
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+      aggregate: jest.fn(),
+    };
     prisma.productionLog = { findMany: jest.fn() };
     prisma.productionSchedule = { findUnique: jest.fn() };
     prisma.stateTransitionLog = { create: jest.fn() };
@@ -54,9 +92,13 @@ describe('WarehouseService — Stats/Catalog/Inbounds Unit', () => {
       prisma.warehouseLocation.findMany = jest.fn().mockResolvedValue([]);
       prisma.materialItem.findMany = jest.fn().mockResolvedValue([]);
       prisma.inventoryTransaction.findMany = jest.fn().mockResolvedValue([]);
-      prisma.materialInventory.aggregate = jest.fn().mockResolvedValue({ _avg: { auditAccuracy: 0 } });
+      prisma.materialInventory.aggregate = jest
+        .fn()
+        .mockResolvedValue({ _avg: { auditAccuracy: 0 } });
       prisma.materialInventory.findMany = jest.fn().mockResolvedValue([]);
-      prisma.inventoryTransaction.aggregate = jest.fn().mockResolvedValue({ _sum: { unitValueAtTransaction: 0 } });
+      prisma.inventoryTransaction.aggregate = jest
+        .fn()
+        .mockResolvedValue({ _sum: { unitValueAtTransaction: 0 } });
 
       const result = await service.getDashboardStats();
 
@@ -81,9 +123,13 @@ describe('WarehouseService — Stats/Catalog/Inbounds Unit', () => {
         },
       ]);
       prisma.inventoryTransaction.findMany = jest.fn().mockResolvedValue([]);
-      prisma.materialInventory.aggregate = jest.fn().mockResolvedValue({ _avg: { auditAccuracy: 95 } });
+      prisma.materialInventory.aggregate = jest
+        .fn()
+        .mockResolvedValue({ _avg: { auditAccuracy: 95 } });
       prisma.materialInventory.findMany = jest.fn().mockResolvedValue([]);
-      prisma.inventoryTransaction.aggregate = jest.fn().mockResolvedValue({ _sum: { unitValueAtTransaction: 0 } });
+      prisma.inventoryTransaction.aggregate = jest
+        .fn()
+        .mockResolvedValue({ _sum: { unitValueAtTransaction: 0 } });
 
       const result = await service.getDashboardStats();
       expect(Number(result.valuation.total)).toBeGreaterThan(0);

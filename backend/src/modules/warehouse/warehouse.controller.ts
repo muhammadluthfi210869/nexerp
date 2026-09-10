@@ -334,7 +334,13 @@ export class WarehouseController {
 
   // Item 53: Stock summary grouped by bahanType
   @Get('stock-summary')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PURCHASING, UserRole.DIRECTOR)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.WAREHOUSE,
+    UserRole.PURCHASING,
+    UserRole.DIRECTOR,
+  )
   async getStockSummary(@Query('groupBy') groupBy?: string) {
     return this.warehouseService.getStockSummaryByBahanType();
-  }}
+  }
+}

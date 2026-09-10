@@ -92,7 +92,9 @@ export class TodoService {
   }
 
   async updateTask(taskId: string, dto: UpdateTaskDto) {
-    const task = await this.prisma.taskItem.findUnique({ where: { id: taskId } });
+    const task = await this.prisma.taskItem.findUnique({
+      where: { id: taskId },
+    });
     if (!task) throw new NotFoundException('Task not found');
     return this.prisma.taskItem.update({ where: { id: taskId }, data: dto });
   }

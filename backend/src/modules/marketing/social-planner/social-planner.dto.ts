@@ -37,6 +37,16 @@ const POST_STATUSES = [
   'scheduled',
   'published',
   'archived',
+  'IDEA',
+  'DRAFT',
+  'SCRIPTING',
+  'PRODUCTION',
+  'IN_REVIEW',
+  'REVISION',
+  'APPROVED',
+  'SCHEDULED',
+  'PUBLISHED',
+  'ARCHIVED',
 ];
 
 export class SocialChecklistItemDto {
@@ -108,6 +118,12 @@ export class CreateSocialPostDto {
   @IsOptional() @IsString() @MaxLength(255) campaign?: string;
   @IsOptional() @IsString() calloutText?: string;
   @IsOptional() @IsString() @MaxLength(20) calloutEmoji?: string;
+  @IsOptional() @IsString() brandId?: string;
+  @IsOptional() @IsString() assigneeId?: string;
+  @IsOptional() @IsString() reviewerId?: string;
+  @IsOptional() @IsString() brief?: string;
+  @IsOptional() @IsString() referenceUrl?: string;
+  @IsOptional() @IsNumber() @Min(1) version?: number;
 
   @IsOptional()
   @ValidateNested()

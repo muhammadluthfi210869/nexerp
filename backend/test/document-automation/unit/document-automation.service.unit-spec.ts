@@ -33,7 +33,9 @@ describe('DocumentAutomationService — Unit Tests', () => {
   };
 
   const mockEventEmitter = { emit: jest.fn() };
-  const mockIdGenerator = { generateId: jest.fn().mockResolvedValue('TEST-2606-001') };
+  const mockIdGenerator = {
+    generateId: jest.fn().mockResolvedValue('TEST-2606-001'),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -54,11 +56,20 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateQuotationDraft', () => {
     it('A1: should create quotation draft for valid lead', async () => {
       prisma.salesLead.findUnique.mockResolvedValue({
-        id: 'lead-1', clientName: 'PT Test', brandName: 'Brand',
-        productInterest: 'Serum', estimatedValue: 100000000, moq: 1000, sampleRequests: [],
+        id: 'lead-1',
+        clientName: 'PT Test',
+        brandName: 'Brand',
+        productInterest: 'Serum',
+        estimatedValue: 100000000,
+        moq: 1000,
+        sampleRequests: [],
       });
       prisma.documentDraft.findFirst.mockResolvedValue(null);
-      prisma.documentDraft.create.mockResolvedValue({ id: 'd1', draftNumber: 'QUO-001', documentType: DocumentType.QUOTATION });
+      prisma.documentDraft.create.mockResolvedValue({
+        id: 'd1',
+        draftNumber: 'QUO-001',
+        documentType: DocumentType.QUOTATION,
+      });
 
       const result = await service.generateQuotationDraft('lead-1');
       expect(result).toBeDefined();
@@ -72,8 +83,14 @@ describe('DocumentAutomationService — Unit Tests', () => {
     });
 
     it('A3: should skip when duplicate quotation exists', async () => {
-      prisma.salesLead.findUnique.mockResolvedValue({ id: 'lead-1', sampleRequests: [] });
-      prisma.documentDraft.findFirst.mockResolvedValue({ id: 'existing', draftNumber: 'QUO-001' });
+      prisma.salesLead.findUnique.mockResolvedValue({
+        id: 'lead-1',
+        sampleRequests: [],
+      });
+      prisma.documentDraft.findFirst.mockResolvedValue({
+        id: 'existing',
+        draftNumber: 'QUO-001',
+      });
 
       const result = await service.generateQuotationDraft('lead-1');
       expect(result).toBeUndefined(); // early return
@@ -85,12 +102,27 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateDpInvoiceDraft', () => {
     it('A4: should create DP Invoice draft (30% of total)', async () => {
       prisma.salesOrder.findUnique.mockResolvedValue({
-        id: 'so-1', orderNumber: 'SO-001', totalAmount: 100000000,
-        brandName: 'Brand', lead: { clientName: 'PT Test' },
-        items: [{ productName: 'X', quantity: 1, unitPrice: 100000000, subtotal: 100000000 }], tax: null,
+        id: 'so-1',
+        orderNumber: 'SO-001',
+        totalAmount: 100000000,
+        brandName: 'Brand',
+        lead: { clientName: 'PT Test' },
+        items: [
+          {
+            productName: 'X',
+            quantity: 1,
+            unitPrice: 100000000,
+            subtotal: 100000000,
+          },
+        ],
+        tax: null,
       });
       prisma.documentDraft.findFirst.mockResolvedValue(null);
-      prisma.documentDraft.create.mockResolvedValue({ id: 'd2', draftNumber: 'INV-001', documentType: DocumentType.INVOICE_DP });
+      prisma.documentDraft.create.mockResolvedValue({
+        id: 'd2',
+        draftNumber: 'INV-001',
+        documentType: DocumentType.INVOICE_DP,
+      });
 
       const result = await service.generateDpInvoiceDraft('so-1');
       expect(result).toBeDefined();
@@ -104,7 +136,12 @@ describe('DocumentAutomationService — Unit Tests', () => {
     });
 
     it('A6: should skip when duplicate DP draft exists', async () => {
-      prisma.salesOrder.findUnique.mockResolvedValue({ id: 'so-1', lead: {}, items: [], tax: null });
+      prisma.salesOrder.findUnique.mockResolvedValue({
+        id: 'so-1',
+        lead: {},
+        items: [],
+        tax: null,
+      });
       prisma.documentDraft.findFirst.mockResolvedValue({ id: 'existing' });
       await service.generateDpInvoiceDraft('so-1');
       expect(prisma.documentDraft.create).not.toHaveBeenCalled();
@@ -115,12 +152,34 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateFinalInvoiceDraft', () => {
     it('A7: should create Final Invoice for valid WO', async () => {
       prisma.workOrder.findUnique.mockResolvedValue({
-        id: 'wo-1', woNumber: 'WO-001', actualCogs: 70000000, lead: { clientName: 'PT' },
-        plan: { so: { id: 'so-1', totalAmount: 100000000, brandName: 'B', orderNumber: 'SO-001',
-          lead: { clientName: 'PT' }, items: [{ productName: 'X', quantity: 1, unitPrice: 100000000, subtotal: 100000000 }], tax: null } },
+        id: 'wo-1',
+        woNumber: 'WO-001',
+        actualCogs: 70000000,
+        lead: { clientName: 'PT' },
+        plan: {
+          so: {
+            id: 'so-1',
+            totalAmount: 100000000,
+            brandName: 'B',
+            orderNumber: 'SO-001',
+            lead: { clientName: 'PT' },
+            items: [
+              {
+                productName: 'X',
+                quantity: 1,
+                unitPrice: 100000000,
+                subtotal: 100000000,
+              },
+            ],
+            tax: null,
+          },
+        },
       });
       prisma.documentDraft.findFirst.mockResolvedValue(null);
-      prisma.documentDraft.create.mockResolvedValue({ id: 'd3', documentType: DocumentType.INVOICE_FINAL });
+      prisma.documentDraft.create.mockResolvedValue({
+        id: 'd3',
+        documentType: DocumentType.INVOICE_FINAL,
+      });
 
       const result = await service.generateFinalInvoiceDraft('wo-1');
       expect(result).toBeDefined();
@@ -136,8 +195,18 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateGoodsRequirementDraft', () => {
     it('A9: should create Goods Requirement draft', async () => {
       prisma.salesOrder.findUnique.mockResolvedValue({
-        id: 'so-1', orderNumber: 'SO-001', brandName: 'B', lead: { clientName: 'PT' },
-        items: [{ productName: 'X', materialItem: { name: 'AHA', unit: 'KG' }, materialItemId: 'm1', quantity: 100 }],
+        id: 'so-1',
+        orderNumber: 'SO-001',
+        brandName: 'B',
+        lead: { clientName: 'PT' },
+        items: [
+          {
+            productName: 'X',
+            materialItem: { name: 'AHA', unit: 'KG' },
+            materialItemId: 'm1',
+            quantity: 100,
+          },
+        ],
       });
       prisma.documentDraft.findFirst.mockResolvedValue(null);
       prisma.documentDraft.create.mockResolvedValue({ id: 'd4' });
@@ -149,9 +218,18 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateDeliveryOrderDraft', () => {
     it('A10: should create DO draft', async () => {
       prisma.workOrder.findUnique.mockResolvedValue({
-        id: 'wo-1', woNumber: 'WO-001', lead: { clientName: 'PT' },
-        plan: { so: { id: 'so-1', orderNumber: 'SO-001', brandName: 'B',
-          lead: { clientName: 'PT', addressDetail: 'Jak', city: 'Jak' }, items: [{ productName: 'X', quantity: 1 }] } },
+        id: 'wo-1',
+        woNumber: 'WO-001',
+        lead: { clientName: 'PT' },
+        plan: {
+          so: {
+            id: 'so-1',
+            orderNumber: 'SO-001',
+            brandName: 'B',
+            lead: { clientName: 'PT', addressDetail: 'Jak', city: 'Jak' },
+            items: [{ productName: 'X', quantity: 1 }],
+          },
+        },
       });
       prisma.documentDraft.findFirst.mockResolvedValue(null);
       prisma.documentDraft.create.mockResolvedValue({ id: 'd5' });
@@ -162,9 +240,20 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateSuratJalanDraft', () => {
     it('A11: should create Surat Jalan draft', async () => {
       prisma.deliveryOrder.findUnique.mockResolvedValue({
-        id: 'do-1', shippedAt: new Date(),
-        workOrder: { woNumber: 'WO-001', lead: { clientName: 'PT' },
-          plan: { so: { orderNumber: 'SO-001', brandName: 'B', lead: { clientName: 'PT', city: 'Jak' }, items: [{ productName: 'X', quantity: 1 }] } } },
+        id: 'do-1',
+        shippedAt: new Date(),
+        workOrder: {
+          woNumber: 'WO-001',
+          lead: { clientName: 'PT' },
+          plan: {
+            so: {
+              orderNumber: 'SO-001',
+              brandName: 'B',
+              lead: { clientName: 'PT', city: 'Jak' },
+              items: [{ productName: 'X', quantity: 1 }],
+            },
+          },
+        },
       });
       prisma.documentDraft.findFirst.mockResolvedValue(null);
       prisma.documentDraft.create.mockResolvedValue({ id: 'd6' });
@@ -175,7 +264,12 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('generateDeliveryJournalDraft', () => {
     it('A12: should create Journal draft', async () => {
       prisma.deliveryOrder.findUnique.mockResolvedValue({
-        id: 'do-1', workOrder: { woNumber: 'WO-001', actualCogs: 70000000, lead: { clientName: 'PT' } },
+        id: 'do-1',
+        workOrder: {
+          woNumber: 'WO-001',
+          actualCogs: 70000000,
+          lead: { clientName: 'PT' },
+        },
       });
       prisma.documentDraft.create.mockResolvedValue({ id: 'd7' });
       expect(await service.generateDeliveryJournalDraft('do-1')).toBeDefined();
@@ -185,23 +279,42 @@ describe('DocumentAutomationService — Unit Tests', () => {
   // A13-A17: Draft Management
   describe('approveDraft', () => {
     it('A13: should approve DRAFT draft', async () => {
-      prisma.documentDraft.findUnique.mockResolvedValue({ id: 'd1', status: DocumentDraftStatus.DRAFT, documentType: DocumentType.INVOICE_DP, draftNumber: 'INV-001', payload: { items: [{}] } });
-      prisma.documentDraft.update.mockResolvedValue({ status: DocumentDraftStatus.APPROVED });
+      prisma.documentDraft.findUnique.mockResolvedValue({
+        id: 'd1',
+        status: DocumentDraftStatus.DRAFT,
+        documentType: DocumentType.INVOICE_DP,
+        draftNumber: 'INV-001',
+        payload: { items: [{}] },
+      });
+      prisma.documentDraft.update.mockResolvedValue({
+        status: DocumentDraftStatus.APPROVED,
+      });
       prisma.invoice.create.mockResolvedValue({});
       const result = await service.approveDraft('d1', { notes: 'OK' }, 'u1');
       expect(result.status).toBe(DocumentDraftStatus.APPROVED);
     });
 
     it('A14: should throw on approving APPROVED draft', async () => {
-      prisma.documentDraft.findUnique.mockResolvedValue({ id: 'd1', status: DocumentDraftStatus.APPROVED, documentType: DocumentType.INVOICE_DP });
-      await expect(service.approveDraft('d1', {}, 'u1')).rejects.toThrow('already approved');
+      prisma.documentDraft.findUnique.mockResolvedValue({
+        id: 'd1',
+        status: DocumentDraftStatus.APPROVED,
+        documentType: DocumentType.INVOICE_DP,
+      });
+      await expect(service.approveDraft('d1', {}, 'u1')).rejects.toThrow(
+        'already approved',
+      );
     });
   });
 
   describe('rejectDraft', () => {
     it('A15: should reject DRAFT draft', async () => {
-      prisma.documentDraft.findUnique.mockResolvedValue({ id: 'd1', status: DocumentDraftStatus.DRAFT });
-      prisma.documentDraft.update.mockResolvedValue({ status: DocumentDraftStatus.REJECTED });
+      prisma.documentDraft.findUnique.mockResolvedValue({
+        id: 'd1',
+        status: DocumentDraftStatus.DRAFT,
+      });
+      prisma.documentDraft.update.mockResolvedValue({
+        status: DocumentDraftStatus.REJECTED,
+      });
       const result = await service.rejectDraft('d1', { reason: 'Wrong' }, 'u1');
       expect(result.status).toBe(DocumentDraftStatus.REJECTED);
     });
@@ -209,15 +322,31 @@ describe('DocumentAutomationService — Unit Tests', () => {
 
   describe('updateDraft', () => {
     it('A16: should update payload and set REVIEWING', async () => {
-      prisma.documentDraft.findUnique.mockResolvedValue({ id: 'd1', status: DocumentDraftStatus.DRAFT, originalPayload: null, payload: { old: true } });
-      prisma.documentDraft.update.mockResolvedValue({ status: DocumentDraftStatus.REVIEWING });
-      const result = await service.updateDraft('d1', { payload: { new: true } }, 'u1');
+      prisma.documentDraft.findUnique.mockResolvedValue({
+        id: 'd1',
+        status: DocumentDraftStatus.DRAFT,
+        originalPayload: null,
+        payload: { old: true },
+      });
+      prisma.documentDraft.update.mockResolvedValue({
+        status: DocumentDraftStatus.REVIEWING,
+      });
+      const result = await service.updateDraft(
+        'd1',
+        { payload: { new: true } },
+        'u1',
+      );
       expect(result.status).toBe(DocumentDraftStatus.REVIEWING);
     });
 
     it('A17: should throw on editing APPROVED draft', async () => {
-      prisma.documentDraft.findUnique.mockResolvedValue({ id: 'd1', status: DocumentDraftStatus.APPROVED });
-      await expect(service.updateDraft('d1', { payload: {} }, 'u1')).rejects.toThrow('Cannot edit');
+      prisma.documentDraft.findUnique.mockResolvedValue({
+        id: 'd1',
+        status: DocumentDraftStatus.APPROVED,
+      });
+      await expect(
+        service.updateDraft('d1', { payload: {} }, 'u1'),
+      ).rejects.toThrow('Cannot edit');
     });
   });
 
@@ -225,7 +354,12 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('processAutoApprovals', () => {
     it('A18: should auto-approve expired drafts', async () => {
       prisma.documentDraft.findMany.mockResolvedValue([
-        { id: 'd1', draftNumber: 'INV-001', documentType: DocumentType.INVOICE_DP, payload: { items: [{}] } },
+        {
+          id: 'd1',
+          draftNumber: 'INV-001',
+          documentType: DocumentType.INVOICE_DP,
+          payload: { items: [{}] },
+        },
       ]);
       prisma.documentDraft.update.mockResolvedValue({});
       prisma.invoice.create.mockResolvedValue({});
@@ -244,9 +378,12 @@ describe('DocumentAutomationService — Unit Tests', () => {
   describe('getStats', () => {
     it('A20: should return correct counts', async () => {
       prisma.documentDraft.count
-        .mockResolvedValueOnce(10).mockResolvedValueOnce(3)
-        .mockResolvedValueOnce(2).mockResolvedValueOnce(4)
-        .mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(3)
+        .mockResolvedValueOnce(2)
+        .mockResolvedValueOnce(4)
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(0);
       const result = await service.getStats();
       expect(result.total).toBe(10);
       expect(result.drafts).toBe(3);
@@ -258,7 +395,11 @@ describe('DocumentAutomationService — Unit Tests', () => {
       prisma.documentDraft.findMany.mockResolvedValue([]);
       await service.findAll({ documentType: DocumentType.INVOICE_DP });
       expect(prisma.documentDraft.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ documentType: DocumentType.INVOICE_DP }) }),
+        expect.objectContaining({
+          where: expect.objectContaining({
+            documentType: DocumentType.INVOICE_DP,
+          }),
+        }),
       );
     });
 
@@ -266,7 +407,9 @@ describe('DocumentAutomationService — Unit Tests', () => {
       prisma.documentDraft.findMany.mockResolvedValue([]);
       await service.findAll({ status: DocumentDraftStatus.DRAFT });
       expect(prisma.documentDraft.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ status: DocumentDraftStatus.DRAFT }) }),
+        expect.objectContaining({
+          where: expect.objectContaining({ status: DocumentDraftStatus.DRAFT }),
+        }),
       );
     });
   });

@@ -134,7 +134,9 @@ export class BussdevController {
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Get all leads' })
   getLeads(@Req() req: any, @Query('mine') mine?: string) {
-    return this.bussdevService.getLeads(mine === 'true' ? req.user.id : undefined);
+    return this.bussdevService.getLeads(
+      mine === 'true' ? req.user.id : undefined,
+    );
   }
 
   @Get('leads/stuck')

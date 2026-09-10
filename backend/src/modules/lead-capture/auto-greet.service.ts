@@ -8,7 +8,9 @@ export class AutoGreetService {
   constructor(private prisma: PrismaService) {}
 
   async sendAutoGreeting(leadId: string, busdevName: string): Promise<void> {
-    const lead = await this.prisma.leadCapture.findUnique({ where: { id: leadId } });
+    const lead = await this.prisma.leadCapture.findUnique({
+      where: { id: leadId },
+    });
     if (!lead) return;
 
     const message = `Halo! Saya ${busdevName} dari Dreamlab. Boleh tau nama Anda?`;

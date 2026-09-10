@@ -1,19 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateInventoryOwnershipsDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   materialId: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   warehouseId: string;
 
-  @ApiProperty({ example: "COMPANY" })
+  @ApiProperty({ example: 'COMPANY' })
   ownerType: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   ownerId: string;
 
   @ApiProperty({ example: 1000 })

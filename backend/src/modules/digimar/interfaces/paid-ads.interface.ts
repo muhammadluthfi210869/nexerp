@@ -20,6 +20,6 @@ export interface PaidAdsData {
   totalLeads: number;
   totalSamples: number;
   totalTraffic: number;
-  cpl: number | null;  // cost per lead
-  cpa: number | null;  // cost per acquisition (samples)
+  cpl: number | null; // cost per lead
+  cpa: number | null; // cost per acquisition (samples)
 }

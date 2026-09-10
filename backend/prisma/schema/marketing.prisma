@@ -215,6 +215,16 @@ model MarketingTask {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Phase 2 canonical fields. Legacy fields above stay readable during the
+  // expand/backfill/contract rollout.
+  taskType         String @default("DAILY") @db.VarChar(30)
+  canonicalStatus  String @default("NOT_STARTED") @db.VarChar(30)
+  outputUrl        String? @db.Text
+  referenceUrl     String? @db.Text
+  estimatedMinutes Int     @default(0)
+  actualMinutes    Int     @default(0)
+  version          Int     @default(1)
+
   // Relations restored for the marketing task subsystem
   projectId    String?                   @db.Uuid
   project      MarketingProject?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
@@ -227,10 +237,16 @@ model MarketingTask {
   history      MarketingTaskHistory[]
   attachments  MarketingTaskAttachment[]
   comments     MarketingTaskComment[]
+  checklist    MarketingTaskChecklistItem[]
+  brandId      String?                   @db.Uuid
+  brandRef     MarketingBrand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
 
   @@index([ownerId])
   @@index([assigneeId])
   @@index([status])
+  @@index([canonicalStatus, dueDate])
+  @@index([brandId])
+  @@index([projectId])
   @@map("marketing_tasks")
 }
 
@@ -399,8 +415,59 @@ model MarketingProject {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   tasks       MarketingTask[]
+  canonicalStatus String      @default("ON_TRACK") @db.VarChar(30)
+  version         Int         @default(1)
+  brandId         String?     @db.Uuid
+  brand            MarketingBrand? @relation(fields: [brandId], references: [id], onDelete: SetNull)
 
+  @@index([brandId])
+  @@index([canonicalStatus, deadline])
   @@map("marketing_projects")
+}
+
+model MarketingBrand {
+  id              String   @id @default(uuid()) @db.Uuid
+  code            String   @unique @db.VarChar(50)
+  name            String   @unique @db.VarChar(120)
+  handle          String?  @db.VarChar(120)
+  primaryPlatform String?  @db.VarChar(50)
+  ownerId         String?  @db.Uuid
+  owner            User?    @relation("MarketingBrandOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  notes           String?  @db.Text
+  accentToken     String   @default("blue") @db.VarChar(30)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tasks           MarketingTask[]
+  projects        MarketingProject[]
+  posts           SocialPost[]
+  campaignOkrs    CampaignOkr[]
+  reportingPeriods MarketingReportingPeriod[]
+  storyMetrics    StoryDailyMetric[]
+  integrations    MarketingIntegrationConnection[]
+  syncJobs        MarketingIntegrationSyncJob[]
+
+  @@index([isActive, name])
+  @@map("marketing_brands")
+}
+
+model MarketingTaskChecklistItem {
+  id            String        @id @default(uuid()) @db.Uuid
+  taskId        String        @db.Uuid
+  task          MarketingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  text          String        @db.VarChar(255)
+  done          Boolean       @default(false)
+  isRequired    Boolean       @default(true)
+  sortOrder     Int           @default(0)
+  completedById String?       @db.Uuid
+  completedBy   User?         @relation("MarketingTaskChecklistCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([taskId, sortOrder])
+  @@map("marketing_task_checklist_items")
 }
 
 // ── Notion Social Media Planner & Meta Hub ───────────────────────────────
@@ -444,13 +511,32 @@ model SocialPost {
   viralityScore  Int                   @default(0)
   costPerResult  Decimal               @default(0) @db.Decimal(12, 2)
 
+  // Phase 2 relational identity and concurrency fields.
+  brandId        String?               @db.Uuid
+  brand          MarketingBrand?       @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  assigneeId     String?               @db.Uuid
+  assignee       User?                 @relation("SocialPostAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reviewerId     String?               @db.Uuid
+  reviewer       User?                 @relation("SocialPostReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  brief          String?               @db.Text
+  referenceUrl   String?               @db.Text
+  canonicalStatus String               @default("IDEA") @db.VarChar(30)
+  version        Int                   @default(1)
+  metricsSyncedAt DateTime?
+
   checklist      SocialChecklistItem[]
+  media           SocialPostMedia[]
+  metricSnapshots SocialPostMetricSnapshot[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
 
   @@index([platform])
   @@index([status])
   @@index([scheduledDate])
+  @@index([brandId, scheduledDate])
+  @@index([assigneeId, status])
+  @@index([canonicalStatus, scheduledDate])
+  @@index([metricsSyncedAt])
   @@map("social_posts")
 }
 
@@ -465,6 +551,54 @@ model SocialChecklistItem {
 
   @@index([postId])
   @@map("social_checklist_items")
+}
+
+model SocialPostMedia {
+  id           String     @id @default(uuid()) @db.Uuid
+  postId       String     @db.Uuid
+  post         SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  kind         String     @default("ASSET") @db.VarChar(30)
+  url          String     @db.Text
+  storageKey   String?    @db.Text
+  mimeType     String?    @db.VarChar(120)
+  sizeBytes    BigInt     @default(0)
+  sortOrder    Int        @default(0)
+  uploadedById String?    @db.Uuid
+  uploadedBy   User?      @relation("SocialPostMediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+
+  @@index([postId, sortOrder])
+  @@map("social_post_media")
+}
+
+model SocialPostMetricSnapshot {
+  id             String     @id @default(uuid()) @db.Uuid
+  postId         String     @db.Uuid
+  post           SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  source         String     @default("MANUAL") @db.VarChar(30)
+  capturedAt     DateTime
+  reach          Int        @default(0)
+  impressions    Int        @default(0)
+  views          Int        @default(0)
+  likes          Int        @default(0)
+  comments       Int        @default(0)
+  shares         Int        @default(0)
+  saves          Int        @default(0)
+  clicks         Int        @default(0)
+  watchTimeSec   Int        @default(0)
+  avgWatchPct    Decimal?   @db.Decimal(5, 2)
+  spend          Decimal    @default(0) @db.Decimal(18, 2)
+  leads          Int        @default(0)
+  sampleRequests Int        @default(0)
+  externalId     String?    @db.VarChar(160)
+  enteredById    String?    @db.Uuid
+  verifiedById   String?    @db.Uuid
+  verifiedAt     DateTime?
+  createdAt      DateTime   @default(now())
+
+  @@unique([postId, source, capturedAt])
+  @@index([postId, capturedAt])
+  @@map("social_post_metric_snapshots")
 }
 
 model CampaignOkr {
@@ -482,8 +616,212 @@ model CampaignOkr {
   associatedPosts String[] @default([])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  brandId         String?  @db.Uuid
+  brand            MarketingBrand? @relation(fields: [brandId], references: [id], onDelete: SetNull)
 
+  @@index([brandId, status])
   @@map("campaign_okrs")
+}
+
+model MarketingReportingPeriod {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  brand        MarketingBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  periodStart  DateTime @db.Date
+  periodEnd    DateTime @db.Date
+  timezone     String   @default("Asia/Jakarta") @db.VarChar(80)
+  status       String   @default("DRAFT") @db.VarChar(30)
+  createdById  String?  @db.Uuid
+  verifiedById String?  @db.Uuid
+  verifiedAt   DateTime?
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  channelMetrics BrandChannelMetric[]
+  weeklyReports  WeeklySocialReport[]
+  storyMetrics   StoryDailyMetric[]
+  funnels        MarketingChannelFunnel[]
+
+  @@unique([brandId, periodStart, periodEnd])
+  @@index([status, periodEnd])
+  @@map("marketing_reporting_periods")
+}
+
+model BrandChannelMetric {
+  id             String   @id @default(uuid()) @db.Uuid
+  periodId       String   @db.Uuid
+  period         MarketingReportingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  channel        String   @db.VarChar(50)
+  source         String   @default("MANUAL") @db.VarChar(30)
+  followersStart Int      @default(0)
+  followersEnd   Int      @default(0)
+  followersGained Int     @default(0)
+  followersLost  Int      @default(0)
+  reach          BigInt   @default(0)
+  views          BigInt   @default(0)
+  impressions    BigInt   @default(0)
+  likes          BigInt   @default(0)
+  comments       BigInt   @default(0)
+  shares         BigInt   @default(0)
+  saves          BigInt   @default(0)
+  clicks         BigInt   @default(0)
+  spend          Decimal  @default(0) @db.Decimal(18, 2)
+  revenue        Decimal  @default(0) @db.Decimal(18, 2)
+  leads          Int      @default(0)
+  sampleRequests Int      @default(0)
+  deals          Int      @default(0)
+  externalId     String?  @db.VarChar(160)
+  enteredById    String?  @db.Uuid
+  verifiedById   String?  @db.Uuid
+  verifiedAt     DateTime?
+  syncedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([periodId, channel, source])
+  @@index([channel, syncedAt])
+  @@map("brand_channel_metrics")
+}
+
+model WeeklySocialReport {
+  id             String   @id @default(uuid()) @db.Uuid
+  periodId       String   @db.Uuid
+  period         MarketingReportingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  weekNumber     Int
+  weekStart      DateTime @db.Date
+  weekEnd        DateTime @db.Date
+  followersStart Int      @default(0)
+  followersEnd   Int      @default(0)
+  followersGained Int     @default(0)
+  followersLost  Int      @default(0)
+  reach          BigInt   @default(0)
+  views          BigInt   @default(0)
+  impressions    BigInt   @default(0)
+  totalEngagement BigInt  @default(0)
+  storiesCount   Int      @default(0)
+  storyViews     BigInt   @default(0)
+  highlights     String?  @db.Text
+  notes          String?  @db.Text
+  enteredById    String?  @db.Uuid
+  verifiedById   String?  @db.Uuid
+  verifiedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([periodId, weekNumber])
+  @@index([weekStart, weekEnd])
+  @@map("weekly_social_reports")
+}
+
+model StoryDailyMetric {
+  id             String   @id @default(uuid()) @db.Uuid
+  periodId       String   @db.Uuid
+  period         MarketingReportingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  brandId        String   @db.Uuid
+  brand          MarketingBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  date           DateTime @db.Date
+  storiesCount   Int      @default(0)
+  views          BigInt   @default(0)
+  replies        Int      @default(0)
+  linkClicks     Int      @default(0)
+  shares         Int      @default(0)
+  completionPct  Decimal? @db.Decimal(5, 2)
+  topic          String?  @db.VarChar(255)
+  notes          String?  @db.Text
+  enteredById    String?  @db.Uuid
+  verifiedById   String?  @db.Uuid
+  verifiedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([brandId, date])
+  @@index([periodId, date])
+  @@map("story_daily_metrics")
+}
+
+model MarketingChannelFunnel {
+  id             String   @id @default(uuid()) @db.Uuid
+  periodId       String   @db.Uuid
+  period         MarketingReportingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  channel        String   @db.VarChar(50)
+  traffic        BigInt   @default(0)
+  prospects      Int      @default(0)
+  sampleRequests Int      @default(0)
+  deals          Int      @default(0)
+  spend          Decimal  @default(0) @db.Decimal(18, 2)
+  dealValue      Decimal  @default(0) @db.Decimal(18, 2)
+  notes          String?  @db.Text
+  enteredById    String?  @db.Uuid
+  verifiedById   String?  @db.Uuid
+  verifiedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([periodId, channel])
+  @@map("marketing_channel_funnels")
+}
+
+model MarketingIntegrationConnection {
+  id               String   @id @default(uuid()) @db.Uuid
+  brandId          String   @db.Uuid
+  brand             MarketingBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  provider         String   @db.VarChar(50)
+  status           String   @default("DISCONNECTED") @db.VarChar(30)
+  secretCiphertext String?  @db.Text
+  secretIv         String?  @db.VarChar(255)
+  secretTag        String?  @db.VarChar(255)
+  keyVersion       Int      @default(1)
+  config           Json     @default("{}")
+  scopes           String[] @default([])
+  tokenExpiresAt   DateTime?
+  lastSyncAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  syncJobs MarketingIntegrationSyncJob[]
+
+  @@unique([brandId, provider])
+  @@index([provider, status])
+  @@map("marketing_integration_connections")
+}
+
+model MarketingIntegrationSyncJob {
+  id             String   @id @default(uuid()) @db.Uuid
+  connectionId   String   @db.Uuid
+  connection     MarketingIntegrationConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  brandId        String   @db.Uuid
+  brand          MarketingBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  provider       String   @db.VarChar(50)
+  status         String   @default("QUEUED") @db.VarChar(30)
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  importedCount  Int      @default(0)
+  skippedCount   Int      @default(0)
+  errorCode      String?  @db.VarChar(100)
+  errorMessage   String?  @db.Text
+  triggeredById  String?  @db.Uuid
+  createdAt      DateTime @default(now())
+
+  @@index([connectionId, createdAt])
+  @@index([status, createdAt])
+  @@map("marketing_integration_sync_jobs")
+}
+
+model MarketingIdempotencyKey {
+  id           String   @id @default(uuid()) @db.Uuid
+  scope        String   @db.VarChar(160)
+  key          String   @db.VarChar(160)
+  requestHash  String   @db.VarChar(64)
+  actorId      String?  @db.Uuid
+  responseBody Json
+  statusCode   Int      @default(200)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@unique([scope, key])
+  @@index([expiresAt])
+  @@map("marketing_idempotency_keys")
 }
 
 model MetaAccountConfig {

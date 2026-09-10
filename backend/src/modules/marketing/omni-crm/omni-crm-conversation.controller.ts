@@ -16,7 +16,10 @@ import { DreamlabRrSyncService } from './dreamlab-rr-sync.service';
 import { SendOutboundMessageDto } from './dto/send-outbound-message.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller(['v1/marketing/omni-crm/conversations', 'marketing/omni-crm/conversations'])
+@Controller([
+  'v1/marketing/omni-crm/conversations',
+  'marketing/omni-crm/conversations',
+])
 export class OmniCrmConversationController {
   constructor(
     private readonly service: OmniCrmConversationService,
@@ -36,7 +39,10 @@ export class OmniCrmConversationController {
     UserRole.COMMERCIAL,
     UserRole.DIRECTOR,
   )
-  list(@Query('limit') limit?: string, @Query('assignedTo') assignedTo?: string) {
+  list(
+    @Query('limit') limit?: string,
+    @Query('assignedTo') assignedTo?: string,
+  ) {
     return this.service.listConversations(
       limit ? Math.min(Math.max(parseInt(limit, 10) || 100, 1), 500) : 100,
       assignedTo,

@@ -10,7 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { MaterialsService } from '../services/materials.service';
 import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
@@ -23,7 +28,9 @@ export class MaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List materials with search, category filter, and pagination' })
+  @ApiOperation({
+    summary: 'List materials with search, category filter, and pagination',
+  })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'categoryId', required: false })
   @ApiQuery({ name: 'type', required: false })
@@ -36,11 +43,19 @@ export class MaterialsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.materialsService.findAll({ search, categoryId, type, page, limit });
+    return this.materialsService.findAll({
+      search,
+      categoryId,
+      type,
+      page,
+      limit,
+    });
   }
 
   @Get('active')
-  @ApiOperation({ summary: 'List active materials for quick dropdown/searchable select' })
+  @ApiOperation({
+    summary: 'List active materials for quick dropdown/searchable select',
+  })
   @ApiQuery({ name: 'search', required: false })
   findActive(@Query('search') search?: string) {
     return this.materialsService.findActive(search);
@@ -88,4 +103,5 @@ export class MaterialsController {
   @ApiOperation({ summary: 'Get HPP calculation breakdown for a product' })
   async getHppBreakdown(@Param('id') id: string) {
     return this.materialsService.getHppBreakdown(id);
-  }}
+  }
+}

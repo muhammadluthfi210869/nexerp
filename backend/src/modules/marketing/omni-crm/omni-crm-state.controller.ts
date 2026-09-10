@@ -20,7 +20,14 @@ export class OmniCrmStateController {
   constructor(private readonly service: OmniCrmStateService) {}
 
   @Get('state')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.DIGIMAR, UserRole.COMMERCIAL, UserRole.DIRECTOR)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.MARKETING,
+    UserRole.DIGIMAR,
+    UserRole.COMMERCIAL,
+    UserRole.DIRECTOR,
+  )
   async getState(@Req() req: { user: User }) {
     const row = await this.service.getOrNull(req.user.id);
     if (!row) return { state: null, version: null };
@@ -28,13 +35,24 @@ export class OmniCrmStateController {
   }
 
   @Put('state')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.DIGIMAR, UserRole.COMMERCIAL, UserRole.DIRECTOR)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.MARKETING,
+    UserRole.DIGIMAR,
+    UserRole.COMMERCIAL,
+    UserRole.DIRECTOR,
+  )
   async putState(
     @Req() req: { user: User },
     @Body() body: { state: unknown; version?: number },
   ) {
     try {
-      const updated = await this.service.upsert(req.user.id, body.state, body.version);
+      const updated = await this.service.upsert(
+        req.user.id,
+        body.state,
+        body.version,
+      );
       return { state: updated.state, version: updated.version };
     } catch (e) {
       if ((e as Error).message === 'VERSION_CONFLICT') {

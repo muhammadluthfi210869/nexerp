@@ -12,12 +12,31 @@ describe('MarketingService — Unit', () => {
 
   beforeEach(async () => {
     const defaultMethods = [
-      'findUnique', 'findFirst', 'findMany', 'create', 'update', 'delete', 'count', 'aggregate', 'upsert', 'groupBy',
+      'findUnique',
+      'findFirst',
+      'findMany',
+      'create',
+      'update',
+      'delete',
+      'count',
+      'aggregate',
+      'upsert',
+      'groupBy',
     ];
     const allCollections = [
-      'user', 'salesLead', 'sampleRequest', 'salesOrder', 'invoice',
-      'dailyAdsMetric', 'accountHealthLog', 'contentAsset', 'marketingTarget',
-      'searchVisibilityMetric', 'payment', 'leadActivity', 'activityStream',
+      'user',
+      'salesLead',
+      'sampleRequest',
+      'salesOrder',
+      'invoice',
+      'dailyAdsMetric',
+      'accountHealthLog',
+      'contentAsset',
+      'marketingTarget',
+      'searchVisibilityMetric',
+      'payment',
+      'leadActivity',
+      'activityStream',
     ];
     prisma = {
       $transaction: jest.fn((fn: any) => fn(prisma)),
@@ -126,9 +145,7 @@ describe('MarketingService — Unit', () => {
       prisma.dailyAdsMetric.aggregate.mockResolvedValue({
         _sum: { spend: 2000000 },
       });
-      prisma.salesLead.count
-        .mockResolvedValueOnce(50)
-        .mockResolvedValueOnce(5);
+      prisma.salesLead.count.mockResolvedValueOnce(50).mockResolvedValueOnce(5);
       prisma.sampleRequest.count.mockResolvedValue(20);
 
       const result = await service.getBudgetAudit(
@@ -403,10 +420,9 @@ describe('MarketingService — Unit', () => {
       const result = await service.updateDailyAds('ADS-1', { spend: 750000 });
 
       expect(result).toEqual(mockUpdated);
-      expect(eventEmitter.emit).toHaveBeenCalledWith(
-        'marketing.ads.updated',
-        { id: 'ADS-1' },
-      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith('marketing.ads.updated', {
+        id: 'ADS-1',
+      });
     });
   });
 });

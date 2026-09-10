@@ -238,13 +238,24 @@ export class PurchaseOrdersService {
   }
 
   // Item 71: Get default source (PO or STOCK) based on stock availability
-  async getDefaultSource(materialId: string, qtyNeeded: number, warehouseId?: string): Promise<'PO' | 'STOCK'> {
-    const where: any = { materialId, currentStock: { gt: 0 }, qcStatus: 'GOOD' };
+  async getDefaultSource(
+    materialId: string,
+    qtyNeeded: number,
+    warehouseId?: string,
+  ): Promise<'PO' | 'STOCK'> {
+    const where: any = {
+      materialId,
+      currentStock: { gt: 0 },
+      qcStatus: 'GOOD',
+    };
     if (warehouseId) {
       where.location = { warehouseId };
     }
     const inventories = await this.prisma.materialInventory.findMany({ where });
-    const totalStock = inventories.reduce((sum, inv) => sum + Number(inv.currentStock), 0);
+    const totalStock = inventories.reduce(
+      (sum, inv) => sum + Number(inv.currentStock),
+      0,
+    );
     return totalStock >= qtyNeeded ? 'STOCK' : 'PO';
   }
 
@@ -256,14 +267,21 @@ export class PurchaseOrdersService {
     warehouseId?: string,
   ): Promise<{ valid: boolean; error?: string }> {
     if (source !== 'STOCK') return { valid: true };
-    
-    const where: any = { materialId, currentStock: { gt: 0 }, qcStatus: 'GOOD' };
+
+    const where: any = {
+      materialId,
+      currentStock: { gt: 0 },
+      qcStatus: 'GOOD',
+    };
     if (warehouseId) {
       where.location = { warehouseId };
     }
     const inventories = await this.prisma.materialInventory.findMany({ where });
-    const totalStock = inventories.reduce((sum, inv) => sum + Number(inv.currentStock), 0);
-    
+    const totalStock = inventories.reduce(
+      (sum, inv) => sum + Number(inv.currentStock),
+      0,
+    );
+
     if (totalStock < qty) {
       return {
         valid: false,
@@ -336,7 +354,9 @@ export class PurchaseOrdersService {
         materialId,
         po: { status: 'APPROVED', updatedAt: { gte: ninetyDaysAgo } },
       },
-      include: { po: { select: { poNumber: true, updatedAt: true, supplier: true } } },
+      include: {
+        po: { select: { poNumber: true, updatedAt: true, supplier: true } },
+      },
       orderBy: { po: { updatedAt: 'desc' } },
     });
 
@@ -369,6 +389,11 @@ export class PurchaseOrdersService {
       manualOverrideHpp: product?.manualOverrideHpp,
       effectiveHpp: product?.manualOverrideHpp ?? product?.autoCalculatedHpp,
       breakdown,
-      summary: { totalQty, totalValue, averageHpp: totalQty > 0 ? totalValue / totalQty : null },
+      summary: {
+        totalQty,
+        totalValue,
+        averageHpp: totalQty > 0 ? totalValue / totalQty : null,
+      },
     };
-  }}
+  }
+}

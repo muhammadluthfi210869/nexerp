@@ -1,6 +1,9 @@
-﻿import { Logger, Injectable,
+﻿import {
+  Logger,
+  Injectable,
   NotFoundException,
-  BadRequestException, } from '@nestjs/common';
+  BadRequestException,
+} from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
@@ -895,7 +898,15 @@ export class ScmService {
   async getHppRequests() {
     const leads = await this.prisma.salesLead.findMany({
       where: {
-        status: { in: ['SAMPLE_REQUESTED', 'SAMPLE_SENT', 'SAMPLE_APPROVED', 'NEGOTIATION', 'SPK_SIGNED'] },
+        status: {
+          in: [
+            'SAMPLE_REQUESTED',
+            'SAMPLE_SENT',
+            'SAMPLE_APPROVED',
+            'NEGOTIATION',
+            'SPK_SIGNED',
+          ],
+        },
       },
       include: {
         sampleRequests: {
@@ -911,12 +922,17 @@ export class ScmService {
     return leads.map((l, index) => {
       const sample = l.sampleRequests[0];
       const moq = l.moq > 0 ? l.moq : 5000;
-      const calculatedHpp = sample?.targetHpp ? Number(sample.targetHpp) : (l.unitPrice ? Number(l.unitPrice) : 18500);
-      const status = l.status === 'SAMPLE_APPROVED' || l.status === 'SPK_SIGNED'
-        ? 'APPROVED'
-        : l.status === 'SAMPLE_SENT'
-        ? 'IN_REVIEW'
-        : 'PENDING';
+      const calculatedHpp = sample?.targetHpp
+        ? Number(sample.targetHpp)
+        : l.unitPrice
+          ? Number(l.unitPrice)
+          : 18500;
+      const status =
+        l.status === 'SAMPLE_APPROVED' || l.status === 'SPK_SIGNED'
+          ? 'APPROVED'
+          : l.status === 'SAMPLE_SENT'
+            ? 'IN_REVIEW'
+            : 'PENDING';
 
       return {
         id: l.id,
@@ -925,9 +941,12 @@ export class ScmService {
         customerId: l.id,
         customerName: l.clientName,
         productId: sample?.id || l.id,
-        productName: sample?.productName || l.productInterest || 'Produk Maklon Kosmetik',
+        productName:
+          sample?.productName || l.productInterest || 'Produk Maklon Kosmetik',
         formulaId: l.formulaId || 'formula-std',
-        formulaName: sample ? `Formula ${sample.productName}` : 'Formula Kosmetik Standar CPKB',
+        formulaName: sample
+          ? `Formula ${sample.productName}`
+          : 'Formula Kosmetik Standar CPKB',
         moq: moq,
         status: status,
         calculatedHpp: calculatedHpp,
@@ -948,7 +967,9 @@ export class ScmService {
         where: { id: lead.id },
         data: {
           moq: Number(dto.moq) || lead.moq,
-          notes: dto.notes ? `${lead.notes || ''} | HPP Req: ${dto.notes}` : lead.notes,
+          notes: dto.notes
+            ? `${lead.notes || ''} | HPP Req: ${dto.notes}`
+            : lead.notes,
         },
       });
       return { id: lead.id, success: true };
@@ -967,7 +988,8 @@ export class ScmService {
         where: { id: lead.id },
         data: {
           status: status === 'APPROVED' ? 'SAMPLE_APPROVED' : lead.status,
-          unitPrice: calculatedHpp !== undefined ? calculatedHpp : lead.unitPrice,
+          unitPrice:
+            calculatedHpp !== undefined ? calculatedHpp : lead.unitPrice,
         },
       });
     }
@@ -981,4 +1003,5 @@ export class ScmService {
       where: { status: 'PENDING_APPROVAL' },
     });
     return { count };
-  }}
+  }
+}

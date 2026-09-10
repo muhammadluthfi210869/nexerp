@@ -2,10 +2,25 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OutboundCounterService } from '../outbound-counter.service';
 
 function mockPrisma(overrides: Record<string, any> = {}) {
-  const defaultMethods = ['findUnique', 'findFirst', 'findMany', 'create', 'update', 'delete', 'count', 'aggregate'];
+  const defaultMethods = [
+    'findUnique',
+    'findFirst',
+    'findMany',
+    'create',
+    'update',
+    'delete',
+    'count',
+    'aggregate',
+  ];
   const collections = [
-    'leadCapture', 'leadMessage', 'leadValidationLog', 'leadAttribute',
-    'user', 'account', 'activityStream', 'bussdevStaff',
+    'leadCapture',
+    'leadMessage',
+    'leadValidationLog',
+    'leadAttribute',
+    'user',
+    'account',
+    'activityStream',
+    'bussdevStaff',
   ];
 
   const prisma: any = {
@@ -44,8 +59,16 @@ describe('OutboundCounterService', () => {
 
   it('transitions to COLD on first reply', async () => {
     prisma.leadCapture.update
-      .mockResolvedValueOnce({ id: 'lead-1', outboundReplyCount: 1, workflowStatus: 'NEW_LEAD' })
-      .mockResolvedValueOnce({ id: 'lead-1', outboundReplyCount: 1, workflowStatus: 'COLD' });
+      .mockResolvedValueOnce({
+        id: 'lead-1',
+        outboundReplyCount: 1,
+        workflowStatus: 'NEW_LEAD',
+      })
+      .mockResolvedValueOnce({
+        id: 'lead-1',
+        outboundReplyCount: 1,
+        workflowStatus: 'COLD',
+      });
     prisma.leadValidationLog.create.mockResolvedValue({});
 
     await service.recordBusdevReply('lead-1');
@@ -62,8 +85,16 @@ describe('OutboundCounterService', () => {
 
   it('transitions to WARM on fifth reply', async () => {
     prisma.leadCapture.update
-      .mockResolvedValueOnce({ id: 'lead-2', outboundReplyCount: 5, workflowStatus: 'COLD' })
-      .mockResolvedValueOnce({ id: 'lead-2', outboundReplyCount: 5, workflowStatus: 'WARM' });
+      .mockResolvedValueOnce({
+        id: 'lead-2',
+        outboundReplyCount: 5,
+        workflowStatus: 'COLD',
+      })
+      .mockResolvedValueOnce({
+        id: 'lead-2',
+        outboundReplyCount: 5,
+        workflowStatus: 'WARM',
+      });
     prisma.leadValidationLog.create.mockResolvedValue({});
 
     await service.recordBusdevReply('lead-2');
@@ -79,8 +110,11 @@ describe('OutboundCounterService', () => {
   });
 
   it('does NOT transition to HOT at 10th reply', async () => {
-    prisma.leadCapture.update
-      .mockResolvedValueOnce({ id: 'lead-3', outboundReplyCount: 10, workflowStatus: 'WARM' });
+    prisma.leadCapture.update.mockResolvedValueOnce({
+      id: 'lead-3',
+      outboundReplyCount: 10,
+      workflowStatus: 'WARM',
+    });
     prisma.leadValidationLog.create.mockResolvedValue({});
 
     await service.recordBusdevReply('lead-3');

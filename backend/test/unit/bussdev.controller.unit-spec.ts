@@ -200,7 +200,10 @@ describe('BussdevController — Unit', () => {
     it('returns all leads', async () => {
       const mockLeads = [{ id: 'L1', clientName: 'Client A' }];
       mockService.getLeads.mockResolvedValue(mockLeads);
-      const result = await controller.getLeads({ user: { id: 'U1' } }, undefined);
+      const result = await controller.getLeads(
+        { user: { id: 'U1' } },
+        undefined,
+      );
       expect(result).toHaveLength(1);
     });
   });

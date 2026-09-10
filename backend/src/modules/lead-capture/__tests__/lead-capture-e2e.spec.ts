@@ -39,11 +39,25 @@ describe('Lead validation E2E', () => {
 
   it('classifyIntent accepts skincare prospect', async () => {
     const responses = new Map([
-      ['undefined/chat/completions', { choices: [{ message: { content: '{"intent":"PROSPEK","confidence":0.92,"reasoning":"calon customer nyata"}' } }] }],
+      [
+        'undefined/chat/completions',
+        {
+          choices: [
+            {
+              message: {
+                content:
+                  '{"intent":"PROSPEK","confidence":0.92,"reasoning":"calon customer nyata"}',
+              },
+            },
+          ],
+        },
+      ],
     ]);
     const restore = mockFetch(responses);
     try {
-      const result = await leadCapture.classifyIntent('Halo, saya mau tanya soal maklon skincare untuk brand saya');
+      const result = await leadCapture.classifyIntent(
+        'Halo, saya mau tanya soal maklon skincare untuk brand saya',
+      );
       expect(result.intent).toBe('PROSPEK');
       expect(result.confidence).toBeGreaterThan(0.5);
     } finally {
@@ -58,11 +72,20 @@ describe('Lead validation E2E', () => {
 
   it('extractName finds name in conversation', async () => {
     const responses = new Map([
-      ['undefined/chat/completions', { choices: [{ message: { content: '{"name":"Siti","confidence":0.92}' } }] }],
+      [
+        'undefined/chat/completions',
+        {
+          choices: [
+            { message: { content: '{"name":"Siti","confidence":0.92}' } },
+          ],
+        },
+      ],
     ]);
     const restore = mockFetch(responses);
     try {
-      const result = await leadCapture.extractName('Halo, nama saya Siti dari Jakarta');
+      const result = await leadCapture.extractName(
+        'Halo, nama saya Siti dari Jakarta',
+      );
       expect(result.name).toBe('Siti');
       expect(result.confidence).toBeGreaterThan(0.85);
     } finally {
@@ -72,11 +95,18 @@ describe('Lead validation E2E', () => {
 
   it('extractName returns null for product inquiry without name', async () => {
     const responses = new Map([
-      ['undefined/chat/completions', { choices: [{ message: { content: '{"name":null,"confidence":0.0}' } }] }],
+      [
+        'undefined/chat/completions',
+        {
+          choices: [{ message: { content: '{"name":null,"confidence":0.0}' } }],
+        },
+      ],
     ]);
     const restore = mockFetch(responses);
     try {
-      const result = await leadCapture.extractName('Berapa harga maklon skincare? MOQ berapa?');
+      const result = await leadCapture.extractName(
+        'Berapa harga maklon skincare? MOQ berapa?',
+      );
       expect(result.name).toBeNull();
     } finally {
       (globalThis as any).fetch = restore;

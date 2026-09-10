@@ -1,6 +1,9 @@
-﻿import { Logger, Injectable,
+﻿import {
+  Logger,
+  Injectable,
   BadRequestException,
-  NotFoundException, } from '@nestjs/common';
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
@@ -1517,7 +1520,9 @@ export class WarehouseService {
       const adjustment = await tx.stockAdjustment.create({
         data: {
           type:
-            data.type === 'WRITE_OFF' || data.type === 'DISPOSAL' ? 'OUT' : 'IN',
+            data.type === 'WRITE_OFF' || data.type === 'DISPOSAL'
+              ? 'OUT'
+              : 'IN',
           warehouseId: data.warehouseId,
           accountId:
             data.accountId ||
@@ -1657,7 +1662,8 @@ export class WarehouseService {
           woNumber,
           batchNumber: woNumber,
           soCode: `SO-${key.slice(0, 6).toUpperCase()}`,
-          productName: req.workOrder?.lead?.brandName || 'Produk Maklon Kosmetik',
+          productName:
+            req.workOrder?.lead?.brandName || 'Produk Maklon Kosmetik',
           requester: 'PRODUCTION (PPIC)',
           date: new Date().toISOString().split('T')[0],
           status: 'WAITING' as const,
@@ -1831,7 +1837,10 @@ export class WarehouseService {
       include: { material: { select: { bahanType: true } } },
     });
 
-    const summary = new Map<string, { totalBagus: number; totalReject: number; count: number }>();
+    const summary = new Map<
+      string,
+      { totalBagus: number; totalReject: number; count: number }
+    >();
 
     for (const inv of inventories) {
       const bt = inv.material.bahanType || 'LAINNYA';
@@ -1852,4 +1861,5 @@ export class WarehouseService {
       bahanType,
       ...data,
     }));
-  }}
+  }
+}

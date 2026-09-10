@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBankReconciliationsDto {
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   id: string;
 
-  @ApiProperty({ example: "uuid" })
+  @ApiProperty({ example: 'uuid' })
   bankAccountId: string;
 
-  @ApiProperty({ example: "2026-09-01" })
+  @ApiProperty({ example: '2026-09-01' })
   periodStart: string;
 
-  @ApiProperty({ example: "2026-09-30" })
+  @ApiProperty({ example: '2026-09-30' })
   periodEnd: string;
 
   @ApiProperty({ example: 100000000 })
@@ -22,6 +22,6 @@ export class CreateBankReconciliationsDto {
   @ApiProperty({ example: 0 })
   diff: number;
 
-  @ApiProperty({ example: "IN_PROGRESS" })
+  @ApiProperty({ example: 'IN_PROGRESS' })
   status: string;
 }

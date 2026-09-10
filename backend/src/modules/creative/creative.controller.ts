@@ -189,7 +189,7 @@ export class CreativeController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
   @Patch('task/:id/client-review')
   clientReview(@Param('id') id: string, @Body() dto: ClientReviewDto) {
-    return this.creativeService.clientReview(id, dto.status!, dto.notes!);
+    return this.creativeService.clientReview(id, dto.status!, dto.notes);
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)

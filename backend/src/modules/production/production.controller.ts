@@ -54,7 +54,9 @@ export class ProductionController {
 
   @Get('work-orders')
   async getWorkOrders(@Req() req: any, @Query('mine') mine?: string) {
-    return this.productionService.getWorkOrders(mine === 'true' ? req.user.id : undefined);
+    return this.productionService.getWorkOrders(
+      mine === 'true' ? req.user.id : undefined,
+    );
   }
 
   @Get('active')

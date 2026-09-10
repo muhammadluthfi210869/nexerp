@@ -17,7 +17,9 @@ export class DreamlabRrSyncService implements OnModuleInit {
     const connectionString = process.env.DREAMLAB_DB_URL;
     if (!connectionString) {
       this.pool = null;
-      this.logger.warn('DREAMLAB_DB_URL is not configured; website sync is disabled');
+      this.logger.warn(
+        'DREAMLAB_DB_URL is not configured; website sync is disabled',
+      );
       return;
     }
 
@@ -48,13 +50,18 @@ export class DreamlabRrSyncService implements OnModuleInit {
   async getDreamlabRoundRobinSummary() {
     if (!this.pool) this.initPool();
     if (!this.pool) {
-      return { success: false, error: 'Database website DreamLab tidak terhubung' };
+      return {
+        success: false,
+        error: 'Database website DreamLab tidak terhubung',
+      };
     }
 
     try {
       const client = await this.pool.connect();
       try {
-        const busdevsRes = await client.query('SELECT * FROM busdevs ORDER BY id ASC');
+        const busdevsRes = await client.query(
+          'SELECT * FROM busdevs ORDER BY id ASC',
+        );
         const breakdownRes = await client.query(`
           SELECT assigned_to, assigned_phone, count(*)::int as count 
           FROM leads 
@@ -62,8 +69,12 @@ export class DreamlabRrSyncService implements OnModuleInit {
           GROUP BY assigned_to, assigned_phone 
           ORDER BY count DESC
         `);
-        const totalRes = await client.query('SELECT count(*)::int as total FROM leads');
-        const visitorsTotalRes = await client.query('SELECT count(*)::int as total FROM visitor_assignments');
+        const totalRes = await client.query(
+          'SELECT count(*)::int as total FROM leads',
+        );
+        const visitorsTotalRes = await client.query(
+          'SELECT count(*)::int as total FROM visitor_assignments',
+        );
         const visitorsBreakdownRes = await client.query(`
           SELECT agent_id, count(*)::int as count
           FROM visitor_assignments
@@ -82,13 +93,16 @@ export class DreamlabRrSyncService implements OnModuleInit {
         }));
 
         const findAgent = (sourceValue: unknown) => {
-          const value = String(sourceValue ?? '').trim().toLowerCase();
+          const value = String(sourceValue ?? '')
+            .trim()
+            .toLowerCase();
           if (!value) return undefined;
-          return activeAgents.find((agent) =>
-            agent.sourceId.toLowerCase() === value ||
-            agent.name.toLowerCase() === value ||
-            agent.name.toLowerCase().includes(value) ||
-            value.includes(agent.name.toLowerCase()),
+          return activeAgents.find(
+            (agent) =>
+              agent.sourceId.toLowerCase() === value ||
+              agent.name.toLowerCase() === value ||
+              agent.name.toLowerCase().includes(value) ||
+              value.includes(agent.name.toLowerCase()),
           );
         };
 
@@ -131,12 +145,16 @@ export class DreamlabRrSyncService implements OnModuleInit {
 
     const client = await this.pool.connect();
     try {
-      this.logger.log('Memulai sinkronisasi data leads dari website DreamLab...');
+      this.logger.log(
+        'Memulai sinkronisasi data leads dari website DreamLab...',
+      );
 
       // 1. Ambil summary per busdev
       const summary = await this.getDreamlabRoundRobinSummary();
       if (!summary.success) {
-        throw new Error(summary.error || 'Gagal membaca summary dari database website');
+        throw new Error(
+          summary.error || 'Gagal membaca summary dari database website',
+        );
       }
 
       // 2. Upsert agen-agen aktif ke tabel RoundRobinAgent ERP
@@ -192,10 +210,14 @@ export class DreamlabRrSyncService implements OnModuleInit {
         const trackingCode = row.tracking_code || `DL-WS-${row.id}`;
         const sourceAgent = (summary.activeAgents || []).find((agent) => {
           const assignedTo = String(row.assigned_to || '').toLowerCase();
-          return agent.sourceId.toLowerCase() === assignedTo || agent.name.toLowerCase() === assignedTo;
+          return (
+            agent.sourceId.toLowerCase() === assignedTo ||
+            agent.name.toLowerCase() === assignedTo
+          );
         });
         const assignedName = sourceAgent?.name || row.assigned_to || null;
-        const assignedPhone = sourceAgent?.phone || this.normalizePhone(row.assigned_phone || '');
+        const assignedPhone =
+          sourceAgent?.phone || this.normalizePhone(row.assigned_phone || '');
         const clientPhone = row.hp ? this.normalizePhone(row.hp) : null;
         const notesParts = [
           row.source ? `Sumber: ${row.source}` : '',
@@ -211,7 +233,11 @@ export class DreamlabRrSyncService implements OnModuleInit {
         });
 
         const leadData = {
-          fullName: row.nama || (row.perusahaan ? `${row.perusahaan} (Lead)` : `Prospek ${trackingCode}`),
+          fullName:
+            row.nama ||
+            (row.perusahaan
+              ? `${row.perusahaan} (Lead)`
+              : `Prospek ${trackingCode}`),
           company: row.perusahaan || null,
           phone: clientPhone,
           source: 'WEBSITE' as any,
@@ -253,7 +279,9 @@ export class DreamlabRrSyncService implements OnModuleInit {
         }
       }
 
-      this.logger.log(`Sinkronisasi selesai: ${importedCount} leads baru diimpor, ${updatedCount} leads terupdate dengan histori komprehensif`);
+      this.logger.log(
+        `Sinkronisasi selesai: ${importedCount} leads baru diimpor, ${updatedCount} leads terupdate dengan histori komprehensif`,
+      );
 
       return {
         success: true,

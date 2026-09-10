@@ -256,9 +256,9 @@ describe('QCAuditsService — Unit', () => {
     it('returns total, passed, failed, quarantine counts', async () => {
       mockPrisma.qCAudit.count
         .mockResolvedValueOnce(100) // total
-        .mockResolvedValueOnce(80)  // passed
-        .mockResolvedValueOnce(15)  // failed
-        .mockResolvedValueOnce(5);  // quarantine
+        .mockResolvedValueOnce(80) // passed
+        .mockResolvedValueOnce(15) // failed
+        .mockResolvedValueOnce(5); // quarantine
 
       const result = await service.getDashboard();
 

@@ -24,51 +24,89 @@ const FIXED_ISO = 'T08:00:00.000Z'; // jam selesai arbitrer — hanya tanggal ya
 
 /** Tanggal "YYYY-MM-DD" relatif terhadap NOW (kalender lokal). */
 function iso(daysFromNow: number): string {
-  const d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + daysFromNow);
+  const d = new Date(
+    NOW.getFullYear(),
+    NOW.getMonth(),
+    NOW.getDate() + daysFromNow,
+  );
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-function task(partial: Partial<SlaTaskShape> & { dueDate: string }): SlaTaskShape {
+function task(
+  partial: Partial<SlaTaskShape> & { dueDate: string },
+): SlaTaskShape {
   return { status: 'Not started', completedAt: undefined, ...partial };
 }
 
 describe('deriveSla — task yang sudah selesai (Done)', () => {
-  const cases: Array<{ name: string; task: SlaTaskShape; expected: SlaStatus }> = [
+  const cases: Array<{
+    name: string;
+    task: SlaTaskShape;
+    expected: SlaStatus;
+  }> = [
     {
       name: 'selesai jauh SEBELUM due → Healthy',
-      task: task({ status: 'Done', dueDate: iso(0), completedAt: `${iso(-5)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(0),
+        completedAt: `${iso(-5)}${FIXED_ISO}`,
+      }),
       expected: 'Healthy',
     },
     {
       name: 'selesai TEPAT di due date → Healthy (regresi 5d42f87)',
-      task: task({ status: 'Done', dueDate: iso(0), completedAt: `${iso(0)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(0),
+        completedAt: `${iso(0)}${FIXED_ISO}`,
+      }),
       expected: 'Healthy',
     },
     {
       name: 'selesai 1 hari lewat due → Watch',
-      task: task({ status: 'Done', dueDate: iso(0), completedAt: `${iso(1)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(0),
+        completedAt: `${iso(1)}${FIXED_ISO}`,
+      }),
       expected: 'Watch',
     },
     {
       name: 'selesai 2 hari lewat due → Late',
-      task: task({ status: 'Done', dueDate: iso(0), completedAt: `${iso(2)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(0),
+        completedAt: `${iso(2)}${FIXED_ISO}`,
+      }),
       expected: 'Late',
     },
     {
       name: 'selesai 10 hari lewat due → Late',
-      task: task({ status: 'Done', dueDate: iso(0), completedAt: `${iso(10)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(0),
+        completedAt: `${iso(10)}${FIXED_ISO}`,
+      }),
       expected: 'Late',
     },
     {
       name: 'task on-time di MASA LALU (completedAt = due 30 hari lalu) tetap Healthy walau now jauh',
-      task: task({ status: 'Done', dueDate: iso(-30), completedAt: `${iso(-30)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(-30),
+        completedAt: `${iso(-30)}${FIXED_ISO}`,
+      }),
       expected: 'Healthy',
     },
     {
       name: 'task Watch di masa lalu (completedAt 1 hari lewat due) tetap Watch walau now jauh',
-      task: task({ status: 'Done', dueDate: iso(-30), completedAt: `${iso(-29)}${FIXED_ISO}` }),
+      task: task({
+        status: 'Done',
+        dueDate: iso(-30),
+        completedAt: `${iso(-29)}${FIXED_ISO}`,
+      }),
       expected: 'Watch',
     },
     {
@@ -93,48 +131,144 @@ describe('deriveSla — task terbuka (belum Done)', () => {
   ];
 
   it.each(cases)('$name → $expected', ({ dueDate, expected }) => {
-    expect(deriveSla(task({ status: 'Not started', dueDate }), NOW)).toBe(expected);
+    expect(deriveSla(task({ status: 'Not started', dueDate }), NOW)).toBe(
+      expected,
+    );
   });
 });
 
 describe('deriveSla — status non-kanonik (defensif)', () => {
   it('status asing apa pun → Healthy, tidak melempar', () => {
-    expect(deriveSla(task({ status: 'Cancelled', dueDate: iso(-10) }), NOW)).toBe('Healthy');
-    expect(deriveSla(task({ status: 'Backlog', dueDate: iso(-10) }), NOW)).toBe('Healthy');
-    expect(deriveSla(task({ status: 'To Do', dueDate: iso(-10) }), NOW)).toBe('Healthy');
+    expect(
+      deriveSla(task({ status: 'Cancelled', dueDate: iso(-10) }), NOW),
+    ).toBe('Healthy');
+    expect(deriveSla(task({ status: 'Backlog', dueDate: iso(-10) }), NOW)).toBe(
+      'Healthy',
+    );
+    expect(deriveSla(task({ status: 'To Do', dueDate: iso(-10) }), NOW)).toBe(
+      'Healthy',
+    );
   });
 });
 
 describe('calcDisciplinePoints', () => {
-  const cases: Array<{ name: string; status: SlaTaskShape['status']; dueDate: string; completedAt?: string; expected: number }> = [
-    { name: 'Done tepat waktu → 100', status: 'Done', dueDate: iso(0), completedAt: `${iso(0)}${FIXED_ISO}`, expected: 100 },
-    { name: 'Done telat 1 hari → 80', status: 'Done', dueDate: iso(0), completedAt: `${iso(1)}${FIXED_ISO}`, expected: 80 },
-    { name: 'Done telat 2 hari → 70', status: 'Done', dueDate: iso(0), completedAt: `${iso(2)}${FIXED_ISO}`, expected: 70 },
-    { name: 'Done telat 3 hari → 60', status: 'Done', dueDate: iso(0), completedAt: `${iso(3)}${FIXED_ISO}`, expected: 60 },
-    { name: 'Done telat 4 hari → 40', status: 'Done', dueDate: iso(0), completedAt: `${iso(4)}${FIXED_ISO}`, expected: 40 },
-    { name: 'Open lewat 1 hari → 80', status: 'Working on it', dueDate: iso(-1), expected: 80 },
-    { name: 'Open lewat 2 hari → 70', status: 'Working on it', dueDate: iso(-2), expected: 70 },
-    { name: 'Open due hari ini → 100', status: 'Working on it', dueDate: iso(0), expected: 100 },
-    { name: 'Status non-kanonik → 0', status: 'Cancelled', dueDate: iso(-10), expected: 0 },
+  const cases: Array<{
+    name: string;
+    status: SlaTaskShape['status'];
+    dueDate: string;
+    completedAt?: string;
+    expected: number;
+  }> = [
+    {
+      name: 'Done tepat waktu → 100',
+      status: 'Done',
+      dueDate: iso(0),
+      completedAt: `${iso(0)}${FIXED_ISO}`,
+      expected: 100,
+    },
+    {
+      name: 'Done telat 1 hari → 80',
+      status: 'Done',
+      dueDate: iso(0),
+      completedAt: `${iso(1)}${FIXED_ISO}`,
+      expected: 80,
+    },
+    {
+      name: 'Done telat 2 hari → 70',
+      status: 'Done',
+      dueDate: iso(0),
+      completedAt: `${iso(2)}${FIXED_ISO}`,
+      expected: 70,
+    },
+    {
+      name: 'Done telat 3 hari → 60',
+      status: 'Done',
+      dueDate: iso(0),
+      completedAt: `${iso(3)}${FIXED_ISO}`,
+      expected: 60,
+    },
+    {
+      name: 'Done telat 4 hari → 40',
+      status: 'Done',
+      dueDate: iso(0),
+      completedAt: `${iso(4)}${FIXED_ISO}`,
+      expected: 40,
+    },
+    {
+      name: 'Open lewat 1 hari → 80',
+      status: 'Working on it',
+      dueDate: iso(-1),
+      expected: 80,
+    },
+    {
+      name: 'Open lewat 2 hari → 70',
+      status: 'Working on it',
+      dueDate: iso(-2),
+      expected: 70,
+    },
+    {
+      name: 'Open due hari ini → 100',
+      status: 'Working on it',
+      dueDate: iso(0),
+      expected: 100,
+    },
+    {
+      name: 'Status non-kanonik → 0',
+      status: 'Cancelled',
+      dueDate: iso(-10),
+      expected: 0,
+    },
   ];
 
-  it.each(cases)('$name → $expected', ({ status, dueDate, completedAt, expected }) => {
-    expect(calcDisciplinePoints(task({ status, dueDate, completedAt }), NOW)).toBe(expected);
-  });
+  it.each(cases)(
+    '$name → $expected',
+    ({ status, dueDate, completedAt, expected }) => {
+      expect(
+        calcDisciplinePoints(task({ status, dueDate, completedAt }), NOW),
+      ).toBe(expected);
+    },
+  );
 });
 
 describe('calendarDayDiff — perbandingan HARI KALENDER lokal (bug timezone)', () => {
-  const cases: Array<{ name: string; from: string; to: string; expected: number }> = [
-    { name: 'hari yang sama → 0', from: '2026-08-05', to: '2026-08-05', expected: 0 },
+  const cases: Array<{
+    name: string;
+    from: string;
+    to: string;
+    expected: number;
+  }> = [
+    {
+      name: 'hari yang sama → 0',
+      from: '2026-08-05',
+      to: '2026-08-05',
+      expected: 0,
+    },
     { name: 'besok → 1', from: '2026-08-06', to: '2026-08-05', expected: 1 },
-    { name: 'kemarin → -1', from: '2026-08-04', to: '2026-08-05', expected: -1 },
-    { name: 'lintas bulan (31 Jul → 1 Aug) → 1', from: '2026-08-01', to: '2026-07-31', expected: 1 },
-    { name: 'lintas tahun (1 Jan → 31 Des) → 1', from: '2026-01-01', to: '2025-12-31', expected: 1 },
+    {
+      name: 'kemarin → -1',
+      from: '2026-08-04',
+      to: '2026-08-05',
+      expected: -1,
+    },
+    {
+      name: 'lintas bulan (31 Jul → 1 Aug) → 1',
+      from: '2026-08-01',
+      to: '2026-07-31',
+      expected: 1,
+    },
+    {
+      name: 'lintas tahun (1 Jan → 31 Des) → 1',
+      from: '2026-01-01',
+      to: '2025-12-31',
+      expected: 1,
+    },
     { name: '7 hari → 7', from: '2026-08-12', to: '2026-08-05', expected: 7 },
   ];
 
   it.each(cases)('$name', ({ from, to, expected }) => {
-    expect(calendarDayDiff(parseLocalDate(from), parseLocalDate(to))).toBe(expected);
+    expect(calendarDayDiff(parseLocalDate(from), parseLocalDate(to))).toBe(
+      expected,
+    );
   });
 });
 
@@ -162,7 +296,11 @@ describe('toLocalDateString', () => {
 
 describe('slaReferenceDate', () => {
   it('task Done memakai completedAt (historis) bukan now', () => {
-    const t = task({ status: 'Done', dueDate: iso(0), completedAt: `${iso(-3)}${FIXED_ISO}` });
+    const t = task({
+      status: 'Done',
+      dueDate: iso(0),
+      completedAt: `${iso(-3)}${FIXED_ISO}`,
+    });
     expect(slaReferenceDate(t, NOW).getDate()).toBe(NOW.getDate() - 3);
   });
 

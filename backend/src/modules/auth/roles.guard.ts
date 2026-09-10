@@ -28,11 +28,9 @@ export class RolesGuard implements CanActivate {
       `[RolesGuard] User: ${user.email}, Roles: ${JSON.stringify(user.roles)}, Required: ${JSON.stringify(requiredRoles)}`,
     );
 
-    // Super admin and Director can access everything (Director view is filtered in UI)
-    if (
-      user.roles.includes(UserRole.SUPER_ADMIN) ||
-      user.roles.includes(UserRole.DIRECTOR)
-    ) {
+    // SUPER_ADMIN is the only global bypass. Other roles, including DIRECTOR,
+    // must be explicitly granted by the route contract.
+    if (user.roles.includes(UserRole.SUPER_ADMIN)) {
       return true;
     }
 

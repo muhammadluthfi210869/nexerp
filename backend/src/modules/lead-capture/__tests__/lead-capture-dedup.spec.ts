@@ -87,7 +87,10 @@ describe('LeadCaptureService — upsertOrphanLead (dedup Fase 2.1 + log Fase 2.2
     };
     prismaMock.leadCapture.create.mockResolvedValue(newLead);
     prismaMock.leadCapture.findUnique.mockResolvedValue(newLead);
-    prismaMock.leadCapture.update.mockResolvedValue({ ...newLead, status: 'WA_CONTACTED' });
+    prismaMock.leadCapture.update.mockResolvedValue({
+      ...newLead,
+      status: 'WA_CONTACTED',
+    });
 
     await service.upsertOrphanLead('6289531681278', 'Luthfi', 'haloo');
 
@@ -119,7 +122,10 @@ describe('LeadCaptureService — upsertOrphanLead (dedup Fase 2.1 + log Fase 2.2
   });
 
   it('tidak membuat baris LeadMessage duplikat kalau msgId sudah tercatat (redelivery webhook)', async () => {
-    prismaMock.leadMessage.findUnique.mockResolvedValue({ id: 'msg-existing', msgId: 'wamid.ABC' });
+    prismaMock.leadMessage.findUnique.mockResolvedValue({
+      id: 'msg-existing',
+      msgId: 'wamid.ABC',
+    });
 
     const existing = {
       id: 'lead-1',
@@ -131,13 +137,20 @@ describe('LeadCaptureService — upsertOrphanLead (dedup Fase 2.1 + log Fase 2.2
       createdAt: new Date(),
     };
     prismaMock.leadCapture.findFirst.mockResolvedValue(existing);
-    prismaMock.leadCapture.update.mockResolvedValue({ ...existing, waMessage: 'haloo' });
+    prismaMock.leadCapture.update.mockResolvedValue({
+      ...existing,
+      waMessage: 'haloo',
+    });
 
     // Webhook yang SAMA dikirim ulang oleh Meta (msgId sama)
-    await service.upsertOrphanLead('6289531681278', 'Luthfi', 'haloo', 'wamid.ABC');
+    await service.upsertOrphanLead(
+      '6289531681278',
+      'Luthfi',
+      'haloo',
+      'wamid.ABC',
+    );
 
     // Pesan tidak dicatat dua kali
     expect(prismaMock.leadMessage.create).not.toHaveBeenCalled();
   });
 });
-

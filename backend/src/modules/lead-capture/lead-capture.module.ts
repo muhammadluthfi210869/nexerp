@@ -8,7 +8,18 @@ import { OutboundCounterService } from './outbound-counter.service';
 
 @Module({
   controllers: [LeadCaptureController],
-  providers: [LeadCaptureService, KommoService, KommoAutoSyncService, AutoGreetService, OutboundCounterService],
-  exports: [LeadCaptureService, KommoService, AutoGreetService, OutboundCounterService],
+  providers: [
+    LeadCaptureService,
+    KommoService,
+    KommoAutoSyncService,
+    AutoGreetService,
+    OutboundCounterService,
+  ],
+  exports: [
+    LeadCaptureService,
+    KommoService,
+    AutoGreetService,
+    OutboundCounterService,
+  ],
 })
 export class LeadCaptureModule {}
