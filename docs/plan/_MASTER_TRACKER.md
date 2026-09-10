@@ -15,13 +15,13 @@
 | Phase 0: Evidence Freeze | 100% | ✅ DONE |
 | Phase 1: Backend Foundation | 80% | 🟡 Mostly done, security/service layer remain |
 | Phase 2: Service Layer Integrity | 0% | ⚪ Not started |
-| Phase 3: Frontend Repair | 38% | 🟢 6 functions DONE (/samples, /master, /approvals, /quality, /penjualan, /pembelian) |
+| Phase 3: Frontend Repair | 46% | 🟢 7 functions DONE (+ /inventory) |
 | Phase 4: State Machine UI | 0% | ⚪ Not started |
 | Phase 5: Test Infrastructure | 50% | 🟡 Jest+Vitest jalan, coverage <80% |
 | Phase 6: UI/UX Polish | 0% | ⚪ Not started |
 | Zero-Error Roadmap (Plan's own phases) | 60% | 🟡 Phase 1-3 done, Phase 4-5 pending |
 | Hyper-Alignment (per-divisi) | 0% | ⚪ Not started |
-| Track A: Hybrid Routes | 38% | 🟢 6 functions DONE (/samples, /master, /approvals, /quality, /penjualan, /pembelian) |
+| Track A: Hybrid Routes | 46% | 🟢 7 functions DONE (+ /inventory) |
 | Track B: Backend Lint | 8% | 🟡 Paused (TS regression) |
 | Track C: Frontend Lint | 0% | ⚪ Queued after A |
 
@@ -125,8 +125,8 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 
 **Track A: Hybrid Routes** (in progress):
 - `evidence/2026-09-10/10-route-regen/route-mapping-v2.json` (229 pages → 11 functions)
-- 96 pages migrated + 2 master-inci deleted across 6 functions DONE: `/samples/*` (22), `/master/*` (10 + 2 deleted), `/approvals/*` (11), `/quality/*` (13), `/penjualan/*` (21), `/pembelian/*` (20 - 18 moved + 2 master override)
-- 133 pages remaining across 5 functions
+- 121 pages migrated + 2 master-inci deleted across 7 functions DONE: + /inventory/* (7 moved + 12 already + 2 master override + 1 manual)
+- 108 pages remaining across 4 functions
 
 ---
 
@@ -215,7 +215,7 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 | /finance | 35 | ⚪ Pending |
 | /pembelian | 20 | ✅ DONE (P1+P2: 16 moved + 2 master override) |
 | /penjualan | 21 | ✅ DONE (J1+J2+J3: 20 cross-folder moves) |
-| /inventory | 22 | ⚪ Pending |
+| /inventory | 22 | ✅ DONE (I1: 7 cross-folder moves) |
 | /production | 15 | ⚪ Pending |
 | /quality | 20 | 🟡 Started (checklist-category done) |
 | /samples | 22 | ✅ DONE (Batches S1-S4) |
