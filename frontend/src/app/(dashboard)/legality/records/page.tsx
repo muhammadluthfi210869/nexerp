@@ -21,20 +21,17 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { 
-  TableWrapper, 
+  DnaDataTableCard,
+  DnaStatCard,
+  DnaCard,
+  DnaSelect,
+  DnaInput,
+  DnaTextarea,
+  DnaCell,
+  DnaTabNav,
+  DnaModal,
   DnaBadge, 
   DnaButton,
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  Textarea,
-  Label
 } from "@/components/dna";
 
 export default function LegalityRecords() {
@@ -115,64 +112,49 @@ export default function LegalityRecords() {
         </Link>
       }
     >
-        <Tabs defaultValue="hki" onValueChange={setActiveTab} className="w-full space-y-6">
-          <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-14 border border-slate-100 flex gap-2 w-fit">
-            <TabsTrigger 
-              value="hki" 
-              className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all gap-2"
-            >
-              <FileBadge className="w-4 h-4" /> HKI BRANDING
-                <DnaBadge status="info">{hkiData?.length || 0}</DnaBadge>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="bpom" 
-              className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all gap-2"
-            >
-              <FlaskConical className="w-4 h-4" /> BPOM PRODUCT
-                <DnaBadge status="success">{bpomData?.length || 0}</DnaBadge>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="halal" 
-              className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all gap-2"
-            >
-              <Moon className="w-4 h-4" /> HALAL CERT
-                <DnaBadge status="success">{halalData?.length || 0}</DnaBadge>
-            </TabsTrigger>
-          </TabsList>
+        <DnaTabNav
+          tabs={[
+            { key: "hki", label: "HKI BRANDING", count: hkiData?.length || 0, icon: <FileBadge className="w-4 h-4" /> },
+            { key: "bpom", label: "BPOM PRODUCT", count: bpomData?.length || 0, icon: <FlaskConical className="w-4 h-4" /> },
+            { key: "halal", label: "HALAL CERT", count: halalData?.length || 0, icon: <Moon className="w-4 h-4" /> },
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          className="mb-6"
+        />
 
-          <TabsContent value="hki" className="outline-none m-0 focus:outline-none">
-            <ComplianceGrid 
-               data={hkiData} 
-               type="HKI" 
-               isLoading={loadingHki} 
-               onAdvance={(id: string) => advanceHkiMutation.mutate(id)} 
-               isAdvancing={advanceHkiMutation.isPending}
-               onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'HKI' })}
-            />
-          </TabsContent>
+        {activeTab === "hki" && (
+          <ComplianceGrid
+            data={hkiData}
+            type="HKI"
+            isLoading={loadingHki}
+            onAdvance={(id: string) => advanceHkiMutation.mutate(id)}
+            isAdvancing={advanceHkiMutation.isPending}
+            onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'HKI' })}
+          />
+        )}
 
-          <TabsContent value="bpom" className="outline-none m-0 focus:outline-none">
-            <ComplianceGrid 
-               data={bpomData} 
-               type="BPOM" 
-               isLoading={loadingBpom} 
-               onAdvance={(id: string) => advanceBpomMutation.mutate(id)}
-               isAdvancing={advanceBpomMutation.isPending}
-               onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'BPOM' })}
-            />
-          </TabsContent>
+        {activeTab === "bpom" && (
+          <ComplianceGrid
+            data={bpomData}
+            type="BPOM"
+            isLoading={loadingBpom}
+            onAdvance={(id: string) => advanceBpomMutation.mutate(id)}
+            isAdvancing={advanceBpomMutation.isPending}
+            onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'BPOM' })}
+          />
+        )}
 
-          <TabsContent value="halal" className="outline-none m-0 focus:outline-none">
-            <ComplianceGrid 
-               data={halalData} 
-               type="HALAL" 
-               isLoading={loadingHalal} 
-               onAdvance={(id: string) => advanceHalalMutation.mutate(id)}
-               isAdvancing={advanceHalalMutation.isPending}
-               onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'HALAL' })}
-            />
-          </TabsContent>
-        </Tabs>
+        {activeTab === "halal" && (
+          <ComplianceGrid
+            data={halalData}
+            type="HALAL"
+            isLoading={loadingHalal}
+            onAdvance={(id: string) => advanceHalalMutation.mutate(id)}
+            isAdvancing={advanceHalalMutation.isPending}
+            onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'HALAL' })}
+          />
+        )}
       {selectedRecord && (
         <TimelineDialog 
           record={selectedRecord} 
@@ -187,7 +169,7 @@ function ComplianceGrid({ data, type, isLoading, onAdvance, isAdvancing, onViewT
   if (isLoading) return <div className="p-20 text-center font-black italic text-slate-300 animate-pulse uppercase tracking-[0.2em]">Synchronizing Repository...</div>;
 
   return (
-    <TableWrapper>
+    <DnaDataTableCard>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
@@ -297,7 +279,7 @@ function ComplianceGrid({ data, type, isLoading, onAdvance, isAdvancing, onViewT
           </tbody>
         </table>
       </div>
-    </TableWrapper>
+    </DnaDataTableCard>
   );
 }
 
@@ -337,49 +319,41 @@ function TimelineDialog({ record, onClose }: { record: any, onClose: () => void 
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-        <DialogHeader className="p-6 bg-slate-50 border-b border-slate-100">
-          <div className="flex items-center gap-2 mb-2 text-slate-400">
-            <Activity className="w-4 h-4" />
-            <span className="text-[8px] font-black uppercase tracking-widest">Auditory Timeline</span>
-          </div>
-          <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-800">
-             {record.brandName || record.productName}
-          </DialogTitle>
-          <DialogDescription className="text-slate-400 text-[10px] uppercase font-bold mt-1">
-             Trace the complete lifecycle of this compliance record.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="p-6 space-y-6 flex flex-col h-[500px]">
+    <DnaModal
+      isOpen={true}
+      onClose={onClose}
+      title={record.brandName || record.productName}
+      subtitle="Trace the complete lifecycle of this compliance record."
+      size="2xl"
+      badge={<Activity className="w-3 h-3 text-blue-500" />}
+    >
+      <div className="space-y-6 flex flex-col h-[500px]">
           <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
             {isLoading ? (
-               <div className="h-full flex items-center justify-center text-[10px] font-black text-slate-300 animate-pulse uppercase tracking-widest">Analyzing Timeline...</div>
+               <div className="h-full flex items-center justify-center text-[10px] font-bold text-slate-300 animate-pulse uppercase tracking-widest">Analyzing Timeline...</div>
             ) : (
                 logs?.map((log: any, idx: number) => (
                     <div key={log.id} className="relative flex gap-4">
-                        {/* Vertical Line Connector */}
                         {idx !== logs.length - 1 && (
                             <div className="absolute left-[9px] top-5 bottom-[-28px] w-[2px] bg-slate-100" />
                         )}
-                        
-                        <div className={`h-5 w-5 rounded-full flex-shrink-0 flex items-center justify-center border-2 border-white shadow-sm ${
-                            log.action === 'CREATED' ? 'bg-blue-500' : 
-                            log.action === 'STAGE_UPDATED' ? 'bg-amber-500' : 
+
+                        <div className={`h-5 w-5 rounded-full shrink-0 flex items-center justify-center border-2 border-white shadow-sm ${
+                            log.action === 'CREATED' ? 'bg-blue-500' :
+                            log.action === 'STAGE_UPDATED' ? 'bg-amber-500' :
                             'bg-slate-700'
                         }`}>
-                            {log.action === 'CREATED' ? <Plus className="w-3 h-3 text-white stroke-[3px]" /> : 
+                            {log.action === 'CREATED' ? <Plus className="w-3 h-3 text-white stroke-[3px]" /> :
                              log.action === 'STAGE_UPDATED' ? <ArrowRightCircle className="w-3 h-3 text-white" /> :
                              <MessageSquare className="w-3 h-3 text-white" />}
                         </div>
-                        
+
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400">{new Date(log.createdAt).toLocaleString()}</span>
+                                <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">{new Date(log.createdAt).toLocaleString()}</span>
                                 <DnaBadge status="default" className="py-0 px-1.5 text-[7px] rounded-md shadow-none">{log.action}</DnaBadge>
                             </div>
-                            <p className="text-xs font-black uppercase text-slate-800 tracking-tight">
+                            <p className="text-xs font-bold uppercase text-slate-800 tracking-tight">
                                 {log.action === 'STAGE_UPDATED' ? `${log.previousStage} → ${log.newStage}` : log.action}
                             </p>
                             {log.notes && <p className="text-xs text-slate-500 italic leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-100">{log.notes}</p>}
@@ -391,28 +365,25 @@ function TimelineDialog({ record, onClose }: { record: any, onClose: () => void 
           </div>
 
           <div className="pt-4 border-t border-slate-100 space-y-4">
-            <div className="space-y-1.5">
-                <Label className="text-[8px] uppercase font-black tracking-widest text-slate-400">Add Auditory Note</Label>
-                <Textarea 
-                    placeholder="Capture essential compliance updates..." 
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="rounded-xl bg-slate-50 border border-slate-200 min-h-[80px] text-[10px] font-bold focus:ring-1 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all text-slate-900 placeholder:text-slate-400 uppercase"
-                />
-            </div>
-            <DnaButton 
-                onClick={handleAddLog}
-                disabled={!note || logMutation.isPending}
-                variant="secondary"
-                size="md"
-                className="w-full"
-                icon={logMutation.isPending ? <Loader2 className="animate-spin" /> : <ArrowRightCircle />}
+            <DnaTextarea
+              label="Add Auditory Note"
+              placeholder="Capture essential compliance updates..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+            />
+            <DnaButton
+              onClick={handleAddLog}
+              disabled={!note || logMutation.isPending}
+              variant="secondary"
+              size="md"
+              className="w-full"
+              icon={logMutation.isPending ? <Loader2 className="animate-spin" /> : <ArrowRightCircle />}
             >
-                APPEND TO TIMELINE
+              APPEND TO TIMELINE
             </DnaButton>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </DnaModal>
   );
 }

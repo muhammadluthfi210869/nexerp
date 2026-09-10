@@ -55,12 +55,6 @@ const legalityLinks = [
     href: "/legality/permits",
     icon: Scale,
     description: "Legal Registry"
-  },
-  {
-    name: "Master INCI",
-    href: "/legality/master-inci",
-    icon: Beaker,
-    description: "Regulatory Brain"
   }
 ];
 

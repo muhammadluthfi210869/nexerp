@@ -21,18 +21,13 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { 
-  TableWrapper, 
+  DnaDataTableCard,
   DnaBadge, 
   DnaButton,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
+  DnaInput,
+  DnaModal,
+  DnaSelect,
+  DnaCell,
 } from "@/components/dna";
 
 export default function RegulatoryPipelinePage() {
@@ -86,32 +81,27 @@ export default function RegulatoryPipelinePage() {
       titleAccent="Pipeline"
       subtitle="Real-time product passport tracking & lifecycle management."
     >
-      <div className="space-y-6 animate-fade-slide-in">
-        <TableWrapper
-          filters={
-            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between w-full">
-              {/* Search input */}
-              <div className="relative w-full lg:w-[400px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <input 
-                  type="text"
-                  placeholder="SEARCH CLIENT OR BRAND..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                />
-              </div>
+      <div className="space-y-6">
+        <DnaDataTableCard
+          customToolbar={
+            <div className="px-5 py-3 border-b border-slate-100 flex flex-col lg:flex-row gap-4 items-center justify-between w-full bg-white">
+              <DnaInput
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+                placeholder="SEARCH CLIENT OR BRAND..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full lg:w-[400px]"
+              />
 
-              {/* Stage Filter Buttons Switches */}
-              <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
+              <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto">
                 {stages.map((s) => (
                   <button
                     key={s.value}
                     onClick={() => setStageFilter(s.value)}
                     className={cn(
-                      "px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight whitespace-nowrap transition-all cursor-pointer",
-                      stageFilter === s.value 
-                        ? "bg-white text-blue-600 shadow-sm border border-slate-200" 
+                      "px-3.5 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-tight whitespace-nowrap transition-all cursor-pointer",
+                      stageFilter === s.value
+                        ? "bg-white text-blue-600 shadow-sm border border-slate-200"
                         : "text-slate-400 hover:text-slate-600 border border-transparent"
                     )}
                   >
@@ -204,38 +194,21 @@ export default function RegulatoryPipelinePage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <div className="flex justify-end">
-                                <DnaButton 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  icon={<MoreVertical className="w-3.5 h-3.5" />} 
-                                />
-                              </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-xl p-1.5 shadow-xl">
-                              <div className="px-2.5 py-1.5 border-b border-slate-50 mb-1">
-                                <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">Lifecycle Management</p>
-                              </div>
-                              {stages.slice(1).map((s) => (
-                                <DropdownMenuItem 
-                                  key={s.value}
-                                  onClick={() => updateStageMutation.mutate({ id: pipe.id, stage: s.value })}
-                                  className="p-2.5 rounded-lg cursor-pointer text-[10px] font-black uppercase tracking-tight italic gap-2 hover:bg-blue-50 hover:text-blue-600 outline-none"
-                                >
-                                  <ArrowRight className="w-3.5 h-3.5" /> Move to {s.label}
-                                </DropdownMenuItem>
-                              ))}
-                              <DropdownMenuSeparator className="bg-slate-50" />
-                              <DropdownMenuItem 
-                                onClick={() => setSelectedPipeline(pipe)}
-                                className="p-2.5 rounded-lg cursor-pointer text-[10px] font-black uppercase tracking-tight italic gap-2 hover:bg-slate-50 outline-none"
-                              >
-                                <History className="w-4 h-4 text-slate-400" /> Audit Trail
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex justify-end gap-1.5">
+                            <DnaSelect
+                              value=""
+                              onChange={(val) => val && updateStageMutation.mutate({ id: pipe.id, stage: val })}
+                              options={stages.slice(1).map((s) => ({ label: `Move to ${s.label}`, value: s.value }))}
+                              placeholder="Lifecycle..."
+                              className="w-[150px] text-[9px] h-8"
+                            />
+                            <DnaButton
+                              size="sm"
+                              variant="ghost"
+                              icon={<History className="w-3.5 h-3.5" />}
+                              onClick={() => setSelectedPipeline(pipe)}
+                            />
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -244,39 +217,34 @@ export default function RegulatoryPipelinePage() {
               </tbody>
             </table>
           </div>
-        </TableWrapper>
+        </DnaDataTableCard>
       </div>
 
-      {/* Dialog for Audit Trail */}
-      <Dialog open={!!selectedPipeline} onOpenChange={() => setSelectedPipeline(null)}>
-        <DialogContent className="max-w-2xl bg-white rounded-2xl p-0 overflow-hidden border border-slate-100 shadow-2xl">
-          <DialogHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <div className="flex items-center gap-2 mb-2 leading-none">
-              <History className="w-4 h-4 text-blue-600" />
-              <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">Auditory Trail</span>
-            </div>
-            <DialogTitle className="text-xl font-black italic tracking-tighter text-slate-900 uppercase leading-none">
-              {selectedPipeline?.lead?.brandName || selectedPipeline?.lead?.clientName}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto">
-            {selectedPipeline?.logHistory?.map((log: any, idx: number) => (
-              <div key={idx} className="relative flex gap-4">
-                <div className="h-5 w-5 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
-                </div>
-                <div className="pb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <DnaBadge status="info">{log.stage}</DnaBadge>
-                    <span className="text-[8px] font-black text-slate-300 uppercase leading-none">{new Date(log.date).toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs font-bold text-slate-500 italic uppercase">{log.notes}</p>
-                </div>
+      <DnaModal
+        isOpen={!!selectedPipeline}
+        onClose={() => setSelectedPipeline(null)}
+        title={selectedPipeline?.lead?.brandName || selectedPipeline?.lead?.clientName || "Audit Trail"}
+        subtitle="Auditory Trail"
+        size="2xl"
+        badge={<History className="w-3 h-3 text-blue-500" />}
+      >
+        <div className="space-y-4 max-h-[400px] overflow-y-auto">
+          {selectedPipeline?.logHistory?.map((log: any, idx: number) => (
+            <div key={idx} className="relative flex gap-4">
+              <div className="h-5 w-5 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
               </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+              <div className="pb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <DnaBadge status="info">{log.stage}</DnaBadge>
+                  <span className="text-[8px] font-bold text-slate-300 uppercase leading-none">{new Date(log.date).toLocaleString()}</span>
+                </div>
+                <p className="text-xs font-bold text-slate-500 italic uppercase">{log.notes}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </DnaModal>
     </DashboardShell>
   );
 }

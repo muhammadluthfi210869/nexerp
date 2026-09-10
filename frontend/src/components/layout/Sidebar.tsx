@@ -417,7 +417,6 @@ const RND_SECTIONS: NavSection[] = [
     items: [
       { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical, badge: "LAB", badgeVariant: "info" },
       { name: "Revision Tracker", href: "/samples/revision-tracker", icon: History, badge: "REV", badgeVariant: "warning" },
-      { name: "Master INCI & Regulasi", href: "/rnd/master-inci", icon: FileSearch },
     ]
   },
   // 4. KENDALI PROYEK & TRACKING (DAILY TRACKING & PROJECT MONITORING)
@@ -600,7 +599,6 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Jadwal Packaging", href: "/production/schedule?type=packaging", icon: History },
       { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical },
       { name: "Sertifikat Analisis (CoA)", href: "/qc/coa", icon: FileCheck },
-      { name: "Master INCI & Regulasi", href: "/rnd/master-inci", icon: FileSearch },
     ]
   },
 
