@@ -10,10 +10,13 @@ describe('WaWebhookService — handleGateway', () => {
     upsertOrphanLead: jest.fn().mockResolvedValue({}),
     updateFromWhatsApp: jest.fn().mockResolvedValue({}),
   };
+  const autoGreetMock = {
+    enqueueOrQueue: jest.fn().mockResolvedValue(undefined),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new WaWebhookService(leadCaptureMock as any);
+    service = new WaWebhookService(leadCaptureMock as any, autoGreetMock as any);
   });
 
   it('Wablas format: from + text + name', async () => {

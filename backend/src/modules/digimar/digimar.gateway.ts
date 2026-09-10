@@ -41,7 +41,7 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
       let remainingSockets = 0;
       try {
         const sockets = this.server.sockets?.adapter
-          ? await this.server.sockets.adapter.fetchSockets?.()
+          ? await (this.server.sockets.adapter.fetchSockets as any)?.()
           : null;
         remainingSockets = sockets?.length ?? 0;
       } catch {

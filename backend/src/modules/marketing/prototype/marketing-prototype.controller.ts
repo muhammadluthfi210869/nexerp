@@ -66,26 +66,26 @@ export class MarketingPrototypeController {
 
   @Get('bundle')
   @Roles(...MEMBER_ROLES)
-  getBundle(@Req() req: any) {
+  getBundle(@Req() req: any): Promise<any> {
     return this.service.getBundle(req.user);
   }
 
   @Post('reset')
   @Roles(...MANAGER_WRITE_ROLES)
   @Throttle({ default: { limit: 5, ttl: 3600000 } })
-  reset(@Req() req: any) {
+  reset(@Req() req: any): Promise<any> {
     return this.service.resetState(req.user);
   }
 
   @Get('dashboard')
   @Roles(...MEMBER_ROLES)
-  getDashboard(@Req() req: any) {
+  getDashboard(@Req() req: any): Promise<any> {
     return this.service.getDashboard(req.user);
   }
 
   @Get('projects')
   @Roles(...MEMBER_ROLES)
-  getProjects(@Req() req: any) {
+  getProjects(@Req() req: any): Promise<any> {
     return this.service.getProjects(req.user);
   }
 
@@ -113,7 +113,7 @@ export class MarketingPrototypeController {
 
   @Get('tasks')
   @Roles(...MEMBER_ROLES)
-  getTasks(@Req() req: any) {
+  getTasks(@Req() req: any): Promise<any> {
     return this.service.getTasks(req.user);
   }
 

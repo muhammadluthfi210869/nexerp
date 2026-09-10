@@ -182,7 +182,6 @@ export class LeadCaptureService {
         where: { id: existing.id },
         data: {
           phone: normalizedPhone,
-          waName,
           waMessage: text,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),

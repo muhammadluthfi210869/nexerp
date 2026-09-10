@@ -95,23 +95,23 @@ describe('Lead validation E2E', () => {
     // Reply 1 → COLD
     await counter.recordBusdevReply(lead.id);
     let l = await prisma.leadCapture.findUnique({ where: { id: lead.id } });
-    expect(l.outboundReplyCount).toBe(1);
-    expect(l.workflowStatus).toBe('COLD');
+    expect(l!.outboundReplyCount).toBe(1);
+    expect(l!.workflowStatus).toBe('COLD');
 
     // Reply 5 → WARM
     for (let i = 0; i < 4; i++) {
       await counter.recordBusdevReply(lead.id);
     }
     l = await prisma.leadCapture.findUnique({ where: { id: lead.id } });
-    expect(l.outboundReplyCount).toBe(5);
-    expect(l.workflowStatus).toBe('WARM');
+    expect(l!.outboundReplyCount).toBe(5);
+    expect(l!.workflowStatus).toBe('WARM');
 
     // Reply 10 → stays WARM (no HOT auto)
     for (let i = 0; i < 5; i++) {
       await counter.recordBusdevReply(lead.id);
     }
     l = await prisma.leadCapture.findUnique({ where: { id: lead.id } });
-    expect(l.outboundReplyCount).toBe(10);
-    expect(l.workflowStatus).toBe('WARM');
+    expect(l!.outboundReplyCount).toBe(10);
+    expect(l!.workflowStatus).toBe('WARM');
   });
 });

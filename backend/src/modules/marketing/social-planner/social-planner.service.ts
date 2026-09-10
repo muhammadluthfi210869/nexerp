@@ -1,6 +1,9 @@
 import {
   BadGatewayException,
   BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -15,23 +18,37 @@ import {
   MetaInsightsDto,
   UpdateSocialPostDto,
 } from './social-planner.dto';
+import {
+  assertSocialTransition,
+  ensureSocialWriteRole,
+  MarketingViewer,
+  normalizeSocialStatus,
+  SocialStatus,
+} from '../canonical/marketing-domain.policy';
+import { CanonicalMarketingService } from '../canonical/canonical-marketing.service';
 
 @Injectable()
 export class SocialPlannerService {
   private readonly logger = new Logger(SocialPlannerService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly canonical: CanonicalMarketingService,
+  ) {}
 
-  async getPosts(filter?: {
+  async getPosts(viewer: MarketingViewer, filter?: {
     platform?: string;
     status?: string;
     pillar?: string;
     search?: string;
+    page?: number;
+    limit?: number;
   }) {
+    this.ensureReadRole(viewer);
     const where: Record<string, unknown> = {};
     if (filter?.platform && filter.platform !== 'all')
       where.platform = filter.platform;
-    if (filter?.status && filter.status !== 'all') where.status = filter.status;
+    if (filter?.status && filter.status !== 'all') where.canonicalStatus = normalizeSocialStatus(filter.status);
     if (filter?.pillar && filter.pillar !== 'all') where.pillar = filter.pillar;
     if (filter?.search) {
       where.OR = [
@@ -41,14 +58,27 @@ export class SocialPlannerService {
     }
 
     try {
-      const posts = await (this.prisma as any).socialPost.findMany({
+      const page = Math.max(1, filter?.page || 1);
+      const limit = Math.min(100, Math.max(1, filter?.limit || 50));
+      const [posts, total] = await this.prisma.$transaction([
+        (this.prisma as any).socialPost.findMany({
         where,
-        include: { checklist: { orderBy: { createdAt: 'asc' } } },
+        include: { checklist: { orderBy: { createdAt: 'asc' } }, brand: true, assignee: { select: { id: true, fullName: true, email: true } }, reviewer: { select: { id: true, fullName: true, email: true } }, media: { orderBy: { sortOrder: 'asc' } } },
         orderBy: [{ scheduledDate: 'asc' }, { createdAt: 'desc' }],
-      });
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+        (this.prisma as any).socialPost.count({ where }),
+      ]);
+      const data = posts.map((post: any) => this.toApiPost(post));
       return {
         success: true,
-        posts: posts.map((post: any) => this.toApiPost(post)),
+        data,
+        posts: data,
+        page,
+        limit,
+        total,
+        hasMore: page * limit < total,
       };
     } catch (error) {
       this.logger.error(
@@ -60,11 +90,23 @@ export class SocialPlannerService {
     }
   }
 
-  async createPost(data: CreateSocialPostDto) {
+  async createPost(viewer: MarketingViewer, data: CreateSocialPostDto, idempotencyKey?: string) {
+    ensureSocialWriteRole(viewer);
+    const canonicalStatus = normalizeSocialStatus(data.status ?? 'IDEA');
+    if (canonicalStatus !== 'IDEA') {
+      throw new ConflictException({ code: 'SOCIAL_INITIAL_STATE_INVALID', message: 'Konten baru harus dimulai dari status IDEA.' });
+    }
+    await this.ensureSocialReferences(data.brandId, data.assigneeId, data.reviewerId);
     try {
-      const created = await (this.prisma as any).socialPost.create({
+      const created = await this.canonical.runIdempotent('POST:/marketing/social/posts', idempotencyKey, viewer, data, (db) => (db as any).socialPost.create({
         data: {
           ...this.toPersistencePayload(data),
+          canonicalStatus,
+          status: canonicalStatus.toLowerCase(),
+          version: 1,
+          authorName: viewer.email || 'Marketing Team',
+          authorAvatar: null,
+          authorRole: viewer.roles.includes('MARKETING') ? 'Marketing' : 'Content Creator',
           checklist: {
             create: (data.checklist ?? []).map((item) => ({
               text: item.text,
@@ -72,8 +114,8 @@ export class SocialPlannerService {
             })),
           },
         },
-        include: { checklist: { orderBy: { createdAt: 'asc' } } },
-      });
+        include: { checklist: { orderBy: { createdAt: 'asc' } }, brand: true, assignee: { select: { id: true, fullName: true, email: true } }, reviewer: { select: { id: true, fullName: true, email: true } }, media: { orderBy: { sortOrder: 'asc' } } },
+      }));
       return { success: true, post: this.toApiPost(created) };
     } catch (error) {
       this.logger.error(
@@ -83,28 +125,42 @@ export class SocialPlannerService {
     }
   }
 
-  async updatePost(id: string, data: UpdateSocialPostDto) {
+  async updatePost(viewer: MarketingViewer, id: string, data: UpdateSocialPostDto) {
+    ensureSocialWriteRole(viewer);
+    const current = await (this.prisma as any).socialPost.findUnique({ where: { id } });
+    if (!current) throw new NotFoundException('Konten tidak ditemukan.');
+    await this.ensureSocialReferences(data.brandId, data.assigneeId, data.reviewerId);
+    const canonicalStatus = data.status ? normalizeSocialStatus(data.status) : current.canonicalStatus as SocialStatus;
+    assertSocialTransition({
+      from: current.canonicalStatus as SocialStatus,
+      to: canonicalStatus,
+      hasBrand: Boolean(data.brandId ?? current.brandId),
+      hasAssignee: Boolean(data.assigneeId ?? current.assigneeId),
+      scheduledAt: data.scheduledDate !== undefined ? (data.scheduledDate ? new Date(data.scheduledDate) : null) : current.scheduledDate,
+      publishedAt: data.publishedDate !== undefined ? (data.publishedDate ? new Date(data.publishedDate) : null) : current.publishedDate,
+      hasPublicationEvidence: Boolean(data.metaPostId ?? data.metaPermalink ?? current.metaPostId ?? current.metaPermalink),
+    });
     const updatePayload = this.toPersistencePayload(data);
-    if (data.checklist !== undefined) {
-      updatePayload.checklist = {
-        deleteMany: {},
-        create: data.checklist.map((item) => ({
-          text: item.text,
-          done: item.done,
-        })),
-      };
-    }
+    updatePayload.canonicalStatus = canonicalStatus;
+    updatePayload.status = canonicalStatus.toLowerCase();
+    updatePayload.version = { increment: 1 };
 
     try {
-      const updated = await (this.prisma as any).socialPost.update({
-        where: { id },
-        data: updatePayload,
-        include: { checklist: { orderBy: { createdAt: 'asc' } } },
+      const expectedVersion = data.version ?? current.version;
+      const updated = await this.prisma.$transaction(async (db: any) => {
+        const result = await db.socialPost.updateMany({ where: { id, version: expectedVersion }, data: updatePayload });
+        if (result.count !== 1) throw new ConflictException({ code: 'VERSION_CONFLICT', message: 'Konten telah berubah. Muat ulang sebelum menyimpan.' });
+        if (data.checklist !== undefined) {
+          await db.socialChecklistItem.deleteMany({ where: { postId: id } });
+          if (data.checklist.length) await db.socialChecklistItem.createMany({ data: data.checklist.map((item) => ({ postId: id, text: item.text, done: item.done })) });
+        }
+        return db.socialPost.findUnique({ where: { id }, include: { checklist: { orderBy: { createdAt: 'asc' } }, brand: true, assignee: { select: { id: true, fullName: true, email: true } }, reviewer: { select: { id: true, fullName: true, email: true } }, media: { orderBy: { sortOrder: 'asc' } } } });
       });
       return { success: true, post: this.toApiPost(updated) };
     } catch (error) {
       if ((error as { code?: string }).code === 'P2025')
         throw new NotFoundException('Konten tidak ditemukan.');
+      if (error instanceof HttpException) throw error;
       this.logger.error(
         `Failed to update social post ${id}: ${(error as Error).message}`,
       );
@@ -114,7 +170,10 @@ export class SocialPlannerService {
     }
   }
 
-  async deletePost(id: string) {
+  async deletePost(viewer: MarketingViewer, id: string) {
+    if (!viewer.roles.some((role) => ['SUPER_ADMIN', 'MARKETING'].includes(role))) {
+      throw new ForbiddenException({ code: 'SOCIAL_DELETE_FORBIDDEN', message: 'Hanya Marketing manager yang dapat menghapus konten.' });
+    }
     try {
       await (this.prisma as any).socialPost.delete({ where: { id } });
       return { success: true, deletedId: id };
@@ -229,7 +288,6 @@ export class SocialPlannerService {
       'title',
       'platform',
       'contentType',
-      'status',
       'pillar',
       'caption',
       'hooks',
@@ -244,6 +302,11 @@ export class SocialPlannerService {
       'campaign',
       'calloutText',
       'calloutEmoji',
+      'brandId',
+      'assigneeId',
+      'reviewerId',
+      'brief',
+      'referenceUrl',
     ] as const;
     for (const field of scalarFields)
       if (data[field] !== undefined) payload[field] = data[field];
@@ -255,24 +318,6 @@ export class SocialPlannerService {
       payload.publishedDate = data.publishedDate
         ? new Date(data.publishedDate)
         : null;
-    if (data.author) {
-      payload.authorName = data.author.name;
-      payload.authorAvatar = data.author.avatar || null;
-      payload.authorRole = data.author.role;
-    }
-    if (data.performance) {
-      Object.assign(payload, data.performance);
-      if (data.performance.engagementRate === undefined) {
-        const interactions =
-          Number(data.performance.likes || 0) +
-          Number(data.performance.comments || 0) +
-          Number(data.performance.shares || 0) +
-          Number(data.performance.saves || 0);
-        const reach = Number(data.performance.reach || 0);
-        payload.engagementRate =
-          reach > 0 ? Number(((interactions / reach) * 100).toFixed(2)) : 0;
-      }
-    }
     return payload;
   }
 
@@ -282,7 +327,17 @@ export class SocialPlannerService {
       title: post.title,
       platform: post.platform,
       contentType: post.contentType,
-      status: post.status,
+      status: post.canonicalStatus,
+      legacyStatus: post.status,
+      brandId: post.brandId,
+      brand: post.brand,
+      assigneeId: post.assigneeId,
+      assignee: post.assignee,
+      reviewerId: post.reviewerId,
+      reviewer: post.reviewer,
+      brief: post.brief ?? '',
+      referenceUrl: post.referenceUrl ?? undefined,
+      version: post.version,
       scheduledDate:
         post.scheduledDate?.toISOString?.() ?? post.scheduledDate ?? '',
       publishedDate:
@@ -320,6 +375,7 @@ export class SocialPlannerService {
         costPerResult: Number(post.costPerResult),
       },
       checklist: post.checklist,
+      media: post.media ?? [],
       createdAt: post.createdAt?.toISOString?.() ?? post.createdAt,
       updatedAt: post.updatedAt?.toISOString?.() ?? post.updatedAt,
     };
@@ -333,6 +389,33 @@ export class SocialPlannerService {
     if (dto.action === 'improve_caption')
       return `Perbaiki caption ini agar lebih jelas dan engaging: "${dto.existingCaption || dto.topic || ''}".`;
     return `Buat caption lengkap dengan hook, isi, CTA, dan hashtag untuk topik "${dto.topic || ''}", platform ${dto.platform || 'Instagram'}, pilar ${dto.pillar || 'Educational'}, audiens ${dto.audience || 'Indonesia'}.`;
+  }
+
+  private ensureReadRole(viewer: MarketingViewer) {
+    if (!viewer.roles.some((role) => ['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING', 'DIGIMAR', 'DIRECTOR', 'COMMERCIAL'].includes(role))) {
+      throw new ForbiddenException({ code: 'SOCIAL_READ_FORBIDDEN', message: 'Akses Social Media ditolak.' });
+    }
+  }
+
+  private async ensureSocialReferences(brandId?: string, assigneeId?: string, reviewerId?: string) {
+    if (brandId) {
+      const brand = await (this.prisma as any).marketingBrand.findFirst({ where: { id: brandId, isActive: true }, select: { id: true } });
+      if (!brand) throw new BadRequestException({ code: 'BRAND_INVALID', message: 'brandId tidak valid.', fieldErrors: { brandId: 'invalid' } });
+    }
+    for (const [field, id] of [['assigneeId', assigneeId], ['reviewerId', reviewerId]] as const) {
+      if (!id) continue;
+      const user = await (this.prisma as any).user.findFirst({ where: { id, status: 'ACTIVE', deletedAt: null }, select: { id: true } });
+      if (!user) throw new BadRequestException({ code: 'USER_INVALID', message: `${field} tidak valid.`, fieldErrors: { [field]: 'invalid' } });
+    }
+  }
+
+  private assertSocialRequirements(status: SocialStatus, data: CreateSocialPostDto) {
+    if (status === 'SCHEDULED' && (!data.brandId || !data.assigneeId || !data.scheduledDate)) {
+      throw new BadRequestException({ code: 'SOCIAL_SCHEDULE_REQUIREMENTS', message: 'Brand, assignee, dan waktu terjadwal wajib sebelum penjadwalan.' });
+    }
+    if (status === 'PUBLISHED' && (!data.publishedDate || !(data.metaPostId || data.metaPermalink))) {
+      throw new BadRequestException({ code: 'SOCIAL_PUBLICATION_EVIDENCE_REQUIRED', message: 'Waktu dan bukti publikasi wajib diisi.' });
+    }
   }
 
 }

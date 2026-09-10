@@ -16,7 +16,7 @@ import { ContentData, ContentRow } from './interfaces/content.interface';
 @Injectable()
 export class DigimarService implements OnModuleInit {
   private readonly logger = new Logger(DigimarService.name);
-  private sheets: sheets_v4.Sheets;
+  private sheets: sheets_v4.Sheets | null = null;
   private spreadsheetId: string;
 
   // ── Cache ──
@@ -72,7 +72,7 @@ export class DigimarService implements OnModuleInit {
       );
       this.sheets = null;
     } catch (err) {
-      this.logger.warn('Google Sheets client initialization skipped (non-fatal):', err.message);
+      this.logger.warn(`Google Sheets client initialization skipped (non-fatal): ${(err as Error).message}`);
       this.sheets = null;
     }
   }
@@ -124,8 +124,9 @@ export class DigimarService implements OnModuleInit {
     if (!this.sheets) {
       return [];
     }
+    const sheets = this.sheets;
     return this.getCached('sheetNames', async () => {
-      const response = await this.sheets.spreadsheets.get({
+      const response = await sheets.spreadsheets.get({
         spreadsheetId: this.spreadsheetId,
       });
       return response.data.sheets?.map(s => s.properties?.title || '') || [];
