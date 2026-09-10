@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { MOCK_PROJECTS } from "@/components/project-control/mock-data";
 import { ProjectStatusBadge } from "@/components/project-control/ProjectControlComponents";
-import { Project } from "@/types/project-control";
+import { type Project } from "@/types/project-control";
 
 export default function ProjectControlDashboardPage() {
   const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);

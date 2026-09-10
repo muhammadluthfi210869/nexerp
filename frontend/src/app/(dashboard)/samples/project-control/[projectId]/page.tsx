@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { MOCK_PROJECTS } from "@/components/project-control/mock-data";
 import { ProjectStatusBadge, MilestoneStatusBadge } from "@/components/project-control/ProjectControlComponents";
-import { ProjectMilestone } from "@/types/project-control";
+import { type ProjectMilestone } from "@/types/project-control";
 
 export default function ProjectDetailPage() {
   const params = useParams();
