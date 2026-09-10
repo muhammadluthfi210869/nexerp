@@ -176,7 +176,7 @@ export default function IndividualKpiDetailPage() {
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
             <span className="font-bold text-slate-900 block">Proyek Strategis Terhubung</span>
             <p className="text-[11px] text-slate-600 mt-0.5">ERP PO & SCM Integration (Milestone 2 In Progress)</p>
-            <Link href="/project-control/proj-2" className="text-[11px] text-blue-600 font-semibold hover:underline block mt-1">
+            <Link href="/samples/project-control/proj-2" className="text-[11px] text-blue-600 font-semibold hover:underline block mt-1">
               Audit Proyek di Project Control Hub &rarr;
             </Link>
           </div>

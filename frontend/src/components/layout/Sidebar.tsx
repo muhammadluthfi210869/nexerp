@@ -390,7 +390,7 @@ const RND_SECTIONS: NavSection[] = [
       { name: "Formula Analytics", href: "/samples/rnd-dashboard", icon: LayoutDashboard },
       { name: "Active Pipeline", href: "/rnd/pipeline", icon: FlaskConical, badge: "FLOW", badgeVariant: "purple" },
       { name: "D. Jadwal Produksi", href: "/production/schedule", icon: History },
-      { name: "Project Control", href: "/project-control", icon: BarChart3 },
+      { name: "Project Control", href: "/samples/project-control", icon: BarChart3 },
     ]
   },
   // 2. PRA PRODUKSI & FORMULASI
@@ -429,7 +429,7 @@ const RND_SECTIONS: NavSection[] = [
     items: [
       { name: "Daily Tracking Progress", href: "/scm/checklist-progress", icon: CheckSquare, badge: "LIVE", badgeVariant: "warning" },
       { name: "Project Monitoring & SLA", href: "/project-control/checklist-tracking", icon: History, badge: "3 DELAY", badgeVariant: "critical" },
-      { name: "Monitoring Projek Master", href: "/project-control", icon: BarChart3 },
+      { name: "Monitoring Projek Master", href: "/samples/project-control", icon: BarChart3 },
     ]
   },
   // 5. OPERASIONAL & KEBUTUHAN BAHAN
@@ -461,7 +461,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Dashboard Executive", href: "/executive/dashboard", icon: LayoutDashboard },
       { name: "Dashboard Notifikasi", href: "/executive/notifications", icon: Bell, badge: "LIVE", badgeVariant: "warning" },
       { name: "KPI Management", href: "/kpi-management/department", icon: Gauge, badge: "KPI", badgeVariant: "info" },
-      { name: "Project Control", href: "/project-control", icon: Kanban },
+      { name: "Project Control", href: "/samples/project-control", icon: Kanban },
       { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
       { name: "Dashboard Busdev", href: "/bussdev/dashboard", icon: Activity },
       { name: "Dashboard R&D", href: "/samples/rnd-dashboard", icon: Beaker },
