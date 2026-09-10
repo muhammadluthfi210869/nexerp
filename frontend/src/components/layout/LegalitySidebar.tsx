@@ -28,7 +28,7 @@ const legalityLinks = [
   },
   {
     name: "Regulatory Pipeline",
-    href: "/legality/pipeline",
+    href: "/penjualan/pipeline-legal",
     icon: LayoutDashboard,
     description: "Live Control Tower"
   },

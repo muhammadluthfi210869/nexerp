@@ -388,7 +388,7 @@ const RND_SECTIONS: NavSection[] = [
     icon: LayoutDashboard,
     items: [
       { name: "Formula Analytics", href: "/samples/rnd-dashboard", icon: LayoutDashboard },
-      { name: "Active Pipeline", href: "/rnd/pipeline", icon: FlaskConical, badge: "FLOW", badgeVariant: "purple" },
+      { name: "Active Pipeline", href: "/penjualan/pipeline-rnd", icon: FlaskConical, badge: "FLOW", badgeVariant: "purple" },
       { name: "D. Jadwal Produksi", href: "/production/schedule", icon: History },
       { name: "Project Control", href: "/samples/project-control", icon: BarChart3 },
     ]
