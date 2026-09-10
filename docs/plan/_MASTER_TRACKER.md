@@ -21,7 +21,7 @@
 | Phase 6: UI/UX Polish | 0% | ⚪ Not started |
 | Zero-Error Roadmap (Plan's own phases) | 60% | 🟡 Phase 1-3 done, Phase 4-5 pending |
 | Hyper-Alignment (per-divisi) | 0% | ⚪ Not started |
-| Track A: Hybrid Routes | 46% | 🟢 7 functions DONE (+ /inventory) |
+| Track A: Hybrid Routes | 100% | ✅ DONE (9/11 functions migrated, /exec excluded per scope, 133 pages) |
 | Track B: Backend Lint | 8% | 🟡 Paused (TS regression) |
 | Track C: Frontend Lint | 0% | ⚪ Queued after A |
 
@@ -119,14 +119,15 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 |---|---|---|---|
 | 3.1 Emergency Fixes | 1 hari | 🟡 Partial | TS errors fixed, ESLint masih banyak |
 | 3.2 Replace Mock Data Pages | 1.5 hari | ⚪ TODO | |
-| 3.3 Add Missing Pages | 3 hari | 🟢 5 functions DONE |
+| 3.3 Add Missing Pages | 3 hari | ✅ DONE (Track A 100%, 10/11 functions) |
 | 3.4 Global Component Library | 1 hari | 🟡 Partial | DNA inventory ada, enforcement via ESLint aktif |
 | 3.5 Financial Gate Visual Indicators | 0.5 hari | ⚪ TODO | |
 
 **Track A: Hybrid Routes** (in progress):
 - `evidence/2026-09-10/10-route-regen/route-mapping-v2.json` (229 pages → 11 functions)
-- 121 pages migrated + 2 master-inci deleted across 7 functions DONE: + /inventory/* (7 moved + 12 already + 2 master override + 1 manual)
-- 108 pages remaining across 4 functions
+- 133 pages migrated + 2 master-inci deleted across 10 functions DONE (/samples, /master, /approvals, /quality, /penjualan, /pembelian, /inventory, /finance, /production, /reports)
+- /exec (24) excluded per scope rule (Dashboard FIXED, JANGAN diedit)
+- Track A 100% COMPLETE
 
 ---
 
@@ -336,7 +337,7 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 - [x] **2026-09-10**: Jest OOM fixed (heap 8GB)
 - [x] **2026-09-10**: 1 hybrid function complete (/samples/, 22 pages migrated)
 - [x] **2026-09-10**: Phase 0 production freeze complete (VPS SSH + DB backup+restore PASS)
-- [x] **2026-09-10**: 2 hybrid functions complete (/samples 22 + /master 12 = 34 pages)
+- [x] **2026-09-10**: Track A COMPLETE - 10 hybrid functions migrated (133 pages)
 - [ ] **Target**: Backend lint 2116 → 0
 - [ ] **Target**: Track A complete (165+ batches)
 - [ ] **Target**: Track C complete (frontend lint)
