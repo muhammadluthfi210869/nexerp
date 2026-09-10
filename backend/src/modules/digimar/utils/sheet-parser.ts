@@ -11,7 +11,7 @@ export function num(val: unknown): number | null {
   // If already a number, return it directly
   if (typeof val === 'number') return isNaN(val) ? null : val;
 
-  const trimmed = String(val).trim();
+  const trimmed = String(val as string).trim();
   if (
     trimmed === '' ||
     trimmed === '-' ||
@@ -39,7 +39,7 @@ export function pct(val: unknown): number | null {
   // If already a number, return it directly (already a decimal fraction)
   if (typeof val === 'number') return isNaN(val) ? null : val;
 
-  const trimmed = String(val).trim();
+  const trimmed = String(val as string).trim();
   if (
     trimmed === '' ||
     trimmed === '-' ||

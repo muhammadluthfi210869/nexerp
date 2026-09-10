@@ -43,13 +43,13 @@ export class ErrorTrackingInterceptor implements NestInterceptor {
 
         if (status >= 500) {
           this.logger.error(
-            `${method} ${url} → ${status} (${duration}ms): ${error.message}`,
-            error.stack,
+            `${method} ${url} → ${status} (${duration}ms): ${String((error as Error)?.message ?? '')}`,
+            error instanceof Error ? error.stack : undefined,
             errorPayload,
           );
         } else {
           this.logger.warn(
-            `${method} ${url} → ${status} (${duration}ms): ${error.message}`,
+            `${method} ${url} → ${status} (${duration}ms): ${String((error as Error)?.message ?? '')}`,
             errorPayload,
           );
         }

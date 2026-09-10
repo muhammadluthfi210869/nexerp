@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
+import compression from 'compression';
 
 // Load ENV from root or backend folder
 dotenv.config({ path: path.join(process.cwd(), '.env') });
@@ -11,8 +12,6 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
-const compression = require('compression');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

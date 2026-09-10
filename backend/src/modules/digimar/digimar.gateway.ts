@@ -68,17 +68,21 @@ export class DigimarGateway
 
   private startAutoRefresh() {
     const interval = Number(process.env.TORIBIO_REFRESH_INTERVAL_MS) || 60_000;
-    this.refreshInterval = setInterval(async () => {
-      try {
-        this.digimarService.invalidateCache();
-        const data = await this.digimarService.getAll();
-        this.server.emit('digimar:update', data);
-        this.logger.debug('Auto-refresh: pushed update to clients');
-      } catch (err) {
-        this.logger.error('Auto-refresh error', err);
-      }
+    this.refreshInterval = setInterval(() => {
+      void this.runAutoRefreshTick();
     }, interval);
     this.logger.log(`Auto-refresh started (interval: ${interval}ms)`);
+  }
+
+  private async runAutoRefreshTick(): Promise<void> {
+    try {
+      this.digimarService.invalidateCache();
+      const data = await this.digimarService.getAll();
+      this.server.emit('digimar:update', data);
+      this.logger.debug('Auto-refresh: pushed update to clients');
+    } catch (err) {
+      this.logger.error('Auto-refresh error', err);
+    }
   }
 
   @SubscribeMessage('subscribe')
