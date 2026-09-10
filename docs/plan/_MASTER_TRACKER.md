@@ -15,13 +15,13 @@
 | Phase 0: Evidence Freeze | 100% | ✅ DONE |
 | Phase 1: Backend Foundation | 80% | 🟡 Mostly done, security/service layer remain |
 | Phase 2: Service Layer Integrity | 0% | ⚪ Not started |
-| Phase 3: Frontend Repair | 8% | 🟢 Started (route map + 3 batches) |
+| Phase 3: Frontend Repair | 13% | 🟢 Started (route map + 4 functions done) |
 | Phase 4: State Machine UI | 0% | ⚪ Not started |
 | Phase 5: Test Infrastructure | 50% | 🟡 Jest+Vitest jalan, coverage <80% |
 | Phase 6: UI/UX Polish | 0% | ⚪ Not started |
 | Zero-Error Roadmap (Plan's own phases) | 60% | 🟡 Phase 1-3 done, Phase 4-5 pending |
 | Hyper-Alignment (per-divisi) | 0% | ⚪ Not started |
-| Track A: Hybrid Routes | 3% | 🟢 Mapping done, 3/176 atomic batches |
+| Track A: Hybrid Routes | 8% | 🟢 /samples/ DONE (22/22), 4 functions remaining |
 | Track B: Backend Lint | 8% | 🟡 Paused (TS regression) |
 | Track C: Frontend Lint | 0% | ⚪ Queued after A |
 
@@ -34,6 +34,11 @@ b13d5bd  fix(frontend): vitest 86 fails -> 0 (MSW routing + dna mocks)
 905124a  fix(backend): Jest OOM fix - heap limit 8GB + runInBand + unit-only default
 f66202f  docs(route): regenerate hybrid map v2 from 229 actual frontend pages
 3adaba7  fix(backend): revert 4 TS regressions introduced by Track B auto-fix
+d18f37a  docs(plan): consolidate 3 plans into single _MASTER_TRACKER.md
+2621f88  refactor(route): migrate /rnd/* sample pages to /samples/* (Batch S1)
+44b8632  refactor(route): migrate sample-related /marketing/* to /samples/* (Batch S2)
+8ea855d  refactor(route): migrate /bussdev/{intake,sample-tracking} to /samples/* (Batch S3)
+e2125ff  refactor(route): migrate /project-control/* to /samples/* (Batch S4)
 ```
 
 ---
@@ -112,14 +117,14 @@ f66202f  docs(route): regenerate hybrid map v2 from 229 actual frontend pages
 |---|---|---|---|
 | 3.1 Emergency Fixes | 1 hari | 🟡 Partial | TS errors fixed, ESLint masih banyak |
 | 3.2 Replace Mock Data Pages | 1.5 hari | ⚪ TODO | |
-| 3.3 Add Missing Pages | 3 hari | 🟢 Started | 176 screens in catalog, 229 actual files; route map v2 generated |
+| 3.3 Add Missing Pages | 3 hari | 🟢 Started | /samples function DONE (22 pages migrated via 4 batches S1-S4) |
 | 3.4 Global Component Library | 1 hari | 🟡 Partial | DNA inventory ada, enforcement via ESLint aktif |
 | 3.5 Financial Gate Visual Indicators | 0.5 hari | ⚪ TODO | |
 
 **Track A: Hybrid Routes** (in progress):
 - `evidence/2026-09-10/10-route-regen/route-mapping-v2.json` (229 pages → 11 functions)
-- 3 atomic route commits done (`/penjualan/guest-book`, `/quality/checklist-category`, `/approvals/purchase-approval`)
-- 173+ batches remaining (per function: samples, pembelian, penjualan, inventory, production, quality, finance, master, approvals, reports, exec)
+- 25 pages migrated across 4 functions: `/samples/*` (22, DONE), `/penjualan/guest-book`, `/quality/checklist-category`, `/approvals/purchase-approval`
+- 204 pages remaining across 10 functions
 
 ---
 
@@ -207,16 +212,16 @@ f66202f  docs(route): regenerate hybrid map v2 from 229 actual frontend pages
 | /master | 25 | ⚪ Pending |
 | /finance | 35 | ⚪ Pending |
 | /pembelian | 20 | ⚪ Pending |
-| /penjualan | 21 | ⚪ Pending |
+| /penjualan | 21 | 🟡 Started (guest-book done) |
 | /inventory | 22 | ⚪ Pending |
 | /production | 15 | ⚪ Pending |
-| /quality | 20 | ⚪ Pending |
-| /samples | 22 | ⚪ Pending |
-| /approvals | 13 | ⚪ Pending |
+| /quality | 20 | 🟡 Started (checklist-category done) |
+| /samples | 22 | ✅ DONE (Batches S1-S4) |
+| /approvals | 13 | 🟡 Started (purchase-approval done) |
 | /reports | 12 | ⚪ Pending |
 | /exec | 24 | ⚪ Pending |
 
-**Progress**: 3 batches done out of ~50 atomic batches
+**Progress**: 25 pages migrated (22 from /samples + 3 individual), 1 function (/samples) complete
 **Next**: `/samples` (RnD pipeline) batch — high priority for cross-functional UX
 
 ### Track B: Backend Lint Cleanup (PAUSED)
@@ -327,6 +332,7 @@ f66202f  docs(route): regenerate hybrid map v2 from 229 actual frontend pages
 - [x] **2026-09-10**: 1 API contract generated (49 endpoints)
 - [x] **2026-09-10**: 1 route map generated (229 pages, 100% classified)
 - [x] **2026-09-10**: Jest OOM fixed (heap 8GB)
+- [x] **2026-09-10**: 1 hybrid function complete (/samples/, 22 pages migrated)
 - [ ] **Target**: Backend lint 2116 → 0
 - [ ] **Target**: Track A complete (165+ batches)
 - [ ] **Target**: Track C complete (frontend lint)
