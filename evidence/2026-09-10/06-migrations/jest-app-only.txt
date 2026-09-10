@@ -1,0 +1,9 @@
+﻿No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test
+  45 files checked.
+  testMatch:  - 0 matches
+  testPathIgnorePatterns: \\node_modules\\ - 45 matches
+  testRegex: .unit-spec.ts$ - 20 matches
+Pattern: app.controller - 0 matches
+

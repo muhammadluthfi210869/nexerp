@@ -2,6 +2,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
+  "maxWorkers": 1,
   "testRegex": ".unit-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "diagnostics": false }]

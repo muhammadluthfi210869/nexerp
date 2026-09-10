@@ -1,0 +1,61 @@
+﻿
+> backend@0.0.1 test
+> node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-unit.json --runInBand
+
+node.exe : FAIL test/unit/finance.unit-spec.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL test/unit/fina 
+   nce.unit-spec.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  ● Console
+
+    console.log
+      ◇ injected env (26) from .env // tip: ⌘ multiple files { 
+path: ['.env.local', '.env'] }
+
+      at _log (../node_modules/dotenv/lib/main.js:131:11)
+
+    console.log
+      ◇ injected env (0) from backend\.env // tip: ⌘ enable 
+debugging { debug: true }
+
+      at _log (../node_modules/dotenv/lib/main.js:131:11)
+
+  ● FinanceService — Unit › verifyOrderPayment › rejects an 
+already verified sales order
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Sales Order already verified"
+    Received message:   "Sales Order 'SO-001' not found"
+
+          669 |     }
+          670 |
+        > 671 |     if (!so) throw new NotFoundException(`Sales 
+Order '${dto.id}' not found`);
+              |                    ^
+          672 |     if (so.status === 'LOCKED_ACTIVE' || 
+so.status === 'COMPLETED') {
+          673 |       throw new BadRequestException('Sales Order 
+already verified');
+          674 |     }
+
+      at FinanceService.verifyOrderPayment 
+(../src/modules/finance/finance.service.ts:671:20)
+      at Object.<anonymous> (unit/finance.unit-spec.ts:112:7)
+      at Object.toThrow 
+(../node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (unit/finance.unit-spec.ts:118:17)
+
+
+Test Suites: 1 failed, 19 passed, 20 total
+Tests:       1 failed, 1 skipped, 233 passed, 235 total
+Snapshots:   0 total
+Time:        126.086 s
+Ran all test suites.
+

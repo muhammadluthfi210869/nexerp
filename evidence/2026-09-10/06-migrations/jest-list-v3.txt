@@ -1,0 +1,21 @@
+﻿C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\production.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\marketing.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\document-automation\unit\document-automation.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\hr.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\bussdev.controller.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\finance.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\bussdev.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\qc-audits.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\finance.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\state-transition.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\bussdev.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\production.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\warehouse.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\creative.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\legality.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\legality.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\warehouse.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\document-automation\unit\pdf-engine.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\rnd.service.unit-spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\test\unit\notification.service.unit-spec.ts
+
