@@ -109,7 +109,7 @@ export default function ProjectControlDashboardPage() {
         </div>
 
         <Link
-          href="/kpi-management/department"
+          href="/master/kpi-department"
           className="h-9 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[12px] font-semibold flex items-center gap-2 transition-all cursor-pointer text-decoration-none shadow-2xs"
         >
           <span>Ke KPI Management Suite</span>

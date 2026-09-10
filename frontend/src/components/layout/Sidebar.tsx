@@ -460,7 +460,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     items: [
       { name: "Dashboard Executive", href: "/executive/dashboard", icon: LayoutDashboard },
       { name: "Dashboard Notifikasi", href: "/executive/notifications", icon: Bell, badge: "LIVE", badgeVariant: "warning" },
-      { name: "KPI Management", href: "/kpi-management/department", icon: Gauge, badge: "KPI", badgeVariant: "info" },
+      { name: "KPI Management", href: "/master/kpi-department", icon: Gauge, badge: "KPI", badgeVariant: "info" },
       { name: "Project Control", href: "/samples/project-control", icon: Kanban },
       { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
       { name: "Dashboard Busdev", href: "/bussdev/dashboard", icon: Activity },

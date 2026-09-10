@@ -65,8 +65,8 @@ export function KpiNavTabs() {
   const pathname = usePathname();
 
   const tabs = [
-    { href: "/kpi-management/department", label: "DEPARTMENT KPI OVERVIEW", icon: Building2 },
-    { href: "/kpi-management/individual", label: "INDIVIDUAL KPI OVERVIEW", icon: Users },
+    { href: "/master/kpi-department", label: "DEPARTMENT KPI OVERVIEW", icon: Building2 },
+    { href: "/master/kpi-individual", label: "INDIVIDUAL KPI OVERVIEW", icon: Users },
     { href: "/kpi-management/settings", label: "KPI CONFIG & TARGET SETTINGS", icon: Settings },
   ];
 
