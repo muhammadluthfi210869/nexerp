@@ -32,7 +32,7 @@ import {
   TaskStatus,
 } from './marketing-domain.policy';
 
-type DbClient = PrismaService | any;
+type DbClient = PrismaService;
 
 const USER_PUBLIC_SELECT = { id: true, fullName: true, email: true } as const;
 const TASK_INCLUDE: any = {
@@ -71,10 +71,10 @@ export class CanonicalMarketingService {
         { taskCode: { contains: search, mode: 'insensitive' } },
         { brief: { contains: search, mode: 'insensitive' } },
       ];
-      if (where.OR)
-        ((where.AND = [{ OR: where.OR }, { OR: searchWhere }]),
-          delete where.OR);
-      else where.OR = searchWhere;
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: searchWhere }];
+        delete where.OR;
+      } else where.OR = searchWhere;
     }
     const orderBy = this.taskSort(query.sort);
     const [rows, total] = await this.prisma.$transaction([
@@ -223,16 +223,20 @@ export class CanonicalMarketingService {
     }
     for (const field of ['projectId', 'brandId', 'reviewerId'] as const)
       if (dto[field] !== undefined) data[field] = dto[field];
-    if (dto.assigneeId !== undefined)
-      ((data.assigneeId = dto.assigneeId), (data.picId = dto.assigneeId));
+    if (dto.assigneeId !== undefined) {
+      data.assigneeId = dto.assigneeId;
+      data.picId = dto.assigneeId;
+    }
     if (dto.startDate !== undefined) data.startDate = new Date(dto.startDate);
     if (dto.dueDate !== undefined) data.dueDate = new Date(dto.dueDate);
-    if (dto.estimatedMinutes !== undefined)
-      ((data.estimatedMinutes = dto.estimatedMinutes),
-        (data.estimatedHours = Math.ceil(dto.estimatedMinutes / 60)));
-    if (dto.actualMinutes !== undefined)
-      ((data.actualMinutes = dto.actualMinutes),
-        (data.actualHours = Math.ceil(dto.actualMinutes / 60)));
+    if (dto.estimatedMinutes !== undefined) {
+      data.estimatedMinutes = dto.estimatedMinutes;
+      data.estimatedHours = Math.ceil(dto.estimatedMinutes / 60);
+    }
+    if (dto.actualMinutes !== undefined) {
+      data.actualMinutes = dto.actualMinutes;
+      data.actualHours = Math.ceil(dto.actualMinutes / 60);
+    }
     await this.optimisticUpdate(
       this.prisma.marketingTask,
       id,
@@ -447,8 +451,10 @@ export class CanonicalMarketingService {
       'blockers',
     ] as const)
       if (dto[field] !== undefined) data[field] = dto[field];
-    if (dto.status)
-      ((data.canonicalStatus = dto.status), (data.status = dto.status));
+    if (dto.status) {
+      data.canonicalStatus = dto.status;
+      data.status = dto.status;
+    }
     if (dto.startDate) data.startDate = new Date(dto.startDate);
     if (dto.deadline) data.deadline = new Date(dto.deadline);
     await this.optimisticUpdate(
@@ -714,12 +720,12 @@ export class CanonicalMarketingService {
             brandId: dto.brandId,
             provider: dto.provider,
             status: dto.secret ? 'CONNECTED' : 'DISCONNECTED',
-            config: dto.config ?? {},
+            config: (dto.config ?? {}) as any,
             scopes: dto.scopes ?? [],
             ...encrypted,
           },
           update: {
-            config: dto.config,
+            config: dto.config as any,
             scopes: dto.scopes,
             ...(dto.secret ? { status: 'CONNECTED', ...encrypted } : {}),
           },
@@ -964,7 +970,7 @@ export class CanonicalMarketingService {
       }
       if (existing)
         await db.marketingIdempotencyKey.delete({ where: { id: existing.id } });
-      const result = await work(db);
+      const result = await work(db as any);
       await db.marketingIdempotencyKey.create({
         data: {
           scope: effectiveScope,

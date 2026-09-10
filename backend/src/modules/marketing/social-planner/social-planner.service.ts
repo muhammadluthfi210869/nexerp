@@ -142,7 +142,7 @@ export class SocialPlannerService {
                   done: item.done,
                 })),
               },
-            },
+            } as any,
             include: {
               checklist: { orderBy: { createdAt: 'asc' } },
               brand: true,
@@ -321,7 +321,7 @@ export class SocialPlannerService {
     const metrics = dto.igAccountId
       ? 'impressions,reach,profile_views,follower_count'
       : 'page_impressions,page_engaged_users,page_post_engagements,page_fans';
-    const url = `https://graph.facebook.com/v19.0/${encodeURIComponent(accountId!)}\/insights?metric=${metrics}&period=${dto.period || 'day'}&access_token=${encodeURIComponent(dto.accessToken)}`;
+    const url = `https://graph.facebook.com/v19.0/${encodeURIComponent(accountId!)}/insights?metric=${metrics}&period=${dto.period || 'day'}&access_token=${encodeURIComponent(dto.accessToken)}`;
     try {
       const response = await fetch(url);
       const result = await response.json();
