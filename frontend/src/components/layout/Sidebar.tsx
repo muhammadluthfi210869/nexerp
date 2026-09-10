@@ -529,7 +529,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     groupLabel: "5. PENJUALAN & CRM",
     icon: Activity,
     items: [
-      { name: "Buku Tamu", href: "/bussdev/guest-book", icon: ClipboardCheck },
+      { name: "Buku Tamu", href: "/penjualan/guest-book", icon: ClipboardCheck },
       { name: "Leads OmniCRM", href: "/marketing/omni-crm", icon: Users, badge: "PRO", badgeVariant: "purple" },
       { name: "Client Sample", href: "/bussdev/client-manager?tab=sample", icon: FlaskConical },
       { name: "Client Produksi", href: "/bussdev/client-manager?tab=production", icon: PackageCheck },
@@ -655,7 +655,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "AP Aging (Hutang)", href: "/finance/ap-aging", icon: History },
       { name: "Laporan Stok Persediaan", href: "/warehouse/stok", icon: Box },
       { name: "Laporan Mutasi Barang", href: "/warehouse/mutasi-stok", icon: RefreshCw },
-      { name: "Laporan BusDev & Buku Tamu", href: "/bussdev/guest-book", icon: ClipboardCheck },
+      { name: "Laporan BusDev & Buku Tamu", href: "/penjualan/guest-book", icon: ClipboardCheck },
     ]
   },
 

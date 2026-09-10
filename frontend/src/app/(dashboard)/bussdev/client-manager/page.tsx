@@ -505,7 +505,7 @@ function ClientManagerContent() {
         <DnaPageHeader
           title="Client Pipeline & Milestone Manager"
           description="Pelacakan Terpadu Siklus Maklon: Activity Work Sample R&D (Audit AMI) → Checklist 16 Tahap Produksi Pabrik → Repeat Order Batch"
-          backLink={{ href: "/bussdev/guest-book", label: "Buku Tamu" }}
+          backLink={{ href: "/penjualan/guest-book", label: "Buku Tamu" }}
           tabs={[
             {
               key: "sample",
