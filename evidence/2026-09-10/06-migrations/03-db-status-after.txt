@@ -1,0 +1,36 @@
+﻿
+> backend@0.0.1 db:status
+> ts-node scripts/db-status.ts
+
+Marketing DB status (READ ONLY)
+============================================================
+Database: erp_db_test
+DB user:  postgres
+Postgres: 16.13
+============================================================
+  MarketingTask                        73 rows
+  MarketingTaskHistory                  8 rows
+  MarketingTaskAttachment              72 rows
+  MarketingTaskComment                 65 rows
+  MarketingProject                      5 rows
+  MarketingBrand                  MISSING
+  MarketingTaskChecklistItem      MISSING
+  SocialPost                            0 rows
+  SocialChecklistItem                   0 rows
+  SocialPostMedia                 MISSING
+  SocialPostMetricSnapshot        MISSING
+  CampaignOkr                           0 rows
+  MarketingReportingPeriod        MISSING
+  BrandChannelMetric              MISSING
+  WeeklySocialReport              MISSING
+  StoryDailyMetric                MISSING
+  MarketingChannelFunnel          MISSING
+  MarketingIntegrationConnection  MISSING
+  MarketingIntegrationSyncJob     MISSING
+  MetaAccountConfig                     0 rows
+  MetaInsightsSnapshot            MISSING
+============================================================
+Users: 78 total, 15 with marketing/admin access
+============================================================
+No schema or data changes were performed.
+

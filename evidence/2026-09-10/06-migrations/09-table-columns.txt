@@ -1,0 +1,8 @@
+﻿The variable '$queryRaw' cannot be retrieved because it has not been set.
+At line:10 char:30
++   const cols = await prisma.\$queryRaw\`
++                              ~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (queryRaw:String) [], RuntimeException
+    + FullyQualifiedErrorId : VariableIsUndefined
+ 
+

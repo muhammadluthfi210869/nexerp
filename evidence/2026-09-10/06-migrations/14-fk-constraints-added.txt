@@ -1,0 +1,39 @@
+﻿Mode: APPLY
+
+  [orphan-check failed for marketing_tasks]: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "undefined" does not exist`
+[APPLY] marketing_tasks_projectId_fkey
+  SQL: ALTER TABLE "marketing_tasks" ADD CONSTRAINT "marketing_tasks_projectId_fkey"
+      FOREIGN KEY ("projectId") REFERENCES "marketing_projects"("id") ON DELETE SET NULL
+  [OK] applied
+  [orphan-check failed for marketing_task_histories]: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42703`. Message: `column "taskid" does not exist`
+[APPLY] marketing_task_histories_taskId_fkey
+  SQL: ALTER TABLE "marketing_task_histories" ADD CONSTRAINT "marketing_task_histories_taskId_fkey"
+      FOREIGN KEY ("taskId") REFERENCES "marketing_tasks"("id") ON DELETE CASCADE
+  [OK] applied
+  [orphan-check failed for marketing_task_attachments]: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42703`. Message: `column "taskid" does not exist`
+[APPLY] marketing_task_attachments_taskId_fkey
+  SQL: ALTER TABLE "marketing_task_attachments" ADD CONSTRAINT "marketing_task_attachments_taskId_fkey"
+      FOREIGN KEY ("taskId") REFERENCES "marketing_tasks"("id") ON DELETE CASCADE
+  [OK] applied
+  [orphan-check failed for marketing_task_comments]: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42703`. Message: `column "taskid" does not exist`
+[APPLY] marketing_task_comments_taskId_fkey
+  SQL: ALTER TABLE "marketing_task_comments" ADD CONSTRAINT "marketing_task_comments_taskId_fkey"
+      FOREIGN KEY ("taskId") REFERENCES "marketing_tasks"("id") ON DELETE CASCADE
+  [OK] applied
+

@@ -1,0 +1,5 @@
+﻿Backend lint captured: 2026-09-10T14:01:23Z
+Total bytes: 2174809
+Error count: 2116
+Warning count: 4974
+Problem markers: 1

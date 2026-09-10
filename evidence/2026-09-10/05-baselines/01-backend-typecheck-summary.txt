@@ -1,0 +1,26 @@
+﻿Backend typecheck captured: 2026-09-10T13:59:23Z
+Command: npx tsc --noEmit
+Exit code: 2
+Total TS errors: 195
+First 20 errors:
+src/modules/creative/creative.controller.ts(68,19): error TS2339: Property 'leadId' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(69,18): error TS2339: Property 'brief' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(70,17): error TS2339: Property 'soId' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(71,21): error TS2339: Property 'taskType' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(142,13): error TS2339: Property 'printSpecs' does not exist on type 'UploadVersionDto'.
+src/modules/creative/creative.controller.ts(144,37): error TS2339: Property 'printSpecs' does not exist on type 'UploadVersionDto'.
+src/modules/creative/creative.controller.ts(181,19): error TS2339: Property 'status' does not exist on type 'ApjReviewDto'.
+src/modules/creative/creative.controller.ts(182,18): error TS2339: Property 'notes' does not exist on type 'ApjReviewDto'.
+src/modules/creative/creative.controller.ts(184,16): error TS2339: Property 'pin' does not exist on type 'ApjReviewDto'.
+src/modules/creative/creative.controller.ts(192,54): error TS2339: Property 'status' does not exist on type 'ClientReviewDto'.
+src/modules/creative/creative.controller.ts(192,66): error TS2339: Property 'notes' does not exist on type 'ClientReviewDto'.
+src/modules/creative/creative.controller.ts(204,19): error TS2339: Property 'action' does not exist on type 'UnlockTaskDto'.
+src/modules/creative/creative.controller.ts(205,23): error TS2339: Property 'managerPin' does not exist on type 'UnlockTaskDto'.
+src/modules/digimar/digimar.gateway.ts(20,22): error TS2564: Property 'server' has no initializer and is not definitely assigned in the constructor.
+src/modules/digimar/digimar.gateway.ts(44,47): error TS2554: Expected 1 arguments, but got 0.
+src/modules/digimar/digimar.service.ts(19,11): error TS2564: Property 'sheets' has no initializer and is not definitely assigned in the constructor.
+src/modules/digimar/digimar.service.ts(73,7): error TS2322: Type 'null' is not assignable to type 'Sheets'.
+src/modules/digimar/digimar.service.ts(75,84): error TS18046: 'err' is of type 'unknown'.
+src/modules/digimar/digimar.service.ts(76,7): error TS2322: Type 'null' is not assignable to type 'Sheets'.
+src/modules/finance/adjustment-journals/dto/create-adjustment-journals.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+

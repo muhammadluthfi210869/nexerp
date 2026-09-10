@@ -1,0 +1,144 @@
+﻿ M .gitignore
+ M backend/package.json
+ M backend/prisma/schema/auth.prisma
+ M backend/prisma/schema/marketing.prisma
+ M backend/scripts/db-status.ts
+ M backend/src/modules/marketing/prototype/__tests__/marketing-prototype.service.spec.ts
+ M backend/src/modules/marketing/prototype/marketing-prototype.service.ts
+ M docs/REFACTOR-MANAGEMENT-TASK-SCHEMA.md
+ M frontend/eslint.config.mjs
+ M frontend/package.json
+ M frontend/src/app/(dashboard)/finance/accounting/auto-journal/page.tsx
+ M frontend/src/app/(dashboard)/finance/accounting/coa/page.tsx
+ M frontend/src/app/(dashboard)/finance/ap-aging/page.tsx
+ M frontend/src/app/(dashboard)/finance/approvals/page.tsx
+ M frontend/src/app/(dashboard)/finance/ar-hub/page.tsx
+ M frontend/src/app/(dashboard)/finance/assets/page.tsx
+ M frontend/src/app/(dashboard)/finance/bank-accounts/page.tsx
+ M frontend/src/app/(dashboard)/finance/bank-reconciliation/page.tsx
+ M frontend/src/app/(dashboard)/finance/bayar-pembelian/page.tsx
+ M frontend/src/app/(dashboard)/finance/bayar-penjualan/page.tsx
+ M frontend/src/app/(dashboard)/finance/bayar-sample/page.tsx
+ M frontend/src/app/(dashboard)/finance/bayar/page.tsx
+ M frontend/src/app/(dashboard)/finance/bills/page.tsx
+ M frontend/src/app/(dashboard)/finance/budget/page.tsx
+ M frontend/src/app/(dashboard)/finance/cash-in/page.tsx
+ M frontend/src/app/(dashboard)/finance/cash-out/page.tsx
+ M frontend/src/app/(dashboard)/finance/client-escrow/page.tsx
+ M frontend/src/app/(dashboard)/finance/closing/page.tsx
+ M frontend/src/app/(dashboard)/finance/cogs-request/page.tsx
+ M frontend/src/app/(dashboard)/finance/collections/page.tsx
+ M frontend/src/app/(dashboard)/finance/compliance-asset/page.tsx
+ M frontend/src/app/(dashboard)/finance/cost-variance/page.tsx
+ M frontend/src/app/(dashboard)/finance/dashboard/page.tsx
+ M frontend/src/app/(dashboard)/finance/dp-pembelian/page.tsx
+ M frontend/src/app/(dashboard)/finance/dp-penjualan/page.tsx
+ M frontend/src/app/(dashboard)/finance/dp/page.tsx
+ M frontend/src/app/(dashboard)/finance/faktur-pembelian/page.tsx
+ M frontend/src/app/(dashboard)/finance/faktur-penjualan/page.tsx
+ M frontend/src/app/(dashboard)/finance/fund-requests/page.tsx
+ M frontend/src/app/(dashboard)/finance/fund/page.tsx
+ M frontend/src/app/(dashboard)/finance/invoices/page.tsx
+ M frontend/src/app/(dashboard)/finance/jurnal-umum/page.tsx
+ M frontend/src/app/(dashboard)/finance/jurnal/page.tsx
+ M frontend/src/app/(dashboard)/finance/kas/page.tsx
+ M frontend/src/app/(dashboard)/finance/laba-rugi/page.tsx
+ M frontend/src/app/(dashboard)/finance/ledger/page.tsx
+ M frontend/src/app/(dashboard)/finance/piutang/page.tsx
+ M frontend/src/app/(dashboard)/finance/profitability/page.tsx
+ M frontend/src/app/(dashboard)/finance/reports/ar-aging/page.tsx
+ M frontend/src/app/(dashboard)/finance/reports/balance-sheet/page.tsx
+ M frontend/src/app/(dashboard)/finance/reports/cash-flow/page.tsx
+ M frontend/src/app/(dashboard)/finance/reports/page.tsx
+ M frontend/src/app/(dashboard)/finance/reports/trial-balance/page.tsx
+ M frontend/src/app/(dashboard)/finance/sales-orders/page.tsx
+ M frontend/src/app/(dashboard)/finance/transactions/page.tsx
+ M frontend/src/app/(dashboard)/legality/apj-release/page.tsx
+ M frontend/src/app/(dashboard)/legality/ckpb-audit/page.tsx
+ M frontend/src/app/(dashboard)/legality/dashboard/page.tsx
+ M frontend/src/app/(dashboard)/legality/inbox/page.tsx
+ M frontend/src/app/(dashboard)/legality/input/page.tsx
+ M frontend/src/app/(dashboard)/legality/master-inci/page.tsx
+ M frontend/src/app/(dashboard)/legality/permits/page.tsx
+ M frontend/src/app/(dashboard)/legality/pipeline/page.tsx
+ M frontend/src/app/(dashboard)/legality/records/page.tsx
+ M frontend/src/app/(dashboard)/marketing/management-task/page.tsx
+ M frontend/src/app/(dashboard)/marketing/social-tracker/page.tsx
+ M frontend/src/app/(dashboard)/production/audit/page.tsx
+ M frontend/src/app/(dashboard)/production/my-performance/page.tsx
+ M frontend/src/app/(dashboard)/production/operations/page.tsx
+ M frontend/src/app/(dashboard)/production/warehouse/page.tsx
+ M frontend/src/app/(dashboard)/scm/dashboard/page.tsx
+ M frontend/src/app/(dashboard)/scm/mrp/page.tsx
+ M frontend/src/app/(dashboard)/scm/purchase-approval/page.tsx
+ M frontend/src/app/(dashboard)/scm/purchasing/down-payment/page.tsx
+ M frontend/src/app/(dashboard)/scm/purchasing/page.tsx
+ M frontend/src/app/(dashboard)/scm/purchasing/payments/page.tsx
+ M frontend/src/app/(dashboard)/scm/rangkuman-kebutuhan/page.tsx
+ M frontend/src/app/(dashboard)/scm/receiving/page.tsx
+ M frontend/src/app/(dashboard)/scm/vendors/performance/page.tsx
+ M frontend/src/app/(dashboard)/scm/warehouse/mutation/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/WarehouseDashboardClient.tsx
+ M frontend/src/app/(dashboard)/warehouse/adjustment/AdjustmentClient.tsx
+ M frontend/src/app/(dashboard)/warehouse/adjustment/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/components/AuditTables.tsx
+ M frontend/src/app/(dashboard)/warehouse/components/Rankings.tsx
+ M frontend/src/app/(dashboard)/warehouse/components/VelocityMatrix.tsx
+ M frontend/src/app/(dashboard)/warehouse/gudang/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/inbound/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/map/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/mutasi-stok/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/opname/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/pindah-gudang/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/release/ReleaseClient.tsx
+ M frontend/src/app/(dashboard)/warehouse/release/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/stok/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/transfers/page.tsx
+ M frontend/src/app/(dashboard)/warehouse/workstation/page.tsx
+ M package.json
+?? .kilo/
+?? backend/prisma/migrations/20260720_add_mkt_proto_tables/
+?? backend/prisma/migrations/20260721_add_rnd_tasks_and_projects/
+?? backend/prisma/migrations/20260822080000_r4_fix_legacy_leadstatus_unused_enum/
+?? backend/prisma/migrations/20260822081953_lead_attribution_journey/
+?? backend/prisma/migrations/20260822085000_r4_fix_formulas_id_to_uuid/
+?? backend/prisma/migrations/20260822085000_r4_fix_text_id_columns_to_uuid/
+?? backend/prisma/migrations/20260822086000_r4_create_missing_goods_requirement_tables/
+?? backend/prisma/migrations/20260822095959_marketing_batch3_placeholder_repair/
+?? backend/prisma/migrations/20260822100000_batch3_so_formula_pinning/
+?? backend/prisma/migrations/20260822110000_batch3_legal_applicability/
+?? backend/prisma/migrations/20260822120000_regulatory_pipeline_unique/
+?? backend/prisma/migrations/20260823090000_batch4_requirement_procurement_lineage/
+?? backend/prisma/migrations/20260823093000_batch5_receiving_inventory_integrity/
+?? backend/prisma/migrations/20260823130000_batch5_requisition_issue_return/
+?? backend/prisma/migrations/20260823150000_batch6_production_qc_finished_flow/
+?? backend/prisma/migrations/20260823170000_batch7_finance_lineage/
+?? backend/prisma/migrations/20260823200000_r4_create_self_qr_devices/
+?? backend/prisma/migrations/20260824090000_marketing_sales_roster_alignment/
+?? backend/prisma/migrations/20260824200000_r2_shipment_lot_lineage/
+?? backend/prisma/migrations/20260825090000_r4_prodlight_to_canonical/
+?? backend/prisma/migrations/20260902120000_phase2_marketing_command/
+?? backend/prisma/migrations/20260902140000_add_director_user_role/
+?? backend/prisma/migrations/20260902150000_zaki_director_role/
+?? backend/prisma/migrations/20260902180000_lead_captures_kommo_columns/
+?? backend/prisma/migrations/20260902200000_omni_crm_state/
+?? backend/prisma/migrations/20260902210000_marketing_tasks/
+?? backend/prisma/migrations/20260904120000_marketing_management_tasks_full/
+?? backend/prisma/migrations/20260910150000_marketing_task_social_foundation/
+?? backend/prisma/migrations/add_assigned_phone/
+?? backend/scripts/audit-migration-history.ts
+?? backend/scripts/rehearse-marketing-phase2.ts
+?? backend/scripts/repair-migration-history.ts
+?? backend/test/jest-marketing.json
+?? backend/tsconfig.marketing-test.json
+?? backend/tsconfig.marketing.json
+?? docs/legacy-erp/backend/
+?? docs/marketing/
+?? "dreamlab-erp-\342\200\224-task-&-social-media-management/"
+?? frontend/.husky/
+?? frontend/commitlint.config.cjs
+?? frontend/eslint-rules/
+?? frontend/tsconfig.marketing.json
+?? scripts/verify-marketing-phase0.ps1
+?? scripts/verify-marketing-phase1.ps1
+?? scripts/verify-marketing-phase2.ps1

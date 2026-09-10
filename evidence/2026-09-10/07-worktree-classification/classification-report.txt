@@ -1,0 +1,170 @@
+﻿========================================
+DIRTY WORKTREE CLASSIFICATION REPORT
+========================================
+Captured: 2026-09-10T14:03:47Z
+Total dirty files: 145
+Status distribution:
+
+Name                    Count
+----                    -----
+REVIEW_FINANCE_PAGE        44
+REVIEW_FRONTEND_PAGE       42
+REVIEW_PRISMA              31
+REVIEW                     15
+REVIEW_CONFIG               8
+REVIEW_MODULE               2
+REVIEW_SEPARATE_PROJECT     1
+DROP_SESSION                1
+DROP_BUILD_ARTIFACT         1
+
+
+
+
+========================================
+KATEGORI 1: FRONTEND PAGES (PRIORITAS RENDAH UNTUK CLASSIFY)
+========================================
+Finance pages (44 files): perlu cross-check dengan MOD-10 + legacy spec
+  - frontend/src/app/(dashboard)/finance/accounting/auto-journal/page.tsx
+  - frontend/src/app/(dashboard)/finance/accounting/coa/page.tsx
+  - frontend/src/app/(dashboard)/finance/ap-aging/page.tsx
+  - frontend/src/app/(dashboard)/finance/approvals/page.tsx
+  - frontend/src/app/(dashboard)/finance/ar-hub/page.tsx
+  - frontend/src/app/(dashboard)/finance/assets/page.tsx
+  - frontend/src/app/(dashboard)/finance/bank-accounts/page.tsx
+  - frontend/src/app/(dashboard)/finance/bank-reconciliation/page.tsx
+  - frontend/src/app/(dashboard)/finance/bayar-pembelian/page.tsx
+  - frontend/src/app/(dashboard)/finance/bayar-penjualan/page.tsx
+
+  ... and 34 more
+
+Other frontend pages (42 files): perlu cross-check nexerpRoute di JSON catalog
+  - frontend/src/app/(dashboard)/legality/apj-release/page.tsx
+  - frontend/src/app/(dashboard)/legality/ckpb-audit/page.tsx
+  - frontend/src/app/(dashboard)/legality/dashboard/page.tsx
+  - frontend/src/app/(dashboard)/legality/inbox/page.tsx
+  - frontend/src/app/(dashboard)/legality/input/page.tsx
+  - frontend/src/app/(dashboard)/legality/master-inci/page.tsx
+  - frontend/src/app/(dashboard)/legality/permits/page.tsx
+  - frontend/src/app/(dashboard)/legality/pipeline/page.tsx
+  - frontend/src/app/(dashboard)/legality/records/page.tsx
+  - frontend/src/app/(dashboard)/marketing/management-task/page.tsx
+
+  ... and 32 more
+
+========================================
+KATEGORI 2: PRISMA (HIGH RISK)
+========================================
+31 files - WAJIB REVIEW sebelum commit karena:
+- Schema drift (12+ tables MISSING confirmed via db:status)
+- Pending migrations belum applied
+- Risiko: dropping schema akan break semua service yang reference fields
+
+  - backend/prisma/schema/auth.prisma
+  - backend/prisma/schema/marketing.prisma
+  - backend/prisma/migrations/20260720_add_mkt_proto_tables/
+  - backend/prisma/migrations/20260721_add_rnd_tasks_and_projects/
+  - backend/prisma/migrations/20260822080000_r4_fix_legacy_leadstatus_unused_enum/
+  - backend/prisma/migrations/20260822081953_lead_attribution_journey/
+  - backend/prisma/migrations/20260822085000_r4_fix_formulas_id_to_uuid/
+  - backend/prisma/migrations/20260822085000_r4_fix_text_id_columns_to_uuid/
+  - backend/prisma/migrations/20260822086000_r4_create_missing_goods_requirement_tables/
+  - backend/prisma/migrations/20260822095959_marketing_batch3_placeholder_repair/
+  - backend/prisma/migrations/20260822100000_batch3_so_formula_pinning/
+  - backend/prisma/migrations/20260822110000_batch3_legal_applicability/
+  - backend/prisma/migrations/20260822120000_regulatory_pipeline_unique/
+  - backend/prisma/migrations/20260823090000_batch4_requirement_procurement_lineage/
+  - backend/prisma/migrations/20260823093000_batch5_receiving_inventory_integrity/
+  - backend/prisma/migrations/20260823130000_batch5_requisition_issue_return/
+  - backend/prisma/migrations/20260823150000_batch6_production_qc_finished_flow/
+  - backend/prisma/migrations/20260823170000_batch7_finance_lineage/
+  - backend/prisma/migrations/20260823200000_r4_create_self_qr_devices/
+  - backend/prisma/migrations/20260824090000_marketing_sales_roster_alignment/
+  - backend/prisma/migrations/20260824200000_r2_shipment_lot_lineage/
+  - backend/prisma/migrations/20260825090000_r4_prodlight_to_canonical/
+  - backend/prisma/migrations/20260902120000_phase2_marketing_command/
+  - backend/prisma/migrations/20260902140000_add_director_user_role/
+  - backend/prisma/migrations/20260902150000_zaki_director_role/
+  - backend/prisma/migrations/20260902180000_lead_captures_kommo_columns/
+  - backend/prisma/migrations/20260902200000_omni_crm_state/
+  - backend/prisma/migrations/20260902210000_marketing_tasks/
+  - backend/prisma/migrations/20260904120000_marketing_management_tasks_full/
+  - backend/prisma/migrations/20260910150000_marketing_task_social_foundation/
+  - backend/prisma/migrations/add_assigned_phone/
+
+
+========================================
+KATEGORI 3: CONFIGS (LOW RISK)
+========================================
+8 files - biasanya aman tapi perlu review:
+  - backend/package.json
+  - frontend/eslint.config.mjs
+  - frontend/package.json
+  - package.json
+  - backend/tsconfig.marketing-test.json
+  - backend/tsconfig.marketing.json
+  - frontend/commitlint.config.cjs
+  - frontend/tsconfig.marketing.json
+
+
+========================================
+KATEGORI 4: REVIEW (manual needed)
+========================================
+  - .gitignore
+  - backend/scripts/db-status.ts
+  - docs/REFACTOR-MANAGEMENT-TASK-SCHEMA.md
+  - backend/scripts/audit-migration-history.ts
+  - backend/scripts/rehearse-marketing-phase2.ts
+  - backend/scripts/repair-migration-history.ts
+  - backend/test/jest-marketing.json
+  - docs/legacy-erp/backend/
+  - docs/marketing/
+  - evidence/
+  - frontend/.husky/
+  - frontend/eslint-rules/
+  - scripts/verify-marketing-phase0.ps1
+  - scripts/verify-marketing-phase1.ps1
+  - scripts/verify-marketing-phase2.ps1
+
+
+========================================
+KATEGORI 5: REVIEW_MODULE
+========================================
+  - backend/src/modules/marketing/prototype/__tests__/marketing-prototype.service.spec.ts
+  - backend/src/modules/marketing/prototype/marketing-prototype.service.ts
+
+
+========================================
+KATEGORI 6: DROP CANDIDATES
+========================================
+  - "dreamlab-erp-\342\200\224-task-&-social-media-management/" | Separate project, out of scope
+
+  - .kilo/ | Kilo session - tmp
+
+  - frontend/src/app/(dashboard)/finance/cash-out/page.tsx | Build artifact
+
+
+========================================
+REKOMENDASI TINDAKAN
+========================================
+1. DROP (aman):
+   - .kilo/ folder (session artifacts)
+   - dreamlab-erp—task-&-social-media-management/ (separate project)
+   - Build artifacts in .next/, dist/, coverage/
+
+2. REVIEW + COMMIT (atomic):
+   - Frontend finance pages (44) → batch per finance-flow
+   - Frontend other pages (42) → batch per division
+   - Prisma migrations (6 pending) → apply via migrate dev first
+
+3. REVIEW + KEEP (working in progress):
+   - Phase 0 docs (docs/legacy-erp/backend/)
+   - Backend modules aligned with MOD-XX
+   - Test files matching plan
+
+4. REVIEW MANUAL:
+   - Config changes (8)
+   - Backend scripts (4)
+   - 15 unclassified
+
+NEXT ACTION: User review this classification, then execute Phase 1
+baseline recovery (BUILD-001, TEST-001, etc.) before any code merge.

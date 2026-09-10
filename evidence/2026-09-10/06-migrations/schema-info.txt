@@ -1,0 +1,1 @@
+﻿Schema not found at C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\prisma\schema.prisma

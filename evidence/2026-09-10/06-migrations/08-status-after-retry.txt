@@ -1,0 +1,20 @@
+﻿node.exe : Loaded Prisma config from prisma.config.ts.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Prisma schema loaded from prisma\schema.
+Datasource "db": PostgreSQL database "erp_db_test", schema "public" at "localhost:5432"
+
+37 migrations found in prisma/migrations
+Following migrations have not yet been applied:
+20260909060000_add_social_tracker_tables
+20260910150000_marketing_task_social_foundation
+20260910170000_marketing_api_idempotency
+
+To apply migrations in development run prisma migrate dev.
+To apply migrations in production run prisma migrate deploy.
+

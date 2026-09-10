@@ -1,0 +1,23 @@
+﻿=== FRONTEND BASELINE ===
+Captured: 2026-09-10T14:02:40Z
+Working dir: C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend
+
+Typecheck:
+  Exit code: 2
+  TS errors: 20
+  First 10 errors: src/app/(dashboard)/production/warehouse/page.tsx(107,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(396,17): error TS17002: Expected corresponding JSX closing tag for 'motion.div'.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(398,15): error TS1005: ')' expected.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(438,15): error TS17002: Expected corresponding JSX closing tag for 'AnimatePresence'.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(439,13): error TS17002: Expected corresponding JSX closing tag for 'DashboardShell'.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(441,7): error TS1128: Declaration or statement expected.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(442,5): error TS1109: Expression expected.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(443,3): error TS1109: Expression expected.
+src/app/(dashboard)/scm/purchasing/down-payment/page.tsx(444,1): error TS1128: Declaration or statement expected.
+src/app/(dashboard)/warehouse/components/AuditTables.tsx(12,12): error TS17008: JSX element 'DnaCard' has no corresponding closing tag.
+
+
+Lint:
+  Exit code: 1
+  ESLint errors: 418
+  ESLint warnings: 5084

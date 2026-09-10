@@ -1,0 +1,10 @@
+﻿3308a9d chore(snapshot): pre-implementation baseline v2026-09-09 - frontend + backend + audit docs
+487f9fa feat(hr): align 5 HR pages with Pure Visual DNA and comprehensive manufacturing operations
+5464b4c feat(reports): align 9 financial and operational reports 100% with Legacy ERP spec and pure Visual DNA
+5805a9a feat(finance): align 8 core finance pages 100% with Legacy ERP spec and pure Visual DNA
+4dcbb9a feat(reports-and-hr): modernize 9 report pages and 5 HR pages to pure Visual DNA
+f7c2b10 feat(finance): modernize 8 core treasury and operational finance pages to pure Visual DNA
+a5831d8 feat(production): modernize 8 core factory production pages to pure Visual DNA (ADR-007 compliant)
+f321556 feat(rnd): modernize all 8 Pra-Produksi & R&D pages to Visual DNA standard (ADR-007 compliant)
+552fc27 feat(warehouse): modernize all 8 warehouse & logistics pages to Visual DNA standard (ADR-007 compliant)
+8ded51a feat(scm-finance): modernize 9 SCM and Pembelian pages to Visual DNA standard with full business rules compliance
