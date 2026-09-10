@@ -79,7 +79,7 @@ const financeSections = [
       },
       {
         name: "DP Penjualan",
-        href: "/finance/dp-penjualan",
+        href: "/penjualan/dp-penjualan-finance",
         icon: Handshake,
         description: "Uang Muka Penjualan"
       },
@@ -91,7 +91,7 @@ const financeSections = [
       },
       {
         name: "Bayar Penjualan",
-        href: "/finance/bayar-penjualan",
+        href: "/penjualan/bayar-penjualan",
         icon: DollarSign,
         description: "Penerimaan Pembayaran Piutang"
       },
@@ -126,7 +126,7 @@ const financeSections = [
       },
       {
         name: "Sales Orders",
-        href: "/finance/sales-orders",
+        href: "/penjualan/sales-orders-finance",
         icon: ShoppingCart,
         description: "Order Penjualan"
       }

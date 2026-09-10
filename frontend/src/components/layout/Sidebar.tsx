@@ -200,8 +200,8 @@ const FINANCE_SECTIONS: NavSection[] = [
     icon: Activity,
     items: [
       { name: "Customer Master", href: "/master/customers", icon: Users },
-      { name: "Faktur Penjualan", href: "/finance/faktur-penjualan", icon: FileSpreadsheet },
-      { name: "DP Penjualan", href: "/finance/dp-penjualan", icon: DollarSign },
+      { name: "Faktur Penjualan", href: "/penjualan/faktur-penjualan", icon: FileSpreadsheet },
+      { name: "DP Penjualan", href: "/penjualan/dp-penjualan-finance", icon: DollarSign },
       { name: "Report Penjualan", href: "/finance/reports", icon: BarChart3 },
       { name: "AR Aging & Collections", href: "/finance/reports/ar-aging", icon: History },
     ]
@@ -537,8 +537,8 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Penjualan (Sales Orders)", href: "/penjualan/sales-orders", icon: FileSpreadsheet },
       { name: "Penjualan Sample", href: "/penjualan/sample-sales", icon: FlaskConical },
       { name: "DP Penjualan", href: "/penjualan/down-payment", icon: DollarSign },
-      { name: "Faktur Penjualan", href: "/finance/faktur-penjualan", icon: FileSpreadsheet },
-      { name: "Bayar Penjualan", href: "/finance/bayar-penjualan", icon: Wallet },
+      { name: "Faktur Penjualan", href: "/penjualan/faktur-penjualan", icon: FileSpreadsheet },
+      { name: "Bayar Penjualan", href: "/penjualan/bayar-penjualan", icon: Wallet },
       { name: "Retur Penjualan", href: "/penjualan/retur-penjualan", icon: XCircle },
       { name: "Target Penjualan", href: "/penjualan/sales-target", icon: Gauge },
     ]
