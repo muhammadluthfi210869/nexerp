@@ -301,13 +301,13 @@ const PURCHASE_SECTIONS: NavSection[] = [
     groupLabel: "OPERASIONAL SCM",
     icon: Truck,
     items: [
-      { name: "Permintaan Pembelian", href: "/scm/purchase-requests", icon: ClipboardList },
-      { name: "Buat Pembelian (PO)", href: "/scm/pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
-      { name: "Penerimaan Barang", href: "/scm/receiving", icon: PackageCheck },
-      { name: "Retur Pembelian", href: "/scm/purchase-returns", icon: XCircle },
-      { name: "Kebutuhan Barang", href: "/scm/kebutuhan-barang", icon: Layers },
+      { name: "Permintaan Pembelian", href: "/pembelian/purchase-requests", icon: ClipboardList },
+      { name: "Buat Pembelian (PO)", href: "/pembelian/scm-pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
+      { name: "Penerimaan Barang", href: "/pembelian/receiving", icon: PackageCheck },
+      { name: "Retur Pembelian", href: "/pembelian/purchase-returns", icon: XCircle },
+      { name: "Kebutuhan Barang", href: "/pembelian/kebutuhan", icon: Layers },
       { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: CreditCard },
-      { name: "DP Pembelian", href: "/scm/purchasing/down-payment", icon: DollarSign },
+      { name: "DP Pembelian", href: "/pembelian/purchasing/down-payment", icon: DollarSign },
       { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
     ]
   },
@@ -439,8 +439,8 @@ const RND_SECTIONS: NavSection[] = [
     icon: Package,
     items: [
       { name: "Penjualan Sample (CRM)", href: "/penjualan/sample-sales", icon: Users },
-      { name: "Kebutuhan Barang Lab", href: "/scm/kebutuhan-barang", icon: Layers },
-      { name: "Permintaan Pembelian Bahan", href: "/scm/purchase-requests", icon: ClipboardList },
+      { name: "Kebutuhan Barang Lab", href: "/pembelian/kebutuhan", icon: Layers },
+      { name: "Permintaan Pembelian Bahan", href: "/pembelian/purchase-requests", icon: ClipboardList },
       { name: "Stok Barang & Bahan", href: "/warehouse/stok", icon: Box },
     ]
   }
@@ -551,13 +551,13 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     groupLabel: "6. PEMBELIAN & PENGADAAN",
     icon: Truck,
     items: [
-      { name: "Permintaan Pembelian (PR)", href: "/scm/purchase-requests", icon: ClipboardList },
-      { name: "Buat Pembelian (PO)", href: "/scm/pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
+      { name: "Permintaan Pembelian (PR)", href: "/pembelian/purchase-requests", icon: ClipboardList },
+      { name: "Buat Pembelian (PO)", href: "/pembelian/scm-pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
       { name: "DP Pembelian", href: "/finance/dp-pembelian", icon: DollarSign },
       { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: CreditCard },
       { name: "Bayar Pembelian", href: "/finance/bayar-pembelian", icon: Wallet },
-      { name: "Retur Pembelian", href: "/scm/purchase-returns", icon: XCircle },
-      { name: "Kebutuhan Barang (MRP)", href: "/scm/kebutuhan-barang", icon: Layers },
+      { name: "Retur Pembelian", href: "/pembelian/purchase-returns", icon: XCircle },
+      { name: "Kebutuhan Barang (MRP)", href: "/pembelian/kebutuhan", icon: Layers },
       { name: "Permintaan Barang", href: "/approvals/goods-request", icon: PackageCheck },
     ]
   },

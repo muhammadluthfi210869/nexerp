@@ -4,41 +4,26 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { 
-  ArrowRightLeft, 
-  History, 
-  Plus, 
-  Search, 
-  Calendar, 
-  Warehouse, 
-  Package, 
-  Trash2, 
-  ChevronLeft, 
-  Save, 
-  Eye, 
+import {
+  ArrowRightLeft,
+  History,
+  Plus,
+  Search,
+  Warehouse,
+  Trash2,
+  ChevronLeft,
+  Save,
+  Eye,
   CheckCircle2,
   Clock,
-  ArrowRight,
   ClipboardList,
   Layers,
   ArrowDownToLine,
-  ShieldCheck,
-  TrendingUp,
-  Boxes,
-  Loader2
+  ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { DnaInput, DnaBadge, DnaButton, DnaStatCard, DnaDataTableCard, DnaSelect, DnaTextarea, DnaCell } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { toast } from "sonner";
 
@@ -46,6 +31,18 @@ const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
   return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
 };
+
+// SPEC: SCR-SCM-MUT-001 — Warehouse Stock Mutation (Mutasi Barang Antar-Gudang)
+
+const WAREHOUSE_OPTIONS_SOURCE = [
+  { label: 'Gudang Utama', value: '00000000-0000-0000-0000-000000000001' },
+  { label: 'Gudang Bahan Baku', value: '00000000-0000-0000-0000-000000000002' },
+];
+const WAREHOUSE_OPTIONS_DEST = [
+  { label: 'Gudang Produksi', value: '00000000-0000-0000-0000-000000000003' },
+  { label: 'Gudang Mixing', value: '00000000-0000-0000-0000-000000000004' },
+  { label: 'Gudang Jadi', value: '00000000-0000-0000-0000-000000000005' },
+];
 
 export default function InventoryMutationPrototype() {
   const queryClient = useQueryClient();
@@ -97,6 +94,11 @@ export default function InventoryMutationPrototype() {
   const transferList = Array.isArray(transfers) ? transfers : [];
   const materialList = Array.isArray(materials) ? materials : [];
 
+  const materialOptions = materialList.map((m: any) => ({
+    label: `${m.name} | ${Number(m.stockQty || 0).toLocaleString()} ${m.unit || "pcs"} Available`,
+    value: m.id,
+  }));
+
   const addToCart = () => {
     if (!selectedProduct) return;
     setCart([...cart, { ...selectedProduct, qty }]);
@@ -129,8 +131,8 @@ export default function InventoryMutationPrototype() {
       title={view === "list" ? "MUTASI" : "BUAT MUTASI"}
       titleAccent="BARANG"
       subtitle={
-        view === "list" 
-          ? "(Protokol Transfer Stok & Pergerakan Aset Antar-Gudang)" 
+        view === "list"
+          ? "(Protokol Transfer Stok & Pergerakan Aset Antar-Gudang)"
           : "(Drafting Phase • Protocol 09-MT)"
       }
       actions={
@@ -139,7 +141,7 @@ export default function InventoryMutationPrototype() {
             <DnaButton variant="outline" size="md" icon={<History className="text-amber-500" />}>
               Riwayat
             </DnaButton>
-            <DnaButton variant="primary" size="md" icon={<Plus />} onClick={() => setView("form")} className="hover:scale-[1.02] active:scale-[0.98]">
+            <DnaButton variant="primary" size="md" icon={<Plus />} onClick={() => setView("form")}>
               Buat
             </DnaButton>
           </div>
@@ -148,7 +150,7 @@ export default function InventoryMutationPrototype() {
             <DnaButton variant="ghost" icon={<ChevronLeft />} onClick={() => setView("list")} className="text-rose-500 hover:bg-rose-50 hover:text-rose-500">
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" icon={<Save />} onClick={handleFinalize} disabled={createMutation.isPending} className="hover:scale-[1.02] active:scale-[0.98]">
+            <DnaButton variant="primary" size="md" icon={<Save />} onClick={handleFinalize} disabled={createMutation.isPending}>
               {createMutation.isPending ? "Processing..." : "Finalize Transfer"}
             </DnaButton>
           </div>
@@ -162,102 +164,98 @@ export default function InventoryMutationPrototype() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-[var(--section-gap)]"
+            className="flex flex-col gap-6"
           >
-            {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Transfer Tertunda" value="5" icon={<Clock className="text-amber-500" />} />
-            <StatCard label="Berhasil" value="128" icon={<CheckCircle2 className="text-emerald-500" />} />
-            <StatCard label="Frekuensi Transfer" value="12/hari" icon={<ArrowRightLeft className="text-blue-600" />} />
-            <StatCard label="Peringatan Stok" value="3" icon={<Layers className="text-rose-600" />} />
+              <DnaStatCard label="Transfer Tertunda" value="5" icon={<Clock />} variant="amber" />
+              <DnaStatCard label="Berhasil" value="128" icon={<CheckCircle2 />} variant="emerald" />
+              <DnaStatCard label="Frekuensi Transfer" value="12/hari" icon={<ArrowRightLeft />} variant="blue" />
+              <DnaStatCard label="Peringatan Stok" value="3" icon={<Layers />} variant="rose" />
             </div>
 
-            {/* List Table */}
-            <TableWrapper
-              filters={
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <DnaDataTableCard
+              customToolbar={
+                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
                   <div className="w-72">
-                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari ID Mutasi..." className="h-10 bg-slate-50 border-none rounded-lg text-xs font-black" />
+                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari ID Mutasi..." className="h-10 text-xs" />
                   </div>
                   <div className="flex gap-4">
-                    <DnaButton variant="ghost" className="h-10 px-5 rounded-lg text-[9px] text-slate-500 hover:bg-slate-50 hover:text-slate-500">
+                    <DnaButton variant="ghost" className="h-10 px-5 text-[9px]">
                       Filter: Semua Status
                     </DnaButton>
                   </div>
                 </div>
               }
             >
-              <Table className="table-dense">
-                <TableHeader>
-                  <TableRow className="bg-slate-50/50">
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">ID Transfer</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Asal / Tujuan</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400">Dibuat Oleh</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-4 px-4 text-table-header text-slate-400 text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="w-full text-left border-collapse text-[12px]">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="py-4 px-4">ID Transfer</th>
+                    <th className="py-4 px-4">Asal / Tujuan</th>
+                    <th className="py-4 px-4">Dibuat Oleh</th>
+                    <th className="py-4 px-4 text-center">Status</th>
+                    <th className="py-4 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
                   {transferLoading && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-20 text-center">
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat transfer...</p>
-                      </TableCell>
-                    </TableRow>
+                        <p className="text-[10px] font-bold uppercase mt-4 text-slate-400">Memuat transfer...</p>
+                      </td>
+                    </tr>
                   )}
                   {!transferLoading && transferList.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada transfer</p>
-                      </TableCell>
-                    </TableRow>
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center">
+                        <p className="text-[10px] font-bold uppercase text-slate-300">Belum ada transfer</p>
+                      </td>
+                    </tr>
                   )}
                   {!transferLoading && transferList.map((mut: any) => (
-                    <TableRow key={mut.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                      <TableCell className="py-4 px-4">
+                    <tr key={mut.id} className="hover:bg-slate-50/80">
+                      <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                            <ClipboardList className="h-4.5 w-4.5" />
+                            <ClipboardList className="h-4 w-4" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{mut.transferNumber || mut.kode}</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase">{formatDate(mut.date || mut.createdAt)}</span>
+                            <span className="font-bold text-slate-900 tracking-tight text-xs uppercase italic">{mut.transferNumber || mut.kode}</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">{formatDate(mut.date || mut.createdAt)}</span>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4">
+                      </td>
+                      <td className="py-4 px-4">
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-1.5">
-                             <Warehouse className="h-3 w-3 text-slate-400" />
-                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">{mut.sourceWarehouse?.name || mut.dari || "-"}</span>
+                            <Warehouse className="h-3 w-3 text-slate-400" />
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{mut.sourceWarehouse?.name || mut.dari || "-"}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                             <Warehouse className="h-3 w-3 text-blue-600" />
-                             <span className="text-[10px] font-black text-blue-600 uppercase italic tracking-tighter">{mut.destWarehouse?.name || mut.ke || "-"}</span>
+                            <Warehouse className="h-3 w-3 text-blue-600" />
+                            <span className="text-[10px] font-bold text-blue-600 uppercase italic tracking-tighter">{mut.destWarehouse?.name || mut.ke || "-"}</span>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4">
+                      </td>
+                      <td className="py-4 px-4">
                         <DnaBadge status="default" className="rounded-md text-[8px] px-1.5 py-0.5">
                           {mut.createdBy || mut.pembuat || "-"}
                         </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-center">
+                      </td>
+                      <td className="py-4 px-4 text-center">
                         <DnaBadge status={mut.status === "COMPLETED" || mut.status === "Selesai" ? "success" : "warning"} className="text-[8px]">
                           {mut.status === "COMPLETED" ? "Selesai" : mut.status === "PENDING" ? "Proses" : mut.status || "-"}
                         </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <DnaButton variant="ghost" size="icon" icon={<Eye className="h-4 w-4" />} />
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+                </tbody>
+              </table>
+            </DnaDataTableCard>
           </motion.div>
         ) : (
           <motion.div
@@ -265,178 +263,154 @@ export default function InventoryMutationPrototype() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-[var(--section-gap)] pb-10"
+            className="flex flex-col gap-6 pb-10"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-               {/* Left: Routing */}
-               <div className="lg:col-span-4 space-y-6">
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8 relative overflow-hidden">
-                      <div className="relative z-10 space-y-6">
-                         <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">Transfer Path</p>
-                            <h3 className="text-2xl font-black italic tracking-tighter uppercase">Warehouse <br/> <span className="text-blue-500 text-3xl">Migration</span></h3>
-                         </div>
+              <div className="lg:col-span-4 space-y-6">
+                <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8 relative overflow-hidden">
+                  <div className="relative z-10 space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Transfer Path</p>
+                      <h3 className="text-2xl font-bold italic tracking-tighter uppercase">Warehouse <br /> <span className="text-blue-500 text-3xl">Migration</span></h3>
+                    </div>
 
-                         <div className="space-y-5">
-                            <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase block">
-                                  <ArrowDownToLine className="h-3 w-3" /> Gudang Asal
-                               </label>
-                               <select
-                                 value={sourceWarehouse}
-                                 onChange={(e) => setSourceWarehouse(e.target.value)}
-                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none"
-                               >
-                                   <option value="" className="bg-white">-- Pilih Gudang --</option>
-                                   <option value="00000000-0000-0000-0000-000000000001" className="bg-white">Gudang Utama</option>
-                                   <option value="00000000-0000-0000-0000-000000000002" className="bg-white">Gudang Bahan Baku</option>
-                               </select>
-                            </div>
+                    <div className="space-y-5">
+                      <DnaSelect
+                        label={<><ArrowDownToLine className="h-3 w-3 inline" /> Gudang Asal</>}
+                        placeholder="-- Pilih Gudang --"
+                        value={sourceWarehouse}
+                        onChange={setSourceWarehouse}
+                        options={WAREHOUSE_OPTIONS_SOURCE}
+                      />
 
-                            <div className="flex justify-center">
-                               <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                  <ArrowRight className="h-4.5 w-4.5 rotate-90" />
-                               </div>
-                            </div>
-
-                            <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase block">
-                                  <Warehouse className="h-3 w-3" /> Gudang Tujuan
-                               </label>
-                               <select
-                                 value={destWarehouse}
-                                 onChange={(e) => setDestWarehouse(e.target.value)}
-                                 className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none"
-                               >
-                                   <option value="" className="bg-white">-- Pilih Gudang --</option>
-                                   <option value="00000000-0000-0000-0000-000000000003" className="bg-white">Gudang Produksi</option>
-                                   <option value="00000000-0000-0000-0000-000000000004" className="bg-white">Gudang Mixing</option>
-                                   <option value="00000000-0000-0000-0000-000000000005" className="bg-white">Gudang Jadi</option>
-                               </select>
-                            </div>
-                         </div>
-
-                         <div className="pt-6 border-t border-slate-200 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Logistics Notes</label>
-                            <textarea
-                              value={notes}
-                              onChange={(e) => setNotes(e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
-                              rows={3}
-                              placeholder="Provide reason for mutation..."
-                            />
-                         </div>
-                      </div>
-                      <Warehouse className="h-40 w-40 text-slate-200 absolute -right-10 -bottom-10 rotate-12" />
-                   </div>
-               </div>
-
-               {/* Right: Asset Picker & Manifest */}
-               <div className="lg:col-span-8 space-y-6">
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8">
-                      <div className="flex items-center justify-between">
-                         <div className="space-y-1">
-                            <h2 className="text-xl font-black uppercase tracking-tighter italic">Resource <span className="text-blue-600">Selection</span></h2>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select assets for logical migration</p>
-                         </div>
-                         <DnaBadge status="info">
-                            Asset Integrity Verified
-                         </DnaBadge>
+                      <div className="flex justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                          <ArrowRight className="h-4 w-4 rotate-90" />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                         <div className="md:col-span-6 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Search Asset</label>
-                            <select 
-                              onChange={(e) => setSelectedProduct(materialList.find((p: any) => p.id === e.target.value))}
-                              className="w-full h-11 px-4 bg-slate-50 border-none rounded-xl font-black text-xs italic uppercase appearance-none"
-                            >
-                               <option value="">— CHOOSE ASSET —</option>
-                               {materialList.map((p: any) => (
-                                 <option key={p.id} value={p.id}>{p.name} | {Number(p.stockQty || 0).toLocaleString()} {p.unit || "pcs"} Available</option>
-                               ))}
-                            </select>
-                         </div>
-                         <div className="md:col-span-3 space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase block">Transfer Qty</label>
-                            <DnaInput 
-                              type="number" 
-                              value={qty}
-                              onChange={(e) => setQty(Number(e.target.value))}
-                              className="h-11 bg-slate-50 border-none rounded-xl font-black text-center text-xs" 
-                            />
-                         </div>
-                         <div className="md:col-span-3 h-11">
-                            <DnaButton variant="primary" icon={<Plus />} onClick={addToCart} className="w-full h-full text-[9px]">
-                              Add to Transfer
-                            </DnaButton>
-                         </div>
-                      </div>
-                   </div>
+                      <DnaSelect
+                        label={<><Warehouse className="h-3 w-3 inline" /> Gudang Tujuan</>}
+                        placeholder="-- Pilih Gudang --"
+                        value={destWarehouse}
+                        onChange={setDestWarehouse}
+                        options={WAREHOUSE_OPTIONS_DEST}
+                      />
+                    </div>
 
-                  {/* Manifest Table */}
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 overflow-hidden">
-                      <div className="flex items-center justify-between mb-6">
-                         <div className="flex items-center gap-2">
-                             <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                <Layers className="h-4.5 w-4.5" />
-                            </div>
-                            <h3 className="text-base font-black uppercase italic tracking-tighter">Migration <span className="text-blue-600">Manifest</span></h3>
-                         </div>
-                         {cart.length > 0 && (
-                           <DnaButton variant="ghost" icon={<Trash2 />} onClick={() => setCart([])} className="text-[9px] text-rose-500 hover:bg-rose-50 hover:text-rose-500 rounded-lg h-9">
-                             Clear Manifest
-                           </DnaButton>
-                         )}
-                      </div>
+                    <div className="pt-6 border-t border-slate-200">
+                      <DnaTextarea
+                        label="Logistics Notes"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={3}
+                        placeholder="Provide reason for mutation..."
+                      />
+                    </div>
+                  </div>
+                  <Warehouse className="h-40 w-40 text-slate-200 absolute -right-10 -bottom-10 rotate-12" />
+                </div>
+              </div>
 
-                      <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                         <Table className="table-dense">
-                            <TableHeader>
-                               <TableRow className="bg-slate-50/50">
-                                  <TableHead className="py-4 px-4 text-[9px] font-black uppercase text-slate-400">Barang</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Kode</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Satuan</TableHead>
-                                  <TableHead className="py-4 px-4 text-center text-[9px] font-black uppercase text-slate-400">Qty Mutasi</TableHead>
-                                  <TableHead className="py-4 px-4 text-right text-[9px] font-black uppercase text-slate-400">Aksi</TableHead>
-                               </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                               {cart.length === 0 ? (
-                                 <TableRow>
-                                    <TableCell colSpan={5} className="py-14 text-center">
-                                       <div className="flex flex-col items-center gap-3">
-                                          <ArrowRightLeft className="h-10 w-10 text-slate-200" />
-                                          <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.3em]">No assets staged for migration</p>
-                                       </div>
-                                    </TableCell>
-                                 </TableRow>
-                               ) : (
-                                 cart.map((item, i) => (
-                                   <TableRow key={i} className="group hover:bg-slate-50 transition-all border-b border-slate-50">
-                                      <TableCell className="py-4 px-4">
-                                         <span className="font-black text-slate-900 text-xs uppercase">{item.name}</span>
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-center">
-                                         <DnaBadge status="default" className="rounded-md text-[8px] px-1.5 py-0.5">{item.code || item.id}</DnaBadge>
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-center font-black text-slate-400 text-xs uppercase">{item.unit || "pcs"}</TableCell>
-                                      <TableCell className="py-4 px-4 text-center font-black text-slate-900 text-xs tabular-nums">
-                                         {item.qty}
-                                      </TableCell>
-                                      <TableCell className="py-4 px-4 text-right">
-                                          <Button variant="ghost" size="icon" onClick={() => removeFromCart(i)} className="h-8 w-8 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all">
-                                             <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                      </TableCell>
-                                   </TableRow>
-                                 ))
-                               )}
-                            </TableBody>
-                         </Table>
+              <div className="lg:col-span-8 space-y-6">
+                <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h2 className="text-xl font-bold uppercase tracking-tighter italic">Resource <span className="text-blue-600">Selection</span></h2>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Select assets for logical migration</p>
+                    </div>
+                    <DnaBadge status="info">
+                      Asset Integrity Verified
+                    </DnaBadge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <div className="md:col-span-6">
+                      <DnaSelect
+                        label="Search Asset"
+                        placeholder="— CHOOSE ASSET —"
+                        value={selectedProduct?.id || ""}
+                        onChange={(val) => setSelectedProduct(materialList.find((p: any) => p.id === val) || null)}
+                        options={materialOptions}
+                      />
+                    </div>
+                    <div className="md:col-span-3">
+                      <DnaInput
+                        label="Transfer Qty"
+                        type="number"
+                        value={qty}
+                        onChange={(e) => setQty(Number(e.target.value))}
+                        className="h-11 text-center text-xs font-bold"
+                      />
+                    </div>
+                    <div className="md:col-span-3 h-11">
+                      <DnaButton variant="primary" icon={<Plus />} onClick={addToCart} className="w-full h-full text-[9px]">
+                        Add to Transfer
+                      </DnaButton>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-8 overflow-hidden">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                        <Layers className="h-4 w-4" />
                       </div>
-                   </div>
-               </div>
+                      <h3 className="text-base font-bold uppercase italic tracking-tighter">Migration <span className="text-blue-600">Manifest</span></h3>
+                    </div>
+                    {cart.length > 0 && (
+                      <DnaButton variant="ghost" icon={<Trash2 />} onClick={() => setCart([])} className="text-[9px] text-rose-500 hover:bg-rose-50 rounded-lg h-9">
+                        Clear Manifest
+                      </DnaButton>
+                    )}
+                  </div>
+
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                    <table className="w-full text-left border-collapse text-[12px]">
+                      <thead>
+                        <tr className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[9px]">
+                          <th className="py-4 px-4">Barang</th>
+                          <th className="py-4 px-4 text-center">Kode</th>
+                          <th className="py-4 px-4 text-center">Satuan</th>
+                          <th className="py-4 px-4 text-center">Qty Mutasi</th>
+                          <th className="py-4 px-4 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {cart.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center">
+                              <div className="flex flex-col items-center gap-3">
+                                <ArrowRightLeft className="h-10 w-10 text-slate-200" />
+                                <p className="text-[9px] font-bold uppercase text-slate-300 tracking-[0.3em]">No assets staged for migration</p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          cart.map((item, i) => (
+                            <tr key={i} className="hover:bg-slate-50/80">
+                              <td className="py-4 px-4">
+                                <span className="font-bold text-slate-900 text-xs uppercase">{item.name}</span>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <DnaBadge status="default" className="rounded-md text-[8px] px-1.5 py-0.5">{item.code || item.id}</DnaBadge>
+                              </td>
+                              <td className="py-4 px-4 text-center font-bold text-slate-400 text-xs uppercase">{item.unit || "pcs"}</td>
+                              <td className="py-4 px-4 text-center font-bold text-slate-900 text-xs tabular-nums">
+                                {item.qty}
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <DnaButton variant="ghost" size="icon" onClick={() => removeFromCart(i)} icon={<Trash2 className="h-4 w-4" />} />
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

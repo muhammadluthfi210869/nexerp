@@ -22,18 +22,11 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { DnaInput, DnaBadge, DnaButton, StatCard, KpiCard, TableWrapper } from "@/components/dna";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
+import { DnaInput, DnaBadge, DnaButton, DnaStatCard, DnaDataTableCard, DnaSelect, DnaTextarea, DnaCell } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { toast } from "sonner";
+
+// SPEC: SCR-SCM-DP-001 — Down Payment (Uang Muka) management
 
 const statusLabel = (status: string) => {
   switch (status) {
@@ -151,119 +144,108 @@ export default function DownPaymentPrototype() {
           >
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard label="Total DP" value="Rp 750,000" subValue="2 Records MTD" icon={<CreditCard className="text-blue-600" />} />
-              <StatCard label="Saldo Outstanding" value="Rp 150,000" subValue="Menunggu Rekonsiliasi Faktur" icon={<AlertCircle className="text-amber-500" />} />
-              <KpiCard label="Tingkat Rekonsiliasi" value="80%" targetPct={80} icon={<CheckCircle2 className="text-emerald-500" />} />
+              <DnaStatCard label="Total DP" value="Rp 750,000" subtext="2 Records MTD" icon={<CreditCard />} variant="blue" />
+              <DnaStatCard label="Saldo Outstanding" value="Rp 150,000" subtext="Menunggu Rekonsiliasi Faktur" icon={<AlertCircle />} variant="amber" />
+              <DnaStatCard label="Tingkat Rekonsiliasi" value="80%" subtext="Target: 80%" icon={<CheckCircle2 />} variant="emerald" />
             </div>
 
             {/* List Table */}
-            <TableWrapper
-              filters={
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <DnaDataTableCard
+              customToolbar={
+                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
                   <div className="relative w-72">
-                    <DnaInput
-                      icon={<Search className="h-3.5 w-3.5 text-slate-400" />}
-                      placeholder="Cari Kode atau Pemasok..."
-                    />
+                    <DnaInput icon={<Search className="h-3.5 w-3.5 text-slate-400" />} placeholder="Cari Kode atau Pemasok..." />
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5">
-                      <div className="relative">
-                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 pointer-events-none" />
-                        <DnaInput type="date" className="h-9 pl-7 text-[9px] font-black w-32" />
-                      </div>
+                      <DnaInput type="date" className="h-9 text-xs w-32" />
                       <span className="text-slate-300 text-xs">—</span>
-                      <div className="relative">
-                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 pointer-events-none" />
-                        <DnaInput type="date" className="h-9 pl-7 text-[9px] font-black w-32" />
-                      </div>
+                      <DnaInput type="date" className="h-9 text-xs w-32" />
                     </div>
-                    <DnaButton variant="outline" size="sm" icon={<Search className="h-3 w-3" />} className="hover:bg-blue-600 hover:text-white">
+                    <DnaButton variant="outline" size="sm" icon={<Search className="h-3 w-3" />}>
                       Filter
                     </DnaButton>
                   </div>
                 </div>
               }
             >
-              <Table className="table-dense">
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="py-3 px-4 pl-8 text-table-header text-slate-400">ID DP</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400">PO / Pemasok</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400">Sumber Dana</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-right">Jumlah / Terpakai</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-center">Status</TableHead>
-                    <TableHead className="py-3 px-4 text-table-header text-slate-400 text-right pr-8">Protokol</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="w-full text-left border-collapse text-[12px]">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[9px]">
+                    <th className="py-3 px-4 pl-8">ID DP</th>
+                    <th className="py-3 px-4">PO / Pemasok</th>
+                    <th className="py-3 px-4">Sumber Dana</th>
+                    <th className="py-3 px-4 text-right">Jumlah / Terpakai</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right pr-8">Protokol</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
                   {invLoading && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-20 text-center">
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-                        <p className="text-[10px] font-black uppercase mt-4 text-slate-400">Memuat uang muka...</p>
-                      </TableCell>
-                    </TableRow>
+                        <p className="text-[10px] font-bold uppercase mt-4 text-slate-400">Memuat uang muka...</p>
+                      </td>
+                    </tr>
                   )}
                   {!invLoading && invList.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-20 text-center">
-                        <p className="text-[10px] font-black uppercase text-slate-300">Belum ada uang muka</p>
-                      </TableCell>
-                    </TableRow>
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center">
+                        <p className="text-[10px] font-bold uppercase text-slate-300">Belum ada uang muka</p>
+                      </td>
+                    </tr>
                   )}
                   {!invLoading && invList.map((dp: any, idx: number) => {
                     const totalDp = Number(dp.amountDue);
                     const paidAmount = totalDp - Number(dp.outstandingAmount);
                     return (
-                      <TableRow key={dp.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                        <TableCell className="py-2.5 px-3 pl-8">
+                      <tr key={dp.id} className="hover:bg-slate-50/80">
+                        <td className="py-2.5 px-3 pl-8">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-lg bg-white text-slate-900 flex items-center justify-center font-black text-[9px] border border-slate-200">
+                            <div className="h-9 w-9 rounded-lg bg-white text-slate-900 flex items-center justify-center font-bold text-[9px] border border-slate-200">
                               {idx + 1}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{dp.invoiceNumber}</span>
-                              <span className="text-[9px] font-black text-slate-400 uppercase">{formatDate(dp.issuedAt)}</span>
+                              <span className="font-bold text-slate-900 tracking-tight text-xs uppercase italic">{dp.invoiceNumber}</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase">{formatDate(dp.issuedAt)}</span>
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3">
+                        </td>
+                        <td className="py-2.5 px-3">
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-xs uppercase">{dp.po?.poNumber || "-"}</span>
-                            <span className="text-[9px] font-black text-blue-600 uppercase italic mt-0.5">{dp.supplier?.name || "-"}</span>
+                            <span className="font-bold text-slate-900 text-xs uppercase">{dp.po?.poNumber || "-"}</span>
+                            <span className="text-[9px] font-bold text-blue-600 uppercase italic mt-0.5">{dp.supplier?.name || "-"}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3">
+                        </td>
+                        <td className="py-2.5 px-3">
                           <div className="flex items-center gap-1.5">
                             <CreditCard className="h-3 w-3 text-slate-400" />
-                            <span className="text-[10px] font-black text-slate-600 uppercase">Invoice</span>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase">Invoice</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-right">
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-xs tabular-nums">Rp {totalDp.toLocaleString()}</span>
-                            <span className="text-[9px] font-black text-emerald-500 uppercase mt-0.5">Used: Rp {paidAmount.toLocaleString()}</span>
+                            <span className="font-bold text-slate-900 text-xs tabular-nums">Rp {totalDp.toLocaleString()}</span>
+                            <span className="text-[9px] font-bold text-emerald-500 uppercase mt-0.5">Used: Rp {paidAmount.toLocaleString()}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-center">
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
                           <DnaBadge status={dp.status === "PAID" ? "success" : "warning"}>
                             {statusLabel(dp.status)}
                           </DnaBadge>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 pr-8 text-right">
-                          <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                        </td>
+                        <td className="py-2.5 px-3 pr-8 text-right">
+                          <div className="flex justify-end gap-1.5">
+                            <DnaButton variant="ghost" size="icon" icon={<Eye className="h-4 w-4" />} />
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     );
                   })}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+                </tbody>
+              </table>
+            </DnaDataTableCard>
 
             {/* Owner Insight Callout */}
             <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-8 flex gap-6 items-start shadow-sm">
@@ -293,23 +275,14 @@ export default function DownPaymentPrototype() {
               <div className="lg:col-span-8 space-y-6">
                   <div className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
                   <div className="space-y-3">
-                    <label className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1.5">
-                      <Package className="h-3 w-3" /> Select Purchase Order
-                    </label>
-                    <div className="relative">
-                      <select
-                        onChange={(e) => setSelectedPO(e.target.value)}
-                        className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none px-4 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                      >
-                        <option value="">\u2014 SELECT ACTIVE PURCHASE ORDER \u2014</option>
-                        {poLoading && <option disabled>Loading...</option>}
-                        {poList.map((po: any) => (
-                          <option key={po.id} value={po.id}>{po.poNumber} | {po.supplier?.name || "-"}</option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <ArrowRight className="h-4.5 w-4.5 text-blue-600" />
-                      </div>
+                    <DnaSelect
+                      label={<><Package className="h-3 w-3 inline" /> Select Purchase Order</>}
+                      placeholder="— SELECT ACTIVE PURCHASE ORDER —"
+                      value={selectedPO || ""}
+                      onChange={(val) => setSelectedPO(val || null)}
+                      options={poList.map((po: any) => ({ label: `${po.poNumber} | ${po.supplier?.name || "-"}`, value: po.id }))}
+                    />
+                  </div>
                     </div>
                   </div>
 
@@ -341,28 +314,28 @@ export default function DownPaymentPrototype() {
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50/50">
-                          <Table className="table-dense">
-                            <TableHeader>
-                              <TableRow className="hover:bg-transparent border-slate-200">
-                                <TableHead className="text-[9px] font-black uppercase text-slate-400 pl-6 py-2">Item</TableHead>
-                                <TableHead className="text-[9px] font-black uppercase text-slate-400 text-center py-2">Qty</TableHead>
-                                <TableHead className="text-[9px] font-black uppercase text-slate-400 text-right pr-6 py-2">Subtotal</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                          <table className="w-full text-left border-collapse text-[12px]">
+                            <thead>
+                              <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[9px]">
+                                <th className="pl-6 py-2">Item</th>
+                                <th className="text-center py-2">Qty</th>
+                                <th className="text-right pr-6 py-2">Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
                               {(selectedPOData.items || []).length > 0 ? selectedPOData.items.map((item: any, i: number) => (
-                                <TableRow key={i} className="hover:bg-transparent border-slate-100">
-                                  <TableCell className="font-black text-slate-900 text-xs pl-6 uppercase py-2">{item.material?.name || item.name || "-"}</TableCell>
-                                  <TableCell className="text-center font-black text-slate-900 text-xs tabular-nums py-2">{item.qty || item.quantity || 0}</TableCell>
-                                  <TableCell className="text-right pr-6 font-black text-slate-900 text-xs tabular-nums py-2">Rp {Number(item.totalPrice || item.price || 0).toLocaleString()}</TableCell>
-                                </TableRow>
+                                <tr key={i}>
+                                  <td className="font-bold text-slate-900 text-xs pl-6 uppercase py-2">{item.material?.name || item.name || "-"}</td>
+                                  <td className="text-center font-bold text-slate-900 text-xs tabular-nums py-2">{item.qty || item.quantity || 0}</td>
+                                  <td className="text-right pr-6 font-bold text-slate-900 text-xs tabular-nums py-2">Rp {Number(item.totalPrice || item.price || 0).toLocaleString()}</td>
+                                </tr>
                               )) : (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center py-6 text-[10px] font-black text-slate-300 uppercase">No items data</TableCell>
-                                </TableRow>
+                                <tr>
+                                  <td colSpan={3} className="text-center py-6 text-[10px] font-bold text-slate-300 uppercase">No items data</td>
+                                </tr>
                               )}
-                            </TableBody>
-                          </Table>
+                            </tbody>
+                          </table>
                         </div>
                       </motion.div>
                     )}
@@ -377,50 +350,37 @@ export default function DownPaymentPrototype() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase">Transaction Date</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                          <DnaInput type="date" className="pl-10" value={dpDate} onChange={(e) => setDpDate(e.target.value)} />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase">Funding Source</label>
-                        <div className="relative">
-                          <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                          <select className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase appearance-none pl-10 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option>BCA Corporate (2640...)</option>
-                            <option>Kas Utama (IDR)</option>
-                            <option>Mandiri Reserve</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase">Down Payment Amount (IDR)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs z-10">Rp</span>
-                        <DnaInput
-                          type="number"
-                          value={dpAmount || ""}
-                          onChange={(e) => setDpAmount(Number(e.target.value))}
-                          placeholder="0.00"
-                          className="h-14 pl-10 bg-white border border-slate-200 rounded-xl text-lg font-black tabular-nums placeholder:text-slate-400"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase">Administrative Note</label>
-                      <textarea
-                        rows={3}
-                        value={dpNotes}
-                        onChange={(e) => setDpNotes(e.target.value)}
-                        placeholder="Add commercial notes or reconciliation context..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-medium text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
+                      <DnaInput label="Transaction Date" type="date" value={dpDate} onChange={(e) => setDpDate(e.target.value)} icon={<Calendar className="h-4 w-4 text-slate-400" />} />
+                      <DnaSelect
+                        label="Funding Source"
+                        value=""
+                        onChange={() => {}}
+                        placeholder="Pilih sumber dana"
+                        options={[
+                          { label: 'BCA Corporate (2640...)', value: 'bca' },
+                          { label: 'Kas Utama (IDR)', value: 'kas' },
+                          { label: 'Mandiri Reserve', value: 'mandiri' },
+                        ]}
+                        icon={<CreditCard className="h-4 w-4 text-slate-400" />}
                       />
                     </div>
+
+                    <DnaInput
+                      label="Down Payment Amount (IDR)"
+                      type="number"
+                      value={dpAmount || ""}
+                      onChange={(e) => setDpAmount(Number(e.target.value))}
+                      placeholder="0.00"
+                      className="h-14 text-lg font-bold tabular-nums"
+                    />
+
+                    <DnaTextarea
+                      label="Administrative Note"
+                      rows={3}
+                      value={dpNotes}
+                      onChange={(e) => setDpNotes(e.target.value)}
+                      placeholder="Add commercial notes or reconciliation context..."
+                    />
 
                     <DnaButton
                       onClick={handleCommitDP}
