@@ -347,8 +347,8 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     groupLabel: "PENJUALAN",
     icon: Activity,
     items: [
-      { name: "Penjualan Sample", href: "/bussdev/sample-sales", icon: FlaskConical },
-      { name: "Retur Penjualan", href: "/bussdev/retur-penjualan", icon: XCircle },
+      { name: "Penjualan Sample", href: "/penjualan/sample-sales", icon: FlaskConical },
+      { name: "Retur Penjualan", href: "/penjualan/retur-penjualan", icon: XCircle },
       { name: "AR Aging Piutang", href: "/bussdev/ar-aging", icon: History, badge: "AR", badgeVariant: "warning" },
     ]
   },
@@ -438,7 +438,7 @@ const RND_SECTIONS: NavSection[] = [
     groupLabel: "OPERASIONAL LAB",
     icon: Package,
     items: [
-      { name: "Penjualan Sample (CRM)", href: "/bussdev/sample-sales", icon: Users },
+      { name: "Penjualan Sample (CRM)", href: "/penjualan/sample-sales", icon: Users },
       { name: "Kebutuhan Barang Lab", href: "/scm/kebutuhan-barang", icon: Layers },
       { name: "Permintaan Pembelian Bahan", href: "/scm/purchase-requests", icon: ClipboardList },
       { name: "Stok Barang & Bahan", href: "/warehouse/stok", icon: Box },
@@ -530,17 +530,17 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     items: [
       { name: "Buku Tamu", href: "/penjualan/guest-book", icon: ClipboardCheck },
       { name: "Leads OmniCRM", href: "/samples/omni-crm", icon: Users, badge: "PRO", badgeVariant: "purple" },
-      { name: "Client Sample", href: "/bussdev/client-manager?tab=sample", icon: FlaskConical },
-      { name: "Client Produksi", href: "/bussdev/client-manager?tab=production", icon: PackageCheck },
-      { name: "Client RO", href: "/bussdev/client-manager?tab=ro", icon: RefreshCw },
-      { name: "Client Lost", href: "/bussdev/lost", icon: XCircle },
-      { name: "Penjualan (Sales Orders)", href: "/bussdev/sales-orders", icon: FileSpreadsheet },
-      { name: "Penjualan Sample", href: "/bussdev/sample-sales", icon: FlaskConical },
-      { name: "DP Penjualan", href: "/bussdev/down-payment", icon: DollarSign },
+      { name: "Client Sample", href: "/penjualan/client-manager?tab=sample", icon: FlaskConical },
+      { name: "Client Produksi", href: "/penjualan/client-manager?tab=production", icon: PackageCheck },
+      { name: "Client RO", href: "/penjualan/client-manager?tab=ro", icon: RefreshCw },
+      { name: "Client Lost", href: "/penjualan/lost", icon: XCircle },
+      { name: "Penjualan (Sales Orders)", href: "/penjualan/sales-orders", icon: FileSpreadsheet },
+      { name: "Penjualan Sample", href: "/penjualan/sample-sales", icon: FlaskConical },
+      { name: "DP Penjualan", href: "/penjualan/down-payment", icon: DollarSign },
       { name: "Faktur Penjualan", href: "/finance/faktur-penjualan", icon: FileSpreadsheet },
       { name: "Bayar Penjualan", href: "/finance/bayar-penjualan", icon: Wallet },
-      { name: "Retur Penjualan", href: "/bussdev/retur-penjualan", icon: XCircle },
-      { name: "Target Penjualan", href: "/bussdev/sales-target", icon: Gauge },
+      { name: "Retur Penjualan", href: "/penjualan/retur-penjualan", icon: XCircle },
+      { name: "Target Penjualan", href: "/penjualan/sales-target", icon: Gauge },
     ]
   },
 
