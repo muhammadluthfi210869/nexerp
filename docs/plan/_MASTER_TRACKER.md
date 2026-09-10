@@ -15,13 +15,13 @@
 | Phase 0: Evidence Freeze | 100% | ✅ DONE |
 | Phase 1: Backend Foundation | 80% | 🟡 Mostly done, security/service layer remain |
 | Phase 2: Service Layer Integrity | 0% | ⚪ Not started |
-| Phase 3: Frontend Repair | 13% | 🟢 Started (route map + 4 functions done) |
+| Phase 3: Frontend Repair | 17% | 🟢 /samples DONE (22), /master 10 moved (3 batches M1-M3) |
 | Phase 4: State Machine UI | 0% | ⚪ Not started |
 | Phase 5: Test Infrastructure | 50% | 🟡 Jest+Vitest jalan, coverage <80% |
 | Phase 6: UI/UX Polish | 0% | ⚪ Not started |
 | Zero-Error Roadmap (Plan's own phases) | 60% | 🟡 Phase 1-3 done, Phase 4-5 pending |
 | Hyper-Alignment (per-divisi) | 0% | ⚪ Not started |
-| Track A: Hybrid Routes | 8% | 🟢 /samples/ DONE (22/22), 4 functions remaining |
+| Track A: Hybrid Routes | 14% | 🟢 /samples DONE + /master 10 moved, 9 functions remaining |
 | Track B: Backend Lint | 8% | 🟡 Paused (TS regression) |
 | Track C: Frontend Lint | 0% | ⚪ Queued after A |
 
@@ -125,8 +125,8 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 
 **Track A: Hybrid Routes** (in progress):
 - `evidence/2026-09-10/10-route-regen/route-mapping-v2.json` (229 pages → 11 functions)
-- 25 pages migrated across 4 functions: `/samples/*` (22, DONE), `/penjualan/guest-book`, `/quality/checklist-category`, `/approvals/purchase-approval`
-- 204 pages remaining across 10 functions
+- 35 pages migrated across 5 functions: `/samples/*` (22, DONE), `/master/*` (10 moved: HR-3 + KPI-4 + automation + dna-visual-2), `/penjualan/guest-book`, `/quality/checklist-category`, `/approvals/purchase-approval`
+- 194 pages remaining across 10 functions
 
 ---
 
@@ -211,7 +211,7 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 
 | Function | Pages | Status |
 |---|---|---|
-| /master | 25 | ⚪ Pending |
+| /master | 25 | 🟢 Started (10 moved, 8 no-op, 2 master-inci duplicates pending decision) |
 | /finance | 35 | ⚪ Pending |
 | /pembelian | 20 | ⚪ Pending |
 | /penjualan | 21 | 🟡 Started (guest-book done) |
@@ -336,6 +336,7 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 - [x] **2026-09-10**: Jest OOM fixed (heap 8GB)
 - [x] **2026-09-10**: 1 hybrid function complete (/samples/, 22 pages migrated)
 - [x] **2026-09-10**: Phase 0 production freeze complete (VPS SSH + DB backup+restore PASS)
+- [x] **2026-09-10**: 2 hybrid functions complete (/samples 22 + /master 10 moved = 32 pages)
 - [ ] **Target**: Backend lint 2116 → 0
 - [ ] **Target**: Track A complete (165+ batches)
 - [ ] **Target**: Track C complete (frontend lint)
