@@ -187,9 +187,9 @@ const FINANCE_SECTIONS: NavSection[] = [
     icon: Truck,
     items: [
       { name: "Vendor Master", href: "/master/suppliers", icon: Building2 },
-      { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: FileSpreadsheet },
-      { name: "DP Pembelian", href: "/finance/dp-pembelian", icon: DollarSign },
-      { name: "Bayar Pembelian", href: "/finance/bayar-pembelian", icon: CreditCard },
+      { name: "Faktur Pembelian", href: "/pembelian/faktur-pembelian", icon: FileSpreadsheet },
+      { name: "DP Pembelian", href: "/pembelian/dp-pembelian", icon: DollarSign },
+      { name: "Bayar Pembelian", href: "/pembelian/bayar-pembelian", icon: CreditCard },
       { name: "AP Aging & QC Toleransi", href: "/finance/ap-aging", icon: History, badge: "H-3/H-7", badgeVariant: "warning" },
     ]
   },
@@ -306,7 +306,7 @@ const PURCHASE_SECTIONS: NavSection[] = [
       { name: "Penerimaan Barang", href: "/pembelian/receiving", icon: PackageCheck },
       { name: "Retur Pembelian", href: "/pembelian/purchase-returns", icon: XCircle },
       { name: "Kebutuhan Barang", href: "/pembelian/kebutuhan", icon: Layers },
-      { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: CreditCard },
+      { name: "Faktur Pembelian", href: "/pembelian/faktur-pembelian", icon: CreditCard },
       { name: "DP Pembelian", href: "/pembelian/purchasing/down-payment", icon: DollarSign },
       { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
     ]
@@ -403,7 +403,7 @@ const RND_SECTIONS: NavSection[] = [
       { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: ClipboardCheck, badge: "NEW", badgeVariant: "warning" },
       { name: "Formulasi Repository", href: "/samples/repository", icon: Beaker },
       { name: "Buat Formulasi Baru", href: "/samples/formula/new", icon: PlusCircle },
-      { name: "Penyesuaian Formulasi", href: "/production/formula-adjustment", icon: Layers },
+      { name: "Penyesuaian Formulasi", href: "/inventory/formula-adjustment-production", icon: Layers },
       { name: "Permintaan HPP (COGS)", href: "/samples/repository?tab=hpp", icon: DollarSign },
       { name: "Digital Batch Record", href: "/production/batch-records", icon: Barcode },
     ]
@@ -553,9 +553,9 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     items: [
       { name: "Permintaan Pembelian (PR)", href: "/pembelian/purchase-requests", icon: ClipboardList },
       { name: "Buat Pembelian (PO)", href: "/pembelian/scm-pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
-      { name: "DP Pembelian", href: "/finance/dp-pembelian", icon: DollarSign },
-      { name: "Faktur Pembelian", href: "/finance/faktur-pembelian", icon: CreditCard },
-      { name: "Bayar Pembelian", href: "/finance/bayar-pembelian", icon: Wallet },
+      { name: "DP Pembelian", href: "/pembelian/dp-pembelian", icon: DollarSign },
+      { name: "Faktur Pembelian", href: "/pembelian/faktur-pembelian", icon: CreditCard },
+      { name: "Bayar Pembelian", href: "/pembelian/bayar-pembelian", icon: Wallet },
       { name: "Retur Pembelian", href: "/pembelian/purchase-returns", icon: XCircle },
       { name: "Kebutuhan Barang (MRP)", href: "/pembelian/kebutuhan", icon: Layers },
       { name: "Permintaan Barang", href: "/approvals/goods-request", icon: PackageCheck },
@@ -589,7 +589,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     items: [
       { name: "Formulasi Repository", href: "/samples/repository", icon: Beaker },
       { name: "Buat Formula Baru", href: "/samples/formula/new", icon: PlusCircle },
-      { name: "Penyesuaian Formulasi", href: "/production/formula-adjustment", icon: RefreshCw },
+      { name: "Penyesuaian Formulasi", href: "/inventory/formula-adjustment-production", icon: RefreshCw },
       { name: "Permintaan HPP", href: "/samples/repository?tab=hpp", icon: Calculator },
       { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: Inbox },
       { name: "Batch Record (SPK)", href: "/production/batch-records", icon: Barcode },
@@ -679,9 +679,9 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     groupLabel: "13. SISTEM & PENGATURAN",
     icon: Cog,
     items: [
-      { name: "Profil Perusahaan", href: "/system/company", icon: Building2 },
+      { name: "Profil Perusahaan", href: "/pembelian/company", icon: Building2 },
       { name: "Audit Ledger Transaksi", href: "/system/audit-ledger", icon: FileSearch },
-      { name: "Daftar Request Perubahan", href: "/system/change-requests", icon: RefreshCw },
+      { name: "Daftar Request Perubahan", href: "/pembelian/change-requests", icon: RefreshCw },
       { name: "Pengaturan Sistem", href: "/system/settings", icon: Cog },
     ]
   }
