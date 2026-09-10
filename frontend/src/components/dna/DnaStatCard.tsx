@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  *
  * @scope OPERATIONAL PAGES (and dashboards that want subtle accent)
  * @see /VISUAL_DNA.md
- * @see /dna-visual/golden-reference (canonical usage example)
+ * @see /master/dna-visual/golden-reference (canonical usage example)
  *
  * Pattern (locked):
  * - Subtle bg tint (e.g., `bg-emerald-50/30`) — NOT full color
