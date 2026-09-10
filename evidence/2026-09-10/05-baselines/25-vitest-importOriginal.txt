@@ -1,0 +1,936 @@
+﻿
+> frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.5 C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/frontend
+
+ ❯ test/production-workorders.test.tsx (3 tests | 3 failed) 212ms
+     × renders the page without crashing 123ms
+     × shows empty state when no work orders 46ms
+     × renders stat cards 32ms
+ ❯ test/production-operations.test.tsx (3 tests | 3 failed) 78ms
+     × renders the page without crashing 37ms
+     × renders tab navigation 24ms
+     × renders stat cards 8ms
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/production-operations.test.tsx > Operations Page > renders the page without crashing
+ FAIL  test/production-operations.test.tsx > Operations Page > renders tab navigation
+ FAIL  test/production-operations.test.tsx > Operations Page > renders stat cards
+ReferenceError: DnaButton is not defined
+ ❯ OperationsContent src/app/(dashboard)/production/operations/page.tsx:335:14
+    333|         footer={
+    334|           <>
+    335|             <DnaButton variant="ghost" onClick={() => {
+       |              ^
+    336|               setConfirmOpen(false);
+    337|               setNotes("");
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+ ❯ renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:11
+ ❯ performWorkOnRoot node_modules/react-dom/cjs/react-dom-client.development.js:16583:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > renders the page without crashing
+TestingLibraryElementError: Unable to find an element by: [data-testid="shell"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"overflow-x-auto"[39m
+    [36m>[39m
+      [36m<table[39m
+        [33mclass[39m=[32m"w-full text-left text-xs text-slate-600"[39m
+      [36m>[39m
+        [36m<thead[39m
+          [33mclass[39m=[32m"bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider"[39m
+        [36m>[39m
+          [36m<tr>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mNo. SPK & Batch[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mKlien & Brand[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mProduk & Netto[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-right"[39m
+            [36m>[39m
+              [0mTarget (PCS)[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-right"[39m
+            [36m>[39m
+              [0mGood / Reject[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mJadwal & PIC[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mTahap Produksi[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mProgress[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-center"[39m
+            [36m>[39m
+              [0mAksi[0m
+            [36m</th>[39m
+          [36m</tr>[39m
+        [36m</thead>[39m
+        [36m<tbody[39m
+          [33mclass[39m=[32m"divide-y divide-slate-100"[39m
+        [36m>[39m
+          [36m<tr>[39m
+            [36m<td[39m
+              [33mclass[39m=[32m"px-4 py-8 text-center text-slate-400"[39m
+              [33mcolspan[39m=[32m"9"[39m
+            [36m>[39m
+              [0mTidak ada data Work Order yang sesuai dengan filter.[0m
+            [36m</td>[39m
+          [36m</tr>[39m
+        [36m</tbody>[39m
+      [36m</table>[39m
+    [36m</div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNo. Sales Order (SO) [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: SO-2026-0195"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Klien / Perusahaan [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: PT Cantika Jelita"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Brand [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: GlowGoddess"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Produk Maklon [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: Ceramide Barrier Cream"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mKategori Produk[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Skincare"[39m
+            [36m>[39m
+              [0mSkincare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Haircare"[39m
+            [36m>[39m
+              [0mHaircare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Bodycare"[39m
+            [36m>[39m
+              [0mBodycare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Decorative"[39m
+            [36m>[39m
+              [0mDecorative[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNetto / Isi per Pcs[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: 30 ml atau 50 gr"[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"30 ml"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTarget Qty (PCS) [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mmin[39m=[32m"100"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"number"[39m
+            [33mvalue[39m=[32m"5000"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mPIC Operator Produksi[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"Budi Santoso"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTanggal Mulai[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+            [33mtype[39m=[32m"date"[39m
+            [33mvalue[39m=[32m"2026-09-10"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTarget Selesai[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+            [33mtype[39m=[32m"date"[39m
+            [33mvalue[39m=[32m"2026-09-15"[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+        [36m>[39m
+          [0mCatatan Khusus / Instruksi Kerja[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+          [33mplaceholder[39m=[32m"Instruksi bejana, spesifikasi kemasan, atau catatan penimbangan..."[39m
+          [33mrows[39m=[32m"2"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center justify-end gap-2 pt-2 border-t border-slate-100"[39m
+      [36m>[39m
+        [0mBatal[0m
+        [0mTerbitkan SPK[0m
+      [36m</div>[39m
+    [36m</form>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ test/production-workorders.test.tsx:46:19
+     44|   it('renders the page without crashing', () => {
+     45|     render(<WorkOrdersPage />);
+     46|     expect(screen.getByTestId('shell')).toBeDefined();
+       |                   ^
+     47|   });
+     48|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > shows empty state when no work orders
+TestingLibraryElementError: Unable to find an element with the text: /No Work Orders Active/i. This could be because the text is broken up by multiple elements. In this case, you can 
+provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"overflow-x-auto"[39m
+    [36m>[39m
+      [36m<table[39m
+        [33mclass[39m=[32m"w-full text-left text-xs text-slate-600"[39m
+      [36m>[39m
+        [36m<thead[39m
+          [33mclass[39m=[32m"bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider"[39m
+        [36m>[39m
+          [36m<tr>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mNo. SPK & Batch[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mKlien & Brand[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mProduk & Netto[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-right"[39m
+            [36m>[39m
+              [0mTarget (PCS)[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-right"[39m
+            [36m>[39m
+              [0mGood / Reject[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mJadwal & PIC[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mTahap Produksi[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mProgress[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-center"[39m
+            [36m>[39m
+              [0mAksi[0m
+            [36m</th>[39m
+          [36m</tr>[39m
+        [36m</thead>[39m
+        [36m<tbody[39m
+          [33mclass[39m=[32m"divide-y divide-slate-100"[39m
+        [36m>[39m
+          [36m<tr>[39m
+            [36m<td[39m
+              [33mclass[39m=[32m"px-4 py-8 text-center text-slate-400"[39m
+              [33mcolspan[39m=[32m"9"[39m
+            [36m>[39m
+              [0mTidak ada data Work Order yang sesuai dengan filter.[0m
+            [36m</td>[39m
+          [36m</tr>[39m
+        [36m</tbody>[39m
+      [36m</table>[39m
+    [36m</div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNo. Sales Order (SO) [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: SO-2026-0195"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Klien / Perusahaan [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: PT Cantika Jelita"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Brand [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: GlowGoddess"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Produk Maklon [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: Ceramide Barrier Cream"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mKategori Produk[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Skincare"[39m
+            [36m>[39m
+              [0mSkincare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Haircare"[39m
+            [36m>[39m
+              [0mHaircare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Bodycare"[39m
+            [36m>[39m
+              [0mBodycare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Decorative"[39m
+            [36m>[39m
+              [0mDecorative[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNetto / Isi per Pcs[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: 30 ml atau 50 gr"[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"30 ml"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTarget Qty (PCS) [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mmin[39m=[32m"100"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"number"[39m
+            [33mvalue[39m=[32m"5000"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mPIC Operator Produksi[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"Budi Santoso"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTanggal Mulai[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+            [33mtype[39m=[32m"date"[39m
+            [33mvalue[39m=[32m"2026-09-10"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTarget Selesai[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+            [33mtype[39m=[32m"date"[39m
+            [33mvalue[39m=[32m"2026-09-15"[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+        [36m>[39m
+          [0mCatatan Khusus / Instruksi Kerja[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+          [33mplaceholder[39m=[32m"Instruksi bejana, spesifikasi kemasan, atau catatan penimbangan..."[39m
+          [33mrows[39m=[32m"2"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center justify-end gap-2 pt-2 border-t border-slate-100"[39m
+      [36m>[39m
+        [0mBatal[0m
+        [0mTerbitkan SPK[0m
+      [36m</div>[39m
+    [36m</form>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ test/production-workorders.test.tsx:51:19
+     49|   it('shows empty state when no work orders', () => {
+     50|     render(<WorkOrdersPage />);
+     51|     expect(screen.getByText(/No Work Orders Active/i)).toBeDefined();
+       |                   ^
+     52|   });
+     53|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > renders stat cards
+TestingLibraryElementError: Unable to find an element by: [data-testid="stat-card"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"overflow-x-auto"[39m
+    [36m>[39m
+      [36m<table[39m
+        [33mclass[39m=[32m"w-full text-left text-xs text-slate-600"[39m
+      [36m>[39m
+        [36m<thead[39m
+          [33mclass[39m=[32m"bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider"[39m
+        [36m>[39m
+          [36m<tr>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mNo. SPK & Batch[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mKlien & Brand[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mProduk & Netto[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-right"[39m
+            [36m>[39m
+              [0mTarget (PCS)[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-right"[39m
+            [36m>[39m
+              [0mGood / Reject[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mJadwal & PIC[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mTahap Produksi[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3"[39m
+            [36m>[39m
+              [0mProgress[0m
+            [36m</th>[39m
+            [36m<th[39m
+              [33mclass[39m=[32m"px-3.5 py-3 text-center"[39m
+            [36m>[39m
+              [0mAksi[0m
+            [36m</th>[39m
+          [36m</tr>[39m
+        [36m</thead>[39m
+        [36m<tbody[39m
+          [33mclass[39m=[32m"divide-y divide-slate-100"[39m
+        [36m>[39m
+          [36m<tr>[39m
+            [36m<td[39m
+              [33mclass[39m=[32m"px-4 py-8 text-center text-slate-400"[39m
+              [33mcolspan[39m=[32m"9"[39m
+            [36m>[39m
+              [0mTidak ada data Work Order yang sesuai dengan filter.[0m
+            [36m</td>[39m
+          [36m</tr>[39m
+        [36m</tbody>[39m
+      [36m</table>[39m
+    [36m</div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNo. Sales Order (SO) [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: SO-2026-0195"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Klien / Perusahaan [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: PT Cantika Jelita"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Brand [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+
+ Test Files  2 failed | 32 passed (34)
+      Tests  6 failed | 300 passed | 1 skipped (307)
+   Start at  15:12:18
+   Duration  16.54s (transform 4.40s, setup 27.30s, import 24.83s, tests 15.98s, environment 88.10s)
+
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: GlowGoddess"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNama Produk Maklon [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: Ceramide Barrier Cream"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mKategori Produk[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Skincare"[39m
+            [36m>[39m
+              [0mSkincare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Haircare"[39m
+            [36m>[39m
+              [0mHaircare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Bodycare"[39m
+            [36m>[39m
+              [0mBodycare[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"Decorative"[39m
+            [36m>[39m
+              [0mDecorative[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mNetto / Isi per Pcs[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mplaceholder[39m=[32m"Contoh: 30 ml atau 50 gr"[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"30 ml"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTarget Qty (PCS) [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-rose-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mmin[39m=[32m"100"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"number"[39m
+            [33mvalue[39m=[32m"5000"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mPIC Operator Produksi[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"Budi Santoso"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTanggal Mulai[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+            [33mtype[39m=[32m"date"[39m
+            [33mvalue[39m=[32m"2026-09-10"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+          [36m>[39m
+            [0mTarget Selesai[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"[39m
+            [33mtype[39m=[32m"date"[39m
+            [33mvalue[39m=[32m"2026-09-15"[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-xs font-semibold text-slate-700 mb-1"[39m
+        [36m>[39m
+          [0mCatatan Khusus / Instruksi Kerja[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"[39m
+          [33mplaceholder[39m=[32m"Instruksi bejana, spesifikasi kemasan, atau catatan penimbangan..."[39m
+          [33mrows[39m=[32m"2"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center justify-end gap-2 pt-2 border-t border-slate-100"[39m
+      [36m>[39m
+        [0mBatal[0m
+        [0mTerbitkan SPK[0m
+      [36m</div>[39m
+    [36m</form>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ❯ test/production-workorders.test.tsx:56:30
+     54|   it('renders stat cards', () => {
+     55|     render(<WorkOrdersPage />);
+     56|     const statCards = screen.getAllByTestId('stat-card');
+       |                              ^
+     57|     expect(statCards.length).toBeGreaterThanOrEqual(4);
+     58|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+

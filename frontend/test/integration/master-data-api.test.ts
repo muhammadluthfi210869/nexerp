@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { api } from '@/lib/api';
 import { http, HttpResponse } from 'msw';

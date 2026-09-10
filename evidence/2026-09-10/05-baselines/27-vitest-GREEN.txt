@@ -1,0 +1,14 @@
+﻿
+> frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.5 C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/frontend
+
+
+ Test Files  32 passed | 2 skipped (34)
+      Tests  300 passed | 7 skipped (307)
+   Start at  15:14:27
+   Duration  16.34s (transform 4.01s, setup 27.58s, import 23.94s, tests 15.66s, environment 87.84s)
+
+

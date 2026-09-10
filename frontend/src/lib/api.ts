@@ -5,7 +5,7 @@ import axios from "axios";
 // bundle, so every user's laptop tried to call its own port 3002.
 const API_URL = typeof window !== "undefined"
   ? "/api"
-  : process.env.NEXT_PUBLIC_API_URL || "http://backend:3001/v1";
+  : process.env.NEXT_PUBLIC_API_URL ?? "http://backend:3001/v1";
 
 export const api = axios.create({
   baseURL: API_URL,

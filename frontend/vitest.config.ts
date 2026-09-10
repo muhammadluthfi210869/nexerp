@@ -9,6 +9,11 @@ export default defineConfig({
     css: false,
     include: ['test/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'tests'],
+    env: {
+      // Use absolute URL so axios node adapter accepts it, but MSW intercepts
+      // the /api/* path portion via the handler patterns
+      NEXT_PUBLIC_API_URL: 'http://localhost',
+    },
   },
   resolve: {
     alias: {
