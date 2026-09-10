@@ -1,0 +1,12 @@
+NAMES                         IMAGE                         CREATED        STATUS
+production-light-frontend-1   production-light-frontend     23 hours ago   Up 23 hours (unhealthy)
+production-light-backend-1    90cb9b70a227                  24 hours ago   Up 24 hours (healthy)
+dreamlab-lead-pgbouncer-1     edoburu/pgbouncer:latest      7 days ago     Up 28 hours
+dreamlab-lead-db-lead-1       postgres:17-alpine            7 days ago     Up 28 hours (healthy)
+production-light-nginx-1      nginx:alpine                  8 days ago     Up 28 hours
+production-light-db-1         postgres:15-alpine            8 days ago     Up 28 hours (healthy)
+production-light-certbot-1    certbot/certbot               8 days ago     Up 28 hours
+nexerp-db-1                   postgres:15-alpine            8 days ago     Up 28 hours (healthy)
+nexerp-certbot-1              certbot/certbot               8 days ago     Up 28 hours
+preview-kil-frontend          preview-kil-frontend:latest   8 days ago     Up 28 hours
+preview-kil-backend           preview-kil-backend:latest    8 days ago     Up 28 hours

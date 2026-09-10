@@ -1,0 +1,11 @@
+         metric          | value 
+-------------------------+-------
+ table_count             | 174
+ user_count              | 129
+ supplier_count          | 0
+ customer_count          | 0
+ sales_order_count       | 0
+ purchase_order_count    | 0
+ prisma_migrations_count | 8
+(7 rows)
+
