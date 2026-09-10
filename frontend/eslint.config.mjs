@@ -1,6 +1,23 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ *  ZERO TOLERANCE — DNA-only rule (enforced 2026-09-10)
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ *  All UI in operational pages MUST come from @/components/dna/*
+ *  NEVER from @/components/ui/* (shadcn primitives) or OLD DNA.
+ *
+ *  Reference: frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx
+ *  Allowed imports: DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaCell, etc.
+ *
+ *  This rule is BINDING per docs/DNA-RULES-CONTRACT.md section 1.
+ *  To remove a violation: migrate the page to use DNA components.
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import noRawUiImport from "./eslint-rules/no-raw-ui-import.cjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -28,8 +45,16 @@ const eslintConfig = defineConfig([
       "src/app/(dashboard)/**/layout.tsx",
       "src/components/dna/**/*.{ts,tsx}",
     ],
+    plugins: {
+      // Custom local rules. See ./eslint-rules/no-raw-ui-import.cjs
+      local: {
+        rules: {
+          "no-raw-ui-import": noRawUiImport,
+        },
+      },
+    },
     rules: {
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "off",
       "react/no-unescaped-entities": "off",
       "react-hooks/exhaustive-deps": "warn",
@@ -41,14 +66,49 @@ const eslintConfig = defineConfig([
       "react-compiler/react-compiler": "off",
 
       // ─────────────────────────────────────────────────────────────
+      // CUSTOM DNA RULE — Stricter than no-restricted-imports:
+      // additionally blocks raw HTML form/table controls in JSX
+      // inside operational routes. 'warn' during R1 transition,
+      // flip to 'error' once all 101 pages are migrated.
+      // ─────────────────────────────────────────────────────────────
+      "local/no-raw-ui-import": "warn",
+
+      // ─────────────────────────────────────────────────────────────
       // DNA-ONLY IMPORT ENFORCEMENT — Per ADR-007 + VISUAL_DNA.md
       // Blocks raw @/components/ui/* imports in operational pages.
       // Components in /components/dna/*, /dna-visual/*, and /components/ui/* itself are exempt.
       // ─────────────────────────────────────────────────────────────
       "no-restricted-imports": ["error", {
+        paths: [
+          { "name": "@/components/ui", "message": "Use @/components/dna instead. See frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx" },
+          { "name": "@/components/ui/button", "message": "Use DnaButton from @/components/dna" },
+          { "name": "@/components/ui/input", "message": "Use DnaInput from @/components/dna" },
+          { "name": "@/components/ui/select", "message": "Use DnaSelect from @/components/dna" },
+          { "name": "@/components/ui/textarea", "message": "Use DnaTextarea from @/components/dna" },
+          { "name": "@/components/ui/table", "message": "Use DnaTable from @/components/dna" },
+          { "name": "@/components/ui/dialog", "message": "Use DnaDialog or DnaModal from @/components/dna" },
+          { "name": "@/components/ui/card", "message": "Use DashboardCard from @/components/dna" },
+          { "name": "@/components/ui/badge", "message": "Use DnaCell.Badge from @/components/dna" },
+          { "name": "@/components/ui/label", "message": "Use DnaFormSection from @/components/dna" },
+          { "name": "@/components/ui/checkbox", "message": "Use DnaCheckbox from @/components/dna" },
+          { "name": "@/components/ui/tabs", "message": "Use DnaTabNav from @/components/dna" },
+          { "name": "@/components/ui/sheet", "message": "Use DnaSheet from @/components/dna" },
+          { "name": "@/components/dna/DataCard", "message": "OLD DNA removed - use DnaCard from @/components/dna" },
+          { "name": "@/components/dna/MetricRow", "message": "OLD DNA removed - use DnaKpiGrid" },
+          { "name": "@/components/dna/SectionLabel", "message": "OLD DNA removed - use DnaPageSection or DnaFormSection" },
+          { "name": "@/components/dna/PageSection", "message": "OLD DNA removed - use DnaFormSection" },
+          { "name": "@/components/dna/TableWrapper", "message": "OLD DNA removed - use DnaDataTableCard" },
+          { "name": "@/components/dna/StatCard", "message": "OLD DNA removed - use DnaStatCard" },
+          { "name": "@/components/dna/KpiCard", "message": "OLD DNA removed - use DnaKpiCard" },
+          { "name": "@/components/dna/DashboardCard", "message": "OLD DNA removed - use DnaCard" },
+          { "name": "@/components/dna/DashboardMetric", "message": "OLD DNA removed - use DnaKpiGrid" },
+          { "name": "@/components/dna/PipelineNode", "message": "OLD DNA removed" },
+          { "name": "@/components/dna/TabButton", "message": "OLD DNA removed - use DnaTabNav" },
+          { "name": "@/components/dna/FilterBar", "message": "OLD DNA removed - use DnaFilterDropdown" },
+        ],
         patterns: [
           {
-            group: ["@/components/ui/*"],
+            group: ["@/components/ui/*", "@/components/ui/*/*"],
             message: "Use DNA components from @/components/dna/* instead. See ADR-007 + DNA_CHEATSHEET.md.",
           },
         ],
