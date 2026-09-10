@@ -107,7 +107,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "MARKETING & CRM",
     icon: Users,
     isDirect: true,
-    href: "/marketing/omni-crm",
+    href: "/samples/omni-crm",
     items: []
   },
   {
@@ -116,7 +116,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "KONTEN & MEDIA",
     icon: Sparkles,
     isDirect: true,
-    href: "/marketing/social-tracker",
+    href: "/samples/social-tracker",
     items: []
   },
   {
@@ -125,7 +125,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "TASK MANAGEMENT",
     icon: ClipboardList,
     isDirect: true,
-    href: "/marketing/management-task/overview",
+    href: "/samples/management-task/overview",
     items: []
   }
 ];
@@ -333,7 +333,7 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     groupLabel: "SALES & CRM",
     icon: Users,
     items: [
-      { name: "OmniCRM Coexistence", href: "/marketing/omni-crm", icon: Layers, badge: "LIVE", badgeVariant: "purple" },
+      { name: "OmniCRM Coexistence", href: "/samples/omni-crm", icon: Layers, badge: "LIVE", badgeVariant: "purple" },
       { name: "Buku Tamu", href: "/crm/buku-tamu", icon: ClipboardCheck },
       { name: "Client Sample", href: "/crm/client-sample", icon: FlaskConical },
       { name: "Client Produksi", href: "/crm/client-produksi", icon: Factory },
@@ -530,7 +530,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     icon: Activity,
     items: [
       { name: "Buku Tamu", href: "/penjualan/guest-book", icon: ClipboardCheck },
-      { name: "Leads OmniCRM", href: "/marketing/omni-crm", icon: Users, badge: "PRO", badgeVariant: "purple" },
+      { name: "Leads OmniCRM", href: "/samples/omni-crm", icon: Users, badge: "PRO", badgeVariant: "purple" },
       { name: "Client Sample", href: "/bussdev/client-manager?tab=sample", icon: FlaskConical },
       { name: "Client Produksi", href: "/bussdev/client-manager?tab=production", icon: PackageCheck },
       { name: "Client RO", href: "/bussdev/client-manager?tab=ro", icon: RefreshCw },
@@ -723,7 +723,7 @@ export function Sidebar() {
 
   const isNavActive = (href: string) => {
     const [targetPath, targetQuery] = href.split("?");
-    if (targetPath.startsWith("/marketing/management-task") && pathname.startsWith("/marketing/management-task")) return true;
+    if (targetPath.startsWith("/samples/management-task") && pathname.startsWith("/samples/management-task")) return true;
     if (targetPath !== pathname) return false;
     if (!targetQuery) return !searchParams.toString();
     return new URLSearchParams(targetQuery).toString() === searchParams.toString();

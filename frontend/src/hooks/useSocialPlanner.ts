@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { PostItem, SocialPlatform, PostStatus, ContentPillar } from '@/app/(dashboard)/marketing/social-tracker/types';
+import { PostItem, SocialPlatform, PostStatus, ContentPillar } from '@/app/(dashboard)/samples/social-tracker/types';
 
 export interface PostFilterParams {
   platform?: SocialPlatform | 'all';
@@ -114,9 +114,9 @@ export function useFetchMetaInsights() {
     mutationFn: async (payload: { accessToken: string; pageId?: string; igAccountId?: string; period?: string }) => {
       const res = await api.post<{
         success: boolean;
-        insights?: import('@/app/(dashboard)/marketing/social-tracker/types').MetaInsightsSummary;
-        dailyTrends?: import('@/app/(dashboard)/marketing/social-tracker/types').MetaDailyTrend[];
-        demographics?: import('@/app/(dashboard)/marketing/social-tracker/types').DemographicData;
+        insights?: import('@/app/(dashboard)/samples/social-tracker/types').MetaInsightsSummary;
+        dailyTrends?: import('@/app/(dashboard)/samples/social-tracker/types').MetaDailyTrend[];
+        demographics?: import('@/app/(dashboard)/samples/social-tracker/types').DemographicData;
         data?: unknown;
       }>('/marketing/social/meta/fetch-insights', payload);
       return res.data;
