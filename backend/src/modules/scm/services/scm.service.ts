@@ -224,7 +224,7 @@ export class ScmService {
 
     const inventoryInsight =
       criticalStockCount > 5
-        ? `âš ï¸ ${criticalStockCount} SKU di bawah ROP. Segera rilis PR.`
+        ? `âš ï¸ ${criticalStockCount} SKU di bawah ROP. Segera rilis PR.`
         : accuracy < 95
           ? 'ðŸ“‰ Akurasi stok rendah. Perlu audit investigasi.'
           : 'âœ… Stok sehat & akurasi terjaga.';

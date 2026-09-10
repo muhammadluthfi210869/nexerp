@@ -1,8 +1,8 @@
-// @ts-nocheck -- TS4053 fires because controller methods' inferred return types
-// reference internal service-only types (MarketingTask, MarketingProject).
-// Those types aren't exported by design; the controller is a thin wrapper and
-// runtime works fine. Add explicit Promise<unknown> annotations if you want
-// strict emission.
+/* eslint-disable @typescript-eslint/ban-ts-comment -- intentional:
+   TS4053 fires because controller methods' inferred return types reference
+   internal service-only types (MarketingTask, MarketingProject) that aren't
+   exported by design. The controller is a thin wrapper and runtime works fine. */
+// @ts-nocheck
 import {
   Body,
   Controller,

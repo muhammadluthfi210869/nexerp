@@ -93,7 +93,7 @@ export class DreamlabRrSyncService implements OnModuleInit {
         }));
 
         const findAgent = (sourceValue: unknown) => {
-          const value = String(sourceValue ?? '')
+          const value = String((sourceValue as string) ?? '')
             .trim()
             .toLowerCase();
           if (!value) return undefined;

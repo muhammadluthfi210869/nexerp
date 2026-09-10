@@ -1,6 +1,7 @@
-// @ts-nocheck — tsconfig.json doesn't include @types/jest in its types[] so
-// describe/it/expect/jest are unresolved. Jest runtime works fine; this only
-// silences the diagnostic.
+/* eslint-disable @typescript-eslint/ban-ts-comment -- intentional:
+   tsconfig.json doesn't include @types/jest in its types[] so describe/it/expect
+   are unresolved. Jest runtime works fine; the diagnostic is suppressed. */
+// @ts-nocheck
 import {
   BadRequestException,
   ForbiddenException,
