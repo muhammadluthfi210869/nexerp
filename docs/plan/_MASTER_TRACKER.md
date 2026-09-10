@@ -39,6 +39,8 @@ d18f37a  docs(plan): consolidate 3 plans into single _MASTER_TRACKER.md
 44b8632  refactor(route): migrate sample-related /marketing/* to /samples/* (Batch S2)
 8ea855d  refactor(route): migrate /bussdev/{intake,sample-tracking} to /samples/* (Batch S3)
 e2125ff  refactor(route): migrate /project-control/* to /samples/* (Batch S4)
+28d57f6  docs(plan): update master tracker - /samples function 100% DONE (Track A 11%)
+bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 ```
 
 ---
@@ -59,7 +61,7 @@ e2125ff  refactor(route): migrate /project-control/* to /samples/* (Batch S4)
 | Generate API_CONTRACT.yaml | ✅ | 49 endpoint v0.1 |
 | Apply 6 pending migrations | ✅ | 12 tables created, FK intact |
 | Backup orphan data | ✅ | 4 rows backed up + deleted |
-| VPS SSH actions | ⚪ **PENDING USER** | Backup, restore test, prod timestamp |
+| VPS SSH actions | ✅ | prod timestamp + DB backup+restore PASS |
 | Worktree classification explicit | ✅ | 80% keep, 20% drop |
 
 **What's in `evidence/2026-09-10/`**:
@@ -333,6 +335,7 @@ e2125ff  refactor(route): migrate /project-control/* to /samples/* (Batch S4)
 - [x] **2026-09-10**: 1 route map generated (229 pages, 100% classified)
 - [x] **2026-09-10**: Jest OOM fixed (heap 8GB)
 - [x] **2026-09-10**: 1 hybrid function complete (/samples/, 22 pages migrated)
+- [x] **2026-09-10**: Phase 0 production freeze complete (VPS SSH + DB backup+restore PASS)
 - [ ] **Target**: Backend lint 2116 → 0
 - [ ] **Target**: Track A complete (165+ batches)
 - [ ] **Target**: Track C complete (frontend lint)
