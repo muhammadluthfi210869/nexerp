@@ -166,7 +166,7 @@ const financeSections = [
       },
       {
         name: "Approvals",
-        href: "/finance/approvals",
+        href: "/approvals/finance-approvals",
         icon: BadgeCheck,
         description: "Persetujuan Transaksi"
       }

@@ -140,7 +140,7 @@ const DESIGN_SECTIONS: NavSection[] = [
     groupLabel: "DASBOR",
     icon: Palette,
     isDirect: true,
-    href: "/design/artwork-approval",
+    href: "/approvals/artwork-approval",
     items: []
   },
   {
@@ -149,7 +149,7 @@ const DESIGN_SECTIONS: NavSection[] = [
     groupLabel: "KREATIF & DESAIN",
     icon: Palette,
     items: [
-      { name: "Artwork Approval & Riwayat", href: "/design/artwork-approval", icon: Palette, badge: "ACC", badgeVariant: "purple" },
+      { name: "Artwork Approval & Riwayat", href: "/approvals/artwork-approval", icon: Palette, badge: "ACC", badgeVariant: "purple" },
       { name: "Creative Board", href: "/creative/board", icon: Layers },
     ]
   },
@@ -593,7 +593,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Permintaan HPP", href: "/samples/repository?tab=hpp", icon: Calculator },
       { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: Inbox },
       { name: "Batch Record (SPK)", href: "/production/batch-records", icon: Barcode },
-      { name: "Kelola Desain & Kemasan", href: "/design/artwork-approval", icon: Palette },
+      { name: "Kelola Desain & Kemasan", href: "/approvals/artwork-approval", icon: Palette },
       { name: "Jadwal Mixing", href: "/production/schedule?type=mixing", icon: History },
       { name: "Jadwal Filling", href: "/production/schedule?type=filling", icon: History },
       { name: "Jadwal Packaging", href: "/production/schedule?type=packaging", icon: History },
