@@ -15,16 +15,15 @@ import {
   PieChart,
 } from "lucide-react";
 
-import { DnaButton, DnaInput, DnaBadge, StatCard, DataCard, TableWrapper } from "@/components/dna";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { DnaButton, DnaInput, DnaBadge, DnaDnaStatCard, DnaCard, DnaDataTableCard, DnaTabNav, DnaDatePicker } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -81,7 +80,7 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
         <span className="text-[10px] font-black opacity-40 uppercase tracking-tighter">Status Audit Otomatis</span>
       </div>
 
-      <TableWrapper>
+      <DnaDataTableCard>
         <Table className="table-dense">
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
@@ -126,7 +125,7 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
             </tr>
           </tfoot>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
     </div>
   );
 }
@@ -148,7 +147,7 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
   const renderGroupCard = (title: string, groupData: any, dotColor: string, isNegative: boolean = false) => {
     const total = groupData?.total || 0;
     return (
-      <DataCard title={title} dotColor={dotColor}>
+      <DnaCard title={title} dotColor={dotColor}>
         <div className="flex justify-between items-end border-b border-slate-100 pb-3">
           <span className="text-[10px] font-black uppercase text-slate-400">Total Group</span>
           <span className={cn("text-sm font-black font-mono", isNegative ? "text-rose-600" : "text-emerald-600")}>
@@ -182,7 +181,7 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
             </div>
           )}
         </div>
-      </DataCard>
+      </DnaCard>
     );
   };
 
@@ -190,24 +189,24 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
     <div className="space-y-6 animate-fade-slide-in">
       {/* 4 Funnel Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+        <DnaStatCard
           label="Total Pendapatan"
           value={formatCurrency(report.operatingRevenue.total)}
           icon={<TrendingUp className="text-emerald-500" />}
         />
-        <StatCard
+        <DnaStatCard
           label="Laba Kotor"
           value={formatCurrency(report.grossProfit)}
           subValue={`${grossMargin}% Gross Margin`}
           icon={<TrendingUp className="text-emerald-600" />}
         />
-        <StatCard
+        <DnaStatCard
           label="Laba Operasional"
           value={formatCurrency(report.operatingIncome)}
           subValue={`${operatingMargin}% EBIT Margin`}
           icon={<ShieldCheck className="text-blue-600" />}
         />
-        <StatCard
+        <DnaStatCard
           label="Laba Bersih"
           value={formatCurrency(report.netProfit)}
           subValue={`${netMargin}% Net Margin`}
@@ -414,7 +413,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
             </div>
           </div>
 
-          <DataCard noShadow={false}>
+          <DnaCard>
             <div className="space-y-1">
               {buildTree(data.assets.items).map((acc, idx) => (
                 <RenderAccountRow key={`${acc.id}-${idx}`} acc={acc} formatCurrency={formatCurrency} />
@@ -431,7 +430,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
               </div>
               <span className="text-lg font-black text-emerald-300 font-mono tabular-nums">{formatCurrency(data.assets.total || 0)}</span>
             </div>
-          </DataCard>
+          </DnaCard>
         </div>
 
         {/* RIGHT: PASIVA (LIABILITIES & EQUITIES) */}
@@ -445,7 +444,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Credit Balance</span>
             </div>
 
-            <DataCard>
+            <DnaCard>
               <div className="space-y-1">
                 {buildTree(data.liabilities.items).map((acc, idx) => (
                   <RenderAccountRow key={`${acc.id}-${idx}`} acc={acc} formatCurrency={formatCurrency} />
@@ -455,7 +454,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
                 <span className="text-[10px] font-bold uppercase text-slate-500 italic">Subtotal Liabilities</span>
                 <span className="text-sm font-black text-slate-950 font-mono">{formatCurrency(data.liabilities.total || 0)}</span>
               </div>
-            </DataCard>
+            </DnaCard>
           </div>
 
           {/* Equity Section */}
@@ -466,7 +465,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
               </h3>
             </div>
 
-            <DataCard>
+            <DnaCard>
               <div className="space-y-1">
                 {buildTree(data.equity.items).map((acc, idx) => (
                   <RenderAccountRow key={`${acc.id}-${idx}`} acc={acc} formatCurrency={formatCurrency} />
@@ -493,7 +492,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
                 </div>
                 <span className="text-lg font-black text-amber-400 font-mono">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</span>
               </div>
-            </DataCard>
+            </DnaCard>
           </div>
         </div>
       </div>
@@ -542,7 +541,7 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
     <div className="grid grid-cols-12 gap-8 items-start animate-fade-slide-in">
       {/* Sidebar: CoA list */}
       <div className="col-span-12 lg:col-span-3 space-y-4">
-        <DataCard title="CHART OF ACCOUNTS" dotColor="bg-blue-600">
+        <DnaCard title="CHART OF ACCOUNTS" dotColor="bg-blue-600">
           <div className="space-y-4">
             <DnaInput
               placeholder="Cari akun..."
@@ -583,16 +582,16 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
               )}
             </div>
           </div>
-        </DataCard>
+        </DnaCard>
       </div>
 
       {/* Content: Mutasi ledger */}
       <div className="col-span-12 lg:col-span-9 space-y-6">
         {!selectedAccId ? (
-          <DataCard className="flex flex-col items-center justify-center py-20 text-center text-slate-400">
+          <DnaCard className="flex flex-col items-center justify-center py-20 text-center text-slate-400">
             <BookOpen className="w-12 h-12 text-slate-300 stroke-[1.5px] mb-4" />
             <p className="text-xs font-medium uppercase tracking-wider">Silakan pilih akun dari daftar di kiri</p>
-          </DataCard>
+          </DnaCard>
         ) : loading ? (
           <div className="p-20 text-center animate-pulse font-black text-xs text-slate-400 uppercase tracking-widest bg-white border border-slate-100 rounded-3xl shadow-sm">
             Memuat mutasi buku besar...
@@ -601,30 +600,30 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
           <div className="space-y-6">
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
+              <DnaStatCard
                 label="Saldo Awal"
                 value={formatCurrency(ledgerData.beginningBalance)}
                 icon={<BookOpen className="text-slate-400" />}
               />
-              <StatCard
+              <DnaStatCard
                 label="Mutasi Debit"
                 value={formatCurrency(ledgerDebitTotal)}
                 icon={<TrendingUp className="text-emerald-500" />}
               />
-              <StatCard
+              <DnaStatCard
                 label="Mutasi Kredit"
                 value={formatCurrency(ledgerCreditTotal)}
                 icon={<TrendingUp className="text-rose-500 rotate-180" />}
               />
-              <StatCard
+              <DnaStatCard
                 label="Saldo Akhir"
                 value={formatCurrency(ledgerData.endingBalance)}
                 icon={<ShieldCheck className="text-blue-600" />}
               />
             </div>
 
-            <TableWrapper
-              filters={
+            <DnaDataTableCard
+              customToolbar={
                 <div className="flex justify-between items-center bg-slate-50/30 p-4 rounded-xl border border-slate-100">
                   <div>
                     <h3 className="text-xs font-black text-slate-900 uppercase italic">
@@ -696,7 +695,7 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
                   </tr>
                 </tfoot>
               </Table>
-            </TableWrapper>
+            </DnaDataTableCard>
           </div>
         ) : null}
       </div>
@@ -720,29 +719,29 @@ function ProjectBudgetingTab() {
   return (
     <div className="space-y-6 animate-fade-slide-in">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
+        <DnaStatCard
           label="Total Project Budget"
           value={formatCurrency(data.reduce((s, i) => s + i.budget, 0))}
           icon={<BookOpen className="text-blue-600" />}
         />
-        <StatCard
+        <DnaStatCard
           label="Total Actual Spent"
           value={formatCurrency(data.reduce((s, i) => s + i.spent, 0))}
           icon={<XCircle className="text-rose-500" />}
         />
-        <StatCard
+        <DnaStatCard
           label="Total Material Cost"
           value={formatCurrency(data.reduce((s, i) => s + i.materialSpend, 0))}
           icon={<PieChart className="text-amber-500" />}
         />
-        <StatCard
+        <DnaStatCard
           label="Avg. Project Margin"
           value={`${((data.reduce((s, i) => s + i.margin, 0) / (data.reduce((s, i) => s + i.budget, 0) || 1)) * 100).toFixed(1)}%`}
           icon={<Target className="text-emerald-500" />}
         />
       </div>
 
-      <TableWrapper>
+      <DnaDataTableCard>
         <Table className="table-dense">
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
@@ -798,7 +797,7 @@ function ProjectBudgetingTab() {
             })}
           </TableBody>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
     </div>
   );
 }
@@ -806,6 +805,7 @@ function ProjectBudgetingTab() {
 // --- MAIN PAGE ---
 
 export default function FinancialReportsHub() {
+  const [activeTab, setActiveTab] = useState("general-ledger");
   const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -820,8 +820,8 @@ export default function FinancialReportsHub() {
             <div className="flex items-center gap-1.5 pl-2">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
               <span className="text-[10px] font-black uppercase text-slate-400">Dari:</span>
-              <input
-                type="date"
+              <DnaDatePicker
+                aria-label="Tanggal mulai"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="bg-transparent border-none text-[11px] font-medium text-slate-700 outline-none w-28 focus:ring-0"
@@ -830,8 +830,8 @@ export default function FinancialReportsHub() {
             <div className="h-4 w-px bg-slate-200" />
             <div className="flex items-center gap-1.5 pr-2">
               <span className="text-[10px] font-black uppercase text-slate-400">Sampai:</span>
-              <input
-                type="date"
+              <DnaDatePicker
+                aria-label="Tanggal mulai"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="bg-transparent border-none text-[11px] font-medium text-slate-700 outline-none w-28 focus:ring-0"
@@ -847,62 +847,51 @@ export default function FinancialReportsHub() {
         </div>
       }
     >
-      <Tabs defaultValue="general-ledger" className="space-y-8">
-        <div className="relative">
-          <TabsList className="bg-slate-100/50 backdrop-blur-md p-1.5 rounded-2xl h-16 inline-flex gap-1 border border-slate-200/50 shadow-inner relative z-10">
-            {[
-              { id: "general-ledger", label: "Buku Besar", icon: BookOpen },
-              { id: "profit-loss", label: "Laba Rugi", icon: TrendingUp },
-              { id: "balance-sheet", label: "Neraca", icon: ShieldCheck },
-              { id: "trial-balance", label: "Neraca Saldo", icon: CheckCircle2 },
-              { id: "project-budgeting", label: "Project Budgeting", icon: PieChart }
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="relative rounded-xl px-8 h-full data-[state=active]:text-slate-900 data-[state=active]:bg-white data-[state=active]:shadow-sm text-slate-500 transition-all duration-300 text-[10px] font-black uppercase tracking-tight z-20 overflow-hidden"
-              >
-                <div className="flex items-center relative z-30">
-                  <tab.icon className="w-4 h-4 mr-2" />
-                  {tab.label}
-                </div>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+      <div className="space-y-8">
+        <DnaTabNav
+          tabs={[
+            { id: "general-ledger", label: "Buku Besar", icon: BookOpen },
+            { id: "profit-loss", label: "Laba Rugi", icon: TrendingUp },
+            { id: "balance-sheet", label: "Neraca", icon: ShieldCheck },
+            { id: "trial-balance", label: "Neraca Saldo", icon: CheckCircle2 },
+            { id: "project-budgeting", label: "Project Budgeting", icon: PieChart },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
         <AnimatePresence mode="wait">
-          <TabsContent value="trial-balance">
+          <div hidden={activeTab !== "trial-balance"}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <TrialBalanceTab startDate={startDate} endDate={endDate} />
             </motion.div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="profit-loss">
+          <div hidden={activeTab !== "profit-loss"}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <ProfitLossTab startDate={startDate} endDate={endDate} />
             </motion.div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="balance-sheet">
+          <div hidden={activeTab !== "balance-sheet"}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <BalanceSheetTab endDate={endDate} />
             </motion.div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="general-ledger">
+          <div hidden={activeTab !== "general-ledger"}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <GeneralLedgerTab startDate={startDate} endDate={endDate} />
             </motion.div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="project-budgeting">
+          <div hidden={activeTab !== "project-budgeting"}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <ProjectBudgetingTab />
             </motion.div>
-          </TabsContent>
+          </div>
         </AnimatePresence>
-      </Tabs>
+      </div>
     </DashboardShell>
   );
 }
