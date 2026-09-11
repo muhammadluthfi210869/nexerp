@@ -80,3 +80,10 @@ export {
   DnaDropdownMenuSeparator as DropdownMenuSeparator,
 } from "./DnaDropdownMenu";
 export { DnaButton as Button } from "./DnaButton";
+
+export {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "./DnaTooltipCompound";
