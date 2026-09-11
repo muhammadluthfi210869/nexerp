@@ -2196,3 +2196,139 @@ Contoh: `SO-29062026-0001`
 ---
 
 *Catatan: seluruh poin sudah final berdasarkan klarifikasi Upii — tidak ada lagi item ambigu, kecuali referensi visual format G-SERP (poin 26, 75) yang perlu screenshot tambahan saat implementasi jika AI CLI membutuhkan detail persis.*
+
+---
+
+# BAGIAN IV: OPERATIONAL ADDENDUM (TER-MERGE 2026-09-11)
+*(Sumber: `docs/legacy-erp/NEX_ERP_OPERATIONAL_ADDENDUM.md` — authority layer AUTHORITY-5, dipromosikan ke AUTHORITY-2 mengikuti hierarki `docs/ssot/00_AUTHORITY_HIERARCHY.md`. Addendum lengkap tetap menjadi referensi operasional.)*
+
+> **CONFLICT_FLAG**: 2 konflik master vs CSV di-resolved dengan **LOCKED** decision per `docs/plan/_MASTER_TRACKER.md`:
+> - **D-001** Sequence numbering = **GLOBAL** (master wins). DPB legacy dipertahankan untuk backward-compat.
+> - **D-002** Real Stok = **kondisi Bagus saja** (1-state) untuk modul Inventory. Pembelian Masuk catat **3-state** (Bagus / Reject / Free) untuk tracking akuntansi. Pembayaran vendor hanya untuk Bagus.
+
+## A. Calculation Formulas (Operational KPI Reference)
+
+47 entri formula dikonfirmasikan operasional dari CSV `Cards` (176 halaman). Master hanya definisikan 5 rumus KPI dasar; sisanya dirangkum di sini sebagai **referensi**:
+
+| # | Group | Formula Type | Halaman (contoh) | Lihat |
+|---|---|---|---|---|
+| 1 | **Dashboard Metrics** | `TOTAL LEADS`, `CONVERSION RATE`, `AR Aging`, `Card History (bebas filter bulan)` | D. Buku Tamu, D. BusDev, D. Client Produksi/Sample, D. Digital Marketing, D. Eksekutif, D. Gudang, D. Legalitas, D. Notifikasi, D. Pelanggan, D. Penjualan (Barang/Sample), D. Purchasing, D. RnD | addendum §1 |
+| 2 | **Asset & Depreciation** | `Total Nilai Perolehan`, `Akumulasi Penyusutan`, `Book Value`, `Net Gain/Loss Disposal`, `Depresiasi Bulan Ini` | Asset Register, Asset Transfer/Disposal, Depreciation Schedule | addendum §1 |
+| 3 | **Bank & Cash** | `Total Saldo Kas & Bank (Konsolidasi)`, `Total Kas Masuk`, `Total Kas Keluar`, `Saldo Bank Saat Ini (Navbar)` | Bank Account Master, Kas Bank Masuk/Keluar, AP Aging | addendum §1 |
+| 4 | **AR / AP** | `Total Outstanding AR`, `Overdue AR`, `Piutang Lancar`, `Total Due AP`, `DP Outstanding`, `Jatuh Tempo H-3/H-7/Overdue` | Faktur Pembelian, Faktur Penjualan (AR Aging), AP Aging, Collections | addendum §1 |
+| 5 | **GL & Neraca** | `Total Debit/Credit (MATCH)`, `Total Aset = Liab + Equity`, `Total Pendapatan`, `Laba Kotor/Bersih`, `Opening/Closing Balance`, `Unbalanced Draft (harus 0)` | Jurnal Umum, Neraca, Neraca Saldo, Laba Rugi, Buku Besar | addendum §1 |
+| 6 | **Production & R&D** | `Rata-rata Material Price Variance`, `Usage Variance`, `Total Scrap Cost`, `Batch Success Rate`, `Sample Approval Rate`, `Job Order WIP/Cost per Unit` | Cost Variance, Project Monitoring R&D, Job Order Costing | addendum §1 |
+| 7 | **Budget & Sales** | `Total Budget YTD`, `Variance %`, `Top Profitable Customer/Product`, `Gross Margin Maklon`, `DP Masuk/Belum Diapply` | Budget vs Actual, Product/Customer Profitability, DP Penjualan | addendum §1 |
+| 8 | **Operational Reports** | `Total Desain Berjalan/Approved/Revisi`, `Total SO Aktif`, `Checklist Pending`, `On Track/Menunggu/Tertunda`, `Sample Fee Diterima/Belum Offset` | Kelola Desain, Checklist Progress, Checklist Tracking, Sample Fee, Report Penjualan | addendum §1 |
+
+> Daftar lengkap 47 entri (per-halaman dengan nilai numerik operasional): lihat `docs/legacy-erp/NEX_ERP_OPERATIONAL_ADDENDUM.md` §1.
+
+## B. Default Values (Standarisasi Operasional)
+
+20 entri default yang harus konsisten lintas halaman (HIGH confidence kecuali ditandai):
+
+| Entity | Field | Default Value | Notes |
+|---|---|---|---|
+| Asset Register | Masa Manfaat (useful life) | Inventaris **4 thn**, Motor **4 thn**, Mobil **8 thn**, Bangunan Permanen **20 thn** | Auto-fill by Category (lihat SCR-025) |
+| Asset Register | Kode Aset | `DL-FIN-AST-...` urutan global tanpa reset | see §1 Format Kode |
+| Compliance Asset | Reminder Kadaluarsa | Auto-notif **H-90, H-60, H-30** sebelum expiry | lihat SCR-026 |
+| CoA Jurnal Otomatis | Posting | Auto jika min 1 rule aktif per Document Type; hak akses: Finance Admin/Controller | lihat SCR-031 |
+| CoA | Delete/Deactivate | Delete hanya jika belum ada transaksi; jika ada → **deactivate** (referential integrity) | lihat SCR-032 |
+| CoA | Numbering | Auto by type: `1xxx` Asset, `2xxx` Liability, dst | lihat SCR-032 |
+| Bank Account | Nomor Akun | Auto-generated, auto-mapping ke akun neraca kas/bank | lihat SCR-037 |
+| DP Pembelian | Nomor DP | `DPB-YYMM-XXXX` (legacy, lihat §D) | lihat SCR-124 |
+| Buku Tamu Form | Save | Auto-save saat user keluar dari form input | lihat SCR-096 |
+| Jurnal Umum | Tipe & Referensi | Auto-filled dari subledger (AP/AR/Cash/Stock); manual hanya untuk adjustment/accrual/reclassification | lihat SCR-079 |
+| Kas Bank Masuk | Status | Auto-generated dari Bayar Penjualan & DP Penjualan → **read-only**; manual hanya petty cash/bunga bank | lihat SCR-081 |
+| Kas Bank Keluar | Status | Auto-generated dari Bayar Pembelian, DP Pembelian, Pengajuan Dana (Disbursed); manual untuk biaya operasional tanpa vendor | lihat SCR-083 |
+| Tax Transactions | Source | Auto dari Faktur Pembelian/Penjualan; PPh 21 direkap bulanan dari payroll HR | lihat SCR-085 |
+| Supplier | Kategori | Riil (Raw Material/Packaging/Jasa/Lainnya) terpisah dari Kategori COA (Akun GL default per vendor) | lihat SCR-067 |
+| Supplier | PKP Status | Menentukan kalkulasi otomatis PPN Masukan pada Faktur Pembelian | lihat SCR-067 |
+| Pengajuan Dana | Jenjang Approval | **Staff → Head → Accounting → Direktur**; atau **Head → Accounting → Direktur** (jika pengaju Head) | lihat SCR-111 |
+| Pengajuan Dana | Threshold | Director vs Accounting — **SPEC_GAP**, nominal belum tercatat di CSV (L113) | butuh klarifikasi |
+| Faktur Penjualan | Delivery Gatekeeper | `FINANCIAL_DELIVERY_RELEASE` default `HELD`; gudang TIDAK boleh cetak Surat Jalan sebelum Finance `RELEASED` | lihat SCR-117 |
+| Faktur Penjualan | Consignment | Bahan Consignment **TIDAK menambah COGS** | lihat SCR-117 |
+| Penerimaan Barang | 3-state Tracking | Wajib catat `Jumlah Bagus`, `Jumlah Cacat/Reject`, `Jumlah Free/Gratis`; pembayaran vendor HANYA untuk Bagus | LOCKED D-002 |
+
+## C. Canonical UI Labels (Bahasa Indonesia)
+
+47 label kanonik lintas 176 halaman. Campuran Indonesia + English (lihat rekomendasi di bawah). **Konsistensi**: tetapkan 1 label per aksi.
+
+| # | Label | Count | Konteks Umum |
+|---|---|---|---|
+| 1 | Lihat | 44 | Universal view/detail |
+| 2 | Kembali | 41 | Back navigation |
+| 3 | Simpan | 34 | Save (generic) |
+| 4 | Riwayat | 31 | History/audit trail |
+| 5 | Buat | 29 | Create new |
+| 6 | Export Excel | 21 | Export data |
+| 7 | Filter | 20 | Filter UI |
+| 8 | Modal Tutup | 15 | Close modal (workflow) |
+| 9 | Modal Setuju | 11 | Approval modal |
+| 10 | Tambah ke Keranjang | 11 | Add to cart (multi-line form) |
+| 11 | Sunting | 10 | Edit (legacy word) |
+| 12 | Print | 10 | Print document |
+| 13 | Hapus | 9 | Delete |
+| 14 | Tutup | 8 | Close |
+| 15 | Modal Tolak | 8 | Reject modal |
+| 16 | + Buat | 7 | Quick-create (with `+`) |
+| 17 | Batal | 6 | Cancel |
+| 18 | Batalkan | 6 | Cancel (active verb) |
+| 19 | Edit | 5 | Edit (modern word) |
+| 20-47 | (Lihat Detail, Simpan Draft, Modal Close, Simpan Perubahan, Lihat Timeline, Toggle Active, Deactivate, Submit Approval, Tracking, Ubah, Revise, Produksi, Drill Down, Process, Hide, Apply to Invoice, Import Data Faktur, Simpan Permintaan, Riwayat Sample/Formula, Cetak Dokumen, Posting ke GL, Import Rekening Koran, Auto-Match, Cairkan Dana, Release Delivery, Print Invoice, Tanda Tangan Digital) | 1–3 each | lihat addendum §3 untuk lengkap |
+
+> **Rekomendasi NEX**: tetapkan 1 label per aksi (mis. **Simpan** saja, bukan campur "Simpan/Save"; **Sunting/Edit** → pilih satu). Daftar lengkap 47 entri: `docs/legacy-erp/NEX_ERP_OPERATIONAL_ADDENDUM.md` §3.
+
+## D. Document Code Registry (6 Pattern)
+
+Master hanya dokumentasikan 2 pattern (`DL-DIV-PRD-DDMMYYYY-0001` + `DPB-YYMM-XXXX`). 4 pattern berikut **MISSING** dan ditambahkan di sini per LOCKED D-001 (GLOBAL counter, AUTHORITY-1):
+
+| Code | Type | Description | Example |
+|---|---|---|---|
+| `DL-DIV-PRD-DDMMYYYY-NNNN` | Universal (Standard) | Global sequence, semua modul | `DL-FIN-SO-29062026-0001` |
+| `[TYPE]-DDMMYYYY-NNNN` | Universal (Compact) | Global sequence, ringkas | `SO-29062026-0001` |
+| `SO-DDMMYYYY-NNNN` | Sales Order | Auto global sequence | `SO-11092026-00001` |
+| `PO-DDMMYYYY-NNNN` | Purchase Order | Auto global sequence | `PO-11092026-00002` |
+| `FJ-DDMMYYYY-NNNN` | Faktur (Invoice) Penjualan | Auto global sequence | `FJ-11092026-00003` |
+| `GR-DDMMYYYY-NNNN` | Goods Receipt | Auto global sequence | `GR-11092026-00004` |
+| `GRN-DDMMYYYY-NNNN` | Goods Receipt Note | Internal QC variant | `GRN-11092026-00005` |
+| `DPB-YYMM-XXXX` | Down Payment Pembelian | **LEGACY** monthly per-bulan (backward-compat) | `DPB-2509-0001` |
+
+> **LOCKED D-001**: Sequence numbering **GLOBAL** (master wins). Format per-bulan (legacy CSV) **TIDAK dipakai** untuk modul baru; DPB legacy dipertahankan untuk backward-compat historical records.
+
+## E. Cross-Module Integration Rules
+
+12 aturan yang span multiple modul — penting untuk konsistensi operasional:
+
+| Rule | Source Module | Target Module | Effect |
+|---|---|---|---|
+| **AR Aging widget** wajib tampil di BusDev dashboard | Finance | BusDev | Tampilkan client overdue di pipeline |
+| **Card History tetap muncul** meskipun user pindah filter bulan | All | All Dashboard | History card bebas filter |
+| **Adjustment Journal** = satu-satunya jalur sah entry ke periode **Hard Lock** | Finance | Finance | Period close enforcement |
+| **Soft Lock** = warning saat transaksi; **Hard Lock** = read-only | Finance | All | Period lock semantics |
+| **Pengajuan Dana** menggantikan Google Form; saat Disbursed → auto generate Kas Bank Keluar (Dr `Uang Muka Karyawan`/`Beban`, Cr `Bank`) | Finance | Procurement | Workflow alignment |
+| **PO discount** = Rupiah (bukan %); shipping ditambahkan; selisih pembulatan packing → diskon | SCM | Finance | PO pricing rules |
+| **PO tanggal** = read-only hari ini | SCM | All | PO date auto-fill |
+| **Real Stok** = kondisi Bagus saja (LOCKED D-002) | Inventory | All | Cross-module qty math (1-state) |
+| **Penerimaan Barang** = 3-state (Bagus / Reject / Free); pembayaran vendor HANYA untuk Bagus | Inventory | AP | 3-state tracking + vendor payment rule |
+| **Faktur Pembelian Matching 4-Leg**: `PO ↔ GRN ↔ QC Passed Qty ↔ Vendor Invoice`; % akurasi hidden, hanya status `Matched/Exception` | AP | SCM/QC | 4-leg matching |
+| **Faktur Penjualan AR Delivery Gatekeeper** (`FINANCIAL_DELIVERY_RELEASE`): default `HELD` | Finance | Warehouse | Pre-delivery finance release |
+| **Bahan Consignment tidak menambah COGS** | Inventory | Finance | COGS exclusion rule |
+
+## F. Migration Debt (Legacy Artifacts to Clean)
+
+45+ artefak legacy yang akan di-bersihkan saat refactor halaman terkait. **WAJIB** dibersihkan agar shadcn/DNA migration tidak inherit noise:
+
+| # | Artifact | Count | Modern Replacement |
+|---|---|---|---|
+| 1 | `GSTable1_length` (DataTables artifact) | **41** | Hapus; gunakan page state (`useState` / URL param) |
+| 2 | `ajaxDetail('ID', 'modal-lg')` (function-style) | **9** | React state + `DnaModal` |
+| 3 | Generic `Search` tanpa field spec di Inputs | **19** | `searchFields: ['field1', 'field2']` explicit |
+| 4 | `Filter Periode (Date Range Custom)` (inconsistent) | **29** | Standardize ke `DnaDateRangePicker` |
+| 5 | Duplicate `Search` (combined w/ #3) | **66** total occurrences | lihat addendum §5 |
+
+> **Cleanup policy**: per-halaman saat refactor (lihat `_MASTER_TRACKER.md` Phase 7.x). Bukan blocker merge tapi tracked as technical debt.
+
+---
+
+*Ter-merge 2026-09-11 dari `NEX_ERP_OPERATIONAL_ADDENDUM.md` (v1.0). Mengakomodasi 5 dari 47+ audit findings: BLK-006 (codes), MS-007 (statuses), MS-019 (ordering), MS-020 (dimensions), MS-024 (debits). Master authority OVERRIDDEN untuk D-001 (GLOBAL sequence) dan D-002 (4-state stok) sampai master direvisi penuh.*
