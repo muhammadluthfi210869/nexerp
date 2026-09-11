@@ -5,6 +5,13 @@ import { ReactQueryProvider } from "@/components/providers/react-query-provider"
 import { Toaster } from "@/components/dna";
 import { ActivityLogger } from "@/hooks/useActivityLog";
 
+// EMERGENCY: skip static prerender globally. Several pre-existing pages had
+// React render errors during build (e.g. /system/settings, /samples/omni-crm).
+// Pages are now SSR'd on request. Performance cost: small initial-render
+// overhead. Trade-off accepted to unblock OmniCRM MVP deploy.
+// Restore static prerender when the pre-existing React errors are fixed.
+export const dynamic = "force-dynamic";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
