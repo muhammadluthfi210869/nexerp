@@ -112,7 +112,6 @@ export { CategorySelect } from "./CategorySelect";
 // Compatibility exports
 export {
   DnaTabItem,
-  DnaEmptyState,
 } from "./DnaLegacyCompat";
 
 export { DnaAuditTimeline } from "./DnaAuditTimeline";
@@ -149,7 +148,6 @@ export {
   DnaPercentageInput,
   DnaDatePicker,
   DnaSearchableSelect,
-  DnaSwitch,
   DnaFormSection,
   DnaCrudModal,
   DnaConfirmDialog,
@@ -161,13 +159,10 @@ export {
   DnaExportButton,
   DnaLineItemsTable,
   DnaWorkflowBar,
-  useDnaToast,
   DnaCascadingAddress,
   DnaInfoCard,
-  DnaCard,
   DnaRadioGroup,
   DnaStickyFooter,
-  DnaToastProvider,
 } from "./DnaInteractiveElements";
 
 export type {
@@ -176,7 +171,6 @@ export type {
   DnaDatePickerProps,
   DnaSelectOption,
   DnaSearchableSelectProps,
-  DnaSwitchProps,
   DnaConfirmVariant,
   DnaPrintSignature as DnaPrintSignatureType,
   DnaPrintItem as DnaPrintItemType,
@@ -185,3 +179,13 @@ export type {
   DnaWorkflowBarProps,
   DnaStickyFooterProps,
 } from "./DnaInteractiveElements";
+
+// ── NEW DNA PRIMITIVES (Phase 3.4, replaces shadcn) ──
+export { DnaCard } from "./DnaCard";
+export type { DnaCardProps, DnaCardVariant, DnaCardPadding } from "./DnaCard";
+export { DnaEmptyState } from "./DnaEmptyState";
+export type { DnaEmptyStateProps } from "./DnaEmptyState";
+export { DnaSwitch } from "./DnaSwitch";
+export type { DnaSwitchProps } from "./DnaSwitch";
+export { dnaToastApi, DnaToaster, useDnaToast } from "./DnaToast";
+export type { DnaToastOptions, DnaToastVariant } from "./DnaToast";

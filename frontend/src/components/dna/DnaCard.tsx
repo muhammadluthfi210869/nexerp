@@ -35,16 +35,36 @@ export type DnaCardPadding = keyof typeof paddingClasses;
 export interface DnaCardProps extends DivProps {
   variant?: DnaCardVariant;
   padding?: DnaCardPadding;
+  /** Optional title rendered inside header (compat with old DnaCard API) */
+  title?: string;
+  /** Optional title color (compat) */
+  titleColor?: string;
+  /** Optional dot color indicator (compat) */
+  dotColor?: string;
+  /** Optional icon rendered before title (compat) */
+  icon?: React.ReactNode;
 }
 
 export const DnaCard = React.forwardRef<HTMLDivElement, DnaCardProps>(
-  ({ className, variant = "default", padding = "none", ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(baseCard, variantClasses[variant], paddingClasses[padding], className)}
-      {...props}
-    />
-  )
+  ({ className, variant = "default", padding = "none", title, titleColor, dotColor, icon, children, ...props }, ref) => {
+    const hasCompatHeader = title || icon || dotColor;
+    return (
+      <div
+        ref={ref}
+        className={cn(baseCard, variantClasses[variant], paddingClasses[padding], className)}
+        {...props}
+      >
+        {hasCompatHeader && (
+          <div className="flex items-center gap-2 p-4 border-b border-slate-100">
+            {dotColor && <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />}
+            {icon}
+            {title && <h3 className="text-base font-bold" style={{ color: titleColor }}>{title}</h3>}
+          </div>
+        )}
+        {children}
+      </div>
+    );
+  }
 );
 DnaCard.displayName = "DnaCard";
 
