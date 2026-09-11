@@ -107,7 +107,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "MARKETING & CRM",
     icon: Users,
     isDirect: true,
-    href: "/samples/omni-crm",
+    href: "/marketing/omnicrm",
     items: []
   },
   {
