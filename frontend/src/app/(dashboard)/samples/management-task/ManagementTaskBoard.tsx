@@ -28,8 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaButton, DnaInput } from "@/components/dna";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { DnaButton, DnaInput, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/dna";
 import { useMarketingPrototypeBundle } from "@/components/marketing/use-marketing-prototype";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
