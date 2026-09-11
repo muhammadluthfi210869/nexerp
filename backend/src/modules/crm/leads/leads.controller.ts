@@ -18,7 +18,7 @@ import { UpdateDisplayNameDto } from "../dto/update-display-name.dto";
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
-  /** GET /crm/leads?stage=HOT&assignedToId=... */
+  /** GET /crm/leads?stage=HOT&assignedToId=...&from=&to=&source= */
   @Get("leads")
   @Roles(
     UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,
@@ -27,15 +27,58 @@ export class LeadsController {
   list(
     @Query("stage") stage?: string,
     @Query("assignedToId") assignedToId?: string,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("source") source?: string,
     @Query("limit") limit?: string,
     @Query("offset") offset?: string,
+    @Req() req?: Request,
   ) {
-    return this.leadsService.list({
+    const filter = {
       stage: this.parseStage(stage),
       assignedToId,
+      from,
+      to,
+      source,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
-    });
+    };
+    const scoped = this.leadsService.applyRbacScope(filter, (req as any)?.user);
+    return this.leadsService.list(scoped);
+  }
+
+  /**
+   * GET /crm/leads/live — overview-friendly list with guestbook status join.
+   * Supports bukuTamuStatus filter. RBAC-scoped (DIGIMAR auto-filtered).
+   */
+  @Get("leads/live")
+  @Roles(
+    UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,
+    UserRole.COMMERCIAL, UserRole.DIRECTOR, UserRole.DIGIMAR,
+  )
+  live(
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("assignedToId") assignedToId?: string,
+    @Query("source") source?: string,
+    @Query("stage") stage?: string,
+    @Query("bukuTamuStatus") bukuTamuStatus?: string,
+    @Query("limit") limit?: string,
+    @Query("offset") offset?: string,
+    @Req() req?: Request,
+  ) {
+    const filter = {
+      stage: this.parseStage(stage),
+      assignedToId,
+      from,
+      to,
+      source,
+      bukuTamuStatus: (bukuTamuStatus as "PENDING" | "APPROVED" | "REJECTED" | undefined),
+      limit: limit ? parseInt(limit, 10) : undefined,
+      offset: offset ? parseInt(offset, 10) : undefined,
+    };
+    const scoped = this.leadsService.applyRbacScope(filter, (req as any)?.user);
+    return this.leadsService.listWithGuestbook(scoped);
   }
 
   @Get("leads/:id")

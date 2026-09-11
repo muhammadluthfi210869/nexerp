@@ -24,20 +24,85 @@ const STAGE_TRANSITIONS: Record<CrmStage, ReadonlyArray<CrmStage>> = {
 export interface ListFilter {
   stage?: CrmStage;
   assignedToId?: string;
+  /** ISO date (yyyy-mm-dd) inclusive lower bound on createdAt */
+  from?: string;
+  /** ISO date (yyyy-mm-dd) inclusive upper bound on createdAt */
+  to?: string;
+  bukuTamuStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  source?: string;
   limit?: number;
   offset?: number;
+}
+
+/**
+ * Lead-with-guestbook join row. Returned by listWithGuestbook() for the
+ * /marketing/omnicrm overview table — single query, no N+1.
+ */
+export interface LeadWithGuestbook extends CrmLead {
+  guestbookEvent: { id: string; approvalStatus: "PENDING" | "APPROVED" | "REJECTED" } | null;
 }
 
 @Injectable()
 export class LeadsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Auto-scope DIGIMAR users: they only see leads assigned to themselves.
+   * MARKETING/SUPER_ADMIN/HEAD_OPS/COMMERCIAL see everything (subject to
+   * explicit filters). Called from LeadsController.list().
+   */
+  applyRbacScope(filter: ListFilter, user: { id: string; roles: string[] } | undefined): ListFilter {
+    if (!user) return filter;
+    const isDigimar = user.roles?.includes("DIGIMAR") && !user.roles?.some((r) => ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "COMMERCIAL"].includes(r));
+    if (isDigimar) {
+      return { ...filter, assignedToId: user.id };
+    }
+    return filter;
+  }
+
   async list(filter: ListFilter = {}): Promise<CrmLead[]> {
-    const { stage, assignedToId, limit = 50, offset = 0 } = filter;
+    const { stage, assignedToId, from, to, source, limit = 50, offset = 0 } = filter;
     return this.prisma.crmLead.findMany({
       where: {
         ...(stage ? { stage } : {}),
         ...(assignedToId ? { assignedToId } : {}),
+        ...(source ? { source: source as any } : {}),
+        ...(from || to ? {
+          createdAt: {
+            ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
+            ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+          },
+        } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: Math.min(limit, 200),
+      skip: Math.max(offset, 0),
+    });
+  }
+
+  /**
+   * Live capture table query — joins CrmLead with its GuestbookEvent so the
+   * overview UI can show approval status without a second round-trip per row.
+   */
+  async listWithGuestbook(filter: ListFilter = {}): Promise<LeadWithGuestbook[]> {
+    const { stage, assignedToId, from, to, source, bukuTamuStatus, limit = 50, offset = 0 } = filter;
+    return this.prisma.crmLead.findMany({
+      where: {
+        ...(stage ? { stage } : {}),
+        ...(assignedToId ? { assignedToId } : {}),
+        ...(source ? { source: source as any } : {}),
+        ...(from || to ? {
+          createdAt: {
+            ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
+            ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+          },
+        } : {}),
+        ...(bukuTamuStatus ? {
+          guestbookEvent: { approvalStatus: bukuTamuStatus },
+        } : {}),
+      },
+      include: {
+        guestbookEvent: { select: { id: true, approvalStatus: true } },
       },
       orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),

@@ -7,6 +7,7 @@ import { GuestbookService } from './guestbook/guestbook.service';
 import { GuestbookController } from './guestbook/guestbook.controller';
 import { KpiService } from './kpi/kpi.service';
 import { KpiController } from './kpi/kpi.controller';
+import { BusDevsController } from './busdevs/busdevs.controller';
 import { LeadSvcWebhookController } from './ingest/lead-svc-webhook.controller';
 import { ActivityStreamModule } from '../activity-stream/activity-stream.module';
 
@@ -23,6 +24,7 @@ import { ActivityStreamModule } from '../activity-stream/activity-stream.module'
     LeadsController,
     GuestbookController,
     KpiController,
+    BusDevsController,
     LeadSvcWebhookController,
   ],
 })
