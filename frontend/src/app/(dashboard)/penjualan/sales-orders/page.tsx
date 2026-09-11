@@ -46,6 +46,8 @@ import {
   useDnaToast,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
+import { DnaGateIndicator } from "@/components/dna";
+import { deriveGateStatus } from "@/lib/gates";
 
 export interface SalesOrderItem {
   id: string;
@@ -488,31 +490,45 @@ function SalesOrdersContent() {
                     />
                   </td>
                   <td className="p-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleGatekeeper(so);
-                      }}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight border transition-all cursor-pointer ${
-                        so.gatekeeperStatus === "RELEASED"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                          : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
-                      }`}
-                      title="Klik untuk toggle status gatekeeper pengiriman"
-                    >
-                      {so.gatekeeperStatus === "RELEASED" ? (
-                        <>
-                          <Unlock className="w-3 h-3" />
-                          RELEASED
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-3 h-3" />
-                          HELD
-                        </>
-                      )}
-                    </button>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleGatekeeper(so);
+                        }}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight border transition-all cursor-pointer ${
+                          so.gatekeeperStatus === "RELEASED"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                            : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                        }`}
+                        title="Klik untuk toggle status gatekeeper pengiriman"
+                      >
+                        {so.gatekeeperStatus === "RELEASED" ? (
+                          <>
+                            <Unlock className="w-3 h-3" />
+                            RELEASED
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3 h-3" />
+                            HELD
+                          </>
+                        )}
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <DnaGateIndicator
+                          gate="G2"
+                          status={deriveGateStatus(so.approvalStatus, 'G2')}
+                          label={`G2 ${deriveGateStatus(so.approvalStatus, 'G2')}`}
+                        />
+                        <DnaGateIndicator
+                          gate="G3"
+                          status={deriveGateStatus(so.approvalStatus, 'G3')}
+                          label={`G3 ${deriveGateStatus(so.approvalStatus, 'G3')}`}
+                        />
+                      </div>
+                    </div>
                   </td>
                   <td className="p-3.5 text-right">
                     <DnaCell.Actions onView={() => setSelectedDetail(so)} />
