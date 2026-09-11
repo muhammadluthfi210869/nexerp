@@ -102,19 +102,18 @@ export class KpiService {
       }),
     ]);
 
-    // 6. Round Robin distribution (today + week)
-    const [todayByAgent, weekByAgent] = await Promise.all([
-      this.prisma.crmLead.groupBy({
-        by: ["assignedToId"],
-        where: { createdAt: { gte: todayStart }, assignedToId: { not: null } },
-        _count: { _all: true },
-      }),
-      this.prisma.crmLead.groupBy({
-        by: ["assignedToId"],
-        where: { createdAt: { gte: weekStart }, assignedToId: { not: null } },
-        _count: { _all: true },
-      }),
-    ]);
+    // 6. Round Robin distribution (today + week). Sequential awaits so the
+    // test mocks can deterministically distinguish the two queries.
+    const todayByAgent = await this.prisma.crmLead.groupBy({
+      by: ["assignedToId"],
+      where: { createdAt: { gte: todayStart }, assignedToId: { not: null } },
+      _count: { _all: true },
+    });
+    const weekByAgent = await this.prisma.crmLead.groupBy({
+      by: ["assignedToId"],
+      where: { createdAt: { gte: weekStart }, assignedToId: { not: null } },
+      _count: { _all: true },
+    });
     const weekMap = new Map(weekByAgent.map((r) => [r.assignedToId, r._count._all]));
     const userIds = Array.from(new Set([
       ...todayByAgent.map((r) => r.assignedToId!),

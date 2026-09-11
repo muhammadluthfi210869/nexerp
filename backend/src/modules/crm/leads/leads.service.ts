@@ -69,8 +69,8 @@ export class LeadsService {
         ...(source ? { source: source as any } : {}),
         ...(from || to ? {
           createdAt: {
-            ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
-            ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+            ...(from ? { gte: new Date(`${from}T00:00:00.000Z`) } : {}),
+            ...(to ? { lte: new Date(`${to}T23:59:59.999Z`) } : {}),
           },
         } : {}),
       },
@@ -93,8 +93,8 @@ export class LeadsService {
         ...(source ? { source: source as any } : {}),
         ...(from || to ? {
           createdAt: {
-            ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
-            ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+            ...(from ? { gte: new Date(`${from}T00:00:00.000Z`) } : {}),
+            ...(to ? { lte: new Date(`${to}T23:59:59.999Z`) } : {}),
           },
         } : {}),
         ...(bukuTamuStatus ? {
