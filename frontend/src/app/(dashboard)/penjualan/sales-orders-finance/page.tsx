@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaGateIndicator } from "@/components/dna";
+import { deriveGateStatus } from "@/lib/gates";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,
@@ -189,9 +190,23 @@ export default function SalesOrderPage() {
                 </TableCell>
 
                 <TableCell className="text-center">
-                   <DnaBadge status={order.status === 'DP_PAID' ? 'info' : order.status === 'PENDING_DP' ? 'warning' : 'default'}>
-                      {order.status.replace('_', ' ')}
-                   </DnaBadge>
+                   <div className="flex flex-col items-center gap-1.5">
+                     <DnaBadge status={order.status === 'DP_PAID' ? 'info' : order.status === 'PENDING_DP' ? 'warning' : 'default'}>
+                        {order.status.replace('_', ' ')}
+                     </DnaBadge>
+                     <div className="flex items-center gap-1">
+                       <DnaGateIndicator
+                         gate="G2"
+                         status={deriveGateStatus(order.status, 'G2')}
+                         label={`G2 ${deriveGateStatus(order.status, 'G2')}`}
+                       />
+                       <DnaGateIndicator
+                         gate="G3"
+                         status={deriveGateStatus(order.status, 'G3')}
+                         label={`G3 ${deriveGateStatus(order.status, 'G3')}`}
+                       />
+                     </div>
+                   </div>
                 </TableCell>
 
                 <TableCell className="text-right pr-6">
