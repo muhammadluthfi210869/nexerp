@@ -53,13 +53,6 @@ interface FundRequestItem {
   notes?: string;
 }
 
-const FALLBACK_REQUESTS: FundRequestItem[] = [
-  { id: "1", requestNo: "FR-2609-001", applicant: "Ahmad Staff Gudang", level: "STAFF", department: "Gudang & Logistik", purpose: "Pengadaan Pallet Kayu Standar CPKB 50 Unit", amount: 7500000, currentApprovalLevel: "ACCOUNTING", status: "PENDING_APPROVAL", requestDate: "2026-09-08", requiredDate: "2026-09-12" },
-  { id: "2", requestNo: "FR-2609-002", applicant: "Budi Santoso (Head)", level: "HEAD_DIVISI", department: "Produksi Manufaktur", purpose: "Sparepart Katup Seal Homogenizer High-Speed", amount: 18500000, currentApprovalLevel: "DIREKTUR", status: "PENDING_APPROVAL", requestDate: "2026-09-07", requiredDate: "2026-09-10" },
-  { id: "3", requestNo: "FR-2609-003", applicant: "Rian Saputra", level: "STAFF", department: "R&D Formulasi", purpose: "Bahan Uji Mikrobiologi & Media Kultur Cepat", amount: 4200000, currentApprovalLevel: "COMPLETED", status: "DISBURSED", requestDate: "2026-09-02", requiredDate: "2026-09-05" },
-  { id: "4", requestNo: "FR-2609-004", applicant: "Dewi Lestari (Head)", level: "HEAD_DIVISI", department: "Business Development", purpose: "Sewa Booth Pameran Maklon Kosmetik Jakarta", amount: 35000000, currentApprovalLevel: "COMPLETED", status: "APPROVED", requestDate: "2026-09-01", requiredDate: "2026-09-15" },
-];
-
 export default function FundRequestsPage() {
   const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,20 +71,26 @@ export default function FundRequestsPage() {
     requiredDate: new Date().toISOString().split("T")[0]
   });
 
+  // Fetch fund requests from backend
+  const { data: requests = [] } = useQuery<FundRequestItem[]>({
+    queryKey: ["fund-requests"],
+    queryFn: () => api.get("/finance/fund-requests").then(r => unwrapResponse(r.data) ?? []),
+  });
+
   const totalPengajuanBulanIni = useMemo(() => {
-    return FALLBACK_REQUESTS.reduce((acc, r) => acc + r.amount, 0);
-  }, []);
+    return requests.reduce((acc, r) => acc + r.amount, 0);
+  }, [requests]);
 
   const totalMenungguApproval = useMemo(() => {
-    return FALLBACK_REQUESTS.filter((r) => r.status === "PENDING_APPROVAL").length;
-  }, []);
+    return requests.filter((r) => r.status === "PENDING_APPROVAL").length;
+  }, [requests]);
 
   const totalDisbursed = useMemo(() => {
-    return FALLBACK_REQUESTS.filter((r) => r.status === "DISBURSED").reduce((acc, r) => acc + r.amount, 0);
-  }, []);
+    return requests.filter((r) => r.status === "DISBURSED").reduce((acc, r) => acc + r.amount, 0);
+  }, [requests]);
 
   const filteredRequests = useMemo(() => {
-    return FALLBACK_REQUESTS.filter((r) => {
+    return requests.filter((r) => {
       const matchSearch =
         r.requestNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.applicant.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,7 +147,7 @@ export default function FundRequestsPage() {
           label="Total Pengajuan Bulan Ini"
           value={formatRupiah(totalPengajuanBulanIni)}
           icon={<DollarSign className="w-5 h-5 text-blue-600" />}
-          delta={{ value: `${FALLBACK_REQUESTS.length} Pengajuan`, isPositive: true }}
+          delta={{ value: `${requests.length} Pengajuan`, isPositive: true }}
           subtext="Total Permintaan Dana Masuk"
           variant="info"
         />
