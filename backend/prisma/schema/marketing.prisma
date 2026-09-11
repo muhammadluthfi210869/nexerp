@@ -841,3 +841,21 @@ model MetaAccountConfig {
 
   @@map("meta_account_configs")
 }
+
+model MarketingTeamMember {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String?  @unique @db.Uuid
+  user        User?    @relation("MarketingTeamMemberUser", fields: [userId], references: [id], onDelete: SetNull)
+  name        String   @db.VarChar(100)
+  role        String   @db.VarChar(150)
+  email       String   @unique @db.VarChar(150)
+  phone       String?  @db.VarChar(30)
+  avatarBg    String   @default("#e8eef6") @db.VarChar(20)
+  initial     String   @db.VarChar(5)
+  department  String   @default("Digital Marketing") @db.VarChar(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("marketing_team_members")
+}
