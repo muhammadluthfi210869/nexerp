@@ -59,6 +59,7 @@ function prismaMock() {
     marketingTaskComment: {
       create: jest.fn(),
       findMany: jest.fn(),
+      findFirst: jest.fn(),
       delete: jest.fn(),
     },
     marketingTaskHistory: { create: jest.fn() },
@@ -250,5 +251,37 @@ describe('CanonicalMarketingService', () => {
       service.createComment(member, 'hidden', { body: 'Hi' }),
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.marketingTaskComment.create).not.toHaveBeenCalled();
+  });
+
+  it('deletes a comment when the author owns it', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTaskComment.findFirst.mockResolvedValue({
+      id: 'comment-1',
+      taskId: 'task-1',
+      authorId: 'member',
+      body: 'Hi',
+      createdAt: new Date(),
+    });
+    const service = new CanonicalMarketingService(prisma);
+    await service.deleteComment(member, 'comment-1');
+    expect(prisma.marketingTaskComment.delete).toHaveBeenCalledWith({
+      where: { id: 'comment-1' },
+    });
+  });
+
+  it('forbids deleting a comment authored by someone else', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTaskComment.findFirst.mockResolvedValue({
+      id: 'comment-1',
+      taskId: 'task-1',
+      authorId: 'other-user',
+      body: 'Hi',
+      createdAt: new Date(),
+    });
+    const service = new CanonicalMarketingService(prisma);
+    await expect(service.deleteComment(member, 'comment-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prisma.marketingTaskComment.delete).not.toHaveBeenCalled();
   });
 });

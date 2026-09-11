@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -124,6 +126,16 @@ export class CanonicalMarketingController {
     @Body() dto: CreateTaskCommentDto,
   ): Promise<unknown> {
     return this.service.createComment(req.user, taskId, dto);
+  }
+
+  @Delete('tasks/comments/:commentId')
+  @Roles(...TASK_READ_ROLES)
+  @HttpCode(204)
+  deleteComment(
+    @Req() req: any,
+    @Param('commentId') commentId: string,
+  ): Promise<unknown> {
+    return this.service.deleteComment(req.user, commentId);
   }
 
   @Get('projects')

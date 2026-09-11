@@ -310,6 +310,19 @@ export class CanonicalMarketingService {
     });
   }
 
+  async deleteComment(viewer: MarketingViewer, commentId: string) {
+    ensureMarketingTaskRole(viewer);
+    const comment = await this.prisma.marketingTaskComment.findFirst({
+      where: { id: commentId },
+    });
+    if (!comment || comment.authorId !== viewer.id)
+      throw new NotFoundException({
+        code: 'COMMENT_NOT_FOUND',
+        message: 'Komentar tidak ditemukan atau Anda tidak memiliki akses.',
+      });
+    await this.prisma.marketingTaskComment.delete({ where: { id: commentId } });
+  }
+
   async updateChecklist(
     viewer: MarketingViewer,
     taskId: string,
