@@ -19,6 +19,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   Tags,
@@ -45,6 +46,8 @@ import {
   DnaCell,
   useDnaToast,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
 export interface MasterSupplierItem {
@@ -318,8 +321,44 @@ function MasterSuppliersContent() {
   };
 
   // ── States ──
+  const suppliersQuery = useQuery({
+    queryKey: ["master-suppliers"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/suppliers");
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : INITIAL_SUPPLIERS;
+      } catch {
+        return INITIAL_SUPPLIERS;
+      }
+    },
+  });
+  const categoriesQuery = useQuery({
+    queryKey: ["master-supplier-categories"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/suppliers/categories");
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : INITIAL_SUPPLIER_CATEGORIES;
+      } catch {
+        return INITIAL_SUPPLIER_CATEGORIES;
+      }
+    },
+  });
   const [suppliersList, setSuppliersList] = useState<MasterSupplierItem[]>(INITIAL_SUPPLIERS);
   const [categoriesList, setCategoriesList] = useState<KategoriSupplierItem[]>(INITIAL_SUPPLIER_CATEGORIES);
+
+  // Sync API results into local lists when query resolves.
+  useEffect(() => {
+    if (suppliersQuery.data && Array.isArray(suppliersQuery.data) && suppliersQuery.data.length > 0) {
+      setSuppliersList(suppliersQuery.data);
+    }
+  }, [suppliersQuery.data]);
+  useEffect(() => {
+    if (categoriesQuery.data && Array.isArray(categoriesQuery.data) && categoriesQuery.data.length > 0) {
+      setCategoriesList(categoriesQuery.data);
+    }
+  }, [categoriesQuery.data]);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
