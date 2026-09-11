@@ -339,14 +339,16 @@ async createWithRollback(dto: Dto) {
 
 ### 3.2 Replace Mock Data Pages (1.5 hari)
 
-| # | Page | Current | Replace With |
-|:---|:---|---:|---:|
-| 3.2.1 | `qc/coa/page.tsx` | Hardcoded array | API: `GET /qc/audits?type=inbound` |
-| 3.2.2 | `qc/inspections/page.tsx` | Hardcoded mock | API: `GET /qc/audits?status=PENDING` |
-| 3.2.3 | `qc/stability/page.tsx` | Hardcoded mock | API: `GET /rnd/lab-test-results?type=stability` |
-| 3.2.4 | `rnd/repository/page.tsx` | Hardcoded mock | API: `GET /formulas?status=ARCHIVED` |
-| 3.2.5 | `finance/transactions/page.tsx` | Hardcoded mock | API: `GET /finance/journal` |
-| 3.2.6 | `production/dashboard/page.tsx` | Mock KPIs | API: `GET /production/dashboard` |
+| # | Page | Current | Replace With | Status |
+|:---|:---|---:|---:|:---:|
+| 3.2.1 | `qc/coa/page.tsx` | Hardcoded array | API: `GET /qc/audits?type=inbound` | ✅ Done (route: `quality/coa`) |
+| 3.2.2 | `qc/inspections/page.tsx` | Hardcoded mock | API: `GET /qc/audits?status=PENDING` | ✅ Done (route: `quality/inspections`) |
+| 3.2.3 | `qc/stability/page.tsx` | Hardcoded mock | API: `GET /rnd/lab-test-results?type=stability` | ✅ Done (route: `quality/stability`) |
+| 3.2.4 | `rnd/repository/page.tsx` | Hardcoded mock | API: `GET /formulas?status=ARCHIVED` | ✅ Done (route: `samples/repository`) |
+| 3.2.5 | `finance/transactions/page.tsx` | Hardcoded mock | API: `GET /finance/journal` | ✅ Done |
+| 3.2.6 | `production/dashboard/page.tsx` | Mock KPIs | API: `GET /production/dashboard` | ✅ Done |
+
+> Note: Routes verified at hybrid paths per ADR-002 (`/quality/*`, `/samples/*`). Master plan was stale — actual routes differ.
 
 ---
 
@@ -356,10 +358,10 @@ async createWithRollback(dto: Dto) {
 
 #### Priority P0 — Critical Path (1 hari)
 
-| Page | Route | Key Features |
-|:---|---:|:---|
-| **Lab Test Center** | `/rnd/lab-test` | Form: pH, visco, density, stability 40°C/RT/4°C; Table: history per formula |
-| **Fund Request UI** | `/finance/fund-requests` | Form: amount, reason, attachment; Table: status timeline (PENDING→APPROVED→PAID) |
+| Page | Route | Key Features | Status |
+|:---|---:|:---|:---:|
+| **Lab Test Center** | `/rnd/lab-test` | Form: pH, visco, density, stability 40°C/RT/4°C; Table: history per formula | ✅ Done (actual route: `/quality/lab-test`) |
+| **Fund Request UI** | `/finance/fund-requests` | Form: amount, reason, attachment; Table: status timeline (PENDING→APPROVED→PAID) | ✅ Done |
 
 #### Priority P1 — Operational (1 hari)
 
@@ -379,14 +381,14 @@ async createWithRollback(dto: Dto) {
 | **Tax Management** | `/finance/taxes` | CRUD: name (PPN 11%), rate, active flag |
 | **Currency Management** | `/finance/currencies` | CRUD: code (IDR/USD), exchange rate, main flag |
 | **Period Management** | `/finance/periods` | Open/soft-lock/close periods; block if trial balance ≠ 0 |
-| **Revision Tracker** | `/rnd/revisions` | Table per sample: revision#, feedback, status, completion date |
+| **Revision Tracker** | `/rnd/revisions` | Table per sample: revision#, feedback, status, completion date | ✅ Done (actual route: `/samples/revisions`) |
 | **Returns (Bussdev)** | `/bussdev/returns` | Form: SO reference, qty, reason, return status; Table: return history |
 
 #### Priority P3 — Compliance (1 hari)
 
 | Page | Route | Key Features |
 |:---|---:|:---|
-| **Internal Audit Workbench** | `/legality/internal-audit` | Checklist CPKB/CARA per area, findings, remediation deadline, status |
+| **Internal Audit Workbench** | `/legality/internal-audit` | Checklist CPKB/CARA per area, findings, remediation deadline, status | ✅ Done (actual route: `/legality/ckpb-audit`) |
 | **Artwork Review Panel** | `/legality/artwork-review` | Image viewer, claim risk (LOW/MED/HIGH), approve/reject with PIN signature |
 | **Retention Sample Tracker** | `/qc/retention` | Batch# list, location rack, retained date, expiry alert |
 
