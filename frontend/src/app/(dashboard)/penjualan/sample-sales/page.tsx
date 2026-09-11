@@ -25,8 +25,10 @@ import {
   DnaModal,
   DnaButton,
   DnaInput,
+  DnaGateIndicator,
   useDnaToast,
 } from "@/components/dna";
+import { deriveGateStatus } from "@/lib/gates";
 
 interface SampleOrder {
   id: string;
@@ -404,10 +406,17 @@ export default function SampleSalesPage() {
                       </p>
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <DnaCell.Badge
-                        status={statusBadgeMap[sample.status] || "default"}
-                        label={statusLabelMap[sample.status] || sample.status}
-                      />
+                      <div className="flex flex-col items-center gap-1.5">
+                        <DnaCell.Badge
+                          status={statusBadgeMap[sample.status] || "default"}
+                          label={statusLabelMap[sample.status] || sample.status}
+                        />
+                        <DnaGateIndicator
+                          gate="G1"
+                          status={deriveGateStatus(sample.status, 'G1')}
+                          label={`G1 ${deriveGateStatus(sample.status, 'G1')}`}
+                        />
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <DnaCell.Actions
