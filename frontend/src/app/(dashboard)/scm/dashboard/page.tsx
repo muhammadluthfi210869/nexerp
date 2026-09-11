@@ -62,17 +62,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  DataCard, TableWrapper, DnaBadge, DnaButton, DnaInput,
+  KpiCard,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Button,
+  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+} from "@/components/dna";
 
 
 interface DashStats {
