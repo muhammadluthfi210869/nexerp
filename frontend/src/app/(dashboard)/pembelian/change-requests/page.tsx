@@ -4,13 +4,10 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaButton, DnaInput, DnaBadge } from "@/components/dna";
+import { DnaButton, DnaInput, DnaBadge, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";
 import {
   Plus, Loader2, FileText, CheckCircle2, XCircle, Clock, AlertCircle
 } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export default function ChangeRequestsPage() {
