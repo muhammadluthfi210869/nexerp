@@ -24,19 +24,27 @@ import {
   CheckCircle2
 } from "lucide-react";
 
-import { Card } from "@/components/ui/card";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { StatCard } from "@/components/dna/StatCard";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { SectionLabel } from "@/components/dna/SectionLabel";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  DnaButton,
+  StatCard,
+  DnaInput,
+  TableWrapper,
+  DnaBadge,
+  SectionLabel,
+  Input,
+  Label,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FormShell } from "@/components/layout/FormShell";
 
 // --- TYPES ---
