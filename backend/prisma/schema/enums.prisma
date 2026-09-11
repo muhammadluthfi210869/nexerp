@@ -655,3 +655,29 @@ enum RequisitionHeaderStatus {
   FULFILLED
   CANCELLED
 }
+
+// OmniCRM MVP — frozen 2026-09-11 per docs/marketing/PHASE-0-OMNICRM-CONTRACT.md
+// Reused from omnicrm---core-engine---whatsapp-coexistence/src/data/initialState.ts FIVE_STAGE_FUNNEL
+
+enum CrmStage {
+  LEADS_MASUK
+  COLD
+  WARM
+  HOT
+  SAMPLE
+  JUNK_LEADS
+  CLIENT_DEAL
+  CLOSED_LOST
+}
+
+enum GuestbookApproval {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CrmKpiWindow {
+  TODAY
+  WEEK
+  MONTH
+}
