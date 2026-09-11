@@ -6,10 +6,10 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataCard } from "@/components/dna/DataCard";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { PageSection } from "@/components/dna/PageSection";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna";
+import { Card, CardContent } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
 
 interface DataSource {
   model: string;

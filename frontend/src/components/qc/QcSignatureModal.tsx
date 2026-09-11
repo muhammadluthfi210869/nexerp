@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/dna";
+import { Card } from "@/components/dna";
+import { Input } from "@/components/dna";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 
 export interface QcParameter {

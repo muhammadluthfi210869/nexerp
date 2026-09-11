@@ -1,12 +1,12 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 import { Wallet, Search, Filter } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/dna";
 
 interface Transaction {
   id: string;

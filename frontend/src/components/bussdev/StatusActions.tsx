@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/dna";
+import { Input } from "@/components/dna";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/dna";
+import { Badge } from "@/components/dna";
 import { useAuth } from "@/hooks/useAuth";
 import { ShieldAlert, Zap, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";

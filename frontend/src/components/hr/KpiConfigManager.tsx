@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Input } from "@/components/dna";
 import { 
   Settings2, 
   Save, 

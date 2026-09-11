@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/dna';
 import { AlertCircle, RefreshCcw, ShieldAlert } from 'lucide-react';
 
 export default function GlobalError({

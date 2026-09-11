@@ -1,11 +1,11 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 import { BookOpen, Hash, Calendar, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/dna";
 
 interface JournalLine {
   id: string;

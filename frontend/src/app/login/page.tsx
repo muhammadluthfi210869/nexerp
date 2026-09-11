@@ -8,7 +8,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/dna";
 import {
   Card,
   CardContent,
@@ -16,9 +16,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),

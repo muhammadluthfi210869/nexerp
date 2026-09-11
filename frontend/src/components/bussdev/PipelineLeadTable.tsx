@@ -10,19 +10,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/dna";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/dna";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/dna";
 import { Inbox, FlaskConical, Landmark, XCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { DnaButton } from "@/components/dna";
 import { STAGES } from "./pipeline-constants";
