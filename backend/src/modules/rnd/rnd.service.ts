@@ -20,6 +20,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
 
 import { IdGeneratorService } from '../system/id-generator.service';
+import { StateTransitionService } from '../system/state-transition.service';
 
 @Injectable()
 export class RndService {
@@ -27,6 +28,7 @@ export class RndService {
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
+    private stateTransition: StateTransitionService,
   ) {}
 
   async createSample(dto: CreateSampleRequestDto) {
@@ -265,14 +267,8 @@ export class RndService {
 
       if (!current) throw new NotFoundException('Sample request not found');
 
-      // Validate state transition
-      const allowedTransitions = this.sampleStageTransitions[current.stage];
-      if (!allowedTransitions || !allowedTransitions.includes(dto.newStage)) {
-        throw new BadRequestException(
-          `STATE_TRANSITION_INVALID: Tidak bisa berpindah dari ${current.stage} ke ${dto.newStage}. ` +
-            `Transisi yang diizinkan: ${(allowedTransitions || []).join(', ') || 'tidak ada'}.`,
-        );
-      }
+      // Validate state transition via canonical service
+      this.stateTransition.validateTransition('SampleStage', current.stage, dto.newStage);
 
       const updateData: any = {
         stage: dto.newStage,

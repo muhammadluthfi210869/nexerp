@@ -16,6 +16,7 @@ import { rel } from '../../common/helpers/prisma.helper';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import { IdGeneratorService } from '../system/id-generator.service';
+import { StateTransitionService } from '../system/state-transition.service';
 
 @Injectable()
 export class ProductionService {
@@ -24,6 +25,7 @@ export class ProductionService {
     private legality: LegalityService,
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
+    private stateTransition: StateTransitionService,
   ) {}
 
   async startProduction(
@@ -302,6 +304,8 @@ export class ProductionService {
 
           const targetStage =
             Number(quarantineQty) > 0 ? LifecycleStatus.PENDING_QC : nextStage;
+          // Validate state transition via canonical service
+          this.stateTransition.validateTransition('LifecycleStatus', wo.stage, targetStage);
           await tx.workOrder.update({
             where: { id: workOrderId },
             data: { stage: targetStage },
