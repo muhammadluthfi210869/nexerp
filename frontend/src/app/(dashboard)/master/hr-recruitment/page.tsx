@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Users,
   Briefcase,
@@ -99,17 +101,52 @@ const INITIAL_OPENINGS: JobOpening[] = [
   { id: "JOB-04", title: "Staff Warehouse Material (Inbound)", department: "Warehouse", type: "Kontrak", openings: 2, applicantsCount: 6, deadline: "2026-10-05", status: "OPEN" },
 ];
 
+const PIPELINE_STAGES = [
+  { value: "ALL", label: "Semua Tahapan" },
+  { value: "APPLIED", label: "Applied" },
+  { value: "INTERVIEW", label: "Interview" },
+  { value: "TEST", label: "Test" },
+  { value: "OFFERING", label: "Offering" },
+  { value: "HIRED", label: "Hired" },
+  { value: "REJECTED", label: "Rejected" },
+];
+
+const STAGE_FLOW: Record<string, string> = {
+  APPLIED: "INTERVIEW",
+  INTERVIEW: "TEST",
+  TEST: "OFFERING",
+  OFFERING: "HIRED",
+};
+
+function nextStageOf(stage: string): string | null {
+  return STAGE_FLOW[stage] ?? null;
+}
+
 export default function HrRecruitmentPage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"employees" | "pipeline" | "openings">("employees");
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("ALL");
+  const [stageFilter, setStageFilter] = useState("ALL");
 
   // Modals
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  // Candidate create form
+  const [newCandidate, setNewCandidate] = useState({
+    name: "",
+    position: "",
+    department: "Produksi Filling",
+    phone: "",
+    email: "",
+    experience: "",
+    education: "",
+    matchScore: 80,
+  });
 
   // Form states
   const [newEmp, setNewEmp] = useState({
@@ -122,15 +159,52 @@ export default function HrRecruitmentPage() {
     basicSalary: 5000000
   });
 
+  // ─── API: recruitment candidates (placeholder backend) ───
+  const { data: candidates = [], isLoading: candidatesLoading } = useQuery<any[]>({
+    queryKey: ["hr-recruitment", stageFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (stageFilter !== "ALL") params.append("stage", stageFilter);
+      const resp = await api.get(`/hr/recruitment?${params.toString()}`);
+      return resp.data;
+    },
+  });
+
+  const advanceMutation = useMutation({
+    mutationFn: async ({ id, stage }: { id: string; stage: string }) =>
+      (await api.patch(`/hr/recruitment/${id}/stage`, { stage })).data,
+    onSuccess: (_, vars) => {
+      toast.success(`Kandidat ${vars.id} maju ke tahap ${vars.stage}`);
+      queryClient.invalidateQueries({ queryKey: ["hr-recruitment"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal advance kandidat");
+    },
+  });
+
+  const createCandidateMutation = useMutation({
+    mutationFn: async (payload: typeof newCandidate) =>
+      (await api.post(`/hr/recruitment`, payload)).data,
+    onSuccess: () => {
+      toast.success("Pelamar baru berhasil didaftarkan!");
+      setIsCandidateModalOpen(false);
+      setNewCandidate({ name: "", position: "", department: "Produksi Filling", phone: "", email: "", experience: "", education: "", matchScore: 80 });
+      queryClient.invalidateQueries({ queryKey: ["hr-recruitment"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mendaftarkan pelamar");
+    },
+  });
+
   const filteredEmployees = INITIAL_EMPLOYEES.filter(e => {
     const matchSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.nik.toLowerCase().includes(searchQuery.toLowerCase()) || e.role.toLowerCase().includes(searchQuery.toLowerCase());
     const matchDept = deptFilter === "ALL" || e.department.includes(deptFilter);
     return matchSearch && matchDept;
   });
 
-  const filteredCandidates = INITIAL_CANDIDATES.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.position.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchDept = deptFilter === "ALL" || c.department.includes(deptFilter);
+  const filteredCandidates = candidates.filter(c => {
+    const matchSearch = !searchQuery || (c.name?.toLowerCase().includes(searchQuery.toLowerCase()) || c.position?.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchDept = deptFilter === "ALL" || (c.department ?? "").includes(deptFilter);
     return matchSearch && matchDept;
   });
 
@@ -200,7 +274,7 @@ export default function HrRecruitmentPage() {
         />
         <DnaStatCard
           label="Pelamar Dalam Pipeline"
-          value={INITIAL_CANDIDATES.length + " Kandidat"}
+          value={candidates.length + " Kandidat"}
           icon={<Briefcase className="w-5 h-5 text-purple-600" />}
           delta={{ value: "4 Lowongan Buka", isPositive: true }}
           subtext="Screening s/d Offering"
@@ -228,7 +302,7 @@ export default function HrRecruitmentPage() {
       <DnaTabNav
         tabs={[
           { id: "employees", label: "Database Pegawai Aktif", icon: Users, count: INITIAL_EMPLOYEES.length },
-          { id: "pipeline", label: "Pipeline Seleksi Pelamar", icon: Briefcase, count: INITIAL_CANDIDATES.length },
+          { id: "pipeline", label: "Pipeline Seleksi Pelamar", icon: Briefcase, count: candidates.length },
           { id: "openings", label: "Lowongan Kerja Buka", icon: Building2, count: INITIAL_OPENINGS.length }
         ]}
         activeTab={activeTab}
@@ -338,6 +412,23 @@ export default function HrRecruitmentPage() {
         <DnaDataTableCard
           title="Pipeline Seleksi Calon Karyawan"
           badge={<DnaBadge variant="purple">{filteredCandidates.length} Pelamar</DnaBadge>}
+          customToolbar={
+            <div className="flex items-center gap-2">
+              <Filter className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={stageFilter}
+                onChange={(e) => setStageFilter(e.target.value)}
+                className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              >
+                {PIPELINE_STAGES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <span className="text-[10px] text-slate-400 ml-1">
+                {candidatesLoading ? "memuat…" : `${filteredCandidates.length} hasil`}
+              </span>
+            </div>
+          }
         >
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
@@ -353,7 +444,16 @@ export default function HrRecruitmentPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredCandidates.map((cnd) => (
+                {filteredCandidates.map((cnd) => {
+                  const variant =
+                    cnd.stage === "HIRED" ? "success" :
+                    cnd.stage === "OFFERING" ? "info" :
+                    cnd.stage === "TEST" ? "purple" :
+                    cnd.stage === "INTERVIEW" ? "warning" :
+                    cnd.stage === "REJECTED" ? "critical" : "default";
+                  const nextStage = nextStageOf(cnd.stage);
+                  const canAdvance = cnd.stage !== "HIRED" && cnd.stage !== "REJECTED";
+                  return (
                   <tr key={cnd.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-3.5 py-3">
                       <div className="font-bold text-slate-900">{cnd.name}</div>
@@ -376,30 +476,31 @@ export default function HrRecruitmentPage() {
                       </span>
                     </td>
                     <td className="px-3.5 py-3 text-center">
-                      <DnaBadge
-                        variant={
-                          cnd.stage === "OFFERING" ? "success" :
-                          cnd.stage === "INTERVIEW_USER" ? "purple" :
-                          cnd.stage === "INTERVIEW_HR" ? "info" : "default"
-                        }
-                      >
-                        {cnd.stage}
-                      </DnaBadge>
+                      <DnaBadge variant={variant}>{cnd.stage}</DnaBadge>
                     </td>
                     <td className="px-3.5 py-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="secondary"
                           size="sm"
-                          onClick={() => toast.success("Maju ke tahap berikutnya: " + cnd.name)}
+                          disabled={!canAdvance || !nextStage || advanceMutation.isPending}
+                          onClick={() => nextStage && advanceMutation.mutate({ id: cnd.id, stage: nextStage })}
                         >
                           <ChevronRight className="w-3.5 h-3.5 mr-1" />
-                          Update
+                          {nextStage ? `→ ${nextStage}` : "Final"}
                         </DnaButton>
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
+                {filteredCandidates.length === 0 && !candidatesLoading && (
+                  <tr>
+                    <td colSpan={7} className="px-3.5 py-8 text-center text-slate-400 italic">
+                      Belum ada kandidat pada tahap ini.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -595,6 +696,110 @@ export default function HrRecruitmentPage() {
             </div>
           </div>
         )}
+      </DnaModal>
+
+      {/* MODAL: INPUT PELAMAR BARU */}
+      <DnaModal
+        isOpen={isCandidateModalOpen}
+        onClose={() => setIsCandidateModalOpen(false)}
+        title="Registrasi Pelamar Baru (Recruitment Pipeline)"
+        maxWidth="max-w-xl"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!newCandidate.name || !newCandidate.position) {
+              toast.error("Nama dan posisi wajib diisi!");
+              return;
+            }
+            createCandidateMutation.mutate(newCandidate);
+          }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+              <input
+                type="text"
+                required
+                placeholder="cth: Agung Wicaksono, S.T"
+                value={newCandidate.name}
+                onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Posisi Dilamar *</label>
+              <input
+                type="text"
+                required
+                placeholder="cth: Operator Filling"
+                value={newCandidate.position}
+                onChange={(e) => setNewCandidate({ ...newCandidate, position: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Departemen</label>
+              <select
+                value={newCandidate.department}
+                onChange={(e) => setNewCandidate({ ...newCandidate, department: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+              >
+                <option value="Produksi Filling">Produksi Filling</option>
+                <option value="Produksi Mixing">Produksi Mixing</option>
+                <option value="R&D Formulasi">R&D Formulasi</option>
+                <option value="QC Mikrobiologi">QC & QA</option>
+                <option value="BusDev Maklon">BusDev & Sales</option>
+                <option value="Warehouse Material">Warehouse</option>
+                <option value="HR & GA">HR & GA</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Match Score (%)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={newCandidate.matchScore}
+                onChange={(e) => setNewCandidate({ ...newCandidate, matchScore: Number(e.target.value) })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp</label>
+              <input
+                type="text"
+                placeholder="0812-xxxx-xxxx"
+                value={newCandidate.phone}
+                onChange={(e) => setNewCandidate({ ...newCandidate, phone: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+              <input
+                type="email"
+                placeholder="cth: agung@gmail.com"
+                value={newCandidate.email}
+                onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <DnaButton variant="secondary" size="md" type="button" onClick={() => setIsCandidateModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" size="md" type="submit" disabled={createCandidateMutation.isPending}>
+              {createCandidateMutation.isPending ? "Menyimpan…" : "Daftarkan Pelamar"}
+            </DnaButton>
+          </div>
+        </form>
       </DnaModal>
     </DnaPageContainer>
   );
