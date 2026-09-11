@@ -30,23 +30,23 @@ import {
   FlaskConical,
   Search
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { DnaInput, DnaButton } from "@/components/dna";
+import {
+  Button,
+  Label,
+  DnaInput,
+  DnaButton,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/dna";
 import { FormShell } from "@/components/layout/FormShell";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // --- TYPES ---
 interface FormulaItem {
