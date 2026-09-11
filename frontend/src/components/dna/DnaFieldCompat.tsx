@@ -1,84 +1,80 @@
 "use client";
 
-// Re-exports of underlying Radix / UI primitives wrapped inside DNA.
-// Operational pages MUST import these through "@/components/dna" per ADR-007.
+// Compat re-exports: maps shadcn-style names to canonical DNA primitives.
+// ADR-007 / ADR-013: zero shadcn imports — all primitives resolve through DNA.
+
+export { DnaTable as Table } from "./DnaTable";
+export { DnaTableBody as TableBody } from "./DnaTable";
+export { DnaTd as TableCell } from "./DnaTable";
+export { DnaTableHead as TableHead } from "./DnaTable";
+export { DnaTh as TableHeader } from "./DnaTable";
+export { DnaTableRow as TableRow } from "./DnaTable";
+
+export { DnaSelect as Select } from "./DnaSelect";
+export { DnaSelect as SelectTrigger } from "./DnaSelect";
+export { DnaSelect as SelectValue } from "./DnaSelect";
+export { DnaSelect as SelectContent } from "./DnaSelect";
+export { DnaSelect as SelectItem } from "./DnaSelect";
 
 export {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DnaTabs as Tabs,
+  DnaTabsList as TabsList,
+  DnaTabsTrigger as TabsTrigger,
+  DnaTabsContent as TabsContent,
+} from "./DnaTabs";
 
 export {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+  DnaDialog as Dialog,
+  DnaDialogTrigger as DialogTrigger,
+  DnaDialogPortal as DialogPortal,
+  DnaDialogClose as DialogClose,
+  DnaDialogOverlay as DialogOverlay,
+  DnaDialogContent as DialogContent,
+  DnaDialogHeader as DialogHeader,
+  DnaDialogFooter as DialogFooter,
+  DnaDialogTitle as DialogTitle,
+  DnaDialogDescription as DialogDescription,
+  DnaDialog as DnaDialogShim,
+  DnaDialogContent as DnaDialogContentShim,
+  DnaDialogTitle as DnaDialogTitleShim,
+  DnaDialogDescription as DnaDialogDescriptionShim,
+  DnaDialogHeader as DnaDialogHeaderShim,
+  DnaDialogFooter as DnaDialogFooterShim,
+} from "./DnaDialog";
 
 export {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+  DnaSheet as Sheet,
+  DnaSheetTrigger as SheetTrigger,
+  DnaSheetClose as SheetClose,
+  DnaSheetContent as SheetContent,
+  DnaSheetHeader as SheetHeader,
+  DnaSheetFooter as SheetFooter,
+  DnaSheetTitle as SheetTitle,
+  DnaSheetDescription as SheetDescription,
+} from "./DnaSheet";
 
+export { DnaLabel as Label } from "./DnaLabel";
+export { DnaInput as Input } from "./DnaInput";
+export { DnaSwitch as Switch } from "./DnaSwitch";
+export { DnaTextarea as Textarea } from "./DnaTextarea";
+export { DnaCheckbox as Checkbox } from "./DnaCheckbox";
 export {
-  Dialog,
-  DialogTrigger,
-  DialogPortal,
-  DialogClose,
-  DialogOverlay,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-  Dialog as DnaDialog,
-  DialogContent as DnaDialogContent,
-  DialogTitle as DnaDialogTitle,
-  DialogDescription as DnaDialogDescription,
-  DialogHeader as DnaDialogHeader,
-  DialogFooter as DnaDialogFooter,
-} from "@/components/ui/dialog";
-
+  DnaCard as Card,
+  DnaCardHeader as CardHeader,
+  DnaCardFooter as CardFooter,
+  DnaCardTitle as CardTitle,
+  DnaCardDescription as CardDescription,
+  DnaCardContent as CardContent,
+} from "./DnaCard";
+export { DnaBadge as Badge } from "./DnaBadge";
+export { DnaSkeleton as Skeleton } from "./DnaSkeleton";
+export { DnaProgress as Progress } from "./DnaProgress";
 export {
-  Sheet,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-
-export { Label } from "@/components/ui/label";
-export { Input } from "@/components/ui/input";
-export { Switch } from "@/components/ui/switch";
-export { Textarea } from "@/components/ui/textarea";
-export { Checkbox } from "@/components/ui/checkbox";
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-export { Badge } from "@/components/ui/badge";
-export { Skeleton } from "@/components/ui/skeleton";
-export { Progress } from "@/components/ui/progress";
-export {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+  DnaDropdownMenu as DropdownMenu,
+  DnaDropdownMenuTrigger as DropdownMenuTrigger,
+  DnaDropdownMenuContent as DropdownMenuContent,
+  DnaDropdownMenuItem as DropdownMenuItem,
+  DnaDropdownMenuLabel as DropdownMenuLabel,
+  DnaDropdownMenuSeparator as DropdownMenuSeparator,
+} from "./DnaDropdownMenu";
 export { DnaButton as Button } from "./DnaButton";

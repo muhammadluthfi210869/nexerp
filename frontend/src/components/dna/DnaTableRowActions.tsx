@@ -3,13 +3,13 @@
 import React from "react";
 import { Eye, Printer, Edit3, MoreHorizontal, Trash2 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
+  DnaDropdownMenu as DropdownMenu,
+  DnaDropdownMenuContent as DropdownMenuContent,
+  DnaDropdownMenuItem as DropdownMenuItem,
+  DnaDropdownMenuTrigger as DropdownMenuTrigger,
+  DnaDropdownMenuSeparator as DropdownMenuSeparator,
+  DnaDropdownMenuLabel as DropdownMenuLabel,
+} from "./DnaDropdownMenu";
 import { cn } from "@/lib/utils";
 
 export interface DnaExtraAction {

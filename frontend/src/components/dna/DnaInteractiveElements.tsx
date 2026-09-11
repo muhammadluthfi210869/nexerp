@@ -6,7 +6,7 @@ import { DnaInput } from "./DnaInput";
 import { DnaButton } from "./DnaButton";
 import { DnaModal } from "./DnaModal";
 import { DnaBadge } from "./DnaBadge";
-import { Switch as RawSwitch } from "@/components/ui/switch";
+import { DnaSwitch as RawSwitch } from "./DnaSwitch";
 import {
   Search,
   Check,

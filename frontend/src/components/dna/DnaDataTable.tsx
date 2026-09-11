@@ -34,13 +34,13 @@ import { DnaDateFilter, type DateFilterValue } from "./DnaDateFilter";
 import { DnaColumnFilter, type ColumnOption } from "./DnaColumnFilter";
 import { DnaTableRowActions, type DnaTableRowActionsProps } from "./DnaTableRowActions";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+  DnaDropdownMenu as DropdownMenu,
+  DnaDropdownMenuContent as DropdownMenuContent,
+  DnaDropdownMenuItem as DropdownMenuItem,
+  DnaDropdownMenuTrigger as DropdownMenuTrigger,
+  DnaDropdownMenuLabel as DropdownMenuLabel,
+  DnaDropdownMenuSeparator as DropdownMenuSeparator,
+} from "./DnaDropdownMenu";
 
 import { cn } from "@/lib/utils";
 
