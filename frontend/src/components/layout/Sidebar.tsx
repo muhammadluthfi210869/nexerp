@@ -600,7 +600,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Jadwal Mixing", href: "/production/schedule?type=mixing", icon: History },
       { name: "Jadwal Filling", href: "/production/schedule?type=filling", icon: History },
       { name: "Jadwal Packaging", href: "/production/schedule?type=packaging", icon: History },
-      { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical },
+      { name: "Pengujian Lab & Stabilitas", href: "/quality/lab-test", icon: FlaskConical },
       { name: "Sertifikat Analisis (CoA)", href: "/quality/coa", icon: FileCheck },
     ]
   },
