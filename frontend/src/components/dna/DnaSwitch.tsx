@@ -102,6 +102,5 @@ export const DnaSwitch = React.forwardRef<HTMLButtonElement, DnaSwitchProps>(
     );
   }
 );
-DnaSwitch.displayName = "DnaSwitch";
-
+export { DnaSwitch as Switch };
 export default DnaSwitch;
