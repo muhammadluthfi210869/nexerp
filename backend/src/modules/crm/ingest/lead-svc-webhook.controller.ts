@@ -11,10 +11,24 @@ import {
   Controller, Post, Body, Headers, HttpCode, HttpException,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { createHash } from "crypto";
 import { LeadSource, type CrmLead, type GuestbookEvent } from "@prisma/client";
 import { PrismaService } from "../../../prisma/prisma/prisma.service";
 import { validateHmac } from "../common/hmac";
 import { LeadIngestDto } from "../dto/lead-ingest.dto";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Convert any trackingCode-shaped input to a stable UUID. The dreamlab.id
+ * website sends trackingCode (e.g. "LC-abc123") rather than a UUID.
+ * Hashing gives us idempotent linking without requiring schema changes.
+ */
+function toStableUuid(value: string): string {
+  if (UUID_RE.test(value)) return value.toLowerCase();
+  const hex = createHash("sha256").update(`nexerp-crm:${value}`).digest("hex").slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
 
 @ApiTags("crm-ingest")
 @Controller(["crm", "v1/crm"])
@@ -49,16 +63,18 @@ export class LeadSvcWebhookController {
       throw new HttpException(`Invalid HMAC: ${validation.reason}`, 401);
     }
 
+    const leadCaptureId = toStableUuid(rawBody.leadCaptureId);
+
     // Idempotency: if CrmLead already exists for this leadCaptureId, just
     // ensure GuestbookEvent exists; otherwise create both atomically.
     return this.prisma.$transaction(async (tx) => {
       let lead = await tx.crmLead.findUnique({
-        where: { leadCaptureId: rawBody.leadCaptureId },
+        where: { leadCaptureId },
       });
       if (!lead) {
         lead = await tx.crmLead.create({
           data: {
-            leadCaptureId: rawBody.leadCaptureId,
+            leadCaptureId,
             trackingCode: rawBody.trackingCode ?? null,
             phone: rawBody.phone,
             source: rawBody.source ?? LeadSource.WEBSITE,
@@ -72,7 +88,7 @@ export class LeadSvcWebhookController {
           },
         });
         await tx.leadAudit.create({
-          data: { crmLeadId: lead.id, action: "INGEST", metadata: { source: rawBody.source } },
+          data: { crmLeadId: lead.id, action: "INGEST", metadata: { source: rawBody.source, trackingCode: rawBody.trackingCode ?? null } },
         });
       }
 
