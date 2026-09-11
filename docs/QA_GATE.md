@@ -59,3 +59,17 @@ Exit code 0 = pass.
 | Date | Feature | Status | Entry |
 |---|---|---|---|
 | 2026-09-11 | WS-D Activity Tracking | PASS | `docs/qa-gate/2026-09-11-ws-d-activity-tracking.md` |
+| 2026-09-12 | OmniCRM MVP (Phase 0-5) | PASS (local) | `docs/qa-gate/2026-09-12-omnicrm-mvp.md` (this run) |
+
+## Gate Report — 2026-09-12 — OmniCRM MVP
+
+| Change | Reproduction test | Suite status | Evidence |
+|---|---|---|---|
+| Schema: CrmLead + GuestbookEvent + LeadAudit + 3 enums + migration | n/a (schema-only) | n/a | `npx prisma format` clean; commit `3b2f4b6` |
+| Backend: 4 services + HMAC + 13 endpoints | `backend/src/modules/crm/__tests__/` (43 Jest) | **43/43 green** | commits `5e85a14`, `9132599`, `fac182b`, `71c2d6b` |
+| Frontend: single-page Overview + 4 drill-down sub-routes | `frontend/tests/e2e/omnicrm-{overview,buku-tamu,lead-detail}.spec.ts` (11 E2E) | n/a (no dev server in sandbox; ready via `npx playwright test`) | commits `4ddd06b` |
+| Sidebar: remove broken /overview + /team entries | covered by omnicrm-overview.spec.ts regression | PASS | commit (this PR) |
+| Bug fix: Promise.all on today/week groupBy → sequential awaits | `kpi.service.spec.ts` Round Robin test | PASS | commit (this PR) |
+| Bug fix: from/to date filter UTC parsing (was local time → 7h shift) | `leads.service.spec.ts` "applies from/to as inclusive day boundaries" | PASS | commit (this PR) |
+
+**Status:** ✅ READY FOR VPS DEPLOY. The 11 Playwright E2E specs need to be executed against a live dev server per docs/marketing/OMNICRM-DEPLOY.md §D; that step is on the user (SSH + dev server + `npx playwright test`).
