@@ -14,7 +14,7 @@
 |---|---|---|
 | Phase 0: Evidence Freeze | 100% | ✅ DONE |
 | Phase 1: Backend Foundation | 80% | 🟡 Mostly done, security/service layer remain |
-| Phase 2: Service Layer Integrity | 0% | ⚪ Not started |
+| Phase 2: Service Layer Integrity | 0% | 🟢 Starting (P2.1 Split Workflows DP/Payment/Revenue) |
 | Phase 3: Frontend Repair | 46% | 🟢 7 functions DONE (+ /inventory) |
 | Phase 4: State Machine UI | 0% | ⚪ Not started |
 | Phase 5: Test Infrastructure | 50% | 🟡 Jest+Vitest jalan, coverage <80% |
@@ -23,7 +23,7 @@
 | Hyper-Alignment (per-divisi) | 0% | ⚪ Not started |
 | Track A: Hybrid Routes | 100% | ✅ DONE (9/11 functions migrated, /exec excluded per scope, 133 pages) |
 | Track B: Backend Lint | 8% | 🟡 Paused (TS regression) |
-| Track C: Frontend Lint | 0% | 🟡 Config updated (no-unused-vars enabled), 7243 warnings need manual refactor |
+| Track C: Frontend Lint | Deferred | ⏸️ Deferred to Phase 2.5 (auto-fix has near-zero impact on 7243 warnings) |
 
 ### Commit Trajectory (Sesi Ini)
 
