@@ -14,7 +14,7 @@
 |---|---|---|
 | Phase 0: Evidence Freeze | 100% | ✅ DONE |
 | Phase 1: Backend Foundation | 80% | 🟡 Mostly done, security/service layer remain |
-| Phase 2: Service Layer Integrity | 0% | 🟢 Starting (P2.1 Split Workflows DP/Payment/Revenue) |
+| Phase 2: Service Layer Integrity | 25% | 🟢 2.1 Split Workflows DONE (DP+AP+AR), 2.2-2.4 pending |
 | Phase 3: Frontend Repair | 46% | 🟢 7 functions DONE (+ /inventory) |
 | Phase 4: State Machine UI | 0% | ⚪ Not started |
 | Phase 5: Test Infrastructure | 50% | 🟡 Jest+Vitest jalan, coverage <80% |
@@ -102,7 +102,7 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 
 | Sub-fase | Effort | Status |
 |---|---|---|
-| 2.1 Complete Split Workflows | 2 hari | ⚪ TODO (Gates: DP, Payment, Revenue) |
+| 2.1 Complete Split Workflows | 2 hari | ✅ DONE (DP+AP+AR services, 13 endpoints, full Procure-to-Pay + Order-to-Cash) |
 | 2.2 Complete Missing API Endpoints | 1.5 hari | ⚪ TODO |
 | 2.3 Error Handling Standardization | 1 hari | ⚪ TODO (RFC 7807 envelope exist, perlu audit) |
 | 2.4 Harden Gate Conditions | 1 hari | ⚪ TODO (Finance verify, warehouse DO lock) |
