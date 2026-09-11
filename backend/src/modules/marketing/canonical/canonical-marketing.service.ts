@@ -13,6 +13,7 @@ import {
   CreateBrandDto,
   CreateCanonicalProjectDto,
   CreateCanonicalTaskDto,
+  CreateTaskCommentDto,
   PaginationQueryDto,
   ReportingQueryDto,
   TaskListQueryDto,
@@ -290,6 +291,23 @@ export class CanonicalMarketingService {
       });
     });
     return this.getTask(viewer, id);
+  }
+
+  async createComment(
+    viewer: MarketingViewer,
+    taskId: string,
+    dto: CreateTaskCommentDto,
+  ) {
+    ensureMarketingTaskRole(viewer);
+    const task = await this.findVisibleTask(this.prisma, viewer, taskId);
+    this.ensureCanEditTask(viewer, task);
+    return this.prisma.marketingTaskComment.create({
+      data: {
+        taskId,
+        authorId: viewer.id,
+        body: dto.body.trim(),
+      },
+    });
   }
 
   async updateChecklist(

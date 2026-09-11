@@ -100,6 +100,10 @@ export class UpdateChecklistItemDto {
   @IsBoolean() done!: boolean;
 }
 
+export class CreateTaskCommentDto {
+  @IsString() @MinLength(1) @MaxLength(5_000) body!: string;
+}
+
 export class CreateCanonicalProjectDto {
   @IsString() @MinLength(1) @MaxLength(255) name!: string;
   @IsString() @MinLength(1) @MaxLength(100) channel!: string;

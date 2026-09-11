@@ -56,6 +56,11 @@ function prismaMock() {
       findFirst: jest.fn(),
       update: jest.fn(),
     },
+    marketingTaskComment: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      delete: jest.fn(),
+    },
     marketingTaskHistory: { create: jest.fn() },
     marketingProject: {
       findMany: jest.fn(),
@@ -209,5 +214,41 @@ describe('CanonicalMarketingService', () => {
       }),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(prisma.marketingIntegrationConnection.upsert).not.toHaveBeenCalled();
+  });
+
+  it('creates a comment on a visible task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(task());
+    prisma.marketingTaskComment.create.mockResolvedValue({
+      id: 'comment-1',
+      taskId: 'task-1',
+      authorId: 'member',
+      body: 'Looks good',
+      createdAt: new Date('2026-09-11T10:00:00Z'),
+    });
+    const service = new CanonicalMarketingService(prisma);
+    const result = await service.createComment(member, 'task-1', {
+      body: 'Looks good',
+    });
+    expect(result.id).toBe('comment-1');
+    expect(prisma.marketingTaskComment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          taskId: 'task-1',
+          authorId: 'member',
+          body: 'Looks good',
+        }),
+      }),
+    );
+  });
+
+  it('returns 404 when creating a comment on a hidden task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(null);
+    const service = new CanonicalMarketingService(prisma);
+    await expect(
+      service.createComment(member, 'hidden', { body: 'Hi' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.marketingTaskComment.create).not.toHaveBeenCalled();
   });
 });

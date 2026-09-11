@@ -19,6 +19,7 @@ import {
   CreateBrandDto,
   CreateCanonicalProjectDto,
   CreateCanonicalTaskDto,
+  CreateTaskCommentDto,
   PaginationQueryDto,
   ReportingQueryDto,
   TaskListQueryDto,
@@ -113,6 +114,16 @@ export class CanonicalMarketingController {
     @Body() dto: UpdateChecklistItemDto,
   ): Promise<unknown> {
     return this.service.updateChecklist(req.user, taskId, itemId, dto);
+  }
+
+  @Post('tasks/:taskId/comments')
+  @Roles(...TASK_READ_ROLES)
+  createComment(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+    @Body() dto: CreateTaskCommentDto,
+  ): Promise<unknown> {
+    return this.service.createComment(req.user, taskId, dto);
   }
 
   @Get('projects')
