@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, DnaBadge } from "@/components/dna";
 import { Clock, AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
-import { DnaBadge } from "@/components/dna";
 
 const COLUMNS = [
   { id: 'INBOX', label: 'Inbox', status: 'default' as const },
