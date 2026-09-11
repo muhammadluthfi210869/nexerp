@@ -10,8 +10,16 @@ import { ActivityLogService } from './activity-log.service';
 import type { Request } from 'express';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
-// Paths that should never be logged (health, swagger, static assets).
-const SKIP_PREFIXES = ['/health', '/api/docs', '/api/docs-json', '/uploads'];
+// Paths that should never be logged (health, swagger, static assets,
+// self-recursion guard so logging /activity-log/log doesn't write
+// its own CREATE row).
+const SKIP_PREFIXES = [
+  '/health',
+  '/api/docs',
+  '/api/docs-json',
+  '/uploads',
+  '/v1/activity-log',
+];
 
 interface AuthedReq extends Request {
   user?: { sub?: string; roles?: string[] };

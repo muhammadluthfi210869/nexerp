@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { Toaster } from "@/components/dna";
+import { ActivityLogger } from "@/hooks/useActivityLog";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,6 +38,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className={`${inter.variable} min-h-screen bg-base text-text-main font-sans antialiased`}>
         <ReactQueryProvider>
+          <ActivityLogger />
           {children}
           <Toaster position="top-right" richColors />
         </ReactQueryProvider>
