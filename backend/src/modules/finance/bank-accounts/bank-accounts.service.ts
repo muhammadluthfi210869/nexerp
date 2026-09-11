@@ -9,7 +9,6 @@ export class BankAccountsService {
     return this.prisma.bankAccount.findMany({
       where: { isActive: true },
       include: {
-        glAccount: { select: { id: true, code: true, name: true } },
         _count: {
           select: {
             transactions: true,
@@ -26,7 +25,6 @@ export class BankAccountsService {
     const account = await this.prisma.bankAccount.findUnique({
       where: { id },
       include: {
-        glAccount: true,
         transactions: { orderBy: { date: 'desc' }, take: 20 },
       },
     });

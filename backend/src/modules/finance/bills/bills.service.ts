@@ -11,8 +11,8 @@ export class BillsService {
       where: filter,
       include: {
         vendor: { select: { id: true, name: true } },
-        lineItems: true,
-        billAllocations: { include: { payment: true } },
+        items: true,
+        allocations: { include: { payment: true } },
       },
       orderBy: { invoiceDate: 'desc' },
     });
@@ -23,8 +23,8 @@ export class BillsService {
       where: { id },
       include: {
         vendor: true,
-        lineItems: true,
-        billAllocations: { include: { payment: true } },
+        items: true,
+        allocations: { include: { payment: true } },
       },
     });
     if (!bill) throw new NotFoundException(`Bill ${id} not found`);
@@ -97,10 +97,10 @@ export class BillsService {
         grandTotal,
         notes: dto.notes,
         pic: dto.pic,
-        lineItems: { create: processedItems },
+        items: { create: processedItems },
         paymentStatus: PaymentStatus.PENDING,
       },
-      include: { lineItems: true, vendor: true },
+      include: { items: true, vendor: true },
     });
   }
 
@@ -112,7 +112,7 @@ export class BillsService {
   async post(userId: string, id: string) {
     const bill = await this.prisma.bill.findUnique({
       where: { id },
-      include: { lineItems: true, vendor: true },
+      include: { items: true, vendor: true },
     });
     if (!bill) throw new NotFoundException(`Bill ${id} not found`);
     if (bill.postedAt) {
@@ -135,12 +135,12 @@ export class BillsService {
         where: { code: bill.procurementCategory.match(/\d+/)?.[0] || '5000' },
       });
       if (apAcc && expenseAcc) {
+        const vendor = await tx.supplier.findUnique({ where: { id: bill.vendorId } });
         await tx.journalEntry.create({
           data: {
             date: new Date(),
             reference: `BILL-POST-${bill.billNumber}`,
-            description: `Bill ${bill.billNumber} from ${bill.vendor.name}`,
-            poId: undefined as any, // TODO: link to PO if exists
+            description: `Bill ${bill.billNumber} from ${vendor?.name ?? 'vendor'}`,
             sourceDocumentType: 'PURCHASE_ORDER' as any,
             lines: {
               create: [
