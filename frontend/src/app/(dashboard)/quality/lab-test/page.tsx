@@ -4,14 +4,12 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Plus, Search, Beaker } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import {
+  DnaInput, DnaButton, DnaBadge,
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardShell } from "@/components/layout/DashboardShell";
