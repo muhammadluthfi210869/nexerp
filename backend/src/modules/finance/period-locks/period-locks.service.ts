@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import {
+  PeriodLockedException,
+  ResourceNotFoundException,
+  StateTransitionInvalidException,
+} from '../../../common/exceptions/api-exception';
 
 @Injectable()
 export class PeriodLocksService {
@@ -13,7 +18,7 @@ export class PeriodLocksService {
 
   async findOne(id: string) {
     const lock = await this.prisma.periodLock.findUnique({ where: { id } });
-    if (!lock) throw new NotFoundException(`Period lock ${id} not found`);
+    if (!lock) throw new ResourceNotFoundException('Period lock', id);
     return lock;
   }
 
@@ -30,6 +35,16 @@ export class PeriodLocksService {
   }
 
   /**
+   * Gate helper: throws PeriodLockedException if the period is locked.
+   * Use in service-layer posting operations to enforce monthly close.
+   */
+  async assertPeriodNotLocked(period: Date): Promise<void> {
+    if (await this.isPeriodLocked(period)) {
+      throw new PeriodLockedException(period.toISOString().slice(0, 7));
+    }
+  }
+
+  /**
    * Lock a period — no more transactions can be posted for this month.
    * Used for monthly accounting close.
    */
@@ -39,7 +54,10 @@ export class PeriodLocksService {
       where: { period: monthStart },
     });
     if (existing?.isLocked) {
-      throw new BadRequestException(
+      throw new StateTransitionInvalidException(
+        'PeriodLock',
+        'LOCKED',
+        'LOCKED',
         `Period ${monthStart.toISOString().slice(0, 7)} is already locked`,
       );
     }
@@ -67,9 +85,14 @@ export class PeriodLocksService {
    */
   async unlock(userId: string, id: string, reason: string) {
     const lock = await this.prisma.periodLock.findUnique({ where: { id } });
-    if (!lock) throw new NotFoundException(`Period lock ${id} not found`);
+    if (!lock) throw new ResourceNotFoundException('Period lock', id);
     if (!lock.isLocked) {
-      throw new BadRequestException(`Period is not locked.`);
+      throw new StateTransitionInvalidException(
+        'PeriodLock',
+        'UNLOCKED',
+        'UNLOCKED',
+        'Period is not locked',
+      );
     }
 
     return this.prisma.periodLock.update({

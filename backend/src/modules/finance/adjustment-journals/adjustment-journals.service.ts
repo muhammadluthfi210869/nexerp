@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import {
+  ResourceNotFoundException,
+  StateTransitionInvalidException,
+  SoDViolationException,
+} from '../../../common/exceptions/api-exception';
 
 /**
  * AdjustmentJournal = Manual Jurnal Penyesuaian (accruals, deferrals, corrections).
@@ -30,7 +35,7 @@ export class AdjustmentJournalsService {
 
   async findOne(id: string) {
     const journal = await this.prisma.adjustmentJournal.findUnique({ where: { id } });
-    if (!journal) throw new NotFoundException(`Adjustment journal ${id} not found`);
+    if (!journal) throw new ResourceNotFoundException('Adjustment journal', id);
     return journal;
   }
 
@@ -47,15 +52,30 @@ export class AdjustmentJournalsService {
     },
   ) {
     if (dto.totalAmount <= 0) {
-      throw new BadRequestException('totalAmount must be > 0');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'DRAFT',
+        'DRAFT',
+        'totalAmount must be > 0',
+      );
     }
     if (!dto.description || dto.description.length < 5) {
-      throw new BadRequestException('description must be at least 5 characters');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'DRAFT',
+        'DRAFT',
+        'description must be at least 5 characters',
+      );
     }
 
     const period = new Date(dto.period);
     if (isNaN(period.getTime())) {
-      throw new BadRequestException('Invalid period (YYYY-MM-DD)');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'DRAFT',
+        'DRAFT',
+        'Invalid period (YYYY-MM-DD)',
+      );
     }
 
     const yymm = `${String(period.getFullYear()).slice(-2)}${String(period.getMonth() + 1).padStart(2, '0')}`;
@@ -81,18 +101,35 @@ export class AdjustmentJournalsService {
    */
   async review(userId: string, id: string) {
     const journal = await this.prisma.adjustmentJournal.findUnique({ where: { id } });
-    if (!journal) throw new NotFoundException(`Adjustment journal ${id} not found`);
+    if (!journal) throw new ResourceNotFoundException('Adjustment journal', id);
     if (!journal.preparedBy) {
-      throw new BadRequestException('Not yet prepared');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'DRAFT',
+        'REVIEWED',
+        'Not yet prepared',
+      );
     }
     if (journal.reviewedBy) {
-      throw new BadRequestException('Already reviewed');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'REVIEWED',
+        'REVIEWED',
+        'Already reviewed',
+      );
     }
-    if (journal.reviewedBy === userId || journal.preparedBy === userId) {
-      throw new BadRequestException('Reviewer must be different from preparer (SoD rule)');
+    if (journal.preparedBy === userId) {
+      throw new SoDViolationException(
+        'review must be different user from preparer',
+      );
     }
     if (journal.approvedBy) {
-      throw new BadRequestException('Already approved, cannot review');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'APPROVED',
+        'REVIEWED',
+        'Already approved, cannot review',
+      );
     }
 
     return this.prisma.adjustmentJournal.update({
@@ -106,20 +143,29 @@ export class AdjustmentJournalsService {
    */
   async approve(userId: string, id: string) {
     const journal = await this.prisma.adjustmentJournal.findUnique({ where: { id } });
-    if (!journal) throw new NotFoundException(`Adjustment journal ${id} not found`);
+    if (!journal) throw new ResourceNotFoundException('Adjustment journal', id);
     if (!journal.reviewedBy) {
-      throw new BadRequestException('Not yet reviewed');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'REVIEWED',
+        'APPROVED',
+        'Not yet reviewed',
+      );
     }
     if (journal.approvedBy) {
-      throw new BadRequestException('Already approved');
+      throw new StateTransitionInvalidException(
+        'AdjustmentJournal',
+        'APPROVED',
+        'APPROVED',
+        'Already approved',
+      );
     }
     if (
-      journal.approvedBy === userId ||
-      journal.reviewedBy === userId ||
-      journal.preparedBy === userId
+      journal.preparedBy === userId ||
+      journal.reviewedBy === userId
     ) {
-      throw new BadRequestException(
-        'Approver must be different from preparer AND reviewer (full SoD)',
+      throw new SoDViolationException(
+        'approver must be different from preparer AND reviewer (full SoD)',
       );
     }
 
