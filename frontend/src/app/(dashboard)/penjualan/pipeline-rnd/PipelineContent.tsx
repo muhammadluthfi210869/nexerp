@@ -23,6 +23,8 @@ import {
 } from "@/components/dna";
 import { ModuleHeader } from "@/components/layout/ModuleHeader";
 import { cn } from "@/lib/utils";
+import { DnaGateIndicator } from "@/components/dna";
+import { deriveGateStatus } from "@/lib/gates";
 import {
   Inbox,
   Beaker,
@@ -335,6 +337,13 @@ export function PipelineContent() {
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        <div className="mt-1.5 flex justify-center">
+                          <DnaGateIndicator
+                            gate="G1"
+                            status={deriveGateStatus(sample.stage, 'G1')}
+                            label={`G1 ${deriveGateStatus(sample.stage, 'G1')}`}
+                          />
+                        </div>
                       </td>
 
                       <td className="py-4 px-4 text-center">
