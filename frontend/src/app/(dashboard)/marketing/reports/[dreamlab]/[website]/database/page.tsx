@@ -4,7 +4,7 @@ import PostDatabase from "../../components/views/PostDatabase";
 import type { PostPlatform } from "@/types/marketing-api";
 
 const PLATFORM_MAP: Record<string, PostPlatform> = {
-  instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", website: "Website", "Paid Ads",
+  instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", website: "Website", "paid-ads": "Paid Ads",
 };
 
 export default function ChannelDatabasePage() {

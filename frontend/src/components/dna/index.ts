@@ -190,3 +190,15 @@ export { DnaSwitch } from "./DnaSwitch";
 export type { DnaSwitchProps } from "./DnaSwitch";
 export { dnaToastApi, DnaToaster, useDnaToast } from "./DnaToast";
 export type { DnaToastOptions, DnaToastVariant } from "./DnaToast";
+export {
+  DnaAlert,
+  DnaAvatar,
+  DnaAvatarStack,
+  DnaPriorityBadge,
+  DnaStatusBadge,
+  DnaDaysLeftChip,
+  DnaAttachmentList,
+  DnaKanban,
+  DnaDateRangePicker,
+} from "./DnaExtras";
+export type { DnaAlertVariant, DnaAttachmentItem, KanbanItem } from "./DnaExtras";
