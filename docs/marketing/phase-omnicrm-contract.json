@@ -1,0 +1,133 @@
+{
+  "version": "1.0.0",
+  "module": "omnicrm",
+  "frozenDate": "2026-09-11",
+  "author": "Marketing MVP workstream",
+  "sidebar": {
+    "slot": "omnicrm",
+    "label": "OmniCRM",
+    "icon": "inbox-stack",
+    "order": 4,
+    "frozen": true
+  },
+  "routes": [
+    {
+      "id": "omnicrm.inbox",
+      "path": "/marketing/omnicrm",
+      "view": "inbox",
+      "label": "Leads Inbox",
+      "default": true
+    },
+    {
+      "id": "omnicrm.guestbook",
+      "path": "/marketing/omnicrm/guestbook",
+      "view": "guestbook",
+      "label": "Buku Tamu"
+    },
+    {
+      "id": "omnicrm.broadcast",
+      "path": "/marketing/omnicrm/broadcast",
+      "view": "broadcast",
+      "label": "Broadcast WA"
+    },
+    {
+      "id": "omnicrm.monitor",
+      "path": "/marketing/omnicrm/monitor",
+      "view": "monitor",
+      "label": "WA Monitor"
+    },
+    {
+      "id": "omnicrm.kpi",
+      "path": "/marketing/omnicrm/kpi",
+      "view": "kpi",
+      "label": "Sales KPI"
+    }
+  ],
+  "rbac": {
+    "write": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"],
+    "broadcastWrite": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"],
+    "approvalWrite": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "COMMERCIAL"],
+    "readAll": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "COMMERCIAL", "DIRECTOR"],
+    "readScoped": ["DIGIMAR"]
+  },
+  "statusMachine": {
+    "stages": [
+      { "id": "LEADS_MASUK", "label": "Leads Masuk", "color": "#06b6d4", "order": 1, "isLossStage": false, "isWonStage": false },
+      { "id": "COLD", "label": "Cold", "color": "#64748b", "order": 2, "isLossStage": false, "isWonStage": false },
+      { "id": "WARM", "label": "Warm", "color": "#f59e0b", "order": 3, "isLossStage": false, "isWonStage": false },
+      { "id": "HOT", "label": "Hot", "color": "#ef4444", "order": 4, "isLossStage": false, "isWonStage": false },
+      { "id": "SAMPLE", "label": "Sample", "color": "#a855f7", "order": 5, "isLossStage": false, "isWonStage": false },
+      { "id": "JUNK_LEADS", "label": "Junk Leads", "color": "#475569", "order": 6, "isLossStage": true, "isWonStage": false },
+      { "id": "CLIENT_DEAL", "label": "Client Deal", "color": "#10b981", "order": 7, "isLossStage": false, "isWonStage": true },
+      { "id": "CLOSED_LOST", "label": "Closed Lost", "color": "#71717a", "order": 8, "isLossStage": true, "isWonStage": false }
+    ],
+    "transitions": {
+      "LEADS_MASUK": ["COLD", "JUNK_LEADS"],
+      "COLD": ["WARM", "JUNK_LEADS", "CLOSED_LOST"],
+      "WARM": ["HOT", "SAMPLE", "COLD", "CLOSED_LOST"],
+      "HOT": ["SAMPLE", "WARM", "CLOSED_LOST"],
+      "SAMPLE": ["HOT", "WARM", "CLIENT_DEAL", "CLOSED_LOST"],
+      "JUNK_LEADS": [],
+      "CLIENT_DEAL": [],
+      "CLOSED_LOST": []
+    },
+    "backwardAllowed": false,
+    "auditRequired": true
+  },
+  "canonicalFields": {
+    "CrmLead": [
+      "id", "leadCaptureId", "stage", "displayName", "phone", "source",
+      "pageUrl", "assignedToId", "firstInboundAt", "firstOutboundAt",
+      "firstResponseAt", "lastInboundAt", "lastOutboundAt", "createdAt", "updatedAt"
+    ],
+    "GuestbookEvent": [
+      "id", "leadCaptureId", "approvalStatus", "approverId", "approvedAt",
+      "pageUrl", "pageTitle", "referrer", "intent", "source", "createdAt"
+    ],
+    "BusDev": [
+      "id", "userId", "name", "phone", "isActive", "specialty",
+      "lastAssignedAt", "totalLeadsAssigned", "createdAt", "updatedAt"
+    ],
+    "Broadcast": [
+      "id", "createdById", "template", "audienceFilter", "recipientCount",
+      "sentCount", "deliveredCount", "readCount", "failedCount",
+      "status", "startedAt", "completedAt", "createdAt"
+    ]
+  },
+  "endpoints": [
+    { "method": "GET", "path": "/crm/leads", "scope": "readAll" },
+    { "method": "PATCH", "path": "/crm/leads/:id/stage", "scope": "write" },
+    { "method": "PATCH", "path": "/crm/leads/:id/displayName", "scope": "write" },
+    { "method": "POST", "path": "/crm/leads/:id/assign", "scope": "write" },
+    { "method": "GET", "path": "/crm/leads/:id/messages", "scope": "readAll" },
+    { "method": "GET", "path": "/crm/busdevs", "scope": "readAll" },
+    { "method": "PATCH", "path": "/crm/busdevs/:id/status", "scope": "write" },
+    { "method": "GET", "path": "/crm/guestbook/events", "scope": "readAll" },
+    { "method": "POST", "path": "/crm/guestbook/:id/approve", "scope": "approvalWrite" },
+    { "method": "POST", "path": "/crm/broadcasts", "scope": "broadcastWrite" },
+    { "method": "GET", "path": "/crm/broadcasts/:id/stats", "scope": "readAll" },
+    { "method": "GET", "path": "/crm/kpi/summary", "scope": "readAll" },
+    { "method": "POST", "path": "/crm/leads/ingest", "scope": "system", "auth": "hmac" }
+  ],
+  "ingest": {
+    "auth": "hmac-sha256",
+    "header": "X-Dreamlab-Signature",
+    "secretEnv": "LEAD_SVC_INGEST_SECRET",
+    "timestampWindow": 300,
+    "source": "dreamlab.id lead-svc-deploy"
+  },
+  "realtime": {
+    "channel": "activity-stream",
+    "transport": "websocket",
+    "events": ["lead.ingested", "lead.stage_changed", "message.inbound", "message.outbound", "guestbook.approved"]
+  },
+  "kpiTiles": [
+    { "id": "leadsToday", "label": "Leads Today", "format": "number" },
+    { "id": "leadsByStage", "label": "Leads by Stage", "format": "bar" },
+    { "id": "avgFirstResponse", "label": "Avg First Response (min)", "format": "duration" },
+    { "id": "replyRate", "label": "Reply Rate", "format": "percent" },
+    { "id": "broadcastStats", "label": "Broadcast Deliver/Read", "format": "ratio" },
+    { "id": "bukuTamuCount", "label": "Buku Tamu (7d)", "format": "number" },
+    { "id": "roundRobinDistribution", "label": "Round Robin (Today/Week)", "format": "table" }
+  ]
+}
