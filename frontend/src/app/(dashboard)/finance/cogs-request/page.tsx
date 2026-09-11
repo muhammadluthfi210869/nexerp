@@ -21,16 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, StatCard, DataCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-
+import { DataCard, DnaBadge, DnaButton, DnaInput, StatCard, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableWrapper } from "@/components/dna";
 // Static Data from Plan
 const STATIC_HPP_REQUESTS = [
   { kode: "HPP-001", tanggal: "01/04/2026", pelanggan: "PT Maju Jaya", produk: "Hair Mask", formula: "FML-001 Rev 2", moq: 1000, status: "Proses" },
