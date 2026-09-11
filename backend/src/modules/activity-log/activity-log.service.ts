@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { LogActivityType, Prisma } from '@prisma/client';
 
@@ -92,6 +93,39 @@ export class ActivityLogService {
     } catch (err) {
       this.logger.error(
         'Retention purge failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
+  }
+
+  // Hook state-machine transitions (G1/G2/G3 gates + entity status
+  // changes). Emitted from rnd.formulas, production, warehouse etc.
+  @OnEvent('state.transition')
+  async onStateTransition(event: {
+    entityType: string;
+    entityId: string;
+    fromState?: string;
+    toState: string;
+    changedById?: string;
+    reason?: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    try {
+      await this.log({
+        userId: event.changedById ?? null,
+        type: LogActivityType.STATE_TRANSITION,
+        entityType: event.entityType,
+        entityId: event.entityId,
+        metadata: {
+          fromState: event.fromState,
+          toState: event.toState,
+          reason: event.reason,
+          ...(event.metadata ?? {}),
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        'state.transition log failed',
         err instanceof Error ? err.stack : String(err),
       );
     }
