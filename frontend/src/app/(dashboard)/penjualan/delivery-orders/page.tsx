@@ -14,20 +14,23 @@ import {
   ArrowRight,
   Boxes
 } from "lucide-react";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { DashboardCard, StatCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
+  DashboardCard,
+  StatCard,
+  TableWrapper,
+  DnaButton,
+  DnaInput,
+  DnaBadge,
+} from "@/components/dna";
+import { cn } from "@/lib/utils";
 import { TableShell } from "@/components/layout/TableShell";
 import { FinalDocumentPdfButton } from "@/components/documents/FinalDocumentPdfButton";
 
