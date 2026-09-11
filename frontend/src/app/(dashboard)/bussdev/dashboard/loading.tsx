@@ -1,6 +1,6 @@
 import React from "react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 
 export default function BussdevLoading() {
   return (
