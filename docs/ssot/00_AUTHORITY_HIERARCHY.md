@@ -151,6 +151,53 @@ approvedBy         (stakeholder role)
 - Master Spec: `docs/legacy-erp/NEX_ERP_MASTER_SPECIFICATION.md`
 - Branch: `phase-3`
 
+## 10. LOCKED Stakeholder Decisions (AUTHORITY-1)
+
+These are explicit decisions from user (Luthfi, 2026-09-11) that resolve audit-conflicting items:
+
+### D-001 — Document Code Sequence: GLOBAL
+
+**Rule**: All document codes (SO, PO, FJ, GR, GRN, DPB, etc.) share ONE global sequence counter. Counter never resets. Format: `{TYPE}-{DDMMYYYY}-{XXXXX}` where XXXXX is monotonically increasing across all document types.
+
+**Example**:
+```
+SO-11092026-00001   ← first doc
+PO-11092026-00002   ← next (different type, same counter)
+FJ-11092026-00003
+GR-11092026-00004
+SO-11092026-00005   ← continues
+```
+
+**Migration impact**: CSV legacy uses per-month sequence (SO-202609-000002). All existing CSV data needs sequence migration. Backend service `IdGeneratorService` already exists — needs verification it implements GLOBAL not PER-MONTH.
+
+**Master spec update**: Section on "Format Kode Universal" already states "Nomor urut akhir bersifat global & berkelanjutan (tidak reset)" — CONFIRMED.
+
+### D-002 — Inventory State Model: 4-state
+
+**Rule**: Each inventory item has 4 quantity fields:
+
+```
+good        = acceptable, available for use
+reject      = failed QC, needs return/claim
+free        = promotional / consignment, Rp 0 cost, special handling
+bad         = damaged / expired / unsellable, write-off candidate
+```
+
+**Math invariant**: `realStok = good + reject + free + bad` (where `realStok` is the displayed balance).
+
+**Master spec update**: Master currently has "Real Stok" as a single field — needs revision to 4-field schema. **Status**: Master spec needs LOCKED revision to reflect this. Until then, master authority is OVERRIDDEN by this decision (AUTHORITY-1 wins per §2).
+
+**Migration impact**: `Material` Prisma model needs new columns (`good`, `reject`, `free`, `bad`) replacing or alongside `currentStock`. CSV data needs split per category. Accounting HPP denominator excludes `free` and `bad` (no cost basis).
+
+**Cross-module effect**:
+- QC pages must record reject/bad separately
+- Procurement returns distinguish reject (vendor claim) vs bad (write-off)
+- Consignment (free) requires special AR/cost handling
+
+### D-003 — Authority Document Created
+
+This document (`00_AUTHORITY_HIERARCHY.md`) was created 2026-09-11 as the foundation for SSOT governance. All future SSOT work references this.
+
 ---
 
 *This document is AUTHORITY-1 and overrides any conflicting text in other SSOT documents until superseded by a new LOCKED decision.*
