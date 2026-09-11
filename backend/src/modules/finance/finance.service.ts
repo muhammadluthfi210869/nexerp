@@ -2233,10 +2233,111 @@ export class FinanceService {
     });
   }
 
+  async createTax(dto: {
+    name: string;
+    rate: number;
+    isActive?: boolean;
+    description?: string;
+  }) {
+    const existing = await this.prisma.taxRate.findUnique({
+      where: { name: dto.name },
+    });
+    if (existing) {
+      throw new BadRequestException(`Tax with name "${dto.name}" already exists`);
+    }
+    return this.prisma.taxRate.create({
+      data: {
+        name: dto.name,
+        rate: dto.rate,
+        isActive: dto.isActive ?? true,
+        description: dto.description,
+      },
+    });
+  }
+
+  async updateTax(
+    id: string,
+    dto: { name?: string; rate?: number; isActive?: boolean; description?: string },
+  ) {
+    await this.getTaxOrThrow(id);
+    return this.prisma.taxRate.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async deleteTax(id: string) {
+    await this.getTaxOrThrow(id);
+    return this.prisma.taxRate.delete({ where: { id } });
+  }
+
+  private async getTaxOrThrow(id: string) {
+    const tax = await this.prisma.taxRate.findUnique({ where: { id } });
+    if (!tax) throw new NotFoundException(`Tax ${id} not found`);
+    return tax;
+  }
+
   async getCurrencies() {
     return this.prisma.currency.findMany({
       orderBy: { code: 'asc' },
     });
+  }
+
+  async createCurrency(dto: {
+    code: string;
+    symbol?: string;
+    exchangeRate?: number;
+    isMain?: boolean;
+  }) {
+    const existing = await this.prisma.currency.findUnique({
+      where: { code: dto.code },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        `Currency with code "${dto.code}" already exists`,
+      );
+    }
+    return this.prisma.currency.create({
+      data: {
+        code: dto.code,
+        symbol: dto.symbol,
+        exchangeRate: dto.exchangeRate ?? 1.0,
+        isMain: dto.isMain ?? false,
+      },
+    });
+  }
+
+  async updateCurrency(
+    id: string,
+    dto: {
+      code?: string;
+      symbol?: string;
+      exchangeRate?: number;
+      isMain?: boolean;
+    },
+  ) {
+    await this.getCurrencyOrThrow(id);
+    return this.prisma.currency.update({ where: { id }, data: dto });
+  }
+
+  async updateExchangeRate(id: string, exchangeRate: number) {
+    await this.getCurrencyOrThrow(id);
+    return this.prisma.currency.update({
+      where: { id },
+      data: { exchangeRate },
+    });
+  }
+
+  async deleteCurrency(id: string) {
+    await this.getCurrencyOrThrow(id);
+    return this.prisma.currency.delete({ where: { id } });
+  }
+
+  private async getCurrencyOrThrow(id: string) {
+    const currency = await this.prisma.currency.findUnique({ where: { id } });
+    if (!currency)
+      throw new NotFoundException(`Currency ${id} not found`);
+    return currency;
   }
 
   // --- COA CRUD ---

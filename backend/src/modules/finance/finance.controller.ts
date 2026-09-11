@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Delete,
+  Put,
   Param,
   UseGuards,
   Query,
@@ -33,6 +34,11 @@ import {
 } from './dto/fund-request.dto';
 import { VerifyArPaymentDto } from './dto/verify-ar-payment.dto';
 import { CashDisburseDto, CashReceiveDto } from './dto/cash.dto';
+import { CreateTaxDto } from './dto/create-tax.dto';
+import {
+  CreateCurrencyDto,
+  UpdateExchangeRateDto,
+} from './dto/create-currency.dto';
 
 @ApiTags('finance')
 @ApiBearerAuth()
@@ -363,9 +369,64 @@ export class FinanceController {
     return this.financeService.getTaxes();
   }
 
+  @Post('taxes')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Create a new tax rate' })
+  async createTax(@Body() dto: CreateTaxDto) {
+    return this.financeService.createTax(dto);
+  }
+
+  @Patch('taxes/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Update a tax rate' })
+  async updateTax(@Param('id') id: string, @Body() dto: CreateTaxDto) {
+    return this.financeService.updateTax(id, dto);
+  }
+
+  @Delete('taxes/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Delete a tax rate' })
+  async deleteTax(@Param('id') id: string) {
+    return this.financeService.deleteTax(id);
+  }
+
   @Get('currencies')
   async getCurrencies() {
     return this.financeService.getCurrencies();
+  }
+
+  @Post('currencies')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Create a new currency' })
+  async createCurrency(@Body() dto: CreateCurrencyDto) {
+    return this.financeService.createCurrency(dto);
+  }
+
+  @Patch('currencies/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Update a currency' })
+  async updateCurrency(
+    @Param('id') id: string,
+    @Body() dto: CreateCurrencyDto,
+  ) {
+    return this.financeService.updateCurrency(id, dto);
+  }
+
+  @Put('currencies/:id/exchange-rate')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Update exchange rate for a currency' })
+  async updateExchangeRate(
+    @Param('id') id: string,
+    @Body() dto: UpdateExchangeRateDto,
+  ) {
+    return this.financeService.updateExchangeRate(id, dto.exchangeRate);
+  }
+
+  @Delete('currencies/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Delete a currency' })
+  async deleteCurrency(@Param('id') id: string) {
+    return this.financeService.deleteCurrency(id);
   }
 
   // --- COA CRUD ---
