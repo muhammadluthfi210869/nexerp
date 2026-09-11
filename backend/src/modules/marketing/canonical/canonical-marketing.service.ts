@@ -9,6 +9,7 @@ import {
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import {
+  AttachmentMetadataDto,
   ConfigureIntegrationDto,
   CreateBrandDto,
   CreateCanonicalProjectDto,
@@ -321,6 +322,49 @@ export class CanonicalMarketingService {
         message: 'Komentar tidak ditemukan atau Anda tidak memiliki akses.',
       });
     await this.prisma.marketingTaskComment.delete({ where: { id: commentId } });
+  }
+
+  async listAttachments(viewer: MarketingViewer, taskId: string) {
+    ensureMarketingTaskRole(viewer);
+    await this.findVisibleTask(this.prisma, viewer, taskId);
+    return this.prisma.marketingTaskAttachment.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async addAttachment(
+    viewer: MarketingViewer,
+    taskId: string,
+    file: AttachmentMetadataDto,
+  ) {
+    ensureMarketingTaskRole(viewer);
+    await this.findVisibleTask(this.prisma, viewer, taskId);
+    return this.prisma.marketingTaskAttachment.create({
+      data: {
+        taskId,
+        uploadedById: viewer.id,
+        name: file.name,
+        type: file.type,
+        sizeKb: file.sizeKb,
+        path: file.path,
+      },
+    });
+  }
+
+  async deleteAttachment(viewer: MarketingViewer, attachmentId: string) {
+    ensureMarketingTaskRole(viewer);
+    const att = await this.prisma.marketingTaskAttachment.findFirst({
+      where: { id: attachmentId },
+    });
+    if (!att || att.uploadedById !== viewer.id)
+      throw new NotFoundException({
+        code: 'ATTACHMENT_NOT_FOUND',
+        message: 'Lampiran tidak ditemukan atau Anda tidak memiliki akses.',
+      });
+    await this.prisma.marketingTaskAttachment.delete({
+      where: { id: attachmentId },
+    });
   }
 
   async updateChecklist(

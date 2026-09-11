@@ -10,8 +10,11 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -136,6 +139,45 @@ export class CanonicalMarketingController {
     @Param('commentId') commentId: string,
   ): Promise<unknown> {
     return this.service.deleteComment(req.user, commentId);
+  }
+
+  @Get('tasks/:taskId/attachments')
+  @Roles(...TASK_READ_ROLES)
+  listAttachments(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+  ): Promise<unknown> {
+    return this.service.listAttachments(req.user, taskId);
+  }
+
+  @Post('tasks/:taskId/attachments')
+  @Roles(...TASK_READ_ROLES)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      dest: 'uploads/marketing-tasks',
+    }),
+  )
+  async addAttachment(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<unknown> {
+    return this.service.addAttachment(req.user, taskId, {
+      name: file.originalname,
+      type: file.mimetype,
+      sizeKb: Math.ceil(file.size / 1024),
+      path: file.path,
+    });
+  }
+
+  @Delete('tasks/attachments/:attachmentId')
+  @Roles(...TASK_READ_ROLES)
+  @HttpCode(204)
+  deleteAttachment(
+    @Req() req: any,
+    @Param('attachmentId') attachmentId: string,
+  ): Promise<unknown> {
+    return this.service.deleteAttachment(req.user, attachmentId);
   }
 
   @Get('projects')

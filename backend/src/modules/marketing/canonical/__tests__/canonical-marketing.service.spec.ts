@@ -62,6 +62,12 @@ function prismaMock() {
       findFirst: jest.fn(),
       delete: jest.fn(),
     },
+    marketingTaskAttachment: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn(),
+    },
     marketingTaskHistory: { create: jest.fn() },
     marketingProject: {
       findMany: jest.fn(),
@@ -283,5 +289,107 @@ describe('CanonicalMarketingService', () => {
       NotFoundException,
     );
     expect(prisma.marketingTaskComment.delete).not.toHaveBeenCalled();
+  });
+
+  it('lists attachments scoped to a visible task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(task());
+    prisma.marketingTaskAttachment.findMany.mockResolvedValue([
+      {
+        id: 'att-1',
+        taskId: 'task-1',
+        name: 'brief.pdf',
+        type: 'application/pdf',
+        sizeKb: 120,
+        path: '/uploads/marketing/task-1/brief.pdf',
+        uploadedById: 'member',
+        createdAt: new Date(),
+      },
+    ]);
+    const service = new CanonicalMarketingService(prisma);
+    const result = await service.listAttachments(member, 'task-1');
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('brief.pdf');
+  });
+
+  it('returns 404 when listing attachments for a hidden task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(null);
+    const service = new CanonicalMarketingService(prisma);
+    await expect(service.listAttachments(member, 'hidden')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prisma.marketingTaskAttachment.findMany).not.toHaveBeenCalled();
+  });
+
+  it('adds an attachment on a visible task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(task());
+    prisma.marketingTaskAttachment.create.mockResolvedValue({
+      id: 'att-1',
+      taskId: 'task-1',
+      name: 'brief.pdf',
+      type: 'application/pdf',
+      sizeKb: 120,
+      path: '/uploads/marketing/task-1/uuid.pdf',
+      uploadedById: 'member',
+      createdAt: new Date(),
+    });
+    const service = new CanonicalMarketingService(prisma);
+    const file = {
+      name: 'brief.pdf',
+      type: 'application/pdf',
+      sizeKb: 120,
+      path: '/uploads/marketing/task-1/uuid.pdf',
+    };
+    const result = await service.addAttachment(member, 'task-1', file);
+    expect(result.id).toBe('att-1');
+    expect(prisma.marketingTaskAttachment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          taskId: 'task-1',
+          uploadedById: 'member',
+          name: 'brief.pdf',
+        }),
+      }),
+    );
+  });
+
+  it('deletes an attachment when the uploader owns it', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTaskAttachment.findFirst.mockResolvedValue({
+      id: 'att-1',
+      taskId: 'task-1',
+      name: 'brief.pdf',
+      type: 'application/pdf',
+      sizeKb: 120,
+      path: '/uploads/...',
+      uploadedById: 'member',
+      createdAt: new Date(),
+    });
+    const service = new CanonicalMarketingService(prisma);
+    await service.deleteAttachment(member, 'att-1');
+    expect(prisma.marketingTaskAttachment.delete).toHaveBeenCalledWith({
+      where: { id: 'att-1' },
+    });
+  });
+
+  it('forbids deleting an attachment uploaded by someone else', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTaskAttachment.findFirst.mockResolvedValue({
+      id: 'att-1',
+      taskId: 'task-1',
+      name: 'brief.pdf',
+      type: 'application/pdf',
+      sizeKb: 120,
+      path: '/uploads/...',
+      uploadedById: 'other-user',
+      createdAt: new Date(),
+    });
+    const service = new CanonicalMarketingService(prisma);
+    await expect(service.deleteAttachment(member, 'att-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prisma.marketingTaskAttachment.delete).not.toHaveBeenCalled();
   });
 });

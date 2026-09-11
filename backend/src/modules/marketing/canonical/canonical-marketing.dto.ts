@@ -104,6 +104,13 @@ export class CreateTaskCommentDto {
   @IsString() @MinLength(1) @MaxLength(5_000) body!: string;
 }
 
+export class AttachmentMetadataDto {
+  @IsString() @MinLength(1) @MaxLength(255) name!: string;
+  @IsString() @MinLength(1) @MaxLength(100) type!: string;
+  @IsInt() @Min(0) sizeKb!: number;
+  @IsString() @MinLength(1) path!: string;
+}
+
 export class CreateCanonicalProjectDto {
   @IsString() @MinLength(1) @MaxLength(255) name!: string;
   @IsString() @MinLength(1) @MaxLength(100) channel!: string;
