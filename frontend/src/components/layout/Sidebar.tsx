@@ -116,7 +116,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "KONTEN & MEDIA",
     icon: Sparkles,
     isDirect: true,
-    href: "/samples/social-tracker",
+    href: "/marketing/social-tracker",
     items: []
   },
   {
@@ -125,7 +125,7 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "TASK MANAGEMENT",
     icon: ClipboardList,
     isDirect: true,
-    href: "/samples/management-task/overview",
+    href: "/marketing/management-task/overview",
     items: []
   }
 ];
@@ -202,7 +202,7 @@ const FINANCE_SECTIONS: NavSection[] = [
       { name: "Customer Master", href: "/master/customers", icon: Users },
       { name: "Faktur Penjualan", href: "/penjualan/faktur-penjualan", icon: FileSpreadsheet },
       { name: "DP Penjualan", href: "/penjualan/dp-penjualan-finance", icon: DollarSign },
-      { name: "Report Penjualan", href: "/finance/reports", icon: BarChart3 },
+      { name: "Report Penjualan", href: "/reports/finance-reports", icon: BarChart3 },
       { name: "AR Aging & Collections", href: "/finance/reports/ar-aging", icon: History },
     ]
   },
@@ -458,7 +458,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     icon: LayoutDashboard,
     items: [
       { name: "Dashboard Executive", href: "/executive/dashboard", icon: LayoutDashboard },
-      { name: "Dashboard Notifikasi", href: "/executive/notifications", icon: Bell, badge: "LIVE", badgeVariant: "warning" },
+      { name: "Dashboard Notifikasi", href: "/reports/notifications", icon: Bell, badge: "LIVE", badgeVariant: "warning" },
       { name: "KPI Management", href: "/master/kpi-department", icon: Gauge, badge: "KPI", badgeVariant: "info" },
       { name: "Project Control", href: "/samples/project-control", icon: Kanban },
       { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
@@ -647,9 +647,9 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     items: [
       { name: "Laporan Laba Rugi", href: "/finance/laba-rugi", icon: BarChart3 },
       { name: "Buku Besar (General Ledger)", href: "/finance/ledger", icon: BookOpen },
-      { name: "Neraca Saldo", href: "/finance/reports/trial-balance", icon: FileSpreadsheet },
-      { name: "Laporan Arus Kas", href: "/finance/reports/cash-flow", icon: Activity },
-      { name: "AR Aging (Piutang)", href: "/finance/reports/ar-aging", icon: History },
+      { name: "Neraca Saldo", href: "/reports/trial-balance", icon: FileSpreadsheet },
+      { name: "Laporan Arus Kas", href: "/reports/cash-flow", icon: Activity },
+      { name: "AR Aging (Piutang)", href: "/reports/ar-aging", icon: History },
       { name: "AP Aging (Hutang)", href: "/finance/ap-aging", icon: History },
       { name: "Laporan Stok Persediaan", href: "/warehouse/stok", icon: Box },
       { name: "Laporan Mutasi Barang", href: "/warehouse/mutasi-stok", icon: RefreshCw },
@@ -721,7 +721,7 @@ export function Sidebar() {
 
   const isNavActive = (href: string) => {
     const [targetPath, targetQuery] = href.split("?");
-    if (targetPath.startsWith("/samples/management-task") && pathname.startsWith("/samples/management-task")) return true;
+    if (targetPath.startsWith("/marketing/management-task") && pathname.startsWith("/marketing/management-task")) return true;
     if (targetPath !== pathname) return false;
     if (!targetQuery) return !searchParams.toString();
     return new URLSearchParams(targetQuery).toString() === searchParams.toString();

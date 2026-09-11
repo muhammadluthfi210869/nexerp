@@ -36,6 +36,10 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
   useDnaToast
 } from "@/components/dna";
 
@@ -432,7 +436,7 @@ export default function GoodsInboundPage() {
         searchPlaceholder="Cari No GRN, PO, Surat Jalan, Supplier..."
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
+          <DnaTable className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">No. GRN</th>
@@ -508,7 +512,7 @@ export default function GoodsInboundPage() {
                 ))
               )}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -570,7 +574,7 @@ export default function GoodsInboundPage() {
             <div>
               <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Rincian Fisik 3 Pilar per Item</h4>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
+                <DnaTable className="w-full text-left text-xs text-slate-600">
                   <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
                     <tr>
                       <th className="py-2.5 px-3">Kode</th>
@@ -597,7 +601,7 @@ export default function GoodsInboundPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -631,10 +635,10 @@ export default function GoodsInboundPage() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Pilih Purchase Order (PO) *</label>
-              <select
+<DnaSelect 
                 aria-label="Pilih PO"
                 value={selectedPoNumber}
-                onChange={(e) => handleSelectPo(e.target.value)}
+                onChange={handleSelectPo}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
                 <option value="">-- Pilih Dokumen PO --</option>
@@ -643,11 +647,11 @@ export default function GoodsInboundPage() {
                     {po.poNumber} - {po.vendorName}
                   </option>
                 ))}
-              </select>
+              </DnaSelect>
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">No. Surat Jalan Supplier *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: SJ/2026/09/1109"
                 value={deliveryOrderNo}
@@ -657,7 +661,7 @@ export default function GoodsInboundPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Tanggal Terima Fisik *</label>
-              <input
+              <DnaInput
                 type="date"
                 value={receiveDate}
                 onChange={(e) => setReceiveDate(e.target.value)}
@@ -671,13 +675,13 @@ export default function GoodsInboundPage() {
             <select
               aria-label="Gudang Alokasi"
               value={warehouseName}
-              onChange={(e) => setWarehouseName(e.target.value)}
+              onChange={setWarehouseName}
               className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
             >
               <option value="Gudang Bahan Baku Utama (WH-01)">Gudang Bahan Baku Utama (WH-01)</option>
               <option value="Gudang Kemas & Box (WH-02)">Gudang Kemas & Box (WH-02)</option>
               <option value="Gudang Karantina & QC (WH-04)">Gudang Karantina & QC (WH-04)</option>
-            </select>
+            </DnaSelect>
           </div>
 
           {/* Breakdown 3 Pilar Fisik per Item */}
@@ -697,7 +701,7 @@ export default function GoodsInboundPage() {
                   <div className="grid grid-cols-4 gap-2 pt-1">
                     <div>
                       <label className="block text-[10px] text-emerald-700 font-bold mb-0.5">Qty Bagus (Stok & Bayar)</label>
-                      <input
+                      <DnaInput
                         type="number"
                         min="0"
                         value={item.qtyGood}
@@ -707,7 +711,7 @@ export default function GoodsInboundPage() {
                     </div>
                     <div>
                       <label className="block text-[10px] text-red-600 font-bold mb-0.5">Qty Reject (Klaim Retur)</label>
-                      <input
+                      <DnaInput
                         type="number"
                         min="0"
                         value={item.qtyReject}
@@ -717,7 +721,7 @@ export default function GoodsInboundPage() {
                     </div>
                     <div>
                       <label className="block text-[10px] text-blue-600 font-bold mb-0.5">Qty Free (Bonus HPP 0)</label>
-                      <input
+                      <DnaInput
                         type="number"
                         min="0"
                         value={item.qtyFree}
@@ -727,7 +731,7 @@ export default function GoodsInboundPage() {
                     </div>
                     <div>
                       <label className="block text-[10px] text-slate-600 font-bold mb-0.5">No. Batch / Lot</label>
-                      <input
+                      <DnaInput
                         type="text"
                         value={item.batchNumber}
                         onChange={(e) => handleUpdateItem(idx, "batchNumber", e.target.value)}
@@ -742,7 +746,7 @@ export default function GoodsInboundPage() {
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Catatan Penerimaan Gudang</label>
-            <textarea
+            <DnaTextarea
               rows={2}
               placeholder="Contoh: Kondisi fisik luar kardus aman, sampling QC diambil 100ml."
               value={formNotes}

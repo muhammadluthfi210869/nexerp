@@ -32,7 +32,7 @@ import {
 } from "@/components/dna";
 import {
   ApprovalDetailModal,
-  ApprovalDetailData,
+  type ApprovalDetailData,
 } from "./ApprovalDetailModal";
 import { cn, formatRupiah } from "@/lib/utils";
 

@@ -5,23 +5,20 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-  DialogHeader,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+  DnaDialog as Dialog,
+  DnaDialogContent as DialogContent,
+  DnaDialogDescription as DialogDescription,
+  DnaDialogTitle as DialogTitle,
+  DnaDialogTrigger as DialogTrigger,
+  DnaDialogHeader as DialogHeader,
+  DnaDialogFooter as DialogFooter,
+} from "@/components/dna";
 import { 
   Plus, 
   ArrowUpRight,
@@ -35,14 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { DnaInput, DnaButton, DnaDataTableCard, DnaDnaStatCard, DnaBadge, DnaSelect } from "@/components/dna";
 
 interface TransactionLine {
   accountId: string;
@@ -65,7 +55,7 @@ export default function CashTransactionsPage() {
   });
   
   // Form State
-  const [lines, setLines] = useState<TransactionLine[]>([]);
+  const [lines, setLiness] = useState<TransactionLine[]>([]);
 
   const { data: coa } = useQuery({
     queryKey: ["coa"],
@@ -113,7 +103,7 @@ export default function CashTransactionsPage() {
               </DnaButton>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
-               <TransactionForm mode="RECEIPT" coa={coa} lines={lines} setLines={setLines} onSuccess={() => setIsModalOpen(false)} />
+               <TransactionForm mode="RECEIPT" coa={coa} lines={lines} setLiness={setLiness} onSuccess={() => setIsModalOpen(false)} />
              </DialogContent>
            </Dialog>
 
@@ -124,7 +114,7 @@ export default function CashTransactionsPage() {
                </DnaButton>
              </DialogTrigger>
              <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
-                <TransactionForm mode="DISBURSEMENT" coa={coa} lines={lines} setLines={setLines} onSuccess={() => setIsModalOpen(false)} />
+                <TransactionForm mode="DISBURSEMENT" coa={coa} lines={lines} setLiness={setLiness} onSuccess={() => setIsModalOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
@@ -137,15 +127,15 @@ export default function CashTransactionsPage() {
       ) : (
       <>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard icon={<Wallet className="text-emerald-600" />} label="Main Cash" value={stats?.balance ? `Rp ${(Number(stats.balance) / 1000000).toFixed(1)}M` : "Rp 0"} />
-        <StatCard icon={<CreditCard className="text-blue-600" />} label="Bank Balance" value={stats?.cashIn ? `Rp ${(Number(stats.cashIn) / 1000000).toFixed(1)}M` : "Rp 0"} />
-        <StatCard icon={<ArrowUpRight className="text-emerald-500" />} label="Inflow MTD" value={stats?.cashIn ? `+ Rp ${(Number(stats.cashIn) / 1000000).toFixed(0)}M` : "+ Rp 0"} />
-        <StatCard icon={<ArrowDownLeft className="text-rose-500" />} label="Outflow MTD" value={stats?.cashOut ? `- Rp ${(Number(stats.cashOut) / 1000000).toFixed(0)}M` : "- Rp 0"} />
+        <DnaStatCard icon={<Wallet className="text-emerald-600" />} label="Main Cash" value={stats?.balance ? `Rp ${(Number(stats.balance) / 1000000).toFixed(1)}M` : "Rp 0"} />
+        <DnaStatCard icon={<CreditCard className="text-blue-600" />} label="Bank Balance" value={stats?.cashIn ? `Rp ${(Number(stats.cashIn) / 1000000).toFixed(1)}M` : "Rp 0"} />
+        <DnaStatCard icon={<ArrowUpRight className="text-emerald-500" />} label="Inflow MTD" value={stats?.cashIn ? `+ Rp ${(Number(stats.cashIn) / 1000000).toFixed(0)}M` : "+ Rp 0"} />
+        <DnaStatCard icon={<ArrowDownLeft className="text-rose-500" />} label="Outflow MTD" value={stats?.cashOut ? `- Rp ${(Number(stats.cashOut) / 1000000).toFixed(0)}M` : "- Rp 0"} />
       </div>
 
       <div className="mt-6">
-        <TableWrapper
-          filters={
+        <DnaDataTableCard
+          customToolbar={
             <div className="flex items-center gap-3 w-full justify-between">
               <div>
                 <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
@@ -214,19 +204,19 @@ export default function CashTransactionsPage() {
               ))}
             </TableBody>
           </Table>
-        </TableWrapper>
+        </DnaDataTableCard>
       </div>
       </>)}
     </DashboardShell>
   );
 }
 
-function TransactionForm({ mode, coa, lines, setLines, onSuccess }: any) {
+function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
   const isReceipt = mode === "RECEIPT";
   const color = isReceipt ? "emerald" : "rose";
   
   const [selectedAccountId, setSelectedAccountId] = useState("");
-  const [lineAmount, setLineAmount] = useState("");
+  const [lineAmount, setLinesAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [entityName, setEntityName] = useState("");
   const [cashAccountId, setCashAccountId] = useState("");
@@ -237,9 +227,9 @@ function TransactionForm({ mode, coa, lines, setLines, onSuccess }: any) {
   const addLine = () => {
     if (!selectedAccountId || !lineAmount) return;
     const account = coa?.find((a: any) => a.id === selectedAccountId);
-    setLines([...lines, { accountId: selectedAccountId, accountName: account.name, amount: Number(lineAmount) }]);
+    setLiness([...lines, { accountId: selectedAccountId, accountName: account.name, amount: Number(lineAmount) }]);
     setSelectedAccountId("");
-    setLineAmount("");
+    setLinesAmount("");
   };
 
   const totalAmount = lines.reduce((sum: number, l: TransactionLine) => sum + l.amount, 0);
@@ -272,7 +262,7 @@ function TransactionForm({ mode, coa, lines, setLines, onSuccess }: any) {
         lines: journalLines,
       });
       toast.success(isReceipt ? "Deposit confirmed!" : "Payment confirmed!");
-      setLines([]);
+      setLiness([]);
       setDate(new Date().toISOString().split('T')[0]);
       setEntityName("");
       setCashAccountId("");
@@ -299,53 +289,46 @@ function TransactionForm({ mode, coa, lines, setLines, onSuccess }: any) {
       <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide font-inter">
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">Tanggal</Label>
+            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">Tanggal</div>
             <DnaInput type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">{isReceipt ? "Terima Dari" : "Bayar Kepada"}</Label>
+            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">{isReceipt ? "Terima Dari" : "Bayar Kepada"}</div>
             <DnaInput placeholder="Nama individu / instansi..." value={entityName} onChange={(e) => setEntityName(e.target.value)} className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">{isReceipt ? "Simpan Ke Akun" : "Ambil Dari Akun"}</Label>
-            <Select value={cashAccountId} onValueChange={(v) => setCashAccountId(v || "")}>
-              <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                <SelectValue placeholder="Pilih CoA Kas & Bank" />
-              </SelectTrigger>
-              <SelectContent>
-                {coa?.filter((a: any) => a.category === "CASH").map((a: any) => (
-                  <SelectItem key={a.id} value={a.id || ""} className="font-medium text-xs">{a.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">{isReceipt ? "Simpan Ke Akun" : "Ambil Dari Akun"}</div>
+             <DnaSelect
+               label="Simpan Ke Akun"
+               value={cashAccountId}
+               placeholder="Pilih CoA Kas & Bank"
+               onChange={(value) => setCashAccountId(value)}
+               options={coa?.filter((a: any) => a.category === "CASH").map((a: any) => ({ label: a.name, value: a.id || "" }))}
+             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">Keterangan</Label>
+            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">Keterangan</div>
             <DnaInput placeholder="Catatan transaksi..." value={notes} onChange={(e) => setNotes(e.target.value)} className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs" />
           </div>
         </div>
 
         <div className="space-y-4">
-          <Label className="text-[9px] font-black uppercase tracking-tight text-slate-900">Allocation Table</Label>
+          <div className="text-[9px] font-black uppercase tracking-tight text-slate-900">Allocation Table</div>
           <div className="grid grid-cols-12 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 items-center">
             <div className="col-span-7">
-              <Select value={selectedAccountId} onValueChange={(v) => setSelectedAccountId(v || "")}>
-                <SelectTrigger className="h-10 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                   <SelectValue placeholder={isReceipt ? "Pilih Akun Pendapatan/Asal..." : "Pilih Akun Biaya/Tujuan..."} />
-                </SelectTrigger>
-                <SelectContent>
-                  {coa?.filter((a: any) => isReceipt ? a.category === "REVENUE" : a.category === "EXPENSE").map((a: any) => (
-                    <SelectItem key={a.id} value={a.id || ""} className="font-medium text-xs">{a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+               <DnaSelect
+                 value={selectedAccountId}
+                 placeholder={isReceipt ? "Pilih Akun Pendapatan/Asal..." : "Pilih Akun Biaya/Tujuan..."}
+                 onChange={(value) => setSelectedAccountId(value)}
+                 options={coa?.filter((a: any) => isReceipt ? a.category === "REVENUE" : a.category === "EXPENSE").map((a: any) => ({ label: a.name, value: a.id || "" }))}
+               />
             </div>
             <DnaInput 
               type="number" 
               placeholder="Nominal (Rp)" 
               className="border-none bg-white col-span-4 shadow-sm text-xs h-10"
               value={lineAmount}
-              onChange={(e) => setLineAmount(e.target.value)}
+              onChange={(e) => setLinesAmount(e.target.value)}
             />
             <DnaButton type="button" onClick={addLine} variant="primary" className={cn("h-10 rounded-lg col-span-1 shadow-sm p-0 flex items-center justify-center", isReceipt ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700")}>
               <Plus size={14} strokeWidth={3} />
@@ -367,7 +350,7 @@ function TransactionForm({ mode, coa, lines, setLines, onSuccess }: any) {
                     <TableCell className="font-medium text-xs">{line.accountName}</TableCell>
                     <TableCell className="font-black text-xs text-right italic font-mono tabular-nums">Rp {line.amount.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
-                      <DnaButton variant="outline" className="text-slate-300 hover:text-rose-500 h-8 w-8 p-0 rounded-lg" onClick={() => setLines(lines.filter((_: any, i: number) => i !== idx))}>
+                      <DnaButton variant="outline" className="text-slate-300 hover:text-rose-500 h-8 w-8 p-0 rounded-lg" onClick={() => setLiness(lines.filter((_: any, i: number) => i !== idx))}>
                         <Trash2 size={14} />
                       </DnaButton>
                     </TableCell>

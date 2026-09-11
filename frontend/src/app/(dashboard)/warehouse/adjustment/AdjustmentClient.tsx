@@ -10,17 +10,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { StatCard } from "@/components/dna/StatCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
+  DnaInput,
+  DnaSelect,
+  DnaDnaStatCard,
+  DnaDataTableCard,
+  DnaTable,
+  DnaBadge,
+} from "@/components/dna";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -109,16 +106,16 @@ export default function AdjustmentClient() {
     <div className="flex flex-col gap-[2rem]">
       {/* 1. KPI CARDS */}
       <div className="grid grid-cols-3 gap-6">
-        <StatCard value={adjustments.length} label="Total Adjustment" subValue={`${adjustments.length} entries`} />
-        <StatCard value={pendingCount} label="Pending Appr" className="[&_h3]:text-amber-600" />
-        <StatCard value={completedCount} label="Completed" className="[&_h3]:text-emerald-600" />
+        <DnaStatCard value={adjustments.length} label="Total Adjustment" subValue={`${adjustments.length} entries`} />
+        <DnaStatCard value={pendingCount} label="Pending Appr" className="[&_h3]:text-amber-600" />
+        <DnaStatCard value={completedCount} label="Completed" className="[&_h3]:text-emerald-600" />
       </div>
 
       {/* 2. FILTER BAR */}
       <div className="bg-white border border-slate-200 p-4 rounded-[24px] flex gap-4 items-center shadow-sm">
          <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
+            <DnaInput
               type="text"
               placeholder="SEARCH MATERIAL..."
               className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-[11px] font-black text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-300"
@@ -126,33 +123,31 @@ export default function AdjustmentClient() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
          </div>
-          <Select value={filterType} onValueChange={(v) => v && setFilterType(v)}>
-             <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-[46px] text-[10px] font-black uppercase tracking-widest">
-                <SelectValue placeholder="TYPE" />
-             </SelectTrigger>
-             <SelectContent className="bg-white border-slate-200 text-slate-900">
-                <SelectItem value="ALL">ALL TYPES</SelectItem>
-                <SelectItem value="WRITE_OFF">WRITE OFF</SelectItem>
-                <SelectItem value="CORRECTION">CORRECTION</SelectItem>
-                <SelectItem value="DISPOSAL">DISPOSAL</SelectItem>
-             </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={(v) => v && setFilterStatus(v)}>
-            <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-[46px] text-[10px] font-black uppercase tracking-widest">
-               <SelectValue placeholder="STATUS" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border-slate-200 text-slate-900">
-               <SelectItem value="ALL">ALL STATUS</SelectItem>
-               <SelectItem value="PENDING">PENDING</SelectItem>
-               <SelectItem value="APPROVED">APPROVED</SelectItem>
-               <SelectItem value="REJECTED">REJECTED</SelectItem>
-            </SelectContent>
-         </Select>
+           <DnaSelect
+             value={filterType}
+             onChange={setFilterType}
+             options={[
+               { label: "ALL TYPES", value: "ALL" },
+               { label: "WRITE OFF", value: "WRITE_OFF" },
+               { label: "CORRECTION", value: "CORRECTION" },
+               { label: "DISPOSAL", value: "DISPOSAL" },
+             ]}
+           />
+          <DnaSelect
+           value={filterStatus}
+           onChange={setFilterStatus}
+           options={[
+             { label: "ALL STATUS", value: "ALL" },
+             { label: "PENDING", value: "PENDING" },
+             { label: "APPROVED", value: "APPROVED" },
+             { label: "REJECTED", value: "REJECTED" },
+           ]}
+         />
       </div>
 
       {/* 3. TABLE SECTION */}
-      <TableWrapper>
-        <table className="w-full border-collapse">
+      <DnaDataTableCard>
+        <DnaTable className="w-full border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="px-6 py-4 text-left text-table-header text-slate-400">#ADJ</th>
@@ -220,14 +215,14 @@ export default function AdjustmentClient() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </DnaTable>
         {filteredAdjustments.length === 0 && (
           <div className="p-12 text-center flex flex-col items-center gap-4">
              <AlertCircle className="w-12 h-12 text-slate-300" />
              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">No adjustments found matching filters</p>
           </div>
         )}
-      </TableWrapper>
+      </DnaDataTableCard>
 
       {/* 5. RECENT ACTIVITY FOOTER */}
       <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">

@@ -46,6 +46,8 @@ import {
   DnaModal,
   DnaConfirmDialog,
   DnaCell,
+  DnaCheckbox,
+  DnaTable,
   useDnaToast,
 } from "@/components/dna";
 import { MASTER_COA_LIST, CoaAccountItem } from "@/lib/coa-utils";
@@ -531,13 +533,12 @@ function ChartOfAccountsContent() {
           onPageChange: setCurrentPage,
         }}
       >
-        <table className="w-full text-left border-collapse text-[12px]">
+        <DnaTable className="w-full text-left border-collapse text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
               {/* Select All Checkbox */}
               <th className="p-3.5 w-10 text-center">
-                <input
-                  type="checkbox"
+                <DnaCheckbox
                   checked={paginatedAccounts.length > 0 && selectedRowIds.length === paginatedAccounts.length}
                   onChange={toggleSelectAll}
                   className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -632,8 +633,7 @@ function ChartOfAccountsContent() {
                   >
                     {/* Checkbox */}
                     <td className="p-3.5 text-center">
-                      <input
-                        type="checkbox"
+                      <DnaCheckbox
                         checked={isSelected}
                         onChange={() => toggleSelectRow(acc.id)}
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -694,7 +694,7 @@ function ChartOfAccountsContent() {
               })
             )}
           </tbody>
-        </table>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* ── MODAL DETAIL INSPECTION ── */}

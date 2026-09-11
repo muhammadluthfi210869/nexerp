@@ -37,6 +37,10 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
   useDnaToast
 } from "@/components/dna";
 
@@ -548,7 +552,7 @@ export default function GudangPage() {
           searchPlaceholder="Cari Nama Gudang, PIC, Kota..."
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
+            <DnaTable className="w-full text-left text-xs text-slate-600">
               <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Kode & Fasilitas</th>
@@ -628,7 +632,7 @@ export default function GudangPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -638,16 +642,16 @@ export default function GudangPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200">
             <span className="text-xs font-semibold text-slate-600">Filter Gudang:</span>
-            <select
+<DnaSelect 
               className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 font-medium text-slate-800 focus:outline-none"
               value={selectedWarehouseFilter}
-              onChange={(e) => setSelectedWarehouseFilter(e.target.value)}
+              onChange={setSelectedWarehouseFilter}
             >
               <option value="ALL">Semua Gudang</option>
               <option value="WH-01">WH-01 (Bahan Baku)</option>
               <option value="WH-02">WH-02 (Bahan Kemas)</option>
               <option value="WH-03">WH-03 (Produk Jadi)</option>
-            </select>
+            </DnaSelect>
           </div>
 
           <DnaDataTableCard
@@ -658,7 +662,7 @@ export default function GudangPage() {
             searchPlaceholder="Cari Kode Bin, SKU Tersimpan..."
           >
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-600">
+              <DnaTable className="w-full text-left text-xs text-slate-600">
                 <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Kode Bin & Lokasi</th>
@@ -699,7 +703,7 @@ export default function GudangPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
           </DnaDataTableCard>
         </div>
@@ -715,7 +719,7 @@ export default function GudangPage() {
           searchPlaceholder="Cari Kategori, Kode, Akun..."
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
+            <DnaTable className="w-full text-left text-xs text-slate-600">
               <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Kode & Kategori</th>
@@ -765,7 +769,7 @@ export default function GudangPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -792,7 +796,7 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Kode Gudang *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: WH-06"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
@@ -802,7 +806,7 @@ export default function GudangPage() {
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Tipe Fasilitas *</label>
-              <select
+  <DnaSelect 
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
                 value={warehouseForm.type}
                 onChange={(e) => setWarehouseForm(prev => ({ ...prev, type: e.target.value as any }))}
@@ -811,13 +815,13 @@ export default function GudangPage() {
                 <option value="PACKAGING">Bahan Kemas (Packaging)</option>
                 <option value="FINISHED_GOODS">Produk Jadi (Finished Goods)</option>
                 <option value="STAGING_WIP">Staging Produksi / WIP</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Nama Gudang *</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="Contoh: Gudang Buffer Kemas Blok C"
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -829,7 +833,7 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Provinsi *</label>
-              <input
+              <DnaInput
                 type="text"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
                 value={warehouseForm.province}
@@ -838,7 +842,7 @@ export default function GudangPage() {
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Kota / Kabupaten *</label>
-              <input
+              <DnaInput
                 type="text"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
                 value={warehouseForm.city}
@@ -849,7 +853,7 @@ export default function GudangPage() {
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Alamat Lengkap *</label>
-            <textarea
+            <DnaTextarea
               rows={2}
               placeholder="Jalan, Kawasan Industri, Nomor Kavling..."
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -861,7 +865,7 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Penanggung Jawab (PIC)</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Nama Staff / Kepala"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -871,7 +875,7 @@ export default function GudangPage() {
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Nomor Telepon</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="021-..."
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -905,19 +909,19 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Pilih Gudang *</label>
-              <select
+  <DnaSelect 
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
                 value={binForm.warehouseCode}
-                onChange={(e) => setBinForm(prev => ({ ...prev, warehouseCode: e.target.value }))}
+                onChange={(value) => setBinForm(prev => ({ ...prev, warehouseCode: value }))}
               >
                 <option value="WH-01">WH-01 Gudang Bahan Baku</option>
                 <option value="WH-02">WH-02 Gudang Bahan Kemas</option>
                 <option value="WH-03">WH-03 Gudang Produk Jadi</option>
-              </select>
+              </DnaSelect>
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Kode Bin *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: WH01-A1-05"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
@@ -930,7 +934,7 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Lorong / Baris</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: Lorong A"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -940,7 +944,7 @@ export default function GudangPage() {
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Tingkat / Level</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: Tingkat 1"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -953,18 +957,18 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Zona Suhu</label>
-              <select
+  <DnaSelect 
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
                 value={binForm.zoneType}
-                onChange={(e) => setBinForm(prev => ({ ...prev, zoneType: e.target.value as any }))}
+                onChange={(value) => setBinForm(prev => ({ ...prev, zoneType: value as any }))}
               >
                 <option value="COOL_ROOM">Cool Room (15-25°C)</option>
                 <option value="AMBIENT">Suhu Ruang (Ambient)</option>
-              </select>
+              </DnaSelect>
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Kapasitas Maksimal (Kg / Pcs)</label>
-              <input
+              <DnaInput
                 type="number"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
                 value={binForm.capacityMax}
@@ -997,7 +1001,7 @@ export default function GudangPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Kode Kategori *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: CAT-REAG"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
@@ -1007,7 +1011,7 @@ export default function GudangPage() {
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Nama Kategori *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: Reagen & Bahan Kimia Uji Lab"
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -1019,7 +1023,7 @@ export default function GudangPage() {
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Deskripsi Kategori</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="Keterangan kategori barang..."
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -1036,52 +1040,52 @@ export default function GudangPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun Persediaan (Inventory Asset) *</label>
-                <select
+    <DnaSelect 
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
                   value={categoryForm.inventoryAccount}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, inventoryAccount: e.target.value }))}
+                  onChange={(value) => setCategoryForm(prev => ({ ...prev, inventoryAccount: value }))}
                 >
                   <option value="110401">110401 - Persediaan Bahan Baku</option>
                   <option value="110402">110402 - Persediaan Bahan Kemas</option>
                   <option value="110404">110404 - Persediaan Produk Jadi</option>
                   <option value="510201">510201 - Persediaan Reagen Lab & QC</option>
-                </select>
+                </DnaSelect>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun HPP (COGS Account) *</label>
-                <select
+    <DnaSelect 
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
                   value={categoryForm.cogsAccount}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, cogsAccount: e.target.value }))}
+                  onChange={(value) => setCategoryForm(prev => ({ ...prev, cogsAccount: value }))}
                 >
                   <option value="510101">510101 - HPP Bahan Baku</option>
                   <option value="510102">510102 - HPP Bahan Kemas</option>
                   <option value="510104">510104 - HPP Produk Jadi</option>
-                </select>
+                </DnaSelect>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun Penjualan (Revenue Account) *</label>
-                <select
+    <DnaSelect 
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
                   value={categoryForm.salesAccount}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, salesAccount: e.target.value }))}
+                  onChange={(value) => setCategoryForm(prev => ({ ...prev, salesAccount: value }))}
                 >
                   <option value="410101">410101 - Pendapatan Penjualan Maklon</option>
                   <option value="410102">410102 - Pendapatan Jasa Produksi</option>
-                </select>
+                </DnaSelect>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun Retur Penjualan *</label>
-                <select
+    <DnaSelect 
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
                   value={categoryForm.salesReturnAccount}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, salesReturnAccount: e.target.value }))}
+                  onChange={(value) => setCategoryForm(prev => ({ ...prev, salesReturnAccount: value }))}
                 >
                   <option value="410201">410201 - Retur Penjualan Maklon</option>
-                </select>
+                </DnaSelect>
               </div>
             </div>
           </div>

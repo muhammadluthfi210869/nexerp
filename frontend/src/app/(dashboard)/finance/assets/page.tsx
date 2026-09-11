@@ -29,8 +29,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface AssetRegisterItem {
   id: string;
@@ -207,9 +210,9 @@ export default function AssetsPage() {
         badge={<DnaBadge variant="default">{filteredAssets.length} Aset</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2">
-            <select
+<DnaSelect 
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={setCategoryFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Kategori Aset</option>
@@ -217,10 +220,10 @@ export default function AssetsPage() {
               <option value="Motor">Sepeda Motor (4 Thn)</option>
               <option value="Mobil">Mobil / Truk Box (8 Thn)</option>
               <option value="Bangunan">Bangunan Pabrik CPKB (20 Thn)</option>
-            </select>
+            </DnaSelect>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari kode / nama aset / lokasi..."
                 value={searchQuery}
@@ -232,7 +235,7 @@ export default function AssetsPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Asset Code</th>
@@ -273,7 +276,7 @@ export default function AssetsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -287,7 +290,7 @@ export default function AssetsPage() {
         <div className="space-y-3.5 text-xs">
           <div>
             <label className="block text-slate-700 font-semibold mb-1">Kode Aset (Auto Universal Global)</label>
-            <input
+            <DnaInput
               type="text"
               value="DL-FIN-AST-09092026-0004"
               disabled
@@ -297,7 +300,7 @@ export default function AssetsPage() {
 
           <div>
             <label className="block text-slate-700 font-semibold mb-1">Nama Aset Tetap *</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="e.g. Mesin Boiler Uap Tekanan Tinggi 10 Bar"
               value={formData.name}
@@ -309,20 +312,20 @@ export default function AssetsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Kategori Aset *</label>
-              <select
+  <DnaSelect 
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                onChange={(value) => setFormData({ ...formData, category: value as any })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium"
               >
                 <option value="Inventaris">Inventaris / Mesin Pabrik</option>
                 <option value="Motor">Sepeda Motor</option>
                 <option value="Mobil">Mobil / Truk Box</option>
                 <option value="Bangunan">Bangunan Pabrik Permanen</option>
-              </select>
+              </DnaSelect>
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Masa Manfaat (Auto-Fill Default)</label>
-              <input
+              <DnaInput
                 type="text"
                 value={`${usefulLifeMap[formData.category]} Tahun (Garis Lurus)`}
                 disabled
@@ -334,7 +337,7 @@ export default function AssetsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Tanggal Perolehan *</label>
-              <input
+              <DnaInput
                 type="date"
                 value={formData.acquisitionDate}
                 onChange={(e) => setFormData({ ...formData, acquisitionDate: e.target.value })}
@@ -343,7 +346,7 @@ export default function AssetsPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Harga Perolehan Cost (Rp) *</label>
-              <input
+              <DnaInput
                 type="number"
                 placeholder="e.g. 150000000"
                 value={formData.cost}
@@ -356,7 +359,7 @@ export default function AssetsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Lokasi Penempatan</label>
-              <input
+              <DnaInput
                 type="text"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
@@ -365,7 +368,7 @@ export default function AssetsPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Departemen Penanggung Jawab</label>
-              <input
+              <DnaInput
                 type="text"
                 value={formData.department}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
@@ -406,7 +409,7 @@ export default function AssetsPage() {
               <Wrench className="w-4 h-4 text-blue-600" />
               <span>Sub-tab: Riwayat Pembelian & Kapitalisasi Upgrade/Repair (SCR-024)</span>
             </h4>
-            <table className="w-full text-left text-xs">
+            <DnaTable className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
                   <th className="py-1">Tanggal</th>
@@ -427,7 +430,7 @@ export default function AssetsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
 
           <div className="flex justify-end pt-2 border-t border-slate-100">

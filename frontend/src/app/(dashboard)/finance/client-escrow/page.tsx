@@ -31,8 +31,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface ClientEscrowItem {
   id: string;
@@ -134,29 +137,29 @@ export default function ClientEscrowPage() {
         badge={<DnaBadge variant="default">{filteredEscrows.length} Akun Escrow</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2">
-            <select
+<DnaSelect 
               value={purposeFilter}
-              onChange={(e) => setPurposeFilter(e.target.value)}
+              onChange={setPurposeFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Peruntukan (Purpose)</option>
               <option value="BPOM Registration">BPOM Registration</option>
               <option value="Uji Lab Mikrobiologi">Uji Lab Mikrobiologi</option>
               <option value="Pendaftaran HKI Merk">Pendaftaran HKI Merk</option>
-            </select>
-            <select
+            </DnaSelect>
+<DnaSelect 
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={setStatusFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Status</option>
               <option value="DEPOSITED">Deposited</option>
               <option value="PARTIALLY_USED">Partially Used</option>
               <option value="FULLY_SETTLED">Fully Settled</option>
-            </select>
+            </DnaSelect>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari client / escrow no..."
                 value={searchQuery}
@@ -168,7 +171,7 @@ export default function ClientEscrowPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Escrow No</th>
@@ -218,7 +221,7 @@ export default function ClientEscrowPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 

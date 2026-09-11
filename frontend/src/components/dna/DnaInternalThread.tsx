@@ -11,7 +11,7 @@ import {
   getSharedInternalNotes,
   addSharedInternalNote,
   addSharedAuditLog,
-  SharedInternalNote,
+  type SharedInternalNote,
 } from "@/lib/shared-erp-flow";
 
 export interface DnaInternalThreadProps {

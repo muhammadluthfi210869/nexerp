@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
+"scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3003",
     "build": "next build",
     "analyze": "ANALYZE=true next build",
@@ -10,13 +10,17 @@
     "start": "node scripts/start-standalone.js",
     "lint": "eslint",
     "lint:dna": "eslint --max-warnings 999",
+    "lint:fix": "eslint --fix",
     "check:dna": "bash scripts/check-visual-dna.sh",
     "test:visual": "playwright test tests/visual-regression/",
     "test:visual:update": "playwright test tests/visual-regression/ --update-snapshots",
     "test:perf": "playwright test tests/e2e/PERFORMANCE_INTEGRITY_AUDIT.spec.ts",
     "test": "vitest run",
+    "typecheck:marketing": "tsc --noEmit -p tsconfig.marketing.json",
     "test:watch": "vitest",
-    "sync-api": "openapi-typescript ../backend/swagger-spec.json -o ./src/types/api-schema.d.ts"
+    "sync-api": "openapi-typescript ../backend/swagger-spec.json -o ./src/types/api-schema.d.ts",
+    "prepare": "husky",
+    "commitlint": "commitlint --edit"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
@@ -65,7 +69,16 @@
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix"],
+    "*.{js,cjs,mjs}": ["eslint --fix"],
+    "*.{json,md,yml,yaml}": ["eslint --fix"]
   },
   "overrides": {
     "@hono/node-server": "^1.19.13",

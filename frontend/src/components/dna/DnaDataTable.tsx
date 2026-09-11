@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { DnaPageContainer } from "./DnaPageContainer";
 import { DnaPageHeader } from "./DnaPageHeader";
-import { DnaTabNav, DnaTabItem } from "./DnaTabNav";
+import { DnaTabNav, type DnaTabItem } from "./DnaTabNav";
 import { DnaKpiGrid } from "./DnaKpiGrid";
 import { KpiCard } from "./KpiCard";
 import { TableWrapper } from "./TableWrapper";

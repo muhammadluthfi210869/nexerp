@@ -974,7 +974,7 @@ export function saveAutomationFlow(
 ): { newState: CRMState; log: EngineLog } {
   const nowIso = new Date().toISOString();
   const existingIndex = state.automationFlows.findIndex((f) => f.id === flow.id);
-  let updatedFlows = [...state.automationFlows];
+  const updatedFlows = [...state.automationFlows];
 
   if (existingIndex >= 0) {
     updatedFlows[existingIndex] = flow;
@@ -1305,7 +1305,7 @@ export function addTrafficSource(
     (s) => s.name.toLowerCase() === params.name.trim().toLowerCase()
   );
 
-  let updatedSources = [...currentSources];
+  const updatedSources = [...currentSources];
   if (existingIdx >= 0) {
     updatedSources[existingIdx] = {
       ...updatedSources[existingIdx],

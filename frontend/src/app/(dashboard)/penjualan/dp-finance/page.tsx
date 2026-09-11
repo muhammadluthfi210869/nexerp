@@ -16,19 +16,19 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaTabNav } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function DpConsolidatedPage() {
+  const [activeTab, setActiveTab] = useState("pembelian");
   const [searchPembelian, setSearchPembelian] = useState("");
   const [searchPenjualan, setSearchPenjualan] = useState("");
 
@@ -86,47 +86,36 @@ export default function DpConsolidatedPage() {
       titleAccent="PAYMENT"
       subtitle="Uang Muka Pembelian & Penjualan — DP Management Hub"
     >
-      <Tabs defaultValue="pembelian" className="space-y-6">
-        <div className="relative">
-          <TabsList className="bg-slate-100/50 backdrop-blur-md p-1.5 rounded-2xl h-14 inline-flex gap-1 border border-slate-200/50 shadow-inner">
-            {[
-              { id: "pembelian", label: "DP Pembelian", icon: Building2 },
-              { id: "penjualan", label: "DP Penjualan", icon: ArrowUpRight },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="relative rounded-xl px-6 h-full data-[state=active]:text-slate-900 data-[state=active]:bg-white data-[state=active]:shadow-sm text-slate-500 transition-all duration-300 text-[10px] font-black uppercase tracking-tight"
-              >
-                <div className="flex items-center gap-2">
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </div>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+      <>
+        <DnaTabNav
+          tabs={[
+            { id: "pembelian", label: "DP Pembelian", icon: Building2 },
+            { id: "penjualan", label: "DP Penjualan", icon: ArrowUpRight },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
-        <TabsContent value="pembelian" className="space-y-6 animate-fade-slide-in">
+        <div hidden={activeTab !== "pembelian"} className="space-y-6 animate-fade-slide-in">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard
+            <DnaStatCard
               label="Total PO"
               value={poList.length}
               icon={<FileText className="text-blue-600" />}
             />
-            <StatCard
+            <DnaStatCard
               label="DP Terbayar"
               value={`Rp ${totalDpPembelianTerbayar.toLocaleString("id-ID")}`}
               icon={<CheckCircle2 className="text-emerald-600" />}
             />
-            <StatCard
+            <DnaStatCard
               label="Outstanding"
               value={`Rp ${totalDpPembelianOutstanding.toLocaleString("id-ID")}`}
               icon={<Clock className="text-amber-500" />}
             />
           </div>
-          <TableWrapper
-            filters={
+          <DnaDataTableCard
+            customToolbar={
               <div className="flex items-center justify-between w-full">
                 <div className="relative w-full max-w-md">
                   <DnaInput
@@ -199,29 +188,29 @@ export default function DpConsolidatedPage() {
                 )}
               </TableBody>
             </Table>
-          </TableWrapper>
-        </TabsContent>
+          </DnaDataTableCard>
+        </div>
 
-        <TabsContent value="penjualan" className="space-y-6 animate-fade-slide-in">
+        <div hidden={activeTab !== "penjualan"} className="space-y-6 animate-fade-slide-in">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard
+            <DnaStatCard
               label="Total SO Belum Lunas"
               value={soList.length}
               icon={<FileText className="text-blue-600" />}
             />
-            <StatCard
+            <DnaStatCard
               label="DP Terbayar"
               value={`Rp ${totalDpPenjualanTerbayar.toLocaleString("id-ID")}`}
               icon={<CheckCircle2 className="text-emerald-600" />}
             />
-            <StatCard
+            <DnaStatCard
               label="Sisa Piutang"
               value={`Rp ${totalDpPenjualanOutstanding.toLocaleString("id-ID")}`}
               icon={<AlertTriangle className="text-rose-500" />}
             />
           </div>
-          <TableWrapper
-            filters={
+          <DnaDataTableCard
+            customToolbar={
               <div className="flex items-center justify-between w-full">
                 <div className="relative w-full max-w-md">
                   <DnaInput
@@ -298,9 +287,9 @@ export default function DpConsolidatedPage() {
                 )}
               </TableBody>
             </Table>
-          </TableWrapper>
-        </TabsContent>
-      </Tabs>
+          </DnaDataTableCard>
+        </div>
+      </>
     </DashboardShell>
   );
 }

@@ -15,27 +15,22 @@ import {
   Truck,
   Warehouse,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DnaInput,
+  DnaSelect,
+  DnaButton,
+  DnaDialog,
+  DnaDialogContent,
+  DnaDialogHeader,
+  DnaDialogTitle,
+  DnaDialogFooter,
+  DnaDnaStatCard,
+  DnaDataTableCard,
+  DnaTable,
+  DnaBadge,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard } from "@/components/dna/StatCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
 
 export default function TransferOrdersPage() {
   const queryClient = useQueryClient();
@@ -127,31 +122,32 @@ export default function TransferOrdersPage() {
       titleAccent="ORDERS"
       subtitle="INTER-WAREHOUSE MOVEMENT & STOCK RELOCATION PROTOCOLS"
       actions={
-        <Button
+        <DnaButton
+          variant="primary"
           onClick={() => setIsModalOpen(true)}
           className="h-14 px-8 bg-brand-black text-white hover:bg-slate-800 rounded-2xl shadow-xl shadow-slate-100 font-black uppercase tracking-tighter text-sm border-none italic"
         >
           <PlusCircle className="mr-2 h-5 w-5 stroke-[3px]" /> CREATE TRANSFER
-        </Button>
+        </DnaButton>
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
+        <DnaStatCard
           label="PENDING"
           value={String(pendingCount).padStart(2, "0")}
           icon={<Clock className="w-[18px] h-[18px]" />}
         />
-        <StatCard
+        <DnaStatCard
           label="COMPLETED"
           value={String(completedCount).padStart(2, "0")}
           icon={<CheckCircle2 className="w-[18px] h-[18px]" />}
         />
-        <StatCard
+        <DnaStatCard
           label="TOTAL TRANSFERS"
           value={String(transfers?.length || 0).padStart(2, "0")}
           icon={<Truck className="w-[18px] h-[18px]" />}
         />
-        <StatCard
+        <DnaStatCard
           label="ACTIVE NODES"
           value={String(warehouses?.length || 0).padStart(2, "0")}
           icon={<Warehouse className="w-[18px] h-[18px]" />}
@@ -165,8 +161,8 @@ export default function TransferOrdersPage() {
             📑 III. TRANSFER REGISTRY
           </h3>
         </div>
-        <TableWrapper>
-          <table className="w-full text-left">
+        <DnaDataTableCard>
+          <DnaTable className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
                 <th className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-widest">
@@ -247,12 +243,13 @@ export default function TransferOrdersPage() {
                   </td>
                   <td className="px-6 py-6 text-right">
                     {trf.status === "PENDING" ? (
-                      <Button
+                      <DnaButton
+                        variant="primary"
                         onClick={() => executeMutation.mutate(trf.id)}
                         className="h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[9px] rounded-xl shadow-md border-none transition-all italic"
                       >
                         <Play className="mr-2 h-3 w-3 fill-white" /> EXECUTE
-                      </Button>
+                      </DnaButton>
                     ) : (
                       <div className="flex items-center justify-end gap-2 text-emerald-600">
                         <CheckCircle2 className="h-4 w-4" />
@@ -265,8 +262,8 @@ export default function TransferOrdersPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </TableWrapper>
+          </DnaTable>
+        </DnaDataTableCard>
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -287,49 +284,29 @@ export default function TransferOrdersPage() {
                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
                   SOURCE WAREHOUSE <span className="text-red-500">*</span>
                 </label>
-                <Select
-                  onValueChange={(v) => setSourceWarehouse(v as string ?? "")}
-                >
-                  <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                    <SelectValue placeholder="ORIGIN..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses?.map((w: any) => (
-                      <SelectItem
-                        key={w.id}
-                        value={w.id}
-                        className="font-black uppercase text-[10px]"
-                      >
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                 <DnaSelect
+                   label="Source Warehouse"
+                   required
+                   value={sourceWarehouse}
+                   placeholder="Origin..."
+                   onChange={setSourceWarehouse}
+                   options={warehouses?.map((w: any) => ({ label: w.name, value: w.id }))}
+                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
                   DESTINATION WAREHOUSE <span className="text-red-500">*</span>
                 </label>
-                <Select
-                  onValueChange={(v) => setDestWarehouse(v as string ?? "")}
-                >
-                  <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs">
-                    <SelectValue placeholder="DESTINATION..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses
-                      ?.filter((w: any) => w.id !== sourceWarehouse)
-                      .map((w: any) => (
-                        <SelectItem
-                          key={w.id}
-                          value={w.id}
-                          className="font-black uppercase text-[10px]"
-                        >
-                          {w.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                 <DnaSelect
+                   label="Destination Warehouse"
+                   required
+                   value={destWarehouse}
+                   placeholder="Destination..."
+                   onChange={setDestWarehouse}
+                   options={warehouses
+                     ?.filter((w: any) => w.id !== sourceWarehouse)
+                     .map((w: any) => ({ label: w.name, value: w.id }))}
+                 />
               </div>
             </div>
 
@@ -338,7 +315,7 @@ export default function TransferOrdersPage() {
                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
                   VEHICLE PLATE (LOGISTICS)
                 </label>
-                <Input
+                <DnaInput
                   placeholder="E.G. B 1234 ABC"
                   className="h-14 bg-slate-50 border-slate-200 rounded-xl font-black uppercase text-xs"
                 />
@@ -347,7 +324,7 @@ export default function TransferOrdersPage() {
                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
                   TRANSFER NOTES
                 </label>
-                <Input
+                <DnaInput
                   placeholder="RELOCATION PROTOCOL..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -360,26 +337,20 @@ export default function TransferOrdersPage() {
               <label className="text-[10px] font-black uppercase text-brand-black tracking-widest">
                 APPEND MATERIAL TO TRANSFER
               </label>
-              <Select onValueChange={(v) => addMaterial(v as string ?? "")}>
-                <SelectTrigger className="h-14 border-2 border-dashed border-slate-200 bg-white rounded-2xl font-black uppercase text-[10px] text-slate-400">
-                  <SelectValue placeholder="+ APPEND MATERIAL TO TRANSFER" />
-                </SelectTrigger>
-                <SelectContent>
-                  {materials?.map((m: any) => (
-                    <SelectItem
-                      key={m.id}
-                      value={m.id}
-                      className="font-black uppercase text-[10px]"
-                    >
-                      {m.name} (AVAIL: {Number(m.stockQty)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+               <DnaSelect
+                 label="Append Material to Transfer"
+                 value=""
+                 placeholder="+ Append material to transfer"
+                 onChange={addMaterial}
+                 options={materials?.map((m: any) => ({
+                   label: `${m.name} (AVAIL: ${Number(m.stockQty)})`,
+                   value: m.id,
+                 }))}
+               />
 
               {transferItems.length > 0 && (
                 <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
-                  <table className="w-full text-left">
+                  <DnaTable className="w-full text-left">
                     <thead>
                       <tr className="bg-slate-100/50 border-b border-slate-200">
                         <th className="px-4 py-3 text-[8px] font-black uppercase text-slate-400">
@@ -406,7 +377,7 @@ export default function TransferOrdersPage() {
                             {item.stockAvailable}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <Input
+                            <DnaInput
                               type="number"
                               value={item.qty}
                               onChange={(e) => {
@@ -423,7 +394,7 @@ export default function TransferOrdersPage() {
                             />
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <Button
+                            <DnaButton
                               variant="ghost"
                               size="sm"
                               onClick={() =>
@@ -434,18 +405,19 @@ export default function TransferOrdersPage() {
                               className="text-rose-500 hover:bg-rose-50 h-8 w-8 p-0"
                             >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
+                            </DnaButton>
                           </td>
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </DnaTable>
                 </div>
               )}
             </div>
 
-            <Button
-              onClick={handleSubmit}
+             <DnaButton
+               variant="primary"
+               onClick={handleSubmit}
               className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-100 transition-all italic"
               disabled={createMutation.isPending}
             >
@@ -454,7 +426,7 @@ export default function TransferOrdersPage() {
               ) : (
                 "COMMIT TRANSFER ORDER"
               )}
-            </Button>
+            </DnaButton>
           </div>
         </DialogContent>
       </Dialog>
@@ -465,10 +437,10 @@ export default function TransferOrdersPage() {
           </DialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>
               Batal
-            </Button>
-            <Button onClick={confirmSubmit}>Ya, Simpan</Button>
+            </DnaButton>
+             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Search, ChevronDown, Check, X, Building2, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MASTER_COA_LIST, CoaAccountItem } from "@/lib/coa-utils";
+import { MASTER_COA_LIST, type CoaAccountItem } from "@/lib/coa-utils";
 import { api } from "@/lib/api";
 
 export interface CoaSelectProps {

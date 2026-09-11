@@ -23,16 +23,15 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-import { DnaInput, DnaButton, DnaBadge, DnaStatCard, DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaSelect, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DnaInput, DnaButton, DnaBadge, DnaStatCard, DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaSelect, DnaTabNav, DnaTextarea } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 
 // Static Data from Plan
 const STATIC_SALES_INVOICES = [
@@ -114,9 +113,18 @@ export default function ARHubPrototype() {
       </DnaKpiGrid>
 
       {/* Main Content Area */}
-      <Tabs defaultValue="products" onValueChange={setActiveTab} className="w-full mt-6">
-        <TableWrapper
-          filters={
+      <div className="w-full mt-6 space-y-4">
+        <DnaTabNav
+          tabs={[
+            { id: "products", label: "Regular Products", icon: Package },
+            { id: "samples", label: "R&D Samples", icon: FlaskConical },
+            { id: "returns", label: "Retur", icon: RotateCcw },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+        <DnaDataTableCard
+          customToolbar={
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 w-full">
               <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-14 border border-slate-100">
                 <TabsTrigger value="products" className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all">
@@ -141,7 +149,7 @@ export default function ARHubPrototype() {
             </div>
           }
         >
-          <TabsContent value="products" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div hidden={activeTab !== "products"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
             <Table className="table-dense">
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-slate-100">
@@ -208,9 +216,9 @@ export default function ARHubPrototype() {
                 ))}
               </TableBody>
             </Table>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="samples" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div hidden={activeTab !== "samples"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
             <Table className="table-dense">
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-slate-100">
@@ -271,9 +279,9 @@ export default function ARHubPrototype() {
                 ))}
               </TableBody>
             </Table>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="returns" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div hidden={activeTab !== "returns"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="p-8">
               <div className="rounded-2xl border border-dashed border-slate-200 p-8 bg-slate-50/50 text-center">
                 <RotateCcw className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -298,9 +306,9 @@ export default function ARHubPrototype() {
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </TableWrapper>
-      </Tabs>
+          </div>
+        </DnaDataTableCard>
+      </div>
 
       {/* Payment Modal Overlay */}
       <AnimatePresence>
@@ -382,7 +390,7 @@ export default function ARHubPrototype() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Remarks / Reference</label>
-                  <textarea 
+                  <DnaTextarea
                     rows={3}
                     placeholder="E.g., Bank transfer reference..."
                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"

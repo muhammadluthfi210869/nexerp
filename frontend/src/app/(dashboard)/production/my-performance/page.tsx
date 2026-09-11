@@ -3,13 +3,10 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DnaPageContainer } from "@/components/dna";
-import { DnaPageHeader } from "@/components/dna";
-import { DnaKpiGrid } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { PageSection, SectionLabel } from "@/components/dna";
+import { DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaStatCard } from "@/components/dna";
 import { Factory, TrendingUp, AlertTriangle, ClipboardCheck, Clock, Gauge } from "lucide-react";
+
+// SPEC: SCR-PROD-MINE-001 — Personal Operator Performance dashboard
 
 export default function ProductionMyPerformancePage() {
   const { data: stats } = useQuery({
@@ -37,80 +34,81 @@ export default function ProductionMyPerformancePage() {
         subtitle="Personal production output and work order metrics. Only your assigned work is shown here."
       />
       <div className="space-y-10">
-        <DnaKpiGrid cols={4}>
-          <KpiCard label="My WOs" value={String(totalWO)} targetPct={totalWO >= 5 ? 100 : totalWO * 20} icon={<Factory />} />
-          <KpiCard label="Active WOs" value={String(activeWO)} targetPct={activeWO <= 3 ? 100 : Math.max(0, 100 - activeWO * 10)} icon={<Clock />} />
-          <KpiCard label="Completed" value={String(completedWO)} targetPct={completedWO > 0 ? 100 : 0} icon={<ClipboardCheck />} />
-          <KpiCard label="Quality" value={String(completedWO || 0)} targetPct={50} icon={<Gauge />} />
-        </DnaKpiGrid>
+        <DnaKpiGrid
+          cards={[
+            { key: "my-wo", title: "My WOs", value: String(totalWO), deltaText: totalWO >= 5 ? "On track" : "Below target", isDeltaPositive: totalWO >= 5, icon: <Factory className="w-4 h-4" />, iconBg: "bg-blue-50", iconColor: "text-blue-600" },
+            { key: "active", title: "Active WOs", value: String(activeWO), deltaText: activeWO <= 3 ? "Healthy" : "Overload", isDeltaPositive: activeWO <= 3, icon: <Clock className="w-4 h-4" />, iconBg: "bg-amber-50", iconColor: "text-amber-600" },
+            { key: "completed", title: "Completed", value: String(completedWO), deltaText: completedWO > 0 ? "On track" : "Pending", isDeltaPositive: completedWO > 0, icon: <ClipboardCheck className="w-4 h-4" />, iconBg: "bg-emerald-50", iconColor: "text-emerald-600" },
+            { key: "quality", title: "Quality", value: String(completedWO || 0), deltaText: "Target 50%", isDeltaPositive: true, icon: <Gauge className="w-4 h-4" />, iconBg: "bg-sky-50", iconColor: "text-sky-600" },
+          ]}
+        />
 
-        <TableWrapper>
-          <SectionLabel>My Work Orders</SectionLabel>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[#F9FAFB] border-b">
-                  <th className="text-table-header text-slate-400 px-6 py-4">WO#</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Product</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Status</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Qty</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Date</th>
+        <DnaDataTableCard title="My Work Orders" count={(myWorkOrders || []).length}>
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <th className="px-6 py-4">WO#</th>
+                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Qty</th>
+                <th className="px-6 py-4">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {(myWorkOrders || []).slice(0, 10).map((wo: any, i: number) => (
+                <tr key={wo.id || i} className="hover:bg-slate-50/80">
+                  <td className="text-[11px] font-bold text-blue-600 tabular-nums px-6 py-4">{wo.woNumber || wo.id?.slice(0, 8) || "—"}</td>
+                  <td className="text-[11px] font-bold text-slate-700 px-6 py-4">{wo.product || "—"}</td>
+                  <td className="px-6 py-4"><span className="text-[9px] font-bold text-slate-500 uppercase">{wo.status || "—"}</span></td>
+                  <td className="text-[11px] font-bold text-slate-700 tabular-nums px-6 py-4">{wo.qty || "—"}</td>
+                  <td className="text-[10px] font-bold text-slate-400 px-6 py-4">{wo.createdAt ? new Date(wo.createdAt).toLocaleDateString() : "—"}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F1F5F9]">
-                {(myWorkOrders || []).slice(0, 10).map((wo: any, i: number) => (
-                  <tr key={wo.id || i}>
-                    <td className="text-[11px] font-black text-blue-600 tabular px-6 py-4">{wo.woNumber || wo.id?.slice(0, 8) || "—"}</td>
-                    <td className="text-[11px] font-bold text-slate-700 px-6 py-4">{wo.product || "—"}</td>
-                    <td className="px-6 py-4"><span className="text-[9px] font-black text-slate-500 uppercase">{wo.status || "—"}</span></td>
-                    <td className="text-[11px] font-bold text-slate-700 tabular px-6 py-4">{wo.qty || "—"}</td>
-                    <td className="text-[10px] font-bold text-slate-400 px-6 py-4">{wo.createdAt ? new Date(wo.createdAt).toLocaleDateString() : "—"}</td>
-                  </tr>
-                ))}
-                {(!myWorkOrders || myWorkOrders.length === 0) && (
-                  <tr>
-                    <td colSpan={5} className="text-center text-[11px] font-bold text-slate-400 py-12">No work orders assigned yet</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TableWrapper>
+              ))}
+              {(!myWorkOrders || myWorkOrders.length === 0) && (
+                <tr>
+                  <td colSpan={5} className="text-center text-[11px] font-bold text-slate-400 py-12">No work orders assigned yet</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </DnaDataTableCard>
 
         <div className="grid grid-cols-2 gap-8">
-          <PageSection title="Activity Summary">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wider mb-3">Activity Summary</h2>
             <div className="bg-white border border-slate-200 rounded-3xl p-8">
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between py-2 border-b border-slate-100">
                   <span className="text-[11px] font-bold text-slate-600">Active WOs</span>
-                  <span className="text-[11px] font-black text-blue-600 tabular">{activeWO}</span>
+                  <span className="text-[11px] font-bold text-blue-600 tabular-nums">{activeWO}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-slate-100">
                   <span className="text-[11px] font-bold text-slate-600">Pending Audits</span>
-                  <span className="text-[11px] font-black text-amber-600 tabular">{stats?.pendingAudits || 0}</span>
+                  <span className="text-[11px] font-bold text-amber-600 tabular-nums">{stats?.pendingAudits || 0}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-[11px] font-bold text-slate-600">Completed</span>
-                  <span className="text-[11px] font-black text-emerald-600 tabular">{completedWO}</span>
+                  <span className="text-[11px] font-bold text-emerald-600 tabular-nums">{completedWO}</span>
                 </div>
               </div>
             </div>
-          </PageSection>
+          </div>
 
-          <PageSection title="Tips">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wider mb-3">Tips</h2>
             <div className="bg-white border border-slate-200 rounded-3xl p-8">
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-[#EFF6FF] border border-[#DBEAFE] rounded-[16px] text-[10px] font-bold text-[#1E40AF]">
-                  <TrendingUp className="w-4 h-4 flex-shrink-0" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] font-bold text-blue-800">
+                  <TrendingUp className="w-4 h-4 shrink-0" />
                   Target output: 100% of planned quantity per WO
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-[#FEF9C3] border border-[#FEF08A] rounded-[16px] text-[10px] font-bold text-[#854D0E]">
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] font-bold text-amber-800">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
                   Report breakdowns immediately to minimize downtime
                 </div>
               </div>
             </div>
-          </PageSection>
+          </div>
         </div>
       </div>
     </DnaPageContainer>

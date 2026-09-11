@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import CommercialDashboard from "../commercial/page";
 import RndDashboard from "../../samples/rnd-dashboard/page";
-import ProductionFloor from "../production-floor/page";
+import ProductionFloor from "../../production/production-floor-dashboard/page";
 import FinanceDashboard from "../finance/page";
 
 export default function SuperAdminTerminal() {

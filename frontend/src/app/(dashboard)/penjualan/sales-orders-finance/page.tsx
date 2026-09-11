@@ -14,23 +14,21 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter,
-  DialogDescription
-} from "@/components/ui/dialog";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+  DnaDialog as Dialog,
+  DnaDialogContent as DialogContent,
+  DnaDialogHeader as DialogHeader,
+  DnaDialogTitle as DialogTitle,
+  DnaDialogFooter as DialogFooter,
+  DnaDialogDescription as DialogDescription,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { cn, formatCurrency } from "@/lib/utils";
 import { TableShell } from "@/components/layout/TableShell";
@@ -107,8 +105,8 @@ export default function SalesOrderPage() {
       )}
 
       {/* Main Grid */}
-      <TableWrapper
-        filters={
+      <DnaDataTableCard
+        customToolbar={
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 w-full">
              <div className="flex items-center gap-4">
                 <div className="w-1.5 h-8 bg-amber-500 rounded-full" />
@@ -219,7 +217,7 @@ export default function SalesOrderPage() {
             ))}
           </TableBody>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
 
       {/* Payment Proof Modal */}
       <Dialog open={isProofModalOpen} onOpenChange={setIsProofModalOpen}>

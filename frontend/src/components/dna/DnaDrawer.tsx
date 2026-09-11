@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { DnaModal, DnaModalSize } from "./DnaModal";
+import { DnaModal, type DnaModalSize } from "./DnaModal";
 
 export interface DnaDrawerProps {
   isOpen: boolean;

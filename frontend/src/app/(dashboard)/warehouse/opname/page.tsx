@@ -37,6 +37,10 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
   useDnaToast
 } from "@/components/dna";
 
@@ -408,7 +412,7 @@ export default function StockOpnamePage() {
         searchPlaceholder="Cari Kode Sesi, Gudang, PIC Auditor..."
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
+          <DnaTable className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="py-3 px-4">Sesi & Tanggal</th>
@@ -506,7 +510,7 @@ export default function StockOpnamePage() {
                 ))
               )}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -531,11 +535,11 @@ export default function StockOpnamePage() {
         <div className="space-y-4 text-xs">
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Pilih Gudang Target Audit *</label>
-            <select
+<DnaSelect 
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={newSessionForm.warehouseCode}
-              onChange={(e) => {
-                const val = e.target.value;
+              onChange={(value) => {
+                const val = value;
                 const label = val === "WH-01" ? "WH-01 Gudang Bahan Baku" : val === "WH-02" ? "WH-02 Gudang Bahan Kemas" : "WH-03 Gudang Produk Jadi";
                 setNewSessionForm(prev => ({ ...prev, warehouseCode: val, warehouseName: label }));
               }}
@@ -543,12 +547,12 @@ export default function StockOpnamePage() {
               <option value="WH-01">WH-01 Gudang Bahan Baku</option>
               <option value="WH-02">WH-02 Gudang Bahan Kemas</option>
               <option value="WH-03">WH-03 Gudang Produk Jadi</option>
-            </select>
+            </DnaSelect>
           </div>
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Ketua Tim Auditor (Lead PIC) *</label>
-            <input
+            <DnaInput
               type="text"
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
               value={newSessionForm.auditorLead}
@@ -558,7 +562,7 @@ export default function StockOpnamePage() {
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Anggota Tim Auditor Lapangan</label>
-            <input
+            <DnaInput
               type="text"
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
               value={newSessionForm.auditorTeam}
@@ -568,7 +572,7 @@ export default function StockOpnamePage() {
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Catatan / Agenda Opname</label>
-            <textarea
+            <DnaTextarea
               rows={2}
               placeholder="Contoh: Stok Opname Triwulan I..."
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -649,7 +653,7 @@ export default function StockOpnamePage() {
 
             {/* Table of items to count */}
             <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
+              <DnaTable className="w-full text-xs text-left">
                 <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="p-3">Barang & Lokasi Bin</th>
@@ -678,7 +682,7 @@ export default function StockOpnamePage() {
                         {selectedSession.status === "RECONCILED_CLOSED" ? (
                           <span className="font-mono font-bold text-slate-900">{item.actualQty} {item.unit}</span>
                         ) : (
-                          <input
+                          <DnaInput
                             type="number"
                             className="w-24 text-right font-mono font-bold text-xs bg-white border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-blue-500"
                             defaultValue={item.actualQty !== null ? item.actualQty : item.systemQty}
@@ -700,7 +704,7 @@ export default function StockOpnamePage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
           </div>
         )}
@@ -788,7 +792,7 @@ export default function StockOpnamePage() {
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 uppercase">Masukkan PIN Otorisasi Manager *</label>
-            <input
+            <DnaInput
               type="password"
               placeholder="••••"
               maxLength={6}

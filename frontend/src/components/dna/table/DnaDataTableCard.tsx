@@ -3,8 +3,8 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import { DnaTableToolbar, DnaTableToolbarProps } from "./DnaTableToolbar";
-import { DnaPagination, DnaPaginationProps } from "./DnaPagination";
+import { DnaTableToolbar, type DnaTableToolbarProps } from "./DnaTableToolbar";
+import { DnaPagination, type DnaPaginationProps } from "./DnaPagination";
 
 export interface DnaDataTableCardProps {
   children: React.ReactNode;

@@ -28,8 +28,10 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface LedgerAccountSummary {
   accountCode: string;
@@ -136,14 +138,14 @@ export default function GeneralLedgerPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -152,7 +154,7 @@ export default function GeneralLedgerPage() {
             </div>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari kode / nama COA..."
                 value={searchQuery}
@@ -164,7 +166,7 @@ export default function GeneralLedgerPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Kode CoA</th>
@@ -208,7 +210,7 @@ export default function GeneralLedgerPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -230,7 +232,7 @@ export default function GeneralLedgerPage() {
               <strong className="text-blue-700 font-bold">{selectedDrilldown ? formatRupiah(selectedDrilldown.saldo) : "0"}</strong>
             </div>
           </div>
-          <table className="w-full text-left text-xs border border-slate-200 rounded-lg">
+          <DnaTable className="w-full text-left text-xs border border-slate-200 rounded-lg">
             <thead className="bg-slate-50 text-slate-600">
               <tr className="border-b border-slate-200">
                 <th className="p-2">Tgl</th>
@@ -249,7 +251,7 @@ export default function GeneralLedgerPage() {
                 <td className="p-2 text-right text-slate-400">-</td>
               </tr>
             </tbody>
-          </table>
+          </DnaTable>
           <div className="flex justify-end pt-2">
             <DnaButton variant="secondary" size="md" onClick={() => setSelectedDrilldown(null)}>
               Tutup

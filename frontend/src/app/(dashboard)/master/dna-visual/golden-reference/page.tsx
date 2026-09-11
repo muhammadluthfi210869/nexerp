@@ -41,7 +41,7 @@ import {
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
-  DnaDateMode,
+  type DnaDateMode,
   DnaCell,
 } from "@/components/dna";
 

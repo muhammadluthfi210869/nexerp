@@ -37,6 +37,10 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
   useDnaToast
 } from "@/components/dna";
 
@@ -442,7 +446,7 @@ export default function GoodsReleasePage() {
         searchPlaceholder="Cari No Surat Jalan, SO, Klien, Brand, No Resi..."
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
+          <DnaTable className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">No. Surat Jalan</th>
@@ -531,7 +535,7 @@ export default function GoodsReleasePage() {
                 })
               )}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -615,7 +619,7 @@ export default function GoodsReleasePage() {
             <div>
               <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Produk yang Dikirim</h4>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
+                <DnaTable className="w-full text-left text-xs text-slate-600">
                   <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
                     <tr>
                       <th className="py-2.5 px-3">Kode</th>
@@ -636,7 +640,7 @@ export default function GoodsReleasePage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -670,10 +674,10 @@ export default function GoodsReleasePage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Pilih Sales Order Siap Kirim (Lunas) *</label>
-              <select
+<DnaSelect 
                 aria-label="Pilih Sales Order"
                 value={selectedSoNumber}
-                onChange={(e) => handleSelectSo(e.target.value)}
+                onChange={handleSelectSo}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
                 <option value="">-- Pilih Sales Order --</option>
@@ -682,11 +686,11 @@ export default function GoodsReleasePage() {
                     {so.soNumber} - {so.clientName} ({so.brandName})
                   </option>
                 ))}
-              </select>
+              </DnaSelect>
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Tanggal Pengiriman *</label>
-              <input
+              <DnaInput
                 type="date"
                 value={shipDate}
                 onChange={(e) => setShipDate(e.target.value)}
@@ -698,7 +702,7 @@ export default function GoodsReleasePage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Ekspedisi / Kurir Pengangkut *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: Dakota Cargo / Driver Internal"
                 value={courierName}
@@ -708,7 +712,7 @@ export default function GoodsReleasePage() {
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">No. Resi Ekspedisi / Plat Kendaraan *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: RESI-DKT-98124 / B-9812-UXD"
                 value={vehicleOrTrackingNo}
@@ -720,7 +724,7 @@ export default function GoodsReleasePage() {
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Alamat Tujuan Pengiriman Lengkap *</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="Alamat lengkap penerima / gudang customer"
               value={destinationAddress}
@@ -731,7 +735,7 @@ export default function GoodsReleasePage() {
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Catatan Tambahan untuk Driver / Ekspedisi</label>
-            <textarea
+            <DnaTextarea
               rows={2}
               placeholder="Contoh: Muatan fragile, simpan di tempat kering dan tidak terkena sinar matahari langsung."
               value={formNotes}

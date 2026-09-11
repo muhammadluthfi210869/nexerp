@@ -3,8 +3,8 @@
 import React from "react";
 import {
   ApprovalPageShell,
-  ApprovalColumn,
-  ApprovalDetailData,
+  type ApprovalColumn,
+  type ApprovalDetailData,
   DnaCell,
   DnaBadge,
   formatRupiah,

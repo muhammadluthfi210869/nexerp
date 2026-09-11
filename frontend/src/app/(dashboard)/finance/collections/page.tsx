@@ -12,6 +12,7 @@ import {
   DnaCell,
   formatRupiah,
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 import { PhoneCall, AlertCircle, Clock, CheckCircle2, Send, MessageSquare } from "lucide-react";
 
 interface CollectionRecord {
@@ -86,7 +87,7 @@ export default function CollectionsPage() {
         onSearchChange={setSearch}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
+          <DnaTable className="w-full text-left text-[12px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
               <tr>
                 <th className="px-4 py-3">No. Faktur AR</th>
@@ -148,7 +149,7 @@ export default function CollectionsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DnaPageContainer>

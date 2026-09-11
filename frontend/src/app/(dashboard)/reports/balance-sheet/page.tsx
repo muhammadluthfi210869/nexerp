@@ -14,7 +14,7 @@ import {
   Info
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaInput, DnaButton, DnaBadge, DataCard, StatCard } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaCard, DnaDnaStatCard } from "@/components/dna";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -230,7 +230,7 @@ export default function BalanceSheetPage() {
               </div>
             </div>
 
-            <DataCard>
+            <DnaCard>
               <div className="space-y-1">
                 {data && buildTree(data.assets.items).map(acc => (
                   <RenderAccountRow key={acc.id} acc={acc} />
@@ -247,7 +247,7 @@ export default function BalanceSheetPage() {
                 </div>
                 <span className="text-2xl font-black text-emerald-300 font-mono tabular-nums tracking-tighter">{formatCurrency(data?.assets.total || 0)}</span>
               </div>
-            </DataCard>
+            </DnaCard>
           </div>
 
           {/* LIABILITIES & EQUITY SIDE */}
@@ -261,7 +261,7 @@ export default function BalanceSheetPage() {
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Credit Balance</span>
               </div>
 
-              <DataCard>
+              <DnaCard>
                 <div className="space-y-1">
                   {data && buildTree(data.liabilities.items).map(acc => (
                     <RenderAccountRow key={acc.id} acc={acc} />
@@ -271,7 +271,7 @@ export default function BalanceSheetPage() {
                   <span className="text-xs font-black uppercase tracking-tight text-slate-500 italic">Subtotal Liabilities</span>
                   <span className="text-base font-black text-slate-950 font-mono tabular-nums">{formatCurrency(data?.liabilities.total || 0)}</span>
                 </div>
-              </DataCard>
+              </DnaCard>
             </div>
 
             {/* Equity Section */}
@@ -282,7 +282,7 @@ export default function BalanceSheetPage() {
                 </h3>
               </div>
 
-              <DataCard>
+              <DnaCard>
                 <div className="space-y-1">
                   {data && buildTree(data.equity.items).map(acc => (
                     <RenderAccountRow key={acc.id} acc={acc} />
@@ -311,7 +311,7 @@ export default function BalanceSheetPage() {
                   </div>
                   <span className="text-2xl font-black text-amber-400 font-mono tabular-nums tracking-tighter">{formatCurrency(data?.totalLiabilitiesAndEquity || 0)}</span>
                 </div>
-              </DataCard>
+              </DnaCard>
             </div>
           </div>
         </div>

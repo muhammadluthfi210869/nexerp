@@ -13,15 +13,15 @@ import {
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { DnaDataTableCard, DnaStatCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 
 export default function FinanceApprovalsPage() {
   const queryClient = useQueryClient();
@@ -85,8 +85,8 @@ export default function FinanceApprovalsPage() {
       subtitle="Pengawasan Manajerial & Pelepasan Fiskal"
     >
       <div className="space-y-6 animate-fade-slide-in">
-        <TableWrapper
-          filters={
+        <DnaDataTableCard
+          customToolbar={
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="status-dot bg-blue-500 animate-pulse" />
@@ -195,7 +195,7 @@ export default function FinanceApprovalsPage() {
               )}
             </TableBody>
           </Table>
-        </TableWrapper>
+        </DnaDataTableCard>
       </div>
     </DashboardShell>
   );

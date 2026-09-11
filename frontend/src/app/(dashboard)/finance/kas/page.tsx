@@ -5,14 +5,21 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, Plus } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaTabNav } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { cn } from "@/lib/utils";
 
 export default function KasPage() {
+  const [activeTab, setActiveTab] = React.useState("masuk");
   const [searchIn, setSearchIn] = React.useState("");
   const [searchOut, setSearchOut] = React.useState("");
 
@@ -74,20 +81,24 @@ export default function KasPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <StatCard icon={<ArrowUpCircle className="text-emerald-600" />} label="Total Kas Masuk" value={`Rp ${processed.totalIn.toLocaleString()}`} subValue={stats?.cashIn ? `${((Number(stats.cashIn) / 1000000).toFixed(1))}M Bulan Ini` : undefined} />
-            <StatCard icon={<ArrowDownCircle className="text-rose-600" />} label="Total Kas Keluar" value={`Rp ${processed.totalOut.toLocaleString()}`} subValue={stats?.cashOut ? `${((Number(stats.cashOut) / 1000000).toFixed(1))}M Bulan Ini` : undefined} />
-            <StatCard icon={<Wallet className="text-blue-600" />} label="Saldo Bersih" value={`Rp ${(processed.totalIn - processed.totalOut).toLocaleString()}`} />
+            <DnaStatCard icon={<ArrowUpCircle className="text-emerald-600" />} label="Total Kas Masuk" value={`Rp ${processed.totalIn.toLocaleString()}`} subValue={stats?.cashIn ? `${((Number(stats.cashIn) / 1000000).toFixed(1))}M Bulan Ini` : undefined} />
+            <DnaStatCard icon={<ArrowDownCircle className="text-rose-600" />} label="Total Kas Keluar" value={`Rp ${processed.totalOut.toLocaleString()}`} subValue={stats?.cashOut ? `${((Number(stats.cashOut) / 1000000).toFixed(1))}M Bulan Ini` : undefined} />
+            <DnaStatCard icon={<Wallet className="text-blue-600" />} label="Saldo Bersih" value={`Rp ${(processed.totalIn - processed.totalOut).toLocaleString()}`} />
           </div>
 
-          <Tabs defaultValue="masuk" className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="masuk">Kas Masuk</TabsTrigger>
-              <TabsTrigger value="keluar">Kas Keluar</TabsTrigger>
-            </TabsList>
+          <div className="w-full space-y-4">
+            <DnaTabNav
+              tabs={[
+                { id: "masuk", label: "Kas Masuk" },
+                { id: "keluar", label: "Kas Keluar" },
+              ]}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
 
-            <TabsContent value="masuk">
-              <TableWrapper
-                filters={
+            <div hidden={activeTab !== "masuk"}>
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center gap-3 w-full justify-between">
                     <div>
                       <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Kas Masuk</h3>
@@ -131,12 +142,12 @@ export default function KasPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
-            </TabsContent>
+              </DnaDataTableCard>
+            </div>
 
-            <TabsContent value="keluar">
-              <TableWrapper
-                filters={
+            <div hidden={activeTab !== "keluar"}>
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center gap-3 w-full justify-between">
                     <div>
                       <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Kas Keluar</h3>
@@ -180,9 +191,9 @@ export default function KasPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
-            </TabsContent>
-          </Tabs>
+              </DnaDataTableCard>
+            </div>
+          </div>
         </>
       )}
     </DashboardShell>

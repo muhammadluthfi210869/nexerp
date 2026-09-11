@@ -1,4 +1,4 @@
-﻿import { Metadata } from "next";
+﻿import { type Metadata } from "next";
 import LeadCaptureDashboard from "./LeadCaptureDashboard";
 
 export const metadata: Metadata = {

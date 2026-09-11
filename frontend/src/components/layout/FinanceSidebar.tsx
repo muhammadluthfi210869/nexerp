@@ -73,7 +73,7 @@ const financeSections = [
     items: [
       {
         name: "DP Pembelian",
-        href: "/finance/dp-pembelian",
+        href: "/pembelian/dp-pembelian",
         icon: Receipt,
         description: "Uang Muka Pembelian"
       },
@@ -85,7 +85,7 @@ const financeSections = [
       },
       {
         name: "Bayar Pembelian",
-        href: "/finance/bayar-pembelian",
+        href: "/pembelian/bayar-pembelian",
         icon: CreditCard,
         description: "Pembayaran Faktur Supplier"
       },
@@ -154,7 +154,7 @@ const financeSections = [
     items: [
       {
         name: "Laporan Keuangan",
-        href: "/finance/reports",
+        href: "/reports/finance-reports",
         icon: ShieldCheck,
         description: "Pusat Pelaporan Terpadu"
       },

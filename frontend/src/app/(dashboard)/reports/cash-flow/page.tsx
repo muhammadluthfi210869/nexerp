@@ -26,8 +26,10 @@ import {
   DnaButton,
   DnaBadge,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 export default function CashFlowReportPage() {
   const toast = useDnaToast();
@@ -99,14 +101,14 @@ export default function CashFlowReportPage() {
           <span className="font-semibold text-slate-600">Periode Laporan Arus Kas:</span>
           <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200">
             <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-            <input
+            <DnaInput
               type="date"
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
               className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
             />
             <span className="text-slate-400 font-semibold">s/d</span>
-            <input
+            <DnaInput
               type="date"
               value={dateRange.end}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -120,7 +122,7 @@ export default function CashFlowReportPage() {
         {/* 1. OPERATING ACTIVITIES */}
         <DnaDataTableCard title="1. Arus Kas dari Aktivitas Operasional (Operating Activities)">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <DnaTable className="w-full text-left border-collapse text-xs">
               <tbody className="divide-y divide-slate-100">
                 <tr className="hover:bg-slate-50/50">
                   <td className="px-3.5 py-2.5 text-slate-800 font-medium">Penerimaan Kas dari Pelanggan Maklon & Pembelian Produk</td>
@@ -143,14 +145,14 @@ export default function CashFlowReportPage() {
                   <td className="px-3.5 py-3 text-right text-emerald-900 font-black">{formatRupiah(cashOperating)}</td>
                 </tr>
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
 
         {/* 2. INVESTING ACTIVITIES */}
         <DnaDataTableCard title="2. Arus Kas dari Aktivitas Investasi (Investing Activities)">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <DnaTable className="w-full text-left border-collapse text-xs">
               <tbody className="divide-y divide-slate-100">
                 <tr className="hover:bg-slate-50/50">
                   <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembelian Mesin Homogenizer High Shear R&D Baru</td>
@@ -165,14 +167,14 @@ export default function CashFlowReportPage() {
                   <td className="px-3.5 py-3 text-right text-amber-900 font-black">({formatRupiah(Math.abs(cashInvesting))})</td>
                 </tr>
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
 
         {/* 3. FINANCING ACTIVITIES */}
         <DnaDataTableCard title="3. Arus Kas dari Aktivitas Pendanaan (Financing Activities)">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <DnaTable className="w-full text-left border-collapse text-xs">
               <tbody className="divide-y divide-slate-100">
                 <tr className="hover:bg-slate-50/50">
                   <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Pokok Pinjaman Investasi Bank BCA</td>
@@ -187,7 +189,7 @@ export default function CashFlowReportPage() {
                   <td className="px-3.5 py-3.5 text-right text-blue-950 font-black text-sm">{formatRupiah(cashEnding)}</td>
                 </tr>
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       </div>

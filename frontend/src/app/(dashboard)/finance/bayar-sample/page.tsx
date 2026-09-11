@@ -17,31 +17,21 @@ import {
   Landmark,
   UploadCloud,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaSelect, DnaTextarea } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+  DnaDialog as Dialog,
+  DnaDialogContent as DialogContent,
+  DnaDialogHeader as DialogHeader,
+  DnaDialogTitle as DialogTitle,
+  DnaDialogFooter as DialogFooter,
+  DnaDialogDescription as DialogDescription,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -134,31 +124,31 @@ export default function BayarSamplePage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard
+            <DnaStatCard
               label="Total Outstanding"
               value={`Rp ${totalOutstanding.toLocaleString("id-ID")}`}
               icon={<Wallet className="text-rose-500" />}
             />
-            <StatCard
+            <DnaStatCard
               label="Telah Dibayar"
               value={`Rp ${totalPaid.toLocaleString("id-ID")}`}
               icon={<CheckCircle2 className="text-emerald-600" />}
             />
-            <StatCard
+            <DnaStatCard
               label="Menunggu Bayar"
               value={awaitingPayment.toString()}
               subValue="Sample pending"
               icon={<Clock className="text-amber-500" />}
             />
-            <StatCard
+            <DnaStatCard
               label="Total Samples"
               value={`${filteredSamples.length} Order`}
               icon={<FileCheck2 className="text-blue-600" />}
             />
           </div>
 
-          <TableWrapper
-            filters={
+          <DnaDataTableCard
+            customToolbar={
               <div className="relative w-full max-w-md">
                 <DnaInput
                   icon={<Search className="h-4 w-4" />}
@@ -273,7 +263,7 @@ export default function BayarSamplePage() {
                 )}
               </TableBody>
             </Table>
-          </TableWrapper>
+          </DnaDataTableCard>
         </>
       )}
 
@@ -382,9 +372,9 @@ function PaymentForm({
       <div className="p-8 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
+            <div className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" /> Tanggal Pembayaran <span className="text-red-500">*</span>
-            </Label>
+            </div>
             <DnaInput
               type="date"
               value={paymentDate}
@@ -393,35 +383,29 @@ function PaymentForm({
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
+            <div className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
               <Landmark className="h-3.5 w-3.5" /> Metode Pembayaran <span className="text-red-500">*</span>
-            </Label>
-            <Select value={method} onValueChange={(v) => setMethod(v || "")}>
-              <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs focus:ring-4 focus:ring-emerald-500/5 transition-all">
-                <SelectValue placeholder="Pilih metode..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="TRANSFER_BANK" className="font-medium text-xs">
-                  Transfer Bank
-                </SelectItem>
-                <SelectItem value="CASH" className="font-medium text-xs">
-                  Tunai
-                </SelectItem>
-                <SelectItem value="E_WALLET" className="font-medium text-xs">
-                  E-Wallet
-                </SelectItem>
-                <SelectItem value="CHECK" className="font-medium text-xs">
-                  Cek
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            </div>
+            <DnaSelect
+              label="Metode Pembayaran"
+              required
+              value={method}
+              placeholder="Pilih metode..."
+              onChange={(value) => setMethod(value)}
+              options={[
+                { label: "Transfer Bank", value: "TRANSFER_BANK" },
+                { label: "Tunai", value: "CASH" },
+                { label: "E-Wallet", value: "E_WALLET" },
+                { label: "Cek", value: "CHECK" },
+              ]}
+            />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
+          <div className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
             <CreditCard className="h-3.5 w-3.5" /> Jumlah Bayar (IDR) <span className="text-red-500">*</span>
-          </Label>
+          </div>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">
               Rp
@@ -436,11 +420,11 @@ function PaymentForm({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
+          <div className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1 flex items-center gap-1.5">
             <UploadCloud className="h-3.5 w-3.5" /> Bukti Pembayaran <span className="text-red-500">*</span>
-          </Label>
+          </div>
           <div className="relative">
-            <input
+            <DnaInput
               type="file"
               accept="image/*,.pdf"
               onChange={(e) => onFileChange(e.target.files?.[0] || null)}
@@ -479,10 +463,10 @@ function PaymentForm({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">
+          <div className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">
             Catatan
-          </Label>
-          <textarea
+          </div>
+          <DnaTextarea
             rows={3}
             placeholder="Contoh: Transfer BCA No. Ref: TRX123..."
             value={notes}

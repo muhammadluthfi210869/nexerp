@@ -32,7 +32,7 @@ import {
 } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import DefectDetailModal from "@/components/qc/DefectDetailModal";
-import QcSignatureModal, { QcParameter } from "@/components/qc/QcSignatureModal";
+import QcSignatureModal, { type QcParameter } from "@/components/qc/QcSignatureModal";
 import QcNumpad from "@/components/qc/QcNumpad";
 
 type InspectionPhase = "INBOUND" | "MIXING" | "FILLING" | "PACKING" | "FINAL";

@@ -29,8 +29,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface CashInItem {
   id: string;
@@ -147,14 +150,14 @@ export default function CashInPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -163,7 +166,7 @@ export default function CashInPage() {
             </div>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari kode/deskripsi/pengirim..."
                 value={searchQuery}
@@ -179,7 +182,7 @@ export default function CashInPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">#</th>
@@ -240,7 +243,7 @@ export default function CashInPage() {
                 <td colSpan={2}></td>
               </tr>
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -255,7 +258,7 @@ export default function CashInPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Tanggal Penerimaan *</label>
-              <input
+              <DnaInput
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -264,22 +267,22 @@ export default function CashInPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Kas / Bank Akun Penerimaan *</label>
-              <select
+<DnaSelect 
                 value={formData.account}
-                onChange={(e) => setFormData({ ...formData, account: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, account: value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white"
               >
                 <option value="BCA Operasional (521-009182)">1120 - Bank BCA Operasional (521-009182)</option>
                 <option value="Mandiri Payroll (137-00123)">1130 - Bank Mandiri Payroll & Pajak (137-00123)</option>
                 <option value="Kas Tunai Operasional">1110 - Kas Tunai Petty Cash Kantor</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Dari (Nama Pengirim / Klien)</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="e.g. PT Glowing Beauty Indonesia"
                 value={formData.from}
@@ -289,22 +292,22 @@ export default function CashInPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Chart of Account (CoA) Pendapatan *</label>
-              <select
+<DnaSelect 
                 value={formData.coaRevenue}
-                onChange={(e) => setFormData({ ...formData, coaRevenue: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, coaRevenue: value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white"
               >
                 <option value="4110 - Pendapatan Produksi Maklon">4110 - Pendapatan Produksi Maklon OEM</option>
                 <option value="4120 - Pendapatan Sample R&D">4120 - Pendapatan Sample & Prototipe R&D</option>
                 <option value="4130 - Jasa Notifikasi BPOM">4130 - Jasa Notifikasi BPOM & HKI</option>
                 <option value="4190 - Pendapatan Bunga & Lainnya">4190 - Pendapatan Bunga & Lainnya</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div>
             <label className="block text-slate-700 font-semibold mb-1">Deskripsi / Keterangan Penerimaan *</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="e.g. Penerimaan DP 50% Produksi Batch Serum Niacinamide"
               value={formData.description}
@@ -316,7 +319,7 @@ export default function CashInPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Jumlah Nominal (Rp) *</label>
-              <input
+              <DnaInput
                 type="number"
                 placeholder="e.g. 450000000"
                 value={formData.amount}
@@ -326,7 +329,7 @@ export default function CashInPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Memo / Catatan Item</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Catatan tambahan..."
                 value={formData.memo}

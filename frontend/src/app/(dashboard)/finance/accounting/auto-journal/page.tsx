@@ -158,16 +158,16 @@ export default function AutoJournalConfigPrototype() {
                             <div className="md:col-span-8 flex gap-4">
                                <div className="relative flex-1">
                                   <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                  <select
+<DnaSelect 
                                     value={mappings[item.id] || ""}
-                                    onChange={(e) => handleUpdateMapping(item.id, e.target.value)}
+                                    onChange={(value) => handleUpdateMapping(item.id, value)}
                                     className="w-full h-11 pl-12 pr-10 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] appearance-none focus:ring-2 focus:ring-blue-500 transition-all italic outline-none cursor-pointer"
                                   >
                                      <option value="">— SELECT COA —</option>
                                      {STATIC_COA.map(coa => (
                                        <option key={coa.kode} value={coa.kode}>{coa.kode} — {coa.nama}</option>
                                      ))}
-                                  </select>
+                                  </DnaSelect>
                                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
                                 </div>
                                 <DnaButton variant="ghost" className="h-11 w-11 p-0 rounded-xl bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white transition-all shrink-0" icon={<Plus className="h-5 w-5" />} />

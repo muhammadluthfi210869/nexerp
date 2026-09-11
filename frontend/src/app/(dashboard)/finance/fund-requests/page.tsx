@@ -31,8 +31,12 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface FundRequestItem {
   id: string;
@@ -172,9 +176,9 @@ export default function FundRequestsPage() {
         badge={<DnaBadge variant="default">{filteredRequests.length} Pengajuan</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2">
-            <select
+<DnaSelect 
               value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
+              onChange={setDepartmentFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Departemen</option>
@@ -182,10 +186,10 @@ export default function FundRequestsPage() {
               <option value="Gudang & Logistik">Gudang & Logistik</option>
               <option value="R&D Formulasi">R&D Formulasi</option>
               <option value="Business Development">Business Development</option>
-            </select>
-            <select
+            </DnaSelect>
+<DnaSelect 
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={setStatusFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Status</option>
@@ -193,10 +197,10 @@ export default function FundRequestsPage() {
               <option value="APPROVED">Disetujui</option>
               <option value="DISBURSED">Sudah Dicairkan</option>
               <option value="REJECTED">Ditolak</option>
-            </select>
+            </DnaSelect>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari pemohon / keperluan..."
                 value={searchQuery}
@@ -208,7 +212,7 @@ export default function FundRequestsPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">No. Pengajuan</th>
@@ -267,7 +271,7 @@ export default function FundRequestsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -282,20 +286,20 @@ export default function FundRequestsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Jenjang Pengaju *</label>
-              <select
+  <DnaSelect 
                 value={formData.level}
-                onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
+                onChange={(value) => setFormData({ ...formData, level: value as any })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium"
               >
                 <option value="STAFF">Staff (Alur: Head ke Accounting ke Direktur)</option>
                 <option value="HEAD_DIVISI">Head Divisi (Alur: Langsung Accounting ke Direktur)</option>
-              </select>
+              </DnaSelect>
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Departemen *</label>
-              <select
+  <DnaSelect 
                 value={formData.department}
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, department: value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium"
               >
                 <option value="Produksi Manufaktur">Produksi Manufaktur</option>
@@ -303,14 +307,14 @@ export default function FundRequestsPage() {
                 <option value="R&D Formulasi">R&D Formulasi</option>
                 <option value="Quality Control (QC)">Quality Control (QC)</option>
                 <option value="Business Development">Business Development</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Nama Pemohon *</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="e.g. Ahmad Staff Gudang"
                 value={formData.applicant}
@@ -320,7 +324,7 @@ export default function FundRequestsPage() {
             </div>
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Tanggal Dibutuhkan *</label>
-              <input
+              <DnaInput
                 type="date"
                 value={formData.requiredDate}
                 onChange={(e) => setFormData({ ...formData, requiredDate: e.target.value })}
@@ -331,7 +335,7 @@ export default function FundRequestsPage() {
 
           <div>
             <label className="block text-slate-700 font-semibold mb-1">Tujuan / Keperluan Dana *</label>
-            <textarea
+            <DnaTextarea
               rows={3}
               placeholder="Jelaskan secara rinci kebutuhan dan tujuan penggunaan dana..."
               value={formData.purpose}
@@ -343,7 +347,7 @@ export default function FundRequestsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Nominal yang Diajukan (Rp) *</label>
-              <input
+              <DnaInput
                 type="number"
                 placeholder="e.g. 7500000"
                 value={formData.amount}

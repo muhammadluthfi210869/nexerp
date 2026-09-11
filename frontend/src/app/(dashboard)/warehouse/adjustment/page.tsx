@@ -36,6 +36,10 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
   useDnaToast
 } from "@/components/dna";
 
@@ -412,7 +416,7 @@ export default function StockAdjustmentPage() {
         searchPlaceholder="Cari No. ADJ, Gudang, Akun CoA, SKU..."
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
+          <DnaTable className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="py-3 px-4">No. Penyesuaian & Tanggal</th>
@@ -500,7 +504,7 @@ export default function StockAdjustmentPage() {
                 ))
               )}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -532,11 +536,11 @@ export default function StockAdjustmentPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 uppercase">Gudang Fasilitas *</label>
-              <select
+<DnaSelect 
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={formData.warehouseCode}
-                onChange={(e) => {
-                  const val = e.target.value;
+                onChange={(value) => {
+                  const val = value;
                   const label = val === "WH-01" ? "WH-01 Gudang Bahan Baku" : val === "WH-02" ? "WH-02 Gudang Bahan Kemas" : "WH-03 Gudang Produk Jadi";
                   setFormData(prev => ({ ...prev, warehouseCode: val, warehouseName: label }));
                 }}
@@ -544,30 +548,30 @@ export default function StockAdjustmentPage() {
                 <option value="WH-01">WH-01 Gudang Bahan Baku</option>
                 <option value="WH-02">WH-02 Gudang Bahan Kemas</option>
                 <option value="WH-03">WH-03 Gudang Produk Jadi</option>
-              </select>
+              </DnaSelect>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 uppercase">Tipe Penyesuaian *</label>
-              <select
+<DnaSelect 
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={formData.adjustmentType}
-                onChange={(e) => setFormData(prev => ({ ...prev, adjustmentType: e.target.value as any }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, adjustmentType: value as any }))}
               >
                 <option value="CORRECTION">Koreksi Selisih Hitung Fisik</option>
                 <option value="WRITE_OFF">Write-Off Kerusakan / Pecah</option>
                 <option value="DISPOSAL">Disposal / Kadaluarsa</option>
                 <option value="QC_SAMPLING">Sampling Uji Lab & QC</option>
-              </select>
+              </DnaSelect>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 uppercase">Akun CoA Pembebanan *</label>
-              <select
+<DnaSelect 
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={formData.adjustmentAccountCode}
-                onChange={(e) => {
-                  const val = e.target.value;
+                onChange={(value) => {
+                  const val = value;
                   const name = val === "510501" ? "510501 - Beban Selisih Stok Persediaan" : val === "510502" ? "510502 - Beban Kerusakan Bahan & Barang" : "510201 - Beban Pemakaian Bahan Uji Lab & QC";
                   setFormData(prev => ({ ...prev, adjustmentAccountCode: val, adjustmentAccountName: name }));
                 }}
@@ -575,7 +579,7 @@ export default function StockAdjustmentPage() {
                 <option value="510501">510501 - Beban Selisih Stok Persediaan</option>
                 <option value="510502">510502 - Beban Kerusakan Bahan & Barang</option>
                 <option value="510201">510201 - Beban Uji Lab & QC</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
@@ -589,12 +593,12 @@ export default function StockAdjustmentPage() {
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="sm:col-span-2 space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Pilih Barang / Bahan</label>
-                <select
+  <DnaSelect 
                   className="w-full text-xs bg-white border border-slate-200 rounded-lg p-2 font-medium text-slate-800"
                   value={currentItemCode}
-                  onChange={(e) => {
-                    setCurrentItemCode(e.target.value);
-                    const mat = MOCK_MATERIALS.find(m => m.code === e.target.value);
+                  onChange={(value) => {
+                    setCurrentItemCode(value);
+                    const mat = MOCK_MATERIALS.find(m => m.code === value);
                     if (mat) setCurrentActualQty(mat.currentStock);
                   }}
                 >
@@ -603,12 +607,12 @@ export default function StockAdjustmentPage() {
                       {m.code} - {m.name} (Stok: {m.currentStock} {m.unit})
                     </option>
                   ))}
-                </select>
+                </DnaSelect>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Stok Aktual Fisik</label>
-                <input
+                <DnaInput
                   type="number"
                   className="w-full text-xs bg-white border border-slate-200 rounded-lg p-2 font-mono font-bold text-slate-900"
                   value={currentActualQty}
@@ -626,7 +630,7 @@ export default function StockAdjustmentPage() {
 
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-600">Catatan Khusus Item Ini (Opsional)</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Contoh: Selisih sampling retain uji stabilitas atau pecah saat pemindahan..."
                 className="w-full text-xs bg-white border border-slate-200 rounded-lg p-2 text-slate-800"
@@ -639,7 +643,7 @@ export default function StockAdjustmentPage() {
           {/* Item Table List */}
           {formData.items.length > 0 && (
             <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
+              <DnaTable className="w-full text-xs text-left">
                 <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="p-3">Barang & Batch</th>
@@ -673,14 +677,14 @@ export default function StockAdjustmentPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
           )}
 
           {/* Notes */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 uppercase">Catatan Tambahan Pengajuan</label>
-            <textarea
+            <DnaTextarea
               rows={2}
               placeholder="Berikan alasan atau referensi Berita Acara / Laporan Kerusakan..."
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -769,7 +773,7 @@ export default function StockAdjustmentPage() {
 
             {/* Table Items */}
             <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
+              <DnaTable className="w-full text-xs text-left">
                 <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="p-3">Barang & Batch</th>
@@ -798,7 +802,7 @@ export default function StockAdjustmentPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
 
             {/* Simulated Accounting Journal Entry */}

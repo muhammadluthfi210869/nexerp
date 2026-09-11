@@ -15,6 +15,7 @@ import {
   DnaCurrencyInput,
   formatRupiah,
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 import { Plus, PieChart, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 interface DepartmentBudget {
@@ -92,7 +93,7 @@ export default function BudgetManagementPage() {
 
       <DnaDataTableCard title="Tabel Pengawasan Realisasi Anggaran per Departemen">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
+          <DnaTable className="w-full text-left text-[12px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
               <tr>
                 <th className="px-4 py-3">Departemen / Divisi</th>
@@ -136,7 +137,7 @@ export default function BudgetManagementPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DnaPageContainer>

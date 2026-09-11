@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { MOCK_INDIVIDUAL_KPIS } from "@/components/kpi-management/mock-data";
 import { KPIStatusBadge, KPITrendIndicator, KpiNavTabs } from "@/components/kpi-management/KpiManagementComponents";
-import { IndividualKPI } from "@/types/kpi-management";
+import { type IndividualKPI } from "@/types/kpi-management";
 import { cn } from "@/lib/utils";
 
 export default function IndividualKpiPage() {

@@ -28,8 +28,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface ApAgingItem {
   id: string;
@@ -144,23 +147,23 @@ export default function ApAgingReportPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
             </div>
-            <select
+<DnaSelect 
               value={bucketFilter}
-              onChange={(e) => setBucketFilter(e.target.value)}
+              onChange={setBucketFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Bucket Umur</option>
@@ -168,10 +171,10 @@ export default function ApAgingReportPage() {
               <option value="1-30">1 - 30 Hari</option>
               <option value="31-60">31 - 60 Hari</option>
               <option value=">60">&gt; 60 Hari</option>
-            </select>
+            </DnaSelect>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari Vendor / No. Faktur..."
                 value={searchQuery}
@@ -183,7 +186,7 @@ export default function ApAgingReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Vendor</th>
@@ -243,7 +246,7 @@ export default function ApAgingReportPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 

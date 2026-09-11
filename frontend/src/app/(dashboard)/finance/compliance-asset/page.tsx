@@ -15,6 +15,7 @@ import {
   DnaCurrencyInput,
   formatRupiah,
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 import { Plus, ShieldAlert, Award, FileText, AlertCircle, Clock } from "lucide-react";
 
 interface ComplianceAsset {
@@ -137,7 +138,7 @@ export default function ComplianceAssetPage() {
         onSearchChange={setSearch}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
+          <DnaTable className="w-full text-left text-[12px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
               <tr>
                 <th className="px-4 py-3">No. Registrasi / Izin</th>
@@ -192,7 +193,7 @@ export default function ComplianceAssetPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DnaPageContainer>

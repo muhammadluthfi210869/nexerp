@@ -17,6 +17,7 @@ import {
   CoaSelect,
   formatRupiah,
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 import { Plus, Building2, CreditCard, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface BankAccount {
@@ -178,7 +179,7 @@ export default function BankAccountsPage() {
         onSearchChange={setSearchQuery}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12px]">
+          <DnaTable className="w-full text-left text-[12px]">
             <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
               <tr>
                 <th className="px-4 py-3">Nama Bank / Kas</th>
@@ -240,7 +241,7 @@ export default function BankAccountsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -269,17 +270,17 @@ export default function BankAccountsPage() {
             />
             <div>
               <label className="text-[12px] font-medium text-slate-700">Tipe Rekening *</label>
-              <select
+<DnaSelect 
                 value={formData.accountType}
-                onChange={(e) =>
-                  setFormData({ ...formData, accountType: e.target.value as "BANK" | "CASH" | "PETTY_CASH" })
+                onChange={(value) =>
+                  setFormData({ ...formData, accountType: value as "BANK" | "CASH" | "PETTY_CASH" })
                 }
                 className="w-full mt-1.5 px-3 py-2 text-[13px] rounded-lg border border-slate-200 bg-white"
               >
                 <option value="BANK">Rekening Bank (Giro/Tabungan)</option>
                 <option value="CASH">Kas Tunai (Brankas Pabrik)</option>
                 <option value="PETTY_CASH">Kas Kecil (Petty Cash)</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 

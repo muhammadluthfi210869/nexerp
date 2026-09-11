@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { MOCK_DEPARTMENT_KPIS } from "@/components/kpi-management/mock-data";
 import { KPIStatusBadge, KPITrendIndicator, KpiNavTabs } from "@/components/kpi-management/KpiManagementComponents";
-import { DepartmentKPI } from "@/types/kpi-management";
+import { type DepartmentKPI } from "@/types/kpi-management";
 
 export default function DepartmentKpiPage() {
   const [departments, setDepartments] = useState<DepartmentKPI[]>(MOCK_DEPARTMENT_KPIS);

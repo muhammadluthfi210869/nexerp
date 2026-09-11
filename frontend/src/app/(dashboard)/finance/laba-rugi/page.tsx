@@ -32,8 +32,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaCheckbox
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface StatementRow {
   code: string;
@@ -172,14 +175,14 @@ export default function LabaRugiReportPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -187,8 +190,7 @@ export default function LabaRugiReportPage() {
               />
             </div>
             <label className="flex items-center gap-1.5 text-xs text-slate-600 font-medium cursor-pointer">
-              <input
-                type="checkbox"
+              <DnaCheckbox
                 checked={showComparison}
                 onChange={(e) => setShowComparison(e.target.checked)}
                 className="rounded text-emerald-600 focus:ring-emerald-500"
@@ -199,7 +201,7 @@ export default function LabaRugiReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3 w-28">Kode Akun</th>
@@ -260,7 +262,7 @@ export default function LabaRugiReportPage() {
                 );
               })}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -284,7 +286,7 @@ export default function LabaRugiReportPage() {
           </div>
           <div className="border border-slate-200 rounded-lg p-3">
             <p className="text-slate-700 font-semibold mb-2">Daftar Jurnal Transaksi Pembentuk Saldo:</p>
-            <table className="w-full text-left text-[11px]">
+            <DnaTable className="w-full text-left text-[11px]">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-semibold">
                   <th className="py-1">Tanggal</th>
@@ -303,7 +305,7 @@ export default function LabaRugiReportPage() {
                   <td className="py-2 text-right text-slate-400">-</td>
                 </tr>
               </tbody>
-            </table>
+            </DnaTable>
           </div>
           <div className="flex justify-end pt-2 border-t border-slate-100">
             <DnaButton variant="secondary" size="md" onClick={() => setSelectedRow(null)}>

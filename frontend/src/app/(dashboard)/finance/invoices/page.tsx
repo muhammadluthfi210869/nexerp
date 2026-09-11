@@ -18,15 +18,15 @@ import {
   AlertTriangle,
   Zap
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
+import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaDnaStatCard } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -95,19 +95,19 @@ export default function InvoicingPage() {
       <div className="space-y-6">
         {/* KPI Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
+          <DnaStatCard
             label="Total Receivables"
             value="Rp 170.0M"
             subValue="Rp 45.0M Overdue for 14 Days"
             icon={<CreditCard className="text-blue-600" />}
           />
-          <StatCard
+          <DnaStatCard
             label="Collected (MTD)"
             value="Rp 89.2M"
             subValue="65% Target Completion"
             icon={<UserCheck className="text-emerald-500" />}
           />
-          <StatCard
+          <DnaStatCard
             label="Pending Approval"
             value="4 Invoices"
             subValue="Execute Review Gate"
@@ -116,8 +116,8 @@ export default function InvoicingPage() {
         </div>
 
         {/* Invoices Table */}
-        <TableWrapper
-          filters={
+        <DnaDataTableCard
+          customToolbar={
             <div className="relative w-full max-w-md">
               <DnaInput
                 icon={<Search className="h-4 w-4" />}
@@ -203,7 +203,7 @@ export default function InvoicingPage() {
               )}
             </TableBody>
           </Table>
-        </TableWrapper>
+        </DnaDataTableCard>
       </div>
     </DashboardShell>
   );

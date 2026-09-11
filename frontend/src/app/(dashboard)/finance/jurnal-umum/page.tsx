@@ -32,8 +32,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface JournalEntryLine {
   id: string;
@@ -242,23 +245,23 @@ export default function JurnalUmumPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
             </div>
-            <select
+<DnaSelect 
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
+              onChange={setTypeFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Tipe Jurnal</option>
@@ -266,10 +269,10 @@ export default function JurnalUmumPage() {
               <option value="AUTO_AR">Subledger AR (Penjualan)</option>
               <option value="AUTO_AP">Subledger AP (Pembelian)</option>
               <option value="ADJUSTMENT">Closing Adjustment</option>
-            </select>
+            </DnaSelect>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari kode/deskripsi..."
                 value={searchQuery}
@@ -281,7 +284,7 @@ export default function JurnalUmumPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">#</th>
@@ -337,7 +340,7 @@ export default function JurnalUmumPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -352,7 +355,7 @@ export default function JurnalUmumPage() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">Tanggal *</label>
-              <input
+              <DnaInput
                 type="date"
                 value={headerForm.date}
                 onChange={(e) => setHeaderForm({ ...headerForm, date: e.target.value })}
@@ -361,7 +364,7 @@ export default function JurnalUmumPage() {
             </div>
             <div className="col-span-2">
               <label className="block text-slate-700 font-semibold mb-1">Referensi Dokumen (Opsional)</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="e.g. ADJ-SEP-26 / MEMO-DIR-01"
                 value={headerForm.reference}
@@ -373,7 +376,7 @@ export default function JurnalUmumPage() {
 
           <div>
             <label className="block text-slate-700 font-semibold mb-1">Deskripsi / Keterangan Jurnal *</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="e.g. Penyesuaian Beban Sewa Pabrik Bulan Berjalan"
               value={headerForm.description}
@@ -392,7 +395,7 @@ export default function JurnalUmumPage() {
               </DnaButton>
             </div>
 
-            <table className="w-full text-left text-xs">
+            <DnaTable className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
                   <th className="py-1.5 w-1/3">Akun CoA *</th>
@@ -406,11 +409,11 @@ export default function JurnalUmumPage() {
                 {linesForm.map((line, idx) => (
                   <tr key={line.id}>
                     <td className="py-1.5 pr-2">
-                      <select
+                      <DnaSelect
                         value={line.accountCode}
-                        onChange={(e) => {
+                        onChange={(value) => {
                           const updated = [...linesForm];
-                          updated[idx].accountCode = e.target.value;
+                          updated[idx].accountCode = value;
                           setLinesForm(updated);
                         }}
                         className="w-full p-1.5 border border-slate-300 rounded text-xs bg-white"
@@ -422,10 +425,10 @@ export default function JurnalUmumPage() {
                         <option value="4110">4110 - Pendapatan Produksi</option>
                         <option value="5110">5110 - Beban Bahan Baku</option>
                         <option value="6130">6130 - Beban Sewa & Utilitas</option>
-                      </select>
+                      </DnaSelect>
                     </td>
                     <td className="py-1.5 px-2">
-                      <input
+                      <DnaInput
                         type="number"
                         placeholder="0"
                         value={line.debit || ""}
@@ -438,7 +441,7 @@ export default function JurnalUmumPage() {
                       />
                     </td>
                     <td className="py-1.5 px-2">
-                      <input
+                      <DnaInput
                         type="number"
                         placeholder="0"
                         value={line.credit || ""}
@@ -451,7 +454,7 @@ export default function JurnalUmumPage() {
                       />
                     </td>
                     <td className="py-1.5 px-2">
-                      <input
+                      <DnaInput
                         type="text"
                         placeholder="Memo..."
                         value={line.lineDescription}
@@ -471,7 +474,7 @@ export default function JurnalUmumPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
 
             {/* BALANCE INDICATOR */}
             <div className="flex justify-between items-center pt-2.5 border-t border-slate-200">
@@ -527,7 +530,7 @@ export default function JurnalUmumPage() {
           </div>
 
           <div className="border border-slate-200 rounded-lg p-2.5">
-            <table className="w-full text-left text-xs">
+            <DnaTable className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
                   <th className="py-1">Kode Akun</th>
@@ -552,7 +555,7 @@ export default function JurnalUmumPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
 
           <div className="flex justify-end pt-2">

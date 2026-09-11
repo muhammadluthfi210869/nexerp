@@ -99,6 +99,6 @@ export const DNA_LINTER_SUMMARY = {
  * eslint-disable
  */
 
-/* eslint-enable */
+ 
 
 export default DNA_LINTER_RULES

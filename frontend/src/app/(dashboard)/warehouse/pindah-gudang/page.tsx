@@ -37,6 +37,10 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
   useDnaToast
 } from "@/components/dna";
 
@@ -399,7 +403,7 @@ export default function WarehouseTransfersPage() {
         searchPlaceholder="Cari No Transfer, Dokumen SPK, Gudang Asal/Tujuan..."
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
+          <DnaTable className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">No. Transfer</th>
@@ -477,7 +481,7 @@ export default function WarehouseTransfersPage() {
                 ))
               )}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -558,7 +562,7 @@ export default function WarehouseTransfersPage() {
             <div>
               <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Barang yang Dipindahkan</h4>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
+                <DnaTable className="w-full text-left text-xs text-slate-600">
                   <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
                     <tr>
                       <th className="py-2.5 px-3">Kode</th>
@@ -579,7 +583,7 @@ export default function WarehouseTransfersPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -613,35 +617,35 @@ export default function WarehouseTransfersPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Gudang Asal (Pengirim) *</label>
-              <select
+<DnaSelect 
                 aria-label="Gudang Asal"
                 value={fromWarehouse}
-                onChange={(e) => setFromWarehouse(e.target.value)}
+                onChange={setFromWarehouse}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
                 {MASTER_WAREHOUSES.map((wh) => (
                   <option key={wh} value={wh}>{wh}</option>
                 ))}
-              </select>
+              </DnaSelect>
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Gudang Tujuan (Penerima) *</label>
-              <select
+<DnaSelect 
                 aria-label="Gudang Tujuan"
                 value={toWarehouse}
-                onChange={(e) => setToWarehouse(e.target.value)}
+                onChange={setToWarehouse}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
                 {MASTER_WAREHOUSES.map((wh) => (
                   <option key={wh} value={wh}>{wh}</option>
                 ))}
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">No. Dokumen Referensi / SPK / Permintaan *</label>
-            <input
+            <DnaInput
               type="text"
               placeholder="Contoh: SPK-2026-09-012 / REQ-202609-0010"
               value={referenceDoc}
@@ -659,10 +663,10 @@ export default function WarehouseTransfersPage() {
             <div className="grid grid-cols-12 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 items-end">
               <div className="col-span-7">
                 <label className="block text-[11px] text-slate-600 font-medium mb-1">Pilih Material / Barang</label>
-                <select
+  <DnaSelect 
                   aria-label="Pilih Material Transfer"
                   value={selectedMatCode}
-                  onChange={(e) => setSelectedMatCode(e.target.value)}
+                  onChange={setSelectedMatCode}
                   className="w-full text-xs border border-slate-300 rounded-lg p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="">-- Pilih Material Gudang Asal --</option>
@@ -671,11 +675,11 @@ export default function WarehouseTransfersPage() {
                       [{m.code}] {m.name} (Tersedia: {m.stock} {m.unit})
                     </option>
                   ))}
-                </select>
+                </DnaSelect>
               </div>
               <div className="col-span-3">
                 <label className="block text-[11px] text-slate-600 font-medium mb-1">Qty Transfer</label>
-                <input
+                <DnaInput
                   type="number"
                   min="0.1"
                   step="any"
@@ -701,7 +705,7 @@ export default function WarehouseTransfersPage() {
           {/* Cart Table */}
           {cartItems.length > 0 && (
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <table className="w-full text-left text-xs text-slate-600">
+              <DnaTable className="w-full text-left text-xs text-slate-600">
                 <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
                   <tr>
                     <th className="py-2 px-3">Kode</th>
@@ -732,13 +736,13 @@ export default function WarehouseTransfersPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
           )}
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Catatan Tambahan</label>
-            <textarea
+            <DnaTextarea
               rows={2}
               placeholder="Contoh: Pemindahan material ruahan untuk line mixing shift malam."
               value={formNotes}

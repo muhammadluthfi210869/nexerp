@@ -12,9 +12,11 @@ import {
   CheckCircle2,
   Box
 } from "lucide-react";
-import { StatCard, TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
+import { DnaStatCard, DnaDataTableCard, DnaBadge, DnaButton, DnaInput, DnaCell } from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+
+// SPEC: SCR-PROD-WH-001 — Warehouse Command Center for Production Material Requisition
 
 export default function WarehouseControlPage() {
   const queryClient = useQueryClient();
@@ -59,31 +61,34 @@ export default function WarehouseControlPage() {
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard
+        <DnaStatCard
           label="Pending Requests"
           value={requisitions?.filter((r:any) => r.status === 'PENDING').length || 0}
-          icon={<ClipboardList className="w-6 h-6 text-amber-600" />}
+          icon={<ClipboardList />}
+          variant="amber"
         />
-        <StatCard
+        <DnaStatCard
           label="Material Shortages"
           value={requisitions?.filter((r:any) => r.status === 'SHORTAGE').length || 0}
-          icon={<AlertTriangle className="w-6 h-6 text-rose-600" />}
+          icon={<AlertTriangle />}
+          variant="rose"
         />
-        <StatCard
+        <DnaStatCard
           label="Total Issued (MTD)"
           value={requisitions?.filter((r:any) => r.status === 'ISSUED').length || 0}
-          icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />}
+          icon={<CheckCircle2 />}
+          variant="emerald"
         />
       </div>
 
       {/* REQUISITION LIST */}
-      <TableWrapper
-        filters={
-          <div className="flex justify-between items-center">
+      <DnaDataTableCard
+        customToolbar={
+          <div className="px-5 py-3 border-b border-slate-100 flex justify-between items-center bg-white">
             <div className="flex items-center gap-4">
-              <DnaInput 
-                icon={<Search className="w-4 h-4" />} 
-                placeholder="Search batch or material..." 
+              <DnaInput
+                icon={<Search className="w-4 h-4" />}
+                placeholder="Search batch or material..."
                 className="w-80"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -94,7 +99,7 @@ export default function WarehouseControlPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Live Signal Active</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Live Signal Active</span>
             </div>
           </div>
         }
@@ -186,8 +191,7 @@ export default function WarehouseControlPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      </TableWrapper>
+      </DnaDataTableCard>
     </DashboardShell>
   );
 }

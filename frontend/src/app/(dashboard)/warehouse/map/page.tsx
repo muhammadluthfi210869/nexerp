@@ -9,8 +9,7 @@ import {
   Filter,
   Activity
 } from "lucide-react";
-import { DataCard } from "@/components/dna";
-import { Button } from "@/components/ui/button";
+import { DnaCard, DnaButton } from "@/components/dna";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
@@ -69,12 +68,12 @@ export default function WarehouseMapPage() {
       subtitle="Digital Twin & Spatial Inventory Audit"
       actions={
         <div className="flex items-center gap-3">
-           <Button variant="outline" className="rounded-2xl border-slate-200">
+           <DnaButton variant="outline" className="rounded-2xl border-slate-200">
               <Layers className="w-4 h-4 mr-2" /> LAYERS
-           </Button>
-           <Button className="rounded-2xl bg-white text-slate-900 font-black uppercase text-[10px] h-11 tracking-tight px-6 shadow-lg shadow-slate-200 border border-slate-200">
+           </DnaButton>
+           <DnaButton variant="primary" className="rounded-2xl bg-white text-slate-900 font-black uppercase text-[10px] h-11 tracking-tight px-6 shadow-lg shadow-slate-200 border border-slate-200">
               EDIT LAYOUT
-           </Button>
+           </DnaButton>
         </div>
       }
     >
@@ -82,7 +81,7 @@ export default function WarehouseMapPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* SIDEBAR ZONE SELECTOR */}
         <div className="space-y-6">
-          <DataCard className="shadow-xl shadow-slate-200/50" title="Zone Overview">
+          <DnaCard className="shadow-xl shadow-slate-200/50" title="Zone Overview">
             <div className="space-y-2">
               {zones.map(z => (
                 <div key={z.name} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between group cursor-pointer hover:bg-white hover:shadow-md transition-all">
@@ -97,9 +96,9 @@ export default function WarehouseMapPage() {
                 </div>
               ))}
             </div>
-          </DataCard>
+          </DnaCard>
 
-          <DataCard className="shadow-xl shadow-slate-200/50">
+          <DnaCard className="shadow-xl shadow-slate-200/50">
             <div className="flex items-center justify-between">
               <h3 className="text-[10px] font-black uppercase tracking-tight text-gray-500">Environment</h3>
               <Activity className="w-4 h-4 text-emerald-400" />
@@ -114,12 +113,12 @@ export default function WarehouseMapPage() {
                 <span className="text-sm font-black text-slate-900">45%</span>
               </div>
             </div>
-          </DataCard>
+          </DnaCard>
         </div>
 
         {/* INTERACTIVE GRID */}
         <div className="lg:col-span-3">
-           <DataCard className="shadow-2xl shadow-slate-200/50">
+           <DnaCard className="shadow-2xl shadow-slate-200/50">
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                      <div className="flex items-center gap-2">
@@ -135,9 +134,9 @@ export default function WarehouseMapPage() {
                        <span className="text-[10px] font-black uppercase tracking-tight text-slate-400">High (81%+)</span>
                      </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="rounded-xl text-slate-400 uppercase font-black text-[9px]">
+                  <DnaButton variant="ghost" size="sm" className="rounded-xl text-slate-400 uppercase font-black text-[9px]">
                      <Maximize2 className="w-4 h-4 mr-1" /> Fullscreen
-                  </Button>
+                  </DnaButton>
                </div>
 
                <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4">
@@ -178,7 +177,7 @@ export default function WarehouseMapPage() {
                      </div>
                   </div>
                </div>
-            </DataCard>
+            </DnaCard>
         </div>
       </div>
     </DashboardShell>

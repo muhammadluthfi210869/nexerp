@@ -30,8 +30,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface ClosingTaskItem {
   id: string;
@@ -93,7 +96,7 @@ export default function ClosingPage() {
         }
         actions={
           <div className="flex items-center gap-2">
-            <input
+            <DnaInput
               type="month"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
@@ -152,9 +155,9 @@ export default function ClosingPage() {
         badge={<DnaBadge variant="purple">{filteredTasks.length} Prosedur Audit</DnaBadge>}
         customToolbar={
           <div className="flex items-center gap-2">
-            <select
+<DnaSelect 
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={setCategoryFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Kategori Checklist</option>
@@ -164,12 +167,12 @@ export default function ClosingPage() {
               <option value="Stock Valuation">Stock Valuation</option>
               <option value="Deprec">Depreciation</option>
               <option value="Statements">Financial Statements</option>
-            </select>
+            </DnaSelect>
           </div>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Task Name</th>
@@ -213,7 +216,7 @@ export default function ClosingPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 

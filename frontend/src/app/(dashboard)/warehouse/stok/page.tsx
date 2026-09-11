@@ -25,6 +25,8 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaSelect,
+  DnaTable,
   formatRupiah,
   useDnaToast
 } from "@/components/dna";
@@ -138,9 +140,9 @@ export default function WarehouseStockReportPage() {
         badge={<DnaBadge variant="default">{filteredStocks.length} Item</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2.5">
-            <select
+<DnaSelect 
               value={warehouseFilter}
-              onChange={(e) => setWarehouseFilter(e.target.value)}
+              onChange={setWarehouseFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Gudang: * (Semua Gudang)</option>
@@ -148,20 +150,20 @@ export default function WarehouseStockReportPage() {
               <option value="Gudang Suhu Dingin">Gudang Suhu Dingin (Chiller)</option>
               <option value="Gudang Kemasan">Gudang Kemasan</option>
               <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-            </select>
-            <select
+            </DnaSelect>
+<DnaSelect 
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={setCategoryFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Tampilkan: Semua Kategori</option>
               <option value="Bahan Baku">Bahan Baku (Raw)</option>
               <option value="Bahan Kemas">Bahan Kemas (Packaging)</option>
               <option value="Barang Jadi">Barang Jadi (Finished Goods)</option>
-            </select>
+            </DnaSelect>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari SKU / nama / rak..."
                 value={searchQuery}
@@ -173,7 +175,7 @@ export default function WarehouseStockReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Kode Barang</th>
@@ -217,7 +219,7 @@ export default function WarehouseStockReportPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DnaPageContainer>

@@ -32,8 +32,11 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface BankStatementLine {
   id: string;
@@ -146,27 +149,27 @@ export default function BankReconciliationPage() {
         <div className="flex items-center gap-3">
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">Akun Kas / Bank (COA) *</label>
-            <select
+<DnaSelect 
               value={selectedAccount}
-              onChange={(e) => setSelectedAccount(e.target.value)}
+              onChange={setSelectedAccount}
               className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium"
             >
               <option value="1120">1120 - Bank BCA Operasional (521-009182)</option>
               <option value="1130">1130 - Bank Mandiri Payroll & Pajak (137-00123)</option>
               <option value="1110">1110 - Kas Tunai Petty Cash Kantor</option>
-            </select>
+            </DnaSelect>
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">Filter Kalender Lengkap *</label>
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -196,7 +199,7 @@ export default function BankReconciliationPage() {
           badge={<DnaBadge variant="purple">{bankLines.length} Baris Bank</DnaBadge>}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <DnaTable className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="px-3 py-2.5">Tanggal</th>
@@ -221,7 +224,7 @@ export default function BankReconciliationPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
 
@@ -231,7 +234,7 @@ export default function BankReconciliationPage() {
           badge={<DnaBadge variant="info">{systemLines.length} Transaksi Sistem</DnaBadge>}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <DnaTable className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="px-3 py-2.5">Tanggal</th>
@@ -258,7 +261,7 @@ export default function BankReconciliationPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       </div>

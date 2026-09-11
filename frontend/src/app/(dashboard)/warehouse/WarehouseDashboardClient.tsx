@@ -17,7 +17,8 @@ import {
   Zap,
   Box,
   Activity
-} from "lucide-react";
+ } from "lucide-react";
+import { DnaTable } from "@/components/dna";
 
 interface WarehouseDashboardClientProps {
    initialStats?: {
@@ -352,7 +353,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                         <span style={{ fontSize: "8px", fontWeight: 950, color: "#475569" }}>BPOM COMPLIANT</span>
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                      </div>
-                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                     <DnaTable style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                         <thead>
                            <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                               <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA / MASUK</th>
@@ -387,7 +388,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                               </tr>
                            ))}
                         </tbody>
-                     </table>
+                     </DnaTable>
                   </div>
                </div>
 
@@ -401,7 +402,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                         <span style={{ fontSize: "8px", fontWeight: 950, color: "#9A3412" }}>QUALITY AUDIT</span>
                         <CheckCircle className="w-3.5 h-3.5 text-orange-500" />
                      </div>
-                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                     <DnaTable style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                         <thead>
                            <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                               <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA / MASUK</th>
@@ -436,7 +437,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                               </tr>
                            ))}
                         </tbody>
-                     </table>
+                     </DnaTable>
                   </div>
                </div>
 
@@ -454,7 +455,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                         <span style={{ fontSize: "8px", fontWeight: 950, color: "#3730A3" }}>LOGISTICS AUDIT</span>
                         <Truck className="w-3.5 h-3.5 text-blue-500" />
                      </div>
-                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                     <DnaTable style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                         <thead>
                            <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                               <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>CLIENT / NO. SO</th>
@@ -494,7 +495,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                               </tr>
                            ))}
                         </tbody>
-                     </table>
+                     </DnaTable>
                   </div>
                </div>
 
@@ -508,7 +509,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                         <span style={{ fontSize: "8px", fontWeight: 950, color: "#9F1239" }}>ACTION REQUIRED</span>
                         <Activity className="w-3 h-3 text-rose-600" />
                      </div>
-                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                     <DnaTable style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                         <thead>
                            <tr style={{ background: "#FECDD3", borderBottom: "1px solid #FECDD3" }}>
                               <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950, color: "#9F1239" }}>ITEM & SUMBER</th>
@@ -547,7 +548,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                               </tr>
                            ))}
                         </tbody>
-                     </table>
+                     </DnaTable>
                   </div>
                </div>
 
@@ -564,7 +565,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                   <Zap className="w-3.5 h-3.5 text-emerald-500" /> IV. TOP 10 LIST BAHAN BAKU (PRODUKTIVITAS)
                </h3>
                <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                  <DnaTable style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                      <thead>
                         <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                            <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA BAHAN BAKU</th>
@@ -581,7 +582,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                            </tr>
                         ))}
                      </tbody>
-                  </table>
+                  </DnaTable>
                </div>
             </div>
 
@@ -591,7 +592,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                   <Box className="w-3.5 h-3.5 text-indigo-500" /> V. TOP 10 LIST KEMASAN (PRODUKTIVITAS)
                </h3>
                <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                  <DnaTable style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                      <thead>
                         <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                            <th style={{ padding: "0.75rem", fontSize: "8px", fontWeight: 950 }}>NAMA KEMASAN</th>
@@ -608,7 +609,7 @@ export default function WarehouseDashboardClient({ initialStats, initialAudit }:
                            </tr>
                         ))}
                      </tbody>
-                  </table>
+                  </DnaTable>
                </div>
             </div>
 

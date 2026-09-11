@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Clock, ShieldCheck, AlertCircle, Info, User, CheckCircle2 } from "lucide-react";
 import { DnaBadge } from "./DnaBadge";
-import { getSharedAuditLogs, SharedAuditLog } from "@/lib/shared-erp-flow";
+import { getSharedAuditLogs, type SharedAuditLog } from "@/lib/shared-erp-flow";
 
 export interface DnaAuditTimelineProps {
   entityId?: string;

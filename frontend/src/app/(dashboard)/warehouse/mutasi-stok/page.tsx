@@ -24,6 +24,8 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaSelect,
+  DnaTable,
   formatRupiah,
   useDnaToast
 } from "@/components/dna";
@@ -134,26 +136,26 @@ export default function MutasiStokReportPage() {
         badge={<DnaBadge variant="default">{filteredMutations.length} Transaksi Mutasi</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2.5">
-            <select
+<DnaSelect 
               value={warehouseFilter}
-              onChange={(e) => setWarehouseFilter(e.target.value)}
+              onChange={setWarehouseFilter}
               className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Gudang: * (Semua Gudang)</option>
               <option value="Bahan Baku">Gudang Bahan Baku</option>
               <option value="Kemasan">Gudang Kemasan</option>
               <option value="Barang Jadi">Gudang Barang Jadi</option>
-            </select>
+            </DnaSelect>
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
               <span className="text-slate-400 font-semibold">s/d</span>
-              <input
+              <DnaInput
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -162,7 +164,7 @@ export default function MutasiStokReportPage() {
             </div>
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
+              <DnaInput
                 type="text"
                 placeholder="Cari Dokumen / SKU..."
                 value={searchQuery}
@@ -174,7 +176,7 @@ export default function MutasiStokReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="px-3.5 py-3">Tanggal & Waktu</th>
@@ -213,7 +215,7 @@ export default function MutasiStokReportPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DnaPageContainer>
