@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Wallet,
   DollarSign,
@@ -15,7 +16,8 @@ import {
   Calendar,
   Send,
   Download,
-  CreditCard
+  CreditCard,
+  RefreshCw
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -30,6 +32,8 @@ import {
   formatRupiah,
   useDnaToast
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 interface PayrollItem {
   id: string;
@@ -49,7 +53,8 @@ interface PayrollItem {
   status: "DRAFT" | "CALCULATED" | "APPROVED" | "PAID";
 }
 
-const INITIAL_PAYROLL: PayrollItem[] = [
+// Fallback used while API is empty (encrypted payroll backend returns no rows yet)
+const FALLBACK_PAYROLL: PayrollItem[] = [
   { id: "PAY-01", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", department: "Produksi Mixing", role: "Supervisor Produksi", basicSalary: 6500000, allowance: 1200000, overtimePay: 850000, bpjsDeduction: 260000, taxPph21: 150000, lateDeduction: 0, netSalary: 8140000, bankName: "BCA", bankAccount: "521-0099881", status: "APPROVED" },
   { id: "PAY-02", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", department: "R&D Formulasi", role: "Senior Formulator", basicSalary: 8000000, allowance: 1500000, overtimePay: 0, bpjsDeduction: 320000, taxPph21: 210000, lateDeduction: 0, netSalary: 8970000, bankName: "Bank Mandiri", bankAccount: "137-0099112", status: "APPROVED" },
   { id: "PAY-03", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", role: "Analis Kimia & QC", basicSalary: 5500000, allowance: 900000, overtimePay: 450000, bpjsDeduction: 220000, taxPph21: 90000, lateDeduction: 50000, netSalary: 6490000, bankName: "BCA", bankAccount: "521-1122334", status: "APPROVED" },
@@ -58,18 +63,68 @@ const INITIAL_PAYROLL: PayrollItem[] = [
   { id: "PAY-06", empId: "KIL-2025-012", empName: "dr. Amanda Putri, M.Biomed", department: "QA & APJ", role: "Apoteker PJ", basicSalary: 11000000, allowance: 2500000, overtimePay: 0, bpjsDeduction: 440000, taxPph21: 480000, lateDeduction: 0, netSalary: 12580000, bankName: "BCA", bankAccount: "521-9988776", status: "APPROVED" },
 ];
 
+// Backend returns encrypted strings (base64-ish); we coerce what we can, default to 0.
+function coerceNum(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+function mapApiRecord(rec: any, payrollId: string): PayrollItem[] {
+  const items = Array.isArray(rec?.items) ? rec.items : [];
+  return items.map((it: any, idx: number) => ({
+    id: `${payrollId}-${idx}`,
+    empId: it?.employee?.id ?? "—",
+    empName: it?.employee?.name ?? "Karyawan",
+    department: "—",
+    role: "—",
+    basicSalary: coerceNum(it?.baseSalary),
+    allowance: coerceNum(it?.kpiIncentive),
+    overtimePay: 0,
+    bpjsDeduction: 0,
+    taxPph21: 0,
+    lateDeduction: coerceNum(it?.deductions),
+    netSalary: coerceNum(it?.netSalary),
+    bankName: "—",
+    bankAccount: "—",
+    status: (rec?.status ?? "DRAFT") as PayrollItem["status"],
+  }));
+}
+
 export default function HrPayrollPage() {
   const toast = useDnaToast();
   const [period, setPeriod] = useState("2026-09");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSlip, setSelectedSlip] = useState<PayrollItem | null>(null);
 
-  const totalBasic = INITIAL_PAYROLL.reduce((acc, r) => acc + r.basicSalary, 0);
-  const totalAllowances = INITIAL_PAYROLL.reduce((acc, r) => acc + r.allowance + r.overtimePay, 0);
-  const totalDeductions = INITIAL_PAYROLL.reduce((acc, r) => acc + r.bpjsDeduction + r.taxPph21 + r.lateDeduction, 0);
-  const totalNetPayroll = INITIAL_PAYROLL.reduce((acc, r) => acc + r.netSalary, 0);
+  const { data: apiData } = useQuery({
+    queryKey: ["hr-payroll", period],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/hr/payroll?period=${encodeURIComponent(period)}`);
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      } catch {
+        return [];
+      }
+    },
+  });
 
-  const filteredPayroll = INITIAL_PAYROLL.filter(r =>
+  // Use API rows when available; otherwise fall back to seeded list.
+  const payroll: PayrollItem[] =
+    Array.isArray(apiData) && apiData.length > 0
+      ? apiData.flatMap((rec: any, i: number) => mapApiRecord(rec, rec?.id ?? `p-${i}`))
+      : FALLBACK_PAYROLL;
+
+  const totalBasic = payroll.reduce((acc, r) => acc + r.basicSalary, 0);
+  const totalAllowances = payroll.reduce((acc, r) => acc + r.allowance + r.overtimePay, 0);
+  const totalDeductions = payroll.reduce((acc, r) => acc + r.bpjsDeduction + r.taxPph21 + r.lateDeduction, 0);
+  const totalNetPayroll = payroll.reduce((acc, r) => acc + r.netSalary, 0);
+
+  const filteredPayroll = payroll.filter(r =>
     r.empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.department.toLowerCase().includes(searchQuery.toLowerCase())
@@ -94,6 +149,10 @@ export default function HrPayrollPage() {
               onChange={(e) => setPeriod(e.target.value)}
               className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-semibold"
             />
+            <DnaButton variant="secondary" size="md" onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Refresh
+            </DnaButton>
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Rekap
