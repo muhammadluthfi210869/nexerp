@@ -23,39 +23,41 @@ export interface DnaToastOptions {
   duration?: number;
 }
 
+const normalizeOpts = (msgOrOpts?: string | DnaToastOptions): DnaToastOptions | undefined => {
+  if (msgOrOpts === undefined) return undefined;
+  if (typeof msgOrOpts === "string") return { description: msgOrOpts };
+  return msgOrOpts;
+};
+
 const dnaToast = {
-  default: (title: string, opts?: DnaToastOptions) =>
-    sonnerToast(title, {
-      description: opts?.description,
-      duration: opts?.duration,
-    }),
-  success: (title: string, opts?: DnaToastOptions) =>
-    sonnerToast.success(title, {
-      description: opts?.description,
-      duration: opts?.duration,
-    }),
-  error: (title: string, opts?: DnaToastOptions) =>
-    sonnerToast.error(title, {
-      description: opts?.description,
-      duration: opts?.duration,
-    }),
-  info: (title: string, opts?: DnaToastOptions) =>
-    sonnerToast.info(title, {
-      description: opts?.description,
-      duration: opts?.duration,
-    }),
-  warning: (title: string, opts?: DnaToastOptions) =>
-    sonnerToast.warning(title, {
-      description: opts?.description,
-      duration: opts?.duration,
-    }),
+  default: (title: string, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast(title, normalizeOpts(msgOrOpts)),
+  success: (title: string, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.success(title, normalizeOpts(msgOrOpts)),
+  error: (title: string, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.error(title, normalizeOpts(msgOrOpts)),
+  info: (title: string, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.info(title, normalizeOpts(msgOrOpts)),
+  warning: (title: string, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.warning(title, normalizeOpts(msgOrOpts)),
   promise: sonnerToast.promise,
   dismiss: sonnerToast.dismiss,
   loading: sonnerToast.loading,
+  // Direct callable form: dnaToast("title", "message") or dnaToast("title", { description })
+  __call__: (title: string, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast(title, normalizeOpts(msgOrOpts)),
 };
 
-export const dnaToastApi = dnaToast;
-export { dnaToast as toast };
+// Proxy makes `dnaToast("title", "msg")` callable as a function AND
+// also exposes .success/.error/etc. method-style. Backward compat for
+// pages that did `toast("title", "msg")` instead of `toast.success(...)`.
+const dnaToastCallable: any = new Proxy(dnaToast, {
+  apply: (_t, _this, args) => (dnaToast as any).__call__(...args),
+  get: (_t, prop) => (dnaToast as any)[prop],
+});
+
+export const dnaToastApi = dnaToastCallable;
+export { dnaToastCallable as dnaToast, dnaToastCallable as toast };
 
 /**
  * DnaToaster — drop-in replacement for the sonner <Toaster /> mount.

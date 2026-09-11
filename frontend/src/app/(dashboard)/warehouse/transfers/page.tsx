@@ -24,7 +24,7 @@ import {
   DnaDialogHeader,
   DnaDialogTitle,
   DnaDialogFooter,
-  DnaDnaStatCard,
+  DnaStatCard,
   DnaDataTableCard,
   DnaTable,
   DnaBadge,

@@ -18,7 +18,7 @@ import {
   DnaCard,
   DnaDialog,
   DnaDialogContent,
-  DnaDnaStatCard,
+  DnaStatCard,
   DnaDataTableCard,
   DnaTable,
   DnaBadge,

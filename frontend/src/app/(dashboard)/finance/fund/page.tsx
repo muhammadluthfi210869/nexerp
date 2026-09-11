@@ -16,7 +16,7 @@ import {
   XCircle,
   AlertTriangle,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaSelect, DnaTextarea, DnaTabNav } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaSelect, DnaTextarea, DnaTabNav } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

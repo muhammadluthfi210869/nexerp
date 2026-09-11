@@ -163,6 +163,7 @@ export {
   DnaInfoCard,
   DnaRadioGroup,
   DnaStickyFooter,
+  DnaToastProvider,
 } from "./DnaInteractiveElements";
 
 export type {

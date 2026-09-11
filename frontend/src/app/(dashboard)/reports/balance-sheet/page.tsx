@@ -14,7 +14,7 @@ import {
   Info
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaInput, DnaButton, DnaBadge, DnaCard, DnaDnaStatCard } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaCard, DnaStatCard } from "@/components/dna";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";

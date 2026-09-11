@@ -15,7 +15,7 @@ import {
   PieChart,
 } from "lucide-react";
 
-import { DnaButton, DnaInput, DnaBadge, DnaDnaStatCard, DnaCard, DnaDataTableCard, DnaTabNav, DnaDatePicker } from "@/components/dna";
+import { DnaButton, DnaInput, DnaBadge, DnaStatCard, DnaCard, DnaDataTableCard, DnaTabNav, DnaDatePicker } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

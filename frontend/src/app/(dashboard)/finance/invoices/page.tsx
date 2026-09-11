@@ -18,7 +18,7 @@ import {
   AlertTriangle,
   Zap
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaDnaStatCard } from "@/components/dna";
+import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaStatCard } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,
