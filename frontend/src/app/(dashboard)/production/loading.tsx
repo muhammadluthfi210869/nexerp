@@ -1,7 +1,6 @@
 import React from "react";
 import { KPIGrid } from "@/components/layout/KPIGrid";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 
 export default function ProductionLoading() {
   return (

@@ -14,12 +14,15 @@ import {
   ShieldCheck,
   History
 } from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent
-} from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  StatCard,
+  DashboardCard,
+  DnaButton,
+  DnaInput,
+} from "@/components/dna";
 import { toast } from "sonner";
-import { StatCard, DashboardCard, DnaButton, DnaInput } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function LogisticsOutboundPage() {

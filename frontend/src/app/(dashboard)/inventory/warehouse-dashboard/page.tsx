@@ -2,33 +2,41 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Box, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/dna";
+import { KpiCard } from "@/components/dna/KpiCard";
+import {
+  Box,
+  CheckCircle2,
+  AlertCircle,
   ClipboardCheck,
   ArrowRight,
   ShieldCheck,
   Beaker,
   Package,
   AlertTriangle,
-  ClipboardList
+  ClipboardList,
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---

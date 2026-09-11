@@ -2,27 +2,33 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Activity, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Timer, 
+import {
+  Card,
+  CardContent,
+  CardTitle,
+  CardDescription,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  Input,
+  Label,
+} from "@/components/dna";
+import {
+  Activity,
+  CheckCircle2,
+  AlertTriangle,
+  Timer,
   Beaker,
   Layers,
   Lock,
   History,
   Droplets,
-  Package
+  Package,
 } from "lucide-react";
 import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Constants ---
