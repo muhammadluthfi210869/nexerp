@@ -1,5 +1,5 @@
 "use client";
-import { useBrandChannel } from "../layout";
+import { useBrandChannel } from "./layout";
 import PostPlanner from "../../components/views/PostPlanner";
 import type { PostPlatform } from "@/types/marketing-api";
 

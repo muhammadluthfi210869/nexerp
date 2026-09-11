@@ -1,6 +1,6 @@
 "use client";
 import { useBrandChannel } from "../layout";
-import PostCalendar from "../../components/views/PostCalendar";
+import PostCalendar from "../../../components/views/PostCalendar";
 import type { PostPlatform } from "@/types/marketing-api";
 
 const PLATFORM_MAP: Record<string, PostPlatform> = {
