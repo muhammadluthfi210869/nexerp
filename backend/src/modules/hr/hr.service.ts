@@ -15,6 +15,11 @@ import {
 } from '@prisma/client';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import {
+  CreateRecruitmentDto,
+  UpdateRecruitmentStageDto,
+  RecruitmentStage,
+} from './dto/recruitment.dto';
 
 @Injectable()
 export class HrService {
@@ -938,5 +943,117 @@ export class HrService {
       disciplineRate: total > 0 ? Math.round((onTime / total) * 100) : 0,
       records,
     };
+  }
+
+  // ─── RECRUITMENT (placeholder — Prisma model not yet provisioned) ───
+  // ponytail: in-memory store, persist via Prisma when model is added.
+  // Stage advance rule: forward-only; cannot go back from HIRED/REJECTED.
+
+  private recruitmentStore: Array<any> = [
+    {
+      id: 'CND-01',
+      name: 'Agung Wicaksono, S.T',
+      position: 'Operator Mesin Filling Auto',
+      department: 'Produksi Filling',
+      appliedDate: '2026-09-07',
+      stage: 'INTERVIEW' as RecruitmentStage,
+      experience: '2 Thn Operator Pabrik Kosmetik',
+      education: 'D3 Teknik Mesin',
+      phone: '0812-7788-9900',
+      email: 'agung.w@gmail.com',
+      matchScore: 92,
+    },
+    {
+      id: 'CND-02',
+      name: 'Nurul Hidayati, S.Farm',
+      position: 'Junior R&D Formulator',
+      department: 'R&D Formulasi',
+      appliedDate: '2026-09-05',
+      stage: 'OFFERING' as RecruitmentStage,
+      experience: '1 Thn Lab Emulsi & Toner',
+      education: 'S1 Farmasi',
+      phone: '0813-2233-4455',
+      email: 'nurul.h@gmail.com',
+      matchScore: 96,
+    },
+    {
+      id: 'CND-03',
+      name: 'Fajar Pratama, S.Kom',
+      position: 'Digital Marketing Specialist',
+      department: 'Marketing',
+      appliedDate: '2026-09-04',
+      stage: 'APPLIED' as RecruitmentStage,
+      experience: '3 Thn Agency Ads Meta/TikTok',
+      education: 'S1 Sistem Informasi',
+      phone: '0878-3344-5566',
+      email: 'fajar.p@gmail.com',
+      matchScore: 85,
+    },
+  ];
+
+  private stageOrder: RecruitmentStage[] = [
+    'APPLIED',
+    'INTERVIEW',
+    'TEST',
+    'OFFERING',
+    'HIRED',
+  ];
+
+  async listRecruitment(stage?: string) {
+    if (!stage || stage === 'ALL')
+      return [...this.recruitmentStore].sort((a, b) =>
+        a.appliedDate < b.appliedDate ? 1 : -1,
+      );
+    return this.recruitmentStore.filter((c) => c.stage === stage);
+  }
+
+  async getRecruitmentById(id: string) {
+    const c = this.recruitmentStore.find((r) => r.id === id);
+    if (!c) throw new NotFoundException(`Recruitment ${id} not found`);
+    return c;
+  }
+
+  async createRecruitment(dto: CreateRecruitmentDto) {
+    const today = new Date().toISOString().split('T')[0];
+    const id = `CND-${String(this.recruitmentStore.length + 1).padStart(2, '0')}`;
+    const entry = {
+      id,
+      name: dto.name,
+      position: dto.position,
+      department: dto.department ?? 'GENERAL',
+      appliedDate: today,
+      stage: dto.stage ?? ('APPLIED' as RecruitmentStage),
+      experience: dto.experience ?? '',
+      education: dto.education ?? '',
+      phone: dto.phone ?? '',
+      email: dto.email ?? '',
+      matchScore: dto.matchScore ?? 0,
+    };
+    this.recruitmentStore.unshift(entry);
+    return entry;
+  }
+
+  async advanceRecruitment(id: string, dto: UpdateRecruitmentStageDto) {
+    const idx = this.recruitmentStore.findIndex((r) => r.id === id);
+    if (idx === -1) throw new NotFoundException(`Recruitment ${id} not found`);
+    const current = this.recruitmentStore[idx];
+    if (current.stage === 'HIRED' || current.stage === 'REJECTED') {
+      throw new BadRequestException(
+        `Cannot advance from terminal stage ${current.stage}`,
+      );
+    }
+    if (dto.stage === 'REJECTED') {
+      this.recruitmentStore[idx] = { ...current, stage: dto.stage };
+      return this.recruitmentStore[idx];
+    }
+    const currentRank = this.stageOrder.indexOf(current.stage as RecruitmentStage);
+    const targetRank = this.stageOrder.indexOf(dto.stage);
+    if (targetRank <= currentRank) {
+      throw new BadRequestException(
+        `Stage must advance forward (current: ${current.stage}, target: ${dto.stage})`,
+      );
+    }
+    this.recruitmentStore[idx] = { ...current, stage: dto.stage };
+    return this.recruitmentStore[idx];
   }
 }

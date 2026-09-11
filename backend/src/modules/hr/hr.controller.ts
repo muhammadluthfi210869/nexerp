@@ -15,6 +15,10 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { ClockOutDto } from './dto/clock-out.dto';
 import { SubjectiveScoreDto } from './dto/subjective-score.dto';
+import {
+  CreateRecruitmentDto,
+  UpdateRecruitmentStageDto,
+} from './dto/recruitment.dto';
 
 @ApiTags('hr')
 @ApiBearerAuth()
@@ -133,5 +137,34 @@ export class HrController {
     @Body('authorizedById') authorizedById: string,
   ) {
     return this.hrService.authorizePayroll(id, authorizedById);
+  }
+
+  // --- RECRUITMENT (placeholder; Prisma model not yet provisioned) ---
+
+  @Get('recruitment')
+  @ApiOperation({ summary: 'List recruitment candidates (stage filter optional)' })
+  listRecruitment(@Query('stage') stage?: string) {
+    return this.hrService.listRecruitment(stage);
+  }
+
+  @Get('recruitment/:id')
+  @ApiOperation({ summary: 'Get recruitment candidate by ID' })
+  getRecruitment(@Param('id') id: string) {
+    return this.hrService.getRecruitmentById(id);
+  }
+
+  @Post('recruitment')
+  @ApiOperation({ summary: 'Create new recruitment candidate' })
+  createRecruitment(@Body() dto: CreateRecruitmentDto) {
+    return this.hrService.createRecruitment(dto);
+  }
+
+  @Patch('recruitment/:id/stage')
+  @ApiOperation({ summary: 'Advance recruitment candidate to next stage' })
+  advanceRecruitment(
+    @Param('id') id: string,
+    @Body() dto: UpdateRecruitmentStageDto,
+  ) {
+    return this.hrService.advanceRecruitment(id, dto);
   }
 }
