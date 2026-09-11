@@ -40,6 +40,25 @@ The "19 vulns closed" claim may refer to a specific subset (e.g. only direct dep
 1. **backend**: `@xhmikosr/decompress` — Archive extraction creates files/links outside target dir (path traversal via symlinks)
 2. **frontend**: `next` — Middleware/Proxy bypass in App Router (Turbopack + single locale)
 
+### Fix Status (2026-09-11, applied same session)
+
+**frontend `next` — FIXED**
+- Bumped `next` from `^16.2.6` to `^16.3.4` (latest 16.x stable).
+- All 9 Next.js advisories (GHSA-6gpp-xcg3-4w24 middleware bypass + 8 others) resolved.
+- Frontend has no `middleware.ts` / `proxy.ts` so the bypass has no direct attack surface, but the dep-level patch closes the vuln class.
+- Verified: `npm audit` no longer reports the middleware bypass CVE.
+- No new TS errors introduced (71 pre-existing errors unrelated to next).
+
+**backend `@xhmikosr/decompress` — RESIDUAL (no upstream fix)**
+- Latest published version is `11.1.4` — already at latest.
+- Source of the chain: `@swc/cli` (NestJS build tool) → `@xhmikosr/bin-wrapper` → `@xhmikosr/downloader` → `@xhmikosr/decompress`.
+- Chain is dev-only (marked `"dev": true` in lockfile) — used at build time to download SWC binaries from official sources.
+- Not used anywhere in `src/` — no direct runtime attack surface.
+- Current `npm audit` (npm v10 advisory DB) **no longer flags this package** (`decompress: NONE` in 28 backend vulns).
+- Original advisory may have been retracted or the path-traversal was fixed in a prior minor release without version bump.
+- Removal options rejected: removing `@swc/cli` breaks `nest build` (NestJS builder is configured as SWC in `nest-cli.json`).
+- **Recommendation**: accept residual risk. Track `@xhmikosr/decompress` advisories; if a future npm audit flags it again, evaluate override to a fork or NestJS builder migration to `tsc`.
+
 ### HIGH (sample — see full JSON in `evidence/2026-09-11/security-audit-{backend,frontend}.json`)
 - `axios` (FE): ReDoS via Cookie Name Injection
 - `form-data` (both): CRLF injection via unescaped multipart field names
