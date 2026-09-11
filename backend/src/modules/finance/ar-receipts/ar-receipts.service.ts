@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
+import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
 
 @Injectable()
 export class ARReceiptsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gate: FinanceGateHelper,
+  ) {}
 
   async findAll(filter?: { customerId?: string; invoiceId?: string }) {
     return this.prisma.aRReceipt.findMany({
@@ -54,6 +58,9 @@ export class ARReceiptsService {
     if (!customer) {
       throw new NotFoundException(`Customer ${dto.customerId} not found`);
     }
+
+    // Gate: period open
+    await this.gate.assertPeriodOpen(new Date(), 'AR-RECEIPT');
 
     // Validate invoice if provided
     if (dto.invoiceId) {

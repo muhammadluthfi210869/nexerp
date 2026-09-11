@@ -7,6 +7,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { CommonModule } from './common/common.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
@@ -72,6 +73,7 @@ import { join } from 'path';
       serveRoot: '/uploads',
     }),
     PrismaModule,
+    CommonModule,
     UsersModule,
     AuthModule,
     MarketingModule,

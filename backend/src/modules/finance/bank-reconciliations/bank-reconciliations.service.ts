@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
+import { SoDViolationException } from '../../../common/exceptions/api-exception';
 
 @Injectable()
 export class BankReconciliationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gate: FinanceGateHelper,
+  ) {}
 
   async findAll(filter?: {
     bankAccountId?: string;
@@ -105,6 +110,19 @@ export class BankReconciliationsService {
     if (recon.status === 'RECONCILED') {
       throw new BadRequestException('Already finalized');
     }
+
+    // SoD: period-end reconciler should ideally be different from the one who opened it.
+    // We use the notes prefix as a lightweight audit marker for who opened.
+    const openerMatch = recon.notes?.match(/\[opened by ([^\]]+)\]/);
+    const openedBy = openerMatch?.[1] ?? null;
+    if (openedBy && openedBy === userId) {
+      throw new SoDViolationException(
+        'Bank reconciliation finalizer must differ from opener (SoD)',
+      );
+    }
+
+    // Gate: ensure period not closed — bank recon would contradict final close
+    await this.gate.assertPeriodOpen(recon.periodEnd, 'BANK-RECON-FINALIZE');
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.bankReconciliation.update({

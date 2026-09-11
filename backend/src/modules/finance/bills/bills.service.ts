@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
+import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
 
 @Injectable()
 export class BillsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gate: FinanceGateHelper,
+  ) {}
 
   async findAll(filter?: { vendorId?: string; status?: PaymentStatus }) {
     return this.prisma.bill.findMany({
@@ -118,6 +122,9 @@ export class BillsService {
     if (bill.postedAt) {
       throw new BadRequestException(`Bill already posted.`);
     }
+
+    // Gate: period must be open
+    await this.gate.assertPeriodOpen(new Date(), 'BILL-POST');
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.bill.update({

@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
+import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
 
 @Injectable()
 export class DownPaymentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gate: FinanceGateHelper,
+  ) {}
 
   async findAll(filter?: { vendorId?: string; status?: PaymentStatus }) {
     return this.prisma.downPayment.findMany({
@@ -84,6 +88,9 @@ export class DownPaymentsService {
         `Cannot post DP with status ${dp.status}. Only PENDING can be posted.`,
       );
     }
+
+    // Gate: period must be open
+    await this.gate.assertPeriodOpen(new Date(), 'DP-POST');
 
     const bankAcc = await this.prisma.bankAccount.findUnique({
       where: { id: dto.bankAccountId },

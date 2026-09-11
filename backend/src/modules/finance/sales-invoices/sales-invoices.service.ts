@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
+import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
 
 @Injectable()
 export class SalesInvoicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gate: FinanceGateHelper,
+  ) {}
 
   async findAll(filter?: { customerId?: string; status?: PaymentStatus }) {
     return this.prisma.salesInvoice.findMany({
@@ -108,6 +112,9 @@ export class SalesInvoicesService {
       include: { lineItems: true, customer: true },
     });
     if (!inv) throw new NotFoundException(`Sales invoice ${id} not found`);
+
+    // Gate: period must be open
+    await this.gate.assertPeriodOpen(new Date(), 'SALES-INVOICE-POST');
     if (inv.postedAt) {
       throw new BadRequestException(`Sales invoice already posted.`);
     }

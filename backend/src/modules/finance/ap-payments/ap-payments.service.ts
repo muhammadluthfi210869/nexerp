@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
+import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
+import { SoDViolationException } from '../../../common/exceptions/api-exception';
 
 @Injectable()
 export class APPaymentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gate: FinanceGateHelper,
+  ) {}
 
   async findAll(filter?: { vendorId?: string; status?: PaymentStatus }) {
     return this.prisma.aPPayment.findMany({
@@ -92,9 +97,15 @@ export class APPaymentsService {
     });
     if (!payment) throw new NotFoundException(`AP payment ${id} not found`);
 
-    // 2-person rule: verifier cannot be creator
-    // (We don't have direct creator field — would need to add. For now, check
-    // that the user has a director/finance role. Real impl: track createdBy.)
+    // SoD gate: verifier must be different from payer (recorded in notes prefix)
+    const payerMatch = payment.notes?.match(/\[created by ([^\]]+)\]/);
+    const createdBy = payerMatch?.[1] ?? null;
+    if (createdBy === userId) {
+      throw new SoDViolationException(
+        'AP verifier must be a different user from creator',
+      );
+    }
+
     if (payment.status === PaymentStatus.PAID) {
       throw new BadRequestException(
         `Cannot verify PAID payment. Payment is already complete.`,
@@ -131,6 +142,16 @@ export class APPaymentsService {
     if (payment.status === PaymentStatus.PAID) {
       throw new BadRequestException(`Payment already PAID.`);
     }
+
+    // Gate: period open + SoD (payer ≠ verifier if recorded)
+    await this.gate.assertCanPost({
+      date: new Date(),
+      label: 'AP-PAY',
+      preparedBy: payment.verifiedBy ?? null,
+      actorId: userId,
+      sodAction: 'AP payer must differ from AP verifier (SoD rule)',
+    });
+
     if (!payment.verifiedBy) {
       throw new BadRequestException(
         `Cannot mark PAID before verification. Run verify first.`,
