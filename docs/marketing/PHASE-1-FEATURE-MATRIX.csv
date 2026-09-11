@@ -1,0 +1,32 @@
+id,domain,feature,priority,release,current_state,target_state,route_id,write_roles,acceptance_id
+DM-TASK-001,task,Deterministic task entry,P0,R1,localStorage redirect,Server redirect to overview,task-entry,NONE,AC-TASK-001
+DM-TASK-002,task,Overview KPI and workload,P0,R1,Partial API board,Database-backed scoped KPI,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN,AC-TASK-002
+DM-TASK-003,task,Task table and kanban,P0,R1,Partial API board,Deep-linkable server-paginated views,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN|DIGIMAR,AC-TASK-003
+DM-TASK-004,task,Create and edit task,P0,R1,Available with legacy contract,Validated canonical contract,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN|DIGIMAR,AC-TASK-004
+DM-TASK-005,task,Task state workflow,P0,R1,Free-form legacy strings,Server-enforced state machine,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN|DIGIMAR,AC-TASK-005
+DM-TASK-006,task,Task checklist,P0,R1,Only aggregate counters,Normalized checklist items,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN|DIGIMAR,AC-TASK-006
+DM-TASK-007,task,Comments and mentions,P0,R1,Comments available,Audited comments with actor identity,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN|DIGIMAR,AC-TASK-007
+DM-TASK-008,task,Attachments,P0,R1,Local upload available,Authorized object-ready attachments,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN|DIGIMAR,AC-TASK-008
+DM-TASK-009,task,Audit history,P0,R1,Status history available,Immutable mutation timeline,task-workspace,NONE,AC-TASK-009
+DM-TASK-010,task,Project management,P0,R1,Partial project CRUD,Validated project lifecycle,task-workspace,MARKETING|HEAD_OPS|SUPER_ADMIN,AC-TASK-010
+DM-TASK-011,task,Team member workload,P1,R1,Alias-based fixed roster,ERP User-based scoped workload,task-workspace,NONE,AC-TASK-011
+DM-TASK-012,task,Search filters sort and pagination,P0,R1,Mostly client-side,URL-backed server query,task-workspace,NONE,AC-TASK-012
+DM-TASK-013,task,Notifications,P2,R2,Stub endpoint,Event-backed inbox and read state,task-workspace,NONE,AC-TASK-013
+DM-SOC-001,social,Brand master,P0,R1,Prototype only,Database-backed brand registry,social-planner,MARKETING|SUPER_ADMIN,AC-SOC-001
+DM-SOC-002,social,Multi-view content planner,P0,R1,Partial API implementation,Table board calendar gallery list,social-planner,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-002
+DM-SOC-003,social,Creative brief and caption,P0,R1,Partial persisted fields,Validated brief hook CTA reference and caption,social-planner,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-003
+DM-SOC-004,social,Content workflow,P0,R1,Seven loose statuses,Server-enforced ten-state workflow,social-planner,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-004
+DM-SOC-005,social,Content media and checklist,P0,R1,URL arrays and checklist,Authorized media plus normalized checklist,social-planner,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-005
+DM-SOC-006,social,Manual post metrics,P0,R1,Current-value cache,Audited metric snapshots,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-006
+DM-REP-001,reporting,Executive brand summary,P0,R1,Prototype local data,Period-based database aggregation,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-001
+DM-REP-002,reporting,Weekly social report,P0,R1,Prototype local data,Audited weekly reporting,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-002
+DM-REP-003,reporting,Daily and monthly stories recap,P0,R1,Prototype local data,Daily facts and monthly aggregate,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-003
+DM-REP-004,reporting,Lead funnel by channel,P0,R1,Prototype local data,Attributed traffic lead sample deal funnel,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-004
+DM-REP-005,reporting,TikTok report,P1,R1,Prototype local data,Manual verified channel metrics,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-005
+DM-REP-006,reporting,YouTube report,P1,R1,Prototype local data,Manual verified channel metrics,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-006
+DM-REP-007,reporting,Website and SEO report,P1,R1,Prototype local data,Manual verified search and query metrics,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-007
+DM-REP-008,reporting,Meta and Google Ads report,P0,R1,Marketing analytics split,Unified period and brand report,social-reporting,MARKETING|DIGIMAR|SUPER_ADMIN,AC-REP-008
+DM-INT-001,integration,Meta connection and sync,P0,R1,Partial live implementation,Server-held encrypted credentials and sync log,social-integrations,MARKETING|SUPER_ADMIN,AC-INT-001
+DM-INT-002,integration,TikTok YouTube and Google automatic sync,P2,R2,Not implemented,Provider jobs with freshness and failure states,social-integrations,MARKETING|SUPER_ADMIN,AC-INT-002
+DM-SOC-007,social,Campaign OKR,P1,R1,Schema exists UI has empty state,Persisted campaign OKR CRUD,social-planner,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-007
+DM-SOC-008,social,AI copy assistance,P2,R2,Partial provider endpoint,Optional assisted draft never auto-publish,social-planner,MARKETING|DIGIMAR|SUPER_ADMIN,AC-SOC-008

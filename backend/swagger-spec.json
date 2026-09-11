@@ -1499,6 +1499,22 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1512,7 +1528,16 @@
       },
       "post": {
         "operationId": "SocialPlannerController_createPost",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1656,6 +1681,690 @@
         },
         "tags": [
           "SocialPlanner"
+        ]
+      }
+    },
+    "/v1/marketing/tasks": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listTasks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "post": {
+        "operationId": "CanonicalMarketingController_createTask",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCanonicalTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/{id}": {
+      "get": {
+        "operationId": "CanonicalMarketingController_getTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "patch": {
+        "operationId": "CanonicalMarketingController_updateTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCanonicalTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "delete": {
+        "operationId": "CanonicalMarketingController_deleteTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/{id}/status": {
+      "patch": {
+        "operationId": "CanonicalMarketingController_updateTaskStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/{taskId}/checklist/{itemId}": {
+      "patch": {
+        "operationId": "CanonicalMarketingController_updateChecklist",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChecklistItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/{taskId}/comments": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listComments",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "post": {
+        "operationId": "CanonicalMarketingController_createComment",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/comments/{commentId}": {
+      "delete": {
+        "operationId": "CanonicalMarketingController_deleteComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/{taskId}/attachments": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listAttachments",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "post": {
+        "operationId": "CanonicalMarketingController_addAttachment",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/tasks/attachments/{attachmentId}": {
+      "delete": {
+        "operationId": "CanonicalMarketingController_deleteAttachment",
+        "parameters": [
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/members": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listMembers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/members/{id}": {
+      "patch": {
+        "operationId": "CanonicalMarketingController_updateMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMarketingMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/projects": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listProjects",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "post": {
+        "operationId": "CanonicalMarketingController_createProject",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCanonicalProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/projects/{id}": {
+      "patch": {
+        "operationId": "CanonicalMarketingController_updateProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCanonicalProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/brands": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listBrands",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "post": {
+        "operationId": "CanonicalMarketingController_createBrand",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/brands/{id}": {
+      "patch": {
+        "operationId": "CanonicalMarketingController_updateBrand",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/social/reports": {
+      "get": {
+        "operationId": "CanonicalMarketingController_getReporting",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/social/reports/channel-metrics": {
+      "post": {
+        "operationId": "CanonicalMarketingController_upsertChannelMetric",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertChannelMetricDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/social/integrations": {
+      "get": {
+        "operationId": "CanonicalMarketingController_listIntegrations",
+        "parameters": [
+          {
+            "name": "brandId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      },
+      "post": {
+        "operationId": "CanonicalMarketingController_configureIntegration",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigureIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/social/integrations/sync": {
+      "post": {
+        "operationId": "CanonicalMarketingController_triggerIntegrationSync",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriggerIntegrationSyncDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CanonicalMarketing"
         ]
       }
     },
@@ -8153,6 +8862,636 @@
         ]
       }
     },
+    "/v1/legality/audits": {
+      "get": {
+        "operationId": "AuditsController_findAll[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all internal audits",
+        "tags": [
+          "legality/audits"
+        ]
+      },
+      "post": {
+        "operationId": "AuditsController_create[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new internal audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/v1/legality/audits": {
+      "get": {
+        "operationId": "AuditsController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all internal audits",
+        "tags": [
+          "legality/audits"
+        ]
+      },
+      "post": {
+        "operationId": "AuditsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new internal audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}": {
+      "get": {
+        "operationId": "AuditsController_findOne[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get internal audit by ID",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/v1/legality/audits/{id}": {
+      "get": {
+        "operationId": "AuditsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get internal audit by ID",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/checklist": {
+      "patch": {
+        "operationId": "AuditsController_updateChecklist[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuditChecklistDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update CPKB/CARA checklist for an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/v1/legality/audits/{id}/checklist": {
+      "patch": {
+        "operationId": "AuditsController_updateChecklist[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuditChecklistDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update CPKB/CARA checklist for an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/status": {
+      "patch": {
+        "operationId": "AuditsController_updateStatus[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update audit status",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/v1/legality/audits/{id}/status": {
+      "patch": {
+        "operationId": "AuditsController_updateStatus[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update audit status",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/finding": {
+      "post": {
+        "operationId": "AuditsController_addFinding[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Append a finding to an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/v1/legality/audits/{id}/finding": {
+      "post": {
+        "operationId": "AuditsController_addFinding[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Append a finding to an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/bussdev/returns": {
+      "get": {
+        "operationId": "ReturnsController_findAll[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all sales returns",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "post": {
+        "operationId": "ReturnsController_create[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a sales return record",
+        "tags": [
+          "bussdev/returns"
+        ]
+      }
+    },
+    "/v1/v1/bussdev/returns": {
+      "get": {
+        "operationId": "ReturnsController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all sales returns",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "post": {
+        "operationId": "ReturnsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a sales return record",
+        "tags": [
+          "bussdev/returns"
+        ]
+      }
+    },
+    "/v1/bussdev/returns/{id}": {
+      "get": {
+        "operationId": "ReturnsController_findOne[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get sales return by ID",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "patch": {
+        "operationId": "ReturnsController_update[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update return status/notes",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "delete": {
+        "operationId": "ReturnsController_remove[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a sales return",
+        "tags": [
+          "bussdev/returns"
+        ]
+      }
+    },
+    "/v1/v1/bussdev/returns/{id}": {
+      "get": {
+        "operationId": "ReturnsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get sales return by ID",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "patch": {
+        "operationId": "ReturnsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update return status/notes",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "delete": {
+        "operationId": "ReturnsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a sales return",
+        "tags": [
+          "bussdev/returns"
+        ]
+      }
+    },
     "/v1/digimar/summary": {
       "get": {
         "operationId": "DigimarController_getSummary",
@@ -10514,8 +11853,18 @@
     },
     "/v1/finance/bills": {
       "post": {
-        "operationId": "FinanceController_createBill",
+        "operationId": "BillsController_create",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBillDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -10526,21 +11875,50 @@
             "bearer": []
           }
         ],
+        "summary": "Create a new vendor bill with line items",
         "tags": [
-          "finance"
+          "finance/bills"
         ]
       },
       "get": {
         "operationId": "BillsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all bills",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all bills, optionally filtered",
         "tags": [
-          "finance"
+          "finance/bills"
         ]
       }
     },
@@ -11440,6 +12818,100 @@
         "tags": [
           "finance"
         ]
+      },
+      "post": {
+        "operationId": "FinanceController_createTax",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaxDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new tax rate",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/taxes/{id}": {
+      "patch": {
+        "operationId": "FinanceController_updateTax",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaxDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a tax rate",
+        "tags": [
+          "finance"
+        ]
+      },
+      "delete": {
+        "operationId": "FinanceController_deleteTax",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a tax rate",
+        "tags": [
+          "finance"
+        ]
       }
     },
     "/v1/finance/currencies": {
@@ -11456,6 +12928,139 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "finance"
+        ]
+      },
+      "post": {
+        "operationId": "FinanceController_createCurrency",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCurrencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new currency",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/currencies/{id}": {
+      "patch": {
+        "operationId": "FinanceController_updateCurrency",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCurrencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a currency",
+        "tags": [
+          "finance"
+        ]
+      },
+      "delete": {
+        "operationId": "FinanceController_deleteCurrency",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a currency",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/currencies/{id}/exchange-rate": {
+      "put": {
+        "operationId": "FinanceController_updateExchangeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExchangeRateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update exchange rate for a currency",
         "tags": [
           "finance"
         ]
@@ -11810,24 +13415,148 @@
             "description": ""
           }
         },
-        "summary": "Get bills by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bill by ID with line items and allocations",
         "tags": [
-          "finance"
+          "finance/bills"
         ]
       }
     },
-    "/v1/finance/bill-line-items": {
+    "/v1/finance/bills/{id}/post": {
+      "post": {
+        "operationId": "BillsController_post",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Post bill — mark as ready for payment, create journal",
+        "tags": [
+          "finance/bills"
+        ]
+      }
+    },
+    "/v1/finance/bills/{id}/cancel": {
+      "post": {
+        "operationId": "BillsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBillDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a bill (only if not yet paid)",
+        "tags": [
+          "finance/bills"
+        ]
+      }
+    },
+    "/v1/finance/bill-line-items/by-bill/{billId}": {
       "get": {
-        "operationId": "BillLineItemsController_findAll",
-        "parameters": [],
+        "operationId": "BillLineItemsController_findAllByBill",
+        "parameters": [
+          {
+            "name": "billId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all bill-line-items",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all line items for a bill",
         "tags": [
-          "finance"
+          "finance/bill-line-items"
+        ]
+      },
+      "post": {
+        "operationId": "BillLineItemsController_addItem",
+        "parameters": [
+          {
+            "name": "billId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBillLineItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add line item to bill (recomputes totals)",
+        "tags": [
+          "finance/bill-line-items"
         ]
       }
     },
@@ -11849,24 +13578,149 @@
             "description": ""
           }
         },
-        "summary": "Get bill-line-items by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bill line item by ID",
         "tags": [
-          "finance"
+          "finance/bill-line-items"
+        ]
+      },
+      "patch": {
+        "operationId": "BillLineItemsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillLineItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update bill line item (recomputes totals)",
+        "tags": [
+          "finance/bill-line-items"
+        ]
+      },
+      "delete": {
+        "operationId": "BillLineItemsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove bill line item (recomputes totals)",
+        "tags": [
+          "finance/bill-line-items"
         ]
       }
     },
     "/v1/finance/down-payments": {
       "get": {
         "operationId": "DownPaymentsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all down-payments",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all down-payments, optionally filtered",
         "tags": [
-          "finance"
+          "finance/down-payments"
+        ]
+      },
+      "post": {
+        "operationId": "DownPaymentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDownPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new down-payment (PENDING)",
+        "tags": [
+          "finance/down-payments"
         ]
       }
     },
@@ -11888,24 +13742,202 @@
             "description": ""
           }
         },
-        "summary": "Get down-payments by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get down-payment by ID",
         "tags": [
-          "finance"
+          "finance/down-payments"
+        ]
+      }
+    },
+    "/v1/finance/down-payments/{id}/post": {
+      "post": {
+        "operationId": "DownPaymentsController_post",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostDownPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Post down-payment (mark as PAID, create journal)",
+        "tags": [
+          "finance/down-payments"
+        ]
+      }
+    },
+    "/v1/finance/down-payments/{id}/apply": {
+      "post": {
+        "operationId": "DownPaymentsController_applyToBill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyDownPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apply paid down-payment to a bill",
+        "tags": [
+          "finance/down-payments"
+        ]
+      }
+    },
+    "/v1/finance/down-payments/{id}/cancel": {
+      "post": {
+        "operationId": "DownPaymentsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelDownPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a PENDING down-payment",
+        "tags": [
+          "finance/down-payments"
         ]
       }
     },
     "/v1/finance/ap-payments": {
       "get": {
         "operationId": "APPaymentsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all ap-payments",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all AP payments, optionally filtered",
         "tags": [
-          "finance"
+          "finance/ap-payments"
+        ]
+      },
+      "post": {
+        "operationId": "APPaymentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new AP payment (DRAFT/PENDING)",
+        "tags": [
+          "finance/ap-payments"
         ]
       }
     },
@@ -11927,24 +13959,182 @@
             "description": ""
           }
         },
-        "summary": "Get ap-payments by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get AP payment by ID",
         "tags": [
-          "finance"
+          "finance/ap-payments"
+        ]
+      }
+    },
+    "/v1/finance/ap-payments/{id}/verify": {
+      "post": {
+        "operationId": "APPaymentsController_verify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Verify AP payment (2-person rule, before paid)",
+        "tags": [
+          "finance/ap-payments"
+        ]
+      }
+    },
+    "/v1/finance/ap-payments/{id}/paid": {
+      "post": {
+        "operationId": "APPaymentsController_markPaid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark AP payment as PAID (after verify, bank transfer done)",
+        "tags": [
+          "finance/ap-payments"
+        ]
+      }
+    },
+    "/v1/finance/ap-payments/{id}/allocate": {
+      "post": {
+        "operationId": "APPaymentsController_allocate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocateApPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Allocate AP payment to a specific bill",
+        "tags": [
+          "finance/ap-payments"
         ]
       }
     },
     "/v1/finance/sales-invoices": {
       "get": {
         "operationId": "SalesInvoicesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all sales-invoices",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all sales invoices",
         "tags": [
-          "finance"
+          "finance/sales-invoices"
+        ]
+      },
+      "post": {
+        "operationId": "SalesInvoicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSalesInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new customer sales invoice with line items",
+        "tags": [
+          "finance/sales-invoices"
         ]
       }
     },
@@ -11966,24 +14156,148 @@
             "description": ""
           }
         },
-        "summary": "Get sales-invoices by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get sales invoice by ID",
         "tags": [
-          "finance"
+          "finance/sales-invoices"
         ]
       }
     },
-    "/v1/finance/sales-invoice-line-items": {
+    "/v1/finance/sales-invoices/{id}/post": {
+      "post": {
+        "operationId": "SalesInvoicesController_post",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Post sales invoice — creates AR + Revenue journal",
+        "tags": [
+          "finance/sales-invoices"
+        ]
+      }
+    },
+    "/v1/finance/sales-invoices/{id}/cancel": {
+      "post": {
+        "operationId": "SalesInvoicesController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelSalesInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel sales invoice (only if not paid)",
+        "tags": [
+          "finance/sales-invoices"
+        ]
+      }
+    },
+    "/v1/finance/sales-invoice-line-items/by-invoice/{invoiceId}": {
       "get": {
-        "operationId": "SalesInvoiceLineItemsController_findAll",
-        "parameters": [],
+        "operationId": "SalesInvoiceLineItemsController_findAllByInvoice",
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all sales-invoice-line-items",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all line items for a sales invoice",
         "tags": [
-          "finance"
+          "finance/sales-invoice-line-items"
+        ]
+      },
+      "post": {
+        "operationId": "SalesInvoiceLineItemsController_addItem",
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSalesInvoiceLineItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add line item to sales invoice (recomputes totals)",
+        "tags": [
+          "finance/sales-invoice-line-items"
         ]
       }
     },
@@ -12005,24 +14319,143 @@
             "description": ""
           }
         },
-        "summary": "Get sales-invoice-line-items by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get sales invoice line item by ID",
         "tags": [
-          "finance"
+          "finance/sales-invoice-line-items"
+        ]
+      },
+      "patch": {
+        "operationId": "SalesInvoiceLineItemsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSalesInvoiceLineItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update sales invoice line item (recomputes totals)",
+        "tags": [
+          "finance/sales-invoice-line-items"
+        ]
+      },
+      "delete": {
+        "operationId": "SalesInvoiceLineItemsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove sales invoice line item (recomputes totals)",
+        "tags": [
+          "finance/sales-invoice-line-items"
         ]
       }
     },
     "/v1/finance/ar-receipts": {
       "get": {
         "operationId": "ARReceiptsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "invoiceId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all ar-receipts",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all AR receipts, optionally filtered",
         "tags": [
-          "finance"
+          "finance/ar-receipts"
+        ]
+      },
+      "post": {
+        "operationId": "ARReceiptsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArReceiptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new AR receipt (customer payment)",
+        "tags": [
+          "finance/ar-receipts"
         ]
       }
     },
@@ -12044,24 +14477,110 @@
             "description": ""
           }
         },
-        "summary": "Get ar-receipts by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get AR receipt by ID",
         "tags": [
-          "finance"
+          "finance/ar-receipts"
+        ]
+      }
+    },
+    "/v1/finance/ar-receipts/{id}/allocate": {
+      "post": {
+        "operationId": "ARReceiptsController_allocate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocateArReceiptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Allocate an existing receipt to a sales invoice",
+        "tags": [
+          "finance/ar-receipts"
         ]
       }
     },
     "/v1/finance/sample-fees": {
       "get": {
         "operationId": "SampleFeesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all sample-fees",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List sample fees (filter by customer)",
         "tags": [
-          "finance"
+          "finance/sample-fees"
+        ]
+      },
+      "post": {
+        "operationId": "SampleFeesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSampleFeeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a new sample fee",
+        "tags": [
+          "finance/sample-fees"
         ]
       }
     },
@@ -12083,9 +14602,82 @@
             "description": ""
           }
         },
-        "summary": "Get sample-fees by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get sample fee by ID",
         "tags": [
-          "finance"
+          "finance/sample-fees"
+        ]
+      }
+    },
+    "/v1/finance/sample-fees/{id}/link-dp": {
+      "post": {
+        "operationId": "SampleFeesController_linkDp",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkSampleFeeToDpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link this sample fee to a Down Payment (offset)",
+        "tags": [
+          "finance/sample-fees"
+        ]
+      }
+    },
+    "/v1/finance/sample-fees/{id}/unlink-dp": {
+      "post": {
+        "operationId": "SampleFeesController_unlinkDp",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlink this sample fee from any Down Payment",
+        "tags": [
+          "finance/sample-fees"
         ]
       }
     },
@@ -12098,9 +14690,42 @@
             "description": ""
           }
         },
-        "summary": "List all bank-accounts",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all active bank accounts",
         "tags": [
-          "finance"
+          "finance/bank-accounts"
+        ]
+      },
+      "post": {
+        "operationId": "BankAccountsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create new bank account",
+        "tags": [
+          "finance/bank-accounts"
         ]
       }
     },
@@ -12122,24 +14747,224 @@
             "description": ""
           }
         },
-        "summary": "Get bank-accounts by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bank account with recent transactions",
         "tags": [
-          "finance"
+          "finance/bank-accounts"
+        ]
+      },
+      "patch": {
+        "operationId": "BankAccountsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBankAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update bank account details",
+        "tags": [
+          "finance/bank-accounts"
+        ]
+      }
+    },
+    "/v1/finance/bank-accounts/{id}/reconcile": {
+      "post": {
+        "operationId": "BankAccountsController_reconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileBankAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reconcile bank account to actual balance",
+        "tags": [
+          "finance/bank-accounts"
         ]
       }
     },
     "/v1/finance/bank-transactions": {
       "get": {
         "operationId": "BankTransactionsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "bankAccountId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "transactionType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reconciled",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all bank-transactions",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List bank transactions (filter by account, date range, type, reconciled status)",
         "tags": [
-          "finance"
+          "finance/bank-transactions"
+        ]
+      },
+      "post": {
+        "operationId": "BankTransactionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record manual bank transaction (fees/interest/adjustment)",
+        "tags": [
+          "finance/bank-transactions"
+        ]
+      }
+    },
+    "/v1/finance/bank-transactions/running-balance": {
+      "get": {
+        "operationId": "BankTransactionsController_runningBalance",
+        "parameters": [
+          {
+            "name": "bankAccountId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get running balance for a bank account over a date range",
+        "tags": [
+          "finance/bank-transactions"
         ]
       }
     },
@@ -12161,24 +14986,176 @@
             "description": ""
           }
         },
-        "summary": "Get bank-transactions by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bank transaction by ID",
         "tags": [
-          "finance"
+          "finance/bank-transactions"
+        ]
+      }
+    },
+    "/v1/finance/bank-transactions/{id}/reconcile": {
+      "post": {
+        "operationId": "BankTransactionsController_reconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileBankTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark transaction as reconciled against bank statement",
+        "tags": [
+          "finance/bank-transactions"
+        ]
+      }
+    },
+    "/v1/finance/bank-transactions/{id}/unreconcile": {
+      "post": {
+        "operationId": "BankTransactionsController_unreconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unreconcile transaction (admin correction)",
+        "tags": [
+          "finance/bank-transactions"
         ]
       }
     },
     "/v1/finance/bank-reconciliations": {
       "get": {
         "operationId": "BankReconciliationsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "bankAccountId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all bank-reconciliations",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List bank reconciliations (filter by account, status)",
         "tags": [
-          "finance"
+          "finance/bank-reconciliations"
+        ]
+      },
+      "post": {
+        "operationId": "BankReconciliationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankReconciliationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Open new reconciliation session for a period",
+        "tags": [
+          "finance/bank-reconciliations"
+        ]
+      }
+    },
+    "/v1/finance/bank-reconciliations/summary": {
+      "get": {
+        "operationId": "BankReconciliationsController_summary",
+        "parameters": [
+          {
+            "name": "bankAccountId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get summary: last recon status + unreconciled count for an account",
+        "tags": [
+          "finance/bank-reconciliations"
         ]
       }
     },
@@ -12200,24 +15177,208 @@
             "description": ""
           }
         },
-        "summary": "Get bank-reconciliations by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bank reconciliation by ID",
         "tags": [
-          "finance"
+          "finance/bank-reconciliations"
+        ]
+      }
+    },
+    "/v1/finance/bank-reconciliations/{id}/finalize": {
+      "post": {
+        "operationId": "BankReconciliationsController_finalize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinalizeReconciliationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finalize reconciliation — mark all in-period txns as reconciled",
+        "tags": [
+          "finance/bank-reconciliations"
+        ]
+      }
+    },
+    "/v1/finance/bank-reconciliations/{id}/reopen": {
+      "post": {
+        "operationId": "BankReconciliationsController_reopen",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Re-open a finalized reconciliation (admin correction)",
+        "tags": [
+          "finance/bank-reconciliations"
         ]
       }
     },
     "/v1/finance/tax-transactions": {
       "get": {
         "operationId": "TaxTransactionsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "taxTypeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all tax-transactions",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List tax transactions (PPN/PPh)",
         "tags": [
-          "finance"
+          "finance/tax-transactions"
+        ]
+      },
+      "post": {
+        "operationId": "TaxTransactionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaxTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record new tax transaction (accrued)",
+        "tags": [
+          "finance/tax-transactions"
+        ]
+      }
+    },
+    "/v1/finance/tax-transactions/summary": {
+      "get": {
+        "operationId": "TaxTransactionsController_summary",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tax summary for a date range (per tax type)",
+        "tags": [
+          "finance/tax-transactions"
         ]
       }
     },
@@ -12239,24 +15400,157 @@
             "description": ""
           }
         },
-        "summary": "Get tax-transactions by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get tax transaction by ID",
         "tags": [
-          "finance"
+          "finance/tax-transactions"
+        ]
+      }
+    },
+    "/v1/finance/tax-transactions/{id}/report": {
+      "post": {
+        "operationId": "TaxTransactionsController_report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportTaxDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark as REPORTED (filed to tax authority)",
+        "tags": [
+          "finance/tax-transactions"
+        ]
+      }
+    },
+    "/v1/finance/tax-transactions/{id}/pay": {
+      "post": {
+        "operationId": "TaxTransactionsController_pay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayTaxDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark as PAID (tax settled)",
+        "tags": [
+          "finance/tax-transactions"
         ]
       }
     },
     "/v1/finance/fixed-assets": {
       "get": {
         "operationId": "FixedAssetsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all fixed-assets",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List fixed assets (filter by status, category)",
         "tags": [
-          "finance"
+          "finance/fixed-assets"
+        ]
+      },
+      "post": {
+        "operationId": "FixedAssetsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFixedAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a new fixed asset",
+        "tags": [
+          "finance/fixed-assets"
         ]
       }
     },
@@ -12278,24 +15572,154 @@
             "description": ""
           }
         },
-        "summary": "Get fixed-assets by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get fixed asset by ID (with schedules, transfers, disposals)",
         "tags": [
-          "finance"
+          "finance/fixed-assets"
+        ]
+      },
+      "patch": {
+        "operationId": "FixedAssetsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFixedAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update fixed asset metadata (not cost — use reversal)",
+        "tags": [
+          "finance/fixed-assets"
+        ]
+      }
+    },
+    "/v1/finance/fixed-assets/{id}/book-value": {
+      "get": {
+        "operationId": "FixedAssetsController_bookValue",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current accumulated depreciation + book value",
+        "tags": [
+          "finance/fixed-assets"
         ]
       }
     },
     "/v1/finance/depreciation-schedules": {
       "get": {
         "operationId": "DepreciationSchedulesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all depreciation-schedules",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List depreciation entries (filter by asset, date range)",
         "tags": [
-          "finance"
+          "finance/depreciation-schedules"
+        ]
+      }
+    },
+    "/v1/finance/depreciation-schedules/calculate/{assetId}": {
+      "get": {
+        "operationId": "DepreciationSchedulesController_calculate",
+        "parameters": [
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Calculate monthly depreciation amount for an asset",
+        "tags": [
+          "finance/depreciation-schedules"
         ]
       }
     },
@@ -12317,24 +15741,158 @@
             "description": ""
           }
         },
-        "summary": "Get depreciation-schedules by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get depreciation entry by ID",
         "tags": [
-          "finance"
+          "finance/depreciation-schedules"
+        ]
+      }
+    },
+    "/v1/finance/depreciation-schedules/generate/{assetId}": {
+      "post": {
+        "operationId": "DepreciationSchedulesController_generate",
+        "parameters": [
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate full depreciation schedule for an asset (idempotent)",
+        "tags": [
+          "finance/depreciation-schedules"
+        ]
+      }
+    },
+    "/v1/finance/depreciation-schedules/{id}/post-journal": {
+      "post": {
+        "operationId": "DepreciationSchedulesController_postJournal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Post a depreciation entry to GL (creates journal entry)",
+        "tags": [
+          "finance/depreciation-schedules"
         ]
       }
     },
     "/v1/finance/asset-transfers": {
       "get": {
         "operationId": "AssetTransfersController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all asset-transfers",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List asset transfers (filter by asset)",
         "tags": [
-          "finance"
+          "finance/asset-transfers"
+        ]
+      },
+      "post": {
+        "operationId": "AssetTransfersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a new asset transfer (updates asset location/person)",
+        "tags": [
+          "finance/asset-transfers"
+        ]
+      }
+    },
+    "/v1/finance/asset-transfers/history/{assetId}": {
+      "get": {
+        "operationId": "AssetTransfersController_history",
+        "parameters": [
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get full transfer history for an asset",
+        "tags": [
+          "finance/asset-transfers"
         ]
       }
     },
@@ -12356,24 +15914,116 @@
             "description": ""
           }
         },
-        "summary": "Get asset-transfers by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get asset transfer by ID",
         "tags": [
-          "finance"
+          "finance/asset-transfers"
         ]
       }
     },
     "/v1/finance/asset-disposals": {
       "get": {
         "operationId": "AssetDisposalsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "disposalType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all asset-disposals",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List asset disposals (filter by asset, type)",
         "tags": [
-          "finance"
+          "finance/asset-disposals"
+        ]
+      },
+      "post": {
+        "operationId": "AssetDisposalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetDisposalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Dispose an asset (auto-computes gain/loss, flips status to DISPOSED)",
+        "tags": [
+          "finance/asset-disposals"
+        ]
+      }
+    },
+    "/v1/finance/asset-disposals/summary": {
+      "get": {
+        "operationId": "AssetDisposalsController_summary",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Disposal summary for a date range",
+        "tags": [
+          "finance/asset-disposals"
         ]
       }
     },
@@ -12395,24 +16045,100 @@
             "description": ""
           }
         },
-        "summary": "Get asset-disposals by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get asset disposal by ID",
         "tags": [
-          "finance"
+          "finance/asset-disposals"
+        ]
+      }
+    },
+    "/v1/finance/asset-disposals/{id}/reverse": {
+      "post": {
+        "operationId": "AssetDisposalsController_reverse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reverse a disposal (return asset to ACTIVE)",
+        "tags": [
+          "finance/asset-disposals"
         ]
       }
     },
     "/v1/finance/intangible-assets": {
       "get": {
         "operationId": "IntangibleAssetsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all intangible-assets",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List intangible assets (filter by status)",
         "tags": [
-          "finance"
+          "finance/intangible-assets"
+        ]
+      },
+      "post": {
+        "operationId": "IntangibleAssetsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntangibleAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a new intangible asset (software/license/patent)",
+        "tags": [
+          "finance/intangible-assets"
         ]
       }
     },
@@ -12434,9 +16160,72 @@
             "description": ""
           }
         },
-        "summary": "Get intangible-assets by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get intangible asset by ID",
         "tags": [
-          "finance"
+          "finance/intangible-assets"
+        ]
+      }
+    },
+    "/v1/finance/intangible-assets/{id}/amortization": {
+      "get": {
+        "operationId": "IntangibleAssetsController_amortization",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Calculate full amortization schedule for an intangible asset",
+        "tags": [
+          "finance/intangible-assets"
+        ]
+      }
+    },
+    "/v1/finance/intangible-assets/{id}/retire": {
+      "post": {
+        "operationId": "IntangibleAssetsController_retire",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retire an intangible asset (mark fully amortized)",
+        "tags": [
+          "finance/intangible-assets"
         ]
       }
     },
@@ -12449,9 +16238,43 @@
             "description": ""
           }
         },
-        "summary": "List all period-locks",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all period locks",
         "tags": [
-          "finance"
+          "finance/period-locks"
+        ]
+      }
+    },
+    "/v1/finance/period-locks/check": {
+      "get": {
+        "operationId": "PeriodLocksController_check",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check if a specific period is locked",
+        "tags": [
+          "finance/period-locks"
         ]
       }
     },
@@ -12473,24 +16296,157 @@
             "description": ""
           }
         },
-        "summary": "Get period-locks by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get period lock by ID",
         "tags": [
-          "finance"
+          "finance/period-locks"
+        ]
+      }
+    },
+    "/v1/finance/period-locks/lock": {
+      "post": {
+        "operationId": "PeriodLocksController_lock",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LockPeriodDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lock a period (monthly accounting close)",
+        "tags": [
+          "finance/period-locks"
+        ]
+      }
+    },
+    "/v1/finance/period-locks/{id}/unlock": {
+      "post": {
+        "operationId": "PeriodLocksController_unlock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnlockPeriodDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlock a period (admin override)",
+        "tags": [
+          "finance/period-locks"
         ]
       }
     },
     "/v1/finance/closing-checklists": {
       "get": {
         "operationId": "ClosingChecklistsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "department",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "completed",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all closing-checklists",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List checklist items (filter by period, department, completion)",
         "tags": [
-          "finance"
+          "finance/closing-checklists"
+        ]
+      }
+    },
+    "/v1/finance/closing-checklists/progress": {
+      "get": {
+        "operationId": "ClosingChecklistsController_progress",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get progress summary for a period (overall + per department)",
+        "tags": [
+          "finance/closing-checklists"
         ]
       }
     },
@@ -12512,24 +16468,177 @@
             "description": ""
           }
         },
-        "summary": "Get closing-checklists by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get checklist item by ID",
         "tags": [
-          "finance"
+          "finance/closing-checklists"
+        ]
+      }
+    },
+    "/v1/finance/closing-checklists/generate": {
+      "post": {
+        "operationId": "ClosingChecklistsController_generate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateChecklistDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate standard monthly close checklist (idempotent per period)",
+        "tags": [
+          "finance/closing-checklists"
+        ]
+      }
+    },
+    "/v1/finance/closing-checklists/{id}/complete": {
+      "post": {
+        "operationId": "ClosingChecklistsController_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark checklist item as completed",
+        "tags": [
+          "finance/closing-checklists"
+        ]
+      }
+    },
+    "/v1/finance/closing-checklists/{id}/reopen": {
+      "post": {
+        "operationId": "ClosingChecklistsController_reopen",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reopen a completed checklist item",
+        "tags": [
+          "finance/closing-checklists"
         ]
       }
     },
     "/v1/finance/adjustment-journals": {
       "get": {
         "operationId": "AdjustmentJournalsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all adjustment-journals",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List adjustment journals (filter by period, fully approved)",
         "tags": [
-          "finance"
+          "finance/adjustment-journals"
+        ]
+      },
+      "post": {
+        "operationId": "AdjustmentJournalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdjustmentJournalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Draft a new adjustment journal (PREPARED)",
+        "tags": [
+          "finance/adjustment-journals"
         ]
       }
     },
@@ -12551,24 +16660,158 @@
             "description": ""
           }
         },
-        "summary": "Get adjustment-journals by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get adjustment journal by ID",
         "tags": [
-          "finance"
+          "finance/adjustment-journals"
+        ]
+      }
+    },
+    "/v1/finance/adjustment-journals/{id}/progress": {
+      "get": {
+        "operationId": "AdjustmentJournalsController_progress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get approval progress (prepared/reviewed/approved)",
+        "tags": [
+          "finance/adjustment-journals"
+        ]
+      }
+    },
+    "/v1/finance/adjustment-journals/{id}/review": {
+      "post": {
+        "operationId": "AdjustmentJournalsController_review",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Review the draft (REVIEWED — SoD: different user from preparer)",
+        "tags": [
+          "finance/adjustment-journals"
+        ]
+      }
+    },
+    "/v1/finance/adjustment-journals/{id}/approve": {
+      "post": {
+        "operationId": "AdjustmentJournalsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve the reviewed journal (APPROVED — full SoD chain)",
+        "tags": [
+          "finance/adjustment-journals"
         ]
       }
     },
     "/v1/finance/job-order-costings": {
       "get": {
         "operationId": "JobOrderCostingsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "closed",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all job-order-costings",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List job order costings (filter open/closed)",
         "tags": [
-          "finance"
+          "finance/job-order-costings"
+        ]
+      },
+      "post": {
+        "operationId": "JobOrderCostingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobOrderCostingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a new job order costing",
+        "tags": [
+          "finance/job-order-costings"
         ]
       }
     },
@@ -12590,24 +16833,232 @@
             "description": ""
           }
         },
-        "summary": "Get job-order-costings by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get job order costing by ID",
         "tags": [
-          "finance"
+          "finance/job-order-costings"
+        ]
+      },
+      "patch": {
+        "operationId": "JobOrderCostingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJobOrderTotalsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update job order cost/revenue totals (open only)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/job-order-costings/{id}/profitability": {
+      "get": {
+        "operationId": "JobOrderCostingsController_profitability",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get profitability breakdown for a job order (cost/revenue/profit/margin)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/job-order-costings/{id}/close": {
+      "post": {
+        "operationId": "JobOrderCostingsController_close",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Close job order (no more adjustments)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/job-order-costings/{id}/reopen": {
+      "post": {
+        "operationId": "JobOrderCostingsController_reopen",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reopen a closed job order",
+        "tags": [
+          "finance/job-order-costings"
         ]
       }
     },
     "/v1/finance/cost-variances": {
       "get": {
         "operationId": "CostVariancesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "jobOrderId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "varianceType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all cost-variances",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List cost variances (filter by job order, variance type)",
         "tags": [
-          "finance"
+          "finance/cost-variances"
+        ]
+      },
+      "post": {
+        "operationId": "CostVariancesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCostVarianceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a cost variance (auto-computes variance = actual - standard)",
+        "tags": [
+          "finance/cost-variances"
+        ]
+      }
+    },
+    "/v1/finance/cost-variances/by-job/{jobOrderId}/summary": {
+      "get": {
+        "operationId": "CostVariancesController_summary",
+        "parameters": [
+          {
+            "name": "jobOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Per-type variance summary (favorable vs unfavorable) for a job order",
+        "tags": [
+          "finance/cost-variances"
         ]
       }
     },
@@ -12629,24 +17080,153 @@
             "description": ""
           }
         },
-        "summary": "Get cost-variances by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get cost variance by ID",
         "tags": [
-          "finance"
+          "finance/cost-variances"
         ]
       }
     },
     "/v1/finance/product-profitabilities": {
       "get": {
         "operationId": "ProductProfitabilitiesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all product-profitabilities",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List product profitabilities (filter by period, product)",
         "tags": [
-          "finance"
+          "finance/product-profitabilities"
+        ]
+      },
+      "post": {
+        "operationId": "ProductProfitabilitiesController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertProductProfitabilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upsert profitability for a product in a period",
+        "tags": [
+          "finance/product-profitabilities"
+        ]
+      }
+    },
+    "/v1/finance/product-profitabilities/top-performers": {
+      "get": {
+        "operationId": "ProductProfitabilitiesController_top",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Top N most profitable products for a period (default 10)",
+        "tags": [
+          "finance/product-profitabilities"
+        ]
+      }
+    },
+    "/v1/finance/product-profitabilities/worst-performers": {
+      "get": {
+        "operationId": "ProductProfitabilitiesController_worst",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bottom N least profitable / loss-making products",
+        "tags": [
+          "finance/product-profitabilities"
         ]
       }
     },
@@ -12668,24 +17248,116 @@
             "description": ""
           }
         },
-        "summary": "Get product-profitabilities by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get product profitability by ID",
         "tags": [
-          "finance"
+          "finance/product-profitabilities"
         ]
       }
     },
     "/v1/finance/cost-allocations": {
       "get": {
         "operationId": "CostAllocationsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "fromCostCenter",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "toCostCenter",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all cost-allocations",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List cost allocations (filter by from/to cost center)",
         "tags": [
-          "finance"
+          "finance/cost-allocations"
+        ]
+      },
+      "post": {
+        "operationId": "CostAllocationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCostAllocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a new cost allocation",
+        "tags": [
+          "finance/cost-allocations"
+        ]
+      }
+    },
+    "/v1/finance/cost-allocations/summary": {
+      "get": {
+        "operationId": "CostAllocationsController_summary",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Per cost-center inflow/outflow summary for a date range",
+        "tags": [
+          "finance/cost-allocations"
         ]
       }
     },
@@ -12707,24 +17379,79 @@
             "description": ""
           }
         },
-        "summary": "Get cost-allocations by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get cost allocation by ID",
         "tags": [
-          "finance"
+          "finance/cost-allocations"
         ]
       }
     },
     "/v1/finance/client-escrows": {
       "get": {
         "operationId": "ClientEscrowsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all client-escrows",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all client escrows",
         "tags": [
-          "finance"
+          "finance/client-escrows"
+        ]
+      },
+      "post": {
+        "operationId": "ClientEscrowsController_deposit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepositEscrowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deposit new customer escrow (advance payment held)",
+        "tags": [
+          "finance/client-escrows"
         ]
       }
     },
@@ -12746,24 +17473,126 @@
             "description": ""
           }
         },
-        "summary": "Get client-escrows by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get client escrow by ID",
         "tags": [
-          "finance"
+          "finance/client-escrows"
+        ]
+      }
+    },
+    "/v1/finance/client-escrows/{id}/release": {
+      "post": {
+        "operationId": "ClientEscrowsController_release",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseEscrowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Release escrow (RELEASE/RETURN/FORFEIT)",
+        "tags": [
+          "finance/client-escrows"
         ]
       }
     },
     "/v1/finance/inventory-ownerships": {
       "get": {
         "operationId": "InventoryOwnershipsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "materialId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all inventory-ownerships",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List inventory ownerships (filter by material, warehouse, owner type)",
         "tags": [
-          "finance"
+          "finance/inventory-ownerships"
+        ]
+      },
+      "post": {
+        "operationId": "InventoryOwnershipsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryOwnershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register new ownership (idempotent per (material, warehouse, owner))",
+        "tags": [
+          "finance/inventory-ownerships"
         ]
       }
     },
@@ -12785,24 +17614,177 @@
             "description": ""
           }
         },
-        "summary": "Get inventory-ownerships by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get inventory ownership by ID",
         "tags": [
-          "finance"
+          "finance/inventory-ownerships"
+        ]
+      }
+    },
+    "/v1/finance/inventory-ownerships/{id}/adjust": {
+      "post": {
+        "operationId": "InventoryOwnershipsController_adjust",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustInventoryOwnershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Adjust quantity (delta, for corrections/returns)",
+        "tags": [
+          "finance/inventory-ownerships"
+        ]
+      }
+    },
+    "/v1/finance/inventory-ownerships/{id}/transfer": {
+      "post": {
+        "operationId": "InventoryOwnershipsController_transfer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferInventoryOwnershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Transfer ownership (e.g., consign → COMPANY after customer buys)",
+        "tags": [
+          "finance/inventory-ownerships"
         ]
       }
     },
     "/v1/finance/bill-match-results": {
       "get": {
         "operationId": "BillMatchResultsController_findAll",
+        "parameters": [
+          {
+            "name": "billId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "matchStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List 4-way matching results (filter by bill, status)",
+        "tags": [
+          "finance/bill-match-results"
+        ]
+      },
+      "post": {
+        "operationId": "BillMatchResultsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBillMatchResultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a 4-way matching result (PO ↔ GR ↔ QC ↔ Invoice)",
+        "tags": [
+          "finance/bill-match-results"
+        ]
+      }
+    },
+    "/v1/finance/bill-match-results/summary": {
+      "get": {
+        "operationId": "BillMatchResultsController_summary",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "List all bill-match-results",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get matching summary (count by status + avg variance)",
         "tags": [
-          "finance"
+          "finance/bill-match-results"
         ]
       }
     },
@@ -12824,9 +17806,14 @@
             "description": ""
           }
         },
-        "summary": "Get bill-match-results by ID",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bill match result by ID",
         "tags": [
-          "finance"
+          "finance/bill-match-results"
         ]
       }
     },
@@ -16056,6 +21043,64 @@
         ]
       }
     },
+    "/v1/hr/payroll": {
+      "get": {
+        "operationId": "HrController_listPayroll[0]",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List payroll records (optionally filtered by period)",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/v1/hr/payroll": {
+      "get": {
+        "operationId": "HrController_listPayroll[1]",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List payroll records (optionally filtered by period)",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
     "/v1/hr/payroll/generate": {
       "post": {
         "operationId": "HrController_generatePayroll[0]",
@@ -16147,6 +21192,572 @@
         ],
         "tags": [
           "hr"
+        ]
+      }
+    },
+    "/v1/hr/recruitment": {
+      "get": {
+        "operationId": "HrController_listRecruitment[0]",
+        "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List recruitment candidates (stage filter optional)",
+        "tags": [
+          "hr"
+        ]
+      },
+      "post": {
+        "operationId": "HrController_createRecruitment[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecruitmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create new recruitment candidate",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/v1/hr/recruitment": {
+      "get": {
+        "operationId": "HrController_listRecruitment[1]",
+        "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List recruitment candidates (stage filter optional)",
+        "tags": [
+          "hr"
+        ]
+      },
+      "post": {
+        "operationId": "HrController_createRecruitment[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecruitmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create new recruitment candidate",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/recruitment/{id}": {
+      "get": {
+        "operationId": "HrController_getRecruitment[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get recruitment candidate by ID",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/v1/hr/recruitment/{id}": {
+      "get": {
+        "operationId": "HrController_getRecruitment[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get recruitment candidate by ID",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/recruitment/{id}/stage": {
+      "patch": {
+        "operationId": "HrController_advanceRecruitment[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecruitmentStageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Advance recruitment candidate to next stage",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/v1/hr/recruitment/{id}/stage": {
+      "patch": {
+        "operationId": "HrController_advanceRecruitment[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecruitmentStageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Advance recruitment candidate to next stage",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/tickets": {
+      "get": {
+        "operationId": "TicketsController_findAll[0]",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all HR tickets (filter by status/type)",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "post": {
+        "operationId": "TicketsController_create[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new HR ticket",
+        "tags": [
+          "hr/tickets"
+        ]
+      }
+    },
+    "/v1/v1/hr/tickets": {
+      "get": {
+        "operationId": "TicketsController_findAll[1]",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all HR tickets (filter by status/type)",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "post": {
+        "operationId": "TicketsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new HR ticket",
+        "tags": [
+          "hr/tickets"
+        ]
+      }
+    },
+    "/v1/hr/tickets/{id}": {
+      "get": {
+        "operationId": "TicketsController_findOne[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get ticket by ID",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "patch": {
+        "operationId": "TicketsController_update[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update/approve/reject a ticket",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "delete": {
+        "operationId": "TicketsController_remove[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a ticket",
+        "tags": [
+          "hr/tickets"
+        ]
+      }
+    },
+    "/v1/v1/hr/tickets/{id}": {
+      "get": {
+        "operationId": "TicketsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get ticket by ID",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "patch": {
+        "operationId": "TicketsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update/approve/reject a ticket",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "delete": {
+        "operationId": "TicketsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a ticket",
+        "tags": [
+          "hr/tickets"
         ]
       }
     },
@@ -18247,6 +23858,50 @@
         "type": "object",
         "properties": {}
       },
+      "CreateCanonicalTaskDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCanonicalTaskDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateChecklistItemDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateMarketingMemberDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCanonicalProjectDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCanonicalProjectDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateBrandDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateBrandDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpsertChannelMetricDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConfigureIntegrationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "TriggerIntegrationSyncDto": {
+        "type": "object",
+        "properties": {}
+      },
       "TrackDto": {
         "type": "object",
         "properties": {}
@@ -18610,6 +24265,22 @@
           "amount"
         ]
       },
+      "CreateAuditDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateAuditChecklistDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddFindingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateReturnDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateLostDealDto": {
         "type": "object",
         "properties": {}
@@ -18762,6 +24433,18 @@
         "type": "object",
         "properties": {}
       },
+      "CreateTaxDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCurrencyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateExchangeRateDto": {
+        "type": "object",
+        "properties": {}
+      },
       "UploadVersionDto": {
         "type": "object",
         "properties": {}
@@ -18777,6 +24460,1427 @@
       "UnlockTaskDto": {
         "type": "object",
         "properties": {}
+      },
+      "BillLineItemDto": {
+        "type": "object",
+        "properties": {
+          "itemCode": {
+            "type": "string",
+            "example": "RM-001"
+          },
+          "itemName": {
+            "type": "string",
+            "example": "Niacinamide Powder"
+          },
+          "qty": {
+            "type": "number",
+            "example": 5
+          },
+          "unit": {
+            "type": "string",
+            "example": "kg"
+          },
+          "price": {
+            "type": "number",
+            "example": 50000
+          },
+          "discount": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "required": [
+          "itemCode",
+          "itemName",
+          "qty",
+          "unit",
+          "price"
+        ]
+      },
+      "CreateBillDto": {
+        "type": "object",
+        "properties": {
+          "poNumber": {
+            "type": "string",
+            "example": "PO-2026-0099"
+          },
+          "vendorId": {
+            "type": "string",
+            "example": "uuid"
+          },
+          "procurementCategory": {
+            "type": "string",
+            "example": "Bahan Baku (11510)",
+            "description": "COA category code"
+          },
+          "invoiceDate": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2026-10-08"
+          },
+          "pic": {
+            "type": "string",
+            "example": "Arie",
+            "description": "Person in charge"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Bill for PO-2026-0099"
+          },
+          "lineItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillLineItemDto"
+            }
+          }
+        },
+        "required": [
+          "vendorId",
+          "procurementCategory",
+          "dueDate",
+          "pic",
+          "lineItems"
+        ]
+      },
+      "CancelBillDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Vendor cancelled order"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "AddBillLineItemDto": {
+        "type": "object",
+        "properties": {
+          "itemCode": {
+            "type": "string",
+            "example": "BBK00028"
+          },
+          "itemName": {
+            "type": "string",
+            "example": "Beeswax pellets"
+          },
+          "qty": {
+            "type": "number",
+            "example": 5.5
+          },
+          "unit": {
+            "type": "string",
+            "example": "kg"
+          },
+          "price": {
+            "type": "number",
+            "example": 85000
+          },
+          "discount": {
+            "type": "number",
+            "example": 5000
+          }
+        },
+        "required": [
+          "itemCode",
+          "itemName",
+          "qty",
+          "unit",
+          "price"
+        ]
+      },
+      "UpdateBillLineItemDto": {
+        "type": "object",
+        "properties": {
+          "qty": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "discount": {
+            "type": "number"
+          },
+          "rejectQty": {
+            "type": "number",
+            "example": 0.5,
+            "description": "Qty rejected by QC"
+          }
+        }
+      },
+      "CreateDownPaymentDto": {
+        "type": "object",
+        "properties": {
+          "vendorId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Vendor/Supplier ID"
+          },
+          "amount": {
+            "type": "number",
+            "example": 500000,
+            "description": "DP amount in IDR"
+          },
+          "dpDate": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "notes": {
+            "type": "string",
+            "example": "DP for PO-2026-0099"
+          }
+        },
+        "required": [
+          "vendorId",
+          "amount"
+        ]
+      },
+      "PostDownPaymentDto": {
+        "type": "object",
+        "properties": {
+          "bankAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Source bank account ID for the payment"
+          }
+        },
+        "required": [
+          "bankAccountId"
+        ]
+      },
+      "ApplyDownPaymentDto": {
+        "type": "object",
+        "properties": {
+          "billId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Bill ID to apply DP to"
+          },
+          "applyAmount": {
+            "type": "number",
+            "example": 200000,
+            "description": "Amount to apply (cannot exceed remaining)"
+          }
+        },
+        "required": [
+          "billId",
+          "applyAmount"
+        ]
+      },
+      "CancelDownPaymentDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Vendor cancelled order"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "CreateApPaymentDto": {
+        "type": "object",
+        "properties": {
+          "vendorId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Vendor/Supplier ID"
+          },
+          "totalAmount": {
+            "type": "number",
+            "example": 2500000,
+            "description": "Total payment amount in IDR"
+          },
+          "paymentDate": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "bankAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Source bank account ID"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Payment for PO-2026-0099"
+          },
+          "attachmentUrls": {
+            "example": [
+              "https://.../invoice.pdf"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "vendorId",
+          "totalAmount"
+        ]
+      },
+      "AllocateApPaymentDto": {
+        "type": "object",
+        "properties": {
+          "billId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Bill ID to allocate payment to"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1500000,
+            "description": "Amount to allocate to this bill"
+          }
+        },
+        "required": [
+          "billId",
+          "amount"
+        ]
+      },
+      "SalesInvoiceLineItemDto": {
+        "type": "object",
+        "properties": {
+          "itemCode": {
+            "type": "string",
+            "example": "PRD-001"
+          },
+          "itemName": {
+            "type": "string",
+            "example": "Brightening Serum 30ml"
+          },
+          "qty": {
+            "type": "number",
+            "example": 100
+          },
+          "unit": {
+            "type": "string",
+            "example": "pcs"
+          },
+          "price": {
+            "type": "number",
+            "example": 75000
+          },
+          "discount": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "required": [
+          "itemCode",
+          "itemName",
+          "qty",
+          "unit",
+          "price"
+        ]
+      },
+      "CreateSalesInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "example": "uuid"
+          },
+          "invoiceDate": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2026-10-08"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Invoice for SO-2026-0099"
+          },
+          "lineItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesInvoiceLineItemDto"
+            }
+          }
+        },
+        "required": [
+          "customerId",
+          "dueDate",
+          "lineItems"
+        ]
+      },
+      "CancelSalesInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Customer cancelled order"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "AddSalesInvoiceLineItemDto": {
+        "type": "object",
+        "properties": {
+          "itemCode": {
+            "type": "string",
+            "example": "PRD001"
+          },
+          "itemName": {
+            "type": "string",
+            "example": "Lipstick Matte Red"
+          },
+          "qty": {
+            "type": "number",
+            "example": 100
+          },
+          "unit": {
+            "type": "string",
+            "example": "pcs"
+          },
+          "price": {
+            "type": "number",
+            "example": 55000
+          },
+          "discount": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "required": [
+          "itemCode",
+          "itemName",
+          "qty",
+          "unit",
+          "price"
+        ]
+      },
+      "UpdateSalesInvoiceLineItemDto": {
+        "type": "object",
+        "properties": {
+          "qty": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "discount": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateArReceiptDto": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Customer ID"
+          },
+          "invoiceId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Sales invoice ID to apply to (optional, can allocate later)"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1500000,
+            "description": "Receipt amount in IDR"
+          },
+          "pph23Amount": {
+            "type": "number",
+            "example": 15000,
+            "description": "PPh 23 withholding (if applicable)"
+          },
+          "receiptDate": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "bankAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Destination bank account ID"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Payment for INV-2026-0099"
+          },
+          "attachmentUrls": {
+            "example": [
+              "https://.../receipt.pdf"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "customerId",
+          "amount"
+        ]
+      },
+      "AllocateArReceiptDto": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Sales invoice ID"
+          }
+        },
+        "required": [
+          "invoiceId"
+        ]
+      },
+      "CreateSampleFeeDto": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Customer (Prospect/Customer master)"
+          },
+          "amount": {
+            "type": "number",
+            "example": 250000,
+            "description": "Fee amount in IDR"
+          },
+          "feeDate": {
+            "type": "string",
+            "example": "2026-09-10"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Sample production cost for SKU-X123"
+          }
+        },
+        "required": [
+          "customerId",
+          "amount"
+        ]
+      },
+      "LinkSampleFeeToDpDto": {
+        "type": "object",
+        "properties": {
+          "dpId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Down Payment ID to offset against"
+          }
+        },
+        "required": [
+          "dpId"
+        ]
+      },
+      "CreateBankAccountDto": {
+        "type": "object",
+        "properties": {
+          "accountCode": {
+            "type": "string",
+            "example": "BCA-001"
+          },
+          "bankName": {
+            "type": "string",
+            "example": "BCA"
+          },
+          "accountNumber": {
+            "type": "string",
+            "example": "123-456-7890"
+          },
+          "accountType": {
+            "type": "string",
+            "example": "BANK",
+            "enum": [
+              "BANK",
+              "CASH",
+              "PETTY_CASH"
+            ]
+          },
+          "currencyCode": {
+            "type": "string",
+            "example": "IDR",
+            "default": "IDR"
+          },
+          "glAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Linked GL account"
+          },
+          "initialBalance": {
+            "type": "number",
+            "example": 10000000
+          },
+          "notes": {
+            "type": "string",
+            "example": "Main operating account"
+          }
+        },
+        "required": [
+          "accountCode",
+          "bankName",
+          "accountNumber",
+          "accountType"
+        ]
+      },
+      "UpdateBankAccountDto": {
+        "type": "object",
+        "properties": {
+          "bankName": {
+            "type": "string"
+          },
+          "accountNumber": {
+            "type": "string"
+          },
+          "glAccountId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "ReconcileBankAccountDto": {
+        "type": "object",
+        "properties": {
+          "actualBalance": {
+            "type": "number",
+            "example": 15000000,
+            "description": "Actual balance from bank statement"
+          },
+          "notes": {
+            "type": "string",
+            "example": "September 2026 statement"
+          }
+        },
+        "required": [
+          "actualBalance",
+          "notes"
+        ]
+      },
+      "CreateBankTransactionDto": {
+        "type": "object",
+        "properties": {
+          "bankAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Bank account ID"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "transactionType": {
+            "type": "string",
+            "example": "DEPOSIT",
+            "enum": [
+              "DEPOSIT",
+              "WITHDRAWAL",
+              "TRANSFER",
+              "ADJUSTMENT"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "example": 1500000,
+            "description": "Amount in IDR (always positive)"
+          },
+          "description": {
+            "type": "string",
+            "example": "Bank fees September 2026"
+          },
+          "attachmentUrls": {
+            "example": [
+              "https://storage/receipt.pdf"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "bankAccountId",
+          "transactionType",
+          "amount",
+          "description"
+        ]
+      },
+      "ReconcileBankTransactionDto": {
+        "type": "object",
+        "properties": {
+          "reconciliationId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Bank reconciliation session ID"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Matched against Sept statement line 12"
+          }
+        }
+      },
+      "CreateBankReconciliationDto": {
+        "type": "object",
+        "properties": {
+          "bankAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Bank account being reconciled"
+          },
+          "periodStart": {
+            "type": "string",
+            "example": "2026-09-01",
+            "description": "Start of reconciliation period"
+          },
+          "periodEnd": {
+            "type": "string",
+            "example": "2026-09-30",
+            "description": "End of reconciliation period"
+          },
+          "statementBalance": {
+            "type": "number",
+            "example": 50000000,
+            "description": "Actual ending balance from bank statement"
+          },
+          "attachmentUrls": {
+            "example": [
+              "https://storage/statement.pdf"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "example": "September 2026 monthly reconciliation"
+          }
+        },
+        "required": [
+          "bankAccountId",
+          "periodStart",
+          "periodEnd",
+          "statementBalance"
+        ]
+      },
+      "FinalizeReconciliationDto": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "string",
+            "example": "All lines matched against statement"
+          }
+        }
+      },
+      "CreateTaxTransactionDto": {
+        "type": "object",
+        "properties": {
+          "taxTypeId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Tax rate (PPN 11%, PPh 23, etc.)"
+          },
+          "sourceType": {
+            "type": "string",
+            "example": "BILL",
+            "enum": [
+              "BILL",
+              "SALES_INVOICE",
+              "PAYMENT"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Source document ID"
+          },
+          "baseAmount": {
+            "type": "number",
+            "example": 1000000,
+            "description": "Taxable base amount"
+          },
+          "taxRate": {
+            "type": "number",
+            "example": 11,
+            "description": "Tax rate percentage (0-100)"
+          },
+          "taxAmount": {
+            "type": "number",
+            "example": 110000,
+            "description": "Tax amount (auto-calculated if omitted)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "PPN on PO-2026-1234"
+          }
+        },
+        "required": [
+          "taxTypeId",
+          "sourceType",
+          "sourceId",
+          "baseAmount",
+          "taxRate"
+        ]
+      },
+      "ReportTaxDto": {
+        "type": "object",
+        "properties": {
+          "reportPeriod": {
+            "type": "string",
+            "example": "2026-09",
+            "description": "Reporting period (e.g., 2026-09)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Filed via e-Faktur"
+          }
+        },
+        "required": [
+          "reportPeriod"
+        ]
+      },
+      "PayTaxDto": {
+        "type": "object",
+        "properties": {
+          "paymentRef": {
+            "type": "string",
+            "example": "TAX-PAY-2026-09-001"
+          },
+          "notes": {
+            "type": "string",
+            "example": "BCA transfer ref 98765"
+          }
+        }
+      },
+      "CreateFixedAssetDto": {
+        "type": "object",
+        "properties": {
+          "assetNumber": {
+            "type": "string",
+            "example": "FA-2609-0001",
+            "description": "Auto-generated if omitted"
+          },
+          "assetName": {
+            "type": "string",
+            "example": "Toyota Innova 2024"
+          },
+          "assetCategory": {
+            "type": "string",
+            "example": "Kendaraan",
+            "description": "Free-text category (Kendaraan, Peralatan, Bangunan, dll)"
+          },
+          "acquisitionDate": {
+            "type": "string",
+            "example": "2026-09-01"
+          },
+          "acquisitionCost": {
+            "type": "number",
+            "example": 250000000,
+            "description": "Acquisition cost in IDR"
+          },
+          "usefulLife": {
+            "type": "number",
+            "example": 60,
+            "description": "Useful life in months (e.g., 60 = 5 years)"
+          },
+          "salvageValue": {
+            "type": "number",
+            "example": 50000000,
+            "default": 0
+          },
+          "location": {
+            "type": "string",
+            "example": "Kantor Pusat Jakarta"
+          },
+          "responsiblePerson": {
+            "type": "string",
+            "example": "Pak Budi"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Untuk operasional direksi"
+          }
+        },
+        "required": [
+          "assetName",
+          "assetCategory",
+          "acquisitionDate",
+          "acquisitionCost",
+          "usefulLife"
+        ]
+      },
+      "UpdateFixedAssetDto": {
+        "type": "object",
+        "properties": {
+          "assetName": {
+            "type": "string"
+          },
+          "assetCategory": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "responsiblePerson": {
+            "type": "string"
+          },
+          "salvageValue": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateAssetTransferDto": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Asset being transferred"
+          },
+          "transferDate": {
+            "type": "string",
+            "example": "2026-09-15"
+          },
+          "fromLocation": {
+            "type": "string",
+            "example": "Kantor Jakarta"
+          },
+          "toLocation": {
+            "type": "string",
+            "example": "Kantor Surabaya"
+          },
+          "fromPerson": {
+            "type": "string",
+            "example": "Pak Andi"
+          },
+          "toPerson": {
+            "type": "string",
+            "example": "Bu Susi"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Relokasi kantor cabang"
+          }
+        },
+        "required": [
+          "assetId",
+          "transferDate",
+          "fromLocation",
+          "toLocation"
+        ]
+      },
+      "CreateAssetDisposalDto": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Asset to dispose"
+          },
+          "disposalDate": {
+            "type": "string",
+            "example": "2026-09-20"
+          },
+          "disposalType": {
+            "type": "string",
+            "example": "SALE",
+            "enum": [
+              "SALE",
+              "WRITE_OFF",
+              "SCRAP"
+            ]
+          },
+          "proceeds": {
+            "type": "number",
+            "example": 80000000,
+            "description": "Proceeds from sale (0 for write-off/scrap)"
+          },
+          "buyer": {
+            "type": "string",
+            "example": "PT Xyz",
+            "description": "Buyer name (for SALE)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Replacement cycle"
+          }
+        },
+        "required": [
+          "assetId",
+          "disposalDate",
+          "disposalType",
+          "proceeds"
+        ]
+      },
+      "CreateIntangibleAssetDto": {
+        "type": "object",
+        "properties": {
+          "assetNumber": {
+            "type": "string",
+            "example": "IA-2609-0001"
+          },
+          "assetName": {
+            "type": "string",
+            "example": "Microsoft 365 Business License"
+          },
+          "acquisitionDate": {
+            "type": "string",
+            "example": "2026-09-01"
+          },
+          "acquisitionCost": {
+            "type": "number",
+            "example": 25000000
+          },
+          "amortizationPeriod": {
+            "type": "number",
+            "example": 36,
+            "description": "Amortization period in months (e.g., 36 = 3 years)"
+          },
+          "amortizationMethod": {
+            "type": "string",
+            "example": "STRAIGHT_LINE",
+            "default": "STRAIGHT_LINE"
+          },
+          "notes": {
+            "type": "string",
+            "example": "5 seats, renewable"
+          }
+        },
+        "required": [
+          "assetName",
+          "acquisitionDate",
+          "acquisitionCost",
+          "amortizationPeriod"
+        ]
+      },
+      "LockPeriodDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "example": "2026-09-01",
+            "description": "First day of month to lock"
+          },
+          "notes": {
+            "type": "string",
+            "example": "September 2026 monthly close"
+          }
+        },
+        "required": [
+          "period"
+        ]
+      },
+      "UnlockPeriodDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Audit correction needed for September close"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "GenerateChecklistDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "example": "2026-09-01",
+            "description": "Period start date (YYYY-MM-DD)"
+          }
+        },
+        "required": [
+          "period"
+        ]
+      },
+      "CompleteItemDto": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "string",
+            "example": "Reconciliation confirmed against bank statement"
+          }
+        }
+      },
+      "CreateAdjustmentJournalDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "example": "2026-09-01",
+            "description": "Period (YYYY-MM-DD)"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accrual for September utilities"
+          },
+          "totalAmount": {
+            "type": "number",
+            "example": 5000000,
+            "description": "Total amount of adjustment"
+          },
+          "attachmentUrls": {
+            "example": [
+              "https://storage/utility-bill.pdf"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "period",
+          "description",
+          "totalAmount"
+        ]
+      },
+      "CreateJobOrderCostingDto": {
+        "type": "object",
+        "properties": {
+          "jobOrderNumber": {
+            "type": "string",
+            "example": "JO-2026-09-0001"
+          },
+          "description": {
+            "type": "string",
+            "example": "Lipstick batch September week 3"
+          },
+          "totalCost": {
+            "type": "number",
+            "example": 5500000
+          },
+          "totalRevenue": {
+            "type": "number",
+            "example": 8000000
+          }
+        },
+        "required": [
+          "jobOrderNumber",
+          "totalCost"
+        ]
+      },
+      "UpdateJobOrderTotalsDto": {
+        "type": "object",
+        "properties": {
+          "totalCost": {
+            "type": "number"
+          },
+          "totalRevenue": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateCostVarianceDto": {
+        "type": "object",
+        "properties": {
+          "jobOrderId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Job Order ID"
+          },
+          "varianceType": {
+            "type": "string",
+            "example": "MATERIAL",
+            "enum": [
+              "MATERIAL",
+              "LABOR",
+              "OVERHEAD"
+            ]
+          },
+          "standardCost": {
+            "type": "number",
+            "example": 1000000
+          },
+          "actualCost": {
+            "type": "number",
+            "example": 1150000
+          },
+          "notes": {
+            "type": "string",
+            "example": "Material price increased 15%"
+          }
+        },
+        "required": [
+          "jobOrderId",
+          "varianceType",
+          "standardCost",
+          "actualCost"
+        ]
+      },
+      "UpsertProductProfitabilityDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Product ID"
+          },
+          "productName": {
+            "type": "string",
+            "example": "Lipstick Matte Red"
+          },
+          "period": {
+            "type": "string",
+            "example": "2026-09-01",
+            "description": "Period start (YYYY-MM-DD)"
+          },
+          "revenue": {
+            "type": "number",
+            "example": 25000000
+          },
+          "cost": {
+            "type": "number",
+            "example": 15000000
+          }
+        },
+        "required": [
+          "productId",
+          "productName",
+          "period",
+          "revenue",
+          "cost"
+        ]
+      },
+      "CreateCostAllocationDto": {
+        "type": "object",
+        "properties": {
+          "allocationDate": {
+            "type": "string",
+            "example": "2026-09-30"
+          },
+          "amount": {
+            "type": "number",
+            "example": 5000000,
+            "description": "Amount to allocate (IDR)"
+          },
+          "fromCostCenter": {
+            "type": "string",
+            "example": "CC-OVERHEAD"
+          },
+          "toCostCenter": {
+            "type": "string",
+            "example": "CC-PRODUCTION"
+          },
+          "allocationMethod": {
+            "type": "string",
+            "example": "DIRECT",
+            "enum": [
+              "DIRECT",
+              "STEP_DOWN",
+              "RECIPROCAL"
+            ]
+          },
+          "basis": {
+            "type": "string",
+            "example": "square_feet"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Q3 overhead allocation"
+          }
+        },
+        "required": [
+          "allocationDate",
+          "amount",
+          "fromCostCenter",
+          "toCostCenter"
+        ]
+      },
+      "DepositEscrowDto": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "example": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "example": 5000000,
+            "description": "Escrow amount in IDR"
+          },
+          "depositDate": {
+            "type": "string",
+            "example": "2026-09-08"
+          },
+          "purpose": {
+            "type": "string",
+            "example": "Advance payment for PO-2026-0099"
+          },
+          "notes": {
+            "type": "string",
+            "example": "From BCA transfer"
+          },
+          "bankAccountId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Destination bank account"
+          }
+        },
+        "required": [
+          "customerId",
+          "amount"
+        ]
+      },
+      "ReleaseEscrowDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "example": "RELEASE",
+            "enum": [
+              "RELEASE",
+              "RETURN",
+              "FORFEIT"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "example": "Customer completed order, release as final payment"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "CreateInventoryOwnershipDto": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Material ID"
+          },
+          "warehouseId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Warehouse ID"
+          },
+          "ownerType": {
+            "type": "string",
+            "example": "CONSIGNMENT",
+            "enum": [
+              "COMPANY",
+              "CONSIGNMENT",
+              "CUSTOMER_OWNED",
+              "SUPPLIER_OWNED"
+            ]
+          },
+          "ownerId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Customer/Supplier ID for non-COMPANY owners"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 100,
+            "description": "Quantity"
+          },
+          "unitCost": {
+            "type": "number",
+            "example": 25000,
+            "description": "Unit cost (IDR)"
+          }
+        },
+        "required": [
+          "materialId",
+          "warehouseId",
+          "ownerType",
+          "quantity"
+        ]
+      },
+      "AdjustInventoryOwnershipDto": {
+        "type": "object",
+        "properties": {
+          "delta": {
+            "type": "number",
+            "example": -5,
+            "description": "Quantity delta (positive = add, negative = remove)"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Damaged in warehouse"
+          }
+        },
+        "required": [
+          "delta"
+        ]
+      },
+      "TransferInventoryOwnershipDto": {
+        "type": "object",
+        "properties": {
+          "newOwnerType": {
+            "type": "string",
+            "example": "COMPANY",
+            "enum": [
+              "COMPANY",
+              "CONSIGNMENT",
+              "CUSTOMER_OWNED",
+              "SUPPLIER_OWNED"
+            ]
+          },
+          "newOwnerId": {
+            "type": "string",
+            "example": "uuid"
+          }
+        },
+        "required": [
+          "newOwnerType"
+        ]
+      },
+      "CreateBillMatchResultDto": {
+        "type": "object",
+        "properties": {
+          "billId": {
+            "type": "string",
+            "example": "uuid",
+            "description": "Bill being matched"
+          },
+          "orderedQty": {
+            "type": "number",
+            "example": 10,
+            "description": "Original PO qty"
+          },
+          "actualQty": {
+            "type": "number",
+            "example": 10,
+            "description": "Actual received qty (GR)"
+          },
+          "poPrice": {
+            "type": "number",
+            "example": 85000,
+            "description": "Original PO price"
+          },
+          "actualPrice": {
+            "type": "number",
+            "example": 85000,
+            "description": "Actual invoice price"
+          },
+          "notes": {
+            "type": "string",
+            "example": "All matched, no variance"
+          }
+        },
+        "required": [
+          "billId",
+          "orderedQty",
+          "actualQty",
+          "poPrice",
+          "actualPrice"
+        ]
       },
       "CreateQCAuditDto": {
         "type": "object",
@@ -18803,6 +25907,22 @@
         "properties": {}
       },
       "SubjectiveScoreDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateRecruitmentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRecruitmentStageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateTicketDto": {
         "type": "object",
         "properties": {}
       },

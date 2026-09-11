@@ -205,4 +205,14 @@ export class TriggerIntegrationSyncDto {
   @IsUUID() connectionId!: string;
 }
 
+export class UpdateMarketingMemberDto {
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(100) name?: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(150) role?: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(150) email?: string;
+  @IsOptional() @IsString() @MaxLength(30) phone?: string;
+  @IsOptional() @IsString() @MaxLength(20) avatarBg?: string;
+  @IsOptional() @IsString() @MaxLength(5) initial?: string;
+  @IsOptional() @IsString() @MaxLength(100) department?: string;
+}
+
 export { SOCIAL_STATUSES };

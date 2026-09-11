@@ -1,0 +1,63 @@
+{
+  "contractVersion": "1.0.0",
+  "status": "FROZEN_FOR_PHASE_2",
+  "product": "NexERP Digital Marketing Task & Social Management",
+  "visualAuthority": {
+    "goldenReference": "frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx",
+    "designContract": "VISUAL_DNA.md",
+    "componentBarrel": "@/components/dna",
+    "prototypeUsage": "FUNCTIONAL_REFERENCE_ONLY"
+  },
+  "roles": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "DIGIMAR", "DIRECTOR", "COMMERCIAL"],
+  "routes": [
+    { "id": "task-entry", "path": "/marketing/management-task", "kind": "redirect", "target": "/marketing/management-task/overview" },
+    { "id": "task-workspace", "path": "/marketing/management-task/[member]", "kind": "page", "defaultMember": "overview", "views": ["overview", "my-tasks", "team", "projects"] },
+    { "id": "social-planner", "path": "/marketing/social-tracker", "kind": "page", "views": ["table", "board", "calendar", "gallery", "list"] },
+    { "id": "social-reporting", "path": "/marketing/social-tracker/reporting", "kind": "planned-page", "views": ["executive", "funnel", "weekly", "stories", "instagram", "tiktok", "youtube", "website", "paid-ads"] },
+    { "id": "social-integrations", "path": "/marketing/social-tracker/integrations", "kind": "planned-page", "views": ["connections", "sync-history"] }
+  ],
+  "statusMachines": {
+    "task": {
+      "values": ["NOT_STARTED", "IN_PROGRESS", "IN_REVIEW", "REVISION", "DONE", "CANCELLED"],
+      "terminal": ["DONE", "CANCELLED"],
+      "legacyAliases": { "Not started": "NOT_STARTED", "Working on it": "IN_PROGRESS", "Progress": "IN_PROGRESS", "In Progress": "IN_PROGRESS", "Revision": "REVISION", "Done": "DONE" }
+    },
+    "socialPost": {
+      "values": ["IDEA", "DRAFT", "SCRIPTING", "PRODUCTION", "IN_REVIEW", "REVISION", "APPROVED", "SCHEDULED", "PUBLISHED", "ARCHIVED"],
+      "terminal": ["PUBLISHED", "ARCHIVED"]
+    },
+    "project": {
+      "values": ["PLANNED", "ON_TRACK", "AT_RISK", "ON_HOLD", "COMPLETED", "CANCELLED"],
+      "terminal": ["COMPLETED", "CANCELLED"]
+    }
+  },
+  "rbac": {
+    "task.read.all": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"],
+    "task.read.scoped": ["DIGIMAR"],
+    "task.create.all": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"],
+    "task.create.scoped": ["DIGIMAR"],
+    "task.manage.project": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"],
+    "task.comment": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "DIGIMAR"],
+    "task.attach": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "DIGIMAR"],
+    "social.read": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "DIGIMAR", "DIRECTOR", "COMMERCIAL"],
+    "social.write": ["SUPER_ADMIN", "MARKETING", "DIGIMAR"],
+    "social.delete": ["SUPER_ADMIN", "MARKETING"],
+    "report.read": ["SUPER_ADMIN", "HEAD_OPS", "MARKETING", "DIGIMAR", "DIRECTOR", "COMMERCIAL"],
+    "report.write": ["SUPER_ADMIN", "MARKETING", "DIGIMAR"],
+    "integration.configure": ["SUPER_ADMIN", "MARKETING"],
+    "integration.sync": ["SUPER_ADMIN", "MARKETING", "DIGIMAR"]
+  },
+  "nonNegotiableRules": [
+    "DATABASE_IS_RUNTIME_SOURCE_OF_TRUTH",
+    "NO_LOCALSTORAGE_DOMAIN_STATE",
+    "NO_SAMPLE_DATA_ON_API_FAILURE",
+    "SERVER_ENFORCES_RBAC",
+    "SERVER_ENFORCES_STATE_TRANSITIONS",
+    "AUDIT_EVERY_MUTATION",
+    "DEEP_LINKABLE_FILTERS_AND_VIEWS",
+    "ONE_PRIMARY_ACTION_PER_VIEW",
+    "KEYBOARD_AND_TOUCH_EQUIVALENCE",
+    "CHARTS_HAVE_TABLE_ALTERNATIVES",
+    "NO_SECRET_RETURNED_TO_BROWSER"
+  ]
+}

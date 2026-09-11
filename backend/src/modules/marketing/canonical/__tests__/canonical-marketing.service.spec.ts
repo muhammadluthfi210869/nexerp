@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
@@ -49,6 +50,12 @@ function prismaMock() {
       findFirst: jest.fn(),
       updateMany: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    marketingTeamMember: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
       update: jest.fn(),
     },
     marketingTaskChecklistItem: {
@@ -133,14 +140,15 @@ describe('CanonicalMarketingService', () => {
     expect(result.total).toBe(1);
     expect(prisma.marketingTask.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
-          OR: [
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
             { ownerId: 'member' },
             { assigneeId: 'member' },
             { picId: 'member' },
             { assignedById: 'member' },
-          ],
-        },
+            { reviewerId: 'member' },
+          ]),
+        }),
       }),
     );
   });
@@ -167,6 +175,55 @@ describe('CanonicalMarketingService', () => {
     await expect(
       service.updateTask(member, 'task-1', { version: 1, title: 'Changed' }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('does not let a member reassign or reschedule a visible task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(task());
+    const service = new CanonicalMarketingService(prisma);
+
+    await expect(
+      service.updateTask(member, 'task-1', {
+        version: 1,
+        assigneeId: 'another-account',
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.marketingTask.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('includes a reviewer in the read scope without granting edit access', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findMany.mockResolvedValue([]);
+    prisma.marketingTask.count.mockResolvedValue(0);
+    const service = new CanonicalMarketingService(prisma);
+
+    await service.listTasks(member, { page: 1, limit: 50 });
+
+    expect(prisma.marketingTask.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([{ reviewerId: 'member' }]),
+        }),
+      }),
+    );
+  });
+
+  it('requires edit rights before uploading an attachment', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(
+      task({ ownerId: 'owner', assigneeId: 'other', picId: 'other', assignedById: 'member' }),
+    );
+    const service = new CanonicalMarketingService(prisma);
+
+    await expect(
+      service.addAttachment(member, 'task-1', {
+        name: 'proof.pdf',
+        type: 'application/pdf',
+        sizeKb: 1,
+        path: 'uploads/proof.pdf',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.marketingTaskAttachment.create).not.toHaveBeenCalled();
   });
 
   it('replays a persistent idempotency result without a second create', async () => {
@@ -392,4 +449,69 @@ describe('CanonicalMarketingService', () => {
     );
     expect(prisma.marketingTaskAttachment.delete).not.toHaveBeenCalled();
   });
+
+  it('allows owner or manager to delete a task', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findFirst.mockResolvedValue(
+      task({ id: 'task-1', ownerId: 'member' }),
+    );
+    const service = new CanonicalMarketingService(prisma);
+    await service.deleteTask(member, 'task-1');
+    expect(prisma.marketingTask.delete).toHaveBeenCalledWith({
+      where: { id: 'task-1' },
+    });
+  });
+
+  it('lists active marketing team members', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTeamMember.findMany.mockResolvedValue([
+      {
+        id: 'm-1',
+        name: 'Gusti',
+        role: 'Lead Strategist',
+        email: 'gusti@nexerp.id',
+        phone: '+62812',
+        avatarBg: '#e8eef6',
+        initial: 'G',
+        department: 'Strategy',
+        isActive: true,
+      },
+    ]);
+    const service = new CanonicalMarketingService(prisma);
+    const result = await service.listMembers(member);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Gusti');
+  });
+
+  it('updates a marketing team member profile', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTeamMember.findUnique.mockResolvedValue({
+      id: 'm-1',
+      userId: 'u-1',
+      name: 'Gusti',
+      role: 'Lead Strategist',
+      email: 'gusti@nexerp.id',
+    });
+    prisma.marketingTeamMember.update.mockResolvedValue({
+      id: 'm-1',
+      userId: 'u-1',
+      name: 'Gusti Updated',
+      role: 'Head of Growth',
+      email: 'gusti.updated@nexerp.id',
+      phone: '+628999',
+      avatarBg: '#e8eef6',
+      initial: 'G',
+      department: 'Growth',
+    });
+    prisma.user.update = jest.fn().mockResolvedValue({});
+    const service = new CanonicalMarketingService(prisma);
+    const result = await service.updateMember(manager, 'm-1', {
+      name: 'Gusti Updated',
+      role: 'Head of Growth',
+      email: 'gusti.updated@nexerp.id',
+    });
+    expect(result.name).toBe('Gusti Updated');
+    expect(prisma.marketingTeamMember.update).toHaveBeenCalled();
+  });
 });
+
