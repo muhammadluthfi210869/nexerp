@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/dna/DnaFieldCompat";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna/DnaFieldCompat";
 import {
   Loader2,
   AlertTriangle,
@@ -503,7 +503,7 @@ export default function WarehouseHubPage() {
                                   {log.type.replace("_", " ")}
                                 </p>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">
-                                  {new Date(log.createdAt).toLocaleString()} •{" "}
+                                  {new Date(log.createdAt).toLocaleString()} â€¢{" "}
                                   {log.referenceNo || "NO_REF"}
                                 </p>
                               </div>

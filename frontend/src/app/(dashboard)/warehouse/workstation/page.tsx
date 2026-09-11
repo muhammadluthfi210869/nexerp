@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -49,11 +49,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { TabsContent } from "@/components/ui/tabs";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Button, Input, Dialog, DialogContent, DialogTitle, DialogFooter, TabsContent, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/dna/DnaFieldCompat";
 
 export default function WarehouseWorkstation() {
   const queryClient = useQueryClient();
@@ -205,7 +201,7 @@ export default function WarehouseWorkstation() {
       }
     >
 
-      {/* 📑 II. EXECUTION TABS */}
+      {/* ðŸ“‘ II. EXECUTION TABS */}
       <div className="w-full">
          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
              <DnaTabNav
@@ -240,7 +236,7 @@ export default function WarehouseWorkstation() {
                     key={item.id}
                     icon={<Truck />}
                     title={`PO: ${item.poId}`}
-                    subtitle={`${item.receivedAt} • ${item.items?.length} MATERIALS IN QUEUE`}
+                    subtitle={`${item.receivedAt} â€¢ ${item.items?.length} MATERIALS IN QUEUE`}
                     status="IN_TRANSIT"
                     actionLabel="RECEIVE BATCH"
                     onAction={() => toast.info("PROCEED TO INBOUND TAB")}
@@ -262,7 +258,7 @@ export default function WarehouseWorkstation() {
                       key={item.id}
                       icon={<ArrowRightLeft />}
                       title={item.transferNumber}
-                      subtitle={`${item.sourceWarehouse?.name} → ${item.destWarehouse?.name}`}
+                      subtitle={`${item.sourceWarehouse?.name} â†’ ${item.destWarehouse?.name}`}
                       status={item.status}
                       actionLabel="EXECUTE MOVE"
                       isAmber={true}
@@ -282,7 +278,7 @@ export default function WarehouseWorkstation() {
                       key={item.id}
                       icon={<ClipboardCheck />}
                       title={item.opnameNumber}
-                      subtitle={`${item.warehouse?.name} • ITEMS: ${item.items?.length}`}
+                      subtitle={`${item.warehouse?.name} â€¢ ITEMS: ${item.items?.length}`}
                       status={item.approvalStatus}
                       actionLabel="APPROVE DISCREPANCY"
                       onAction={() => setSelectedOpname(item)}
@@ -335,7 +331,7 @@ export default function WarehouseWorkstation() {
          </TabsContent>
       </div>
 
-      {/* 🛡️ FEFO SECURITY GATE DIALOG */}
+      {/* ðŸ›¡ï¸ FEFO SECURITY GATE DIALOG */}
       <Dialog open={!!selectedIssueItem} onOpenChange={(open) => !open && setSelectedIssueItem(null)}>
          <DialogContent className="sm:max-w-[550px] bg-white rounded-[24px] border border-slate-200 shadow-2xl p-0 overflow-hidden">
             <div className="bg-emerald-600 p-10 text-white relative">
@@ -413,7 +409,7 @@ export default function WarehouseWorkstation() {
          </DialogContent>
       </Dialog>
 
-      {/* 🔐 AUDIT APPROVAL GATE DIALOG */}
+      {/* ðŸ” AUDIT APPROVAL GATE DIALOG */}
       <Dialog open={!!selectedOpname} onOpenChange={(open) => !open && setSelectedOpname(null)}>
          <DialogContent className="sm:max-w-[500px] bg-white rounded-[24px] border border-slate-200 shadow-2xl p-0 overflow-hidden">
             <div className="bg-brand-black p-10 text-white relative">
@@ -449,7 +445,7 @@ export default function WarehouseWorkstation() {
                      </div>
                      <Input 
                        type="password" 
-                       placeholder="••••" 
+                       placeholder="â€¢â€¢â€¢â€¢" 
                        className="h-16 text-center text-4xl tracking-[1em] font-black border-2 border-slate-100 bg-slate-50 rounded-2xl focus:ring-blue-600/10"
                        value={managerPin}
                        onChange={(e) => setManagerPin(e.target.value)}

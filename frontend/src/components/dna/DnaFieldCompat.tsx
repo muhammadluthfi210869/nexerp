@@ -10,11 +10,13 @@ export { DnaTableHead as TableHead } from "./DnaTable";
 export { DnaTh as TableHeader } from "./DnaTable";
 export { DnaTableRow as TableRow } from "./DnaTable";
 
-export { DnaSelect as Select } from "./DnaSelect";
-export { DnaSelect as SelectTrigger } from "./DnaSelect";
-export { DnaSelect as SelectValue } from "./DnaSelect";
-export { DnaSelect as SelectContent } from "./DnaSelect";
-export { DnaSelect as SelectItem } from "./DnaSelect";
+export {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "./DnaSelectCompound";
 
 export {
   DnaTabs as Tabs,
