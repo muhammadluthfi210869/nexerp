@@ -4,19 +4,11 @@ import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone, CalendarDays, BarChart3 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DashboardCard, PageSection, TableWrapper } from "@/components/dna";
+import { DashboardCard, PageSection, TableWrapper, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
 import { marketingProfiles } from "@/components/marketing/project-management-prototype-extra-data";
 import { marketingTasks } from "@/components/marketing/project-management-prototype-data";
 import { AvatarPill, ProgressBar, StatusBadge } from "@/components/marketing/project-management-prototype-ui";
 import { useMarketingPrototypeBundle } from "@/components/marketing/use-marketing-prototype";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type ProfileRow = {
   id: string;
