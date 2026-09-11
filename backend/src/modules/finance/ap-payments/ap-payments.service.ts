@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
 
@@ -215,7 +215,7 @@ export class APPaymentsService {
    * Sum of allocations must equal totalAmount.
    */
   async allocateToBill(
-    userId: string,
+    _userId: string,
     paymentId: string,
     dto: { billId: string; amount: number },
   ) {
