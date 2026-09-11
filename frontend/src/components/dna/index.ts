@@ -115,6 +115,8 @@ export {
 } from "./DnaLegacyCompat";
 
 export { DnaAuditTimeline } from "./DnaAuditTimeline";
+export { DnaGateIndicator, DnaGateLabel } from "./DnaGateIndicator";
+export type { DnaGateIndicatorProps, DnaGate, DnaGateStatus } from "./DnaGateIndicator";
 
 export type {
   DnaKpiItem,
