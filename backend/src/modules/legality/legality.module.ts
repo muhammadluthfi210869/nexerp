@@ -5,9 +5,10 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { LegalityListener } from './legality.listener';
 
 import { BussdevModule } from '../bussdev/bussdev.module';
+import { AuditsModule } from './audits/audits.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => BussdevModule)],
+  imports: [PrismaModule, forwardRef(() => BussdevModule), AuditsModule],
   providers: [LegalityService, LegalityListener],
   controllers: [LegalityController],
   exports: [LegalityService],
