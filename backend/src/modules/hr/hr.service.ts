@@ -380,6 +380,25 @@ export class HrService {
 
   // --- PAYROLL (FIXED) ---
 
+  async findAllPayroll(periodName?: string) {
+    return this.prisma.payroll.findMany({
+      where: periodName
+        ? { period: { name: periodName } }
+        : undefined,
+      include: {
+        period: { select: { id: true, name: true } },
+        items: {
+          include: {
+            employee: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async generateDraftPayroll(periodName: string) {
     const period = await this.prisma.financialPeriod.findFirst({
       where: { name: periodName },

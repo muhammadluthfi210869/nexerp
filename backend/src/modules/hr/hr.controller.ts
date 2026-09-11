@@ -126,6 +126,12 @@ export class HrController {
 
   // --- PAYROLL ---
 
+  @Get('payroll')
+  @ApiOperation({ summary: 'List payroll records (optionally filtered by period)' })
+  listPayroll(@Query('period') period?: string) {
+    return this.hrService.findAllPayroll(period);
+  }
+
   @Post('payroll/generate')
   generatePayroll(@Body('period') period: string) {
     return this.hrService.generateDraftPayroll(period);
