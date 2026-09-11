@@ -20,23 +20,24 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { TableShell } from "@/components/layout/TableShell";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
 import {
+  TableWrapper,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   SALES_ORDER: "Sales Order",

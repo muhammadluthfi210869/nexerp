@@ -19,22 +19,24 @@ import {
   Calendar,
   ArrowUpRight,
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
 import {
+  DnaButton,
+  DnaBadge,
+  DnaInput,
+  StatCard,
+  TableWrapper,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
