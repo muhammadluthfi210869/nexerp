@@ -30,15 +30,7 @@ import {
   Percent,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { StatCard } from "@/components/dna/StatCard";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { SectionLabel } from "@/components/dna/SectionLabel";
+import { Card, Input, DnaInput, Tabs, TabsContent, TabsList, TabsTrigger, DnaBadge, DnaButton, StatCard, TableWrapper, SectionLabel } from "@/components/dna";
 import { toast } from "sonner";
 
 interface SalesMember {
