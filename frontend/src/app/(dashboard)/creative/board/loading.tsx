@@ -1,5 +1,5 @@
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 import { Palette } from "lucide-react";
 
 export default function CreativeLoading() {
