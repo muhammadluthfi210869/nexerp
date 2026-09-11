@@ -1,25 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+  DnaButton,
+} from "@/components/dna";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Palette, FileText, ShoppingBag, Zap } from "lucide-react";
-import { DnaButton } from "@/components/dna";
 
 export function CreateDesignTaskModal({ 
   isOpen, 
