@@ -1,7 +1,7 @@
 # 01 — DECISIONS LOG (Quick Reference)
 
 > **Tujuan:** Compact reference keputusan final untuk session berikutnya. Jika memory hilang, baca file ini lebih dulu sebelum `00_DISCUSSION_NOTES_2026-09-10.md` (yang lebih panjang).
-> **Last updated:** 2026-09-10
+> **Last updated:** 2026-09-11 (Phase 2 → Phase 3 transition marker added)
 > **Format:** Tabel sederhana, satu baris = satu keputusan. ID bisa dirujuk dari file lain.
 
 ---
@@ -95,13 +95,34 @@
 
 - **178 layar ERP** (`NEX_ERP_MASTER_SPECIFICATION.md`) / **176 screens JSON** (gap 2 — ADR-001)
 - **95 Prisma model** di **19 schema file split** (akan dikonsolidasi)
-- **520 endpoint** (per audit awal, mungkin sudah lebih sekarang)
+- **686 endpoint** aktual di backend (per scan 2026-09-11) — `API_CONTRACT.yaml` masih v0.1 (49 endpoints), update ke v0.2 outstanding
 - **210+ TypeScript source files** di backend
 - **110 layar R1 scope** (D-22)
 - **10 hari kerja** R1 timeline (D-23)
 - **400 LOC max** per service file (D-11)
 - **70%+ unit test coverage** core services (D-13)
 - **9 trigger auto-jurnal** + 6 Golden Threads (per Master Spec + plan existing)
+
+---
+
+## Phase 2 → Phase 3 Transition (2026-09-11)
+
+| Status | Konteks |
+|---|---|
+| ✅ **Phase 2 DONE** | Service Layer Integrity 5/5 sub-phases complete: 2.1 split workflows (DP+AP+AR), 2.2 27 finance stubs (112 endpoints), 2.3 RFC 7807 errors, 2.4 gate conditions. 2.5 lint deferred per user priority. |
+| ✅ **Batch 1** (Phase 6 gate) | 7 frontend build blockers + 2 shared components fixed. Phase 6 deployment unblocked. |
+| ✅ **Phase 1.4** | StateTransitionService wired into RndService + ProductionService (canonical validation before stage updates). |
+| ✅ **Phase 1.5** | **CRITICAL FINDING**: ZERO_ERROR_ROADMAP claim "0 vulns" FALSE. Real audit: **75 vulns** (2 critical, 50 high). See `docs/security/SECURITY-AUDIT-2026-09-11.md`. |
+| ✅ **Phase 1.6** | NotificationService gate event handlers wired (emitted from StateTransitionService). |
+| 🟡 **Phase 3 STARTING** | Frontend Repair. Sub-tasks: 3.1 Emergency Fixes, 3.2 Replace Mock Data (6 pages), 3.3 Add Missing Pages (17 pages), 3.4 Component Library, 3.5 Gate Visual Indicators. |
+| ⚪ **Phase 4-6** | Pending Phase 3. |
+
+**Next actions for Phase 3**:
+1. Close OPEN ADRs blocking 3.4 Component Library (especially ADR-013 legacy shadcn)
+2. Fix 9 anti-patterns in 3.1 (per `ERP_FINALIZATION_MASTER_PLAN.md` §3.1)
+3. Replace mock data in 6 pages per §3.2
+4. Update `API_CONTRACT.yaml` v0.1 → v0.2 (49 → ~161 endpoints covering Phase 2 finance stubs)
+5. Address security audit findings (75 vulns — start with 2 critical)
 
 ---
 

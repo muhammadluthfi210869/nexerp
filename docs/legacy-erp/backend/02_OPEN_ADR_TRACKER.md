@@ -32,7 +32,7 @@
 | 10 | ADR-010 | Costing Method + Rounding | 🟡 PROPOSED | 🟡 High |
 | 11 | ADR-011 | Retention/Backup/RPO/RTO | 🟡 PROPOSED | 🟡 High |
 | 12 | ADR-012 | Release Train Order | 🟡 PROPOSED | 🟢 Low |
-| 13 | ADR-013 | Legacy shadcn (hapus atau keep sebagai DNA base) | ⚪ OPEN | 🟡 High |
+| 13 | **ADR-013** | **Legacy shadcn (keep sebagai base, DNA membungkus)** | 🟡 **PROPOSED 2026-09-11** | ✅ Recommendation ready |
 | 14 | ADR-014 | Marketing module exception (full atau wajib DNA) | ⚪ OPEN | 🟡 High |
 | 15 | ADR-015 | Commitlint strict vs flexible | ⚪ OPEN | 🟢 Low |
 
@@ -58,18 +58,51 @@
 
 ## ADR-002: 12 Modul Final + Canonical Routes
 
-- **Status:** 🟢 **SIGNED**
+- **Status:** 🟢 **SIGNED** (revised 2026-09-10, original superseded)
 - **Signed by:** Muhammad Luthfi
 - **Signed at:** 2026-09-10
 - **Owner:** ERP Architect + Frontend Lead
 - **Related:** Master Spec Bagian II MOD-01..MOD-12 + `NEX_ERP_SCREEN_AND_API_CATALOG.json` (176 screens)
 
-**Decision (Option A):** Ikut 12 modul Master Spec. 7 route prefix (`/master`, `/scm`, `/bussdev`, `/rnd`, `/warehouse`, `/qc`, `/executive`) sesuai JSON catalog. 5 modul tanpa screen detail (MOD-06 Production, MOD-08 Design, MOD-09 Legality, MOD-10 Finance, MOD-11 HR) → di-re-nest ke MOD-01 atau modul lain via per-SCR audit.
+**⚠️ REVISION 2026-09-10-2:** Original decision (Option A, 7 route prefix per divisi) **diubah** karena analisis cross-functional access (RnD butuh akses ke Production/Warehouse/QC) menunjukkan route per divisi membuat navigasi awkward. Keputusan baru: **Hybrid per Business Function + Role-based Menu**.
 
-**Implikasi bisnis:**
-- ✅ 12 divisi ERP diakui resmi (Master, Pembelian, Penjualan, Gudang, QC, RnD, Produksi, Design, Legal, Finance, HR, Exec)
-- ✅ 7 "pintu masuk" URL dipakai konsisten (tidak bertentangan dengan legacy G-SERP)
-- ✅ Frontend engineer bisa buat halaman baru dengan yakin (tahu route mana yang dipakai)
+**Decision (revised Option C - Hybrid):**
+
+**12 Modul tetap dipakai sebagai ARSITEKTUR konsep internal** (master data, scm, bussdev, rnd, warehouse, qc, production, design, legal, finance, hr, executive) — sebagai domain ownership.
+
+**Route URL diganti ke 11 Business Function** (proses bisnis, bukan divisi):
+```
+/samples          → Sample pipeline (RnD → Mixing → QC → Release)        [Owning: RnD]
+/pembelian        → PO Inbound, GR, Faktur, Bayar, Retur                 [Owning: SCM]
+/penjualan        → SO, Quotation, DP, Delivery, Faktur                  [Owning: BusDev]
+/inventory        → Stok, Mutasi, Adjustment, Opname                     [Owning: Warehouse]
+/production       → Batch Record, Mixing, Filling, Packing               [Owning: Production]
+/quality          → QC Test, Compliance, Release, Checklist             [Owning: QC]
+/finance          → CoA, Journal, Bank, Closing, Aging                   [Owning: Finance]
+/master           → Customer, Supplier, Material, User (cross-cutting)  [Owning: Master Data]
+/approvals        → Fund Request, Approval Queue, Signature             [Owning: Finance]
+/reports          → Cross-divisional reports, Aging, KPI                 [Owning: Exec]
+/exec             → Executive dashboard                                  [Owning: Executive]
+```
+
+**Frontend Menu: RBAC-based filter** — user lihat menu yang relevan dengan role-nya saja.
+
+**Contoh menu per role:**
+- **RnD user**: Sample | Master (Material, Supplier) | Quality (test results) | Inventory (sample stock)
+- **BusDev user**: Sample | Sales | Master (Customer) | Delivery | Approvals
+- **Warehouse user**: Inbound (Pembelian) | Inventory | Outbound (Penjualan) | Quality (release)
+- **Finance user**: Pembelian | Penjualan | Bank | Closing | Reports | Approvals
+- **Director**: Semua menu
+
+**Implikasi bisnis (revisi):**
+- ✅ Cross-functional user (RnD, BusDev, Warehouse) navigasi natural — menu berdasarkan proses bisnis
+- ✅ Setiap halaman tetap punya 1 owning division (tanggung jawab jelas)
+- ✅ Permission/menu RBAC = kepatuhan audit (siapa akses apa tercatat)
+- ✅ Legacy G-SERP pattern terbukti untuk daily operations (reduce training time)
+- ⚠️ Frontend routes butuh reorganize (~10-12 folder rename atomic per divisi)
+- ⚠️ Backend API endpoint TIDAK berubah (per-controller per-domain sudah benar)
+
+**Refactor effort:** 1-2 minggu atomic batch per divisi (routes reorganization + RBAC menu). Bisa parallel dengan Phase 1 Baseline Recovery.
 
 **Resolved dependencies:** ADR-001 (176 vs 178) — JSON catalog = SSOT, 176 screens final.
 
@@ -294,13 +327,32 @@
 
 ## ADR-013: Legacy shadcn (`frontend/src/components/ui/`)
 
-- **Status:** ⚪ OPEN
+- **Status:** 🟡 **PROPOSED 2026-09-11** (recommendation ready, user sign-off needed)
 - **Owner:** Frontend Lead + ERP Architect
 - **Related:** STRICT_POLICIES_ADDENDUM BAGIAN A + BAGIAN F.1
+- **Blocks:** Phase 3.4 Global Component Library
 
 **Options:**
 - (A) **Hapus total** — paksa migrasi 100% ke DNA
 - (B) **Keep sebagai internal base** — DNA membungkus shadcn, shadcn tidak diimport langsung
+
+**RECOMMENDATION (B)** — Keep shadcn as base, DNA wraps it.
+
+**Rationale:**
+1. **Pragmatic**: shadcn primitives (Button, Input, Dialog, Select, Tabs) are battle-tested Radix wrappers. Reinventing them wastes 2-3 weeks.
+2. **De-facto state**: Build blocker fixes (Batch 1) already use this pattern. E.g. `import { Button } from "@/components/ui/button"` works in `workstation/page.tsx` while DnaButton wraps higher-level actions.
+3. **Enforcement**: Add ESLint rule `no-raw-ui-import-on-operational` that BLOCKS direct shadcn imports in `app/(dashboard)/*` (operational routes), ALLOWS them in `components/dna/*` (DNA wrappers).
+4. **Gradual migration**: DNA components can progressively replace shadcn usage without breaking changes.
+
+**Implementation:**
+- ESLint rule already exists: `frontend/eslint-rules/no-raw-ui-import.cjs` (per D-20)
+- 7,341 lint warnings in Phase 2.5 lint cleanup are mostly this — auto-fix has near-zero impact, manual refactor multi-day
+- For Phase 3.4: focus on creating DNA wrappers for NEW components first, then migrate existing usages batch by batch
+
+**Awaiting user sign-off:**
+```
+ADR-013: B (keep as base)
+```
 - (C) **Deprecate gradual** — keep file tapi ESLint block import
 
 **Recommendation:** **(B) Keep sebagai internal base** — DNA components sudah extend shadcn (`Dialog`, `Drawer`, `DropdownMenu`), remove = break DNA. Tapi CSS/HTML control raw (button/input) WAJIB lewat DNA wrapper, bukan direct shadcn import.

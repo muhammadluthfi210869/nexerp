@@ -1,21 +1,31 @@
 openapi: 3.0.3
 info:
   title: NEX ERP API Contract
-  version: 0.1.0
+  version: 0.1.1
   description: |
     First-cut API contract generated from NEX_ERP_SCREEN_AND_API_CATALOG.json v2.0.0.
     Covers critical business flows: PO Inbound, SO Pipeline, Closing Period, Escrow,
     Approval Workflow, Master Data (representative), Dashboard & Report (representative).
-    
-    Total endpoints: 49 (target 40 first-cut)
+
+    Documented endpoints: 49 (representative first-cut)
+    Actual backend endpoints: ~686 (per scan 2026-09-11, includes Phase 2 finance stubs)
+
     Source catalog: docs/legacy-erp/NEX_ERP_SCREEN_AND_API_CATALOG.json (176 screens)
     Generated: 2026-09-10T07:07:38.224Z
-    
+    Last updated: 2026-09-11 (v0.1.1 — Phase 2 marker, coverage gap noted)
+
     NOTE: This is a STARTING POINT. Each endpoint should be reviewed against:
     - specialRequirementsNotes in JSON catalog (full text)
     - master spec NEX_ERP_MASTER_SPECIFICATION.md
     - existing backend NestJS controllers
     - ADR decisions (ADR-001 through ADR-015)
+
+    COVERAGE GAP (as of 2026-09-11):
+    - Phase 2 finance stubs (~112 endpoints across DownPayment, APPayment, ARReceipt,
+      journal automation, auto-posting, period management) NOT yet documented here.
+    - Update path: scan backend/src/modules/finance/**/*.controller.ts, extract
+      @Get/@Post/@Put/@Patch/@Delete decorators, generate OpenAPI operations.
+    - Target: v0.2 with 161+ endpoints covering critical finance flows.
     
 servers:
   - url: https://nexerp.id
