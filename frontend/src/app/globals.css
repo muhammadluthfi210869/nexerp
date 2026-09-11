@@ -566,3 +566,18 @@
 }
 
 
+
+
+/* Print/PDF styles for brand reports (Phase 4, 2026-09-11) */
+@media print {
+  .no-print, header, aside, nav, [data-sidebar], [data-toolbar] { display: none !important; }
+  body { background: white !important; font-size: 11pt; }
+  .print-page-break { page-break-before: always; }
+  .rounded-xl, .rounded-lg, .rounded-2xl { border-radius: 0 !important; box-shadow: none !important; }
+  .shadow-xs, .shadow-sm, .shadow { box-shadow: none !important; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  h1, h2, h3 { page-break-after: avoid; }
+  .print-only { display: block !important; }
+}
+.print-only { display: none; }

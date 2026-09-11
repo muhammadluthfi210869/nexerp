@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { TaskWorkspace } from "../TaskWorkspace";
+import TaskWorkspaceV2 from "../TaskWorkspaceV2";
 
 export default async function ManagementTaskMemberPage({ params }: { params: Promise<{ member: string }> }) {
   const { member } = await params;
   if (!/^[a-z0-9-]+$/i.test(member)) notFound();
-  return <TaskWorkspace memberSlug={member.toLowerCase()} />;
+  return <TaskWorkspaceV2 memberSlug={member.toLowerCase()} />;
 }
