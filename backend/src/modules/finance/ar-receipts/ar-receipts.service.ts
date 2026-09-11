@@ -149,7 +149,7 @@ export class ARReceiptsService {
    * Use this when receipt was created without invoice link.
    */
   async allocateToInvoice(
-    userId: string,
+    _userId: string,
     receiptId: string,
     dto: { invoiceId: string },
   ) {
