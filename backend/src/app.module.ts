@@ -43,6 +43,8 @@ import { SystemModule } from './modules/system/system.module';
 import { DocumentAutomationModule } from './modules/document-automation/document-automation.module';
 import { TodoModule } from './modules/todo/todo.module';
 
+import { ActivityLogModule } from './modules/activity-log/activity-log.module';
+
 import { MasterModule } from './modules/master/master.module';
 import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -110,6 +112,7 @@ import { join } from 'path';
     SystemModule,
     DocumentAutomationModule,
     TodoModule,
+    ActivityLogModule,
   ],
   controllers: [AppController],
   providers: [

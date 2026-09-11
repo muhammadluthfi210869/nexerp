@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { LogActivityType, Prisma } from '@prisma/client';
 
@@ -18,6 +19,8 @@ export interface LogInput {
 
 @Injectable()
 export class ActivityLogService {
+  private readonly logger = new Logger(ActivityLogService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async log(input: LogInput): Promise<void> {
@@ -77,5 +80,20 @@ export class ActivityLogService {
       where: { createdAt: { lt: cutoff } },
     });
     return result.count;
+  }
+
+  // Daily purge at 03:13 (random minute to avoid midnight thundering herd
+  // when many cron jobs across services start).
+  @Cron('13 3 * * *')
+  async scheduledPurge() {
+    try {
+      const deleted = await this.purgeOlderThan(90);
+      this.logger.log(`Retention purge: ${deleted} rows removed (>90 days)`);
+    } catch (err) {
+      this.logger.error(
+        'Retention purge failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
   }
 }
