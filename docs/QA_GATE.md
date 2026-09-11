@@ -84,7 +84,7 @@ status changes). It applies to backend, frontend, infra, and docs.
 
 | Date | Change | Reproduction test | Suite status | Evidence |
 |------|--------|-------------------|--------------|----------|
-| _pending_ | _next change_ | _path to spec_ | _green/red_ | _commit hash + log line_ |
+| 2026-09-11 | fix(mgmt-task): entry page 404 / self-redirect → production-light client resolver | `frontend/tests/e2e/management-task-redirect-bug.spec.ts` (3 cases) | n/a (no dev server in sandbox) | commit `d3903e0` + TypeScript `-p tsconfig.json` clean for mgmt-task files |
 
 ---
 
