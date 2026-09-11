@@ -2,6 +2,22 @@
 -- See docs/marketing/PHASE-0-OMNICRM-CONTRACT.md
 -- Idempotent + expand-only.
 
+-- 0. Enums (must exist before any table that references them)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'CrmStage') THEN
+    CREATE TYPE "CrmStage" AS ENUM (
+      'LEADS_MASUK', 'COLD', 'WARM', 'HOT', 'SAMPLE',
+      'JUNK_LEADS', 'CLIENT_DEAL', 'CLOSED_LOST'
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'GuestbookApproval') THEN
+    CREATE TYPE "GuestbookApproval" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'CrmKpiWindow') THEN
+    CREATE TYPE "CrmKpiWindow" AS ENUM ('TODAY', 'WEEK', 'MONTH');
+  END IF;
+END $$;
+
 -- 1. crm_leads (the kanban inbox entry)
 CREATE TABLE IF NOT EXISTS "crm_leads" (
   "id" UUID NOT NULL DEFAULT gen_random_uuid(),
