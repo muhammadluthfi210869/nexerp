@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FileText,
   Calendar,
@@ -45,15 +48,9 @@ interface HrTicketItem {
   status: "PENDING" | "APPROVED" | "REJECTED";
 }
 
-const INITIAL_TICKETS: HrTicketItem[] = [
-  { id: "TCK-01", ticketNo: "REQ-LV-001", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", department: "Produksi Mixing", type: "LEMBUR_PRODUKSI", startDate: "2026-09-09 16:00", endDate: "2026-09-09 20:00", duration: "4 Jam", reason: "Surat Perintah Lembur (SPL) Batch Darurat PO-8821", approver: "Plant Manager", status: "APPROVED" },
-  { id: "TCK-02", ticketNo: "REQ-LV-002", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", department: "R&D Formulasi", type: "CUTI_TAHUNAN", startDate: "2026-09-15", endDate: "2026-09-17", duration: "3 Hari", reason: "Acara keluarga (Sisa Cuti Tahunan: 8 Hari)", approver: "Head of R&D", status: "PENDING" },
-  { id: "TCK-03", ticketNo: "REQ-LV-003", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", type: "IZIN_SAKIT", startDate: "2026-09-08", endDate: "2026-09-08", duration: "1 Hari", reason: "Sakit demam, surat dokter klinik terlampir", approver: "Supervisor QA", status: "APPROVED" },
-  { id: "TCK-04", ticketNo: "REQ-LV-004", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", department: "BusDev Maklon", type: "DINAS_LUAR", startDate: "2026-09-11", endDate: "2026-09-12", duration: "2 Hari", reason: "Meeting presentasi formula kosmetik dengan klien Jakarta", approver: "Direktur Bisnis", status: "APPROVED" },
-];
-
 export default function HrTicketsPage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"tickets" | "leaves" | "spl">("tickets");
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -69,11 +66,28 @@ export default function HrTicketsPage() {
     reason: ""
   });
 
-  const pendingCount = INITIAL_TICKETS.filter(t => t.status === "PENDING").length;
-  const approvedCount = INITIAL_TICKETS.filter(t => t.status === "APPROVED").length;
-  const splCount = INITIAL_TICKETS.filter(t => t.type === "LEMBUR_PRODUKSI").length;
+  // Fetch tickets from backend
+  const { data: tickets = [] } = useQuery<HrTicketItem[]>({
+    queryKey: ["hr-tickets"],
+    queryFn: () => api.get("/hr/tickets").then(r => unwrapResponse(r.data) ?? []),
+  });
 
-  const filteredTickets = INITIAL_TICKETS.filter(t => {
+  // Status update mutation (approve/reject)
+  const updateTicketStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: "APPROVED" | "REJECTED" }) =>
+      api.patch(`/hr/tickets/${id}`, { status }),
+    onSuccess: (_, vars) => {
+      toast.success(`Tiket berhasil di${vars.status === "APPROVED" ? "setujui" : "tolak"}!`);
+      queryClient.invalidateQueries({ queryKey: ["hr-tickets"] });
+    },
+    onError: () => toast.error("Gagal memperbarui status tiket."),
+  });
+
+  const pendingCount = tickets.filter(t => t.status === "PENDING").length;
+  const approvedCount = tickets.filter(t => t.status === "APPROVED").length;
+  const splCount = tickets.filter(t => t.type === "LEMBUR_PRODUKSI").length;
+
+  const filteredTickets = tickets.filter(t => {
     const matchSearch = t.empName.toLowerCase().includes(searchQuery.toLowerCase()) || t.ticketNo.toLowerCase().includes(searchQuery.toLowerCase());
     const matchType = typeFilter === "ALL" || t.type === typeFilter;
     return matchSearch && matchType;
@@ -156,7 +170,7 @@ export default function HrTicketsPage() {
       {/* TAB NAVIGATION */}
       <DnaTabNav
         tabs={[
-          { id: "tickets", label: "Semua Tiket Pengajuan", icon: FileText, count: INITIAL_TICKETS.length },
+          { id: "tickets", label: "Semua Tiket Pengajuan", icon: FileText, count: tickets.length },
           { id: "leaves", label: "Cuti & Izin Sakit", icon: Calendar },
           { id: "spl", label: "Surat Perintah Lembur (SPL)", icon: Clock }
         ]}
@@ -260,14 +274,14 @@ export default function HrTicketsPage() {
                           <DnaButton
                             variant="primary"
                             size="sm"
-                            onClick={() => toast.success("Tiket " + tck.ticketNo + " Berhasil Disetujui!")}
+                            onClick={() => updateTicketStatus.mutate({ id: tck.id, status: "APPROVED" })}
                           >
                             Setujui
                           </DnaButton>
                           <DnaButton
                             variant="danger"
                             size="sm"
-                            onClick={() => toast.error("Tiket " + tck.ticketNo + " Ditolak.")}
+                            onClick={() => updateTicketStatus.mutate({ id: tck.id, status: "REJECTED" })}
                           >
                             Tolak
                           </DnaButton>
