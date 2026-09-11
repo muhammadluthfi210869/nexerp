@@ -32,7 +32,7 @@
 | 10 | ADR-010 | Costing Method + Rounding | 🟡 PROPOSED | 🟡 High |
 | 11 | ADR-011 | Retention/Backup/RPO/RTO | 🟡 PROPOSED | 🟡 High |
 | 12 | ADR-012 | Release Train Order | 🟡 PROPOSED | 🟢 Low |
-| 13 | **ADR-013** | **Legacy shadcn (keep sebagai base, DNA membungkus)** | 🟡 **PROPOSED 2026-09-11** | ✅ Recommendation ready |
+| 13 | **ADR-013** | **TOTAL shadcn removal — 100% DNA components only** | 🟢 **SIGNED 2026-09-11** | ✅ User choice: A |
 | 14 | ADR-014 | Marketing module exception (full atau wajib DNA) | ⚪ OPEN | 🟡 High |
 | 15 | ADR-015 | Commitlint strict vs flexible | ⚪ OPEN | 🟢 Low |
 

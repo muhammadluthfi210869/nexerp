@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
@@ -85,13 +85,23 @@ export default function BussDevGuestBookReportPage() {
     });
   }, [searchQuery, busDevFilter]);
 
+  const queryClient = useQueryClient();
+  const createGuestMutation = useMutation({
+    mutationFn: (data: typeof formData) => api.post("/guests", data).then((r) => r.data),
+    onSuccess: () => {
+      toast.success("Catatan kunjungan tamu baru berhasil disimpan ke Buku Tamu!");
+      queryClient.invalidateQueries({ queryKey: ["guests"] });
+      setIsModalOpen(false);
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Gagal menyimpan catatan tamu"),
+  });
+
   const handleSave = () => {
     if (!formData.name || !formData.phone || !formData.company) {
       toast.error("Mohon lengkapi nama tamu, nomor telepon, dan nama perusahaan/brand!");
       return;
     }
-    toast.success("Catatan kunjungan tamu baru berhasil disimpan ke Buku Tamu!");
-    setIsModalOpen(false);
+    createGuestMutation.mutate(formData);
   };
 
   return (
