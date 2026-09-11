@@ -36,6 +36,7 @@ export function Rankings({ audit }: { audit: any }) {
             </DnaTable>
           </div>
         </DnaDataTableCard>
+      </DnaCard>
       </div>
 
       {/* 📦 V. TOP 10 LIST KEMASAN */}
@@ -69,6 +70,7 @@ export function Rankings({ audit }: { audit: any }) {
             </DnaTable>
           </div>
         </DnaDataTableCard>
+      </DnaCard>
       </div>
 
       {/* 🏆 TEAM PRODUCTIVITY RANK */}
@@ -93,6 +95,7 @@ export function Rankings({ audit }: { audit: any }) {
               </div>
             ))}
           </div>
+        </DnaCard>
         </DnaCard>
       </div>
     </div>

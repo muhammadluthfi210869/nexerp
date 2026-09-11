@@ -39,6 +39,7 @@ export function AuditTables({ audit }: { audit: any }) {
               </DnaTable>
             </div>
           </DnaDataTableCard>
+        </DnaCard>
         </div>
 
         {/* 📦 III.B AUDIT GRANULAR BAHAN KEMAS */}
@@ -73,6 +74,7 @@ export function AuditTables({ audit }: { audit: any }) {
               </DnaTable>
             </div>
           </DnaDataTableCard>
+        </DnaCard>
         </div>
       </div>
 
@@ -115,6 +117,7 @@ export function AuditTables({ audit }: { audit: any }) {
               </DnaTable>
             </div>
           </DnaDataTableCard>
+        </DnaCard>
         </div>
 
         {/* ⚠️ III.D AUDIT RISIKO & KERUGIAN */}
@@ -150,6 +153,7 @@ export function AuditTables({ audit }: { audit: any }) {
               </DnaTable>
             </div>
           </DnaDataTableCard>
+        </DnaCard>
         </div>
       </div>
     </div>

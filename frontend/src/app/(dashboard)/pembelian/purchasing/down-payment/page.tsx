@@ -276,7 +276,8 @@ export default function DownPaymentPrototype() {
                   <div className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
                   <div className="space-y-3">
                     <DnaSelect
-                      label={<><Package className="h-3 w-3 inline" /> Select Purchase Order</>}
+                      label="Select Purchase Order"
+                      icon={<Package className="h-3 w-3" />}
                       placeholder="— SELECT ACTIVE PURCHASE ORDER —"
                       value={selectedPO || ""}
                       onChange={(val) => setSelectedPO(val || null)}
@@ -393,7 +394,6 @@ export default function DownPaymentPrototype() {
                     </DnaButton>
                   </div>
                 )}
-              </div>
 
               {/* Right Column: Financial Summary */}
               <div className="lg:col-span-4 space-y-6">
@@ -435,7 +435,6 @@ export default function DownPaymentPrototype() {
                   </div>
                 </div>
               </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

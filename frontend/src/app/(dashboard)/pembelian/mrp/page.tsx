@@ -6,7 +6,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DnaTabNav } from "@/components/dna";
 import { BarChart4, Layers } from "lucide-react";
 
-const KebutuhanPage = dynamic(() => import("../kebutuhan-barang/page"), {
+const KebutuhanPage = dynamic(() => import("../kebutuhan/page"), {
   loading: () => <div className="h-96 bg-slate-50 rounded-2xl animate-pulse" />,
 });
 const RangkumanPage = dynamic(() => import("../rangkuman-kebutuhan/page"), {
@@ -26,8 +26,8 @@ export default function MRPPage() {
     >
       <DnaTabNav
         tabs={[
-          { key: "kebutuhan", label: "Kebutuhan Barang", icon: <BarChart4 className="w-4 h-4" /> },
-          { key: "rangkuman", label: "Rangkuman Kebutuhan", icon: <Layers className="w-4 h-4" /> },
+          { id: "kebutuhan", label: "Kebutuhan Barang", icon: BarChart4 },
+          { id: "rangkuman", label: "Rangkuman Kebutuhan", icon: Layers },
         ]}
         activeTab={tab}
         onTabChange={(k) => setTab(k as "kebutuhan" | "rangkuman")}

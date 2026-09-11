@@ -1,4 +1,4 @@
-import FormulaAdjustmentPage from "../../rnd/formula-adjustment/page";
+import FormulaAdjustmentPage from "../formula-adjustment-rnd/page";
 
 export const metadata = {
   title: "Penyesuaian Formulasi & Upscaling Produksi",

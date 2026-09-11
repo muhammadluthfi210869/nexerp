@@ -1,4 +1,4 @@
-import BatchRecordPage from "../../rnd/batch-record/page";
+import BatchRecordPage from "../batch-record-rnd/page";
 
 export const metadata = {
   title: "Batch Record Pra-Produksi (EBMR Standar CPKB)",

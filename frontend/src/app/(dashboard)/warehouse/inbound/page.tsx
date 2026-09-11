@@ -675,13 +675,13 @@ export default function GoodsInboundPage() {
             <select
               aria-label="Gudang Alokasi"
               value={warehouseName}
-              onChange={setWarehouseName}
+              onChange={(e) => setWarehouseName(e.target.value)}
               className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
             >
               <option value="Gudang Bahan Baku Utama (WH-01)">Gudang Bahan Baku Utama (WH-01)</option>
               <option value="Gudang Kemas & Box (WH-02)">Gudang Kemas & Box (WH-02)</option>
               <option value="Gudang Karantina & QC (WH-04)">Gudang Karantina & QC (WH-04)</option>
-            </DnaSelect>
+            </select>
           </div>
 
           {/* Breakdown 3 Pilar Fisik per Item */}

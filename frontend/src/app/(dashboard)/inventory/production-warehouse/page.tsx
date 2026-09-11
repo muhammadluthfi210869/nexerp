@@ -191,6 +191,7 @@ export default function WarehouseControlPage() {
               ))}
             </tbody>
           </table>
+        </div>
       </DnaDataTableCard>
     </DashboardShell>
   );

@@ -49,6 +49,11 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { TabsContent } from "@/components/ui/tabs";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export default function WarehouseWorkstation() {
   const queryClient = useQueryClient();
@@ -242,7 +247,7 @@ export default function WarehouseWorkstation() {
                   />
                ))}
             </div>
-         </TabsContent>
+         </div>
 
          {/* Tab 2: Internal */}
          <div hidden={activeTab !== "internal"} className="space-y-12">
@@ -286,7 +291,7 @@ export default function WarehouseWorkstation() {
                   ))}
                </div>
             </div>
-         </TabsContent>
+         </div>
 
          {/* Tab 3: Logistics */}
          <TabsContent value="logistics" className="space-y-6">
@@ -328,7 +333,7 @@ export default function WarehouseWorkstation() {
                ))}
             </div>
          </TabsContent>
-      </Tabs>
+      </div>
 
       {/* 🛡️ FEFO SECURITY GATE DIALOG */}
       <Dialog open={!!selectedIssueItem} onOpenChange={(open) => !open && setSelectedIssueItem(null)}>
