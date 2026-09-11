@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Clock,
   MapPin,
@@ -55,10 +58,40 @@ const INITIAL_ATTENDANCE: AttendanceRecord[] = [
 
 export default function HrAttendancePage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"live" | "recap" | "shifts">("live");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState("2026-09-09");
   const [isClockInModalOpen, setIsClockInModalOpen] = useState(false);
+  const [selectedEmpId, setSelectedEmpId] = useState("EMP-001");
+
+  // Fetch employees for clock-in selector (per-employee attendance is GET /hr/employees/:id/attendance)
+  const { data: employees = [] } = useQuery<{ id: string; name: string; division?: string }[]>({
+    queryKey: ["hr-employees"],
+    queryFn: () => api.get("/hr/employees").then(r => unwrapResponse(r.data) ?? []),
+  });
+
+  // Clock-in / clock-out mutations
+  const clockIn = useMutation({
+    mutationFn: (body: { employeeId: string; lat: number; lng: number }) =>
+      api.post("/hr/attendance/clock-in", body),
+    onSuccess: () => {
+      toast.success("Clock-In Berhasil Tercatat dengan Geotag GPS!");
+      setIsClockInModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["hr-attendance"] });
+    },
+    onError: () => toast.error("Gagal clock-in, coba lagi."),
+  });
+
+  const clockOut = useMutation({
+    mutationFn: (body: { employeeId: string }) =>
+      api.post("/hr/attendance/clock-out", body),
+    onSuccess: () => {
+      toast.success("Clock-Out Berhasil Tercatat!");
+      queryClient.invalidateQueries({ queryKey: ["hr-attendance"] });
+    },
+    onError: () => toast.error("Gagal clock-out, coba lagi."),
+  });
 
   const onTimeCount = INITIAL_ATTENDANCE.filter(a => a.status === "ON_TIME").length;
   const lateCount = INITIAL_ATTENDANCE.filter(a => a.status === "LATE").length;
@@ -283,10 +316,22 @@ export default function HrAttendancePage() {
 
           <div className="p-3 border border-slate-200 rounded-lg bg-slate-50">
             <div className="font-semibold text-slate-800 mb-1">Pilih Karyawan Clock-In:</div>
-            <select className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white">
-              <option value="EMP-001">Budi Santoso - Produksi Mixing</option>
-              <option value="EMP-002">Rian Saputra - R&D Formulasi</option>
-              <option value="EMP-003">Siti Rahmawati - QC Mikrobiologi</option>
+            <select
+              value={selectedEmpId}
+              onChange={(e) => setSelectedEmpId(e.target.value)}
+              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+            >
+              {employees.length > 0 ? (
+                employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.name}{emp.division ? ` - ${emp.division}` : ""}</option>
+                ))
+              ) : (
+                <>
+                  <option value="EMP-001">Budi Santoso - Produksi Mixing</option>
+                  <option value="EMP-002">Rian Saputra - R&D Formulasi</option>
+                  <option value="EMP-003">Siti Rahmawati - QC Mikrobiologi</option>
+                </>
+              )}
             </select>
           </div>
 
@@ -297,12 +342,10 @@ export default function HrAttendancePage() {
             <DnaButton
               variant="primary"
               size="md"
-              onClick={() => {
-                toast.success("Clock-In Berhasil Tercatat dengan Geotag GPS!");
-                setIsClockInModalOpen(false);
-              }}
+              disabled={clockIn.isPending}
+              onClick={() => clockIn.mutate({ employeeId: selectedEmpId, lat: -6.2088, lng: 106.8456 })}
             >
-              Konfirmasi Check-In
+              {clockIn.isPending ? "Mencatat..." : "Konfirmasi Check-In"}
             </DnaButton>
           </div>
         </div>
