@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   Zap
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaStatCard } from "@/components/dna";
+import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaStatCard, DnaGateIndicator } from "@/components/dna";
+import { deriveGateStatus } from "@/lib/gates";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,
@@ -170,9 +171,16 @@ export default function InvoicingPage() {
                     Rp {inv.amount.toLocaleString("id-ID")}
                   </TableCell>
                   <TableCell className="text-center">
-                    <DnaBadge status={inv.status === 'PAID' ? 'success' : inv.status === 'OVERDUE' ? 'critical' : 'info'}>
-                      {inv.status}
-                    </DnaBadge>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <DnaBadge status={inv.status === 'PAID' ? 'success' : inv.status === 'OVERDUE' ? 'critical' : 'info'}>
+                        {inv.status}
+                      </DnaBadge>
+                      <DnaGateIndicator
+                        gate="G3"
+                        status={deriveGateStatus(inv.status, 'G3')}
+                        label={`G3 ${deriveGateStatus(inv.status, 'G3')}`}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell className="pr-6 text-right">
                     <div className="flex justify-end gap-1.5">
