@@ -111,21 +111,24 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     items: []
   },
   {
+    id: "dm-tasks",
+    title: "Management Task",
+    groupLabel: "TASK MANAGEMENT",
+    icon: ClipboardList,
+    items: [
+      { name: "Task", href: "/marketing/management-task/overview", icon: ClipboardList },
+      { name: "Task Team", href: "/marketing/management-task/team", icon: Users },
+      { name: "Report Dreamlab", href: "/marketing/reports/dreamlab", icon: BarChart3 },
+      { name: "Report Toribio", href: "/marketing/reports/toribio", icon: BarChart3 },
+    ]
+  },
+  {
     id: "dm-social",
     title: "Social Media",
     groupLabel: "KONTEN & MEDIA",
     icon: Sparkles,
     isDirect: true,
     href: "/marketing/social-tracker",
-    items: []
-  },
-  {
-    id: "dm-tasks",
-    title: "Management Task",
-    groupLabel: "TASK MANAGEMENT",
-    icon: ClipboardList,
-    isDirect: true,
-    href: "/marketing/management-task/overview",
     items: []
   }
 ];
