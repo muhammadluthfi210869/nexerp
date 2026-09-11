@@ -87,3 +87,41 @@ export {
   TooltipTrigger,
   TooltipContent,
 } from "./DnaTooltipCompound";
+
+// ── Phase 3 shim additions (replaces shadcn one-offs) ──
+export { DnaEmptyState as EmptyState } from "./DnaEmptyState";
+export { DnaLoadingSkeleton as LoadingSkeleton } from "./DnaTable";
+export { DnaSlider as Slider } from "./DnaSlider";
+export { DnaToaster as Toaster } from "./DnaToast";
+
+// ErrorFallback: minimal error UI for React error-boundary.
+// Mirrors the shadcn empty-state ErrorFallback signature: { error, retry? }.
+export function ErrorFallback({
+  error,
+  retry,
+}: {
+  error: Error;
+  retry?: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center mb-4">
+        <span className="text-2xl">!</span>
+      </div>
+      <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase italic">
+        Terjadi Kesalahan
+      </h3>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-2 max-w-sm">
+        {error?.message ?? "Unknown error"}
+      </p>
+      {retry && (
+        <button
+          onClick={retry}
+          className="mt-6 rounded-xl font-black uppercase text-[10px] px-4 py-2 bg-slate-900 text-white"
+        >
+          Coba Lagi
+        </button>
+      )}
+    </div>
+  );
+}

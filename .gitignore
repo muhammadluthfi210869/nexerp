@@ -40,3 +40,7 @@ backend_out.txt
 # Playwright & Tests
 playwright-report/
 test-results/
+
+# Security audit artifacts (third-party systems, contain sensitive evidence)
+docs/security-audit/
+evidence/security/

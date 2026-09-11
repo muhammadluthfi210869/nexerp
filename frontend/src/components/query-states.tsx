@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Loader2, AlertTriangle, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/dna";
 
 interface QueryLoadingProps {
   message?: string;

@@ -231,6 +231,24 @@ export class SocialPlannerService {
               })),
             });
         }
+        if (data.performance) {
+          await db.socialPostMetricSnapshot.create({
+            data: {
+              postId: id,
+              source: 'MANUAL',
+              capturedAt: new Date(),
+              reach: Number(data.performance.reach || 0),
+              impressions: Number(data.performance.impressions || 0),
+              views: Number(data.performance.videoViews || 0),
+              likes: Number(data.performance.likes || 0),
+              comments: Number(data.performance.comments || 0),
+              shares: Number(data.performance.shares || 0),
+              saves: Number(data.performance.saves || 0),
+              clicks: Number(data.performance.clicks || 0),
+              spend: Number(data.performance.costPerResult || 0),
+            },
+          });
+        }
         return db.socialPost.findUnique({
           where: { id },
           include: {
@@ -411,6 +429,26 @@ export class SocialPlannerService {
       payload.publishedDate = data.publishedDate
         ? new Date(data.publishedDate)
         : null;
+    if (data.author) {
+      payload.authorName = data.author.name;
+      payload.authorAvatar = data.author.avatar || null;
+      payload.authorRole = data.author.role;
+    }
+    if (data.performance) {
+      Object.assign(payload, data.performance);
+      if (data.performance.engagementRate === undefined) {
+        const interactions =
+          Number(data.performance.likes || 0) +
+          Number(data.performance.comments || 0) +
+          Number(data.performance.shares || 0) +
+          Number(data.performance.saves || 0);
+        const base = Number(
+          data.performance.impressions || data.performance.reach || 0,
+        );
+        payload.engagementRate =
+          base > 0 ? Number(((interactions / base) * 100).toFixed(2)) : 0;
+      }
+    }
     return payload;
   }
 

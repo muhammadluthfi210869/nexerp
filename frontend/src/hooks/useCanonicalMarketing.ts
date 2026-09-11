@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "IN_REVIEW" | "REVISION" | "DONE" | "CANCELLED";
+export type TaskType = "DAILY" | "PROJECT";
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type SocialStatus = "IDEA" | "DRAFT" | "SCRIPTING" | "PRODUCTION" | "IN_REVIEW" | "REVISION" | "APPROVED" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
 
 export interface MarketingMember { id: string; fullName: string; email: string; roles?: string[] }

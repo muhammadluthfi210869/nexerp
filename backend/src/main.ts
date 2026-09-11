@@ -58,21 +58,28 @@ async function bootstrap() {
 
   // --- SWAGGER CONFIGURATION (Dev Only) ---
   if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('NexERP API')
-      .setDescription('The ultimate manufacturing ERP system API documentation')
-      .setVersion('4.0')
-      .addTag('rnd')
-      .addTag('finance')
-      .addTag('bussdev')
-      .build();
+    try {
+      const config = new DocumentBuilder()
+        .setTitle('NexERP API')
+        .setDescription('The ultimate manufacturing ERP system API documentation')
+        .setVersion('4.0')
+        .addTag('rnd')
+        .addTag('finance')
+        .addTag('bussdev')
+        .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+      const document = SwaggerModule.createDocument(app, config);
+      SwaggerModule.setup('api/docs', app, document);
 
-    const specPath = path.join(process.cwd(), 'swagger-spec.json');
-    fs.writeFileSync(specPath, JSON.stringify(document, null, 2));
-    console.log(`✅ Swagger specification saved to: ${specPath}`);
+      const specPath = path.join(process.cwd(), 'swagger-spec.json');
+      fs.writeFileSync(specPath, JSON.stringify(document, null, 2));
+      console.log(`✅ Swagger specification saved to: ${specPath}`);
+    } catch (err) {
+      console.warn(
+        '⚠️ Swagger generation warning (skipped):',
+        (err as Error).message,
+      );
+    }
   }
   // -----------------------------
 
