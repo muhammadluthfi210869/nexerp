@@ -35,19 +35,23 @@ model SystemConfig {
 }
 
 model StateTransitionLog {
-  id          String   @id @default(uuid()) @db.Uuid
-  entityType  String // e.g., "SALES_ORDER", "SAMPLE_REQUEST"
-  entityId    String
-  fromState   String?
-  toState     String
-  changedById String?  @db.Uuid
-  reason      String?
-  metadata    Json? // For storing snapshots of critical data during transition
-  createdAt   DateTime @default(now())
+  id           String             @id @default(uuid()) @db.Uuid
+  entityType   String // e.g., "SALES_ORDER", "SAMPLE_REQUEST"
+  entityId     String
+  fromState    String?
+  toState      String
+  eventTrigger StateEventTrigger? // Wave 1/A1: 9 canonical event triggers
+  changedById  String?            @db.Uuid
+  reason       String?
+  metadata     Json? // For storing snapshots of critical data during transition
+  createdAt    DateTime           @default(now())
 
   changedBy User? @relation("StateChanger", fields: [changedById], references: [id])
 
+  // NO_DUAL_WRITE: each (entityId, eventTrigger) may only occur once.
+  @@unique([entityId, eventTrigger])
   @@index([entityType, entityId])
+  @@index([eventTrigger, createdAt])
   @@map("state_transition_logs")
 }
 

@@ -1,0 +1,19 @@
+// Wave 1 / A1 — State Machine Architecture
+// See docs/ssot/PHASE_4_PLAN.md §WS-A (State Machine UI) + Master Spec Bagian 5.
+//
+// 9 canonical event triggers covering the full ERP transactional lifecycle.
+// Used by StateMachineService.transition() as the entry point for every
+// state change. Each (entityId, eventTrigger) pair is unique — enforces
+// NO_DUAL_WRITE invariant at the DB layer.
+
+enum StateEventTrigger {
+  SO_CREATED
+  PO_CREATED
+  INVOICE_ISSUED
+  JOURNAL_POSTED
+  PAYMENT_RECEIVED
+  PAYMENT_SENT
+  APPROVAL_REQUESTED
+  APPROVAL_GRANTED
+  PERIOD_LOCKED
+}

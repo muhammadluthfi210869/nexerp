@@ -24,7 +24,9 @@ Dokumen ini adalah **kontrak pengerjaan** untuk seluruh pekerjaan implementasi N
 - `docs/_AUDIT_FIELDS_2026-09-09.md` — per-field gap matrix
 - `docs/_AUDIT_RULES_2026-09-09.md` — 52 cross-field business rules
 - `docs/_AUDIT_BACKEND_2026-09-09.md` — Prisma schema + API gaps
-- `docs/_AUDIT_DRIFT_2026-09-09.md` — ghost routes + duplicates + hardcoded values
+- `docs/_AUDIT_DRIFT_2026-09-09.md` — ghost routes + duplicates + hardcoded values (REFERENCED BUT NOT IN REPO — drift numbers below reconciled against `docs/_AUDIT_FULL_REPORT_2026-09-09.md` which is the canonical source)
+
+**Last verified**: 2026-09-12 (post-audit reconciliation against `_AUDIT_FULL_REPORT_2026-09-09.md`)
 
 ---
 
@@ -169,10 +171,16 @@ Per `docs/_AUDIT_RULES_2026-09-09.md`:
 
 ---
 
-## 6. DRIFT CATALOG (per Agent-Drift-Audit)
+## 6. DRIFT CATALOG (per Agent-Drift-Audit, reconciled 2026-09-12)
 
-### 6.1 Ghost Routes (12 total)
-Sidebar hrefs tanpa `page.tsx`:
+> **Angka drift resolution** (reconciled against `_AUDIT_FULL_REPORT_2026-09-09.md`):
+> - Ghost Routes: 12 → **10** (per §2.1 + §2.4 + QW6)
+> - Within-Sidebar Duplicates: 51 → **46** (per §2.1 + QW5)
+> - Dead-Code Orphan Pages: 106 → **unverified** (referenced `_AUDIT_DRIFT_2026-09-09.md` not present in repo; SPEC-GAP-MAP originally cited from that file)
+> - Suspicious Duplicates: 9 pairs → **unverified** (same source gap as orphans)
+
+### 6.1 Ghost Routes (10 total — per `_AUDIT_FULL_REPORT_2026-09-09.md` §2.4)
+Sidebar hrefs tanpa `page.tsx` (10 unique hrefs, Next.js 404 on click):
 1. `/finance/aset-tetap` → canonical: `/finance/assets`
 2. `/finance/buku-besar` → canonical: `/finance/ledger`
 3. `/crm/dashboard` → canonical: `/bussdev/...`
@@ -182,23 +190,25 @@ Sidebar hrefs tanpa `page.tsx`:
 7. `/crm/activities` → canonical: `/bussdev/...`
 8. `/marketing/management-task/overview`
 9. `/rnd/formula/new`
-10. (3 additional, see drift audit §2)
+10. (1 additional, see audit §2.4)
 
-### 6.2 Within-Sidebar Duplicates (51 total)
-3 hrefs appear 5× each:
+### 6.2 Within-Sidebar Duplicates (46 total — per `_AUDIT_FULL_REPORT_2026-09-09.md` §2.1 + QW5)
+46 hrefs appear 2-5× each. 3 hrefs appear 5× each (top offenders):
 - `/production/schedule`
 - `/project-control/checklist-tracking`
 - `/scm/checklist-progress`
 
-### 6.3 Dead-Code Orphan Pages (106 total)
-Pages exist but no sidebar links to them. Worst offenders:
+### 6.3 Dead-Code Orphan Pages (count unverified)
+Pages exist but no sidebar links to them. Worst offenders per original SPEC-GAP-MAP claim:
 - `marketing/` (17 orphans)
 - `finance/` (14 orphans)
 - `rnd/` (8 orphans)
 - `qc/` (7 orphans)
 - `logistics/` (4 orphans — entire module has no sidebar presence)
 
-### 6.4 Suspicious Duplicates (9 pairs)
+> ⚠ **Note**: The 106 figure originates from `_AUDIT_DRIFT_2026-09-09.md` referenced in the Sources block. That file is not present in the repo as of 2026-09-12. Verify before relying on the per-module breakdown.
+
+### 6.4 Suspicious Duplicates (9 pairs — per original SPEC-GAP-MAP claim, unverified)
 - `finance/jurnal` vs `finance/jurnal-umum` vs `finance/general-journal`
 - `finance/dp-pembelian` vs `finance/uang-muka-pembelian`
 - `finance/dp-penjualan` vs `finance/uang-muka-penjualan`
