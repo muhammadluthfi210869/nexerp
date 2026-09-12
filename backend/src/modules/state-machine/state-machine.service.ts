@@ -13,7 +13,12 @@
 // See docs/ssot/PHASE_4_PLAN.md §WS-A + docs/legacy-erp/NEX_ERP_MASTER_SPECIFICATION.md
 // Bagian 5 (state engine).
 
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
@@ -93,17 +98,105 @@ export class StateMachineService {
   }
 
   /**
-   * Apply a state transition. Skeleton — commit 2 fills in DB write + emit.
-   * Kept here so commit 1 already exposes a working API surface.
+   * Apply a state transition. Orchestrator contract:
+   *   1. Validate (entityType, eventTrigger) is registered
+   *   2. Insert StateTransitionLog row — NO_DUAL_WRITE enforced by DB
+   *      unique constraint on (entityId, eventTrigger). Duplicate
+   *      insert throws ConflictException.
+   *   3. Emit `state.transition` event for downstream listeners
+   *      (activity-log already listens, see activity-log.service.ts).
+   *   4. Return the inserted row.
+   *
+   * Atomic per-call: the row insert + emit are sequential; emit failure
+   * is logged but does not roll back the log row (audit durability wins
+   * over notification best-effort).
    */
   async transition(input: TransitionInput): Promise<TransitionResult> {
     this.validateEventTrigger(input.entityType, input.eventTrigger);
 
-    // ponytail: skeleton defers actual DB write to commit 2 — for now this
-    // satisfies the type contract so dependent services can wire up imports.
-    throw new BadRequestException(
-      'STATE_MACHINE_NOT_IMPLEMENTED: commit 2 wires the orchestrator.',
-    );
+    let row;
+    try {
+      row = await this.prisma.stateTransitionLog.create({
+        data: {
+          entityType: input.entityType,
+          entityId: input.entityId,
+          fromState: input.fromState ?? null,
+          toState: input.toState,
+          eventTrigger: input.eventTrigger,
+          changedById: input.userId ?? null,
+          reason: input.reason ?? null,
+          metadata: input.metadata
+            ? (input.metadata as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
+        },
+      });
+    } catch (err) {
+      // Prisma P2002 = unique constraint violation on (entityId, eventTrigger)
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `NO_DUAL_WRITE_VIOLATION: Trigger "${input.eventTrigger}" already ` +
+            `executed for ${input.entityType} ${input.entityId}.`,
+        );
+      }
+      throw err;
+    }
+
+    // Best-effort event emit — activity-log listener already wired.
+    try {
+      this.eventEmitter.emit('state.transition', {
+        entityType: row.entityType,
+        entityId: row.entityId,
+        fromState: row.fromState,
+        toState: row.toState,
+        eventTrigger: row.eventTrigger,
+        changedById: row.changedById,
+        reason: row.reason,
+        metadata: row.metadata,
+      });
+    } catch (err) {
+      this.logger.error(
+        'state.transition emit failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
+
+    return {
+      id: row.id,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      fromState: row.fromState,
+      toState: row.toState,
+      eventTrigger: row.eventTrigger as StateEventTrigger,
+      createdAt: row.createdAt,
+    };
+  }
+
+  /**
+   * Lookup the latest transition for a given (entityId, eventTrigger).
+   * Used by services that need to check "did this transition already fire?"
+   * without triggering a NO_DUAL_WRITE violation.
+   */
+  async findLatest(
+    entityId: string,
+    trigger: StateEventTrigger,
+  ): Promise<TransitionResult | null> {
+    const row = await this.prisma.stateTransitionLog.findFirst({
+      where: { entityId, eventTrigger: trigger },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!row) return null;
+    return {
+      id: row.id,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      fromState: row.fromState,
+      toState: row.toState,
+      eventTrigger: row.eventTrigger as StateEventTrigger,
+      createdAt: row.createdAt,
+    };
   }
 
   /**
@@ -132,9 +225,10 @@ export class StateMachineService {
   }
 
   /**
-   * No-op consumer of Prisma namespace import so tree-shaking does not drop
-   * the type-only reference. Keeps `@prisma/client` types aligned.
+   * Lookup the trigger map for one entity. Convenience for callers that
+   * want to know which triggers are valid before calling transition().
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _typesRef: Prisma.InputJsonValue | null = null;
+  getTriggerMap(entityType: string): StateEventTrigger[] {
+    return ENTITY_TRIGGER_MAP[entityType] ?? [];
+  }
 }
