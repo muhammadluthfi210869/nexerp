@@ -10,6 +10,7 @@
 import {
   Controller, Post, Body, Headers, HttpCode, HttpException,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { ApiTags } from "@nestjs/swagger";
 import { createHash } from "crypto";
 import { LeadSource, type CrmLead, type GuestbookEvent } from "@prisma/client";
@@ -45,6 +46,10 @@ export class LeadSvcWebhookController {
    */
   @Post("leads/ingest")
   @HttpCode(201)
+  // Wave 1 / A4: cap ingest webhook at 30 req/min/IP on top of the global
+  // 100/min default. Dreamlab deploys fire ~1 req/lead, so 30/min covers
+  // burst without blocking legitimate traffic.
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   async ingest(
     @Body() rawBody: LeadIngestDto,
     @Headers("x-dreamlab-signature") signature: string | undefined,
