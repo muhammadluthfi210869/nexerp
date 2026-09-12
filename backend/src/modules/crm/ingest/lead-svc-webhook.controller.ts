@@ -51,8 +51,9 @@ export class LeadSvcWebhookController {
     @Headers("x-dreamlab-timestamp") timestamp: string | undefined,
   ): Promise<{ lead: CrmLead; guestbookEvent: GuestbookEvent }> {
     const secret = process.env.LEAD_SVC_INGEST_SECRET ?? "";
+    // 401 (not 503) per Wave 1 A4 hardening: do not leak server-config state.
     if (!secret) {
-      throw new HttpException("Server not configured for lead-svc ingest", 503);
+      throw new HttpException("Server not configured for lead-svc ingest", 401);
     }
     const validation = validateHmac(
       { signature, timestamp },
