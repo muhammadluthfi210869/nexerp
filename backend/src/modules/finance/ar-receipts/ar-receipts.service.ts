@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, StateEventTrigger } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
+import { StateMachineService } from '../../state-machine/state-machine.service';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class ARReceiptsService {
   constructor(
     private prisma: PrismaService,
     private gate: FinanceGateHelper,
+    private stateMachine: StateMachineService,
   ) {}
 
   async findAll(filter?: { customerId?: string; invoiceId?: string }) {
@@ -84,9 +87,31 @@ export class ARReceiptsService {
     });
     const receiptNumber = `RECV-${yymm}-${String(count + 1).padStart(4, '0')}`;
 
+    // Wave 1/A5 — generate receipt UUID up front so the state-machine
+    // transition can use it as entityId BEFORE the receipt row exists.
+    // NO_DUAL_WRITE: duplicate create() for the same receipt will fail
+    // the (entityId, eventTrigger) unique index.
+    const receiptId = randomUUID();
+    await this.stateMachine.transition({
+      entityType: 'AR_RECEIPT',
+      entityId: receiptId,
+      eventTrigger: StateEventTrigger.PAYMENT_RECEIVED,
+      fromState: null,
+      toState: 'RECEIVED',
+      userId,
+      reason: `AR receipt ${receiptNumber} from customer`,
+      metadata: {
+        customerId: dto.customerId,
+        invoiceId: dto.invoiceId ?? null,
+        amount: dto.amount,
+        bankAccountId: dto.bankAccountId ?? null,
+      },
+    });
+
     return this.prisma.$transaction(async (tx) => {
       const receipt = await tx.aRReceipt.create({
         data: {
+          id: receiptId,
           receiptNumber,
           customerId: dto.customerId,
           invoiceId: dto.invoiceId,
