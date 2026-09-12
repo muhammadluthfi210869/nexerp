@@ -9,6 +9,7 @@ export function ReactQueryProvider({ children }: { children: React.ReactNode }) 
       queries: {
         staleTime: 60 * 1000,
         refetchOnWindowFocus: false,
+        retry: false, // ponytail: stop RQ retrying 401s — would feed the auto-refresh loop
       },
     },
   }));

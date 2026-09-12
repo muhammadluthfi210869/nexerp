@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Activity,
   ShieldAlert,
@@ -66,7 +66,6 @@ import {
   Calculator
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
 
 interface SubMenuItem {
   name: string;
@@ -690,7 +689,6 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -709,15 +707,10 @@ export function Sidebar() {
         // ignore
       }
     }
-
-    api.get("/auth/profile").then((res) => {
-      if (res?.data) {
-        setUser(res.data);
-        localStorage.setItem("user", JSON.stringify(res.data));
-      }
-    }).catch(() => {
-      // ignore
-    });
+    // ponytail: removed api.get("/auth/profile") on mount.
+    // Why: was the loop's primary trigger — every dashboard page mount
+    // fired a 401 on stale tokens → interceptor → full-page redirect → loop.
+    // Trust localStorage; profile refresh happens on user-initiated action.
   }, []);
 
   const isNavActive = (href: string) => {

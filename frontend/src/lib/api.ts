@@ -39,14 +39,21 @@ api.interceptors.request.use((config) => {
 });
 
 // Response Interceptor: Handle 401 Unauthorized
+// ponytail: isRedirecting guard prevents multiple in-flight 401s from
+// queuing multiple navigations (root cause of "auto-refresh per detik" loop).
+// Reset after 5s so a fresh page (after user re-logs in) can redirect again.
+let isRedirecting = false;
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !isRedirecting && window.location.pathname !== "/login") {
+        isRedirecting = true;
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "/login";
+        document.cookie = "token=; path=/; max-age=0;";
+        window.location.replace("/login");
+        setTimeout(() => { isRedirecting = false; }, 5000);
       }
     }
     return Promise.reject(error);
