@@ -13,7 +13,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma, StateEventTrigger } from '@prisma/client';
-import { StateMachineService } from '../../../src/modules/state-machine/state-machine.service';
+import { StateMachineService } from '../state-machine.service';
 
 describe('StateMachineService', () => {
   let service: StateMachineService;
