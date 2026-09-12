@@ -1850,6 +1850,247 @@ Setiap event operasional memicu posting otomatis ke Buku Besar berpasangan seimb
 - **Aksi / Tombol Operasional**: `Riwayat | Tracking | Pending | Lihat | Ubah | Batalkan | Modal Tutup`
 
 
+---
+
+## MOD-06: Production & PPIC — **[PROPOSED — awaiting user LOCKED-level approval]**
+> Status: Konten diekstrak dari `docs/plan/FULLSTACK_INTEGRITY_PLAN.md` + `docs/plan/ULTIMATE_PLAN_WAREHOUSE_QC.md`. Belum ada definisi SCR/UI resmi di Master Spec TOC (TOC anchor sudah ada).
+
+### Business Processes
+1. **Work Order Scheduling** — Sales Order (paid) → otomatis create ProductionOrder (Mixing → Filling → Packaging) per planned date.
+2. **Batch Record (Pra Produksi)** — SCR-132: catat formula, bahan, tim mixing, durasi, hasil mixing.
+3. **Mixing → Filling → Packaging → Delivery** — eksekusi per Work Order (SCR-141, 142, 143). Quarantine Drum jika ada unresolved issue (per Legal Mix-Soft-Gate).
+4. **Job Order Costing** — cost roll-up: Dr COGS / Cr WIP. Bridge ke Finance Auto-Jurnal.
+5. **ProductionDebt reconciliation** — track material borrowed by Production not yet returned.
+
+### Key Entities (Prisma)
+- `ProductionOrder` — header WO (planned vs actual)
+- `BatchRecord` — immutable mixing log per batch
+- `BillOfMaterials` — recipe/formula per finished good
+- `WorkOrder` — unit eksekusi (Mixing/Filling/Packaging)
+- `JobOrderCosting` — cost accumulator (Dr COGS, Cr WIP)
+- `ProductionDebt` — material borrowed not reconciled
+- `WIP_RETURN` — flag on material return reconciliation (per Warehouse plan)
+
+### Calculation Formulas
+- **COGS per Batch** = `Σ(qty_bahan × movingAveragePrice) + overhead_allocation` (overhead dari `CostAllocationSetup` MOD-01)
+- **OEE** = `Availability × Performance × Quality` (per Warehouse plan §oee_metrics)
+- **Selisih Pembulatan** = `Σ(qty × harga) − total_invoice` (audit Issue #16 fix)
+
+### Default Values
+- WIP default warehouse = `PRODUCTION`
+- Batch size = planned qty dari SO
+- Status default = `SCHEDULED` (transitions: SCHEDULED → MIXING → FILLING → PACKAGING → DELIVERED)
+
+### Status Flags
+- 🔴 **MISSING** `JobOrderCostingService` cost roll-up (per SPEC-GAP-MAP §7.1 — SCR-146 100% missing)
+- 🔴 **MISSING** `POST /job-order/cost-rollup` endpoint (per SPEC-GAP-MAP §7.2)
+- 🟠 Artwork GET integration with Production Tablet UI pending (per Creative Design Phase 4)
+
+### Refs
+- `docs/plan/FULLSTACK_INTEGRITY_PLAN.md` — Phase 2 Golden Thread (SCM Inbound → Production Schedule → Warehouse Stock → Finance Journal)
+- `docs/plan/ULTIMATE_PLAN_WAREHOUSE_QC.md` — ProductionDebt + oee_metrics
+- `docs/SPEC-GAP-MAP.md` §7.1, §7.2, §8 (rank #4-7 production/mixing, filling, packaging, work-orders)
+- Legacy SCR count: **19 SCRs** (per SPEC-GAP-MAP §4)
+
+---
+
+## MOD-08: Creative & Packaging Design — **[PROPOSED — awaiting user LOCKED-level approval]**
+> Status: Diekstrak dari `docs/plan/ULTIMATE_PLAN_CREATIVE_DESIGN.md` (V4 World-Class). Database Hardening + Logic Engine + Design Hub UI COMPLETED. Phase 4-5 pending.
+
+### Business Processes
+1. **Brief Intake** (BusDev) → `DesignTask` created with state `BRIEF`
+2. **Designer Work** → upload ke Kanban state `DRAFT` → `REVIEW`
+3. **Internal Review** → Designer → BusDev feedback loop (`DesignFeedback` immutable)
+4. **APJ (Legal) Approval** → 6-Digit Encrypted PIN (Bcrypt) dengan audit trail (user_id, timestamp, IP)
+5. **Client ACC** → BusDev konfirmasi → state `LOCKED` triggers Auto-Printing PO ke SCM
+
+### Key Entities (Prisma)
+- `DesignTask` — task header (state, kanban_state, sla_deadline, revision_count)
+- `DesignVersion` — immutable version history (V1, V2, V3, ...)
+- `DesignFeedback` — timestamped audit trail (per revision)
+- `Artwork` — final approved artwork asset (file URL + metadata)
+- `DesignRequest` — upstream brief request dari BusDev
+- `ApprovalPin` — User.approvalPin (6-digit Bcrypt) untuk E-Signature
+
+### Calculation Formulas
+- **Revision Count** = `Σ(DesignFeedback where type='REVISION')` per task
+- **SLA Deadline** = `created_at + sla_hours (configurable per task type)`
+- **Soft-Block trigger** = `revision_count >= 3` (freeze designer upload)
+
+### Default Values
+- Revision Cap = **3** (after 3rd → BusDev must `Unlock & Charge` atau `Unlock & Waive` via Manager PIN)
+- File size limit: Mockup JPG/PNG max **5MB**, Master File (Ai/PDF/CDR) max **50MB**
+- Local storage: `backend/uploads/creative_assets/` (architecture supports S3/GCP migration)
+- Communication: **Server-Sent Events (SSE)** (Server → BusDev/Designer) — lighter than Socket.io
+- Audit Trail log: `user_id`, `timestamp`, `IP_address` (compliance: 21 CFR Part 11)
+
+### Status Flags
+- 🟡 **DEFERRED** Artwork GET endpoint (per memory)
+- 🟡 **PENDING** Auto-Printing PO wire to SCM (Phase 4)
+- 🟡 **PENDING** finalArtworkUrl injection to Production Tablet UI (Phase 4)
+- 🟡 **PENDING** E2E test full revision-to-lock lifecycle (Phase 5)
+
+### Refs
+- `docs/plan/ULTIMATE_PLAN_CREATIVE_DESIGN.md` (V4 plan)
+- Legacy SCR count: **2 SCRs** (per SPEC-GAP-MAP §4) — spec coverage 100%
+
+---
+
+## MOD-09: Legality & Regulation — **[PROPOSED — awaiting user LOCKED-level approval]**
+> Status: Diekstrak dari `docs/plan/LEGAL_ULTIMATE_IMPLEMENTATION_PLAN.md` (V4 Gatekeeper). Database extension + Backend gate logic pending implementation.
+
+### Business Processes
+1. **Formula Submission** (R&D) → `RegulatoryPipeline.stage = SUBMITTED`
+2. **Compliance Check** — validate INCI array vs `MasterINCI` concentration limits (auto-reject PROHIBITED)
+3. **Three-Button Decision**:
+   - `Approve` → `BPOM_REGISTRATION_PROCESS`
+   - `Minor Adjustment` → unlock R&D Phase Builder (soft-reject)
+   - `Fatal Reject` → archive Formula & trigger new version requirement
+4. **SCM Smart-Gate** — block PO creation for `MaterialType.PACKAGING` if `ArtworkReview.isApproved = false`
+5. **Production Smart-Gate** — hide/disable FILLING & PACKAGING execution until `RegulatoryPipeline.registrationNo` present
+6. **PNBP Payment** → otomatis advance `RegulatoryPipeline.stage = EVALUATION` via event
+
+### Key Entities (Prisma)
+- `RegulatoryPipeline` — unified BPOM + HKI registry (`pnbpStatus`, `daysInStage`, `logHistory`)
+- `MasterINCI` — international ingredient names, CAS numbers, max concentrations, mandatory warnings
+- `ArtworkReview` — designer upload + claim risk analysis + `izinCetak` flag
+- `PNBPRequest` — payment tracking, linked to `FinanceRecord`
+- `RegStage` enum: `[DRAFT, SUBMITTED, EVALUATION, REVISION, PUBLISHED]`
+- `FormulaStatus` enum: `+ [MINOR_COMPLIANCE_FIX, BPOM_REGISTRATION_PROCESS]`
+- `IngredientCategory` enum: `[ALLOWED, RESTRICTED, PROHIBITED, COLORANT, PRESERVATIVE, UV_FILTER]`
+- `ClaimRisk` enum: `[LOW, MEDIUM, HIGH]`
+
+### Calculation Formulas
+- **daysInStage** = `current_date - stage_entered_at`
+- **Claim Risk Score** = `Σ(risk_weight per ingredient) / total_ingredients` → LOW/MEDIUM/HIGH threshold
+- **SLA breach alert** = `daysInStage > sla_threshold` per RegStage
+
+### Default Values
+- APJ Approval = **6-Digit Encrypted PIN** (Bcrypt/Argon2)
+- Mandatory expiry reminders: **H-90, H-60, H-30** sebelum sertifikat kadaluarsa (per MOD-01 SCR-026)
+- Audit Trail per approval: `user_id`, `timestamp`, `IP_address`
+- Visual identity: Deep Dark `#0A0A0A` + Glassmorphism `backdrop-filter: blur(20px)`
+
+### Status Flags
+- 🔴 **MISSING** `RegulatoryValidatorService` (formula compliance API)
+- 🔴 **MISSING** Smart-Gate engine in SCM & Production (intercept logic)
+- 🟠 **MISSING** MasterINCI bulk import (seeded BPOM regulated ingredients)
+- 🟡 **PARTIAL** Audit Ledger styling (per HR audit §5 rekomendasi: pertahankan sebagai canonical reference)
+
+### Refs
+- `docs/plan/LEGAL_ULTIMATE_IMPLEMENTATION_PLAN.md` (V4 Gatekeeper)
+- `docs/_AUDIT_FULL_REPORT_2026-09-09.md` §2.4 — legality/* pages intentionally dashboard-styled (Aureon Matrix), excluded from "compliant" list per VISUAL_DNA scope
+- Legacy SCR count: **10 SCRs** (per SPEC-GAP-MAP §4) — spec coverage 100%
+
+---
+
+## MOD-10: Finance & Accounting — **[PROPOSED — awaiting user LOCKED-level approval]**
+> Status: Diekstrak dari `docs/plan/FINANCE_ULTIMATE_ARCHITECTURE_PLAN.md` + SPEC-GAP-MAP business rules. Core COA + Period Lock schema exist; Auto-Jurnal Engine MISSING.
+
+### Business Processes
+1. **9 Auto-Jurnal Event Triggers** (per Master Spec §4 + SPEC-GAP-MAP R4) — TBD wiring: PO, Goods Received, Invoice, Payment, Asset Acquisition, Depreciation, Disposal, Inventory Adjustment, Production Cost Roll-up
+2. **Material Cost Tracking** — `MaterialValuation` recalc `movingAveragePrice` on setiap GRN event
+3. **3-Tier Approval** (per SPEC-GAP-MAP R2) — `amount ≤ 50jt → Finance`, `amount > 50jt → Director`
+4. **Period Lock** — `FinancialPeriod.softLock` (no new transactions) → `hardLock` (immutable, audited)
+5. **Dynamic Reclassification** — saat generate Balance Sheet, cek saldo normal: Asset bersaldo Credit → tampil di Liability
+6. **Automated Closing** — akhir bulan: pindahkan saldo Laba Rugi ke `Retained Earnings`
+7. **Proof-of-Disbursement** — Kas Keluar `Final` requires upload bukti transfer (S3/GCS) sebelum valid
+
+### Key Entities (Prisma)
+- `Account` (COA) — `reportGroup` enum, `reclassifyToAccountId` (nullable UUID)
+- `JournalEntry` — immutable journal header + line items; reversal only via `JurnalPembalik`
+- `FinancialPeriod` — Soft Lock / Hard Lock enum, prevents input in closed periods
+- `MaterialValuation` — `movingAveragePrice` history per GRN event
+- `APInvoice`, `APPayment` (split workflow DONE per Phase 2.1)
+- `ARReceipt` (split workflow DONE per Phase 2.1)
+- `ClientEscrowLedger` — immutable sub-ledger, 0% P&L (per SPEC-GAP-MAP R6)
+- `FixedAsset` + `DepreciationSchedule` (per MOD-01 SCR-024)
+- `reportGroup` enum: `[CURRENT_ASSET, FIXED_ASSET, CURRENT_LIABILITY, EQUITY, OPERATING_REVENUE, COGS, OPEX]`
+
+### Calculation Formulas
+- **Moving Average Price (MAP)** = `((Qty_Lama × Harga_MAP_Lama) + (Qty_Baru × Harga_Beli)) / Qty_Total` (triggered on `SCM_GOODS_RECEIVED`)
+- **Approval Tier** — `if amount > 50_000_000 then assign_to(DirectorPool) else assign_to(FinancePool)`
+- **Reclassification Logic** — `if account.type = ASSET and balance < 0 → display_side = LIABILITY`
+- **PPh 21** — per Indonesian tax bracket (progressive)
+- **Depreciation** — straight-line: `(Cost - Salvage) / UsefulLife`; default useful life: Inventaris 4th, Motor 4th, Mobil 8th, Bangunan 20th
+
+### Default Values
+- Hard Lock threshold = end of audit period (Finance Controller sets)
+- Default COA numbering by type: 1xxx Asset, 2xxx Liability, dst (per MOD-01 SCR-032)
+- Immutable Journal: tidak boleh delete, hanya `JurnalPembalik` reversal
+- Comparison view: MoM / YoY toggle per Balance Sheet & P&L
+- Hotkeys: `Alt+N` new line, `Alt+S` save
+
+### Status Flags
+- 🔴 **MISSING** `JournalEngineService` event-wiring — service exists, NOT event-wired (per SPEC-GAP-MAP §7.3)
+- 🔴 **MISSING** `POST /journal/auto` endpoint (per SPEC-GAP-MAP §7.2 R4)
+- 🔴 **MISSING** `ClientEscrowLedger` model + service (per SPEC-GAP-MAP §7.1, R6 CRITICAL)
+- 🔴 **MISSING** `JobOrderCostingService` cost roll-up (cross-ref MOD-06 — 32 hr effort per S3-B)
+- 🟠 `ApprovalEngine` only in FundRequest context — perlu extend ke 9 approval flows (per SPEC-GAP-MAP §7.3)
+- 🟡 `PeriodLock` binary only — perlu enum migration (per SPEC-GAP-MAP §7.3)
+- 🟡 RFC 7807 error envelope exist, perlu audit (per Phase 2.3)
+- 🟡 `AR Gatekeeper` runtime check only, no persisted state (per SPEC-GAP-MAP §7.3)
+
+### Refs
+- `docs/plan/FINANCE_ULTIMATE_ARCHITECTURE_PLAN.md` (100% Zero-Leakage blueprint)
+- `docs/SPEC-GAP-MAP.md` §3 (R1-R7 business rules), §7 (backend gaps)
+- Legacy SCR count: **30 SCRs** (per SPEC-GAP-MAP §4) — spec coverage 73%
+
+---
+
+## MOD-11: Human Resources — **[PROPOSED — awaiting user LOCKED-level approval]**
+> Status: Diekstrak dari `docs/_AUDIT_HR_SYSTEM_2026-09-09.md`. HR Core ada 5/5 pages tapi masih mock-state; KPI Leaderboard + SCR-174 Beranda MISSING.
+
+### Business Processes
+1. **Recruitment** — job posting → CV intake → interview schedule → hire
+2. **Onboarding** — Employee record + Bank Account + KPI baseline
+4. **Attendance Live Feed** — check-in/out per hari, real-time feed
+5. **KPI Evaluation** — `KPI Management` per Departemen + per Individual + Drill-down + Leaderboard
+6. **Payroll Workbench PPh 21** — hitung gaji bruto, PPh 21, net pay
+7. **Tickets** — Izin / Cuti / Lembur dengan approval flow
+8. **My Dashboard** — personal KPI, todo, requests aggregator
+9. **SCR-174 Beranda** — system aggregator (100+ top metric cards) — HILANG TOTAL per audit
+
+### Key Entities (Prisma)
+- `Employee` — master data karyawan + Bank Account + posisi + departemen
+- `Attendance` — check-in/out log per hari
+- `Payroll` + `PPh21Calc` — gaji + tax calculation
+- `Ticket` — Izin/Cuti/Lembur dengan status + approval
+- `Recruitment` — candidate pipeline
+- `KPI Config` — KPI definitions (per departemen + per individual)
+- `KPI Record` — actual achievement per period
+- `KPI Leaderboard` — ranking per departemen (MISSING)
+- `ActivityLog` (already landed per WS-D — `backend/src/modules/activity-log/`)
+
+### Calculation Formulas
+- **PPh 21** — progressive Indonesian tax bracket (PTKP + PKP × rate)
+- **Overtime** = `hours × rate × multiplier` (multiplier per aturan depnaker)
+- **KPI Score** = `Σ(weight × achievement) / total_weight` per period
+- **Salary Components** — bruto = pokok + tunjangan + lembur; netto = bruto - PPh 21 - BPJS
+
+### Default Values
+- HR Dashboard delegates to BusDev client (`bussdev/client-manager` aggregator)
+- 23 pages audited per `docs/_AUDIT_HR_SYSTEM_2026-09-09.md`
+- KPI Real-time Tracking IMPLICIT only — no WebSocket/SSE (audit gap)
+- Auto-approve timer on Document Center (per audit §4)
+
+### Status Flags
+- 🔴 **MISSING** `KPI Leaderboard` page (per audit §1 finding #3 + audit #1)
+- 🔴 **MISSING** SCR-174 Beranda — 100+ top metric cards aggregator HILANG TOTAL (per audit §1 finding #1, §3 #1)
+- 🔴 **MISSING** `hr/tickets` controller — HR Tickets ORPHAN (per SPEC-GAP-MAP §7.1)
+- 🟠 HR pages pakai plain `<select>` bukan `DnaSelect` (per audit #1 finding #5)
+- 🟠 `kpi-management/*` 4/5 pages TIDAK pakai `DnaPageContainer` — hardcoded `bg-[#F8FAFC]` (per audit #3 finding #2)
+- 🟡 My Dashboard MINIMAL — 5 KpiCard + 3 static task (per audit #1 finding #7)
+- 🟡 My Requests SCOPED — HANYA Fund Request (per audit #1 finding #8)
+- 🟡 3-layer DNA inkompatibilitas: banyak pakai `DashboardCard` legacy (per audit #1 finding #4)
+
+### Refs
+- `docs/_AUDIT_HR_SYSTEM_2026-09-09.md` (Agent-HR-System, 23 pages)
+- `docs/SPEC-GAP-MAP.md` §7.1 (`hr/tickets` orphan), §8 (mock pages)
+- Legacy SCR count: **5 HR SCRs + SCR-174 (System Beranda)** (per SPEC-GAP-MAP §4) — spec coverage 100% (existing pages) tapi banyak gap visual + missing leaderboard
+
+---
+
 
 ## MOD-12: Executive & Analytics
 > **Total Layar / Fitur Terdaftar:** 13 Layar
