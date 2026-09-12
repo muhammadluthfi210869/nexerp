@@ -115,8 +115,9 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     groupLabel: "TASK MANAGEMENT",
     icon: ClipboardList,
     items: [
-      { name: "Report Dreamlab", href: "/marketing/reports/dreamlab", icon: BarChart3 },
-      { name: "Report Toribio", href: "/marketing/reports/toribio", icon: BarChart3 },
+      { name: "Task",      href: "/marketing/management-task/overview", icon: Layers },
+      { name: "Dreamlab",  href: "/marketing/reports/dreamlab",        icon: BarChart3 },
+      { name: "Toribio",   href: "/marketing/reports/toribio",         icon: BarChart3 },
     ]
   },
   {
