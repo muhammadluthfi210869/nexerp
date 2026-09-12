@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, StateEventTrigger } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class DownPaymentsService {
   constructor(
     private prisma: PrismaService,
     private gate: FinanceGateHelper,
+    private stateMachine: StateMachineService,
   ) {}
 
   async findAll(filter?: { vendorId?: string; status?: PaymentStatus }) {
@@ -98,6 +100,23 @@ export class DownPaymentsService {
     if (!bankAcc) {
       throw new NotFoundException(`Bank account ${dto.bankAccountId} not found`);
     }
+
+    // Record state-machine transition BEFORE the entity update — fires the
+    // `state.transition` event for activity-log/notifications. NO_DUAL_WRITE
+    // invariant is enforced by the (entityId, eventTrigger) unique index on
+    // state_transition_logs. ponytail: out-of-tx insert matches the existing
+    // system/state-transition.service.ts pattern; cross-row atomicity can be
+    // added later by passing the tx client to the orchestrator.
+    await this.stateMachine.transition({
+      entityType: 'DOWN_PAYMENT',
+      entityId: id,
+      eventTrigger: StateEventTrigger.PAYMENT_SENT,
+      fromState: PaymentStatus.PENDING,
+      toState: PaymentStatus.PAID,
+      userId,
+      reason: `DP ${dp.dpNumber} posted to ${bankAcc.bankName}`,
+      metadata: { bankAccountId: bankAcc.id, amount: Number(dp.amount) },
+    });
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.downPayment.update({
