@@ -1,14 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, StateEventTrigger } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
 import { SoDViolationException } from '../../../common/exceptions/api-exception';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class APPaymentsService {
   constructor(
     private prisma: PrismaService,
     private gate: FinanceGateHelper,
+    private stateMachine: StateMachineService,
   ) {}
 
   async findAll(filter?: { vendorId?: string; status?: PaymentStatus }) {
@@ -174,6 +176,24 @@ export class APPaymentsService {
     if (!bankAcc) {
       throw new NotFoundException(`Bank account ${payment.bankAccountId} not found`);
     }
+
+    // Wave 1/A3 — record PAYMENT_SENT transition BEFORE entity update so
+    // activity-log captures the attempt. NO_DUAL_WRITE via DB unique index.
+    await this.stateMachine.transition({
+      entityType: 'AP_PAYMENT',
+      entityId: id,
+      eventTrigger: StateEventTrigger.PAYMENT_SENT,
+      fromState: PaymentStatus.PENDING,
+      toState: PaymentStatus.PAID,
+      userId,
+      reason: `AP payment ${payment.paymentNumber} to vendor ${payment.vendorId}`,
+      metadata: {
+        vendorId: payment.vendorId,
+        bankAccountId: payment.bankAccountId,
+        totalAmount: Number(payment.totalAmount),
+        verifiedBy: payment.verifiedBy,
+      },
+    });
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.aPPayment.update({
