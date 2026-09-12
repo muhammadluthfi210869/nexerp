@@ -44,3 +44,14 @@ test-results/
 # Security audit artifacts (third-party systems, contain sensitive evidence)
 docs/security-audit/
 evidence/security/
+
+# IDE / tooling cache
+.kilo/
+backend/.jest-cache/
+
+# Secrets & API keys
+scripts/.minimax-api-key
+*.api-key
+
+# Windows artifacts
+nul

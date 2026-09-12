@@ -1,0 +1,1586 @@
+[
+  {
+    "screenId": "SCR-001",
+    "page": "D. Buku Tamu",
+    "oldRoute": "/bussdev/dashboard-guest-book",
+    "moduleId": "MOD-02",
+    "type": "Dashboard",
+    "newRoute": "/penjualan/dashboard-guest-book",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-002",
+    "page": "D. BusDev",
+    "oldRoute": "/bussdev/dashboard-business-development",
+    "moduleId": "MOD-02",
+    "type": "Dashboard",
+    "newRoute": "/penjualan/dashboard-business-development",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-003",
+    "page": "D. Client Produksi",
+    "oldRoute": "/bussdev/dashboard-client-production",
+    "moduleId": "MOD-02",
+    "type": "Dashboard",
+    "newRoute": "/penjualan",
+    "reason": "Client production dashboard = Sales function"
+  },
+  {
+    "screenId": "SCR-004",
+    "page": "D. Client RO",
+    "oldRoute": "/bussdev/dashboard-client-repeat-order",
+    "moduleId": "MOD-02",
+    "type": "Dashboard",
+    "newRoute": "/penjualan/dashboard-client-repeat-order",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-005",
+    "page": "D. Client Sample",
+    "oldRoute": "/bussdev/dashboard-client-sample",
+    "moduleId": "MOD-02",
+    "type": "Dashboard",
+    "newRoute": "/samples",
+    "reason": "Client sample dashboard = Sample function"
+  },
+  {
+    "screenId": "SCR-006",
+    "page": "D. Digital Marketing",
+    "oldRoute": "/executive/dashboard-digital-marketing",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec",
+    "reason": "Exec dashboard"
+  },
+  {
+    "screenId": "SCR-007",
+    "page": "D. Eksekutif",
+    "oldRoute": "/executive/dashboard-executive",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-executive",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-008",
+    "page": "D. Gudang",
+    "oldRoute": "/executive/dashboard-warehouse",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec",
+    "reason": "Exec dashboard"
+  },
+  {
+    "screenId": "SCR-009",
+    "page": "D. HR",
+    "oldRoute": "/executive/dashboard-human-resources",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-human-resources",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-010",
+    "page": "D. Jadwal Produksi",
+    "oldRoute": "/executive/dashboard-production-schedule",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-production-schedule",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-011",
+    "page": "Finance Overview (Dashboard)",
+    "oldRoute": "/executive/dashboard-finance",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-finance",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-012",
+    "page": "D. Legalitas",
+    "oldRoute": "/executive/dashboard-legality",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-legality",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-013",
+    "page": "D. Lost",
+    "oldRoute": "/bussdev/dashboard-client-lost",
+    "moduleId": "MOD-02",
+    "type": "Dashboard",
+    "newRoute": "/penjualan/dashboard-client-lost",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-014",
+    "page": "D. Notifikasi",
+    "oldRoute": "/executive/dashboard-notification",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-notification",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-015",
+    "page": "D. Pelanggan",
+    "oldRoute": "/executive/dashboard-customer",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec",
+    "reason": "Exec dashboard"
+  },
+  {
+    "screenId": "SCR-016",
+    "page": "D. Penjualan Barang",
+    "oldRoute": "/executive/dashboard-sales-product",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-sales-product",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-017",
+    "page": "D. Penjualan Sample",
+    "oldRoute": "/rnd/dashboard-sales-sample",
+    "moduleId": "MOD-03",
+    "type": "Dashboard",
+    "newRoute": "/samples/dashboard-sales-sample",
+    "reason": "Default RnD"
+  },
+  {
+    "screenId": "SCR-018",
+    "page": "D. Produksi",
+    "oldRoute": "/executive/dashboard-production",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec",
+    "reason": "Exec dashboard"
+  },
+  {
+    "screenId": "SCR-019",
+    "page": "D. Purchasing",
+    "oldRoute": "/executive/dashboard-purchasing",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-purchasing",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-020",
+    "page": "D. Realisasi Produksi",
+    "oldRoute": "/executive/dashboard-production-realization",
+    "moduleId": "MOD-12",
+    "type": "Dashboard",
+    "newRoute": "/exec/dashboard-production-realization",
+    "reason": "Default Exec"
+  },
+  {
+    "screenId": "SCR-021",
+    "page": "D. RnD",
+    "oldRoute": "/rnd/dashboard-rnd",
+    "moduleId": "MOD-03",
+    "type": "Dashboard",
+    "newRoute": "/samples/dashboard-rnd",
+    "reason": "Default RnD"
+  },
+  {
+    "screenId": "SCR-022",
+    "page": "D. Sample",
+    "oldRoute": "/rnd/dashboard-sample",
+    "moduleId": "MOD-03",
+    "type": "Dashboard",
+    "newRoute": "/samples/dashboard-sample",
+    "reason": "Default RnD"
+  },
+  {
+    "screenId": "SCR-023",
+    "page": "Cost Allocation Setup",
+    "oldRoute": "/master/cost-allocation-setup",
+    "moduleId": "MOD-01",
+    "type": "Overhead Allocation Rules",
+    "newRoute": "/master/cost-allocation-setup",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-024",
+    "page": "Asset Register",
+    "oldRoute": "/master/asset-register",
+    "moduleId": "MOD-01",
+    "type": "Master List & Asset History",
+    "newRoute": "/master/asset-register",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-025",
+    "page": "Buat Asset Register",
+    "oldRoute": "/master/asset-register/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/asset-register/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-026",
+    "page": "Compliance / Intangible Asset",
+    "oldRoute": "/master/compliance-asset",
+    "moduleId": "MOD-01",
+    "type": "Compliance & Amortization Tracker",
+    "newRoute": "/master/compliance-asset",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-027",
+    "page": "Kategori Barang",
+    "oldRoute": "/master/goods-category-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/goods-category-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-028",
+    "page": "Buat Kategori Barang",
+    "oldRoute": "/master/goods-category-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/goods-category-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-029",
+    "page": "Barang",
+    "oldRoute": "/master/goods-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/goods-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-030",
+    "page": "Buat Barang",
+    "oldRoute": "/master/goods-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/goods-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-031",
+    "page": "CoA Jurnal Otomatis",
+    "oldRoute": "/master/coa-auto-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/coa-auto-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-032",
+    "page": "CoA",
+    "oldRoute": "/master/coa-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/coa-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-033",
+    "page": "Buat CoA",
+    "oldRoute": "/master/coa-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/coa-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-034",
+    "page": "Hak Akses Gudang",
+    "oldRoute": "/master/warehouse-access-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/warehouse-access-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-035",
+    "page": "Gudang",
+    "oldRoute": "/master/warehouse-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/warehouse-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-036",
+    "page": "Buat Gudang",
+    "oldRoute": "/master/warehouse-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/warehouse-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-037",
+    "page": "Bank Account Master",
+    "oldRoute": "/master/bank-account-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/bank-account-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-038",
+    "page": "Buat Bank Account",
+    "oldRoute": "/master/bank-account-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/bank-account-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-039",
+    "page": "Tax Setup",
+    "oldRoute": "/master/tax-setup",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/tax-setup",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-040",
+    "page": "Kategori Pelanggan",
+    "oldRoute": "/master/customer-category-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/customer-category-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-041",
+    "page": "Buat Kategori Pelanggan",
+    "oldRoute": "/master/customer-category-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/customer-category-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-042",
+    "page": "Pelanggan",
+    "oldRoute": "/master/customer-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/customer-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-043",
+    "page": "Buat Pelanggan",
+    "oldRoute": "/master/customer-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/customer-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-044",
+    "page": "Pelanggan Saya",
+    "oldRoute": "/master/customer-my-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/customer-my-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-045",
+    "page": "Buat Pelanggan Saya",
+    "oldRoute": "/master/customer-my-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/customer-my-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-046",
+    "page": "Hak Akses",
+    "oldRoute": "/master/role-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/role-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-047",
+    "page": "Buat Hak Akses",
+    "oldRoute": "/master/role-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/role-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-048",
+    "page": "Pengguna",
+    "oldRoute": "/master/user-manage",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/user-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-049",
+    "page": "Buat Pengguna",
+    "oldRoute": "/master/user-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/user-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-050",
+    "page": "Kategori Penjualan",
+    "oldRoute": "/master/sales-category",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/sales-category",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-051",
+    "page": "Buat Kategori Penjualan",
+    "oldRoute": "/master/sales-category/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/sales-category/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-052",
+    "page": "Target Penjualan",
+    "oldRoute": "/master/sales-target",
+    "moduleId": "MOD-01",
+    "type": "Master List",
+    "newRoute": "/master/sales-target",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-053",
+    "page": "Buat Target Penjualan",
+    "oldRoute": "/master/sales-target/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/sales-target/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-054",
+    "page": "Kategori Supplier",
+    "oldRoute": "/scm/supplier-category-manage",
+    "moduleId": "MOD-04",
+    "type": "Master List",
+    "newRoute": "/pembelian/supplier-category-manage",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-055",
+    "page": "Buat Kategori Supplier",
+    "oldRoute": "/scm/supplier-category-manage/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/supplier-category-manage/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-056",
+    "page": "Supplier",
+    "oldRoute": "/scm/supplier-manage",
+    "moduleId": "MOD-04",
+    "type": "Master List",
+    "newRoute": "/pembelian/supplier-manage",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-057",
+    "page": "Buat Supplier",
+    "oldRoute": "/scm/supplier-manage/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/supplier-manage/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-058",
+    "page": "Pembelian ~",
+    "oldRoute": "/scm/purchase-approval",
+    "moduleId": "MOD-04",
+    "type": "Approval List",
+    "newRoute": "/approvals",
+    "reason": "Approval queue"
+  },
+  {
+    "screenId": "SCR-059",
+    "page": "Penjualan Produk ~",
+    "oldRoute": "/master/sales-approval",
+    "moduleId": "MOD-01",
+    "type": "Approval List",
+    "newRoute": "/master/sales-approval",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-060",
+    "page": "Penjualan Sample ~",
+    "oldRoute": "/rnd/sales-sample-approval",
+    "moduleId": "MOD-03",
+    "type": "Approval List",
+    "newRoute": "/samples/sales-sample-approval",
+    "reason": "Default RnD"
+  },
+  {
+    "screenId": "SCR-061",
+    "page": "Permintaan Barang ~",
+    "oldRoute": "/master/goods-request-approval",
+    "moduleId": "MOD-01",
+    "type": "Approval List",
+    "newRoute": "/master/goods-request-approval",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-062",
+    "page": "Permintaan HPP ~",
+    "oldRoute": "/master/request-cogs-approval",
+    "moduleId": "MOD-01",
+    "type": "Approval List",
+    "newRoute": "/master/request-cogs-approval",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-063",
+    "page": "Permintaan Pembelian ~",
+    "oldRoute": "/scm/purchase-request-approval",
+    "moduleId": "MOD-04",
+    "type": "Approval List",
+    "newRoute": "/pembelian/purchase-request-approval",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-064",
+    "page": "Retur Pembelian ~",
+    "oldRoute": "/scm/purchase-return-approval",
+    "moduleId": "MOD-04",
+    "type": "Approval List",
+    "newRoute": "/pembelian/purchase-return-approval",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-065",
+    "page": "Retur Penjualan ~",
+    "oldRoute": "/master/sales-return-approval",
+    "moduleId": "MOD-01",
+    "type": "Approval List",
+    "newRoute": "/master/sales-return-approval",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-066",
+    "page": "Checklist",
+    "oldRoute": "/qc/checklist",
+    "moduleId": "MOD-07",
+    "type": "List",
+    "newRoute": "/quality",
+    "reason": "Checklist = QC"
+  },
+  {
+    "screenId": "SCR-067",
+    "page": "Buat Checklist",
+    "oldRoute": "/qc/checklist/create",
+    "moduleId": "MOD-07",
+    "type": "Form",
+    "newRoute": "/quality/create",
+    "reason": "Checklist = QC"
+  },
+  {
+    "screenId": "SCR-068",
+    "page": "Checklist Progress",
+    "oldRoute": "/qc/checklist-progress",
+    "moduleId": "MOD-07",
+    "type": "List",
+    "newRoute": "/quality/checklist-progress",
+    "reason": "Default QC"
+  },
+  {
+    "screenId": "SCR-069",
+    "page": "Checklist Tracking",
+    "oldRoute": "/qc/checklist-tracking",
+    "moduleId": "MOD-07",
+    "type": "Tracking Matrix",
+    "newRoute": "/quality/checklist-tracking",
+    "reason": "Default QC"
+  },
+  {
+    "screenId": "SCR-070",
+    "page": "Closing Checklist & Period Lock",
+    "oldRoute": "/master/closing-checklist",
+    "moduleId": "MOD-01",
+    "type": "Financial Checklist & Period Governance",
+    "newRoute": "/master/closing-checklist",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-071",
+    "page": "Kategori Checklist",
+    "oldRoute": "/qc/checklist-category",
+    "moduleId": "MOD-07",
+    "type": "List",
+    "newRoute": "/quality/checklist-category",
+    "reason": "Default QC"
+  },
+  {
+    "screenId": "SCR-072",
+    "page": "Buat Kategori Checklist",
+    "oldRoute": "/qc/checklist-category/create",
+    "moduleId": "MOD-07",
+    "type": "Form",
+    "newRoute": "/quality/checklist-category/create",
+    "reason": "Default QC"
+  },
+  {
+    "screenId": "SCR-073",
+    "page": "Kelola Checklist",
+    "oldRoute": "/qc/checklist-manage",
+    "moduleId": "MOD-07",
+    "type": "List",
+    "newRoute": "/quality/checklist-manage",
+    "reason": "Default QC"
+  },
+  {
+    "screenId": "SCR-074",
+    "page": "Adjustment Journal",
+    "oldRoute": "/master/adjustment-journal",
+    "moduleId": "MOD-01",
+    "type": "Special Approval Journal",
+    "newRoute": "/master/adjustment-journal",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-075",
+    "page": "Asset Transfer / Disposal",
+    "oldRoute": "/scm/asset-transfer-disposal",
+    "moduleId": "MOD-04",
+    "type": "Asset Lifecycle Execution",
+    "newRoute": "/pembelian/asset-transfer-disposal",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-076",
+    "page": "Bank Reconciliation",
+    "oldRoute": "/master/bank-reconciliation",
+    "moduleId": "MOD-01",
+    "type": "Two-Column Reconciliation Engine",
+    "newRoute": "/master/bank-reconciliation",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-077",
+    "page": "Client Escrow / Pass-Through Disbursement Ledger",
+    "oldRoute": "/master/client-escrow",
+    "moduleId": "MOD-01",
+    "type": "Trust Fund / Escrow Ledger",
+    "newRoute": "/master/client-escrow",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-078",
+    "page": "Depreciation Schedule",
+    "oldRoute": "/master/depreciation-schedule",
+    "moduleId": "MOD-01",
+    "type": "Schedule & Batch Runner",
+    "newRoute": "/master/depreciation-schedule",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-079",
+    "page": "Jurnal Umum",
+    "oldRoute": "/master/general-journal",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/general-journal",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-080",
+    "page": "Buat Jurnal Umum",
+    "oldRoute": "/master/general-journal/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/general-journal/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-081",
+    "page": "Kas Bank Masuk",
+    "oldRoute": "/master/other-deposit",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/other-deposit",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-082",
+    "page": "Buat Kas Bank Masuk",
+    "oldRoute": "/master/other-deposit/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/other-deposit/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-083",
+    "page": "Kas Bank Keluar",
+    "oldRoute": "/master/other-payment",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/other-payment",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-084",
+    "page": "Buat Kas Bank Keluar",
+    "oldRoute": "/master/other-payment/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/other-payment/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-085",
+    "page": "Tax Transactions",
+    "oldRoute": "/master/tax-transactions",
+    "moduleId": "MOD-01",
+    "type": "Tax Ledger & Reconciliation",
+    "newRoute": "/master/tax-transactions",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-086",
+    "page": "Pengiriman Barang",
+    "oldRoute": "/master/delivery-out",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/delivery-out",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-087",
+    "page": "Buat Pengiriman Barang",
+    "oldRoute": "/master/delivery-out/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/delivery-out/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-088",
+    "page": "Transfer Barang",
+    "oldRoute": "/master/goods-transfer",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/goods-transfer",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-089",
+    "page": "Buat Transfer Barang",
+    "oldRoute": "/master/goods-transfer/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/goods-transfer/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-090",
+    "page": "Retur Pembelian",
+    "oldRoute": "/master/purchase-return-out",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/purchase-return-out",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-091",
+    "page": "Pembelian Masuk",
+    "oldRoute": "/master/purchase-in",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/purchase-in",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-092",
+    "page": "Retur Penjualan",
+    "oldRoute": "/master/sales-return-in",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/sales-return-in",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-093",
+    "page": "Budget Entry",
+    "oldRoute": "/master/budget-entry",
+    "moduleId": "MOD-01",
+    "type": "Matrix Budget Planner",
+    "newRoute": "/master/budget-entry",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-094",
+    "page": "Buku Tamu",
+    "oldRoute": "/bussdev/guest-book",
+    "moduleId": "MOD-02",
+    "type": "List",
+    "newRoute": "/penjualan/guest-book",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-095",
+    "page": "Buat Buku Tamu",
+    "oldRoute": "/bussdev/guest-book/create",
+    "moduleId": "MOD-02",
+    "type": "Form",
+    "newRoute": "/penjualan/guest-book/create",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-096",
+    "page": "Client Lost",
+    "oldRoute": "/master/client-lost",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/client-lost",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-097",
+    "page": "Client Produksi",
+    "oldRoute": "/master/client-production",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/client-production",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-098",
+    "page": "Client RO",
+    "oldRoute": "/master/client-repeat-order",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/client-repeat-order",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-099",
+    "page": "Client Sample",
+    "oldRoute": "/rnd/client-sample",
+    "moduleId": "MOD-03",
+    "type": "List",
+    "newRoute": "/samples/client-sample",
+    "reason": "Default RnD"
+  },
+  {
+    "screenId": "SCR-100",
+    "page": "Kebutuhan Barang",
+    "oldRoute": "/scm/need-for-goods",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/need-for-goods",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-101",
+    "page": "Buat Kebutuhan Barang",
+    "oldRoute": "/scm/need-for-goods/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/need-for-goods/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-102",
+    "page": "Leads",
+    "oldRoute": "/bussdev/leads",
+    "moduleId": "MOD-02",
+    "type": "List",
+    "newRoute": "/penjualan/leads",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-103",
+    "page": "Buat Leads",
+    "oldRoute": "/bussdev/leads/create",
+    "moduleId": "MOD-02",
+    "type": "Form",
+    "newRoute": "/penjualan/leads/create",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-104",
+    "page": "DP Pembelian",
+    "oldRoute": "/scm/purchase-down-payment",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/purchase-down-payment",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-105",
+    "page": "Buat DP Pembelian",
+    "oldRoute": "/scm/purchase-down-payment/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/purchase-down-payment/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-106",
+    "page": "Faktur Pembelian",
+    "oldRoute": "/scm/purchase-invoice",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/purchase-invoice",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-107",
+    "page": "Bayar Pembelian",
+    "oldRoute": "/scm/purchase-payment",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/purchase-payment",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-108",
+    "page": "Retur Pembelian",
+    "oldRoute": "/scm/purchase-return",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/purchase-return",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-109",
+    "page": "Buat Retur Pembelian",
+    "oldRoute": "/scm/purchase-return/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/purchase-return/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-110",
+    "page": "Buat Pembelian (Form)",
+    "oldRoute": "/scm/purchase/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/purchase/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-111",
+    "page": "Pengajuan Dana (Fund Request)",
+    "oldRoute": "/master/fund-request",
+    "moduleId": "MOD-01",
+    "type": "Approval List / Workflow",
+    "newRoute": "/master/fund-request",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-112",
+    "page": "Buat Pengajuan Dana",
+    "oldRoute": "/master/fund-request/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/fund-request/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-113",
+    "page": "Collections",
+    "oldRoute": "/master/collections",
+    "moduleId": "MOD-01",
+    "type": "Monitoring & Action Tracking",
+    "newRoute": "/master/collections",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-114",
+    "page": "Penjualan",
+    "oldRoute": "/master/sales",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/penjualan",
+    "reason": "SO, DP, Faktur belongs to Penjualan function"
+  },
+  {
+    "screenId": "SCR-115",
+    "page": "DP Penjualan",
+    "oldRoute": "/master/sales-down-payment",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/sales-down-payment",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-116",
+    "page": "Buat DP Penjualan",
+    "oldRoute": "/master/sales-down-payment/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/sales-down-payment/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-117",
+    "page": "Faktur Penjualan",
+    "oldRoute": "/master/sales-invoice",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/sales-invoice",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-118",
+    "page": "Report Penjualan (Pembayaran Penjualan)",
+    "oldRoute": "/scm/sales-payment",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/sales-payment",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-119",
+    "page": "Retur Penjualan",
+    "oldRoute": "/master/sales-return",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/sales-return",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-120",
+    "page": "Buat Retur Penjualan",
+    "oldRoute": "/master/sales-return/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/sales-return/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-121",
+    "page": "Penjualan Sample",
+    "oldRoute": "/rnd/sales-sample",
+    "moduleId": "MOD-03",
+    "type": "List",
+    "newRoute": "/approvals",
+    "reason": "Approval"
+  },
+  {
+    "screenId": "SCR-122",
+    "page": "Sample Fee (Bayar Sample)",
+    "oldRoute": "/rnd/sales-sample-payment",
+    "moduleId": "MOD-03",
+    "type": "List",
+    "newRoute": "/samples/sales-sample-payment",
+    "reason": "Default RnD"
+  },
+  {
+    "screenId": "SCR-123",
+    "page": "Buat Penjualan Sample",
+    "oldRoute": "/rnd/sales-sample/create",
+    "moduleId": "MOD-03",
+    "type": "Form",
+    "newRoute": "/approvals/create",
+    "reason": "Approval"
+  },
+  {
+    "screenId": "SCR-124",
+    "page": "Buat Penjualan (SO)",
+    "oldRoute": "/master/sales/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/penjualan/create",
+    "reason": "SO, DP, Faktur belongs to Penjualan function"
+  },
+  {
+    "screenId": "SCR-125",
+    "page": "Penyesuaian Stok",
+    "oldRoute": "/warehouse/stock-adjustment",
+    "moduleId": "MOD-05",
+    "type": "List",
+    "newRoute": "/inventory/stock-adjustment",
+    "reason": "Default Warehouse"
+  },
+  {
+    "screenId": "SCR-126",
+    "page": "Buat Penyesuaian Stok",
+    "oldRoute": "/warehouse/stock-adjustment/create",
+    "moduleId": "MOD-05",
+    "type": "Form",
+    "newRoute": "/inventory/stock-adjustment/create",
+    "reason": "Default Warehouse"
+  },
+  {
+    "screenId": "SCR-127",
+    "page": "Permintaan Barang",
+    "oldRoute": "/master/goods-request",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/goods-request",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-128",
+    "page": "Buat Permintaan Barang",
+    "oldRoute": "/master/goods-request/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/goods-request/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-129",
+    "page": "Permintaan Pembelian",
+    "oldRoute": "/scm/purchase-request",
+    "moduleId": "MOD-04",
+    "type": "List",
+    "newRoute": "/pembelian/purchase-request",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-130",
+    "page": "Buat Permintaan Pembelian",
+    "oldRoute": "/scm/purchase-request/create",
+    "moduleId": "MOD-04",
+    "type": "Form",
+    "newRoute": "/pembelian/purchase-request/create",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-131",
+    "page": "Batch Record",
+    "oldRoute": "/master/batch-record",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/batch-record",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-132",
+    "page": "Buat Batch Record",
+    "oldRoute": "/master/batch-record/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/batch-record/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-133",
+    "page": "Kelola Desain & Kemasan",
+    "oldRoute": "/master/design-manage",
+    "moduleId": "MOD-01",
+    "type": "Design Workflow & Revision Matrix",
+    "newRoute": "/master/design-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-134",
+    "page": "Buat / Revisi Desain",
+    "oldRoute": "/master/design-manage/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/design-manage/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-135",
+    "page": "Formulasi",
+    "oldRoute": "/master/formulation",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/formulation",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-136",
+    "page": "Penyesuaian Formulasi",
+    "oldRoute": "/master/formulation-adjustment",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/formulation-adjustment",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-137",
+    "page": "Kelola Formulasi",
+    "oldRoute": "/master/formulation-manage",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/formulation-manage",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-138",
+    "page": "Permintaan HPP",
+    "oldRoute": "/master/request-cogs",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/request-cogs",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-139",
+    "page": "Buat Permintaan HPP",
+    "oldRoute": "/master/request-cogs/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/request-cogs/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-140",
+    "page": "Jadwal Filling",
+    "oldRoute": "/master/schedule-filling",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/schedule-filling",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-141",
+    "page": "Buat Jadwal Filling",
+    "oldRoute": "/master/schedule-filling/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/schedule-filling/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-142",
+    "page": "Jadwal Mixing",
+    "oldRoute": "/master/schedule-mixing",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/schedule-mixing",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-143",
+    "page": "Buat Jadwal Mixing",
+    "oldRoute": "/master/schedule-mixing/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/schedule-mixing/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-144",
+    "page": "Jadwal Packaging",
+    "oldRoute": "/master/schedule-packaging",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/schedule-packaging",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-145",
+    "page": "Buat Jadwal Packaging",
+    "oldRoute": "/master/schedule-packaging/create",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/schedule-packaging/create",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-146",
+    "page": "Job Order Costing",
+    "oldRoute": "/master/job-order-costing",
+    "moduleId": "MOD-01",
+    "type": "Cost Roll-Up Matrix",
+    "newRoute": "/master/job-order-costing",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-147",
+    "page": "Produksi Filling",
+    "oldRoute": "/master/production-filling",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/production-filling",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-148",
+    "page": "Produksi Mixing",
+    "oldRoute": "/master/production-mixing",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/production-mixing",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-149",
+    "page": "Produksi Packaging",
+    "oldRoute": "/master/production-packaging",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/production-packaging",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-150",
+    "page": "Stok Opname",
+    "oldRoute": "/warehouse/stock-opname",
+    "moduleId": "MOD-05",
+    "type": "List",
+    "newRoute": "/inventory/stock-opname",
+    "reason": "Default Warehouse"
+  },
+  {
+    "screenId": "SCR-151",
+    "page": "Buat Stok Opname",
+    "oldRoute": "/warehouse/stock-opname/create",
+    "moduleId": "MOD-05",
+    "type": "Form",
+    "newRoute": "/inventory/stock-opname/create",
+    "reason": "Default Warehouse"
+  },
+  {
+    "screenId": "SCR-152",
+    "page": "Kebutuhan Barang",
+    "oldRoute": "/scm/report-need-for-goods",
+    "moduleId": "MOD-04",
+    "type": "Report",
+    "newRoute": "/pembelian/report-need-for-goods",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-153",
+    "page": "Follow Up Pelanggan",
+    "oldRoute": "/bussdev/report-follow-up-customer",
+    "moduleId": "MOD-02",
+    "type": "Report",
+    "newRoute": "/penjualan/report-follow-up-customer",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-154",
+    "page": "Buku Tamu",
+    "oldRoute": "/bussdev/report-guest-book",
+    "moduleId": "MOD-02",
+    "type": "Report",
+    "newRoute": "/penjualan/report-guest-book",
+    "reason": "Default BusDev"
+  },
+  {
+    "screenId": "SCR-155",
+    "page": "Budget vs Actual",
+    "oldRoute": "/master/budget-vs-actual",
+    "moduleId": "MOD-01",
+    "type": "Variance Analysis Report",
+    "newRoute": "/master/budget-vs-actual",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-156",
+    "page": "Cost Variance",
+    "oldRoute": "/master/cost-variance",
+    "moduleId": "MOD-01",
+    "type": "Variance Investigation Report",
+    "newRoute": "/master/cost-variance",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-157",
+    "page": "Product / Customer Profitability",
+    "oldRoute": "/master/product-customer-profitability",
+    "moduleId": "MOD-01",
+    "type": "Profitability Matrix & Chart",
+    "newRoute": "/master/product-customer-profitability",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-158",
+    "page": "AP Aging Report",
+    "oldRoute": "/scm/report-ap-aging",
+    "moduleId": "MOD-04",
+    "type": "Report / Aging Matrix",
+    "newRoute": "/pembelian/report-ap-aging",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-159",
+    "page": "AR Aging Report",
+    "oldRoute": "/scm/report-ar-aging",
+    "moduleId": "MOD-04",
+    "type": "Report / Aging Matrix",
+    "newRoute": "/pembelian/report-ar-aging",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-160",
+    "page": "Neraca",
+    "oldRoute": "/master/report-balance-sheet",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-balance-sheet",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-161",
+    "page": "Cash Flow Statement",
+    "oldRoute": "/master/report-cash-flow",
+    "moduleId": "MOD-01",
+    "type": "Cash Flow Statement",
+    "newRoute": "/master/report-cash-flow",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-162",
+    "page": "Buku Besar",
+    "oldRoute": "/master/report-general-ledger",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-general-ledger",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-163",
+    "page": "Laba Rugi",
+    "oldRoute": "/master/report-profit-loss",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-profit-loss",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-164",
+    "page": "Report Penjualan",
+    "oldRoute": "/scm/report-sales-summary",
+    "moduleId": "MOD-04",
+    "type": "Sales Financial Summary Report",
+    "newRoute": "/pembelian/report-sales-summary",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-165",
+    "page": "Neraca Saldo",
+    "oldRoute": "/master/report-trial-balance",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-trial-balance",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-166",
+    "page": "Report Penerimaan Barang",
+    "oldRoute": "/scm/report-goods-receipt",
+    "moduleId": "MOD-04",
+    "type": "Report / Goods Receipt Ledger",
+    "newRoute": "/pembelian/report-goods-receipt",
+    "reason": "Default SCM"
+  },
+  {
+    "screenId": "SCR-167",
+    "page": "Mutasi Barang",
+    "oldRoute": "/master/report-mutation-goods",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-mutation-goods",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-168",
+    "page": "Stok",
+    "oldRoute": "/master/report-stock",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-stock",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-169",
+    "page": "Stok Valuation",
+    "oldRoute": "/master/report-stock-valuation",
+    "moduleId": "MOD-01",
+    "type": "Report",
+    "newRoute": "/master/report-stock-valuation",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-170",
+    "page": "Akun Saya",
+    "oldRoute": "/master/account",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/account",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-171",
+    "page": "Catatan Aktifitas",
+    "oldRoute": "/master/activity-log",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/activity-log",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-172",
+    "page": "Pengaturan",
+    "oldRoute": "/master/setting",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/setting",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-173",
+    "page": "Perusahaan",
+    "oldRoute": "/master/company",
+    "moduleId": "MOD-01",
+    "type": "Form",
+    "newRoute": "/master/company",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-174",
+    "page": "Beranda",
+    "oldRoute": "/master/",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/",
+    "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-175",
+    "page": "Buat Pembelian",
+    "oldRoute": "/master/purchase",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/pembelian",
+    "reason": "PO Inbound, GR, Faktur belongs to Pembelian function"
+  },
+  {
+    "screenId": "SCR-176",
+    "page": "Project Monitoring R&D",
+    "oldRoute": "/master/rnd/project-monitoring",
+    "moduleId": "MOD-01",
+    "type": "List",
+    "newRoute": "/master/rnd/project-monitoring",
+    "reason": "Default master"
+  }
+]
