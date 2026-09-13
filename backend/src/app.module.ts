@@ -46,6 +46,7 @@ import { TodoModule } from './modules/todo/todo.module';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 
 import { StateMachineModule } from './modules/state-machine/state-machine.module';
+import { KpiModule } from './modules/kpi/kpi.module';
 
 import { MasterModule } from './modules/master/master.module';
 import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
@@ -116,6 +117,7 @@ import { join } from 'path';
     TodoModule,
     ActivityLogModule,
     StateMachineModule,
+    KpiModule,
   ],
   controllers: [AppController],
   providers: [
