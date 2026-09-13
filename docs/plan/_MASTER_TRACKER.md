@@ -391,3 +391,52 @@ bd0afc7  chore(phase0): add production evidence (Step 1b + 2)
 ### Known Drift Notes
 - SPEC-GAP-MAP §6.3 (106 dead-code orphans) + §6.4 (9 suspicious duplicate pairs) reference `docs/_AUDIT_DRIFT_2026-09-09.md` which is NOT present in repo as of 2026-09-12. Numbers retained from original but flagged **unverified**.
 - API contract v0.3.0 (809 paths) supercedes v0.2.0 (273 paths). Track A migration is based on the v0.2.0 spec; v0.3.0 delta still needs route-mapping-v3.json regeneration.
+
+---
+
+## ✅ Phase Closure Audit 2026-09-13
+
+> E1 QA Gate final pass. All Wave 1-4 closures verified. ERP ready for VPS deploy (E2 = user action).
+
+### Wave 3 (D1 Comms + D2 KPI) — CLOSED ✅
+- 19 atomic commits since Sprint 1 closure (`6448c76`)
+- Backend: 38/38 new tests PASS (communication, notification gateway, kpi)
+- Frontend: 12/12 new tests PASS
+- See `wave-3-complete-2026-09-13.md`
+
+### Wave 4 D3 (Decision Support) — CLOSED ✅
+- 12 atomic commits (11 D3 + 1 fix `e18ca63`)
+- Backend: 18/18 tests PASS (decision-support)
+- Frontend: 3/3 tests PASS
+- See `wave-4-d3-decision-support-complete-2026-09-13.md`
+
+### E1 Gate Final State (commit `430ef06` + tail)
+- **Backend tsc**: 7 errors (all pre-existing marketing baseline; Wave 4 D3 fixed 11 new errors at commit `552428b` by replacing `@/` alias with relative paths in 2 unit-spec files)
+- **Backend Jest**: 232 passed, 61 failed (all 5 failed suites in finance/state-transition/production/rnd are pre-existing EventEmitter2 mock baseline), 1 skipped — 27 suites, 25 unit-spec files
+- **Frontend tsc**: 1 pre-existing `.next/dev/types/validator.ts` error
+- **Frontend vitest**: 357 passed, 1 failed (qc-workbench pre-existing baseline), 7 skipped — 60 files
+- **API contract**: regenerated v0.3.0 → v0.4.0 (875 paths / 1067 ops), x-changelog extension added at commit `430ef06`
+- **E1 cleanup commit** `080dbd7`: removed unused `DnaButton` (PersonalKpiClient), `AlertRuleMetric`/`AlertComparator`/`listIndent` (alert-engine.service)
+
+### Updated Status Dashboard (2026-09-13)
+
+| Area | Progress | Status |
+|---|---|---|
+| Phase 1: Backend Foundation | 100% | ✅ DONE (state machine + 19 tests + Wave 2 finance services) |
+| Phase 2: Service Layer Integrity | 100% | ✅ DONE (2.1 + 2.2 + 2.3 + 2.4 — Phase 2 closed `phase-2-complete-2026-09-11`) |
+| Phase 3: Frontend Repair | 100% | ✅ DONE (Track A 133 pages + emergency deploy + Wave 3 frontend) |
+| Phase 4: State Machine UI | 100% | ✅ DONE (WS-A State Machine + WS-B KPI + WS-C Comms + WS-D Activity + WS-E Decision) |
+| Phase 5: Test Infrastructure | 70% | 🟢 25 unit-spec + 60 vitest files, coverage TBD |
+| Wave 1 (foundation) | 100% | ✅ CLOSED (`wave-1-closed-2026-09-13`) |
+| Wave 2 (closure) | 100% | ✅ CLOSED (`wave-2-closed-2026-09-13`) |
+| Wave 3 (Comms + KPI) | 100% | ✅ CLOSED (this section) |
+| Wave 4 D3 (Decision Support) | 100% | ✅ CLOSED (this section) |
+
+### Next Action (E2 — USER)
+- Open PR from `phase-3` → `main`
+- Merge PR
+- SSH to VPS (dreamlab@103.93.134.215)
+- Set env: `LEAD_SVC_INGEST_SECRET` (OmniCRM)
+- Run `docs/RUNBOOK-DEPLOY-DAN-TEST-OMNICRM.md` for OmniCRM smoke
+- Apply manual diff to lead-svc-deploy (`OMNICRM-DEPLOY.md §B`)
+- `npx prisma migrate deploy` if auto-apply missed it
