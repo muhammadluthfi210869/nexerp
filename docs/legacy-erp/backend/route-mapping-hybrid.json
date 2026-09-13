@@ -1582,5 +1582,347 @@
     "type": "List",
     "newRoute": "/master/rnd/project-monitoring",
     "reason": "Default master"
+  },
+  {
+    "screenId": "SCR-177",
+    "page": "Auto Journal Engine",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Engine",
+    "newRoute": "/finance/accounting/auto-journal",
+    "reason": "Core finance — auto-jurnal triggers (9 events per MOD-10)"
+  },
+  {
+    "screenId": "SCR-178",
+    "page": "Chart of Accounts",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Master",
+    "newRoute": "/finance/accounting/coa",
+    "reason": "COA master + dynamic reclassification (Asset<0→Liability)"
+  },
+  {
+    "screenId": "SCR-179",
+    "page": "Actual Costing",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/actual-costing",
+    "reason": "Job Order actual cost roll-up (cross-ref MOD-06)"
+  },
+  {
+    "screenId": "SCR-180",
+    "page": "AP Aging",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/ap-aging",
+    "reason": "AP aging alerts (H-3 red, H-7 yellow, overdue bouncy)"
+  },
+  {
+    "screenId": "SCR-181",
+    "page": "AR Hub",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/ar-hub",
+    "reason": "AR receipts + aging combined view (post-split workflow Phase 2.1)"
+  },
+  {
+    "screenId": "SCR-182",
+    "page": "Fixed Assets",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Master",
+    "newRoute": "/finance/assets",
+    "reason": "Asset registry + depreciation schedule (straight-line)"
+  },
+  {
+    "screenId": "SCR-183",
+    "page": "Audit Ledger",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/audit-ledger",
+    "reason": "Immutable audit trail for ledger entries"
+  },
+  {
+    "screenId": "SCR-184",
+    "page": "Bank Accounts",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Master",
+    "newRoute": "/finance/bank-accounts",
+    "reason": "Bank account registry (multi-account support)"
+  },
+  {
+    "screenId": "SCR-185",
+    "page": "Bank Reconciliation",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/bank-reconciliation",
+    "reason": "Match bank statement with GL entries"
+  },
+  {
+    "screenId": "SCR-186",
+    "page": "Pembayaran (Payments)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/bayar",
+    "reason": "AP payment voucher + proof-of-disbursement"
+  },
+  {
+    "screenId": "SCR-187",
+    "page": "Pembayaran Sample",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/bayar-sample",
+    "reason": "Sample fee collection from client (Gate G1 verification)"
+  },
+  {
+    "screenId": "SCR-188",
+    "page": "Bills (AP Invoices)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/bills",
+    "reason": "AP invoice entry + 3-tier approval (50jt threshold)"
+  },
+  {
+    "screenId": "SCR-189",
+    "page": "Budget",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Master",
+    "newRoute": "/finance/budget",
+    "reason": "Annual/monthly budget vs actual (allocation basis + weight)"
+  },
+  {
+    "screenId": "SCR-190",
+    "page": "Cash In",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/cash-in",
+    "reason": "Kas masuk journal entry (DP/SO/collection receipts)"
+  },
+  {
+    "screenId": "SCR-191",
+    "page": "Cash Out",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/cash-out",
+    "reason": "Kas keluar journal + proof-of-disbursement (Final requires upload)"
+  },
+  {
+    "screenId": "SCR-192",
+    "page": "Client Escrow",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/client-escrow",
+    "reason": "Immutable client escrow sub-ledger (0% P&L per R6)"
+  },
+  {
+    "screenId": "SCR-193",
+    "page": "Period Closing",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/closing",
+    "reason": "End-of-month automated closing (Laba Rugi → Retained Earnings)"
+  },
+  {
+    "screenId": "SCR-194",
+    "page": "COGS Request (Production)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/cogs-request",
+    "reason": "COGS allocation request from Production"
+  },
+  {
+    "screenId": "SCR-195",
+    "page": "COGS Request (R&D)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/cogs-request-rnd",
+    "reason": "COGS allocation request from R&D (formulation sampling)"
+  },
+  {
+    "screenId": "SCR-196",
+    "page": "Collections",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/collections",
+    "reason": "AR collection follow-up workflow"
+  },
+  {
+    "screenId": "SCR-197",
+    "page": "Asset Compliance",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/compliance-asset",
+    "reason": "Asset certification + amortization (H-90/H-60/H-30 reminder)"
+  },
+  {
+    "screenId": "SCR-198",
+    "page": "Cost Variance",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/cost-variance",
+    "reason": "Standard vs actual cost variance analysis"
+  },
+  {
+    "screenId": "SCR-199",
+    "page": "Currencies",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Master",
+    "newRoute": "/finance/currencies",
+    "reason": "Multi-currency FX rates registry"
+  },
+  {
+    "screenId": "SCR-200",
+    "page": "Finance Dashboard",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Dashboard",
+    "newRoute": "/finance/dashboard",
+    "reason": "Finance overview tiles + KPI (MOD-10 entry)"
+  },
+  {
+    "screenId": "SCR-201",
+    "page": "Fund (Kas Pool)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/fund",
+    "reason": "Fund pool allocation + 3-tier approval"
+  },
+  {
+    "screenId": "SCR-202",
+    "page": "Fund Requests",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/fund-requests",
+    "reason": "Fund request workflow + approval (DirectorPool > 50jt)"
+  },
+  {
+    "screenId": "SCR-203",
+    "page": "Jurnal Input",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/input",
+    "reason": "Manual journal entry form (Alt+N new line, Alt+S save)"
+  },
+  {
+    "screenId": "SCR-204",
+    "page": "Invoices (AR)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/invoices",
+    "reason": "AR invoice generation + DP receipt tracking"
+  },
+  {
+    "screenId": "SCR-205",
+    "page": "Jurnal & COA",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/jurnal",
+    "reason": "Journal list + COA reference (combined view)"
+  },
+  {
+    "screenId": "SCR-206",
+    "page": "Jurnal Umum",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/jurnal-umum",
+    "reason": "General journal viewer (immutable, reversal only)"
+  },
+  {
+    "screenId": "SCR-207",
+    "page": "Kas & Bank",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/kas",
+    "reason": "Cash & bank journal management (multi-account)"
+  },
+  {
+    "screenId": "SCR-208",
+    "page": "Laba Rugi (P&L)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/laba-rugi",
+    "reason": "Profit & Loss statement (MoM/YoY toggle)"
+  },
+  {
+    "screenId": "SCR-209",
+    "page": "Buku Besar (Ledger)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/ledger",
+    "reason": "General ledger viewer (per-account drill-down)"
+  },
+  {
+    "screenId": "SCR-210",
+    "page": "Financial Periods",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Master",
+    "newRoute": "/finance/periods",
+    "reason": "Period lock state management (soft lock / hard lock)"
+  },
+  {
+    "screenId": "SCR-211",
+    "page": "Piutang (AR)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/piutang",
+    "reason": "Accounts receivable tracking + aging"
+  },
+  {
+    "screenId": "SCR-212",
+    "page": "Profitability",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/profitability",
+    "reason": "Per-product/client profitability analysis"
+  },
+  {
+    "screenId": "SCR-213",
+    "page": "Taxes (Pajak)",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Transaction",
+    "newRoute": "/finance/taxes",
+    "reason": "PPh 21 progressive, PPN, withholding tax management"
+  },
+  {
+    "screenId": "SCR-214",
+    "page": "Transactions",
+    "oldRoute": null,
+    "moduleId": "MOD-10",
+    "type": "Report",
+    "newRoute": "/finance/transactions",
+    "reason": "Combined transaction history viewer (searchable)"
   }
 ]
