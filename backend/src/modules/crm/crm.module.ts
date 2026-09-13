@@ -9,6 +9,7 @@ import { KpiService } from './kpi/kpi.service';
 import { KpiController } from './kpi/kpi.controller';
 import { BusDevsController } from './busdevs/busdevs.controller';
 import { LeadSvcWebhookController } from './ingest/lead-svc-webhook.controller';
+import { RoundRobinService } from './common/round-robin.service';
 import { ActivityStreamModule } from '../activity-stream/activity-stream.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { ActivityStreamModule } from '../activity-stream/activity-stream.module'
     LeadsService,
     GuestbookService,
     KpiService,
+    RoundRobinService,
   ],
   controllers: [
     LostDealsController,

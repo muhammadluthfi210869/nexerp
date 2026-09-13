@@ -21,17 +21,17 @@ describe("LeadSvcWebhookController — HMAC enforcement", () => {
   };
   const bodyJson = JSON.stringify(body);
 
-  function makeController(prismaMock: any): LeadSvcWebhookController {
-    return new LeadSvcWebhookController(prismaMock);
+  function makeController(prismaMock: any, roundRobin: any = { assignOnIngest: jest.fn().mockResolvedValue({ assignedToId: "u-busdev-1" }) }): LeadSvcWebhookController {
+    return new LeadSvcWebhookController(prismaMock, roundRobin);
   }
 
-  function makePrismaMock(returnValue: any = { lead: { id: "L1" }, guestbookEvent: { id: "G1" } }) {
+  function makePrismaMock(returnValue: any = { lead: { id: "L1", assignedToId: null }, guestbookEvent: { id: "G1" } }) {
     return {
       $transaction: jest.fn(async (fn: any) =>
         fn({
           crmLead: {
             findUnique: jest.fn().mockResolvedValue(null),
-            create: jest.fn().mockResolvedValue({ id: "L1", leadCaptureId: body.leadCaptureId }),
+            create: jest.fn().mockResolvedValue({ id: "L1", leadCaptureId: body.leadCaptureId, assignedToId: null }),
           },
           leadAudit: { create: jest.fn().mockResolvedValue({}) },
           guestbookEvent: {
@@ -40,6 +40,9 @@ describe("LeadSvcWebhookController — HMAC enforcement", () => {
           },
         }),
       ),
+      crmLead: {
+        findUnique: jest.fn().mockResolvedValue({ id: "L1", leadCaptureId: body.leadCaptureId, assignedToId: "u-busdev-1" }),
+      },
     };
   }
 

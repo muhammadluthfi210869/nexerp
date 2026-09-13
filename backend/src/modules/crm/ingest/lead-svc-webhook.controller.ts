@@ -16,6 +16,7 @@ import { createHash } from "crypto";
 import { LeadSource, type CrmLead, type GuestbookEvent } from "@prisma/client";
 import { PrismaService } from "../../../prisma/prisma/prisma.service";
 import { validateHmac } from "../common/hmac";
+import { RoundRobinService } from "../common/round-robin.service";
 import { LeadIngestDto } from "../dto/lead-ingest.dto";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,7 +35,10 @@ function toStableUuid(value: string): string {
 @ApiTags("crm-ingest")
 @Controller(["crm", "v1/crm"])
 export class LeadSvcWebhookController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly roundRobin: RoundRobinService,
+  ) {}
 
   /**
    * POST /crm/leads/ingest
@@ -115,6 +119,19 @@ export class LeadSvcWebhookController {
         });
       }
       return { lead, guestbookEvent: event };
-    });
+    })
+      .then(async (result) => {
+        // Auto-assign busdev after the transaction commits (Round 2 — closes
+        // BUG #8). Skipped for re-ingest of an existing lead (round-robin
+        // assigns new leads only; re-ingests preserve original assignment).
+        const wasNewlyCreated = result.lead.assignedToId === null;
+        if (wasNewlyCreated) {
+          await this.roundRobin.assignOnIngest(result.lead.id);
+          // Re-read lead so the response reflects the assignment.
+          const updated = await this.prisma.crmLead.findUnique({ where: { id: result.lead.id } });
+          return { lead: updated!, guestbookEvent: result.guestbookEvent };
+        }
+        return result;
+      });
   }
 }
