@@ -1,5 +1,5 @@
-import { ToribioDashboardClient } from './ToribioDashboardClient';
+import BrandWorkspace from "../reports/workspace/BrandWorkspace";
 
 export default function ToribioDashboardPage() {
-  return <ToribioDashboardClient />;
+  return <BrandWorkspace initialBrandSlug="toribio" />;
 }

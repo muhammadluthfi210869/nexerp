@@ -35,6 +35,7 @@ import type {
   IntegrationConnection,
   ConnectIntegrationInput,
   SyncJob,
+  MarketingTeamMember,
 } from "@/types/marketing-api";
 
 // ─── Seed Data ─────────────────────────────────────────────────────────────
@@ -347,6 +348,38 @@ const db = {
   websiteTasks: [] as WebsiteTask[],
   integrations: [] as IntegrationConnection[],
   syncJobs: [] as SyncJob[],
+  members: [
+    {
+      id: "mem-revita",
+      userId: "00000000-0000-0000-0000-000000000001",
+      name: "Revita",
+      role: "Digital Marketing Lead",
+      department: "Marketing",
+      email: "revita@dreamlab.id",
+      phone: "+62 812-0000-0001",
+      avatarBg: "#fce7f3",
+      initial: "R",
+    },
+    {
+      id: "mem-gusti",
+      name: "Gusti Raditya",
+      role: "Lead Digital & Brand Strategist",
+      department: "Marketing",
+      email: "gusti@dreamlab.id",
+      phone: "+62 812-0000-0002",
+      avatarBg: "#dbeafe",
+      initial: "G",
+    },
+    {
+      id: "mem-andra",
+      name: "Andra",
+      role: "Content Creator",
+      department: "Marketing",
+      email: "andra@dreamlab.id",
+      avatarBg: "#dcfce7",
+      initial: "A",
+    },
+  ] as MarketingTeamMember[],
 };
 
 // ─── Mock Implementation ───────────────────────────────────────────────────
@@ -471,6 +504,27 @@ class MockMarketingService implements IMarketingService {
     task.version += 1;
     task.updatedAt = now();
     return delay(task);
+  }
+
+  async deleteTask(_viewer: MarketingViewer, taskId: string) {
+    const idx = db.tasks.findIndex((t) => t.id === taskId);
+    if (idx === -1) throw new Error("Task not found");
+    db.tasks.splice(idx, 1);
+    db.comments = db.comments.filter((c) => c.taskId !== taskId);
+    db.attachments = db.attachments.filter((a) => a.taskId !== taskId);
+    return delay(undefined);
+  }
+
+  // Members
+  async listMembers(_viewer: MarketingViewer) {
+    return delay(db.members);
+  }
+
+  async updateMember(_viewer: MarketingViewer, memberId: string, patch: Partial<MarketingTeamMember>) {
+    const member = db.members.find((m) => m.id === memberId);
+    if (!member) throw new Error("Member not found");
+    Object.assign(member, patch);
+    return delay(member);
   }
 
   // Comments
@@ -920,6 +974,15 @@ class HttpMarketingService implements IMarketingService {
   }
   updateChecklist(viewer: MarketingViewer, taskId: string, itemId: string, input: UpdateChecklistItemInput) {
     return this.req<MarketingTask>(`/tasks/${taskId}/checklist/${itemId}`, { method: "PATCH", body: JSON.stringify(input) });
+  }
+  deleteTask(viewer: MarketingViewer, taskId: string) {
+    return this.req<void>(`/tasks/${taskId}`, { method: "DELETE" });
+  }
+  listMembers(viewer: MarketingViewer) {
+    return this.req<MarketingTeamMember[]>("/members");
+  }
+  updateMember(viewer: MarketingViewer, memberId: string, patch: Partial<MarketingTeamMember>) {
+    return this.req<MarketingTeamMember>(`/members/${memberId}`, { method: "PATCH", body: JSON.stringify(patch) });
   }
   listTaskComments(viewer: MarketingViewer, taskId: string) {
     return this.req<TaskComment[]>(`/tasks/${taskId}/comments`);

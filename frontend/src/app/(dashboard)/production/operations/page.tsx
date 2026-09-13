@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaStatCard, DnaBadge, DnaDataTableCard, DnaModal, DnaTextarea, DnaSelect, DnaTabNav, DnaCell } from "@/components/dna";
+import { DnaStatCard, DnaBadge, DnaDataTableCard, DnaModal, DnaTextarea, DnaSelect, DnaTabNav, DnaCell, DnaButton } from "@/components/dna";
 import {
   ClipboardList,
   FlaskConical,
@@ -230,10 +230,10 @@ function OperationsContent() {
     >
       <DnaTabNav
         tabs={[
-          { key: "work-orders", label: "Work Orders", icon: <ClipboardList className="mr-2 h-4 w-4" /> },
-          { key: "mixing", label: "Mixing", icon: <FlaskConical className="mr-2 h-4 w-4" /> },
-          { key: "filling", label: "Filling", icon: <Droplets className="mr-2 h-4 w-4" /> },
-          { key: "packing", label: "Packing", icon: <Package className="mr-2 h-4 w-4" /> },
+          { id: "work-orders", label: "Work Orders", icon: ClipboardList },
+          { id: "mixing", label: "Mixing", icon: FlaskConical },
+          { id: "filling", label: "Filling", icon: Droplets },
+          { id: "packing", label: "Packing", icon: Package },
         ]}
         activeTab={tab}
         onTabChange={setTab}

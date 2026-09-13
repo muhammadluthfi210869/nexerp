@@ -114,9 +114,9 @@ export default function LegalityRecords() {
     >
         <DnaTabNav
           tabs={[
-            { key: "hki", label: "HKI BRANDING", count: hkiData?.length || 0, icon: <FileBadge className="w-4 h-4" /> },
-            { key: "bpom", label: "BPOM PRODUCT", count: bpomData?.length || 0, icon: <FlaskConical className="w-4 h-4" /> },
-            { key: "halal", label: "HALAL CERT", count: halalData?.length || 0, icon: <Moon className="w-4 h-4" /> },
+            { id: "hki", label: "HKI BRANDING", count: hkiData?.length || 0, icon: FileBadge },
+            { id: "bpom", label: "BPOM PRODUCT", count: bpomData?.length || 0, icon: FlaskConical },
+            { id: "halal", label: "HALAL CERT", count: halalData?.length || 0, icon: Moon },
           ]}
           activeTab={activeTab}
           onTabChange={setActiveTab}

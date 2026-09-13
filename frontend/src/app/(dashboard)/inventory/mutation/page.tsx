@@ -276,7 +276,7 @@ export default function InventoryMutationPrototype() {
 
                     <div className="space-y-5">
                       <DnaSelect
-                        label={<><ArrowDownToLine className="h-3 w-3 inline" /> Gudang Asal</>}
+                        label="Gudang Asal"
                         placeholder="-- Pilih Gudang --"
                         value={sourceWarehouse}
                         onChange={setSourceWarehouse}
@@ -290,7 +290,7 @@ export default function InventoryMutationPrototype() {
                       </div>
 
                       <DnaSelect
-                        label={<><Warehouse className="h-3 w-3 inline" /> Gudang Tujuan</>}
+                        label="Gudang Tujuan"
                         placeholder="-- Pilih Gudang --"
                         value={destWarehouse}
                         onChange={setDestWarehouse}

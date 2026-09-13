@@ -806,10 +806,10 @@ export default function GudangPage() {
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Tipe Fasilitas *</label>
-  <DnaSelect 
+  <DnaSelect
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
                 value={warehouseForm.type}
-                onChange={(e) => setWarehouseForm(prev => ({ ...prev, type: e.target.value as any }))}
+                onChange={(value) => setWarehouseForm(prev => ({ ...prev, type: value as any }))}
               >
                 <option value="RAW_MATERIAL">Bahan Baku (Raw Material)</option>
                 <option value="PACKAGING">Bahan Kemas (Packaging)</option>

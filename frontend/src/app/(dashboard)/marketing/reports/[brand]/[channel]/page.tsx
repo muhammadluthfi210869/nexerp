@@ -1,13 +1,29 @@
 "use client";
-import { useBrandChannel } from "./layout";
-import PostPlanner from "../../components/views/PostPlanner";
-import type { PostPlatform } from "@/types/marketing-api";
 
-const PLATFORM_MAP: Record<string, PostPlatform> = {
-  instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", website: "Website", "paid-ads": "Paid Ads",
+import React, { use } from "react";
+import BrandWorkspace from "../../workspace/BrandWorkspace";
+
+const PLATFORM_MAP: Record<string, string> = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  website: "Website",
+  "paid-ads": "Paid Ads",
 };
 
-export default function ChannelPlannerPage() {
-  const { brand, channel } = useBrandChannel();
-  return <PostPlanner brand={`brand-${brand}`} channel={PLATFORM_MAP[channel]} />;
+export default function ChannelPlannerPage({
+  params,
+}: {
+  params: Promise<{ brand: string; channel: string }>;
+}) {
+  const { brand, channel } = use(params);
+  const mappedChannel = PLATFORM_MAP[channel.toLowerCase()] || "Instagram";
+
+  return (
+    <BrandWorkspace
+      initialBrandSlug={brand}
+      initialChannel={mappedChannel}
+      initialMode="planner"
+    />
+  );
 }

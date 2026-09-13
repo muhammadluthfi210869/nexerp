@@ -200,8 +200,8 @@ export default function CkpbAuditPage() {
 
         <DnaTabNav
           tabs={[
-            { key: "log", label: "AUDIT LOG", count: totalAudits, icon: <ClipboardCheck className="w-4 h-4" /> },
-            { key: "new", label: "NEW AUDIT", icon: <PlusCircle className="w-4 h-4" /> },
+            { id: "log", label: "AUDIT LOG", count: totalAudits, icon: ClipboardCheck },
+            { id: "new", label: "NEW AUDIT", icon: PlusCircle },
           ]}
           activeTab={activeTab}
           onTabChange={(k) => setActiveTab(k as "log" | "new")}

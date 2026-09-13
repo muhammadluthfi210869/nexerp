@@ -118,16 +118,18 @@ export default function PurchaseApprovalPage() {
         subtitle="Setujui PO ini? Status akan berubah menjadi APPROVED."
         size="md"
         badge={<CheckCircle2 className="h-3 w-3 text-emerald-500" />}
-        footer={
-          <>
-            <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
-            <DnaButton variant="primary" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
-              toast.success("PO berhasil disetujui.");
-              setApproveDialog(null);
-            }}>Ya, Setujui</DnaButton>
-          </>
-        }
-      />
+      >
+        <p className="text-sm text-slate-600">
+          Tindakan ini akan langsung mengubah status PO menjadi APPROVED dan memicu alur purchasing berikutnya.
+        </p>
+        <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-slate-100">
+          <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
+          <DnaButton variant="primary" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+            toast.success("PO berhasil disetujui.");
+            setApproveDialog(null);
+          }}>Ya, Setujui</DnaButton>
+        </div>
+      </DnaModal>
 
       <DnaModal
         isOpen={!!rejectDialog}
@@ -136,16 +138,6 @@ export default function PurchaseApprovalPage() {
         subtitle="Beri alasan penolakan untuk dokumentasi audit."
         size="md"
         badge={<XCircle className="h-3 w-3 text-rose-500" />}
-        footer={
-          <>
-            <DnaButton variant="ghost" onClick={() => { setRejectDialog(null); setRejectReason(''); }}>Batal</DnaButton>
-            <DnaButton variant="danger" onClick={() => {
-              toast.success("PO ditolak.");
-              setRejectDialog(null);
-              setRejectReason('');
-            }}>Ya, Tolak</DnaButton>
-          </>
-        }
       >
         <DnaInput
           label="Alasan Penolakan"
@@ -153,6 +145,14 @@ export default function PurchaseApprovalPage() {
           onChange={(e) => setRejectReason(e.target.value)}
           placeholder="Berikan alasan penolakan..."
         />
+        <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-slate-100">
+          <DnaButton variant="ghost" onClick={() => { setRejectDialog(null); setRejectReason(''); }}>Batal</DnaButton>
+          <DnaButton variant="danger" onClick={() => {
+            toast.success("PO ditolak.");
+            setRejectDialog(null);
+            setRejectReason('');
+          }}>Ya, Tolak</DnaButton>
+        </div>
       </DnaModal>
 
       <DnaModal

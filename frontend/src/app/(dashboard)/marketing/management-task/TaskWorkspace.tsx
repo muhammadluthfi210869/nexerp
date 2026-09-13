@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, CheckCircle2, Clock3, ListChecks, MessageSquare, Plus, RefreshCw, Search, Users } from "lucide-react";
-import { DnaButton, DnaDrawer, DnaInput, DnaKpiGrid, DnaPageContainer, DnaPageHeader, DnaPagination, DnaTabNav, DnaTextarea } from "@/components/dna";
+import { DnaAuditTimeline, DnaButton, DnaCheckbox, DnaDrawer, DnaInput, DnaKpiGrid, DnaModal, DnaPageContainer, DnaPageHeader, DnaPagination, DnaSelect, DnaTabNav, DnaTextarea } from "@/components/dna";
 import { extractApiError } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -37,6 +37,7 @@ export function TaskWorkspace({ memberSlug }: { memberSlug: string }) {
   const [selected, setSelected] = useState<MarketingTask | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [notice, setNotice] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const [conflictOpen, setConflictOpen] = useState(false);
   const page = Number(searchParams.get("page") || 1); const limit = Number(searchParams.get("limit") || 25);
   const status = searchParams.get("status") ?? "all"; const projectId = searchParams.get("project") ?? "all"; const brandId = searchParams.get("brand") ?? "all";
   const members = useMarketingMembers(); const brands = useMarketingBrands(); const projects = useMarketingProjects();
@@ -57,8 +58,12 @@ export function TaskWorkspace({ memberSlug }: { memberSlug: string }) {
   }
   function mutationError(error: unknown) {
     const parsed = extractApiError(error);
-    setNotice({ tone: "error", text: parsed.status === 409 ? "Data berubah di perangkat lain. Daftar telah dimuat ulang; silakan ulangi aksi." : parsed.message });
-    if (parsed.status === 409) tasks.refetch();
+    if (parsed.status === 409) {
+      setConflictOpen(true);
+      tasks.refetch();
+    } else {
+      setNotice({ tone: "error", text: parsed.message });
+    }
   }
   async function moveTask(task: MarketingTask, next: TaskStatus) {
     const needsReason = next === "CANCELLED" || (task.status === "DONE" && next === "IN_PROGRESS");
@@ -99,18 +104,55 @@ export function TaskWorkspace({ memberSlug }: { memberSlug: string }) {
     <DnaDrawer isOpen={!!selected} onClose={() => setSelected(null)} title={selected?.title ?? "Detail task"} subtitle={selected?.taskCode} badge={selected ? <StatusBadge status={selected.status} /> : undefined} size="3xl" footer={selected && <div className="flex flex-wrap justify-end gap-2">{(NEXT_STATUS[selected.status] ?? []).filter((s) => s !== "CANCELLED" || canManage).map((next) => <DnaButton key={next} variant={next === "CANCELLED" ? "danger" : "primary"} loading={statusMutation.isPending} onClick={() => moveTask(selected, next)}>Ke {LABEL[next]}</DnaButton>)}</div>}>
       {selected && <TaskDetail task={selected} onToggle={toggleChecklist} checklistBusy={checklistMutation.isPending} commentBusy={commentMutation.isPending} onComment={async (body) => { try { setSelected(await commentMutation.mutateAsync({ taskId: selected.id, version: selected.version, body })); } catch (error) { mutationError(error); } }} />}
     </DnaDrawer>
+    <DnaModal
+      isOpen={conflictOpen}
+      onClose={() => setConflictOpen(false)}
+      title="Konflik Perubahan Data (409)"
+    >
+      <div className="space-y-4 py-2">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold">Data telah diperbarui di sesi lain</p>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              Task yang Anda coba ubah baru saja diperbarui oleh pengguna lain. Daftar task telah dimuat ulang dengan versi terbaru dari database untuk menjaga integritas data.
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <DnaButton
+            variant="primary"
+            onClick={() => {
+              setConflictOpen(false);
+              tasks.refetch();
+            }}
+          >
+            Muat Ulang Data Terbaru
+          </DnaButton>
+        </div>
+      </div>
+    </DnaModal>
   </DnaPageContainer>;
 }
 
 function StatusBadge({ status }: { status: TaskStatus }) { return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold ${STATUS_CLASS[status]}`}>{LABEL[status]}</span>; }
-function Filter({ value, onChange, label, options }: { value: string; onChange: (v: string) => void; label: string; options: Array<{ value: string; label: string }> }) { return <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5"><option value="all">{label}</option>{options.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select>; }
+function Filter({ value, onChange, label, options }: { value: string; onChange: (v: string) => void; label: string; options: Array<{ value: string; label: string }> }) {
+  return (
+    <DnaSelect
+      aria-label={label}
+      value={value}
+      onChange={onChange}
+      options={[{ value: "all", label }, ...options]}
+    />
+  );
+}
 function TaskSkeleton() { return <div aria-label="Memuat task" className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-slate-100" />)}</div>; }
 function ErrorState({ onRetry }: { onRetry: () => void }) { return <div className="grid place-items-center gap-3 p-12 text-center"><AlertCircle className="h-8 w-8 text-rose-500"/><div><p className="font-bold text-slate-900">Task gagal dimuat</p><p className="text-sm text-slate-500">Periksa koneksi atau hak akses, lalu coba kembali.</p></div><DnaButton variant="outline" onClick={onRetry}>Coba lagi</DnaButton></div>; }
 function EmptyState({ onAdd }: { onAdd: () => void }) { return <div className="grid place-items-center gap-3 p-12 text-center"><ListChecks className="h-9 w-9 text-slate-300"/><div><p className="font-bold text-slate-900">Belum ada task</p><p className="text-sm text-slate-500">Filter ini belum memiliki pekerjaan.</p></div><DnaButton variant="primary" icon={<Plus/>} onClick={onAdd}>Tambah task</DnaButton></div>; }
 
 function TaskDetail({ task, onToggle, checklistBusy, onComment, commentBusy }: { task: MarketingTask; onToggle: (id: string, done: boolean) => void; checklistBusy: boolean; onComment: (body: string) => Promise<void>; commentBusy: boolean }) {
   const [body, setBody] = useState("");
-  return <div className="grid gap-6 lg:grid-cols-[1.25fr_.75fr]"><div className="space-y-5"><div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm"><Info label="PIC" value={task.assignee?.fullName ?? "—"}/><Info label="Reviewer" value={task.reviewer?.fullName ?? "—"}/><Info label="Mulai" value={idDate(task.startDate)}/><Info label="Deadline" value={idDate(task.dueDate)}/><Info label="Channel" value={task.channel}/><Info label="Prioritas" value={task.priority}/></div><section><h3 className="mb-2 text-sm font-bold text-slate-900">Brief</h3><p className="whitespace-pre-wrap rounded-xl border border-slate-200 p-4 leading-6 text-slate-600">{task.brief || "Belum ada brief."}</p></section><section><h3 className="mb-2 text-sm font-bold text-slate-900">Checklist</h3><div className="space-y-2">{task.checklist.length ? task.checklist.map((item) => <label key={item.id} className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3"><input type="checkbox" disabled={checklistBusy} checked={item.done} onChange={(e) => onToggle(item.id, e.target.checked)} className="h-4 w-4 accent-blue-600"/><span className={item.done ? "text-slate-400 line-through" : "text-slate-700"}>{item.text}</span>{item.isRequired && <span className="ml-auto text-[10px] font-bold uppercase text-rose-500">Wajib</span>}</label>) : <p className="text-sm text-slate-400">Belum ada checklist.</p>}</div></section><form onSubmit={async (e) => { e.preventDefault(); if (!body.trim()) return; await onComment(body.trim()); setBody(""); }}><DnaTextarea label="Komentar" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Tambahkan konteks atau update..."/><DnaButton className="mt-2" type="submit" variant="primary" icon={<MessageSquare/>} loading={commentBusy}>Kirim komentar</DnaButton></form></div><section><h3 className="mb-3 text-sm font-bold text-slate-900">Riwayat aktivitas</h3><div className="space-y-3 border-l-2 border-slate-100 pl-4">{task.history.map((entry) => <div key={entry.id}><p className="text-sm font-semibold text-slate-800">{entry.fromStatus ? `${LABEL[entry.fromStatus as TaskStatus] ?? entry.fromStatus} → ` : ""}{LABEL[entry.toStatus as TaskStatus] ?? entry.toStatus}</p><p className="text-xs text-slate-400">{entry.by?.fullName ?? "System"} · {idDate(entry.createdAt)}</p>{entry.note && <p className="mt-1 text-xs text-slate-600">{entry.note}</p>}</div>)}</div></section></div>;
+  return <div className="grid gap-6 lg:grid-cols-[1.25fr_.75fr]"><div className="space-y-5"><div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm"><Info label="PIC" value={task.assignee?.fullName ?? "—"}/><Info label="Reviewer" value={task.reviewer?.fullName ?? "—"}/><Info label="Mulai" value={idDate(task.startDate)}/><Info label="Deadline" value={idDate(task.dueDate)}/><Info label="Channel" value={task.channel}/><Info label="Prioritas" value={task.priority}/></div><section><h3 className="mb-2 text-sm font-bold text-slate-900">Brief</h3><p className="whitespace-pre-wrap rounded-xl border border-slate-200 p-4 leading-6 text-slate-600">{task.brief || "Belum ada brief."}</p></section><section><h3 className="mb-2 text-sm font-bold text-slate-900">Checklist</h3><div className="space-y-2">{task.checklist.length ? task.checklist.map((item) => <div key={item.id} className="flex min-h-11 items-center justify-between rounded-xl border border-slate-200 px-3 bg-white"><DnaCheckbox disabled={checklistBusy} checked={item.done} onChange={(e) => onToggle(item.id, e.target.checked)} label={<span className={item.done ? "text-slate-400 line-through" : "text-slate-700 font-medium"}>{item.text}</span>}/><div className="flex items-center gap-2">{item.isRequired && <span className="text-[10px] font-bold uppercase text-rose-500 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">Wajib</span>}</div></div>) : <p className="text-sm text-slate-400">Belum ada checklist.</p>}</div></section><form onSubmit={async (e) => { e.preventDefault(); if (!body.trim()) return; await onComment(body.trim()); setBody(""); }}><DnaTextarea label="Komentar" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Tambahkan konteks atau update..."/><DnaButton className="mt-2" type="submit" variant="primary" icon={<MessageSquare/>} loading={commentBusy}>Kirim komentar</DnaButton></form></div><section><h3 className="mb-3 text-sm font-bold text-slate-900">Riwayat aktivitas & audit</h3><DnaAuditTimeline logs={task.history.map((entry) => ({ id: entry.id, entityId: task.id, action: entry.fromStatus ? `${LABEL[entry.fromStatus as TaskStatus] ?? entry.fromStatus} → ${LABEL[entry.toStatus as TaskStatus] ?? entry.toStatus}` : `Status Awal: ${LABEL[entry.toStatus as TaskStatus] ?? entry.toStatus}`, actor: entry.by?.fullName ?? "Sistem", role: entry.by?.roles?.[0] ?? "Marketing", timestamp: idDate(entry.createdAt), notes: entry.note || undefined, severity: entry.toStatus === "CANCELLED" ? "CRITICAL" : entry.toStatus === "REVISION" ? "WARNING" : "INFO" }))} /></section></div>;
 }
 function Info({ label, value }: { label: string; value: string }) { return <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 font-semibold text-slate-800">{value}</p></div>; }
 
@@ -121,4 +163,15 @@ function CreateTaskModal({ open, onClose, members, brands, projects, defaultAssi
   async function submit(e: FormEvent) { e.preventDefault(); await onSubmit({ ...form, projectId: form.projectId || undefined, brandId: form.brandId || undefined, brief: form.brief || undefined, startDate: new Date(`${form.startDate}T00:00:00+07:00`).toISOString(), dueDate: new Date(`${form.dueDate}T23:59:59+07:00`).toISOString() }); }
   return <DnaDrawer isOpen={open} onClose={onClose} title="Tambah task" subtitle="Semua identitas menggunakan data ERP" footer={<><DnaButton variant="outline" onClick={onClose}>Batal</DnaButton><DnaButton variant="primary" loading={saving} onClick={() => document.getElementById("canonical-task-form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))}>Simpan task</DnaButton></>}><form id="canonical-task-form" onSubmit={submit} className="grid gap-4 sm:grid-cols-2"><DnaInput required label="Judul task" {...field("title")}/><LabeledSelect label="Jenis" {...field("type")} options={[{value:"DAILY",label:"Daily"},{value:"PROJECT",label:"Project"}]}/><LabeledSelect required label="Assignee" {...field("assigneeId")} options={members.map((x) => ({ value: x.id, label: x.fullName }))}/><LabeledSelect label="Brand" {...field("brandId")} options={brands.map((x) => ({ value: x.id, label: x.name }))} empty="Tanpa brand"/><LabeledSelect label="Project" {...field("projectId")} options={projects.map((x) => ({ value: x.id, label: x.name }))} empty="Tanpa project"/><DnaInput required label="Channel" {...field("channel")}/><DnaInput required label="Kategori" {...field("category")}/><LabeledSelect label="Prioritas" {...field("priority")} options={["LOW","MEDIUM","HIGH","URGENT"].map((x) => ({value:x,label:x}))}/><DnaInput required type="date" label="Mulai" {...field("startDate")}/><DnaInput required type="date" label="Deadline" {...field("dueDate")}/><div className="sm:col-span-2"><DnaTextarea label="Brief" {...field("brief")} rows={5}/></div></form></DnaDrawer>;
 }
-function LabeledSelect({ label, value, onChange, options, empty }: { label: string; value: string; onChange: (e: any) => void; options: Array<{value:string;label:string}>; empty?: string; required?: boolean }) { return <label className="space-y-1.5 text-xs font-bold text-slate-700">{label}<select required={!empty} value={value} onChange={onChange} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium outline-none focus:border-blue-500">{empty && <option value="">{empty}</option>}{options.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></label>; }
+function LabeledSelect({ label, value, onChange, options, empty, required }: { label: string; value: string; onChange: (e: any) => void; options: Array<{value:string;label:string}>; empty?: string; required?: boolean }) {
+  const opts = empty ? [{ value: "", label: empty }, ...options] : options;
+  return (
+    <DnaSelect
+      label={label}
+      required={required}
+      value={value}
+      onChange={(v) => onChange({ target: { value: v } })}
+      options={opts}
+    />
+  );
+}

@@ -161,9 +161,9 @@ export default function ComplianceInput() {
     >
       <DnaTabNav
         tabs={[
-          { key: "hki", label: "HKI BRANDING" },
-          { key: "bpom", label: "BPOM PRODUCT" },
-          { key: "halal", label: "HALAL CERT" },
+          { id: "hki", label: "HKI BRANDING" },
+          { id: "bpom", label: "BPOM PRODUCT" },
+          { id: "halal", label: "HALAL CERT" },
         ]}
         activeTab={activeTab}
         onTabChange={(k) => setActiveTab(k as FormType)}
@@ -189,7 +189,7 @@ export default function ComplianceInput() {
               />
             ))}
             <DnaSelect
-              label={<><UserCircle className="w-4 h-4 inline" /> Assigned PIC</>}
+              label="Assigned PIC"
               name="picId"
               placeholder="Select PIC Officer"
               options={staffOptions}
@@ -216,13 +216,13 @@ export default function ComplianceInput() {
         title="Konfirmasi"
         subtitle="Apakah Anda yakin ingin menyimpan data ini?"
         size="sm"
-        footer={
-          <>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </>
-        }
-      />
+      >
+        <p className="text-sm text-slate-600">Pastikan seluruh data compliance yang diinput sudah benar sebelum disimpan.</p>
+        <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-slate-100">
+          <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
+          <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
+        </div>
+      </DnaModal>
     </DashboardShell>
   );
 }

@@ -186,8 +186,8 @@ export default function ReleaseClient() {
       </DnaDataTableCard>
 
       {/* 4. EXECUTE DIALOG */}
-      <Dialog open={isExecuteOpen} onOpenChange={setIsExecuteOpen}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900 rounded-[24px] max-w-2xl p-0 overflow-hidden border-2 shadow-2xl">
+      <DnaDialog open={isExecuteOpen} onOpenChange={setIsExecuteOpen}>
+        <DnaDialogContent className="bg-white border-gray-200 text-gray-900 rounded-[24px] max-w-2xl p-0 overflow-hidden border-2 shadow-2xl">
            <div className="bg-gray-50 p-8 border-b border-gray-200">
               <div className="flex justify-between items-start">
                  <div>
@@ -258,8 +258,8 @@ export default function ReleaseClient() {
                  </DnaButton>
               </div>
            </div>
-        </DialogContent>
-      </Dialog>
+        </DnaDialogContent>
+      </DnaDialog>
 
       {/* 5. RECENT ACTIVITY FOOTER */}
       {!isLogsMode && (

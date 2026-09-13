@@ -266,8 +266,8 @@ export default function TransferOrdersPage() {
         </DnaDataTableCard>
       </div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[900px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
+      <DnaDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DnaDialogContent className="sm:max-w-[900px] bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 overflow-hidden">
           <div className="bg-brand-black p-10 text-white relative">
             <h2 className="text-3xl font-black italic uppercase tracking-tighter">
               TRANSFER{" "}
@@ -428,22 +428,22 @@ export default function TransferOrdersPage() {
               )}
             </DnaButton>
           </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
+        </DnaDialogContent>
+      </DnaDialog>
+      <DnaDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DnaDialogContent>
+          <DnaDialogHeader>
+            <DnaDialogTitle>Konfirmasi</DnaDialogTitle>
+          </DnaDialogHeader>
           <p>Apakah Anda yakin ingin menyimpan data ini?</p>
-          <DialogFooter>
+          <DnaDialogFooter>
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>
               Batal
             </DnaButton>
              <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DnaDialogFooter>
+        </DnaDialogContent>
+      </DnaDialog>
     </DashboardShell>
   );
 }

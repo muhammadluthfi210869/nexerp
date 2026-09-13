@@ -21,6 +21,8 @@ export { DnaPageHeader } from "./layout/DnaPageHeader";
 export type { DnaPageHeaderProps, DnaPageTabItem } from "./layout/DnaPageHeader";
 export { DnaKpiGrid, DnaKpiCard } from "./layout/DnaKpiGrid";
 export type { DnaKpiGridProps, DnaKpiCardItem } from "./layout/DnaKpiGrid";
+export { DnaMacroPillarCard } from "./DnaMacroPillarCard";
+export type { DnaMacroPillarCardProps, DnaSubMetric } from "./DnaMacroPillarCard";
 
 // Table & Toolbar
 export { DnaDataTableCard } from "./table/DnaDataTableCard";

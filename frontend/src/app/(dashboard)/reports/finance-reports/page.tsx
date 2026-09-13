@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import {
   Calendar,
   CheckCircle2,
@@ -823,7 +823,7 @@ export default function FinancialReportsHub() {
               <DnaDatePicker
                 aria-label="Tanggal mulai"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
                 className="bg-transparent border-none text-[11px] font-medium text-slate-700 outline-none w-28 focus:ring-0"
               />
             </div>
@@ -833,7 +833,7 @@ export default function FinancialReportsHub() {
               <DnaDatePicker
                 aria-label="Tanggal mulai"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
                 className="bg-transparent border-none text-[11px] font-medium text-slate-700 outline-none w-28 focus:ring-0"
               />
             </div>

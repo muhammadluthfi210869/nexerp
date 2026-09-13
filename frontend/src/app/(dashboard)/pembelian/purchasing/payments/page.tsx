@@ -278,7 +278,10 @@ export default function PurchasePaymentPrototype() {
                     <span className="text-[9px] font-bold text-slate-400 uppercase">Available: Rp 500,000</span>
                   </div>
                 </div>
-                <DnaCheckbox checked={useDP} onCheckedChange={(val) => setUseDP(!!val)} />
+                <DnaCheckbox
+                  checked={useDP}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUseDP(e.target.checked)}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

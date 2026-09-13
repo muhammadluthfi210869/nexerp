@@ -1,7 +1,8 @@
 {
-  "contractVersion": "1.0.0",
+  "contractVersion": "1.1.0",
   "status": "FROZEN_FOR_PHASE_2",
   "product": "NexERP Digital Marketing Task & Social Management",
+  "taskSsotContract": "docs/marketing/MANAGEMENT-TASK-SSOT-CONTRACT.md",
   "visualAuthority": {
     "goldenReference": "frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx",
     "designContract": "VISUAL_DNA.md",

@@ -27,6 +27,7 @@ import {
   DnaBadge,
   DnaSelect,
   DnaTable,
+  DnaInput,
   formatRupiah,
   useDnaToast
 } from "@/components/dna";
@@ -167,7 +168,7 @@ export default function WarehouseStockReportPage() {
                 type="text"
                 placeholder="Cari SKU / nama / rak..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

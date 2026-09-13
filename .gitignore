@@ -55,3 +55,10 @@ scripts/.minimax-api-key
 
 # Windows artifacts
 nul
+
+# Sprint 1 evidence dumps (1.2MB postgres dumps + baselines — artifact storage, not git)
+evidence/
+
+# External sibling project (separate Vite+React+Bun app, not part of ERP monorepo)
+dreamlab-erp-*/
+*dreamlab-erp*

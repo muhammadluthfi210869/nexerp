@@ -512,15 +512,17 @@ export default function PurchasingPage() {
             subtitle={`Setujui ${approveDialog?.type === "PO" ? "Purchase Order" : "Purchase Request"} ini? Tindakan ini akan mengubah status menjadi APPROVED.`}
             size="md"
             badge={<CheckCircle2 className="h-3 w-3 text-emerald-500" />}
-            footer={
-              <>
-                <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
-                <DnaButton variant="primary" onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-700">
-                  Ya, Setujui
-                </DnaButton>
-              </>
-            }
-          />
+          >
+            <p className="text-sm text-slate-600">
+              Pastikan data {approveDialog?.type === "PO" ? "Purchase Order" : "Purchase Request"} sudah lengkap sebelum disetujui.
+            </p>
+            <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-slate-100">
+              <DnaButton variant="ghost" onClick={() => setApproveDialog(null)}>Batal</DnaButton>
+              <DnaButton variant="primary" onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-700">
+                Ya, Setujui
+              </DnaButton>
+            </div>
+          </DnaModal>
 
           <DnaModal
             isOpen={!!rejectDialog}
