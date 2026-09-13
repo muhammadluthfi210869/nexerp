@@ -11,7 +11,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { DnaBadge, DnaButton, DnaSearchableSelect, type DnaSelectOption } from "@/components/dna";
+import {
+  DnaBadge,
+  DnaButton,
+  DnaCard,
+  DnaInput,
+  DnaSearchableSelect,
+  type DnaSelectOption,
+} from "@/components/dna";
 
 type CrmStage = "LEADS_MASUK" | "COLD" | "WARM" | "HOT" | "SAMPLE" | "JUNK_LEADS" | "CLIENT_DEAL" | "CLOSED_LOST";
 type BukuTamuStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -118,7 +125,7 @@ export default function LeadDetailPage() {
       </div>
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{lead.displayName ?? "(belum ada nama)"}</h1>
+        <h1 className="text-[32px] leading-[40px] font-bold text-slate-900">{lead.displayName ?? "(belum ada nama)"}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span className="font-mono text-xs">{lead.trackingCode ?? lead.id}</span>
           <DnaBadge status="default">{lead.source}</DnaBadge>
@@ -137,30 +144,30 @@ export default function LeadDetailPage() {
         <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
+      {/* Metadata grid — DnaCard replaces raw <section className="rounded-2xl border ..."> (B4) */}
       <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4">
+        <DnaCard variant="default" padding="md" data-testid="lead-detail-phone-card">
           <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Phone</h3>
           <p className="mt-1 text-lg font-medium tabular-nums" data-testid="lead-detail-phone">{lead.phone}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4">
+        </DnaCard>
+        <DnaCard variant="default" padding="md">
           <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Thankyou Page</h3>
           <p className="mt-1 truncate text-sm" title={lead.pageUrl ?? ""}>{lead.pageTitle ?? lead.pageUrl ?? "—"}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4">
+        </DnaCard>
+        <DnaCard variant="default" padding="md">
           <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Created</h3>
           <p className="mt-1 text-sm tabular-nums">{new Date(lead.createdAt).toLocaleString("id-ID")}</p>
-        </div>
+        </DnaCard>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-4">
+      <DnaCard variant="default" padding="md">
         <h3 className="mb-2 text-sm font-semibold">Edit Display Name</h3>
         <div className="flex items-end gap-2">
           <div className="flex flex-1 flex-col gap-1">
-            <input
+            <DnaInput
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               maxLength={120}
-              className="rounded-md border border-slate-200 px-3 py-2 text-sm"
               data-testid="lead-detail-displayname-input"
             />
           </div>
@@ -171,9 +178,9 @@ export default function LeadDetailPage() {
         <p className="mt-2 text-xs text-muted-foreground">
           Override <code>extractedFullName</code> dari AI. Jika kosong, akan tampil "(belum ada nama)".
         </p>
-      </section>
+      </DnaCard>
 
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-4">
+      <DnaCard variant="default" padding="md">
         <h3 className="mb-2 text-sm font-semibold">Stage</h3>
         <div className="flex items-center gap-2">
           <DnaSearchableSelect
@@ -189,9 +196,9 @@ export default function LeadDetailPage() {
         <p className="mt-2 text-xs text-muted-foreground">
           Stage machine guard berlaku: hanya transisi yang diizinkan (lihat <code>phase-omnicrm-contract.json</code> §5).
         </p>
-      </section>
+      </DnaCard>
 
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-4">
+      <DnaCard variant="default" padding="md">
         <h3 className="mb-2 text-sm font-semibold">Chat Timeline ({messages.length})</h3>
         {messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">Belum ada pesan.</p>
@@ -212,7 +219,7 @@ export default function LeadDetailPage() {
             ))}
           </ul>
         )}
-      </section>
+      </DnaCard>
     </div>
   );
 }

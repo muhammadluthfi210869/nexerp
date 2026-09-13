@@ -7,7 +7,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
-import { DnaBadge, DnaButton, DnaSearchableSelect, type DnaSelectOption } from "@/components/dna";
+import {
+  DnaBadge,
+  DnaButton,
+  DnaSearchableSelect,
+  DnaConfirmDialog,
+  dnaToastApi,
+  type DnaSelectOption,
+} from "@/components/dna";
 
 interface GuestbookEvent {
   id: string;
@@ -35,6 +42,7 @@ export function CrmGuestbookClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<{ id: string; decision: "APPROVED" | "REJECTED" } | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -60,11 +68,20 @@ export function CrmGuestbookClient() {
       await api.post(`/crm/guestbook/events/${id}/${decision === "APPROVED" ? "approve" : "reject"}`, {
         approverNote: null,
       });
+      dnaToastApi.success({
+        title: decision === "APPROVED" ? "Buku Tamu disetujui" : "Buku Tamu ditolak",
+        description: `Event ${id.slice(0, 8)} telah di-${decision === "APPROVED" ? "approve" : "reject"}.`,
+      });
       load();
     } catch (e: any) {
       setError(e?.message ?? `Gagal ${decision}`);
+      dnaToastApi.error({
+        title: `Gagal ${decision === "APPROVED" ? "menyetujui" : "menolak"}`,
+        description: e?.message ?? "Unknown error",
+      });
     } finally {
       setBusyId(null);
+      setPendingDecision(null);
     }
   };
 
@@ -128,7 +145,7 @@ export function CrmGuestbookClient() {
               <DnaButton
                 variant="primary"
                 disabled={busyId === ev.id}
-                onClick={() => decide(ev.id, "APPROVED")}
+                onClick={() => setPendingDecision({ id: ev.id, decision: "APPROVED" })}
                 data-testid={`omnicrm-guestbook-approve-${ev.id}`}
               >
                 Approve
@@ -136,7 +153,7 @@ export function CrmGuestbookClient() {
               <DnaButton
                 variant="secondary"
                 disabled={busyId === ev.id}
-                onClick={() => decide(ev.id, "REJECTED")}
+                onClick={() => setPendingDecision({ id: ev.id, decision: "REJECTED" })}
                 data-testid={`omnicrm-guestbook-reject-${ev.id}`}
               >
                 Reject
@@ -145,6 +162,20 @@ export function CrmGuestbookClient() {
           </article>
         );
       })}
+
+      {/* DnaConfirmDialog before approve/reject (B4) */}
+      <DnaConfirmDialog
+        isOpen={pendingDecision !== null}
+        onClose={() => setPendingDecision(null)}
+        title={pendingDecision?.decision === "APPROVED" ? "Setujui Buku Tamu?" : "Tolak Buku Tamu?"}
+        description={pendingDecision
+          ? `Event ${pendingDecision.id.slice(0, 8)} akan di-${pendingDecision.decision === "APPROVED" ? "approve" : "reject"}. Tindakan ini tidak dapat dibatalkan.`
+          : ""}
+        confirmText={pendingDecision?.decision === "APPROVED" ? "Ya, Setujui" : "Ya, Tolak"}
+        variant={pendingDecision?.decision === "APPROVED" ? "success" : "danger"}
+        onConfirm={() => { if (pendingDecision) decide(pendingDecision.id, pendingDecision.decision); }}
+        isProcessing={busyId !== null}
+      />
     </div>
   );
 }

@@ -114,20 +114,19 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     title: "Management Task",
     groupLabel: "TASK MANAGEMENT",
     icon: ClipboardList,
-    items: [
-      { name: "Task",      href: "/marketing/management-task/overview", icon: Layers },
-      { name: "Dreamlab",  href: "/marketing/reports/dreamlab",        icon: BarChart3 },
-      { name: "Toribio",   href: "/marketing/reports/toribio",         icon: BarChart3 },
-    ]
+    isDirect: true,
+    href: "/marketing/management-task/overview",
+    items: []
   },
   {
-    id: "dm-social",
+    id: "dm-social-brands",
     title: "Social Media",
-    groupLabel: "KONTEN & MEDIA",
+    groupLabel: "SOCIAL MEDIA & BRANDS",
     icon: Sparkles,
-    isDirect: true,
-    href: "/marketing/social-tracker",
-    items: []
+    items: [
+      { name: "Dreamlab", href: "/marketing/reports/dreamlab", icon: Sparkles },
+      { name: "Toribio",  href: "/marketing/reports/toribio",  icon: Sparkles },
+    ]
   }
 ];
 
@@ -334,12 +333,12 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     groupLabel: "SALES & CRM",
     icon: Users,
     items: [
-      { name: "OmniCRM Coexistence", href: "/samples/omni-crm", icon: Layers, badge: "LIVE", badgeVariant: "purple" },
-      { name: "Buku Tamu", href: "/crm/buku-tamu", icon: ClipboardCheck },
-      { name: "Client Sample", href: "/crm/client-sample", icon: FlaskConical },
-      { name: "Client Produksi", href: "/crm/client-produksi", icon: Factory },
-      { name: "Client RO", href: "/crm/client-ro", icon: RefreshCw },
-      { name: "Client Lost", href: "/crm/client-lost", icon: UserX },
+      // B4: removed 6 legacy /samples/omni-crm and /crm/* entries (all 404 in
+      // phase-3 — the canonical CRM lives at /marketing/omnicrm under the
+      // DIGIMAR persona). Replaced with single OmniCRM entry pointing at the
+      // canonical route.
+      { name: "OmniCRM", href: "/marketing/omnicrm", icon: Layers, badge: "LIVE", badgeVariant: "purple" },
+      { name: "Buku Tamu", href: "/marketing/omnicrm/guestbook", icon: ClipboardCheck },
     ]
   },
   {
