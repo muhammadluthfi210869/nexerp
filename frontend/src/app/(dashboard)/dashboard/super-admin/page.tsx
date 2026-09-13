@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { 
-  Terminal, 
-  ShieldCheck, 
-  Search, 
-  Users, 
-  FlaskConical, 
-  History, 
+import {
+  ShieldCheck,
+  Search,
+  Users,
+  FlaskConical,
+  History,
   CreditCard,
   Zap,
   Boxes,
@@ -21,7 +19,6 @@ import {
   DnaTabsList,
   DnaTabsTrigger,
 } from "@/components/dna/DnaTabs";
-import { DnaCard } from "@/components/dna";
 import { DnaBadge } from "@/components/dna";
 import { DnaButton } from "@/components/dna";
 
