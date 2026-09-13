@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, StateEventTrigger } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class SalesInvoicesService {
   constructor(
     private prisma: PrismaService,
     private gate: FinanceGateHelper,
+    private stateMachine: StateMachineService,
   ) {}
 
   async findAll(filter?: { customerId?: string; status?: PaymentStatus }) {
@@ -118,6 +120,23 @@ export class SalesInvoicesService {
     if (inv.postedAt) {
       throw new BadRequestException(`Sales invoice already posted.`);
     }
+
+    // Wave 2/A5 — record INVOICE_ISSUED transition BEFORE entity update so
+    // activity-log captures the attempt. NO_DUAL_WRITE via DB unique index.
+    await this.stateMachine.transition({
+      entityType: 'SALES_INVOICE',
+      entityId: id,
+      eventTrigger: StateEventTrigger.INVOICE_ISSUED,
+      fromState: 'DRAFT',
+      toState: 'ISSUED',
+      userId,
+      reason: `Sales invoice ${inv.invoiceNumber} to ${inv.customer.name}`,
+      metadata: {
+        invoiceNumber: inv.invoiceNumber,
+        customerId: inv.customerId,
+        totalAmount: Number(inv.totalAmount),
+      },
+    });
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.salesInvoice.update({
