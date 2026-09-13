@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { StateEventTrigger } from '@prisma/client';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 type TxType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'ADJUSTMENT';
 
 @Injectable()
 export class BankTransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private stateMachine: StateMachineService,
+  ) {}
 
   async findAll(filter?: {
     bankAccountId?: string;
@@ -94,6 +99,31 @@ export class BankTransactionsService {
           sourceType: 'MANUAL',
           description: `${dto.description} [posted by ${userId}]`,
           attachmentUrls: dto.attachmentUrls || [],
+        },
+      });
+
+      // Wave 2/A5 — record direction-based state transition so downstream
+      // listeners (reconciliation, AR/AP balance recalc) can react. Ponytail:
+      // direction derived inline instead of a helper; trivial 1-branch.
+      const trigger =
+        direction > 0
+          ? StateEventTrigger.PAYMENT_RECEIVED
+          : StateEventTrigger.PAYMENT_SENT;
+      // NOTE: orchestrator.transition() lives outside the $transaction
+      // (same pattern as DP/AP/AR services). If rollback semantics are needed
+      // later, pass `tx` to a stateMachine.transition() variant.
+      await this.stateMachine.transition({
+        entityType: 'BANK_TRANSACTION',
+        entityId: bankTx.id,
+        eventTrigger: trigger,
+        fromState: null,
+        toState: dto.transactionType,
+        userId,
+        reason: `Manual bank tx ${dto.transactionType} of ${dto.amount} on ${account.accountCode}`,
+        metadata: {
+          bankAccountId: dto.bankAccountId,
+          amount: dto.amount,
+          transactionType: dto.transactionType,
         },
       });
 
