@@ -6,7 +6,13 @@ import { api } from "@/lib/api";
 import { LeadBoard } from "@/components/commercial/lead-board";
 import { MarketingForm } from "@/components/commercial/marketing-form";
 import { Zap, Target, Users, AlertTriangle, ShieldAlert } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  DnaCard,
+  DnaCardHeader,
+  DnaCardTitle,
+  DnaCardDescription,
+  DnaCardContent,
+} from "@/components/dna/DnaCard";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { RetentionRadar } from "@/components/commercial/retention-radar";
 import { KpiCard } from "@/components/dna/KpiCard";
@@ -79,16 +85,16 @@ export default function CommercialDashboard() {
            <RetentionRadar />
            <MarketingForm />
 
-            <Card className="border-gray-200 bg-white shadow-sm relative overflow-hidden">
+            <DnaCard className="border-gray-200 bg-white shadow-sm relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500 opacity-30" />
-             <CardHeader>
-                <CardTitle className="text-gray-900 text-xs font-bold uppercase tracking-tight flex items-center">
+             <DnaCardHeader>
+                <DnaCardTitle className="text-gray-900 text-xs font-bold uppercase tracking-tight flex items-center">
                    <Zap className="mr-2 h-4 w-4 text-emerald-500" />
                    Growth Metrics
-                </CardTitle>
-                <CardDescription className="text-[10px] text-zinc-500 font-sans">Live Conversion Data</CardDescription>
-             </CardHeader>
-             <CardContent className="space-y-4">
+                </DnaCardTitle>
+                <DnaCardDescription className="text-[10px] text-zinc-500 font-sans">Live Conversion Data</DnaCardDescription>
+             </DnaCardHeader>
+             <DnaCardContent className="space-y-4">
                  <div className="flex items-center justify-between">
                     <span className="text-xs text-zinc-400">Conversion Rate</span>
                     <span className="text-sm font-bold text-gray-900">{conversionRate}</span>
@@ -97,8 +103,8 @@ export default function CommercialDashboard() {
                     <span className="text-xs text-zinc-400">SLA Violation Rate</span>
                     <span className="text-sm font-bold text-red-500">{slaViolationRate}</span>
                  </div>
-             </CardContent>
-           </Card>
+             </DnaCardContent>
+           </DnaCard>
         </div>
       </div>
     </DashboardShell>
