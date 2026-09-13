@@ -93,7 +93,7 @@ export default function SystemSettingsPage() {
       />
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
-        <DnaCard title="Penomoran Dokumen & Universal Code" icon={Hash}>
+        <DnaCard title="Penomoran Dokumen & Universal Code" icon={<Hash className="w-5 h-5" />}>
           <div className="space-y-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg bg-muted/20 border border-border/40">
               <div>
@@ -169,7 +169,7 @@ export default function SystemSettingsPage() {
           </div>
         </DnaCard>
 
-        <DnaCard title="Parameter Keuangan & Penagihan" icon={Coins}>
+        <DnaCard title="Parameter Keuangan & Penagihan" icon={<Coins className="w-5 h-5" />}>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <DnaFormSection title="Mata Uang Pembukuan Utama">
@@ -227,7 +227,7 @@ export default function SystemSettingsPage() {
           </div>
         </DnaCard>
 
-        <DnaCard title="Database, Audit Trail & Pemeliharaan" icon={Database}>
+        <DnaCard title="Database, Audit Trail & Pemeliharaan" icon={<Database className="w-5 h-5" />}>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 rounded-lg border border-border/40 bg-muted/10 space-y-2">
