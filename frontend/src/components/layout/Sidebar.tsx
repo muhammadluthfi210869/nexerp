@@ -64,7 +64,8 @@ import {
   CheckCheck,
   Clock,
   Calculator,
-  MessageSquare
+  MessageSquare,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
