@@ -112,7 +112,7 @@ export function DnaDecisionModal({
             </label>
             <DnaSelect
               value={action}
-              onChange={(e) => setAction(e.target.value as DecisionAction)}
+              onChange={(v) => setAction(v as DecisionAction)}
               disabled={submitting}
             >
               {ACTION_OPTIONS.map((o) => (
@@ -140,11 +140,9 @@ export function DnaDecisionModal({
         </div>
 
         <DnaDialogFooter className="gap-2">
-          <DnaDialogClose asChild>
-            <DnaButton variant="outline" disabled={submitting}>
-              Batal
-            </DnaButton>
-          </DnaDialogClose>
+          <DnaButton variant="outline" disabled={submitting} onClick={onClose}>
+            Batal
+          </DnaButton>
           <DnaButton onClick={submit} disabled={submitting}>
             {submitting ? "Menyimpan…" : "Simpan Keputusan"}
           </DnaButton>
