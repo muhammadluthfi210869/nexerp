@@ -2,17 +2,23 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+} from "@/components/dna/DnaTable";
+import {
+  DnaCard,
+  DnaCardContent,
+  DnaCardHeader,
+  DnaCardTitle,
+  DnaCardDescription,
+} from "@/components/dna/DnaCard";
+import { DnaBadge } from "@/components/dna";
+import { DnaButton } from "@/components/dna";
 import { 
   FileText, 
   AlertCircle, 
@@ -26,10 +32,22 @@ import {
 import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DnaDialog,
+  DnaDialogContent,
+  DnaDialogHeader,
+  DnaDialogTitle,
+  DnaDialogFooter,
+} from "@/components/dna";
+import { DnaInput } from "@/components/dna/DnaInput";
+import { DnaLabel } from "@/components/dna/DnaLabel";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/dna/DnaSelectCompound";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---
@@ -118,9 +136,9 @@ export default function FinanceDashboard() {
       titleAccent="Gate v2.0"
       subtitle="Billing & Payment Verification Command Center"
       actions={
-        <Button variant="outline" size="sm" className="border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]">
+        <DnaButton variant="outline" size="sm" className="border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]">
           <Search className="mr-2 h-3 w-3" /> Audit Log
-        </Button>
+        </DnaButton>
       }
     >
       {(() => {
@@ -141,51 +159,51 @@ export default function FinanceDashboard() {
       })()}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Order Center */}
-        <Card className="lg:col-span-3 border-gray-200 bg-white">
-          <CardHeader>
+        <DnaCard className="lg:col-span-3 border-gray-200 bg-white">
+          <DnaCardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                <DnaCardTitle className="text-lg font-bold text-gray-900 flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-emerald-500" /> SALES ORDER MONITORING
-                </CardTitle>
-                <CardDescription className="text-zinc-500">Real-time status of commercial contracts and factory locks.</CardDescription>
+                </DnaCardTitle>
+                <DnaCardDescription className="text-zinc-500">Real-time status of commercial contracts and factory locks.</DnaCardDescription>
               </div>
-              <Badge variant="outline" className="border-gray-200 text-zinc-500 text-[10px] font-sans">
+              <DnaBadge variant="outline" className="border-gray-200 text-zinc-500 text-[10px] font-sans">
                 {salesOrders?.length || 0} CONTRACTS
-              </Badge>
+              </DnaBadge>
             </div>
-          </CardHeader>
-          <CardContent>
+          </DnaCardHeader>
+          <DnaCardContent>
             <div className="rounded-md border border-gray-200 overflow-hidden bg-gray-50">
-              <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow className="border-gray-200 hover:bg-transparent">
-                    <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">SO ID</TableHead>
-                    <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">Client Entity</TableHead>
-                    <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">Transaction Value</TableHead>
-                    <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">Operational Gate</TableHead>
-                    <TableHead className="text-zinc-500 font-sans text-[10px] uppercase text-center">Invoice Matrix</TableHead>
-                    <TableHead className="text-right text-zinc-500 font-sans text-[10px] uppercase">Command</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <DnaTable>
+                <DnaTableHead className="bg-gray-50">
+                  <DnaTableRow className="border-gray-200 hover:bg-transparent">
+                    <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">SO ID</DnaTh>
+                    <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">Client Entity</DnaTh>
+                    <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">Transaction Value</DnaTh>
+                    <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">Operational Gate</DnaTh>
+                    <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase text-center">Invoice Matrix</DnaTh>
+                    <DnaTh className="text-right text-zinc-500 font-sans text-[10px] uppercase">Command</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {soLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-20 text-gray-400 italic uppercase tracking-tighter text-2xl font-black">Decrypting Ledger...</TableCell></TableRow>
+                    <DnaTableRow><DnaTd colSpan={6} className="text-center py-20 text-gray-400 italic uppercase tracking-tighter text-2xl font-black">Decrypting Ledger...</DnaTd></DnaTableRow>
                   ) : salesOrders?.map(so => (
-                    <TableRow key={so.id} className="border-gray-200 hover:bg-gray-50 transition-colors group">
-                      <TableCell className="font-sans text-xs text-gray-900 group-hover:text-emerald-400">{so.id.split('-')[0]}</TableCell>
-                      <TableCell>
+                    <DnaTableRow key={so.id} className="border-gray-200 hover:bg-gray-50 transition-colors group">
+                      <DnaTd className="font-sans text-xs text-gray-900 group-hover:text-emerald-400">{so.id.split('-')[0]}</DnaTd>
+                      <DnaTd>
                         <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{so.lead?.client_name}</p>
-                      </TableCell>
-                      <TableCell className="font-sans text-sm text-gray-900">
+                      </DnaTd>
+                      <DnaTd className="font-sans text-sm text-gray-900">
                         IDR {Number(so.total_amount).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`font-sans text-[10px] px-2 py-0.5 rounded-none border ${getStatusColor(so.status)}`}>
+                      </DnaTd>
+                      <DnaTd>
+                        <DnaBadge variant="outline" className={`font-sans text-[10px] px-2 py-0.5 rounded-none border ${getStatusColor(so.status)}`}>
                           {so.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
+                        </DnaBadge>
+                      </DnaTd>
+                      <DnaTd>
                         <div className="flex gap-2 justify-center flex-wrap">
                           {so.invoices.map(inv => (
                             <button
@@ -199,42 +217,42 @@ export default function FinanceDashboard() {
                           ))}
                           {so.invoices.length === 0 && <span className="text-gray-400 text-[10px] italic font-sans uppercase tracking-tight">Awaiting Invoice Gen</span>}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost" 
+                      </DnaTd>
+                      <DnaTd className="text-right">
+                        <DnaButton
+                          variant="ghost"
                           size="sm"
                           className="h-8 border border-transparent hover:border-gray-200 hover:bg-gray-50 text-emerald-500"
                           onClick={() => { setSelectedSO(so); setIsInvoiceModalOpen(true); }}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" />
                           <span className="text-[10px] font-bold uppercase tracking-tight">Invoice</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                        </DnaButton>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
                   {salesOrders?.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-20">
+                    <DnaTableRow>
+                      <DnaTd colSpan={6} className="text-center py-20">
                           <p className="text-gray-400 text-xs uppercase font-bold tracking-[0.3em]">No Commercial Contracts in Database</p>
-                      </TableCell>
-                    </TableRow>
+                      </DnaTd>
+                    </DnaTableRow>
                   )}
-                </TableBody>
-              </Table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
-          </CardContent>
-        </Card>
+          </DnaCardContent>
+        </DnaCard>
       </div>
 
       {/* Invoice Generator Modal */}
-      <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center tracking-tighter uppercase text-2xl font-black italic">
+      <DnaDialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
+        <DnaDialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[500px]">
+          <DnaDialogHeader>
+            <DnaDialogTitle className="flex items-center tracking-tighter uppercase text-2xl font-black italic">
               <FileText className="mr-2 h-6 w-6 text-emerald-500" /> GENERATE BILLING
-            </DialogTitle>
-          </DialogHeader>
+            </DnaDialogTitle>
+          </DnaDialogHeader>
           {selectedSO && (
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -249,7 +267,7 @@ export default function FinanceDashboard() {
             }} className="space-y-6 py-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Invoice Category</Label>
+                  <DnaLabel className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Invoice Category</DnaLabel>
                   <Select name="type" defaultValue="DP">
                     <SelectTrigger className="bg-white border-gray-200 h-12 focus:ring-emerald-500">
                       <SelectValue />
@@ -261,19 +279,19 @@ export default function FinanceDashboard() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Amount Due (IDR)</Label>
+                  <DnaLabel className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Amount Due (IDR)</DnaLabel>
                   <div className="relative">
-                    <Input 
-                      name="amount" 
-                      type="number" 
-                      defaultValue={Number(selectedSO.total_amount) * 0.3} 
+                    <DnaInput
+                      name="amount"
+                      type="number"
+                      defaultValue={Number(selectedSO.total_amount) * 0.3}
                       className="bg-white border-gray-200 font-sans h-12 text-xl pl-12 text-emerald-500 focus-visible:ring-emerald-500"
                     />
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-sans font-bold">Rp</span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-gray-50 p-4 rounded-none border border-gray-200 space-y-2">
                 <p className="text-[10px] text-zinc-500 uppercase font-black tracking-tight text-center border-b border-gray-200 pb-2 mb-2">Contract Verification</p>
                 <div className="flex justify-between text-xs">
@@ -290,28 +308,28 @@ export default function FinanceDashboard() {
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button 
-                  type="submit" 
+              <DnaDialogFooter>
+                <DnaButton
+                  type="submit"
                   disabled={generateInvoiceMutation.isPending}
                   className="w-full bg-white text-black hover:bg-emerald-500 hover:text-white font-black h-14 tracking-[0.2em] uppercase transition-all"
                 >
                    {generateInvoiceMutation.isPending ? "transmitting..." : "Initialize Billing Matrix"}
-                </Button>
-              </DialogFooter>
+                </DnaButton>
+              </DnaDialogFooter>
             </form>
           )}
-        </DialogContent>
-      </Dialog>
+        </DnaDialogContent>
+      </DnaDialog>
 
       {/* Payment Verification Modal */}
-      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center tracking-tighter uppercase text-2xl font-black italic">
+      <DnaDialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DnaDialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[450px]">
+          <DnaDialogHeader>
+            <DnaDialogTitle className="flex items-center tracking-tighter uppercase text-2xl font-black italic">
               <Wallet className="mr-2 h-6 w-6 text-emerald-500" /> FINANCIAL VERIFIER
-            </DialogTitle>
-          </DialogHeader>
+            </DnaDialogTitle>
+          </DnaDialogHeader>
           {selectedInvoice && (
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -323,18 +341,18 @@ export default function FinanceDashboard() {
               });
             }} className="space-y-6 py-6">
               <div className="space-y-2">
-                <Label className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Amount to Verify (IDR)</Label>
+                <DnaLabel className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Amount to Verify (IDR)</DnaLabel>
                 <div className="relative">
-                  <Input 
-                    name="amount" 
-                    type="number" 
+                  <DnaInput
+                    name="amount"
+                    type="number"
                     defaultValue={Number(selectedInvoice.amount_due)}
                     className="bg-white border-gray-200 font-sans h-14 text-2xl pl-12 text-gray-900 focus-visible:ring-emerald-500"
                   />
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-sans font-bold">Rp</span>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-gray-50 rounded-none border border-gray-200">
                 <p className="text-[10px] text-zinc-500 mb-2 font-black italic uppercase tracking-tight text-center border-b border-gray-200 pb-2">Audit Engagement</p>
                 <div className="grid grid-cols-2 gap-y-2 text-xs">
@@ -348,14 +366,14 @@ export default function FinanceDashboard() {
               </div>
 
               <div className="space-y-4">
-                <Button 
-                   type="submit" 
+                <DnaButton
+                   type="submit"
                    disabled={verifyPaymentMutation.isPending}
                    className="w-full bg-emerald-600 text-white hover:bg-emerald-500 font-black h-16 tracking-[0.3em] uppercase transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                 >
                    {verifyPaymentMutation.isPending ? "PROCESSING..." : "VERIFY & UNLOCK FACTORY"}
-                </Button>
-                
+                </DnaButton>
+
                 {selectedInvoice.type === 'DP' && (
                   <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20">
                      <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
@@ -367,8 +385,8 @@ export default function FinanceDashboard() {
               </div>
             </form>
           )}
-        </DialogContent>
-      </Dialog>
+        </DnaDialogContent>
+      </DnaDialog>
     </DashboardShell>
   );
 }
