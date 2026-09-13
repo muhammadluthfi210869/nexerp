@@ -11,11 +11,11 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as yaml from 'js-yaml';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import {
   AlertRule,
   AlertRuleMetric,
+  AlertComparator,
   TriggeredAlert,
 } from './alert-rules.types';
 
@@ -23,6 +23,104 @@ const CACHE_TTL_MS = 60_000;
 
 interface YamlConfig {
   rules: AlertRule[];
+}
+
+// ponytail: ~30-line parser for our flat alert-rules.yaml shape
+// (top-level `rules:` list of objects with scalar key: value + array
+// of recipient objects). Avoids adding js-yaml as a direct dep.
+function parseAlertRules(src: string): YamlConfig {
+  const lines = src.split(/\r?\n/);
+  const out: AlertRule[] = [];
+  let cur: Partial<AlertRule> | null = null;
+  let inRecipients = false;
+  let curRecipient: Record<string, string> | null = null;
+  let listIndent = -1;
+
+  const flushRecipient = () => {
+    if (cur && curRecipient) {
+      if (!cur.recipients) cur.recipients = [];
+      cur.recipients.push(curRecipient as AlertRule['recipients'][number]);
+      curRecipient = null;
+    }
+  };
+  const flushRule = () => {
+    flushRecipient();
+    if (cur) {
+      if (
+        cur.id &&
+        cur.name &&
+        cur.metric &&
+        cur.comparator &&
+        cur.threshold !== undefined &&
+        cur.severity &&
+        cur.triggerEvent &&
+        cur.enabled !== undefined
+      ) {
+        out.push(cur as AlertRule);
+      }
+      cur = null;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.replace(/#.*$/, '').replace(/\s+$/, '');
+    if (!line.trim()) continue;
+    const indent = line.length - line.trimStart().length;
+    const trimmed = line.trim();
+
+    if (indent === 0 && trimmed === 'rules:') {
+      flushRule();
+      inRecipients = false;
+      continue;
+    }
+    if (indent === 2 && trimmed.startsWith('- ')) {
+      flushRule();
+      cur = {};
+      inRecipients = false;
+      const inline = trimmed.slice(2);
+      const m = /^(\w+):\s*(.*)$/.exec(inline);
+      if (m) (cur as Record<string, unknown>)[m[1]] = coerce(m[2]);
+      continue;
+    }
+    if (!cur) continue;
+
+    if (indent === 4 && trimmed === 'recipients:') {
+      inRecipients = true;
+      cur.recipients = [];
+      continue;
+    }
+    if (inRecipients && indent >= 6 && trimmed.startsWith('- ')) {
+      flushRecipient();
+      curRecipient = {};
+      const inline = trimmed.slice(2);
+      const m = /^(\w+):\s*(.*)$/.exec(inline);
+      if (m) curRecipient[m[1]] = m[2];
+      continue;
+    }
+    if (inRecipients && indent <= 4 && !trimmed.startsWith('- ')) {
+      flushRecipient();
+      inRecipients = false;
+    }
+
+    if (!inRecipients) {
+      const m = /^(\w+):\s*(.*)$/.exec(trimmed);
+      if (m) (cur as Record<string, unknown>)[m[1]] = coerce(m[2]);
+    } else if (curRecipient) {
+      const m = /^(\w+):\s*(.*)$/.exec(trimmed);
+      if (m) curRecipient[m[1]] = m[2];
+    }
+  }
+  flushRule();
+  return { rules: out };
+}
+
+function coerce(raw: string): unknown {
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  if (raw === '') return '';
+  const n = Number(raw);
+  if (!Number.isNaN(n) && raw.trim() !== '' && /^-?\d+(\.\d+)?$/.test(raw.trim())) return n;
+  return raw;
 }
 
 @Injectable()
@@ -45,7 +143,7 @@ export class AlertEngineService implements OnModuleInit {
     const file = path.join(__dirname, 'alert-rules.yaml');
     try {
       const raw = fs.readFileSync(file, 'utf8');
-      const cfg = yaml.load(raw) as YamlConfig;
+      const cfg = parseAlertRules(raw);
       this.rules = cfg.rules.map((r) => ({ ...r }));
       for (const r of this.rules) {
         this.toggles.set(r.id, r.enabled);
@@ -116,13 +214,14 @@ export class AlertEngineService implements OnModuleInit {
   // ----- individual rule evaluators -----
 
   private async evalLowStock(rule: AlertRule): Promise<TriggeredAlert[]> {
-    // Compare stockOnHand < minStock (threshold unused; threshold=1 is sentinel).
+    // MaterialItem.stockQty is a Decimal cache; reorderPoint is the trigger.
+    // We pull everything and filter in JS — bounded to 200 rows.
     const rows = await this.prisma.materialItem.findMany({
-      where: { minStock: { gt: 0 } },
-      select: { id: true, code: true, name: true, stockOnHand: true, minStock: true },
-      take: 100,
+      where: { status: 'ACTIVE' },
+      select: { id: true, code: true, name: true, stockQty: true, reorderPoint: true },
+      take: 200,
     });
-    const breaches = rows.filter((r) => r.stockOnHand < r.minStock);
+    const breaches = rows.filter((r) => Number(r.reorderPoint) > 0 && Number(r.stockQty) < Number(r.reorderPoint));
     if (breaches.length === 0) return [];
     return [{
       ruleId: rule.id,
@@ -131,11 +230,11 @@ export class AlertEngineService implements OnModuleInit {
       metric: rule.metric,
       observedValue: breaches.length,
       threshold: rule.threshold,
-      message: `${breaches.length} material di bawah stok minimum`,
+      message: `${breaches.length} material di bawah reorder point`,
       contextRefs: breaches.slice(0, 5).map((b) => ({
         entityType: 'MaterialItem',
         entityId: b.id,
-        label: `${b.code} (${b.stockOnHand}/${b.minStock})`,
+        label: `${b.code ?? b.name} (${b.stockQty}/${b.reorderPoint})`,
       })),
       recipients: rule.recipients,
       firedAt: new Date().toISOString(),
@@ -146,11 +245,11 @@ export class AlertEngineService implements OnModuleInit {
     const today = new Date();
     const rows = await this.prisma.purchaseOrder.findMany({
       where: {
-        expectedDelivery: { lt: today },
-        status: { not: 'RECEIVED' },
+        dueDate: { lt: today },
+        status: { in: ['ORDERED', 'SHIPPED', 'APPROVED'] },
         deletedAt: null,
       },
-      select: { id: true, poNumber: true, status: true, expectedDelivery: true },
+      select: { id: true, poNumber: true, status: true, dueDate: true },
       take: 50,
     });
     if (rows.length <= rule.threshold) return [];
@@ -176,7 +275,7 @@ export class AlertEngineService implements OnModuleInit {
     const cutoff = new Date(Date.now() - rule.threshold * 24 * 60 * 60 * 1000);
     const rows = await this.prisma.purchaseOrder.findMany({
       where: {
-        approvalStatus: 'WAITING',
+        status: 'PENDING_APPROVAL',
         createdAt: { lt: cutoff },
         deletedAt: null,
       },
@@ -218,7 +317,6 @@ export class AlertEngineService implements OnModuleInit {
       where: {
         amountDue: { gt: rule.threshold },
         status: { in: ['UNPAID', 'PARTIAL'] },
-        approvalStatus: 'WAITING',
         deletedAt: null,
       },
       select: { id: true, invoiceNumber: true, amountDue: true },
@@ -232,7 +330,7 @@ export class AlertEngineService implements OnModuleInit {
       metric: rule.metric,
       observedValue: rows.length,
       threshold: rule.threshold,
-      message: `${rows.length} invoice > Rp${rule.threshold.toLocaleString('id-ID')} menunggu approval`,
+      message: `${rows.length} invoice > Rp${rule.threshold.toLocaleString('id-ID')} belum lunas`,
       contextRefs: rows.slice(0, 5).map((r) => ({
         entityType: 'Invoice',
         entityId: r.id,
