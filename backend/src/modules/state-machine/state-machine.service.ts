@@ -64,6 +64,9 @@ const ENTITY_TRIGGER_MAP: Record<string, StateEventTrigger[]> = {
     StateEventTrigger.INVOICE_ISSUED,
     StateEventTrigger.JOURNAL_POSTED,
   ],
+  BILL: [
+    StateEventTrigger.JOURNAL_POSTED,
+  ],
   FINANCIAL_PERIOD: [StateEventTrigger.PERIOD_LOCKED],
 };
 
