@@ -23,6 +23,7 @@ services:
     restart: always
     environment:
       DATABASE_URL: postgresql://erp_user:erp_password_secure@db:5432/erp_database?schema=public
+      DREAMLAB_DATABASE_URL: ${DREAMLAB_DATABASE_URL:-}
       PORT: 3002
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:-dreamlab_prod_jwt_secret_2026}
