@@ -149,4 +149,77 @@ describe("KpiService", () => {
       expect.objectContaining({ agentId: "u-2", agentName: "Budi", todayCount: 2, weekCount: 5 }),
     ]));
   });
+
+  // Round 2 — A3 per-busdev reply rate (user wishlist).
+  describe("replyRatePerBusdev (Round 2)", () => {
+    it("returns empty array when no leads are assigned", async () => {
+      const kpi = await service.summary();
+      expect(kpi.replyRatePerBusdev).toEqual([]);
+    });
+
+    it("computes per-busdev total/replied/replyRatePct + avg first response", async () => {
+      // crmLead.findMany is called twice in summary() now:
+      //   1. avg-first-response (existing) — returns []
+      //   2. per-busdev reply rate (Round 2) — the test data
+      // groupBy defaults to [] → round-robin user lookup short-circuits,
+      // so user.findMany is called only by the per-busdev path.
+      prismaMock.crmLead.findMany
+        .mockResolvedValueOnce([]) // avg first response
+        .mockResolvedValueOnce([
+          // Amy: 3 leads, 2 replied, 1 with response-time 15min
+          { assignedToId: "u-amy", firstOutboundAt: new Date("2026-09-12T10:00:00Z"), firstResponseAt: new Date("2026-09-12T10:15:00Z") },
+          { assignedToId: "u-amy", firstOutboundAt: new Date("2026-09-12T11:00:00Z"), firstResponseAt: null },
+          { assignedToId: "u-amy", firstOutboundAt: null, firstResponseAt: null },
+          // Budi: 2 leads, 1 replied, no response-time recorded
+          { assignedToId: "u-budi", firstOutboundAt: new Date("2026-09-12T09:00:00Z"), firstResponseAt: null },
+          { assignedToId: "u-budi", firstOutboundAt: null, firstResponseAt: null },
+          // Ghost: no firstOutboundAt, should be counted in total but not replied
+          { assignedToId: "u-ghost", firstOutboundAt: null, firstResponseAt: null },
+        ]);
+      prismaMock.user.findMany.mockResolvedValueOnce([
+        { id: "u-amy", fullName: "Amy" },
+        { id: "u-budi", fullName: "Budi" },
+        // u-ghost not returned → shows "(unknown)"
+      ]);
+
+      const kpi = await service.summary();
+      expect(kpi.replyRatePerBusdev).toHaveLength(3);
+      // Sorted by totalLeads desc: Amy(3), Budi(2), Ghost(1)
+      expect(kpi.replyRatePerBusdev[0]).toMatchObject({
+        busdevId: "u-amy",
+        busdevName: "Amy",
+        totalLeads: 3,
+        repliedLeads: 2,
+        replyRatePct: 0.667, // 2/3 rounded
+        avgFirstResponseMinutes: 15,
+      });
+      expect(kpi.replyRatePerBusdev[1]).toMatchObject({
+        busdevId: "u-budi",
+        busdevName: "Budi",
+        totalLeads: 2,
+        repliedLeads: 1,
+        replyRatePct: 0.5,
+        avgFirstResponseMinutes: null, // no response-time recorded
+      });
+      expect(kpi.replyRatePerBusdev[2]).toMatchObject({
+        busdevId: "u-ghost",
+        busdevName: "(unknown)",
+        totalLeads: 1,
+        repliedLeads: 0,
+        replyRatePct: 0,
+        avgFirstResponseMinutes: null,
+      });
+    });
+
+    it("skips user lookup when no assigned leads exist (no division-by-zero)", async () => {
+      // Both crmLead.findMany calls return [] (no leads at all) — defaults
+      // groupBy returns [] → round-robin user lookup short-circuits.
+      // Per-busdev also sees empty assignedToIds → short-circuits user lookup.
+      const userLookupCountBefore = prismaMock.user.findMany.mock.calls.length;
+      const kpi = await service.summary();
+      expect(kpi.replyRatePerBusdev).toEqual([]);
+      // No additional user.findMany call beyond baseline (round-robin short-circuit)
+      expect(prismaMock.user.findMany.mock.calls.length).toBe(userLookupCountBefore);
+    });
+  });
 });

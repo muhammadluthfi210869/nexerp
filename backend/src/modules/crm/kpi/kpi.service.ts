@@ -12,6 +12,15 @@ export interface RoundRobinRow {
   weekCount: number;
 }
 
+export interface BusdevReplyRow {
+  busdevId: string;
+  busdevName: string;
+  totalLeads: number;
+  repliedLeads: number;
+  replyRatePct: number; // 0..1
+  avgFirstResponseMinutes: number | null;
+}
+
 export interface KpiSummary {
   leadsToday: number;
   leadsThisWeek: number;
@@ -21,6 +30,7 @@ export interface KpiSummary {
   bukuTamuPending: number;
   bukuTamuApproved7d: number;
   roundRobinDistribution: RoundRobinRow[];
+  replyRatePerBusdev: BusdevReplyRow[]; // Round 2 — per-busdev breakdown
   generatedAt: string;
 }
 
@@ -133,6 +143,50 @@ export class KpiService {
       weekCount: weekMap.get(row.assignedToId!) ?? 0,
     }));
 
+    // 7. Per-busdev reply rate (Round 2 — user wishlist).
+    // One fetch + in-memory aggregate (ponytail: no extra groupBy needed since
+    // we need both total and replied counts plus avg minutes).
+    const perBusdevRows = await this.prisma.crmLead.findMany({
+      where: { assignedToId: { not: null } },
+      select: { assignedToId: true, firstOutboundAt: true, firstResponseAt: true },
+    });
+    const perBusdevIds = Array.from(
+      new Set(perBusdevRows.map((r) => r.assignedToId).filter((id): id is string => id != null)),
+    );
+    const perBusdevUsers = perBusdevIds.length > 0
+      ? await this.prisma.user.findMany({
+          where: { id: { in: perBusdevIds } },
+          select: { id: true, fullName: true },
+        })
+      : [];
+    const perBusdevUserMap = new Map(perBusdevUsers.map((u) => [u.id, u.fullName]));
+    type Agg = { total: number; replied: number; totalMinutes: number; respondedCount: number };
+    const agg = new Map<string, Agg>();
+    for (const r of perBusdevRows) {
+      const aid = r.assignedToId!;
+      const cur = agg.get(aid) ?? { total: 0, replied: 0, totalMinutes: 0, respondedCount: 0 };
+      cur.total += 1;
+      if (r.firstOutboundAt) cur.replied += 1;
+      if (r.firstOutboundAt && r.firstResponseAt) {
+        const diff = (r.firstResponseAt.getTime() - r.firstOutboundAt.getTime()) / 60000;
+        if (diff >= 0) {
+          cur.totalMinutes += diff;
+          cur.respondedCount += 1;
+        }
+      }
+      agg.set(aid, cur);
+    }
+    const replyRatePerBusdev: BusdevReplyRow[] = Array.from(agg.entries())
+      .map(([busdevId, v]) => ({
+        busdevId,
+        busdevName: perBusdevUserMap.get(busdevId) ?? "(unknown)",
+        totalLeads: v.total,
+        repliedLeads: v.replied,
+        replyRatePct: Math.round((v.replied / v.total) * 1000) / 1000,
+        avgFirstResponseMinutes: v.respondedCount > 0 ? Math.round(v.totalMinutes / v.respondedCount) : null,
+      }))
+      .sort((a, b) => b.totalLeads - a.totalLeads);
+
     return {
       leadsToday,
       leadsThisWeek,
@@ -142,6 +196,7 @@ export class KpiService {
       bukuTamuPending,
       bukuTamuApproved7d,
       roundRobinDistribution,
+      replyRatePerBusdev,
       generatedAt: now.toISOString(),
     };
   }
