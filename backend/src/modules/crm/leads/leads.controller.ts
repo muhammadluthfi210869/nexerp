@@ -111,6 +111,21 @@ export class LeadsController {
     return this.leadsService.assign(id, body.assignedToId, actorId);
   }
 
+  /**
+   * POST /crm/leads/:id/reply — mark that busdev sent first outbound reply
+   * to this lead. Idempotent. Unblocks KPI Avg First Response + per-busdev
+   * reply rate (BUG #2). Optional body for future channel tag; ignored.
+   */
+  @Post("leads/:id/reply")
+  @Roles(
+    UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,
+    UserRole.DIGIMAR,
+  )
+  reply(@Param("id") id: string, @Req() req: Request) {
+    const actorId = (req as any).user?.id;
+    return this.leadsService.markFirstOutbound(id, actorId);
+  }
+
   @Get("leads/:id/messages")
   @Roles(
     UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,

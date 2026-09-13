@@ -176,6 +176,35 @@ export class LeadsService {
   }
 
   /**
+   * Mark the first time a busdev sent an outbound reply to this lead.
+   * Idempotent: firstOutboundAt is only set on the first call; lastOutboundAt
+   * always advances. Writes a LeadAudit row with action OUTBOUND_REPLY.
+   * Unblocks KPI avg-first-response + per-busdev reply rate (BUG #2).
+   */
+  async markFirstOutbound(id: string, actorId?: string): Promise<CrmLead> {
+    const existing = await this.getById(id);
+    const now = new Date();
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.crmLead.update({
+        where: { id },
+        data: {
+          ...(existing.firstOutboundAt ? {} : { firstOutboundAt: now }),
+          lastOutboundAt: now,
+        },
+      });
+      await tx.leadAudit.create({
+        data: {
+          crmLeadId: id,
+          actorId: actorId ?? null,
+          action: "OUTBOUND_REPLY",
+          metadata: { firstTime: !existing.firstOutboundAt },
+        },
+      });
+      return updated;
+    });
+  }
+
+  /**
    * Chat timeline — joins CrmLead → LeadCapture → LeadMessage.
    * Returns messages ordered chronologically.
    */
