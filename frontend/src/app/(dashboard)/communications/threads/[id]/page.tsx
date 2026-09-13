@@ -38,7 +38,6 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
       <DnaPageHeader
         title={meta?.title ?? "Thread"}
         subtitle={meta?.contextType ? `Konteks: ${meta.contextType}` : undefined}
-        icon={<Users className="w-5 h-5" />}
       />
 
       <DnaCard padding="lg" className="mt-4">

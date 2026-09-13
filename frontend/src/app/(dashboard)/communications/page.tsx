@@ -62,7 +62,6 @@ export default function CommunicationsInboxPage() {
         <DnaPageHeader
           title="Communications"
           subtitle="Zero-chat: thread diskusi lintas divisi yang terdokumentasi otomatis."
-          icon={<MessageSquare className="w-5 h-5" />}
         />
         <DnaNotificationCenter viewer={viewer} />
       </div>

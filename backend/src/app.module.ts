@@ -50,6 +50,7 @@ import { KpiModule } from './modules/kpi/kpi.module';
 
 import { MasterModule } from './modules/master/master.module';
 import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
+import { CommunicationModule } from './modules/communication/communication.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -118,6 +119,7 @@ import { join } from 'path';
     ActivityLogModule,
     StateMachineModule,
     KpiModule,
+    CommunicationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -63,7 +63,8 @@ import {
   FileText,
   CheckCheck,
   Clock,
-  Calculator
+  Calculator,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
