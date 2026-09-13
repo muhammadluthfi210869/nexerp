@@ -13,9 +13,9 @@ The database, canonical backend, frontend migration, and QA hardening are fully 
 | 1 | Product, UX, route, RBAC contract | Complete | `PHASE-1-PRODUCT-UI-CONTRACT.md` and `phase-1-contract.json` |
 | 2 | Canonical database foundation | Complete | `PHASE-2-DATABASE-FOUNDATION.md` |
 | 3 | Canonical backend, security, workflow, integration hardening | Complete | `PHASE-3-CANONICAL-BACKEND.md` |
-| 4 | Production frontend migration and UX integration | Complete | `PHASE-4-VERIFIER.md` (6/6 sub-items verified) |
-| 5 | End-to-end quality assurance and release hardening | Complete | `scripts/verify-marketing-phase4.ps1` (7/7 gates PASSED) |
-| 6 | Deployment, monitoring, and operational handover | Ready | Phase 6 handover checklist |
+| 4 | Production frontend migration and UX integration | Complete (final closure 2026-09-13) | `PHASE-4-VERIFIER.md` + `docs/qa-gate/2026-09-13-marketing-finalization.md` |
+| 5 | End-to-end quality assurance and release hardening | Complete (with E2E deferred to deploy) | `scripts/verify-marketing-phase4.ps1` + `evidence/2026-09-13/e2e-management-task/STATUS.md` |
+| 6 | Deployment, monitoring, and operational handover | Ready (user-driven deploy) | `PHASE-6-DEPLOY-RUNBOOK.md` |
 
 ## Product boundary
 
