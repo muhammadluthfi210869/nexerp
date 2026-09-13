@@ -1,0 +1,72 @@
+# Wave 4 / D3 — Default alert rules.
+#
+# ponytail: in-memory load at module init — file is the single source of
+# truth. Edit here, restart backend. DB-persisted rules are a follow-up
+# upgrade (alert-rules.admin page already exposes toggle; persistence is
+# the next slice).
+
+rules:
+  - id: low-stock
+    name: Stok Barang di Bawah Minimum
+    description: MaterialItem.stockOnHand jatuh di bawah minStock.
+    metric: inventory.stock_below_min
+    comparator: lt
+    threshold: 1
+    severity: MEDIUM
+    recipients:
+      - role: PURCHASING
+      - role: WAREHOUSE
+    triggerEvent: scheduled
+    enabled: true
+
+  - id: overdue-po
+    name: PO Melewati Tanggal Kirim
+    description: PurchaseOrder.expectedDelivery < today AND status != RECEIVED.
+    metric: purchase_order.overdue_count
+    comparator: gt
+    threshold: 0
+    severity: HIGH
+    recipients:
+      - role: PURCHASING
+      - role: DIRECTOR
+    triggerEvent: scheduled
+    enabled: true
+
+  - id: blocked-approval
+    name: Approval Terbuka > 3 Hari
+    description: PurchaseOrder.approvalStatus=WAITING lebih dari 3 hari.
+    metric: approval.pending_days
+    comparator: gt
+    threshold: 3
+    severity: HIGH
+    recipients:
+      - role: DIRECTOR
+      - role: FINANCE
+    triggerEvent: scheduled
+    enabled: true
+
+  - id: kpi-decline
+    name: KPI Divisi Turun > 10%
+    description: DivisionKpi drop lebih dari 10% period-over-period.
+    metric: kpi.division_drop_pct
+    comparator: gt
+    threshold: 10
+    severity: MEDIUM
+    recipients:
+      - role: DIRECTOR
+      - role: HEAD_OPS
+    triggerEvent: scheduled
+    enabled: true
+
+  - id: high-value-pending
+    name: Transaksi > 100 Juta Menunggu Approval
+    description: Invoice.amountDue > 100_000_000 dan status belum APPROVED.
+    metric: transaction.high_value_pending
+    comparator: gt
+    threshold: 100000000
+    severity: CRITICAL
+    recipients:
+      - role: DIRECTOR
+      - role: FINANCE
+    triggerEvent: scheduled
+    enabled: true
