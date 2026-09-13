@@ -177,6 +177,12 @@ Migration scripts used for verification create and remove disposable databases. 
 7. Train operational users on task lifecycle, social approval lifecycle, reporting input, integration retry, and conflict recovery.
 8. Set monitoring for API errors, failed sync jobs, stale integrations, and workflow transition failures.
 
+## AI copy generation mode (clarification, 2026-09-13)
+
+`backend/src/modules/marketing/social-planner/social-planner.service.ts:generateAiCopy` calls **Google Gemini 2.5 Flash live** via `process.env.GEMINI_API_KEY`. It is **not** a stub. If the env var is missing, the endpoint returns `503 ServiceUnavailableException` with body "AI copywriter belum dikonfigurasi."
+
+Implication for production deploy (Phase 6 step 4): `GEMINI_API_KEY` must be set on the backend environment alongside `MARKETING_INTEGRATION_KEY`. Earlier plan notes ("stub-only AI") were incorrect; this doc is authoritative.
+
 ## Commands
 
 From repository root:
@@ -200,6 +206,8 @@ npm --prefix backend run db:audit-migrations
 | Purpose | File |
 | --- | --- |
 | Product and UI contract | `docs/marketing/PHASE-1-PRODUCT-UI-CONTRACT.md` |
+| Management Task SSOT Contract | `docs/marketing/MANAGEMENT-TASK-SSOT-CONTRACT.md` |
+| Go-Live Runbook (Non-Destructive) | `docs/marketing/PHASE-4-GO-LIVE-RUNBOOK.md` |
 | Database foundation | `docs/marketing/PHASE-2-DATABASE-FOUNDATION.md` |
 | Backend contract | `docs/marketing/PHASE-3-CANONICAL-BACKEND.md` |
 | Phase 4 API hooks | `frontend/src/hooks/useCanonicalMarketing.ts` |
