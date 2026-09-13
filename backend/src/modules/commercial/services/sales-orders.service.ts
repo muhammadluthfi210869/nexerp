@@ -8,9 +8,10 @@ import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSalesOrderDto } from '../dto/create-sales-order.dto';
 import { UpdateSalesOrderDto } from '../dto/update-sales-order.dto';
-import { SOStatus, InvoiceType, InvoiceStatus } from '@prisma/client';
+import { SOStatus, InvoiceType, InvoiceStatus, StateEventTrigger } from '@prisma/client';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class SalesOrdersService {
@@ -19,6 +20,7 @@ export class SalesOrdersService {
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
     private eventEmitter: EventEmitter2,
+    private stateMachine: StateMachineService,
   ) {}
 
   async create(dto: CreateSalesOrderDto) {
@@ -49,6 +51,21 @@ export class SalesOrdersService {
 
     // Emit event for document automation
     this.eventEmitter.emit('sales_order.created', { salesOrderId: so.id });
+
+    // Wave 2/A5 — record SO_CREATED transition so downstream listeners
+    // (gate conditions: DP requirement, interlock rules) can react.
+    // NO_DUAL_WRITE via DB unique index on (entityId, eventTrigger).
+    // ponytail: emit + transition are sequential best-effort — event emit
+    // is already async-fire-and-forget; transition awaits.
+    await this.stateMachine.transition({
+      entityType: 'SALES_ORDER',
+      entityId: so.id,
+      eventTrigger: StateEventTrigger.SO_CREATED,
+      fromState: null,
+      toState: 'DRAFT',
+      reason: `SO ${so.orderNumber} created (lead ${so.leadId ?? 'n/a'})`,
+      metadata: { orderNumber: so.orderNumber, totalAmount: Number(so.totalAmount) },
+    });
 
     return so;
   }

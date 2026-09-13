@@ -6,8 +6,10 @@ import { SalesOrdersController } from './controllers/sales-orders.controller';
 import { InvoicesController } from './controllers/invoices.controller';
 import { PaymentsController } from './controllers/payments.controller';
 import { RetentionController } from './controllers/retention.controller';
+import { StateMachineModule } from '../state-machine/state-machine.module';
 
 @Module({
+  imports: [StateMachineModule],
   providers: [SalesOrdersService, InvoicesService, PaymentsService],
   controllers: [
     SalesOrdersController,
