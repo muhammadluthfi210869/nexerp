@@ -21,6 +21,14 @@ interface KpiSummary {
     todayCount: number;
     weekCount: number;
   }>;
+  replyRatePerBusdev: Array<{
+    busdevId: string;
+    busdevName: string;
+    totalLeads: number;
+    repliedLeads: number;
+    replyRatePct: number;
+    avgFirstResponseMinutes: number | null;
+  }>;
   generatedAt: string;
 }
 
@@ -75,24 +83,32 @@ export function CrmKpiTiles() {
       </section>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-3 text-sm font-semibold">Round Robin Distribution</h3>
-        {kpi.roundRobinDistribution.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Belum ada assignment hari ini.</p>
+        <h3 className="mb-3 text-sm font-semibold">Per-BusDev Reply Rate</h3>
+        {kpi.replyRatePerBusdev.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Belum ada leads yang ter-assign.</p>
         ) : (
-          <table className="w-full text-xs">
+          <table className="w-full text-xs" data-testid="kpi-per-busdev-table">
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="pb-2">BusDev</th>
-                <th className="pb-2 text-right">Today</th>
-                <th className="pb-2 text-right">This Week</th>
+                <th className="pb-2 text-right">Total Leads</th>
+                <th className="pb-2 text-right">Replied</th>
+                <th className="pb-2 text-right">Reply Rate</th>
+                <th className="pb-2 text-right">Avg First Response</th>
               </tr>
             </thead>
             <tbody>
-              {kpi.roundRobinDistribution.map((row) => (
-                <tr key={row.agentId ?? "unassigned"} className="border-t border-border">
-                  <td className="py-2">{row.agentName ?? "(unassigned)"}</td>
-                  <td className="py-2 text-right"><strong>{row.todayCount}</strong></td>
-                  <td className="py-2 text-right">{row.weekCount}</td>
+              {kpi.replyRatePerBusdev.map((row) => (
+                <tr key={row.busdevId} className="border-t border-border" data-testid={`kpi-per-busdev-row-${row.busdevId}`}>
+                  <td className="py-2">{row.busdevName}</td>
+                  <td className="py-2 text-right">{row.totalLeads}</td>
+                  <td className="py-2 text-right"><strong>{row.repliedLeads}</strong></td>
+                  <td className="py-2 text-right">
+                    <DnaBadge status={row.replyRatePct < 0.1 ? "warning" : "default"}>
+                      {fmtPct(row.replyRatePct)}
+                    </DnaBadge>
+                  </td>
+                  <td className="py-2 text-right">{fmtMin(row.avgFirstResponseMinutes)}</td>
                 </tr>
               ))}
             </tbody>

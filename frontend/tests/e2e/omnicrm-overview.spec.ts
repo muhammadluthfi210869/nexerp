@@ -96,4 +96,23 @@ test.describe('OmniCRM — Overview page', () => {
     expect(finalPath).toMatch(/\/marketing\/management-task\/(aurel|revi|zarka|gusti|luthfi|rahmat)$/);
     expect(finalPath).not.toBe('/marketing/management-task/overview');
   });
+
+  // B2 — per-busdev reply rate table on KPI drill-down page.
+  test('KPI page renders per-busdev reply rate table (B2)', async ({ page }) => {
+    await page.goto('/marketing/omnicrm/kpi');
+    // Wait for the section to render (or empty state).
+    const hasTable = await page.getByTestId('kpi-per-busdev-table').isVisible().catch(() => false);
+    if (!hasTable) {
+      // Empty state: no leads assigned. Still valid.
+      const noLeadsMsg = await page.getByText('Belum ada leads yang ter-assign').isVisible().catch(() => false);
+      expect(noLeadsMsg).toBe(true);
+      return;
+    }
+    // Headers present
+    await expect(page.getByTestId('kpi-per-busdev-table').locator('th').nth(0)).toHaveText('BusDev');
+    await expect(page.getByTestId('kpi-per-busdev-table').locator('th').nth(1)).toHaveText('Total Leads');
+    await expect(page.getByTestId('kpi-per-busdev-table').locator('th').nth(2)).toHaveText('Replied');
+    await expect(page.getByTestId('kpi-per-busdev-table').locator('th').nth(3)).toHaveText('Reply Rate');
+    await expect(page.getByTestId('kpi-per-busdev-table').locator('th').nth(4)).toHaveText('Avg First Response');
+  });
 });
