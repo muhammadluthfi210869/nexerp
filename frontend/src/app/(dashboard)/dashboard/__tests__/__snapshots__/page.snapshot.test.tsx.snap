@@ -1,0 +1,1239 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Direksi DashboardPage (snapshot) > renders marketing audit with seeded data and matches snapshot 1`] = `
+<div
+  class="w-full h-full animate-[fadeIn_0.3s_ease-out]"
+>
+  <div
+    class="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]"
+  >
+    <header
+      class="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]"
+      style="margin-bottom: var(--section-gap);"
+    >
+      <div>
+        <h1
+          class="text-dashboard-title uppercase"
+        >
+          Marketing
+           
+          <span
+            class="text-status-action"
+          >
+            Dashboard
+          </span>
+        </h1>
+        <p
+          class="font-bold text-slate-400 tracking-tight mt-1.5"
+          style="font-size: var(--module-subtitle-size);"
+        >
+          Command Center • Precision Analytics Engine
+        </p>
+      </div>
+      <div
+        class="hidden md:flex items-center gap-3"
+      >
+        <div
+          class="hidden md:flex items-center gap-3 bg-white px-4 py-2 rounded-full border border-border shadow-sm"
+        >
+          <span
+            class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+          />
+          <span
+            class="text-micro-label text-emerald-600"
+          >
+            Protocol: Nominal
+          </span>
+        </div>
+      </div>
+    </header>
+    <div
+      class="flex flex-col"
+      style="gap: var(--section-gap);"
+    >
+      <div
+        class="grid grid-cols-1 lg:grid-cols-3 gap-[var(--card-gap)]"
+      >
+        <div
+          class="bento-card p-[var(--card-px)] bento-card-hover"
+        >
+          <div
+            class="flex justify-between items-center mb-6"
+          >
+            <h3
+              class="text-section-label"
+            >
+              I. ACQUISITION HUB
+            </h3>
+            <div
+              class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-primary border border-slate-100"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-target w-5 h-5"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="6"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="2"
+                />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="space-y-6"
+          >
+            <div>
+              <p
+                class="text-section-label mb-2"
+              >
+                Revenue Sales (MTD)
+              </p>
+              <p
+                class="text-primary-value text-brand-black tabular"
+              >
+                IDR 
+                250.000.000
+              </p>
+              <div
+                class="row-progress-bg mt-6"
+              >
+                <div
+                  class="row-progress-fill bg-primary"
+                  style="width: 71.42857142857143%;"
+                />
+              </div>
+              <div
+                class="flex justify-between mt-3 px-1"
+              >
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Target: 350M
+                </p>
+                <p
+                  class="text-micro-label text-primary"
+                >
+                  71.4
+                  %
+                </p>
+              </div>
+            </div>
+            <div
+              class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50"
+            >
+              <div
+                class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+              >
+                <p
+                  class="text-micro-label text-slate-400 mb-1"
+                >
+                  Clients
+                </p>
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  42
+                </p>
+              </div>
+              <div
+                class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+              >
+                <p
+                  class="text-micro-label text-slate-400 mb-1"
+                >
+                  Avg CPA
+                </p>
+                <p
+                  class="text-secondary-value text-primary tabular"
+                >
+                  IDR 
+                  85
+                  k
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bento-card p-[var(--card-px)] bento-card-hover border-emerald-100 bg-emerald-50/10"
+        >
+          <div
+            class="flex justify-between items-center mb-6"
+          >
+            <h3
+              class="text-section-label text-emerald-600"
+            >
+              II. FUNNEL EFFICIENCY
+            </h3>
+            <div
+              class="w-10 h-10 rounded-[24px] bg-white flex items-center justify-center text-emerald-500 border border-emerald-100 shadow-sm"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-trending-up w-5 h-5"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M16 7h6v6"
+                />
+                <path
+                  d="m22 7-8.5 8.5-5-5L2 17"
+                />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="space-y-6"
+          >
+            <div
+              class="flex justify-between items-center bg-white p-4 rounded-[24px] border border-emerald-100 shadow-sm"
+            >
+              <div>
+                <p
+                  class="text-micro-label text-emerald-600/60 mb-1"
+                >
+                  Leads
+                </p>
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  1200
+                </p>
+              </div>
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-arrow-right text-emerald-300 h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 12h14"
+                />
+                <path
+                  d="m12 5 7 7-7 7"
+                />
+              </svg>
+              <div
+                class="text-right"
+              >
+                <p
+                  class="text-micro-label text-emerald-600/60 mb-1"
+                >
+                  Samples
+                </p>
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  180
+                </p>
+              </div>
+            </div>
+            <div
+              class="pt-4 border-t border-emerald-100"
+            >
+              <div
+                class="flex justify-between items-end mb-2 px-1"
+              >
+                <p
+                  class="text-section-label text-emerald-600"
+                >
+                  Closing Rate
+                </p>
+                <p
+                  class="text-primary-value text-emerald-500 tabular"
+                >
+                  5.8
+                  %
+                </p>
+              </div>
+              <p
+                class="text-micro-label text-emerald-600/40"
+              >
+                Benchmark: 5.5%+
+              </p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bento-card p-[var(--card-px)] bento-card-hover"
+        >
+          <div
+            class="flex justify-between items-center mb-6"
+          >
+            <h3
+              class="text-section-label"
+            >
+              III. BUDGET AUDIT
+            </h3>
+            <div
+              class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-rose-500 border border-slate-100"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-credit-card w-5 h-5"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="14"
+                  rx="2"
+                  width="20"
+                  x="2"
+                  y="5"
+                />
+                <line
+                  x1="2"
+                  x2="22"
+                  y1="10"
+                  y2="10"
+                />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="space-y-6"
+          >
+            <div>
+              <p
+                class="text-section-label mb-1"
+              >
+                Burned Spend
+              </p>
+              <p
+                class="text-primary-value text-brand-black tabular"
+              >
+                IDR 
+                18.500.000
+              </p>
+              <div
+                class="flex items-center gap-2 mt-4 bg-slate-50 p-3 rounded-[24px] border border-slate-100"
+              >
+                <div
+                  class="w-2 h-2 rounded-full bg-primary animate-pulse"
+                />
+                <p
+                  class="text-micro-label text-slate-500"
+                >
+                  Utilization: 
+                  74
+                  %
+                </p>
+              </div>
+            </div>
+            <div
+              class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50"
+            >
+              <div
+                class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+              >
+                <p
+                  class="text-micro-label text-slate-400 mb-1"
+                >
+                  CPL Global
+                </p>
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  IDR 
+                  15.416
+                </p>
+              </div>
+              <div
+                class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+              >
+                <p
+                  class="text-micro-label text-slate-400 mb-1"
+                >
+                  Cost / Sample
+                </p>
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  IDR 
+                  102.777
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]"
+      >
+        <div
+          class="w-full bg-slate-50 rounded-3xl animate-pulse flex items-center justify-center"
+          style="height: 350px;"
+        >
+          <div
+            class="flex flex-col items-center gap-3 text-slate-300"
+          >
+            <svg
+              class="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span
+              class="text-[10px] font-bold uppercase tracking-widest"
+            >
+              Loading Chart
+            </span>
+          </div>
+        </div>
+        <div
+          class="w-full bg-slate-50 rounded-3xl animate-pulse flex items-center justify-center"
+          style="height: 350px;"
+        >
+          <div
+            class="flex flex-col items-center gap-3 text-slate-300"
+          >
+            <svg
+              class="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span
+              class="text-[10px] font-bold uppercase tracking-widest"
+            >
+              Loading Chart
+            </span>
+          </div>
+        </div>
+      </div>
+      <div
+        class="grid grid-cols-1 lg:grid-cols-3 gap-[var(--card-gap)]"
+      >
+        <div
+          class="lg:col-span-2 bento-card overflow-hidden"
+        >
+          <div
+            class="p-6 border-b border-slate-50 flex items-center gap-3 bg-slate-50/30"
+          >
+            <div
+              class="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-primary shadow-sm"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-zap h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+                />
+              </svg>
+            </div>
+            <h3
+              class="text-section-label"
+            >
+              VI. TOP LIST CONTENT LEADERS
+            </h3>
+          </div>
+          <div
+            class="p-0"
+          >
+            <table
+              class="w-full text-left border-collapse"
+            >
+              <thead
+                class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-slate-50/50"
+              >
+                <tr
+                  class="dark:hover:bg-slate-800/40 transition-colors h-[42px] hover:bg-transparent"
+                >
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header pl-6 py-4"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Judul Konten
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Kategori
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-center"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Views
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-right pr-6"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Engagement
+                      </span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
+              >
+                <tr
+                  class="dark:hover:bg-slate-800/40 h-[42px] hover:bg-slate-50/50 transition-colors border-slate-50"
+                >
+                  <td
+                    class="px-3.5 text-[12px] dark:text-slate-200 font-medium pl-6 py-4 text-brand-black uppercase"
+                  >
+                    AUREON LAUNCH
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-slate-400"
+                  >
+                    Reels
+                  </td>
+                  <td
+                    class="py-2 px-3.5 dark:text-slate-200 text-center font-bold text-sm text-brand-black tabular"
+                  >
+                    24.0
+                    k
+                  </td>
+                  <td
+                    class="py-2 px-3.5 dark:text-slate-200 text-right pr-6 font-bold text-emerald-500 text-base tabular"
+                  >
+                    4.2
+                    %
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div
+          class="bento-card p-[var(--card-px)] bento-card-hover"
+        >
+          <div
+            class="flex items-center gap-3 mb-6"
+          >
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-primary border border-slate-100"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-share2 lucide-share-2 h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="18"
+                  cy="5"
+                  r="3"
+                />
+                <circle
+                  cx="6"
+                  cy="12"
+                  r="3"
+                />
+                <circle
+                  cx="18"
+                  cy="19"
+                  r="3"
+                />
+                <line
+                  x1="8.59"
+                  x2="15.42"
+                  y1="13.51"
+                  y2="17.49"
+                />
+                <line
+                  x1="15.41"
+                  x2="8.59"
+                  y1="6.51"
+                  y2="10.49"
+                />
+              </svg>
+            </div>
+            <h3
+              class="text-section-label"
+            >
+              VII. VITALITAS KONTEN
+            </h3>
+          </div>
+          <div
+            class="grid grid-cols-2 gap-4"
+          >
+            <div
+              class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 mb-2"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-user-check w-4 h-4 text-primary"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m16 11 2 2 4-4"
+                  />
+                  <path
+                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                  />
+                  <circle
+                    cx="9"
+                    cy="7"
+                    r="4"
+                  />
+                </svg>
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Followers
+                </p>
+              </div>
+              <div
+                class="flex items-baseline gap-2"
+              >
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  120.000
+                </p>
+                <span
+                  class="text-micro-label text-emerald-500"
+                >
+                  +3.4%
+                </span>
+              </div>
+            </div>
+            <div
+              class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 mb-2"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-heart w-4 h-4 text-rose-500"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+                  />
+                </svg>
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Likes
+                </p>
+              </div>
+              <div
+                class="flex items-baseline gap-2"
+              >
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  8.4k
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 mb-2"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-message-square w-4 h-4 text-primary"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"
+                  />
+                </svg>
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Comments
+                </p>
+              </div>
+              <div
+                class="flex items-baseline gap-2"
+              >
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  320
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 mb-2"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-repeat2 lucide-repeat-2 w-4 h-4 text-emerald-500"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m2 9 3-3 3 3"
+                  />
+                  <path
+                    d="M13 18H7a2 2 0 0 1-2-2V6"
+                  />
+                  <path
+                    d="m22 15-3 3-3-3"
+                  />
+                  <path
+                    d="M11 6h6a2 2 0 0 1 2 2v10"
+                  />
+                </svg>
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Shares
+                </p>
+              </div>
+              <div
+                class="flex items-baseline gap-2"
+              >
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  190
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 mb-2"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-bookmark w-4 h-4 text-amber-500"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"
+                  />
+                </svg>
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Saves
+                </p>
+              </div>
+              <div
+                class="flex items-baseline gap-2"
+              >
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  410
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 mb-2"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-activity w-4 h-4 text-primary"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"
+                  />
+                </svg>
+                <p
+                  class="text-micro-label text-slate-400"
+                >
+                  Status
+                </p>
+              </div>
+              <div
+                class="flex items-baseline gap-2"
+              >
+                <p
+                  class="text-secondary-value text-brand-black tabular"
+                >
+                  OPTIMAL
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="bento-card overflow-hidden"
+      >
+        <div
+          class="p-6 border-b border-slate-50 flex items-center gap-3 bg-slate-50/30"
+        >
+          <div
+            class="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-primary shadow-sm"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-chart-pie h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"
+              />
+              <path
+                d="M21.21 15.89A10 10 0 1 1 8 2.83"
+              />
+            </svg>
+          </div>
+          <h3
+            class="text-section-label"
+          >
+            VIII. ADS PERFORMANCE DASHBOARD
+          </h3>
+        </div>
+        <div
+          class="grid grid-cols-1 lg:grid-cols-3"
+        >
+          <div
+            class="lg:col-span-2"
+          >
+            <table
+              class="w-full text-left border-collapse"
+            >
+              <thead
+                class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-slate-50/50"
+              >
+                <tr
+                  class="dark:hover:bg-slate-800/40 transition-colors h-[42px] hover:bg-transparent"
+                >
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header pl-8 py-4"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Platform Identity
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Total Spend
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-center"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Leads
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-center"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        CPL Efficiency
+                      </span>
+                    </div>
+                  </th>
+                  <th
+                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-right pr-8"
+                  >
+                    <div
+                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    >
+                      <span>
+                        Ad CPC
+                      </span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
+              >
+                <tr
+                  class="dark:hover:bg-slate-800/40 h-[42px] border-slate-50 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td
+                    class="px-3.5 text-[12px] dark:text-slate-200 font-medium pl-8 py-5 text-brand-black uppercase"
+                  >
+                    META
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-brand-black tabular"
+                  >
+                    IDR 
+                    12.000.000
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-brand-black tabular"
+                  >
+                    800
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-primary tabular"
+                  >
+                    IDR 
+                    15.000
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-right pr-8 text-slate-400 tabular"
+                  >
+                    IDR 
+                    1.200
+                  </td>
+                </tr>
+                <tr
+                  class="dark:hover:bg-slate-800/40 h-[42px] border-slate-50 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td
+                    class="px-3.5 text-[12px] dark:text-slate-200 font-medium pl-8 py-5 text-brand-black uppercase"
+                  >
+                    TIKTOK
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-brand-black tabular"
+                  >
+                    IDR 
+                    6.500.000
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-brand-black tabular"
+                  >
+                    400
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-primary tabular"
+                  >
+                    IDR 
+                    16.250
+                  </td>
+                  <td
+                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-right pr-8 text-slate-400 tabular"
+                  >
+                    IDR 
+                    950
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="w-full bg-slate-50 rounded-3xl animate-pulse flex items-center justify-center"
+            style="height: 350px;"
+          >
+            <div
+              class="flex flex-col items-center gap-3 text-slate-300"
+            >
+              <svg
+                class="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span
+                class="text-[10px] font-bold uppercase tracking-widest"
+              >
+                Loading Chart
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="grid grid-cols-2 md:grid-cols-4 gap-[var(--card-gap)]"
+      >
+        <div
+          class="bento-card p-[var(--card-px)] bento-card-hover flex items-center justify-between"
+        >
+          <div>
+            <p
+              class="text-section-label mb-2"
+            >
+              Meta Ads
+            </p>
+            <p
+              class="text-primary-value text-brand-black tabular"
+            >
+              420
+            </p>
+            <p
+              class="text-micro-label text-primary mt-1"
+            >
+              Verified Leads
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-sm bg-primary text-white"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-zap w-5 h-5"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+              />
+            </svg>
+          </div>
+        </div>
+        <div
+          class="bento-card p-[var(--card-px)] bento-card-hover flex items-center justify-between"
+        >
+          <div>
+            <p
+              class="text-section-label mb-2"
+            >
+              TikTok Ads
+            </p>
+            <p
+              class="text-primary-value text-brand-black tabular"
+            >
+              280
+            </p>
+            <p
+              class="text-micro-label text-primary mt-1"
+            >
+              Verified Leads
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-sm bg-slate-50 text-slate-300 border border-slate-100"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-package w-5 h-5"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"
+              />
+              <path
+                d="M12 22V12"
+              />
+              <polyline
+                points="3.29 7 12 12 20.71 7"
+              />
+              <path
+                d="m7.5 4.27 9 5.15"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Direksi DashboardPage (snapshot) > renders the loading skeleton state and matches snapshot 1`] = `
+<div
+  class="p-8 space-y-8 animate-pulse bg-slate-50/50 min-h-screen rounded-3xl"
+>
+  <div
+    class="h-20 w-1/3 bg-white rounded-2xl"
+  />
+  <div
+    class="grid grid-cols-3 gap-6"
+  >
+    <div
+      class="h-64 bg-white rounded-3xl shadow-sm"
+    />
+    <div
+      class="h-64 bg-white rounded-3xl shadow-sm"
+    />
+    <div
+      class="h-64 bg-white rounded-3xl shadow-sm"
+    />
+  </div>
+  <div
+    class="h-96 bg-white rounded-3xl shadow-sm"
+  />
+</div>
+`;

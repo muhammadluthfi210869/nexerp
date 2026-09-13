@@ -21,8 +21,14 @@ import {
   Bookmark,
   Package
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+} from "@/components/dna/DnaTable";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
@@ -267,26 +273,26 @@ export default function DashboardPage() {
                 <h3 className="text-section-label">VI. TOP LIST CONTENT LEADERS</h3>
              </div>
              <div className="p-0">
-                <Table>
-                   <TableHeader className="bg-slate-50/50">
-                      <TableRow className="hover:bg-transparent">
-                         <TableHead className="text-table-header pl-6 py-4">Judul Konten</TableHead>
-                         <TableHead className="text-table-header py-4">Kategori</TableHead>
-                         <TableHead className="text-table-header py-4 text-center">Views</TableHead>
-                         <TableHead className="text-table-header py-4 text-right pr-6">Engagement</TableHead>
-                      </TableRow>
-                   </TableHeader>
-                   <TableBody>
+                <DnaTable>
+                   <DnaTableHead className="bg-slate-50/50">
+                      <DnaTableRow className="hover:bg-transparent">
+                         <DnaTh className="text-table-header pl-6 py-4">Judul Konten</DnaTh>
+                         <DnaTh className="text-table-header py-4">Kategori</DnaTh>
+                         <DnaTh className="text-table-header py-4 text-center">Views</DnaTh>
+                         <DnaTh className="text-table-header py-4 text-right pr-6">Engagement</DnaTh>
+                      </DnaTableRow>
+                   </DnaTableHead>
+                   <DnaTableBody>
                       {audit.content.map((c: { id: string, title: string, category: string, views: number, engagement_rate: number }) => (
-                         <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-                            <TableCell className="pl-6 py-4 text-audit-body text-brand-black uppercase">{c.title}</TableCell>
-                            <TableCell className="text-micro-label text-slate-400">{c.category}</TableCell>
-                            <TableCell className="text-center font-bold text-sm text-brand-black tabular">{(c.views / 1000).toFixed(1)}k</TableCell>
-                            <TableCell className="text-right pr-6 font-bold text-emerald-500 text-base tabular">{c.engagement_rate}%</TableCell>
-                         </TableRow>
+                         <DnaTableRow key={c.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                            <DnaTd className="pl-6 py-4 text-audit-body text-brand-black uppercase">{c.title}</DnaTd>
+                            <DnaTd className="text-micro-label text-slate-400">{c.category}</DnaTd>
+                            <DnaTd className="text-center font-bold text-sm text-brand-black tabular">{(c.views / 1000).toFixed(1)}k</DnaTd>
+                            <DnaTd className="text-right pr-6 font-bold text-emerald-500 text-base tabular">{c.engagement_rate}%</DnaTd>
+                         </DnaTableRow>
                       ))}
-                   </TableBody>
-                </Table>
+                   </DnaTableBody>
+                </DnaTable>
              </div>
           </div>
 
@@ -330,28 +336,28 @@ export default function DashboardPage() {
          </div>
          <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2">
-               <Table>
-                  <TableHeader className="bg-slate-50/50">
-                     <TableRow className="hover:bg-transparent">
-                        <TableHead className="text-table-header pl-8 py-4">Platform Identity</TableHead>
-                        <TableHead className="text-table-header py-4">Total Spend</TableHead>
-                        <TableHead className="text-table-header py-4 text-center">Leads</TableHead>
-                        <TableHead className="text-table-header py-4 text-center">CPL Efficiency</TableHead>
-                        <TableHead className="text-table-header py-4 text-right pr-8">Ad CPC</TableHead>
-                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
+               <DnaTable>
+                  <DnaTableHead className="bg-slate-50/50">
+                     <DnaTableRow className="hover:bg-transparent">
+                        <DnaTh className="text-table-header pl-8 py-4">Platform Identity</DnaTh>
+                        <DnaTh className="text-table-header py-4">Total Spend</DnaTh>
+                        <DnaTh className="text-table-header py-4 text-center">Leads</DnaTh>
+                        <DnaTh className="text-table-header py-4 text-center">CPL Efficiency</DnaTh>
+                        <DnaTh className="text-table-header py-4 text-right pr-8">Ad CPC</DnaTh>
+                     </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                      {audit.platform_audit.map((p: { platform: string, spend: number, leads: number, cpl: number, cpc: number }) => (
-                        <TableRow key={p.platform} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
-                           <TableCell className="pl-8 py-5 text-audit-body text-brand-black uppercase">{p.platform}</TableCell>
-                           <TableCell className="text-audit-body text-brand-black tabular">IDR {p.spend.toLocaleString()}</TableCell>
-                           <TableCell className="text-center text-audit-body text-brand-black tabular">{p.leads}</TableCell>
-                           <TableCell className="text-center text-audit-body text-primary tabular">IDR {Math.round(p.cpl).toLocaleString()}</TableCell>
-                           <TableCell className="text-right pr-8 text-audit-body text-slate-400 tabular">IDR {Math.round(p.cpc).toLocaleString()}</TableCell>
-                        </TableRow>
+                        <DnaTableRow key={p.platform} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
+                           <DnaTd className="pl-8 py-5 text-audit-body text-brand-black uppercase">{p.platform}</DnaTd>
+                           <DnaTd className="text-audit-body text-brand-black tabular">IDR {p.spend.toLocaleString()}</DnaTd>
+                           <DnaTd className="text-center text-audit-body text-brand-black tabular">{p.leads}</DnaTd>
+                           <DnaTd className="text-center text-audit-body text-primary tabular">IDR {Math.round(p.cpl).toLocaleString()}</DnaTd>
+                           <DnaTd className="text-right pr-8 text-audit-body text-slate-400 tabular">IDR {Math.round(p.cpc).toLocaleString()}</DnaTd>
+                        </DnaTableRow>
                      ))}
-                  </TableBody>
-               </Table>
+                  </DnaTableBody>
+               </DnaTable>
             </div>
              <Suspense fallback={<ChartSkeleton height={350} />}>
                 <LazyAdSpendPieChart data={audit.platform_audit} />
