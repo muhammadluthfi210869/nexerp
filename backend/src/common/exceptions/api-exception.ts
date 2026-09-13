@@ -26,6 +26,8 @@ export class ApiException extends HttpException {
 /**
  * Convert to RFC 7807 Problem Details format.
  * Fields: type, title, status, detail, instance (all required by RFC 7807).
+ * Extension members (traceId, path, errors[]) are added by the caller via
+ * the returned object — the helper keeps its signature minimal.
  */
 export function toProblemDetails(
   status: number,
@@ -33,7 +35,7 @@ export function toProblemDetails(
   detail: string,
   instance: string,
   details?: any,
-) {
+): Record<string, unknown> {
   const TYPE_BASE = 'https://nexerp.dreamlab.id/errors/';
   return {
     type: `${TYPE_BASE}${code.toLowerCase().replace(/[:_]/g, '-')}`,
