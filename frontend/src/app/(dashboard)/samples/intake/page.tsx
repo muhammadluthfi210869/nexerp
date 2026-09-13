@@ -233,7 +233,7 @@ export default function LeadIntakePage() {
           <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormItem label="Lead Source" id="source" required>
-                <Select name="source" required>
+                <Select name="source">
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase"><SelectValue placeholder="SELECT" /></SelectTrigger>
                   <SelectContent className="font-black text-xs uppercase">{SOURCES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
@@ -242,7 +242,7 @@ export default function LeadIntakePage() {
                 <DnaInput id="productInterest" name="productInterest" required placeholder="e.g. SERUM" className="font-black uppercase text-xs" />
               </FormItem>
               <FormItem label="Product Vertical" id="category" required>
-                <Select name="category" required>
+                <Select name="category">
                   <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase"><SelectValue placeholder="SELECT" /></SelectTrigger>
                   <SelectContent className="font-black text-xs uppercase">
                     {["SKINCARE", "BODYCARE", "BABYCARE", "HAIRCARE", "DECORATIVE", "PARFUM"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
