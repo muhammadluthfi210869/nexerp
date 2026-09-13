@@ -65,6 +65,8 @@ export interface DnaStatCardProps {
   isSelected?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Extra HTML attrs forwarded to the root div (e.g. data-testid) */
+  [key: `data-${string}`]: string | undefined;
 }
 
 const VARIANT_STYLES: Record<string, {
@@ -169,6 +171,7 @@ export function DnaStatCard({
   onClick,
   isSelected,
   className,
+  ...rest
 }: DnaStatCardProps) {
   const styles = (variant && VARIANT_STYLES[variant]) || VARIANT_STYLES.neutral;
   const isInteractive = !!onClick;
@@ -185,6 +188,7 @@ export function DnaStatCard({
         isSelected && "ring-2 ring-blue-500 ring-offset-1",
         className
       )}
+      {...rest}
     >
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-normal text-slate-500">{displayLabel}</span>
