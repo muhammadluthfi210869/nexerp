@@ -26,8 +26,8 @@ import type { MarketingTask, MarketingTeamMember, MarketingViewer, TaskStatus } 
 
 const NEXT_STATUSES: Partial<Record<TaskStatus, TaskStatus[]>> = {
   NOT_STARTED: ["IN_PROGRESS"],
-  IN_PROGRESS: ["REVIEW"],
-  REVIEW: ["DONE"],
+  IN_PROGRESS: ["IN_REVIEW"],
+  IN_REVIEW: ["DONE"],
   REVISION: ["IN_PROGRESS"],
 };
 
@@ -47,7 +47,7 @@ function getStatusClass(status: TaskStatus) {
       return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case "IN_PROGRESS":
       return "bg-blue-50 text-blue-700 border-blue-200";
-    case "REVIEW":
+    case "IN_REVIEW":
       return "bg-amber-50 text-amber-700 border-amber-200";
     case "LATE":
       return "bg-rose-50 text-rose-700 border-rose-200";
@@ -116,7 +116,7 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
   // Fast-path status toggle
   const handleToggleTaskDone = async (task: MarketingTask, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (task.status !== "REVIEW") return;
+    if (task.status !== "IN_REVIEW") return;
     const nextStatus: TaskStatus = "DONE";
     try {
       await marketingService.updateTaskStatus(viewer, task.id, {
@@ -497,7 +497,7 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                             <button
                               type="button"
                               onClick={(e) => handleToggleTaskDone(task, e)}
-                              disabled={task.status !== "REVIEW"}
+                              disabled={task.status !== "IN_REVIEW"}
                               className={`w-4 h-4 rounded border flex items-center justify-center transition shrink-0 disabled:cursor-not-allowed disabled:opacity-45 ${
                                 isDone
                                   ? "bg-emerald-600 border-emerald-600 text-white"
@@ -543,7 +543,7 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                             onChange={(e) => handleInlineStatusChange(task, e.target.value as TaskStatus)}
                             className={`text-[10px] font-bold px-2 py-1 rounded-md border cursor-pointer focus:outline-none ${getStatusClass(task.status)}`}
                           >
-                            {allowedStatuses.map((status) => <option key={status} value={status}>{status === "REVIEW" ? "In Review" : status.replace("_", " ")}</option>)}
+                            {allowedStatuses.map((status) => <option key={status} value={status}>{status === "IN_REVIEW" ? "In Review" : status.replace("_", " ")}</option>)}
                           </select>
                         </td>
 
@@ -639,7 +639,7 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                             <button
                               type="button"
                               onClick={(e) => handleToggleTaskDone(task, e)}
-                              disabled={task.status !== "REVIEW"}
+                              disabled={task.status !== "IN_REVIEW"}
                               className={`w-4 h-4 rounded border flex items-center justify-center transition shrink-0 disabled:cursor-not-allowed disabled:opacity-45 ${
                                 isDone
                                   ? "bg-emerald-600 border-emerald-600 text-white"
@@ -691,7 +691,7 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                             onChange={(e) => handleInlineStatusChange(task, e.target.value as TaskStatus)}
                             className={`text-[10px] font-bold px-2 py-1 rounded-md border cursor-pointer focus:outline-none ${getStatusClass(task.status)}`}
                           >
-                            {allowedStatuses.map((status) => <option key={status} value={status}>{status === "REVIEW" ? "In Review" : status.replace("_", " ")}</option>)}
+                            {allowedStatuses.map((status) => <option key={status} value={status}>{status === "IN_REVIEW" ? "In Review" : status.replace("_", " ")}</option>)}
                           </select>
                         </td>
 

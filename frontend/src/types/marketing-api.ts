@@ -39,9 +39,11 @@ export type TaskType = "DAILY" | "PROJECT";
 export type TaskStatus =
   | "NOT_STARTED"
   | "IN_PROGRESS"
-  | "REVIEW"
+  | "IN_REVIEW"
+  | "REVISION"
   | "DONE"
   | "BLOCKED"
+  | "CANCELLED"
   | "LATE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -83,6 +85,18 @@ export interface TaskHistoryEntry {
   note?: string | null;
   changedById?: Uuid | null;
   createdAt: IsoDate;
+}
+
+export interface MarketingTeamMember {
+  id: Uuid;
+  userId?: Uuid | null;
+  name: string;
+  role: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  avatarBg?: string;
+  initial?: string;
 }
 
 export interface MarketingTask {
@@ -528,6 +542,10 @@ export interface IMarketingService {
   updateTask(viewer: MarketingViewer, taskId: Uuid, input: UpdateTaskInput): Promise<MarketingTask>;
   updateTaskStatus(viewer: MarketingViewer, taskId: Uuid, input: UpdateTaskStatusInput): Promise<MarketingTask>;
   updateChecklist(viewer: MarketingViewer, taskId: Uuid, itemId: Uuid, input: UpdateChecklistItemInput): Promise<MarketingTask>;
+  deleteTask(viewer: MarketingViewer, taskId: Uuid): Promise<void>;
+  // Members
+  listMembers(viewer: MarketingViewer): Promise<MarketingTeamMember[]>;
+  updateMember(viewer: MarketingViewer, memberId: Uuid, patch: Partial<MarketingTeamMember>): Promise<MarketingTeamMember>;
   // Comments
   listTaskComments(viewer: MarketingViewer, taskId: Uuid): Promise<TaskComment[]>;
   createTaskComment(viewer: MarketingViewer, taskId: Uuid, input: CreateTaskCommentInput): Promise<TaskComment>;

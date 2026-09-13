@@ -39,12 +39,12 @@ import type { MarketingTask, MarketingTeamMember, MarketingViewer, TaskStatus, T
 
 type ViewMode = "table" | "kanban" | "calendar";
 
-const KANBAN_STATUSES: TaskStatus[] = ["NOT_STARTED", "IN_PROGRESS", "REVIEW", "REVISION", "DONE"];
+const KANBAN_STATUSES: TaskStatus[] = ["NOT_STARTED", "IN_PROGRESS", "IN_REVIEW", "REVISION", "DONE"];
 
 const NEXT_STATUSES: Partial<Record<TaskStatus, TaskStatus[]>> = {
   NOT_STARTED: ["IN_PROGRESS"],
-  IN_PROGRESS: ["REVIEW"],
-  REVIEW: ["DONE"],
+  IN_PROGRESS: ["IN_REVIEW"],
+  IN_REVIEW: ["DONE"],
   REVISION: ["IN_PROGRESS"],
 };
 
@@ -54,7 +54,7 @@ function getStatusClass(status: TaskStatus) {
       return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case "IN_PROGRESS":
       return "bg-blue-50 text-blue-700 border-blue-200";
-    case "REVIEW":
+    case "IN_REVIEW":
       return "bg-amber-50 text-amber-700 border-amber-200";
     case "REVISION":
       return "bg-violet-50 text-violet-700 border-violet-200";
@@ -181,7 +181,7 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
 
   // Overall KPI calculations
   const total = filtered.length;
-  const active = filtered.filter((t) => ["IN_PROGRESS", "REVIEW", "NOT_STARTED"].includes(t.status)).length;
+  const active = filtered.filter((t) => ["IN_PROGRESS", "IN_REVIEW", "NOT_STARTED"].includes(t.status)).length;
   const late = filtered.filter((t) => t.status === "LATE" || (t.status !== "DONE" && new Date(t.dueDate) < new Date())).length;
   const done = filtered.filter((t) => t.status === "DONE").length;
   const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -190,7 +190,7 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   // Fast-path status toggle — uses canonical statusMutation (Idempotency-Key handled by hook)
   const handleToggleDone = async (task: MarketingTask, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (task.status !== "REVIEW") return;
+    if (task.status !== "IN_REVIEW") return;
     const nextStatus: TaskStatus = "DONE";
     try {
       await statusMutation.mutateAsync({ id: task.id, version: task.version, status: nextStatus });
@@ -357,7 +357,7 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
             <option value="all">Semua Status</option>
             <option value="NOT_STARTED">NOT STARTED</option>
             <option value="IN_PROGRESS">IN PROGRESS</option>
-            <option value="REVIEW">REVIEW</option>
+            <option value="IN_REVIEW">REVIEW</option>
             <option value="DONE">DONE</option>
             <option value="LATE">LATE</option>
           </select>
@@ -582,14 +582,14 @@ function TableView({
                       <button
                         type="button"
                         onClick={(e) => onToggleDone(task, e)}
-                        disabled={task.status !== "REVIEW"}
-                        aria-label={task.status === "REVIEW" ? "Tandai task selesai" : "Task harus melalui workflow sebelum selesai"}
+                        disabled={task.status !== "IN_REVIEW"}
+                        aria-label={task.status === "IN_REVIEW" ? "Tandai task selesai" : "Task harus melalui workflow sebelum selesai"}
                         className={`w-4 h-4 rounded border flex items-center justify-center transition shrink-0 disabled:cursor-not-allowed disabled:opacity-45 ${
                           isDone
                             ? "bg-emerald-600 border-emerald-600 text-white"
                             : "border-slate-300 hover:border-slate-500 bg-white"
                         }`}
-                        title={task.status === "REVIEW" ? "Tandai selesai" : "Task harus masuk Review sebelum selesai"}
+                        title={task.status === "IN_REVIEW" ? "Tandai selesai" : "Task harus masuk Review sebelum selesai"}
                       >
                         {isDone && <Check className="w-3 h-3 stroke-[3]" />}
                       </button>
@@ -665,7 +665,7 @@ function TableView({
                       className={`text-[10px] font-bold px-2 py-1 rounded-md border cursor-pointer focus:outline-none ${getStatusClass(task.status)}`}
                     >
                       {allowedStatuses.map((status) => (
-                        <option key={status} value={status}>{status === "REVIEW" ? "In Review" : status.replace("_", " ")}</option>
+                        <option key={status} value={status}>{status === "IN_REVIEW" ? "In Review" : status.replace("_", " ")}</option>
                       ))}
                     </select>
                   </td>

@@ -23,8 +23,8 @@ interface TaskDetailModalProps {
 
 const NEXT_STATUSES: Partial<Record<TaskStatus, TaskStatus[]>> = {
   NOT_STARTED: ["IN_PROGRESS"],
-  IN_PROGRESS: ["REVIEW"],
-  REVIEW: ["DONE"],
+  IN_PROGRESS: ["IN_REVIEW"],
+  IN_REVIEW: ["DONE"],
 };
 
 export default function TaskDetailModal({
@@ -194,7 +194,7 @@ export default function TaskDetailModal({
             >
               {[task.status, ...(NEXT_STATUSES[task.status] ?? [])].map((s) => (
                 <option key={s} value={s}>
-                  {s === "REVIEW" ? "IN REVIEW" : s.replace("_", " ")}
+                  {s === "IN_REVIEW" ? "IN REVIEW" : s.replace("_", " ")}
                 </option>
               ))}
             </select>
