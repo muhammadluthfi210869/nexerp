@@ -64,7 +64,7 @@ export function UtilityUsageWidget() {
                       </span>
                    </div>
                 </div>
-                <Progress value={(m.current / m.limit) * 100} className={`h-2 rounded-full bg-slate-50`} indicatorClassName={`${m.color}`} />
+                <Progress value={(m.current / m.limit) * 100} className={`h-2 rounded-full bg-slate-50`} />
              </div>
           </div>
         ))}
