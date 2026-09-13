@@ -47,7 +47,7 @@ export default function RootLayout({
         <ReactQueryProvider>
           <ActivityLogger />
           {children}
-          <Toaster position="top-right" richColors />
+          <Toaster position="top-right" />
         </ReactQueryProvider>
       </body>
     </html>
