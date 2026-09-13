@@ -39,6 +39,7 @@ services:
       META_PAGE_ACCESS_TOKEN: ${META_PAGE_ACCESS_TOKEN:-}
       META_PAGE_ID: ${META_PAGE_ID:-1359947222387450}
       META_IG_USER_ID: ${META_IG_USER_ID:-17841462584910741}
+      DREAMLAB_DATABASE_URL: ${DREAMLAB_DATABASE_URL:-}
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
@@ -46,6 +47,7 @@ services:
         condition: service_healthy
     networks:
       - erp_network
+      - dreamlab_default
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/system/health 2>/dev/null || exit 1"]
       interval: 30s
@@ -109,6 +111,9 @@ services:
 networks:
   erp_network:
     driver: bridge
+  dreamlab_default:
+    external: true
+    name: dreamlab-lead_default
 
 volumes:
   postgres_data:
