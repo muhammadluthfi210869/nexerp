@@ -4,7 +4,7 @@
 // mocked PrismaService. Real YAML load via the bundled alert-rules.yaml
 // in the same dir (loaded at module init via path.join(__dirname, ...)).
 
-import { AlertEngineService } from '@/modules/decision-support/alert-engine.service';
+import { AlertEngineService } from '../../../src/modules/decision-support/alert-engine.service';
 
 describe('AlertEngineService', () => {
   let service: AlertEngineService;
