@@ -30,7 +30,7 @@ describe('TaxTransactionsService', () => {
       },
       taxRate: { findUnique: jest.fn().mockResolvedValue(FAKE_RATE) },
     };
-    service = new TaxTransactionsService(prismaMock);
+    service = new TaxTransactionsService(prismaMock, { transition: jest.fn().mockResolvedValue({}) } as any);
   });
 
   describe('findAll', () => {

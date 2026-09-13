@@ -1,12 +1,17 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { StateEventTrigger } from '@prisma/client';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 type TaxStatus = 'ACCRUED' | 'REPORTED' | 'PAID';
 type TaxSource = 'BILL' | 'SALES_INVOICE' | 'PAYMENT';
 
 @Injectable()
 export class TaxTransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private stateMachine: StateMachineService,
+  ) {}
 
   async findAll(filter?: {
     taxTypeId?: string;
@@ -92,6 +97,8 @@ export class TaxTransactionsService {
 
   /**
    * Mark as REPORTED (submitted to tax authority).
+   * No state machine trigger — REPORTED is an internal workflow milestone,
+   * not a money movement. PAYMENT_SENT fires when the tax is actually paid.
    */
   async markReported(id: string, dto: { reportPeriod: string; notes?: string }) {
     const tx = await this.prisma.taxTransaction.findUnique({ where: { id } });
@@ -111,6 +118,9 @@ export class TaxTransactionsService {
 
   /**
    * Mark as PAID (tax settlement made).
+   * Emits PAYMENT_SENT on TAX_TRANSACTION entity so downstream
+   * listeners (cash flow recalc) can react.
+   * Ponytail: only PAID triggers — REPORTED is internal workflow, not money out.
    */
   async markPaid(id: string, dto: { paymentRef?: string; notes?: string }) {
     const tx = await this.prisma.taxTransaction.findUnique({ where: { id } });
@@ -118,7 +128,8 @@ export class TaxTransactionsService {
     if (tx.status !== 'REPORTED') {
       throw new BadRequestException(`Cannot mark PAID from ${tx.status}. Must be REPORTED first.`);
     }
-    return this.prisma.taxTransaction.update({
+
+    const updated = await this.prisma.taxTransaction.update({
       where: { id },
       data: {
         status: 'PAID',
@@ -128,6 +139,25 @@ export class TaxTransactionsService {
           : tx.notes,
       },
     });
+
+    // NOTE: orchestrator.transition() lives outside the prisma update —
+    // same pattern as DP/AP/AR/BankTx services. NO_DUAL_WRITE applies on
+    // (TAX_TRANSACTION id, PAYMENT_SENT) — repeat pay throws ConflictException.
+    await this.stateMachine.transition({
+      entityType: 'TAX_TRANSACTION',
+      entityId: id,
+      eventTrigger: StateEventTrigger.PAYMENT_SENT,
+      fromState: 'REPORTED',
+      toState: 'PAID',
+      reason: `Tax settlement paid ref=${dto.paymentRef ?? 'n/a'} amount=${tx.taxAmount}`,
+      metadata: {
+        taxTypeId: tx.taxTypeId,
+        taxAmount: Number(tx.taxAmount),
+        paymentRef: dto.paymentRef,
+      },
+    });
+
+    return updated;
   }
 
   /**
@@ -143,8 +173,7 @@ export class TaxTransactionsService {
     });
 
     const byTaxType: Record<
-      string,
-      { name: string; accrued: number; reported: number; paid: number; count: number }
+      string, { name: string; accrued: number; reported: number; paid: number; count: number }
     > = {};
 
     for (const t of txs) {
