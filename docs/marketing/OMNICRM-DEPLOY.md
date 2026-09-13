@@ -265,3 +265,100 @@ sudo docker compose -p production-light up -d --build backend
 The OmniCRM frontend lives under `/marketing/omnicrm/*` — if it 5xx's,
 users just see an empty page; existing routes (`/marketing/management-task`,
 `/marketing/social-tracker`, etc.) are unaffected.
+
+---
+
+## Round 2 Deploy Checklist (2026-09-13)
+
+8 atomic commits since Round 1: `e9f3082`, `18b7373`, `9496d16`, `aaf75fe`,
+`966477a`, `795d272`, `ec6caed`, plus this docs commit. Closes BUG #2
+(KPI first-response null), BUG #8 (no auto-assign), and adds 3 user-facing
+features: per-busdev reply rate, per-busdev filter on Buku Tamu, Visual DNA
+compliance on Overview/Guestbook/LeadDetail + sidebar cleanup.
+
+### Pre-deploy verification
+
+```bash
+# Backend tests (mandatory)
+cd backend && NODE_OPTIONS=--max-old-space-size=8192 npx jest src/modules/crm
+# Expected: 9 suites, 61 tests green (10 new tests in this round)
+
+# Frontend build (skip if emergency deploy still in effect)
+cd frontend && npm run build
+# Pre-existing TS errors in warehouse/Direksi files block clean build —
+# Phase 3 keeps `force-dynamic` emergency override active. Verify CRM
+# routes render under emergency mode.
+```
+
+### Deploy to VPS
+
+```bash
+git push origin phase-3
+gh pr create --base production-light --head phase-3 \
+  --title "feat(omnicrm): Round 2 — per-busdev reply rate + auto-assign + DNA compliance" \
+  --body "8 commits. Closes BUG #2 (KPI first-response null) + BUG #8 (no auto-assign). See docs/QA_GATE.md 2026-09-13-omnicrm-round2 entry."
+
+# After PR merge:
+ssh dreamlab@103.93.134.215
+cd /home/dreamlab/nexerp
+git pull origin production-light
+sudo docker compose -p production-light up -d --build backend frontend
+```
+
+### Round 2 Smoke Test
+
+```bash
+# D.8 (new): Per-busdev reply rate populates after first reply
+curl -s https://nexerp.id/api/crm/kpi/summary \
+  -H "Authorization: Bearer <jwt>" | jq '.replyRatePerBusdev | length'
+# Expected: ≥1 row if any leads have been replied to (B1→A1 flow).
+
+# D.9 (new): Auto-assign lands new leads on a busdev
+# 1. Visit https://dreamlab.id/ads/thankyou/google-ads/
+# 2. Click WA → triggers lead-svc-deploy → POST /api/crm/leads/ingest
+# 3. Curl leads list:
+curl -s 'https://nexerp.id/api/crm/leads/live?limit=5' \
+  -H "Authorization: Bearer <jwt>" | jq '[.[] | {id: .id, assignedToId: .assignedToId}]'
+# Expected: each row has non-null assignedToId (A2).
+
+# D.10 (new): Per-busdev filter on Buku Tamu page
+# Browser: https://nexerp.id/marketing/omnicrm/guestbook
+# Expected: BusDev dropdown present. Selecting a busdev reloads with
+# ?assignedToId=...&status=PENDING (B1).
+
+# D.11 (new): Visual DNA — Overview uses DnaCard/DnaDatePicker/DnaTable
+# Browser: https://nexerp.id/marketing/omnicrm
+# Expected: KPI cards render with onClick navigation (no Link wrapper),
+# filter bar inside a DnaCard, Live Capture table uses DnaTable primitives
+# (no raw <table>). Verify by inspecting elements.
+
+# D.12 (new): Sidebar — BUSDEV legacy 404 entries gone
+# Browser: open as a busdev persona
+# Expected: only 2 BUSDEV CRM entries (OmniCRM + Buku Tamu) — not 6.
+```
+
+### Rollback (Round 2)
+
+Same as Round 1 (section F). Round 2 changes are additive — no DB
+migration in this round. To roll back UI only:
+
+```bash
+git revert ec6caed 795d272 966477a aaf75fe  # frontend-only commits
+sudo docker compose -p production-light up -d --build frontend
+# Backend commits stay: reply endpoint, auto-assign, per-busdev KPI are
+# additive and safe to leave enabled.
+```
+
+### Known follow-ups (deferred from Round 2)
+
+- **BUG #1 `LostDealsService.create()` broken** — `tx.salesLead.update()` on
+  a non-existent model. Dead code, no callers. File:
+  `backend/src/modules/crm/lost-deals/lost-deals.service.ts:25`. Fix in
+  Round 3 — replace with `tx.crmLead.update({ stage: 'CLOSED_LOST', lostAt: ... })`.
+- **`CrmKpiWindow` enum unused** — declared in `enums.prisma` but zero
+  references. Defer to Round 3 schema cleanup.
+- **Live VPS curl-verify of Round 2 features** — must run after deploy to
+  VPS to confirm what is actually live vs. in working tree.
+- **Working tree risk** — `Sidebar.tsx`, `marketing-service.ts`,
+  `marketing-api.ts`, `app/layout.tsx` all show `M` in `git status` from
+  pre-existing Phase 3 work. Resolve (commit or stash) before Round 2 deploy.
