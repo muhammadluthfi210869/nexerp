@@ -4,15 +4,15 @@
 // Replaces the 5-tab UI. Layout (top-down, audit-friendly):
 //   1. 4 KPI cards (Leads Today, Buku Tamu Pending, Reply Rate, Avg First Response)
 //      Each clickable → drill-down route
-//   2. Filter bar (date range + BusDev + Source + Buku Tamu Status)
+//   2. Filter bar (Bulan+Tahun dropdowns + BusDev + Source + Buku Tamu Status)
+//      Auto-fires on change; no Apply button. 30s auto-refresh.
 //   3. Live capture table (Time | ID | Name | Phone | Source | Page | BusDev | Stage | Buku Tamu | Action)
 //      Each row clickable → /marketing/omnicrm/leads/:id
 //
 // RBAC: DIGIMAR role auto-scoped to assignedToId=self via applyRbacScope().
-// Auto-refresh every 30s.
 // All UI components from @/components/dna (no shadcn, no custom cards).
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -22,7 +22,7 @@ import {
   DnaBadge,
   DnaButton,
   DnaSearchableSelect,
-  DnaDatePicker,
+  DnaSelect,
   DnaCard,
   DnaTable,
   DnaTableHead,
@@ -32,6 +32,7 @@ import {
   DnaTd,
   DnaTdNumber,
   DnaTdCode,
+  dnaToastApi,
   type DnaSelectOption,
 } from "@/components/dna";
 
@@ -61,8 +62,18 @@ interface KpiSummary {
   bukuTamuPending: number;
 }
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+const MONTHS = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+];
+const YEARS = [2025, 2026, 2027];
+
+function monthBounds(bulan: number, tahun: number): { from: string; to: string } {
+  const start = new Date(tahun, bulan - 1, 1);
+  const end = new Date(tahun, bulan, 0); // day 0 of next month = last day of bulan
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return { from: fmt(start), to: fmt(end) };
 }
 
 function fmtPct(n: number): string {
@@ -77,8 +88,9 @@ function fmtTime(iso: string): string {
 
 export function CrmOverviewClient() {
   const router = useRouter();
-  const [from, setFrom] = useState<string>(todayIso());
-  const [to, setTo] = useState<string>(todayIso());
+  const now = useMemo(() => new Date(), []);
+  const [bulan, setBulan] = useState<number>(now.getMonth() + 1);
+  const [tahun, setTahun] = useState<number>(now.getFullYear());
   const [busdevId, setBusdevId] = useState<string>("");
   const [source, setSource] = useState<string>("");
   const [bukuTamuStatus, setBukuTamuStatus] = useState<BukuTamuStatus | "">("");
@@ -90,34 +102,64 @@ export function CrmOverviewClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadAll = async () => {
-    setError(null);
-    try {
-      const params: Record<string, string> = { from, to, limit: "200" };
-      if (busdevId) params.assignedToId = busdevId;
-      if (source) params.source = source;
-      if (bukuTamuStatus) params.bukuTamuStatus = bukuTamuStatus;
+  // Derive from/to from bulan+tahun (local date range).
+  const { from, to } = useMemo(() => monthBounds(bulan, tahun), [bulan, tahun]);
 
+  // Latest values reachable from auto-refresh without re-creating interval.
+  const filterRef = useRef({ from, to, busdevId, source, bukuTamuStatus });
+  filterRef.current = { from, to, busdevId, source, bukuTamuStatus };
+
+  const loadAll = useCallback(async () => {
+    setError(null);
+    const { from: f, to: t, busdevId: b, source: s, bukuTamuStatus: bts } = filterRef.current;
+    try {
+      const params: Record<string, string> = { from: f, to: t, limit: "200" };
+      if (b) params.assignedToId = b;
+      if (s) params.source = s;
+      if (bts) params.bukuTamuStatus = bts;
+
+      // Parallel but isolated: each Promise has its own .catch so one failure
+      // doesn't blank the whole UI. Busdevs are static-ish, fetch once.
       const [leadsRes, busdevsRes, kpiRes] = await Promise.all([
-        api.get<LiveLead[]>("/crm/leads/live", { params }),
-        api.get<BusDev[]>("/crm/busdevs", { params: { isActive: "true" } }),
-        api.get<KpiSummary>("/crm/kpi/summary"),
+        api.get<LiveLead[]>("/crm/leads/live", { params }).catch((e) => {
+          if (e?.response?.status === 401 || e?.response?.status === 403) {
+            dnaToastApi.error({ title: "Sesi berakhir", description: "Silakan login ulang." });
+            return { data: [] as LiveLead[] };
+          }
+          throw e;
+        }),
+        api.get<BusDev[]>("/crm/busdevs", { params: { isActive: "true" } }).catch((e) => {
+          if (e?.response?.status === 401 || e?.response?.status === 403) {
+            dnaToastApi.error({ title: "Sesi berakhir", description: "Silakan login ulang." });
+            return { data: [] as BusDev[] };
+          }
+          throw e;
+        }),
+        api.get<KpiSummary>("/crm/kpi/summary").catch((e) => {
+          if (e?.response?.status === 401 || e?.response?.status === 403) {
+            dnaToastApi.error({ title: "Sesi berakhir", description: "Silakan login ulang." });
+            return { data: null };
+          }
+          throw e;
+        }),
       ]);
       setLeads(leadsRes.data);
       setBusdevs(busdevsRes.data);
-      setKpi(kpiRes.data);
+      if (kpiRes.data) setKpi(kpiRes.data);
     } catch (e: any) {
       setError(e?.message ?? "Gagal memuat data");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadAll(); }, [from, to, busdevId, source, bukuTamuStatus]);
+  // Single effect: immediate load on filter change + 30s auto-refresh.
   useEffect(() => {
-    const t = setInterval(loadAll, 30_000);
-    return () => clearInterval(t);
-  }, [from, to, busdevId, source, bukuTamuStatus]);
+    loadAll();
+    const id = setInterval(loadAll, 30_000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bulan, tahun, busdevId, source, bukuTamuStatus]);
 
   // Client-side search filter (server already filtered by from/to/busdev/source/bukuTamuStatus)
   const filteredLeads = useMemo(() => {
@@ -130,10 +172,13 @@ export function CrmOverviewClient() {
     );
   }, [leads, search]);
 
+  // Filter dropdown to only busdevs with valid userId. Backend's
+  // CrmLead.assignedToId is always a User.id (round-robin uses bussdevStaff.userId),
+  // so busdevs without a userId would silently return empty when selected.
   const busdevOptions: DnaSelectOption[] = useMemo(
     () => [
       { value: "", label: "Semua BusDev" },
-      ...busdevs.map((b) => ({ value: b.id, label: b.name })),
+      ...busdevs.filter((b) => b.userId).map((b) => ({ value: b.userId as string, label: b.name })),
     ],
     [busdevs],
   );
@@ -190,23 +235,25 @@ export function CrmOverviewClient() {
         />
       </section>
 
-      {/* FILTER BAR — DnaCard + DnaDatePicker replace raw <section> + <input type="date"> (B3) */}
+      {/* FILTER BAR — Bulan+Tahun dropdowns replace date range (per user request) */}
       <DnaCard variant="default" padding="md" data-testid="overview-filter-bar">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Dari</label>
-            <DnaDatePicker
-              value={from}
-              onChange={setFrom}
-              data-testid="overview-filter-from"
+          <div className="flex min-w-[140px] flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Bulan</label>
+            <DnaSelect
+              value={String(bulan)}
+              onChange={(v) => setBulan(Number(v))}
+              options={MONTHS.map((m, i) => ({ value: String(i + 1), label: m }))}
+              data-testid="overview-filter-bulan"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Sampai</label>
-            <DnaDatePicker
-              value={to}
-              onChange={setTo}
-              data-testid="overview-filter-to"
+          <div className="flex min-w-[110px] flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Tahun</label>
+            <DnaSelect
+              value={String(tahun)}
+              onChange={(v) => setTahun(Number(v))}
+              options={YEARS.map((y) => ({ value: String(y), label: String(y) }))}
+              data-testid="overview-filter-tahun"
             />
           </div>
           <div className="flex min-w-[200px] flex-col gap-1">
