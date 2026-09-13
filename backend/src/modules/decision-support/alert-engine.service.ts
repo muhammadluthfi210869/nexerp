@@ -14,8 +14,6 @@ import * as path from 'node:path';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import {
   AlertRule,
-  AlertRuleMetric,
-  AlertComparator,
   TriggeredAlert,
 } from './alert-rules.types';
 
@@ -34,7 +32,6 @@ function parseAlertRules(src: string): YamlConfig {
   let cur: Partial<AlertRule> | null = null;
   let inRecipients = false;
   let curRecipient: Record<string, string> | null = null;
-  let listIndent = -1;
 
   const flushRecipient = () => {
     if (cur && curRecipient) {
