@@ -571,8 +571,15 @@ export class CanonicalMarketingService {
 
   async listMembers(viewer?: MarketingViewer) {
     if (viewer) ensureMarketingTaskRole(viewer);
+    // Filter to marketing team only (defense-in-depth: even if isActive=true was set on stale
+    // admin/busdev rows from earlier seeds, we exclude them here). Marketing-relevant
+    // departments are an allow-list; super-admin / admin role rows are excluded by name.
     const members = await this.prisma.marketingTeamMember.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        department: { in: ['Digital Marketing', 'Digital Strategy', 'Social Media', 'Design & Visual', 'Production'] },
+        NOT: { role: { contains: 'Admin' } },
+      },
       orderBy: { name: 'asc' },
     });
     return members.map((m) => ({
