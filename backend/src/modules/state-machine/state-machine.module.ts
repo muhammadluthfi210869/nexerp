@@ -17,6 +17,7 @@ import { JournalPostedListener } from './listeners/journal-posted.listener';
   providers: [
     StateMachineService,
     PeriodLockedListener,
+    ApprovalGrantedListener,
   ],
   exports: [StateMachineService],
 })
