@@ -93,10 +93,9 @@ export class KpiController {
   leaderboard(
     @Query() query: { from?: string; to?: string; limit?: string },
   ) {
-    const limit = Math.min(
-      100,
-      Math.max(1, parseInt(query.limit ?? '10', 10) || 10),
-    );
+    const parsed = query.limit !== undefined ? parseInt(query.limit, 10) : 10;
+    const safe = Number.isFinite(parsed) ? parsed : 10;
+    const limit = Math.min(100, Math.max(1, safe));
     return this.kpi.topPerformers(this.parsePeriod(query), limit);
   }
 }
