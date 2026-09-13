@@ -1,0 +1,4 @@
+# Force LF for shell scripts — git's core.autocrlf=true on Windows would
+# otherwise reintroduce CRLF, breaking busybox sh on Alpine containers.
+backend/init-db.sh text eol=lf
+*.sh text eol=lf
