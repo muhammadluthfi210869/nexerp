@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { StateEventTrigger } from '@prisma/client';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class BankAccountsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private stateMachine: StateMachineService,
+  ) {}
 
   async findAll() {
     return this.prisma.bankAccount.findMany({
@@ -122,9 +127,17 @@ export class BankAccountsService {
       return { account, message: 'Already balanced' };
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    // Wave 2/A5 — record direction-based state transition so downstream
+    // listeners (AR/AP balance recalc) can react. Ponytail: direction
+    // derived inline; trivial 1-branch.
+    const trigger =
+      diff > 0
+        ? StateEventTrigger.PAYMENT_RECEIVED
+        : StateEventTrigger.PAYMENT_SENT;
+
+    const result = await this.prisma.$transaction(async (tx) => {
       // Record the reconciliation adjustment
-      await tx.bankTransaction.create({
+      const bankTx = await tx.bankTransaction.create({
         data: {
           bankAccountId: id,
           date: new Date(),
@@ -140,7 +153,24 @@ export class BankAccountsService {
         data: { currentBalance: dto.actualBalance },
       });
 
-      return updated;
+      return { updated, bankTxId: bankTx.id };
     });
+
+    // NOTE: orchestrator.transition() lives outside the $transaction (same
+    // pattern as DP/AP/AR/BankTx services). NO_DUAL_WRITE applies on
+    // (BANK_ACCOUNT id, trigger) — repeated reconcile with same direction
+    // will throw ConflictException, which is the correct invariant.
+    await this.stateMachine.transition({
+      entityType: 'BANK_ACCOUNT',
+      entityId: id,
+      eventTrigger: trigger,
+      fromState: null,
+      toState: diff > 0 ? 'BALANCE_UP' : 'BALANCE_DOWN',
+      userId,
+      reason: `Reconcile ${account.accountCode}: diff=${diff}`,
+      metadata: { diff, actualBalance: dto.actualBalance, adjustmentTxId: result.bankTxId },
+    });
+
+    return result.updated;
   }
 }

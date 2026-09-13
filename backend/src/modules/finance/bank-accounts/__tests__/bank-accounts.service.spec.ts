@@ -32,7 +32,7 @@ describe('BankAccountsService', () => {
       account: { findUnique: jest.fn().mockResolvedValue({ id: 'gl-1', code: '1201' }) },
       $transaction: jest.fn(),
     };
-    service = new BankAccountsService(prismaMock);
+    service = new BankAccountsService(prismaMock, { transition: jest.fn().mockResolvedValue({}) } as any);
   });
 
   describe('findAll', () => {
