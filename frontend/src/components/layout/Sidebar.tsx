@@ -119,6 +119,15 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     items: []
   },
   {
+    id: "dm-comm",
+    title: "Communications",
+    groupLabel: "KOMUNIKASI",
+    icon: MessageSquare,
+    isDirect: true,
+    href: "/communications",
+    items: []
+  },
+  {
     id: "dm-social-brands",
     title: "Social Media",
     groupLabel: "SOCIAL MEDIA & BRANDS",
@@ -460,6 +469,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Dashboard Executive", href: "/executive/dashboard", icon: LayoutDashboard },
       { name: "Dashboard Notifikasi", href: "/reports/notifications", icon: Bell, badge: "LIVE", badgeVariant: "warning" },
       { name: "KPI Management", href: "/master/kpi-department", icon: Gauge, badge: "KPI", badgeVariant: "info" },
+    { name: "Communications", href: "/communications", icon: MessageSquare, badge: "NEW", badgeVariant: "info" },
       { name: "Project Control", href: "/samples/project-control", icon: Kanban },
       { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
       { name: "Dashboard Busdev", href: "/bussdev/dashboard", icon: Activity },

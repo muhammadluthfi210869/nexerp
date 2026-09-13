@@ -206,3 +206,15 @@ export {
   DnaDateRangePicker,
 } from "./DnaExtras";
 export type { DnaAlertVariant, DnaAttachmentItem, KanbanItem } from "./DnaExtras";
+
+// ── WAVE 3 D1.COMMS: Communications thread UI (Phase 3) ──
+export { DnaMention } from "./DnaMention";
+export type { DnaMentionProps } from "./DnaMention";
+export { DnaAttach } from "./DnaAttach";
+export type { DnaAttachProps } from "./DnaAttach";
+export { DnaComposer } from "./DnaComposer";
+export type { DnaComposerProps } from "./DnaComposer";
+export { DnaThread } from "./DnaThread";
+export type { DnaThreadProps } from "./DnaThread";
+export { DnaNotificationCenter } from "./DnaNotificationCenter";
+export type { DnaNotificationCenterProps } from "./DnaNotificationCenter";
