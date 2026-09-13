@@ -177,9 +177,9 @@ export class LeadsService {
 
   /**
    * Mark the first time a busdev sent an outbound reply to this lead.
-   * Idempotent: firstOutboundAt is only set on the first call; lastOutboundAt
-   * always advances. Writes a LeadAudit row with action OUTBOUND_REPLY.
-   * Unblocks KPI avg-first-response + per-busdev reply rate (BUG #2).
+   * Idempotent: firstOutboundAt and firstResponseAt are only set on the first
+   * call; lastOutboundAt always advances. Writes a LeadAudit row with action
+   * OUTBOUND_REPLY. Unblocks KPI avg-first-response + per-busdev reply rate.
    */
   async markFirstOutbound(id: string, actorId?: string): Promise<CrmLead> {
     const existing = await this.getById(id);
@@ -189,6 +189,7 @@ export class LeadsService {
         where: { id },
         data: {
           ...(existing.firstOutboundAt ? {} : { firstOutboundAt: now }),
+          ...(existing.firstResponseAt ? {} : { firstResponseAt: now }),
           lastOutboundAt: now,
         },
       });

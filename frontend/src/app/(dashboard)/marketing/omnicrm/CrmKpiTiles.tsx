@@ -186,7 +186,7 @@ export function CrmKpiTiles() {
         <h3 className="mb-3 text-sm font-semibold">Round Robin Distribution — Dreamlab <span className="text-xs font-normal text-muted-foreground">(historis · semua waktu)</span></h3>
         {historicalError && !historical ? (
           <p className="text-xs text-muted-foreground" data-testid="kpi-round-robin-historical-error">
-            Data dreamlab belum tersedia ({historicalError}). Set <code>DREAMLAB_DATABASE_URL</code> di backend env untuk mengaktifkan.
+            Distribusi historis belum tersedia ({historicalError}). Hubungi admin untuk aktivasi sinkronisasi Dreamlab.
           </p>
         ) : !historical ? (
           <p className="text-xs text-muted-foreground">Memuat data dreamlab…</p>
