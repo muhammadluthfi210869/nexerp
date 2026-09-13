@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, StateEventTrigger } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class BillsService {
   constructor(
     private prisma: PrismaService,
     private gate: FinanceGateHelper,
+    private stateMachine: StateMachineService,
   ) {}
 
   async findAll(filter?: { vendorId?: string; status?: PaymentStatus }) {
@@ -125,6 +127,23 @@ export class BillsService {
 
     // Gate: period must be open
     await this.gate.assertPeriodOpen(new Date(), 'BILL-POST');
+
+    // Wave 2/A5 — record JOURNAL_POSTED transition BEFORE entity update.
+    // NO_DUAL_WRITE via DB unique index on (entityId, eventTrigger).
+    await this.stateMachine.transition({
+      entityType: 'BILL',
+      entityId: id,
+      eventTrigger: StateEventTrigger.JOURNAL_POSTED,
+      fromState: 'DRAFT',
+      toState: 'POSTED',
+      userId,
+      reason: `Bill ${bill.billNumber} from ${bill.vendor.name ?? bill.vendorId}`,
+      metadata: {
+        billNumber: bill.billNumber,
+        vendorId: bill.vendorId,
+        grandTotal: Number(bill.grandTotal),
+      },
+    });
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.bill.update({
