@@ -22,7 +22,6 @@ $marketingPaths = @(
   "backend/package-lock.json",
   "backend/src/modules/marketing",
   "backend/src/modules/analytics/services/analytics.service.ts",
-  "backend/data/marketing-prototype-state.json",
   "backend/init-db.sh",
   "backend/prisma/seed-master.ts",
   "backend/prisma/migrations",
