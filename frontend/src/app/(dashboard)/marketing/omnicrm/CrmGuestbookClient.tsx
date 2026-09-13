@@ -5,7 +5,7 @@
 //
 // B1 — per-busdev filter via DnaSearchableSelect (mirrors Overview pattern).
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import {
   DnaBadge,
@@ -44,7 +44,7 @@ export function CrmGuestbookClient() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDecision, setPendingDecision] = useState<{ id: string; decision: "APPROVED" | "REJECTED" } | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
     Promise.all([
       api.get<GuestbookEvent[]>("/crm/guestbook/events", {
@@ -58,9 +58,9 @@ export function CrmGuestbookClient() {
       })
       .catch((e) => setError(e?.message ?? "Gagal memuat buku tamu"))
       .finally(() => setLoading(false));
-  };
+  }, [busdevId]);
 
-  useEffect(load, [busdevId]);
+  useEffect(() => { load(); }, [load]);
 
   const decide = async (id: string, decision: "APPROVED" | "REJECTED") => {
     setBusyId(id);
@@ -85,10 +85,13 @@ export function CrmGuestbookClient() {
     }
   };
 
+  // Filter dropdown to only busdevs with valid userId. Backend expects User.id
+  // (matches Overview convention) — busdevs without a User link silently
+  // return empty results when selected.
   const busdevOptions: DnaSelectOption[] = useMemo(
     () => [
       { value: "", label: "Semua BusDev" },
-      ...busdevs.map((b) => ({ value: b.id, label: b.name })),
+      ...busdevs.filter((b) => b.userId).map((b) => ({ value: b.userId as string, label: b.name })),
     ],
     [busdevs],
   );
