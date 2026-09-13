@@ -265,7 +265,7 @@ export function MarketingModuleSidebar({
 
               <div className="space-y-0.5 mt-1">
                 {members.map((m, idx) => {
-                  const mSlug = slug(m.fullName);
+                  const mSlug = slug(m.name);
                   const isSelected = activeMemberSlug === mSlug;
                   const mTasks = tasks.filter((t) => t.assigneeId === m.id);
                   const mDone = mTasks.filter((t) => t.status === "DONE").length;
@@ -289,10 +289,10 @@ export function MarketingModuleSidebar({
                           className="w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] text-slate-800 shrink-0 border border-slate-200 shadow-2xs"
                           style={{ backgroundColor: bgCol }}
                         >
-                          {m.fullName.charAt(0).toUpperCase()}
+                          {(m.name ?? m.initial ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="truncate leading-tight font-medium text-[11px]">
-                          {m.fullName}
+                          {m.name}
                         </span>
                       </div>
 
@@ -351,12 +351,12 @@ export function MarketingModuleSidebar({
                         className="w-6 h-6 rounded-lg text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-2xs"
                         style={{ backgroundColor: brand.accentToken || "#3b82f6" }}
                       >
-                        {brand.name.charAt(0).toUpperCase()}
+                        {(brand.name ?? '?').charAt(0).toUpperCase()}
                       </div>
                       <div className="truncate">
                         <div className="text-xs font-bold truncate leading-tight">{brand.name}</div>
                         <div className="text-[10px] text-slate-400 font-normal truncate">
-                          {brand.code || `@${brand.name.toLowerCase()}`}
+                          {brand.code || `@${(brand.name ?? '').toLowerCase()}`}
                         </div>
                       </div>
                     </div>

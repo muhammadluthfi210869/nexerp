@@ -75,12 +75,17 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   // Canonical API hooks (replace imperative marketingService + localStorage persistence)
   const tasksQuery = useMarketingTasks({ page: 1, limit: 100 });
   const membersQuery = useMarketingMembers();
-  // ponytail: hook returns lean MarketingMember ({fullName}); adapt to MarketingTeamMember
+  // ponytail: hook returns canonical MarketingMember ({name, role}); pass-through since MarketingTeamMember
+  // requires the same shape plus avatarBg/initial/department which the API also provides.
   const members: MarketingTeamMember[] = useMemo(() => (membersQuery.data ?? []).map((m) => ({
     id: m.id,
-    name: m.fullName,
+    userId: m.userId ?? undefined,
+    name: m.name,
     email: m.email,
-    role: m.roles?.[0] ?? "MEMBER",
+    role: m.role,
+    avatarBg: m.avatarBg,
+    initial: m.initial,
+    department: m.department,
   })), [membersQuery.data]);
   // ponytail: hook types are leaner than marketing-api; cast to canonical shape (runtime data has all fields).
   const tasks: MarketingTask[] = useMemo(() => (tasksQuery.data?.data ?? []) as MarketingTask[], [tasksQuery.data]);

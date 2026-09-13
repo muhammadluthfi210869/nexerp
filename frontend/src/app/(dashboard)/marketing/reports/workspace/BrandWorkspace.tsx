@@ -127,17 +127,17 @@ export default function BrandWorkspace({
 
   // Persistent Data States with localStorage
   // Wire members to canonical API (no local mutation — server-owned)
-  // ponytail: hook returns lean MarketingMember shape ({fullName}); richer fields stay empty.
+  // ponytail: hook returns canonical MarketingMember shape ({name, role, avatarBg, initial, department}); pass-through.
   const { data: membersData } = useMarketingMembers();
   const members: Member[] = useMemo(() => (membersData ?? []).map((m) => ({
     id: m.id,
-    name: m.fullName,
-    role: m.roles?.[0] ?? 'MEMBER',
+    name: m.name,
+    role: m.role || 'MEMBER',
     email: m.email,
-    phone: '',
-    avatarBg: 'bg-slate-500',
-    initial: m.fullName.charAt(0).toUpperCase(),
-    department: '',
+    phone: m.phone ?? '',
+    avatarBg: m.avatarBg ?? '#e8eef6',
+    initial: (m.initial ?? m.name ?? '?').charAt(0).toUpperCase(),
+    department: m.department ?? '',
   })), [membersData]);
 
   // Wire brands to canonical API (local mutation no-op until useCreateBrand hook lands)
@@ -223,13 +223,14 @@ export default function BrandWorkspace({
   const [editingWeeklyData, setEditingWeeklyData] = useState<WeeklyReportData | null>(null);
 
   const currentBrand = useMemo(() => {
+    const target = (activeBrandName ?? '').toLowerCase();
     return (
-      brands.find(b => b.name.toLowerCase() === activeBrandName.toLowerCase()) || 
+      brands.find(b => (b.name ?? '').toLowerCase() === target) ||
       brands[0] || {
         id: 'b1',
         name: activeBrandName,
         handle: activeBrandName === 'Toribio' ? '@toribio.skincare' : '@dreamlab.workspace',
-        initial: activeBrandName.charAt(0),
+        initial: (activeBrandName ?? '?').charAt(0),
         color: activeBrandName === 'Toribio' ? '#ec4899' : '#1264d3',
         primaryPlatform: 'Instagram & TikTok',
         pic: 'Revita',
@@ -238,9 +239,9 @@ export default function BrandWorkspace({
     );
   }, [brands, activeBrandName]);
 
-  const currentReportKey = `${currentBrand.name.toLowerCase()}-${selectedPeriod.replace(/\s+/g, '-').toLowerCase()}`;
-  const currentReport = reports[currentReportKey] || reports[currentBrand.name.toLowerCase()];
-  const previousReportKey = `${currentBrand.name.toLowerCase()}-agustus-2026`;
+  const currentReportKey = `${(currentBrand.name ?? '').toLowerCase()}-${selectedPeriod.replace(/\s+/g, '-').toLowerCase()}`;
+  const currentReport = reports[currentReportKey] || reports[(currentBrand.name ?? '').toLowerCase()];
+  const previousReportKey = `${(currentBrand.name ?? '').toLowerCase()}-agustus-2026`;
   const previousReport = reports[previousReportKey];
 
   // Post handlers
@@ -268,11 +269,12 @@ export default function BrandWorkspace({
 
   // Metric update handler
   const handleSaveReportMetrics = (updatedReport: BrandReport) => {
-    const key = `${updatedReport.brandId.toLowerCase()}-${(updatedReport.monthYear || selectedPeriod).replace(/\s+/g, '-').toLowerCase()}`;
+    const brandKey = (updatedReport.brandId ?? '').toLowerCase();
+    const key = `${brandKey}-${(updatedReport.monthYear || selectedPeriod).replace(/\s+/g, '-').toLowerCase()}`;
     setReports(prev => ({
       ...prev,
       [key]: updatedReport,
-      [updatedReport.brandId.toLowerCase()]: updatedReport
+      [brandKey]: updatedReport
     }));
     setReportMetricModalOpen(false);
   };

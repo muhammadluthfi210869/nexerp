@@ -8,7 +8,20 @@ export type TaskType = "DAILY" | "PROJECT";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type SocialStatus = "IDEA" | "DRAFT" | "SCRIPTING" | "PRODUCTION" | "IN_REVIEW" | "REVISION" | "APPROVED" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
 
-export interface MarketingMember { id: string; fullName: string; email: string; roles?: string[] }
+// Backend /marketing/members returns: { id, userId, name, role, email, phone, avatarBg, initial, department }.
+// Older shape used `fullName` + `roles[]`; renamed to match canonical service. Caller components
+// were updated in the same commit (see git log for "fix(marketing): align member shape").
+export interface MarketingMember {
+  id: string;
+  userId?: string | null;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  avatarBg?: string;
+  initial?: string;
+  department?: string;
+}
 export interface MarketingBrand { id: string; code: string; name: string; handle?: string | null; primaryPlatform?: string | null; accentToken?: string; isActive?: boolean }
 export interface MarketingProject { id: string; projectCode: string; name: string; channel: string; category: string; status: string; progress: number; version: number; brandId?: string | null; deadline?: string | null; _count?: { tasks: number } }
 export interface ChecklistItem { id: string; text: string; done: boolean; isRequired: boolean; sortOrder: number }
