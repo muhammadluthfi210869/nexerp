@@ -22,12 +22,14 @@ describe("GuestbookService", () => {
       expect(arg.where.approvalStatus).toBe(GuestbookApproval.PENDING);
     });
 
-    it("includes lead projection with id, displayName, phone, source, stage, pageUrl", async () => {
+    it("includes lead projection with id, displayName, phone, source, stage, pageUrl, assignedToId", async () => {
+      // B1: assignedToId added so the Buku Tamu UI can render the busdev
+      // and apply per-busdev filter via the lead relation.
       prismaMock.guestbookEvent.findMany.mockResolvedValue([]);
       await service.list();
       const arg = prismaMock.guestbookEvent.findMany.mock.calls[0][0];
       expect(arg.include.lead.select).toEqual({
-        id: true, displayName: true, phone: true, source: true, stage: true, pageUrl: true,
+        id: true, displayName: true, phone: true, source: true, stage: true, pageUrl: true, assignedToId: true,
       });
     });
   });

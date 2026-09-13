@@ -74,4 +74,45 @@ test.describe('OmniCRM — Buku Tamu approval', () => {
     await page.waitForTimeout(2000);
     expect(rejectCalled).toBe(true);
   });
+
+  // B1 — per-busdev filter on Buku Tamu page.
+  test('BusDev filter dropdown is present (B1)', async ({ page }) => {
+    await page.goto('/marketing/omnicrm/guestbook');
+    const filter = page.getByTestId('guestbook-filter-busdev');
+    await filter.waitFor({ timeout: 8000 });
+    await expect(filter).toBeVisible();
+  });
+
+  test('Selecting a BusDev filter reloads the list with assignedToId query', async ({ page }) => {
+    await page.goto('/marketing/omnicrm/guestbook');
+    const filter = page.getByTestId('guestbook-filter-busdev');
+    await filter.waitFor({ timeout: 8000 });
+
+    // Intercept the next guestbook list request
+    let lastListUrl = '';
+    page.on('request', (req) => {
+      if (req.method() === 'GET' && /\/crm\/guestbook\/events/.test(req.url())) {
+        lastListUrl = req.url();
+      }
+    });
+
+    // Open the searchable select and pick the first non-default option.
+    // The DnaSearchableSelect renders a <button> trigger + popover options.
+    await filter.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Pick the second option (first is "Semua BusDev" placeholder)
+    const options = page.locator('[role="option"]');
+    await options.first().waitFor({ timeout: 4000 }).catch(() => null);
+    const optionCount = await options.count();
+    if (optionCount < 2) {
+      test.skip(true, 'No busdevs seeded — skipping filter selection test');
+      return;
+    }
+    await options.nth(1).click();
+    await page.waitForTimeout(1000);
+
+    // The reload should now include assignedToId=...
+    expect(lastListUrl).toMatch(/assignedToId=/);
+  });
 });

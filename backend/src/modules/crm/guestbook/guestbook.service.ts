@@ -7,12 +7,13 @@ import { PrismaService } from "../../../prisma/prisma/prisma.service";
 
 export interface GuestbookListFilter {
   status?: GuestbookApproval;
+  assignedToId?: string;
   limit?: number;
   offset?: number;
 }
 
 export interface GuestbookEventWithLead extends GuestbookEvent {
-  lead: Pick<CrmLead, "id" | "displayName" | "phone" | "source" | "stage" | "pageUrl">;
+  lead: Pick<CrmLead, "id" | "displayName" | "phone" | "source" | "stage" | "pageUrl" | "assignedToId">;
 }
 
 @Injectable()
@@ -20,12 +21,15 @@ export class GuestbookService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(filter: GuestbookListFilter = {}): Promise<GuestbookEventWithLead[]> {
-    const { status, limit = 50, offset = 0 } = filter;
+    const { status, assignedToId, limit = 50, offset = 0 } = filter;
     return this.prisma.guestbookEvent.findMany({
-      where: status ? { approvalStatus: status } : {},
+      where: {
+        ...(status ? { approvalStatus: status } : {}),
+        ...(assignedToId ? { lead: { assignedToId } } : {}),
+      },
       include: {
         lead: {
-          select: { id: true, displayName: true, phone: true, source: true, stage: true, pageUrl: true },
+          select: { id: true, displayName: true, phone: true, source: true, stage: true, pageUrl: true, assignedToId: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -39,7 +43,7 @@ export class GuestbookService {
       where: { id },
       include: {
         lead: {
-          select: { id: true, displayName: true, phone: true, source: true, stage: true, pageUrl: true },
+          select: { id: true, displayName: true, phone: true, source: true, stage: true, pageUrl: true, assignedToId: true },
         },
       },
     });

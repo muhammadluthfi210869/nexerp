@@ -17,7 +17,7 @@ import { ApproveGuestbookDto } from "../dto/update-display-name.dto";
 export class GuestbookController {
   constructor(private readonly guestbookService: GuestbookService) {}
 
-  /** GET /crm/guestbook/events?status=PENDING */
+  /** GET /crm/guestbook/events?status=PENDING&assignedToId=... */
   @Get("guestbook/events")
   @Roles(
     UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,
@@ -25,12 +25,14 @@ export class GuestbookController {
   )
   list(
     @Query("status") status?: string,
+    @Query("assignedToId") assignedToId?: string,
     @Query("limit") limit?: string,
     @Query("offset") offset?: string,
   ) {
     const parsedStatus = status ? (GuestbookApproval[status.toUpperCase() as keyof typeof GuestbookApproval] ?? undefined) : undefined;
     return this.guestbookService.list({
       status: parsedStatus,
+      assignedToId,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     });
