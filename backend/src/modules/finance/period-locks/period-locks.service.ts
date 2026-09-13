@@ -1,14 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { StateEventTrigger } from '@prisma/client';
 import {
   PeriodLockedException,
   ResourceNotFoundException,
   StateTransitionInvalidException,
 } from '../../../common/exceptions/api-exception';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 
 @Injectable()
 export class PeriodLocksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private stateMachine: StateMachineService,
+  ) {}
 
   async findAll() {
     return this.prisma.periodLock.findMany({
@@ -61,6 +66,21 @@ export class PeriodLocksService {
         `Period ${monthStart.toISOString().slice(0, 7)} is already locked`,
       );
     }
+
+    // Wave 2/A5 — record PERIOD_LOCKED transition BEFORE upsert so
+    // gate-condition listeners can react to close events (cache invalidation,
+    // etc). NO_DUAL_WRITE via DB unique index on (entityId, eventTrigger).
+    const periodId = existing?.id ?? 'pending';
+    await this.stateMachine.transition({
+      entityType: 'FINANCIAL_PERIOD',
+      entityId: periodId,
+      eventTrigger: StateEventTrigger.PERIOD_LOCKED,
+      fromState: 'OPEN',
+      toState: 'LOCKED',
+      userId,
+      reason: `Period ${monthStart.toISOString().slice(0, 7)} locked${notes ? `: ${notes}` : ''}`,
+      metadata: { period: monthStart.toISOString() },
+    });
 
     return this.prisma.periodLock.upsert({
       where: { period: monthStart },
