@@ -17,7 +17,7 @@ export class KpiController {
   @Get("kpi/summary")
   @Roles(
     UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,
-    UserRole.COMMERCIAL, UserRole.DIRECTOR,
+    UserRole.COMMERCIAL, UserRole.DIRECTOR, UserRole.DIGIMAR,
   )
   summary() {
     return this.kpiService.summary();

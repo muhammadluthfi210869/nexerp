@@ -4,6 +4,12 @@
 **Target:** Biznet VPS `dreamlab@103.93.134.215` (`/home/dreamlab/nexerp`)
 **Project:** nexerp.id (production-light compose)
 
+> **Production test runbook (Playwright automated + DB state checks + RBAC matrix)**:
+> see [`docs/RUNBOOK-DEPLOY-DAN-TEST-OMNICRM.md`](../RUNBOOK-DEPLOY-DAN-TEST-OMNICRM.md).
+> Runbook ini melengkapi dokumen ini (yang fokus ke curl smoke D.1–D.12) dengan
+> 5 spec Playwright otomatis + 2 SQL script + RBAC matrix untuk Round 2
+> (per-busdev reply rate + auto round-robin + DNA compliance).
+
 ---
 
 ## A. Pre-deploy: environment variables

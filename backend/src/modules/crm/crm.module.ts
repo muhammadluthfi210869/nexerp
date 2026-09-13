@@ -10,6 +10,9 @@ import { KpiController } from './kpi/kpi.controller';
 import { BusDevsController } from './busdevs/busdevs.controller';
 import { LeadSvcWebhookController } from './ingest/lead-svc-webhook.controller';
 import { RoundRobinService } from './common/round-robin.service';
+import { RoundRobinHistoricalService } from './round-robin/round-robin-historical.service';
+import { RoundRobinHistoricalController } from './round-robin/round-robin-historical.controller';
+import { DreamlabPrismaService } from './dreamlab/dreamlab-prisma.service';
 import { ActivityStreamModule } from '../activity-stream/activity-stream.module';
 
 @Module({
@@ -20,6 +23,8 @@ import { ActivityStreamModule } from '../activity-stream/activity-stream.module'
     GuestbookService,
     KpiService,
     RoundRobinService,
+    RoundRobinHistoricalService,
+    DreamlabPrismaService,
   ],
   controllers: [
     LostDealsController,
@@ -28,6 +33,7 @@ import { ActivityStreamModule } from '../activity-stream/activity-stream.module'
     KpiController,
     BusDevsController,
     LeadSvcWebhookController,
+    RoundRobinHistoricalController,
   ],
 })
 export class CrmModule {}

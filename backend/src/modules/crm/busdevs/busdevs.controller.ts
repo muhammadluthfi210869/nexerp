@@ -21,7 +21,7 @@ export class BusDevsController {
   @Get("busdevs")
   @Roles(
     UserRole.SUPER_ADMIN, UserRole.HEAD_OPS, UserRole.MARKETING,
-    UserRole.COMMERCIAL, UserRole.DIRECTOR,
+    UserRole.COMMERCIAL, UserRole.DIRECTOR, UserRole.DIGIMAR,
   )
   async list(@Query("isActive") isActive?: string) {
     const where = isActive === "true" ? { isActive: true } : {};
