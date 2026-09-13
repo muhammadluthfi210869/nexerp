@@ -13,7 +13,8 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 import { LegalityService } from '../../legality/legality.service';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
-import { UserRole } from '@prisma/client';
+import { StateEventTrigger, UserRole } from '@prisma/client';
+import { StateMachineService } from '../../state-machine/state-machine.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -23,6 +24,7 @@ export class PurchaseOrdersService {
     @Inject(forwardRef(() => LegalityService))
     private legality: LegalityService,
     private idGenerator: IdGeneratorService,
+    private stateMachine: StateMachineService,
   ) {}
 
   async create(userId: string, dto: CreatePurchaseOrderDto) {
@@ -112,7 +114,7 @@ export class PurchaseOrdersService {
 
     const { totalAmount, ...otherData } = poData;
 
-    return this.prisma.purchaseOrder.create({
+    const created = await this.prisma.purchaseOrder.create({
       data: {
         ...otherData,
         poNumber,
@@ -133,6 +135,22 @@ export class PurchaseOrdersService {
           : undefined,
       },
     });
+
+    // Wave 2/A5 — record PO_CREATED transition so downstream listeners
+    // (gate conditions: vendor black-list, artwork approval, etc) can react.
+    // NO_DUAL_WRITE via DB unique index on (entityId, eventTrigger).
+    await this.stateMachine.transition({
+      entityType: 'PURCHASE_ORDER',
+      entityId: created.id,
+      eventTrigger: StateEventTrigger.PO_CREATED,
+      fromState: null,
+      toState: 'DRAFT',
+      userId,
+      reason: `PO ${created.poNumber} created for supplier ${created.supplierId}`,
+      metadata: { poNumber: created.poNumber, totalValue: Number(created.totalValue) },
+    });
+
+    return created;
   }
 
   async findAll() {

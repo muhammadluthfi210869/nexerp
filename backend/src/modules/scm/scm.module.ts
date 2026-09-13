@@ -17,9 +17,14 @@ import { SupplierScoreService } from './services/supplier-score.service';
 import { PurchasePaymentsController } from './controllers/purchase-payments.controller';
 
 import { LegalityModule } from '../legality/legality.module';
+import { StateMachineModule } from '../state-machine/state-machine.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => LegalityModule)],
+  imports: [
+    PrismaModule,
+    forwardRef(() => LegalityModule),
+    StateMachineModule,
+  ],
   providers: [
     PurchaseOrdersService,
     InboundsService,
