@@ -28,7 +28,7 @@ import {
 } from "@/components/dna";
 import { DnaEmptyState } from "@/components/dna/DnaEmptyState";
 import { DnaAvatar, DnaDaysLeftChip, DnaKanban, DnaPriorityBadge } from "@/components/dna/DnaExtras";
-import { marketingService } from "@/lib/services/marketing-service";
+import { useMarketingTasks, useMarketingMembers, useTaskStatusMutation } from "@/hooks/useCanonicalMarketing";
 import { useAuth } from "@/hooks/useAuth";
 import TaskDetailModal from "./components/TaskDetailModal";
 import CreateTaskModal from "./components/CreateTaskModal";
@@ -72,10 +72,25 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   const toast = useDnaToast();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [tasks, setTasks] = useState<MarketingTask[]>([]);
-  const [members, setMembers] = useState<MarketingTeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // Canonical API hooks (replace imperative marketingService + localStorage persistence)
+  const tasksQuery = useMarketingTasks({ page: 1, limit: 100 });
+  const membersQuery = useMarketingMembers();
+  // ponytail: hook returns lean MarketingMember ({fullName}); adapt to MarketingTeamMember
+  const members: MarketingTeamMember[] = useMemo(() => (membersQuery.data ?? []).map((m) => ({
+    id: m.id,
+    name: m.fullName,
+    email: m.email,
+    role: m.roles?.[0] ?? "MEMBER",
+  })), [membersQuery.data]);
+  // ponytail: hook types are leaner than marketing-api; cast to canonical shape (runtime data has all fields).
+  const tasks: MarketingTask[] = useMemo(() => (tasksQuery.data?.data ?? []) as MarketingTask[], [tasksQuery.data]);
+  const loading = tasksQuery.isLoading || membersQuery.isLoading;
+  const loadError = (tasksQuery.error ?? membersQuery.error) ? "Data Management Task tidak dapat dimuat." : null;
+  const refresh = useCallback(() => {
+    void tasksQuery.refetch();
+    void membersQuery.refetch();
+  }, [tasksQuery, membersQuery]);
+  const statusMutation = useTaskStatusMutation();
   const [view, setView] = useState<ViewMode>("table");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | TaskType>("all");
@@ -90,32 +105,6 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   const viewer = useMemo<MarketingViewer | null>(() =>
     user ? { id: user.id, email: user.email, name: user.fullName, roles: user.roles } : null,
   [user]);
-
-  // Production data must either load from the API or surface an actionable error.
-  // It must never fall back to browser-local sample data.
-  const refresh = useCallback(async () => {
-    if (!viewer) return;
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const [tRes, mRes] = await Promise.all([
-        marketingService.listTasks(viewer, { limit: 100 }),
-        marketingService.listMembers(viewer),
-      ]);
-      setTasks(tRes.items);
-      setMembers(mRes);
-    } catch (error) {
-      setTasks([]);
-      setMembers([]);
-      setLoadError(error instanceof Error ? error.message : "Data Management Task tidak dapat dimuat.");
-    } finally {
-      setLoading(false);
-    }
-  }, [viewer]);
-
-  useEffect(() => {
-    if (viewer) void refresh();
-  }, [viewer, refresh]);
 
   // Check if memberSlug is a specific team member
   const currentMember = useMemo(() => {
@@ -133,24 +122,6 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
       router.replace("/marketing/management-task/overview");
     }
   }, [authLoading, currentMember, loadError, loading, memberSlug, members.length, router]);
-
-  // If viewing a specific member's workspace, render MemberProfileView
-  if (currentMember && viewer) {
-    return (
-      <DnaPageContainer className="mx-auto max-w-[1500px] space-y-5 p-4 sm:p-6 lg:p-8">
-        <DnaPageHeader
-          title="MEMBER WORKSPACE"
-          subtitle={`${currentMember.name} (${currentMember.role}) — Profil performa & manajemen tugas.`}
-          breadcrumbs={[
-            { label: "Marketing", href: "/marketing/dashboard" },
-            { label: "Management Task", href: "/marketing/management-task/overview" },
-            { label: currentMember.name },
-          ]}
-        />
-        <MemberProfileView member={currentMember} tasks={tasks} viewer={viewer} onRefresh={refresh} />
-      </DnaPageContainer>
-    );
-  }
 
   // Filter logic across views
   const filtered = useMemo(() => {
@@ -190,6 +161,24 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
     return Array.from(map.entries());
   }, [tasks]);
 
+  // If viewing a specific member's workspace, render MemberProfileView
+  if (currentMember && viewer) {
+    return (
+      <DnaPageContainer className="mx-auto max-w-[1500px] space-y-5 p-4 sm:p-6 lg:p-8">
+        <DnaPageHeader
+          title="MEMBER WORKSPACE"
+          subtitle={`${currentMember.name} (${currentMember.role}) — Profil performa & manajemen tugas.`}
+          breadcrumbs={[
+            { label: "Marketing", href: "/marketing/dashboard" },
+            { label: "Management Task", href: "/marketing/management-task/overview" },
+            { label: currentMember.name },
+          ]}
+        />
+        <MemberProfileView member={currentMember} tasks={tasks} viewer={viewer} onRefresh={refresh} />
+      </DnaPageContainer>
+    );
+  }
+
   // Overall KPI calculations
   const total = filtered.length;
   const active = filtered.filter((t) => ["IN_PROGRESS", "REVIEW", "NOT_STARTED"].includes(t.status)).length;
@@ -198,39 +187,27 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
   const lateRate = total > 0 ? Math.round((late / total) * 100) : 0;
 
-  // Fast-path status toggle
+  // Fast-path status toggle — uses canonical statusMutation (Idempotency-Key handled by hook)
   const handleToggleDone = async (task: MarketingTask, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!viewer || task.status !== "REVIEW") return;
+    if (task.status !== "REVIEW") return;
     const nextStatus: TaskStatus = "DONE";
     try {
-      await marketingService.updateTaskStatus(viewer, task.id, {
-        version: task.version,
-        status: nextStatus,
-      });
-      toast.success(
-        nextStatus === "DONE"
-          ? `Task "${task.title}" ditandai selesai.`
-          : `Task "${task.title}" dikembalikan ke pengerjaan.`
-      );
-      refresh();
+      await statusMutation.mutateAsync({ id: task.id, version: task.version, status: nextStatus });
+      toast.success(`Task "${task.title}" ditandai selesai.`);
     } catch (err: any) {
-      toast.error("Gagal update status: " + err.message);
+      toast.error("Gagal update status: " + (err?.message ?? err));
     }
   };
 
-  // Inline status change in table
+  // Inline status change in table — uses canonical statusMutation
   const handleInlineStatusChange = async (task: MarketingTask, newStatus: TaskStatus) => {
-    if (!viewer || newStatus === task.status) return;
+    if (newStatus === task.status) return;
     try {
-      await marketingService.updateTaskStatus(viewer, task.id, {
-        version: task.version,
-        status: newStatus,
-      });
+      await statusMutation.mutateAsync({ id: task.id, version: task.version, status: newStatus as any });
       toast.success(`Status "${task.title}" diubah menjadi ${newStatus.replace("_", " ")}.`);
-      refresh();
     } catch (err: any) {
-      toast.error("Gagal ubah status: " + err.message);
+      toast.error("Gagal ubah status: " + (err?.message ?? err));
     }
   };
 
@@ -497,13 +474,6 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
         />
       ) : view === "kanban" ? (
         <DnaKanban
-          columns={[
-            { id: "NOT_STARTED", label: "Not started" },
-            { id: "IN_PROGRESS", label: "Working on it" },
-            { id: "REVIEW", label: "Review" },
-            { id: "REVISION", label: "Revision" },
-            { id: "DONE", label: "Done" },
-          ]}
           items={filtered.map((t) => ({
             id: t.id,
             title: t.title,
