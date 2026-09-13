@@ -1,6 +1,6 @@
 // Wave 4 / D3 — DecisionSupportService unit tests.
 
-import { DecisionSupportService } from '../decision-support.service';
+import { DecisionSupportService } from '@/modules/decision-support/decision-support.service';
 import { UserRole } from '@prisma/client';
 
 type DecisionAction = 'APPROVE' | 'REJECT' | 'DEFER';
