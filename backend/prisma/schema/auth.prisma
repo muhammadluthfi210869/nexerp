@@ -20,7 +20,21 @@ model User {
   approvedPayrolls Payroll[]  @relation("PayrollApprover")
 
   // Lead Capture
-  assignedLeads LeadCapture[]
+  leadAssignedLeads         LeadCapture[]      @relation("LeadAssignee")
+  marketingTasksAsPic       MarketingTask[]     @relation("MarketingTaskPic")
+  marketingTasksAsReviewer  MarketingTask[]     @relation("MarketingTaskReviewer")
+  marketingTasksAssignedBy  MarketingTask[]     @relation("MarketingTaskAssignedBy")
+  adsVerified               DailyAdsMetric[]    @relation("AdsVerifier")
+  marketingTaskHistory      MarketingTaskHistory[] @relation("MarketingTaskHistoryActor")
+  marketingTaskAttachments  MarketingTaskAttachment[] @relation("MarketingTaskAttachmentUploader")
+  marketingTaskComments     MarketingTaskComment[] @relation("MarketingTaskCommentAuthor")
+  marketingProjectsOwned    MarketingProject[]  @relation("MarketingProjectOwner")
+  marketingBrandsOwned      MarketingBrand[]    @relation("MarketingBrandOwner")
+  marketingChecklistCompleted MarketingTaskChecklistItem[] @relation("MarketingTaskChecklistCompleter")
+  socialPostsAssigned       SocialPost[]        @relation("SocialPostAssignee")
+  socialPostsReviewed       SocialPost[]        @relation("SocialPostReviewer")
+  socialPostMediaUploaded   SocialPostMedia[]   @relation("SocialPostMediaUploader")
+  marketingTeamMembers      MarketingTeamMember[] @relation("MarketingTeamMemberUser")
 
   @@map("users")
 }
