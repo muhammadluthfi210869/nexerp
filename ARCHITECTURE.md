@@ -19,7 +19,7 @@ Sejarah lengkap: [PRODUCTION_LIGHT.md](PRODUCTION_LIGHT.md) (RETIRED).
 ## Stack Deploy
 
 ```
-GitHub Actions (ubuntu)                 Biznet VPS 103.93.134.215 (4GB, TIDAK build)
+GitHub Actions (ubuntu)                 Biznet VPS 103.93.134.215 (8GB+swap, TIDAK build)
 ┌────────────────────────┐              ┌──────────────────────────────────┐
 │ build-and-test          │              │ /home/dreamlab/nexerp            │
 │  docker build x2        │              │  compose project: production-*   │

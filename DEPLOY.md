@@ -17,9 +17,12 @@ GitHub Actions (.github/workflows/ci.yml)
                         {backend,frontend}:<sha> + :latest
    │
    ▼
-VPS Biznet 103.93.134.215 (/home/dreamlab/nexerp, RAM 4GB — TIDAK pernah build)
+VPS Biznet 103.93.134.215 (/home/dreamlab/nexerp, RAM 8GB + swap 4GB — TIDAK pernah build)
    bash scripts/deploy.sh <sha>   →  backup DB → pull image → up -d → health gate
 ```
+
+> Panduan LENGKAP (piramida testing level 0–5, drift analysis, kontrak env,
+> histori insiden): [docs/PANDUAN-TESTING-DAN-DEPLOY-LENGKAP.md](docs/PANDUAN-TESTING-DAN-DEPLOY-LENGKAP.md)
 
 ## Deploy baru
 
@@ -33,7 +36,7 @@ bash scripts/deploy.sh <git-sha>        # atau: bash scripts/deploy.sh  (=latest
 ```
 
 `deploy.sh` otomatis: backup `pg_dumpall` → `docker compose pull` → `up -d`
-(tanpa build) → health gate `/health` 60s → `verify-deploy.sh`.
+(tanpa build) → health gate `/v1/health` 60s → `verify-deploy.sh`.
 
 ## Rollback (sub-menit, tanpa git revert)
 
@@ -46,13 +49,15 @@ Khusus DB rusak: restore `backups/pre-deploy-*.sql.gz` lalu restart container `d
 
 ## Konfigurasi server (sekali saja, sudah terpasang)
 
-- `docker login ghcr.io -u muhammadluthfi210869 --password-stdin` (PAT `read:packages`)
-- `.env` dari `.env.production.example` — **`JWT_SECRET` wajib** (dipakai build CI
-  untuk frontend DAN runtime backend — dulu ini bikin 2x deploy gagal)
-- Swap 2GB aktif; compose project name `production-light` dipertahankan
-  DESA sebagai nama volume lama (postgres_data) — jangan diganti seenaknya.
+- **Repo public → pull GHCR anonim**, `docker login` di VPS TIDAK diperlukan.
+- `.env` dari `.env.production.example` — **`JWT_SECRET` wajib SAMA dengan
+  GitHub secret** (dipakai build CI untuk frontend DAN runtime backend — dulu
+  ini bikin 2x deploy gagal). `NEXT_PUBLIC_API_URL=https://nexerp.id/api/v1`.
+- Swap 4GB aktif (RAM 8GB); compose project name `production-light`
+  dipertahankan demi volume lama (postgres_data) — jangan diganti seenaknya.
 - GitHub: secret `JWT_SECRET` + optional vars `NEXT_PUBLIC_API_URL`,
   `NEXT_PUBLIC_WA_PHONE` untuk job `push-images`.
+- User `dreamlab` sudah di grup docker — **tanpa `sudo`** untuk perintah docker.
 
 ## Dev lokal
 
