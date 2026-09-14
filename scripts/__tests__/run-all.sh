@@ -51,6 +51,7 @@ run_test "db-snapshot-script-exists"                 "$SCRIPT_DIR/db-snapshot.te
 
 # Phase 4 — CI safeguards
 run_test "ci-has-bridge-size-guard"                  "$SCRIPT_DIR/ci-bridge-size-guard.test.sh"
+run_test "init-db-idempotent-on-restart"             "$SCRIPT_DIR/init-db-idempotency.test.sh"
 
 # Phase 5 — Top-level docs
 run_test "docs-link-integrity"                       "$SCRIPT_DIR/docs-link-integrity.test.sh"

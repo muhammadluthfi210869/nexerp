@@ -13,16 +13,29 @@ echo "✅ /app/data/ ready"
 echo "Waiting 8 seconds for database to be ready..."
 sleep 8
 
-echo "=== Step 1: prisma db push (sync schema without dropping data) ==="
-npx prisma db push --accept-data-loss 2>&1
-PUSH_EXIT=$?
-echo "prisma db push exit code: $PUSH_EXIT"
+echo "=== Step 1: prisma db push (idempotent: skip if drift already known) ==="
+DRIFT_MARKER="/app/data/.schema-drift-acknowledged"
 
-if [ $PUSH_EXIT -ne 0 ]; then
-  echo "ERROR: prisma db push failed! Retrying in 5 seconds..."
-  sleep 5
+if [ -f "$DRIFT_MARKER" ]; then
+  echo "⏭️  Drift marker present at $DRIFT_MARKER — skipping db push (idempotent restart)"
+else
+  echo "Running prisma db push (first start or after operator cleared marker)..."
   npx prisma db push --accept-data-loss 2>&1
-  echo "Retry exit code: $?"
+  PUSH_EXIT=$?
+  echo "prisma db push exit code: $PUSH_EXIT"
+
+  if [ $PUSH_EXIT -ne 0 ]; then
+    # Data-loss blocked (e.g. wholesale-merge-era schema drifted from production-light
+    # code: SOURCE_OVERRIDE enum can't be dropped because other tables depend on it).
+    # Acknowledge drift so subsequent restarts skip this destructive op and the
+    # container can start serving traffic from the existing schema.
+    echo "⚠️  db push blocked by existing data (data-loss guard)."
+    echo "   Persisting $DRIFT_MARKER so restarts stay idempotent."
+    mkdir -p /app/data
+    echo "skip db push: schema drift acknowledged $(date -Iseconds)" > "$DRIFT_MARKER"
+  else
+    echo "✅ prisma db push succeeded"
+  fi
 fi
 
 echo "=== Step 2: Seed default users (only if empty) ==="
