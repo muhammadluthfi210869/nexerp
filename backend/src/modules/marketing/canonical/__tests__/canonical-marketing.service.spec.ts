@@ -62,6 +62,7 @@ function prismaMock() {
       count: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
+      create: jest.fn(),
     },
     marketingTaskComment: {
       create: jest.fn(),
@@ -512,6 +513,142 @@ describe('CanonicalMarketingService', () => {
     });
     expect(result.name).toBe('Gusti Updated');
     expect(prisma.marketingTeamMember.update).toHaveBeenCalled();
+  });
+
+  describe('getKpi (SSOT §8.2)', () => {
+    it('aggregates KPI counts with scope-aware byMember breakdown for a manager', async () => {
+      const prisma = prismaMock();
+      const pastDue = new Date('2026-09-01');
+      prisma.marketingTask.findMany.mockResolvedValue([
+        {
+          id: 't-1',
+          canonicalStatus: 'NOT_STARTED',
+          dueDate: pastDue,
+          assigneeId: 'u-1',
+          pic: { id: 'u-1', fullName: 'Gusti', email: 'gusti@nexerp.id' },
+        },
+        {
+          id: 't-2',
+          canonicalStatus: 'IN_PROGRESS',
+          dueDate: new Date('2026-09-30'),
+          assigneeId: 'u-2',
+          pic: { id: 'u-2', fullName: 'Luthfi', email: 'luthfi@nexerp.id' },
+        },
+        {
+          id: 't-3',
+          canonicalStatus: 'DONE',
+          dueDate: new Date('2026-09-13'),
+          assigneeId: 'u-1',
+          pic: { id: 'u-1', fullName: 'Gusti', email: 'gusti@nexerp.id' },
+        },
+      ]);
+      prisma.marketingTask.count.mockResolvedValue(3);
+      const service = new CanonicalMarketingService(prisma);
+      const result = await service.getKpi(manager);
+      expect(result.total).toBe(3);
+      expect(result.notStarted).toBe(1);
+      expect(result.inProgress).toBe(1);
+      expect(result.done).toBe(1);
+      expect(result.overdue).toBe(1);
+      expect(result.scope).toBe('team');
+      expect(result.byMember).toHaveLength(2);
+      expect(result.byMember[0]).toEqual({
+        id: 'u-1',
+        fullName: 'Gusti',
+        email: 'gusti@nexerp.id',
+        count: 2,
+      });
+    });
+
+    it('scopes KPI to a single member when viewer is DIGIMAR', async () => {
+      const prisma = prismaMock();
+      prisma.marketingTask.findMany.mockResolvedValue([
+        {
+          id: 't-1',
+          canonicalStatus: 'IN_PROGRESS',
+          dueDate: new Date('2026-09-30'),
+          assigneeId: 'member',
+          pic: { id: 'member', fullName: 'Rahmat', email: 'r@nexerp.id' },
+        },
+      ]);
+      prisma.marketingTask.count.mockResolvedValue(1);
+      const service = new CanonicalMarketingService(prisma);
+      const result = await service.getKpi(member);
+      expect(result.total).toBe(1);
+      expect(result.scope).toBe('personal');
+      expect(result.byMember).toHaveLength(1);
+      expect(result.byMember[0].id).toBe('member');
+      expect(prisma.marketingTask.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { ownerId: 'member' },
+              { assigneeId: 'member' },
+              { picId: 'member' },
+              { assignedById: 'member' },
+              { reviewerId: 'member' },
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('forbids KPI access for non-marketing roles', async () => {
+      const prisma = prismaMock();
+      const service = new CanonicalMarketingService(prisma);
+      await expect(
+        service.getKpi({ id: 'director', roles: ['DIRECTOR'] }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+  });
+
+  describe('addChecklistItem (SSOT §8.2)', () => {
+    it('adds a new checklist item and updates required count on the task', async () => {
+      const prisma = prismaMock();
+      prisma.marketingTask.findFirst.mockResolvedValue(
+        task({ assigneeId: 'member', ownerId: 'member' }),
+      );
+      prisma.marketingTaskChecklistItem.create.mockResolvedValue({
+        id: 'item-1',
+        taskId: 'task-1',
+        text: 'Review SEO meta',
+        isRequired: true,
+        sortOrder: 0,
+        done: false,
+      });
+      prisma.marketingTaskChecklistItem.count.mockResolvedValueOnce(2);
+      prisma.marketingTask.findFirst.mockResolvedValueOnce(
+        task({ assigneeId: 'member', ownerId: 'member' }),
+      );
+      const service = new CanonicalMarketingService(prisma);
+      const result = await service.addChecklistItem(member, 'task-1', {
+        text: 'Review SEO meta',
+        isRequired: true,
+        sortOrder: 0,
+      });
+      expect(prisma.marketingTaskChecklistItem.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          taskId: 'task-1',
+          text: 'Review SEO meta',
+          isRequired: true,
+        }),
+      });
+      expect(result.id).toBe('task-1');
+    });
+
+    it('returns 404 when adding checklist item to a hidden task', async () => {
+      const prisma = prismaMock();
+      prisma.marketingTask.findFirst.mockResolvedValue(null);
+      const service = new CanonicalMarketingService(prisma);
+      await expect(
+        service.addChecklistItem(member, 'hidden', {
+          text: 'Will not save',
+          isRequired: true,
+          sortOrder: 0,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(prisma.marketingTaskChecklistItem.create).not.toHaveBeenCalled();
+    });
   });
 });
 

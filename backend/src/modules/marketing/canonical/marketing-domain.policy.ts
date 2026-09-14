@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 export const TASK_STATUSES = [
@@ -144,7 +145,7 @@ export function assertTaskTransition(input: {
     });
   }
   if (input.to === 'DONE' && (input.incompleteRequiredItems ?? 0) > 0) {
-    throw new ConflictException({
+    throw new UnprocessableEntityException({
       code: 'TASK_CHECKLIST_INCOMPLETE',
       message: 'Semua checklist wajib harus selesai sebelum task ditutup.',
     });

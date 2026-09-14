@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import {
   assertSocialTransition,
@@ -63,7 +64,7 @@ describe('canonical marketing domain policy', () => {
         isManager: false,
         incompleteRequiredItems: 1,
       }),
-    ).toThrow(ConflictException);
+    ).toThrow(UnprocessableEntityException);
   });
 
   it('requires manager and reason to cancel', () => {

@@ -25,6 +25,7 @@ import {
   CreateBrandDto,
   CreateCanonicalProjectDto,
   CreateCanonicalTaskDto,
+  CreateChecklistItemDto,
   CreateTaskCommentDto,
   PaginationQueryDto,
   ReportingQueryDto,
@@ -74,6 +75,12 @@ export class CanonicalMarketingController {
     @Query() query: TaskListQueryDto,
   ): Promise<unknown> {
     return this.service.listTasks(req.user, query);
+  }
+
+  @Get('tasks/kpi')
+  @Roles(...TASK_READ_ROLES)
+  getKpi(@Req() req: any): Promise<unknown> {
+    return this.service.getKpi(req.user);
   }
 
   @Get('tasks/:id')
@@ -128,6 +135,16 @@ export class CanonicalMarketingController {
     @Body() dto: UpdateChecklistItemDto,
   ): Promise<unknown> {
     return this.service.updateChecklist(req.user, taskId, itemId, dto);
+  }
+
+  @Post('tasks/:taskId/checklist')
+  @Roles(...TASK_READ_ROLES)
+  addChecklistItem(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+    @Body() dto: CreateChecklistItemDto,
+  ): Promise<unknown> {
+    return this.service.addChecklistItem(req.user, taskId, dto);
   }
 
   @Get('tasks/:taskId/comments')

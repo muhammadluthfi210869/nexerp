@@ -14,6 +14,7 @@ import {
   CreateBrandDto,
   CreateCanonicalProjectDto,
   CreateCanonicalTaskDto,
+  CreateChecklistItemDto,
   CreateTaskCommentDto,
   PaginationQueryDto,
   ReportingQueryDto,
@@ -94,6 +95,79 @@ export class CanonicalMarketingService {
     ensureMarketingTaskRole(viewer);
     const task = await this.findVisibleTask(this.prisma, viewer, id);
     return this.taskResponse(task);
+  }
+
+  async getKpi(viewer: MarketingViewer) {
+    ensureMarketingTaskRole(viewer);
+    const scope = this.taskScope(viewer);
+    const now = new Date();
+    const where: any = { ...scope };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.marketingTask.findMany({
+        where,
+        select: {
+          id: true,
+          canonicalStatus: true,
+          dueDate: true,
+          assigneeId: true,
+          pic: { select: { id: true, fullName: true, email: true } },
+        },
+      }),
+      this.prisma.marketingTask.count({ where }),
+    ]);
+    const statusCounts = {
+      notStarted: 0,
+      inProgress: 0,
+      inReview: 0,
+      revision: 0,
+      done: 0,
+      cancelled: 0,
+    };
+    let overdue = 0;
+    const byMember = new Map<
+      string,
+      { id: string; fullName: string; email: string; count: number }
+    >();
+    for (const row of rows) {
+      const status = row.canonicalStatus as TaskStatus;
+      if (status === 'NOT_STARTED') statusCounts.notStarted++;
+      else if (status === 'IN_PROGRESS') statusCounts.inProgress++;
+      else if (status === 'IN_REVIEW') statusCounts.inReview++;
+      else if (status === 'REVISION') statusCounts.revision++;
+      else if (status === 'DONE') statusCounts.done++;
+      else if (status === 'CANCELLED') statusCounts.cancelled++;
+      if (
+        row.dueDate &&
+        row.dueDate < now &&
+        status !== 'DONE' &&
+        status !== 'CANCELLED'
+      ) {
+        overdue++;
+      }
+      const assigneeId = row.assigneeId ?? 'unassigned';
+      const existing = byMember.get(assigneeId);
+      const memberMeta = row.pic ?? {
+        id: assigneeId,
+        fullName: 'Unassigned',
+        email: null,
+      };
+      if (existing) existing.count++;
+      else
+        byMember.set(assigneeId, {
+          id: memberMeta.id,
+          fullName: memberMeta.fullName ?? 'Unassigned',
+          email: memberMeta.email ?? '',
+          count: 1,
+        });
+    }
+    return {
+      total,
+      ...statusCounts,
+      overdue,
+      byMember: Array.from(byMember.values()).sort((a, b) => b.count - a.count),
+      scope: isMarketingManager(viewer) ? 'team' : 'personal',
+      generatedAt: now.toISOString(),
+    };
   }
 
   async createTask(
@@ -426,6 +500,34 @@ export class CanonicalMarketingService {
       await db.marketingTask.update({
         where: { id: taskId },
         data: { checklistDone: done, checklistTotal: total },
+      });
+    });
+    return this.getTask(viewer, taskId);
+  }
+
+  async addChecklistItem(
+    viewer: MarketingViewer,
+    taskId: string,
+    dto: CreateChecklistItemDto,
+  ) {
+    ensureMarketingTaskRole(viewer);
+    const task = await this.findVisibleTask(this.prisma, viewer, taskId);
+    this.ensureCanEditTask(viewer, task);
+    await this.prisma.$transaction(async (db) => {
+      await db.marketingTaskChecklistItem.create({
+        data: {
+          taskId,
+          text: dto.text.trim(),
+          isRequired: dto.isRequired ?? true,
+          sortOrder: dto.sortOrder ?? 0,
+        },
+      });
+      const required = await db.marketingTaskChecklistItem.count({
+        where: { taskId, isRequired: true },
+      });
+      await db.marketingTask.update({
+        where: { id: taskId },
+        data: { checklistTotal: required },
       });
     });
     return this.getTask(viewer, taskId);
