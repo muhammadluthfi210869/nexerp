@@ -24,6 +24,10 @@ FROM node:20-bookworm AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+# Next.js 16 still reads process.env.JWT_SECRET at runtime for proxy.ts.
+# Mirrored from builder stage so standalone output can resolve it.
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
 
 # Automatically leverage standalone output
 COPY --from=builder /app/public ./public
