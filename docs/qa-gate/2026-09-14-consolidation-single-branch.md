@@ -61,6 +61,24 @@ bencana e75fbe1).
 - Frontend sebenarnya Next.js (bukan "Vite dashboard" seperti disebut
   dokumen lama) — CLAUDE.md dikoreksi.
 
+### Ronde 2 — CI run #1 FAIL → repro lokal → 4 latent defect diperbaiki (`aabdd8c`)
+CI membuktikan dirinya berguna: run pertama gagal dan menemukan empat bug yang
+TIDAK AKAN pernah terlihat sebelumnya karena skema full-ERP `main` tidak pernah
+sekalipun di-`db push` + di-seed ke DB sungguhan:
+1. **FK type mismatch** `ProductSupplierHistory.productId/supplierId` (text→uuid)
+   — skema full gagal di-push bahkan ke DB kosong. Scan seluruh 19 file: satu-satunya.
+2. **seed.ts TRUNCATE daftar basi** (`sample_revisions` sudah tidak ada) — diganti
+   discovery `pg_tables` dinamis, tidak akan pernah basi lagi.
+3. **CORS_ORIGIN tidak di-split koma** — health probe localhost tak pernah match.
+4. **nginx rewrite `/api/* → /v1/*`** — kontrak browser bundle main; rewrite warisan
+   light (`/api/x → /x`) membuat 100% endpoint 404 setelah cutover.
+Verifikasi ulang lokal end-to-end: postgres docker → `prisma db push` → `db seed`
+→ boot `dist/main` → `test-deploy.sh` **6/6 PASS** (termasuk login+profile ber-token
+via `/v1`). `test-deploy.sh` juga dibuat jalan tanpa python3 (Git Bash).
+
+⚠️ Implikasi cutover: `.env` VPS perlu `NEXT_PUBLIC_API_URL=https://nexerp.id/api/v1`
+   (SSR/server-side); nginx.conf baru otomatis dipakai setelah `git checkout main`.
+
 ## Putusan
 Kode **siap di-review lewat PR** (C1). **DILARANG menyebut deploy baru
 "selesai"** sampai C2–C8 tercentang dengan laporan cutover.
