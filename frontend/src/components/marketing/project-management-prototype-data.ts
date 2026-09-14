@@ -1,7 +1,7 @@
 export type MarketingTaskStatus =
   | "Backlog"
   | "To Do"
-  | "In Progress"
+  | "Progress"
   | "Waiting Approval"
   | "Revision"
   | "Done"
@@ -213,7 +213,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "High",
     dueDate: "2026-07-03",
-    status: "In Progress",
+    status: "Progress",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 3,
@@ -339,7 +339,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Urgent",
     dueDate: "2026-07-03",
-    status: "In Progress",
+    status: "Progress",
     sla: "Watch",
     revisionCount: 0,
     checklistDone: 1,
@@ -393,7 +393,7 @@ export const marketingTasks: MarketingTaskPrototype[] = [
     reviewer: headOfMarketing,
     priority: "Medium",
     dueDate: "2026-07-06",
-    status: "In Progress",
+    status: "Progress",
     sla: "Healthy",
     revisionCount: 0,
     checklistDone: 2,

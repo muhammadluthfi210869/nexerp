@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { TableWrapper, SectionLabel, DnaBadge } from "@/components/dna";
+import { DnaCard, DnaDataTableCard, DnaTable, DnaBadge } from "@/components/dna";
 
 export function AuditTables({ audit }: { audit: any }) {
   return (
@@ -9,10 +9,10 @@ export function AuditTables({ audit }: { audit: any }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 🧪 III.A AUDIT GRANULAR BAHAN BAKU */}
         <div className="space-y-4">
-          <SectionLabel as="h3">🧪 III.A AUDIT GRANULAR BAHAN BAKU (SENSITIF & FEFO)</SectionLabel>
-          <TableWrapper>
+          <DnaCard title="🧪 III.A AUDIT GRANULAR BAHAN BAKU (SENSITIF & FEFO)">
+          <DnaDataTableCard>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <DnaTable className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     <th className="px-6 py-4 text-table-header text-slate-400">NAMA MATERIAL / MASUK</th>
@@ -36,17 +36,18 @@ export function AuditTables({ audit }: { audit: any }) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
-          </TableWrapper>
+          </DnaDataTableCard>
+        </DnaCard>
         </div>
 
         {/* 📦 III.B AUDIT GRANULAR BAHAN KEMAS */}
         <div className="space-y-4">
-          <SectionLabel as="h3">📦 III.B AUDIT GRANULAR BAHAN KEMAS (DEGRADASI & STOK)</SectionLabel>
-          <TableWrapper>
+          <DnaCard title="📦 III.B AUDIT GRANULAR BAHAN KEMAS (DEGRADASI & STOK)">
+          <DnaDataTableCard>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <DnaTable className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     <th className="px-6 py-4 text-table-header text-slate-400">NAMA KEMASAN / TIPE</th>
@@ -70,19 +71,20 @@ export function AuditTables({ audit }: { audit: any }) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
-          </TableWrapper>
+          </DnaDataTableCard>
+        </DnaCard>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 🧾 III.C SO FULFILLMENT */}
         <div className="space-y-4">
-          <SectionLabel as="h3">🧾 III.C PEMENUHAN PESANAN (SO FULFILLMENT)</SectionLabel>
-          <TableWrapper>
+          <DnaCard title="🧾 III.C PEMENUHAN PESANAN (SO FULFILLMENT)">
+          <DnaDataTableCard>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <DnaTable className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     <th className="px-6 py-4 text-table-header text-slate-400">CLIENT / NO. SO</th>
@@ -112,17 +114,18 @@ export function AuditTables({ audit }: { audit: any }) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
-          </TableWrapper>
+          </DnaDataTableCard>
+        </DnaCard>
         </div>
 
         {/* ⚠️ III.D AUDIT RISIKO & KERUGIAN */}
         <div className="space-y-4">
-          <SectionLabel as="h3">⚠️ III.D AUDIT RISIKO & KERUGIAN (NON-SELLABLE)</SectionLabel>
-          <TableWrapper>
+          <DnaCard title="⚠️ III.D AUDIT RISIKO & KERUGIAN (NON-SELLABLE)">
+          <DnaDataTableCard>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <DnaTable className="w-full text-left">
                 <thead>
                   <tr className="bg-rose-50/50 border-b border-rose-100">
                     <th className="px-6 py-4 text-table-header text-rose-800">ITEM & SUMBER</th>
@@ -147,9 +150,10 @@ export function AuditTables({ audit }: { audit: any }) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DnaTable>
             </div>
-          </TableWrapper>
+          </DnaDataTableCard>
+        </DnaCard>
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ import { PurchasePaymentsService } from '../services/purchase-payments.service';
 import { CreatePurchasePaymentDto } from '../dto/purchase-payment.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('scm/purchase-payments')
+@Controller(['scm/purchase-payments', 'v1/scm/purchase-payments'])
 export class PurchasePaymentsController {
   constructor(private readonly service: PurchasePaymentsService) {}
 

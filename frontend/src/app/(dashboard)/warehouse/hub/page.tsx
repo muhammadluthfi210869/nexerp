@@ -26,10 +26,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DetailSection, DataField } from "./helpers";
+import { DataField } from "./helpers";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { StatCard } from "@/components/dna/StatCard";
+import { DataCard } from "@/components/dna/DataCard";
 
 interface MaterialCatalogItem {
   id: string;
@@ -370,7 +371,7 @@ export default function WarehouseHubPage() {
                     value="identity"
                     className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500"
                   >
-                    <DetailSection title="Basic Attributes">
+                    <DataCard dotColor="bg-slate-400" title="Basic Attributes" titleColor="text-slate-400" className="rounded-2xl">
                       <div className="grid grid-cols-2 gap-8">
                         <DataField
                           label="Material Type"
@@ -389,9 +390,9 @@ export default function WarehouseHubPage() {
                           value="Moving Average"
                         />
                       </div>
-                    </DetailSection>
+                    </DataCard>
 
-                    <DetailSection title="Batch Distribution">
+                    <DataCard dotColor="bg-blue-500" title="Batch Distribution" titleColor="text-slate-400" className="rounded-2xl">
                       <div className="space-y-3">
                         {selectedItem.inventories.map((inv, idx) => {
                           const bg =
@@ -440,11 +441,11 @@ export default function WarehouseHubPage() {
                           );
                         })}
                       </div>
-                    </DetailSection>
+                    </DataCard>
                   </TabsContent>
 
                   <TabsContent value="logistics" className="space-y-8">
-                    <DetailSection title="Risk Control Parameters">
+                    <DataCard dotColor="bg-amber-500" title="Risk Control Parameters" titleColor="text-slate-400" className="rounded-2xl">
                       <div className="grid grid-cols-2 gap-8">
                         <DataField
                           label="Safety Stock (Min)"
@@ -461,11 +462,11 @@ export default function WarehouseHubPage() {
                         <DataField label="Lead Time" value="3 - 5 Days" />
                         <DataField label="Max Holding" value="72 Hours" />
                       </div>
-                    </DetailSection>
+                    </DataCard>
                   </TabsContent>
 
                   <TabsContent value="history" className="space-y-8">
-                    <DetailSection title="Mutation Logs (Stock Card)">
+                    <DataCard dotColor="bg-indigo-500" title="Mutation Logs (Stock Card)" titleColor="text-slate-400" className="rounded-2xl">
                       <div className="space-y-4">
                         {isHistoryLoading ? (
                           <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 opacity-20" />
@@ -529,7 +530,7 @@ export default function WarehouseHubPage() {
                           ))
                         )}
                       </div>
-                    </DetailSection>
+                    </DataCard>
                   </TabsContent>
                 </Tabs>
               </div>

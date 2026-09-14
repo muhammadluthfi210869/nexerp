@@ -1,471 +1,757 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Warehouse, 
-  Search, 
-  ArrowRight, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Package, 
-  ChevronRight, 
-  AlertTriangle, 
-  Truck, 
-  History,
-  ClipboardList,
-  ArrowLeftRight,
-  ShieldCheck,
-  MoreVertical,
-  X,
+import { unwrapResponse } from "@/lib/unwrap-response";
+import {
+  ArrowRightLeft,
   Plus,
-  Zap,
-  LayoutDashboard,
-  Loader2
+  Search,
+  Filter,
+  Eye,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  FileSpreadsheet,
+  AlertTriangle,
+  Send,
+  Trash2,
+  FileText,
+  Boxes,
+  Warehouse,
+  ShieldCheck,
+  Package,
+  Calendar,
+  Building2,
+  ArrowRight,
+  Printer
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Badge } from "@/components/ui/badge";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaButton,
+  DnaBadge,
+  DnaModal,
+  DnaTabNav,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  DnaTable,
+  useDnaToast
+} from "@/components/dna";
 
-// Static fallback if API is unavailable
-const FALLBACK_REQUESTS = [
-  { kode: "REQ-001", dari: "Gudang Bahan Baku", ke: "Gudang Produksi Mixing", tanggal: "01/04/2026", status: "PENDING",
-    items: [{ kode: "BB-001", nama: "Glycerin 99%", qty_diminta: 120, stok: 1500, satuan: "kg", catatan: "Batch BR-001" }] },
-  { kode: "REQ-002", dari: "Gudang Kemasan", ke: "Gudang Produksi Filling", tanggal: "03/04/2026", status: "PENDING",
-    items: [{ kode: "KP-001", nama: "Botol PET 100ml", qty_diminta: 2500, stok: 4500, satuan: "pcs", catatan: "" }] },
+interface TransferItem {
+  id: string;
+  materialCode: string;
+  materialName: string;
+  transferQty: number;
+  availableStockOrigin: number;
+  unit: string;
+  batchLot: string;
+}
+
+interface WarehouseTransfer {
+  id: string;
+  transferNumber: string; // TRF-WH-YYYYMM-XXXX
+  transferDate: string;
+  fromWarehouse: string;
+  toWarehouse: string;
+  referenceDoc: string; // e.g. SPK / Kebutuhan Line Produksi
+  totalItems: number;
+  totalQty: number;
+  senderPic: string;
+  receiverPic?: string;
+  receivedDate?: string;
+  status: "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
+  notes?: string;
+  items: TransferItem[];
+}
+
+const INITIAL_TRANSFERS: WarehouseTransfer[] = [
+  {
+    id: "trf-1",
+    transferNumber: "TRF-WH-202609-0008",
+    transferDate: "2026-09-09",
+    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
+    toWarehouse: "Gudang Karantina & QC (WH-04)",
+    referenceDoc: "SPK-2026-09-008",
+    totalItems: 2,
+    totalQty: 55.0,
+    senderPic: "Bambang Sudiro (WH-01)",
+    status: "IN_TRANSIT",
+    notes: "Pengiriman sampel ruahan dan bahan aktif untuk re-testing kestabilan mikrobiologi.",
+    items: [
+      { id: "ti-1", materialCode: "BBK00028", materialName: "Super Moisturing Max", transferQty: 50.0, availableStockOrigin: 120.0, unit: "Kg", batchLot: "LOT-BB-2609-001" },
+      { id: "ti-2", materialCode: "BBK00092", materialName: "Fragrance Sweet Vanilla", transferQty: 5.0, availableStockOrigin: 18.0, unit: "Kg", batchLot: "LOT-FG-2608-004" }
+    ]
+  },
+  {
+    id: "trf-2",
+    transferNumber: "TRF-WH-202609-0007",
+    transferDate: "2026-09-08",
+    fromWarehouse: "Gudang Kemas & Box (WH-02)",
+    toWarehouse: "Gudang Produk Jadi (WH-03)",
+    referenceDoc: "SPK-2026-09-006",
+    totalItems: 1,
+    totalQty: 300,
+    senderPic: "Siti Rahma (WH-02)",
+    receiverPic: "Rahmat Hidayat (WH-03)",
+    receivedDate: "2026-09-08 16:30",
+    status: "COMPLETED",
+    notes: "Transfer master carton box cadangan untuk line packaging shift malam.",
+    items: [
+      { id: "ti-3", materialCode: "KMS00105", materialName: "Master Carton Box K125/M125 (Isi 48)", transferQty: 300, availableStockOrigin: 1200, unit: "Pcs", batchLot: "LOT-KM-2608-012" }
+    ]
+  },
+  {
+    id: "trf-3",
+    transferNumber: "TRF-WH-202609-0005",
+    transferDate: "2026-09-05",
+    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
+    toWarehouse: "Gudang Retur & Reject (WH-05)",
+    referenceDoc: "RET-PO-202609-0004",
+    totalItems: 1,
+    totalQty: 25.0,
+    senderPic: "Bambang Sudiro (WH-01)",
+    receiverPic: "Agus Santoso (WH-05)",
+    receivedDate: "2026-09-05 11:15",
+    status: "COMPLETED",
+    notes: "Pemindahan drum rusak fisik hasil reject QC ke gudang retur vendor.",
+    items: [
+      { id: "ti-4", materialCode: "REJ00004", materialName: "Drum Bahan Baku Rusak Segel", transferQty: 25.0, availableStockOrigin: 25.0, unit: "Kg", batchLot: "LOT-SON-2609-001" }
+    ]
+  }
 ];
 
-export default function PindahGudangPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+const MASTER_WAREHOUSES = [
+  "Gudang Bahan Baku Utama (WH-01)",
+  "Gudang Kemas & Box (WH-02)",
+  "Gudang Produk Jadi (WH-03)",
+  "Gudang Karantina & QC (WH-04)",
+  "Gudang Retur & Reject (WH-05)"
+];
+
+const AVAILABLE_TRANSFER_ITEMS = [
+  { code: "BBK00028", name: "Super Moisturing Max", unit: "Kg", stock: 120.0, lot: "LOT-BB-2609-001" },
+  { code: "BBK00031", name: "Niacinamide PC (Vitamin B3)", unit: "Kg", stock: 85.0, lot: "LOT-NC-2608-019" },
+  { code: "KMS00012", name: "Botol Tube 100ml Doff White", unit: "Pcs", stock: 12500, lot: "LOT-KM-2609-002" },
+  { code: "KMS00105", name: "Master Carton Box K125/M125", unit: "Pcs", stock: 350, lot: "LOT-KM-2608-012" }
+];
+
+export default function WarehouseTransfersPage() {
+  const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [selectedReq, setSelectedReq] = useState<any>(null);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [shipmentNotes, setShipmentNotes] = useState("");
+  const [dataList, setDataList] = useState<WarehouseTransfer[]>(INITIAL_TRANSFERS);
 
-  const { data: requisitions, isLoading } = useQuery({
-    queryKey: ["warehouse-requisitions"],
-    queryFn: async () => {
-      const res = await api.get("/warehouse/requisitions");
-      return res.data || res;
-    },
-  });
+  // Filters
+  const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTransfer, setSelectedTransfer] = useState<WarehouseTransfer | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const reqList = Array.isArray(requisitions) && requisitions.length > 0
-    ? requisitions.map((r: any) => ({
-        kode: r.reqNumber,
-        dari: r.fromWarehouse,
-        ke: r.toWarehouse,
-        tanggal: new Date(r.requestDate).toLocaleDateString('id-ID'),
-        status: r.status,
-        items: r.items?.map((i: any) => ({
-          kode: i.materialId?.slice(0, 8),
-          nama: i.materialId,
-          qty_diminta: Number(i.qty),
-          stok: 0,
-          satuan: 'pcs',
-          catatan: i.notes || '',
-          id: i.id,
-        })) || [],
-      }))
-    : FALLBACK_REQUESTS;
+  // Create Form State
+  const [fromWarehouse, setFromWarehouse] = useState(MASTER_WAREHOUSES[0]);
+  const [toWarehouse, setToWarehouse] = useState(MASTER_WAREHOUSES[3]);
+  const [referenceDoc, setReferenceDoc] = useState("");
+  const [formNotes, setFormNotes] = useState("");
+  const [cartItems, setCartItems] = useState<Array<{
+    materialCode: string;
+    materialName: string;
+    transferQty: number;
+    availableStockOrigin: number;
+    unit: string;
+    batchLot: string;
+  }>>([]);
 
-  const executeMutation = useMutation({
-    mutationFn: async (data: { id: string; items: { itemId: string; qty: number }[]; notes?: string }) => {
-      const res = await api.post(`/warehouse/requisitions/${data.id}/execute`, {
-        items: data.items,
-        notes: data.notes,
-      });
-      return res.data || res;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["warehouse-requisitions"] });
-    },
-  });
+  const [selectedMatCode, setSelectedMatCode] = useState("");
+  const [itemTransferQty, setItemTransferQty] = useState<number>(1);
 
-  // Set default selected request
-  if (!selectedReq && reqList.length > 0) {
-    setSelectedReq(reqList[0]);
-  }
+  // Calculate KPIs
+  const kpis = useMemo(() => {
+    const list = dataList;
+    const totalTransfers = list.length;
+    const inTransitCount = list.filter(t => t.status === "IN_TRANSIT").length;
+    const completedCount = list.filter(t => t.status === "COMPLETED").length;
+    const totalVolume = list.reduce((sum, t) => sum + t.totalQty, 0);
 
-  if (!mounted) return <div className="min-h-full bg-white" />;
+    return {
+      totalTransfers,
+      inTransitCount,
+      completedCount,
+      totalVolume
+    };
+  }, [dataList]);
 
-  const statusVariant: Record<string, "success" | "info" | "warning" | "critical" | "purple" | "default"> = {
-    PENDING: "warning",
-    APPROVED: "info",
-    IN_TRANSIT: "purple",
-    RECEIVED: "success",
-    REJECTED: "critical",
+  // Filtered List
+  const filteredList = useMemo(() => {
+    return dataList.filter(item => {
+      const matchSearch =
+        item.transferNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.referenceDoc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.fromWarehouse.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.toWarehouse.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.senderPic.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchTab =
+        activeTab === "ALL" ? true :
+        activeTab === "IN_TRANSIT" ? item.status === "IN_TRANSIT" :
+        activeTab === "COMPLETED" ? item.status === "COMPLETED" : true;
+
+      return matchSearch && matchTab;
+    });
+  }, [dataList, searchQuery, activeTab]);
+
+  const handleAddItemToTransfer = () => {
+    if (!selectedMatCode) {
+      toast.error("Pilih material barang terlebih dahulu");
+      return;
+    }
+    const mat = AVAILABLE_TRANSFER_ITEMS.find(m => m.code === selectedMatCode);
+    if (!mat) return;
+
+    if (itemTransferQty <= 0) {
+      toast.error("Jumlah transfer harus lebih dari 0");
+      return;
+    }
+    if (itemTransferQty > mat.stock) {
+      toast.error(`Kuantitas transfer melebihi stok tersedia (${mat.stock} ${mat.unit})`);
+      return;
+    }
+
+    const existing = cartItems.find(c => c.materialCode === mat.code);
+    if (existing) {
+      setCartItems(cartItems.map(c => c.materialCode === mat.code ? { ...c, transferQty: c.transferQty + itemTransferQty } : c));
+    } else {
+      setCartItems([
+        ...cartItems,
+        {
+          materialCode: mat.code,
+          materialName: mat.name,
+          transferQty: itemTransferQty,
+          availableStockOrigin: mat.stock,
+          unit: mat.unit,
+          batchLot: mat.lot
+        }
+      ]);
+    }
+
+    setSelectedMatCode("");
+    setItemTransferQty(1);
+    toast.success(`${mat.name} ditambahkan ke daftar transfer`);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.5, staggerChildren: 0.1, ease: [0.22, 1, 0.36, 1] as const }
+  const handleRemoveFromCart = (code: string) => {
+    setCartItems(cartItems.filter(c => c.materialCode !== code));
+  };
+
+  const handleCreateTransfer = () => {
+    if (fromWarehouse === toWarehouse) {
+      toast.error("Gudang asal dan gudang tujuan tidak boleh sama");
+      return;
+    }
+    if (!referenceDoc.trim()) {
+      toast.error("Nomor Dokumen Referensi / SPK wajib diisi");
+      return;
+    }
+    if (cartItems.length === 0) {
+      toast.error("Tambahkan minimal 1 item barang yang akan dipindahkan");
+      return;
+    }
+
+    const newNo = `TRF-WH-202609-00${String(dataList.length + 9).padStart(2, "0")}`;
+    const totalQty = cartItems.reduce((sum, i) => sum + i.transferQty, 0);
+
+    const newTransfer: WarehouseTransfer = {
+      id: `trf-${Date.now()}`,
+      transferNumber: newNo,
+      transferDate: new Date().toISOString().split("T")[0],
+      fromWarehouse,
+      toWarehouse,
+      referenceDoc,
+      totalItems: cartItems.length,
+      totalQty,
+      senderPic: "Petugas Gudang Asal (Anda)",
+      status: "IN_TRANSIT",
+      notes: formNotes || "Mutasi fisik antar gudang internal.",
+      items: cartItems.map((c, idx) => ({
+        id: `ti-${Date.now()}-${idx}`,
+        ...c
+      }))
+    };
+
+    setDataList([newTransfer, ...dataList]);
+    setIsCreateOpen(false);
+    setCartItems([]);
+    setReferenceDoc("");
+    setFormNotes("");
+    toast.success(`Surat Transfer ${newNo} berhasil diterbitkan (Status: In Transit).`);
+  };
+
+  const handleConfirmReceived = (id: string) => {
+    setDataList(dataList.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          status: "COMPLETED",
+          receiverPic: "Petugas Gudang Penerima (Anda)",
+          receivedDate: new Date().toLocaleString("id-ID")
+        };
+      }
+      return item;
+    }));
+    if (selectedTransfer && selectedTransfer.id === id) {
+      setSelectedTransfer({
+        ...selectedTransfer,
+        status: "COMPLETED",
+        receiverPic: "Petugas Gudang Penerima (Anda)",
+        receivedDate: new Date().toLocaleString("id-ID")
+      });
+    }
+    toast.success("Barang transfer telah diverifikasi fisik dan stok gudang tujuan otomatis bertambah.");
+  };
+
+  const getStatusBadge = (status: WarehouseTransfer["status"]) => {
+    switch (status) {
+      case "IN_TRANSIT":
+        return <DnaBadge variant="info">Sedang Dikirim (In Transit)</DnaBadge>;
+      case "COMPLETED":
+        return <DnaBadge variant="success">Selesai Serah Terima</DnaBadge>;
+      case "CANCELLED":
+        return <DnaBadge variant="critical">Dibatalkan</DnaBadge>;
     }
   };
 
   return (
-    <DashboardShell
-      title="Pindah"
-      titleAccent="Gudang"
-      subtitle="Inventory Transfer Operations & Stock Migration Control"
-      actions={
-        <div className="flex gap-4">
-          <Button 
-            variant="outline" 
-            className="h-14 px-6 border-2 border-slate-200 bg-white text-slate-900 rounded-2xl font-black uppercase tracking-tight text-[10px] shadow-sm hover:bg-slate-50 transition-all"
-          >
-            <History className="mr-2 h-4 w-4 text-amber-500" /> Transfer History
-          </Button>
-          <Button 
-            className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-tighter text-sm border-none transition-all hover:scale-105"
-          >
-            <Plus className="mr-2 h-5 w-5" /> Manual Transfer
-          </Button>
-        </div>
-      }
-    >
+    <DnaPageContainer>
+      {/* Header */}
+      <DnaPageHeader
+        title="Transfer Antar Gudang (Inter-Warehouse Transfers)"
+        description="Pemindahan persediaan material fisik antar lokasi gudang internal dengan alur serah terima 2-Step Handover."
+        badge={<DnaBadge variant="neutral">SCR-088 / WH-TRANSFER</DnaBadge>}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              onClick={() => toast.success("Data Transfer Barang diexport ke Excel")}
+            >
+              Export Excel
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              + Buat Transfer Antar Gudang
+            </DnaButton>
+          </div>
+        }
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 h-[calc(100vh-280px)]">
-        {/* LEFT: Request List */}
-        <Card className="lg:col-span-4 rounded-[24px] border-none shadow-2xl shadow-slate-200/30 overflow-hidden bg-white flex flex-col">
-           <div className="p-8 border-b border-slate-50 space-y-6">
-              <div className="flex justify-between items-center">
-                 <h3 className="text-xl font-black uppercase tracking-tighter italic flex items-center gap-3">
-                   <Clock className="h-5 w-5 text-indigo-600" /> Pending <span className="text-indigo-600">Requests</span>
-                 </h3>
-                   <DnaBadge status="info">5 NEW</DnaBadge>
-              </div>
-              <div className="relative">
-                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                 <Input placeholder="Search Request Code..." className="h-12 pl-12 bg-slate-50 border-none rounded-2xl font-bold text-xs" />
-              </div>
-           </div>
+      {/* KPI Cards */}
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Total Dokumen Transfer"
+          value={`${kpis.totalTransfers} Mutasi`}
+          icon={<ArrowRightLeft className="w-5 h-5 text-indigo-600" />}
+          delta={{ value: "+3 minggu ini", isPositive: true }}
+        />
+        <DnaStatCard
+          label="Sedang Dalam Pengiriman"
+          value={`${kpis.inTransitCount} Mutasi`}
+          icon={<Clock className="w-5 h-5 text-blue-500" />}
+          variant={kpis.inTransitCount > 0 ? "warning" : "default"}
+        />
+        <DnaStatCard
+          label="Selesai Diterima"
+          value={`${kpis.completedCount} Mutasi`}
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+        />
+        <DnaStatCard
+          label="Total Volume Berpindah"
+          value={`${kpis.totalVolume.toLocaleString("id-ID")} Qty`}
+          icon={<Boxes className="w-5 h-5 text-purple-600" />}
+        />
+      </DnaKpiGrid>
 
-           <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-100">
-               {isLoading ? (
-                 <div className="p-8 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>
-               ) : (
-                 reqList.map((req) => (
-                <motion.div
-                  key={req?.kode}
-                  whileHover={{ x: 8 }}
-                  onClick={() => setSelectedReq(req)}
-                   className={cn(
-                    "p-6 rounded-[24px] border-2 transition-all cursor-pointer group relative overflow-hidden",
-                    selectedReq?.kode === req?.kode 
-                      ? "border-indigo-600 bg-indigo-50/50 shadow-lg shadow-indigo-100" 
-                      : "border-slate-50 hover:border-slate-200 bg-white"
-                  )}
-                >
-                   <div className="flex justify-between items-start mb-4 relative z-10">
-                      <div className="flex flex-col">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{req.tanggal}</span>
-                         <span className={cn(
-                           "text-lg font-black tracking-tighter uppercase italic transition-colors",
-                           selectedReq?.kode === req?.kode ? "text-indigo-600" : "text-slate-900"
-                         )}>
-                           {req?.kode}
-                         </span>
-                      </div>
-                       <DnaBadge status={statusVariant[req.status] || "default"}>
-                          {req.status}
-                       </DnaBadge>
-                   </div>
-                   
-                   <div className="space-y-3 relative z-10">
-                      <div className="flex items-center gap-3">
-                         <div className="w-2 h-2 rounded-full bg-slate-200" />
-                         <span className="text-[11px] font-bold text-slate-500 uppercase truncate">{req.dari}</span>
-                      </div>
-                      <div className="ml-1 border-l-2 border-dashed border-slate-100 h-4" />
-                      <div className="flex items-center gap-3">
-                         <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                         <span className="text-[11px] font-black text-slate-900 uppercase truncate">{req.ke}</span>
-                      </div>
-                   </div>
-
-                   <ArrowRight className={cn(
-                     "absolute -right-8 top-1/2 -translate-y-1/2 h-16 w-16 text-indigo-100 transition-all group-hover:-right-4 opacity-50",
-                     selectedReq?.kode === req?.kode && "text-indigo-200 opacity-100"
-                   )} />
-                  </motion.div>
-                )))}
-            </div>
-        </Card>
-
-        {/* RIGHT: Detail & Execution */}
-        <div className="lg:col-span-8 flex flex-col gap-8 h-full">
-           <AnimatePresence mode="wait">
-              <motion.div
-                key={selectedReq?.kode}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col h-full gap-8"
-              >
-                {/* Info Header Card */}
-                <Card className="rounded-[24px] border-none shadow-xl p-8 bg-indigo-600 text-white overflow-hidden relative">
-                   <div className="relative z-10 flex justify-between items-center">
-                      <div className="space-y-4">
-                         <div className="flex items-center gap-4">
-                            <h2 className="text-4xl font-black italic tracking-tighter uppercase">{selectedReq?.kode}</h2>
-                            <DnaBadge status="info">
-                              {selectedReq.status}
-                            </DnaBadge>
-                         </div>
-                         <div className="flex items-center gap-6 text-slate-400">
-                            <div className="flex items-center gap-2">
-                               <Clock className="h-4 w-4" />
-                               <span className="text-[11px] font-bold uppercase">{selectedReq.tanggal}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                               <span className="text-[11px] font-black uppercase text-white">{selectedReq.dari}</span>
-                               <ArrowRight className="h-4 w-4 text-indigo-400" />
-                               <span className="text-[11px] font-black uppercase text-white">{selectedReq.ke}</span>
-                            </div>
-                         </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end gap-2">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Valuation</span>
-                         <span className="text-3xl font-black italic tracking-tighter text-indigo-400 tabular-nums">Rp 4.5M</span>
-                      </div>
-                   </div>
-                   <Warehouse className="absolute -right-12 -bottom-12 h-64 w-64 text-white/5 rotate-12 pointer-events-none" />
-                </Card>
-
-                {/* Items Table Card */}
-                <Card className="flex-1 rounded-[24px] border-none shadow-2xl shadow-slate-200/30 overflow-hidden bg-white flex flex-col">
-                   <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white">
-                      <h3 className="text-xl font-black uppercase tracking-tighter italic">Transfer <span className="text-indigo-600">Manifest</span></h3>
-                      <div className="flex items-center gap-4">
-                         <Badge variant="outline" className="rounded-lg border-slate-200 text-slate-500 font-bold text-[9px] uppercase">
-                           {selectedReq?.items.length} Unique Items
-                         </Badge>
-                      </div>
-                   </div>
-                   
-                    <TableWrapper className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-100">
-                       <Table>
-                        <TableHeader className="bg-slate-50/50 sticky top-0 z-20">
-                          <TableRow className="hover:bg-transparent border-slate-100">
-                            <TableHead className="py-6 pl-10 text-table-header text-slate-400">#</TableHead>
-                            <TableHead className="text-table-header text-slate-400">Barang</TableHead>
-                            <TableHead className="text-table-header text-slate-400 text-right">Diminta</TableHead>
-                            <TableHead className="text-table-header text-slate-400 text-right">Stok Tersedia</TableHead>
-                            <TableHead className="text-table-header text-slate-400 text-center">Qty Dikirim</TableHead>
-                            <TableHead className="pr-10 text-table-header text-slate-400">Catatan</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {selectedReq?.items.map((item: any, idx: number) => (
-                            <TableRow key={item.kode} className="group hover:bg-indigo-50/30 transition-all duration-300 border-b border-slate-50">
-                              <TableCell className="py-8 pl-10 font-bold text-slate-300 text-xs">{(idx + 1).toString().padStart(2, '0')}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-4">
-                                   <div className="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
-                                    <Package className="h-4 w-4" />
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{item.nama}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.kode}</span>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right font-black text-slate-900 text-xs tabular-nums">
-                                {item.qty_diminta.toLocaleString()} <span className="text-[9px] text-slate-400">{item.satuan}</span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                 <div className={cn(
-                                   "font-black text-xs tabular-nums flex items-center justify-end gap-2",
-                                   item.stok >= item.qty_diminta ? "text-emerald-500" : "text-rose-500"
-                                 )}>
-                                    {item.stok.toLocaleString()}
-                                    {item.stok < item.qty_diminta && <AlertTriangle className="h-3 w-3 animate-pulse" />}
-                                 </div>
-                              </TableCell>
-                              <TableCell className="text-center">
-                                 <Input 
-                                   type="number" 
-                                   defaultValue={item.qty_diminta}
-                                   className="w-24 h-10 mx-auto bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-xl font-black text-center text-xs transition-all"
-                                 />
-                              </TableCell>
-                              <TableCell className="pr-10">
-                                 <p className="text-[10px] font-bold text-slate-400 uppercase italic truncate max-w-[150px]">{item.catatan || "No notes"}</p>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableWrapper>
-
-                    {/* Execution Footer */}
-                   <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
-                      <div className="flex items-center gap-6">
-                         <div className={cn(
-                           "h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg",
-                           selectedReq?.items.every((i: any) => i.stok >= i.qty_diminta) ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"
-                         )}>
-                            {selectedReq?.items.every((i: any) => i.stok >= i.qty_diminta) ? <CheckCircle2 className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6 animate-pulse" />}
-                         </div>
-                         <div className="space-y-1">
-                            <p className="text-xs font-black text-slate-900 uppercase italic">
-                               Stock Validation Status
-                            </p>
-                            <p className={cn(
-                              "text-[10px] font-bold uppercase",
-                              selectedReq?.items.every((i: any) => i.stok >= i.qty_diminta) ? "text-emerald-500" : "text-rose-500"
-                            )}>
-                               {selectedReq?.items.every((i: any) => i.stok >= i.qty_diminta) ? "âœ… Ready for immediate dispatch" : "âš ï¸ Attention: Stock shortage detected"}
-                            </p>
-                         </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                         <Button variant="ghost" className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-50 hover:text-rose-600">
-                            <XCircle className="mr-2 h-4 w-4" /> Tolak Permintaan
-                         </Button>
-                         <Button 
-                           onClick={() => setIsConfirmModalOpen(true)}
-                           disabled={!selectedReq?.items.some((i: any) => i.stok > 0)}
-                           className="h-14 px-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-sm transition-all hover:scale-105 active:scale-95"
-                         >
-                            <Truck className="mr-3 h-5 w-5" /> Konfirmasi Kirim
-                         </Button>
-                      </div>
-                   </div>
-                </Card>
-              </motion.div>
-           </AnimatePresence>
-        </div>
+      {/* Navigation Tabs */}
+      <div className="mb-4">
+        <DnaTabNav
+          tabs={[
+            { id: "ALL", label: "Semua Transfer", count: dataList.length },
+            { id: "IN_TRANSIT", label: "Sedang Dikirim (In Transit)", count: dataList.filter(d => d.status === "IN_TRANSIT").length },
+            { id: "COMPLETED", label: "Selesai Serah Terima", count: dataList.filter(d => d.status === "COMPLETED").length }
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
       </div>
 
-      {/* Confirmation Modal */}
-      <AnimatePresence>
-        {isConfirmModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-             <motion.div 
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               onClick={() => setIsConfirmModalOpen(false)}
-                className="absolute inset-0 bg-black/60 backdrop-blur-md"
-             />
-             
-             <motion.div 
-               initial={{ opacity: 0, scale: 0.95, y: 20 }}
-               animate={{ opacity: 1, scale: 1, y: 0 }}
-               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-               className="relative w-full max-w-2xl bg-white rounded-[24px] shadow-2xl overflow-hidden"
-             >
-                <div className="p-12 space-y-10">
-                   <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                         <div className="flex items-center gap-2">
-                            <Truck className="h-5 w-5 text-indigo-600" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">Final Validation</span>
-                         </div>
-                         <h2 className="text-3xl font-black italic tracking-tighter uppercase">Konfirmasi <br/> <span className="text-indigo-600">Pindah Gudang</span></h2>
+      {/* Main Table Card */}
+      <DnaDataTableCard
+        title="Daftar Surat Pemindahan Barang Antar Gudang"
+        description="Stok baru bertambah di gudang tujuan setelah petugas penerima mengonfirmasi penerimaan fisik."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari No Transfer, Dokumen SPK, Gudang Asal/Tujuan..."
+      >
+        <div className="overflow-x-auto">
+          <DnaTable className="w-full text-left text-sm text-slate-600">
+            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <tr>
+                <th className="py-3 px-4">No. Transfer</th>
+                <th className="py-3 px-4">Tanggal</th>
+                <th className="py-3 px-4">Gudang Asal</th>
+                <th className="py-3 px-4">Gudang Tujuan</th>
+                <th className="py-3 px-4">Dokumen Referensi</th>
+                <th className="py-3 px-4 text-center">Total Item</th>
+                <th className="py-3 px-4 text-right">Total Qty</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-normal">
+              {filteredList.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <ArrowRightLeft className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada dokumen transfer antar gudang yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredList.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs">
+                      {row.transferNumber}
+                    </td>
+                    <td className="py-3 px-4 text-xs whitespace-nowrap">
+                      {row.transferDate}
+                    </td>
+                    <td className="py-3 px-4 text-xs font-medium text-slate-800">
+                      {row.fromWarehouse}
+                    </td>
+                    <td className="py-3 px-4 text-xs font-semibold text-slate-900">
+                      {row.toWarehouse}
+                    </td>
+                    <td className="py-3 px-4 text-xs font-mono text-slate-700">
+                      {row.referenceDoc}
+                    </td>
+                    <td className="py-3 px-4 text-center text-xs font-semibold text-slate-800">
+                      {row.totalItems} Jenis
+                    </td>
+                    <td className="py-3 px-4 text-right text-xs font-mono font-bold text-indigo-700">
+                      {row.totalQty.toLocaleString("id-ID")}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {getStatusBadge(row.status)}
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          icon={<Eye className="w-3.5 h-3.5" />}
+                          onClick={() => {
+                            setSelectedTransfer(row);
+                            setIsDetailOpen(true);
+                          }}
+                        >
+                          Detail
+                        </DnaButton>
+                        {row.status === "IN_TRANSIT" && (
+                          <DnaButton
+                            variant="secondary"
+                            size="sm"
+                            icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                            onClick={() => handleConfirmReceived(row.id)}
+                          >
+                            Terima Fisik
+                          </DnaButton>
+                        )}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => setIsConfirmModalOpen(false)} className="rounded-full h-12 w-12 bg-slate-50">
-                         <X className="h-6 w-6" />
-                      </Button>
-                   </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </DnaTable>
+        </div>
+      </DnaDataTableCard>
 
-                   <div className="grid grid-cols-2 gap-8 p-8 bg-slate-50 rounded-[24px] border border-slate-100">
-                      <div className="space-y-4">
-                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gudang Asal</span>
-                            <span className="text-sm font-black text-slate-900 uppercase italic truncate">{selectedReq.dari}</span>
-                         </div>
-                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gudang Tujuan</span>
-                            <span className="text-sm font-black text-slate-900 uppercase italic truncate">{selectedReq.ke}</span>
-                         </div>
-                      </div>
-                      <div className="space-y-4 text-right">
-                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Manifest</span>
-                            <span className="text-sm font-black text-slate-900 uppercase italic">{selectedReq?.items.length} Items</span>
-                         </div>
-                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Valuation</span>
-                            <span className="text-xl font-black text-indigo-600 uppercase italic tabular-nums">Rp 4.500.000</span>
-                         </div>
-                      </div>
-                   </div>
+      {/* Modal Detail Transfer */}
+      {selectedTransfer && (
+        <DnaModal
+          isOpen={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          title={`Surat Transfer Barang: ${selectedTransfer.transferNumber}`}
+          description={`Pemindahan dari ${selectedTransfer.fromWarehouse} ➔ ${selectedTransfer.toWarehouse}`}
+          size="xl"
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <div className="text-xs text-slate-500">
+                Pengirim: <span className="font-semibold text-slate-700">{selectedTransfer.senderPic}</span>
+                {selectedTransfer.receiverPic && (
+                  <span> | Penerima: <span className="font-semibold text-slate-700">{selectedTransfer.receiverPic}</span></span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <DnaButton
+                  variant="outline"
+                  size="sm"
+                  icon={<Printer className="w-4 h-4" />}
+                  onClick={() => toast.success("Mencetak Surat Transfer Barang Antar Gudang...")}
+                >
+                  Cetak Bukti Transfer
+                </DnaButton>
+                {selectedTransfer.status === "IN_TRANSIT" && (
+                  <DnaButton
+                    variant="primary"
+                    size="sm"
+                    icon={<CheckCircle2 className="w-4 h-4" />}
+                    onClick={() => {
+                      handleConfirmReceived(selectedTransfer.id);
+                      setIsDetailOpen(false);
+                    }}
+                  >
+                    Konfirmasi Penerimaan Fisik
+                  </DnaButton>
+                )}
+                <DnaButton variant="primary" size="sm" onClick={() => setIsDetailOpen(false)}>
+                  Tutup
+                </DnaButton>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            {/* Header Cards */}
+            <div className="grid grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div>
+                <span className="text-slate-500 block">No. Referensi / SPK</span>
+                <span className="font-bold text-slate-900 font-mono">{selectedTransfer.referenceDoc}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Total Volume Berpindah</span>
+                <span className="font-bold text-indigo-700 font-mono text-sm">{selectedTransfer.totalQty.toLocaleString("id-ID")} Unit</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Tanggal Transfer</span>
+                <span className="font-medium text-slate-800">{selectedTransfer.transferDate}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Status Mutasi</span>
+                <div className="mt-0.5">{getStatusBadge(selectedTransfer.status)}</div>
+              </div>
+            </div>
 
-                   <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Internal Shipment Notes</label>
-                      <textarea 
-                        rows={3}
-                        placeholder="Add special delivery instructions or pallet tracking IDs..."
-                        className="w-full p-6 bg-slate-50 border-none rounded-[2rem] font-semibold text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                        value={shipmentNotes}
-                        onChange={(e) => setShipmentNotes(e.target.value)}
-                      />
-                   </div>
+            {selectedTransfer.notes && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-indigo-900">
+                <span className="font-bold block mb-0.5">Catatan Instruksi Pemindahan:</span>
+                {selectedTransfer.notes}
+              </div>
+            )}
 
-                   <div className="flex gap-4 pt-4">
-                      <Button 
-                        onClick={() => setIsConfirmModalOpen(false)}
-                        variant="ghost" 
-                        className="flex-1 h-16 rounded-[2rem] font-black uppercase text-xs tracking-widest text-slate-400 hover:bg-slate-50"
-                      >
-                         Batal
-                      </Button>
-                       <Button 
-                         onClick={() => {
-                           const items = selectedReq?.items.map((i: any) => ({ itemId: i.id || i.kode, qty: i.qty_diminta || 0 }));
-                           executeMutation.mutate({ id: selectedReq?.kode, items, notes: shipmentNotes });
-                           setIsConfirmModalOpen(false);
-                         }}
-                         disabled={executeMutation.isPending}
-                         className="flex-[2] h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2rem] shadow-2xl shadow-indigo-100 font-black uppercase tracking-widest text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                       >
-                          <ShieldCheck className="mr-3 h-5 w-5" /> {executeMutation.isPending ? "Processing..." : "Konfirmasi & Kirim"}
-                       </Button>
-                   </div>
-                </div>
-             </motion.div>
+            {/* Items Table */}
+            <div>
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Barang yang Dipindahkan</h4>
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <DnaTable className="w-full text-left text-xs text-slate-600">
+                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
+                    <tr>
+                      <th className="py-2.5 px-3">Kode</th>
+                      <th className="py-2.5 px-3">Nama Material / Barang</th>
+                      <th className="py-2.5 px-3 text-right">Qty Transfer</th>
+                      <th className="py-2.5 px-3">Satuan</th>
+                      <th className="py-2.5 px-3">No. Batch / Lot</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-mono">
+                    {selectedTransfer.items.map((it) => (
+                      <tr key={it.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 text-indigo-600 font-medium">{it.materialCode}</td>
+                        <td className="py-2.5 px-3 font-sans font-semibold text-slate-800">{it.materialName}</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-indigo-700">{it.transferQty.toLocaleString("id-ID")}</td>
+                        <td className="py-2.5 px-3 text-slate-500">{it.unit}</td>
+                        <td className="py-2.5 px-3 text-slate-700">{it.batchLot}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DnaTable>
+              </div>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </DnaModal>
+      )}
 
-      {/* Insight Panel */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-indigo-50/50 border border-indigo-100 rounded-[24px] p-10 flex gap-8 items-center">
-         <div className="h-16 w-16 rounded-3xl bg-white shadow-xl flex items-center justify-center text-indigo-600 shrink-0">
-            <LayoutDashboard className="h-8 w-8" />
-         </div>
-         <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 italic">ðŸ’¡ Operator Insight: Supply Chain Velocity</p>
-            <p className="text-sm font-semibold text-slate-600 leading-relaxed uppercase">
-               "Batch validation for <span className="text-indigo-600 font-bold italic">Gudang Produksi Mixing</span> is critical to maintain the production timeline. 
-               Always cross-reference <span className="text-indigo-600 font-bold">Batch BR-001</span> notes with the physical pallet labels before committing the transfer."
-            </p>
-         </div>
-      </motion.div>
-    </DashboardShell>
+      {/* Modal Buat Transfer Baru */}
+      <DnaModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Form Transfer Barang Antar Gudang"
+        description="Pilih gudang asal dan gudang tujuan serta item barang yang akan dipindahkan fisiknya."
+        size="2xl"
+        footer={
+          <div className="flex items-center justify-end gap-2.5 w-full">
+            <DnaButton variant="outline" size="sm" onClick={() => setIsCreateOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Send className="w-4 h-4" />}
+              onClick={handleCreateTransfer}
+            >
+              Terbitkan Surat Transfer
+            </DnaButton>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Gudang Asal (Pengirim) *</label>
+<DnaSelect 
+                aria-label="Gudang Asal"
+                value={fromWarehouse}
+                onChange={setFromWarehouse}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+              >
+                {MASTER_WAREHOUSES.map((wh) => (
+                  <option key={wh} value={wh}>{wh}</option>
+                ))}
+              </DnaSelect>
+            </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Gudang Tujuan (Penerima) *</label>
+<DnaSelect 
+                aria-label="Gudang Tujuan"
+                value={toWarehouse}
+                onChange={setToWarehouse}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+              >
+                {MASTER_WAREHOUSES.map((wh) => (
+                  <option key={wh} value={wh}>{wh}</option>
+                ))}
+              </DnaSelect>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">No. Dokumen Referensi / SPK / Permintaan *</label>
+            <DnaInput
+              type="text"
+              placeholder="Contoh: SPK-2026-09-012 / REQ-202609-0010"
+              value={referenceDoc}
+              onChange={(e) => setReferenceDoc(e.target.value)}
+              className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Item Adder */}
+          <div className="border-t border-slate-200 pt-3">
+            <h4 className="font-bold text-slate-800 text-xs mb-2 flex items-center justify-between">
+              <span>Pilih Material yang Dipindahkan</span>
+              <span className="text-[11px] font-normal text-slate-500">{cartItems.length} Item dalam Daftar</span>
+            </h4>
+            <div className="grid grid-cols-12 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 items-end">
+              <div className="col-span-7">
+                <label className="block text-[11px] text-slate-600 font-medium mb-1">Pilih Material / Barang</label>
+  <DnaSelect 
+                  aria-label="Pilih Material Transfer"
+                  value={selectedMatCode}
+                  onChange={setSelectedMatCode}
+                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">-- Pilih Material Gudang Asal --</option>
+                  {AVAILABLE_TRANSFER_ITEMS.map((m) => (
+                    <option key={m.code} value={m.code}>
+                      [{m.code}] {m.name} (Tersedia: {m.stock} {m.unit})
+                    </option>
+                  ))}
+                </DnaSelect>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-[11px] text-slate-600 font-medium mb-1">Qty Transfer</label>
+                <DnaInput
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  value={itemTransferQty}
+                  onChange={(e) => setItemTransferQty(parseFloat(e.target.value) || 0)}
+                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 text-right font-mono"
+                />
+              </div>
+              <div className="col-span-2">
+                <DnaButton
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  icon={<Plus className="w-3.5 h-3.5" />}
+                  onClick={handleAddItemToTransfer}
+                >
+                  Tambah
+                </DnaButton>
+              </div>
+            </div>
+          </div>
+
+          {/* Cart Table */}
+          {cartItems.length > 0 && (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <DnaTable className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
+                  <tr>
+                    <th className="py-2 px-3">Kode</th>
+                    <th className="py-2 px-3">Nama Material</th>
+                    <th className="py-2 px-3 text-right">Stok Asal</th>
+                    <th className="py-2 px-3 text-right">Qty Dipindahkan</th>
+                    <th className="py-2 px-3">Satuan</th>
+                    <th className="py-2 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {cartItems.map((c) => (
+                    <tr key={c.materialCode}>
+                      <td className="py-2 px-3 font-mono font-medium text-indigo-600">{c.materialCode}</td>
+                      <td className="py-2 px-3 font-semibold text-slate-800">{c.materialName}</td>
+                      <td className="py-2 px-3 text-right font-mono text-slate-600">{c.availableStockOrigin}</td>
+                      <td className="py-2 px-3 text-right font-mono font-bold text-indigo-700">{c.transferQty}</td>
+                      <td className="py-2 px-3 text-slate-500">{c.unit}</td>
+                      <td className="py-2 px-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFromCart(c.materialCode)}
+                          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DnaTable>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">Catatan Tambahan</label>
+            <DnaTextarea
+              rows={2}
+              placeholder="Contoh: Pemindahan material ruahan untuk line mixing shift malam."
+              value={formNotes}
+              onChange={(e) => setFormNotes(e.target.value)}
+              className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+      </DnaModal>
+    </DnaPageContainer>
   );
 }

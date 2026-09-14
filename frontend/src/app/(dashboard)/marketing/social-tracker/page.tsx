@@ -1,10 +1,4 @@
-import SocialTrackerClient from './SocialTrackerClient';
+import { SocialPlanner } from "./SocialPlanner";
 
-export const metadata = {
-  title: 'Social Media Tracker & Meta Analytics | ERP Digmar',
-  description: 'Notion-style Social Media Content Planner & Meta Suite Analytics Tracker (Read-Only Mode)',
-};
-
-export default function SocialTrackerPage() {
-  return <SocialTrackerClient />;
-}
+export const metadata = { title: "Social Media Planner | NexERP" };
+export default function SocialTrackerPage() { return <SocialPlanner />; }

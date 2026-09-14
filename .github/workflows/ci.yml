@@ -1,0 +1,169 @@
+# ═══════════════════════════════════════════════════════════════
+#  CI — Build, Test & Push (satu-satunya pipeline, branch main)
+# ═══════════════════════════════════════════════════════════════
+#  Alur sejak konsolidasi 2026-09 (production-light DIARSIPKAN):
+#
+#    PR → build-and-test gate → merge ke main → push-images ke GHCR
+#    → di VPS: bash scripts/deploy.sh <sha>  (pull, TANPA build)
+#
+#  VPS (4GB) tidak pernah build; CI yang build dengan layer cache GHA.
+#  Rollback: bash scripts/rollback.sh <sha-lama> (image per-SHA abadi).
+# ═══════════════════════════════════════════════════════════════
+
+name: 🔨 CI — Build, Test & Push
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+
+jobs:
+  build-and-test:
+    name: 🔨 Build & Integration Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build Backend Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          load: true
+          tags: nexerp-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Build Frontend Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          load: true
+          tags: nexerp-frontend:test
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:3001/v1
+            JWT_SECRET=test-secret-do-not-use-in-production
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Start Backend
+        run: |
+          docker run -d --name nexerp-backend-test \
+            --network host \
+            -e PORT=3001 \
+            -e NODE_ENV=production \
+            -e DATABASE_URL="postgresql://test_user:test_pass@localhost:5432/test_db?schema=public" \
+            -e JWT_SECRET="test-secret-do-not-use-in-production" \
+            -e AES_SECRET_KEY="aureon_erp_v4_ultra_secret_key_32" \
+            -e CORS_ORIGIN="http://localhost:3000,https://nexerp.id" \
+            nexerp-backend:test
+
+          echo "⏳ Menunggu backend siap..."
+          for i in $(seq 1 60); do
+            sleep 2
+            HEALTH=$(curl -sf http://localhost:3001/v1/health 2>/dev/null || echo "")
+            if [ -n "$HEALTH" ]; then
+              echo "✅ Backend siap setelah ${i}x2s"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "❌ Backend gagal start!"
+              docker logs nexerp-backend-test --tail 50
+              exit 1
+            fi
+          done
+
+      - name: 🩺 Integration Tests
+        run: |
+          chmod +x scripts/test-deploy.sh
+          bash scripts/test-deploy.sh http://localhost:3001/v1
+
+      - name: 🧪 Consolidation Regression Tests
+        run: |
+          chmod +x scripts/__tests__/consolidation.test.sh
+          bash scripts/__tests__/consolidation.test.sh
+
+      - name: 📝 Logs (jika gagal)
+        if: failure()
+        run: docker logs nexerp-backend-test --tail 100
+
+      - name: 🧹 Bersihkan container
+        if: always()
+        run: docker rm -f nexerp-backend-test 2>/dev/null || true
+
+  push-images:
+    name: 📦 Push Images ke GHCR
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Login ke GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Build & Push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 📦 Build & Push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/frontend:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api/v1' }}
+            NEXT_PUBLIC_WA_PHONE=${{ vars.NEXT_PUBLIC_WA_PHONE || '6287793032556' }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: ✅ Ringkasan
+        run: |
+          echo "### Image ter-push" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy: \`ssh dreamlab@103.93.134.215\` → \`cd /home/dreamlab/nexerp && bash scripts/deploy.sh ${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"

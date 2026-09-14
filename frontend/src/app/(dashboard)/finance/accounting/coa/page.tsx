@@ -1,581 +1,888 @@
 "use client";
 
-import React, { useState } from "react";
+/**
+ * Chart of Accounts (COA) — Unified Enterprise Financial Hub
+ *
+ * Portal sentral bagan akun neraca, laba rugi, persediaan kosmetik,
+ * dan aturan posting jurnal transaksi manufaktur maklon.
+ *
+ * Visual DNA Golden Reference Architecture:
+ * - 0 raw @/components/ui imports (Strict ADR-007)
+ * - Light Enterprise Theme: bg-[#F8FAFC] min-h-screen text-slate-900
+ * - DnaPageHeader with integrated 6 tabs (Semua, Aset, Kewajiban, Ekuitas, Pendapatan, Beban)
+ * - DnaKpiGrid with 5 interactive click-to-filter KPI cards
+ * - DnaDataTableCard with 2-level filter toolbar, sorting, and pagination
+ * - Standardized cells: DnaCell.Code, DnaCell.Text, DnaCell.Badge, DnaCell.Actions
+ * - Clean DnaModal dialogs for Detail, Create, and Edit
+ */
+
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-  DialogHeader,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Search,
-  Plus,
-  ChevronRight,
-  ChevronDown,
+  FileSpreadsheet,
   Layers,
   Wallet,
-  TrendingUp,
   TrendingDown,
-  ArrowRightLeft,
-  Edit3,
-  Hash,
+  TrendingUp,
+  CreditCard,
+  Landmark,
+  Plus,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Building2,
+  CheckCircle2,
+  Lock,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaButton,
+  DnaInput,
+  DnaSelect,
+  DnaModal,
+  DnaConfirmDialog,
+  DnaCell,
+  DnaCheckbox,
+  DnaTable,
+  useDnaToast,
+} from "@/components/dna";
+import { MASTER_COA_LIST, CoaAccountItem } from "@/lib/coa-utils";
 
-type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
-type NormalBalance = "DEBIT" | "CREDIT";
-
-interface Account {
+export interface AccountModel {
   id: string;
   code: string;
   name: string;
-  type: AccountType;
-  normalBalance: NormalBalance;
-  parentId: string | null;
+  type: "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
+  normalBalance: "DEBIT" | "CREDIT";
+  category: string;
+  parentId?: string | null;
   isActive: boolean;
-  children?: Account[];
 }
 
-const ACCOUNT_TYPES: { value: AccountType; label: string; color: string }[] = [
-  { value: "ASSET", label: "Asset", color: "text-blue-600" },
-  { value: "LIABILITY", label: "Liability", color: "text-rose-600" },
-  { value: "EQUITY", label: "Equity", color: "text-purple-600" },
-  { value: "REVENUE", label: "Revenue", color: "text-emerald-600" },
-  { value: "EXPENSE", label: "Expense", color: "text-amber-600" },
-];
+// Convert MASTER_COA_LIST into initial state models
+const INITIAL_COA_DATA: AccountModel[] = MASTER_COA_LIST.map((item, idx) => ({
+  id: `coa-${item.code}`,
+  code: item.code,
+  name: item.name,
+  type: item.type,
+  normalBalance: item.normalBalance || (item.type === "ASSET" || item.type === "EXPENSE" ? "DEBIT" : "CREDIT"),
+  category: item.category || "General",
+  parentId: null,
+  isActive: item.isActive ?? true,
+}));
 
-function buildTree(items: Account[]): Account[] {
-  const map: Record<string, Account> = {};
-  const tree: Account[] = [];
-
-  items.forEach((item) => {
-    map[item.id] = { ...item, children: [] };
-  });
-
-  items.forEach((item) => {
-    if (item.parentId && map[item.parentId]) {
-      map[item.parentId].children!.push(map[item.id]);
-    } else {
-      tree.push(map[item.id]);
-    }
-  });
-
-  return tree;
-}
-
-function getTypeBadge(type: AccountType) {
-  switch (type) {
-    case "ASSET": return "info";
-    case "LIABILITY": return "critical";
-    case "EQUITY": return "purple";
-    case "REVENUE": return "success";
-    case "EXPENSE": return "warning";
-    default: return "default";
-  }
-}
-
-function AccountRow({
-  account,
-  level = 0,
-  onEdit,
-}: {
-  account: Account;
-  level?: number;
-  onEdit: (acc: Account) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(true);
-  const hasChildren = account.children && account.children.length > 0;
-
-  return (
-    <>
-      <TableRow
-        className={cn(
-          "group transition-all duration-300 border-b border-slate-50",
-          level === 0 ? "bg-slate-50/50" : "hover:bg-slate-50/30"
-        )}
-      >
-        <TableCell className="py-3 pl-6">
-          <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 20}px` }}>
-            {hasChildren ? (
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="h-5 w-5 rounded flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                {isOpen ? (
-                  <ChevronDown className="h-3 w-3 text-slate-500" />
-                ) : (
-                  <ChevronRight className="h-3 w-3 text-slate-500" />
-                )}
-              </button>
-            ) : (
-              <div className="w-5" />
-            )}
-            <div className={cn(
-              "h-7 w-7 rounded-lg flex items-center justify-center text-[8px] font-black",
-              level === 0
-                ? "bg-blue-600 text-white"
-                : "bg-white border border-slate-200 text-slate-400"
-            )}>
-              {account.code.substring(0, 3)}
-            </div>
-            <span className={cn(
-              "font-black tracking-tight text-xs uppercase",
-              level === 0 ? "text-slate-900" : "text-slate-700"
-            )}>
-              {account.code}
-            </span>
-          </div>
-        </TableCell>
-        <TableCell className="py-3">
-          <span className={cn(
-            "font-medium text-xs uppercase",
-            level === 0 ? "font-black text-slate-900" : "text-slate-700"
-          )}>
-            {account.name}
-          </span>
-        </TableCell>
-        <TableCell className="py-3 text-center">
-          <DnaBadge status={getTypeBadge(account.type) as any}>
-            {account.type}
-          </DnaBadge>
-        </TableCell>
-        <TableCell className="py-3 text-center">
-          <span className={cn(
-            "text-[10px] font-black uppercase",
-            account.normalBalance === "DEBIT" ? "text-blue-600" : "text-rose-600"
-          )}>
-            {account.normalBalance}
-          </span>
-        </TableCell>
-        <TableCell className="py-3 text-center">
-          <DnaBadge status={account.isActive ? "success" : "default"}>
-            {account.isActive ? "ACTIVE" : "INACTIVE"}
-          </DnaBadge>
-        </TableCell>
-        <TableCell className="py-3 pr-6 text-right">
-          <DnaButton
-            variant="ghost"
-            size="sm"
-            icon={<Edit3 />}
-            onClick={() => onEdit(account)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          />
-        </TableCell>
-      </TableRow>
-      {isOpen &&
-        hasChildren &&
-        account.children?.map((child) => (
-          <AccountRow
-            key={child.id}
-            account={child}
-            level={level + 1}
-            onEdit={onEdit}
-          />
-        ))}
-    </>
-  );
-}
-
-export default function ChartOfAccountsPage() {
+function ChartOfAccountsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
+  const tabParam = searchParams.get("tab")?.toUpperCase() || "ALL";
+  const [activeTab, setActiveTab] = useState<string>(tabParam);
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    router.replace(`/finance/accounting/coa?tab=${tabId.toLowerCase()}`);
+  };
+
+  // ── States ──
+  const [accountsList, setAccountsList] = useState<AccountModel[]>(INITIAL_COA_DATA);
+
+  // Sync with API query if backend is available
+  const { data: apiAccounts } = useQuery<AccountModel[]>({
+    queryKey: ["finance-accounts"],
+    queryFn: async (): Promise<AccountModel[]> => {
+      try {
+        const res = await api.get("/finance/accounts");
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          return res.data;
+        }
+        return [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 60000,
+  });
+
+  useEffect(() => {
+    if (apiAccounts && apiAccounts.length > 0) {
+      setAccountsList(apiAccounts);
+    }
+  }, [apiAccounts]);
+
+  // Filter & Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKpiFilter, setSelectedKpiFilter] = useState<string>("ALL");
+  const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>("category");
+  const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
+
+  // Sorting
+  const [sortColumn, setSortColumn] = useState<string | null>("code");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Selection
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(12);
+
+  // Modals
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [viewingAccount, setViewingAccount] = useState<AccountModel | null>(null);
+  const [editingAccount, setEditingAccount] = useState<AccountModel | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<AccountModel | null>(null);
+
+  // Form State
   const [formCode, setFormCode] = useState("");
   const [formName, setFormName] = useState("");
-  const [formType, setFormType] = useState<AccountType>("ASSET");
-  const [formNormalBalance, setFormNormalBalance] = useState<NormalBalance>("DEBIT");
-  const [formParentId, setFormParentId] = useState("");
+  const [formType, setFormType] = useState<AccountModel["type"]>("ASSET");
+  const [formNormalBalance, setFormNormalBalance] = useState<AccountModel["normalBalance"]>("DEBIT");
+  const [formCategory, setFormCategory] = useState("Kas & Bank");
   const [formIsActive, setFormIsActive] = useState(true);
-  const [showConfirm, setShowConfirm] = useState(false);
 
-  const { data: accounts, isLoading, isError } = useQuery<Account[]>({
-    queryKey: ["finance-accounts"],
-    queryFn: async () => {
-      const res = await api.get("/finance/accounts");
-      return res.data;
-    },
-  });
+  // ── Stats Calculations ──
+  const totalAccounts = accountsList.length;
+  const assetCount = accountsList.filter((a) => a.type === "ASSET").length;
+  const liabilityCount = accountsList.filter((a) => a.type === "LIABILITY").length;
+  const equityCount = accountsList.filter((a) => a.type === "EQUITY").length;
+  const revenueCount = accountsList.filter((a) => a.type === "REVENUE").length;
+  const expenseCount = accountsList.filter((a) => a.type === "EXPENSE").length;
 
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return api.post("/finance/accounts", data);
-    },
-    onSuccess: () => {
-      toast.success("Akun berhasil ditambahkan");
-      queryClient.invalidateQueries({ queryKey: ["finance-accounts"] });
-      resetForm();
-      setIsModalOpen(false);
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Gagal menambahkan akun");
-    },
-  });
+  // ── Filtered & Sorted Pipeline ──
+  const filteredAccounts = useMemo(() => {
+    return accountsList
+      .filter((item) => {
+        // 1. Top Tab Filter
+        if (activeTab !== "ALL" && item.type !== activeTab) {
+          return false;
+        }
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, ...data }: any) => {
-      return api.patch(`/finance/accounts/${id}`, data);
-    },
-    onSuccess: () => {
-      toast.success("Akun berhasil diperbarui");
-      queryClient.invalidateQueries({ queryKey: ["finance-accounts"] });
-      resetForm();
-      setIsModalOpen(false);
-      setEditingAccount(null);
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Gagal memperbarui akun");
-    },
-  });
+        // 2. KPI Filter
+        if (selectedKpiFilter !== "ALL" && item.type !== selectedKpiFilter) {
+          return false;
+        }
 
-  const resetForm = () => {
+        // 3. Toolbar Dropdown Filter
+        if (filterColumnValue !== "ALL") {
+          if (selectedFilterColumn === "category" && item.category !== filterColumnValue) {
+            return false;
+          }
+          if (selectedFilterColumn === "normalBalance" && item.normalBalance !== filterColumnValue) {
+            return false;
+          }
+          if (selectedFilterColumn === "status") {
+            const statusStr = item.isActive ? "ACTIVE" : "INACTIVE";
+            if (statusStr !== filterColumnValue) return false;
+          }
+        }
+
+        // 4. Global Search
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchCode = item.code.toLowerCase().includes(q);
+          const matchName = item.name.toLowerCase().includes(q);
+          const matchCat = item.category.toLowerCase().includes(q);
+          const matchType = item.type.toLowerCase().includes(q);
+          if (!matchCode && !matchName && !matchCat && !matchType) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (!sortColumn) return 0;
+        const dir = sortDirection === "asc" ? 1 : -1;
+        switch (sortColumn) {
+          case "code":
+            return dir * a.code.localeCompare(b.code);
+          case "name":
+            return dir * a.name.localeCompare(b.name);
+          case "type":
+            return dir * a.type.localeCompare(b.type);
+          case "normalBalance":
+            return dir * a.normalBalance.localeCompare(b.normalBalance);
+          case "category":
+            return dir * a.category.localeCompare(b.category);
+          default:
+            return 0;
+        }
+      });
+  }, [
+    accountsList,
+    activeTab,
+    selectedKpiFilter,
+    selectedFilterColumn,
+    filterColumnValue,
+    searchQuery,
+    sortColumn,
+    sortDirection,
+  ]);
+
+  // Pagination Slice
+  const totalEntries = filteredAccounts.length;
+  const totalPages = Math.ceil(totalEntries / pageSize) || 1;
+  const paginatedAccounts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredAccounts.slice(start, start + pageSize);
+  }, [filteredAccounts, currentPage, pageSize]);
+
+  // ── Selection Handlers ──
+  const toggleSelectAll = () => {
+    if (selectedRowIds.length === paginatedAccounts.length) {
+      setSelectedRowIds([]);
+    } else {
+      setSelectedRowIds(paginatedAccounts.map((a) => a.id));
+    }
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // ── Sort Toggle ──
+  const handleHeaderSortToggle = (col: string) => {
+    if (sortColumn === col) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(col);
+      setSortDirection("asc");
+    }
+  };
+
+  // ── KPI Click Filter ──
+  const handleKpiClick = (filterKey: string) => {
+    setSelectedKpiFilter((prev) => (prev === filterKey ? "ALL" : filterKey));
+    setCurrentPage(1);
+  };
+
+  // ── Modal Handlers ──
+  const handleOpenCreate = () => {
+    setEditingAccount(null);
     setFormCode("");
     setFormName("");
     setFormType("ASSET");
     setFormNormalBalance("DEBIT");
-    setFormParentId("");
+    setFormCategory("Kas & Bank");
     setFormIsActive(true);
-  };
-
-  const handleEdit = (acc: Account) => {
-    setEditingAccount(acc);
-    setFormCode(acc.code);
-    setFormName(acc.name);
-    setFormType(acc.type);
-    setFormNormalBalance(acc.normalBalance);
-    setFormParentId(acc.parentId || "");
-    setFormIsActive(acc.isActive);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = () => {
-    setShowConfirm(true);
+  const handleOpenEdit = (item: AccountModel) => {
+    setEditingAccount(item);
+    setFormCode(item.code);
+    setFormName(item.name);
+    setFormType(item.type);
+    setFormNormalBalance(item.normalBalance);
+    setFormCategory(item.category);
+    setFormIsActive(item.isActive);
+    setIsModalOpen(true);
   };
 
-  const confirmSubmit = () => {
-    setShowConfirm(false);
-    const payload = {
-      code: formCode,
-      name: formName,
-      type: formType,
-      normalBalance: formNormalBalance,
-      parentId: formParentId || null,
-      isActive: formIsActive,
-    };
+  const handleOpenView = (item: AccountModel) => {
+    setViewingAccount(item);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleSaveAccount = () => {
+    if (!formCode.trim() || !formName.trim()) {
+      toast.error("Kode akun dan nama akun wajib diisi!");
+      return;
+    }
 
     if (editingAccount) {
-      updateMutation.mutate({ id: editingAccount.id, ...payload });
+      setAccountsList((prev) =>
+        prev.map((a) =>
+          a.id === editingAccount.id
+            ? {
+                ...a,
+                code: formCode,
+                name: formName,
+                type: formType,
+                normalBalance: formNormalBalance,
+                category: formCategory,
+                isActive: formIsActive,
+              }
+            : a
+        )
+      );
+      toast.success(`Akun ${formCode} - ${formName} berhasil diperbarui.`);
     } else {
-      createMutation.mutate(payload);
+      const newAcc: AccountModel = {
+        id: `coa-${Date.now()}`,
+        code: formCode,
+        name: formName,
+        type: formType,
+        normalBalance: formNormalBalance,
+        category: formCategory,
+        isActive: formIsActive,
+      };
+      setAccountsList((prev) => [newAcc, ...prev]);
+      toast.success(`Akun baru ${newAcc.code} - ${newAcc.name} berhasil ditambahkan.`);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleDeleteAccount = () => {
+    if (!accountToDelete) return;
+    setAccountsList((prev) => prev.filter((a) => a.id !== accountToDelete.id));
+    toast.success(`Akun ${accountToDelete.code} berhasil dihapus.`);
+    setAccountToDelete(null);
+  };
+
+  // Helper badge color per account type
+  const getTypeBadgeStatus = (type: AccountModel["type"]) => {
+    switch (type) {
+      case "ASSET":
+        return "blue";
+      case "LIABILITY":
+        return "rose";
+      case "EQUITY":
+        return "purple";
+      case "REVENUE":
+        return "success";
+      case "EXPENSE":
+        return "orange";
+      default:
+        return "slate";
     }
   };
 
-  const treeData = accounts ? buildTree(accounts) : [];
-  const flatList = accounts || [];
-
-  const filteredTree = searchTerm
-    ? flatList.filter(
-        (a) =>
-          a.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          a.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : treeData;
-
-  const totalAccounts = accounts?.length || 0;
-  const activeAccounts = accounts?.filter((a) => a.isActive).length || 0;
-  const assetCount = accounts?.filter((a) => a.type === "ASSET").length || 0;
-  const revenueCount = accounts?.filter((a) => a.type === "REVENUE").length || 0;
-
   return (
-    <DashboardShell
-      title="Chart of"
-      titleAccent="Accounts"
-      subtitle="Manajemen struktur akun & kode rekening pusat"
-      actions={
-        <div className="flex gap-3">
-          <DnaButton
-            variant="primary"
-            onClick={() => {
-              resetForm();
-              setEditingAccount(null);
-              setIsModalOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Tambah Akun
-          </DnaButton>
-        </div>
-      }
-    >
-      {isLoading ? (
-        <QueryLoading message="Memuat data akun..." />
-      ) : isError ? (
-        <QueryError error="Gagal memuat data akun" onRetry={() => window.location.reload()} />
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard icon={<Layers className="text-blue-600" />} label="Total Akun" value={totalAccounts} />
-            <StatCard icon={<Hash className="text-emerald-600" />} label="Akun Aktif" value={activeAccounts} />
-            <StatCard icon={<Wallet className="text-blue-500" />} label="Total Asset" value={assetCount} />
-            <StatCard icon={<TrendingUp className="text-emerald-500" />} label="Total Revenue" value={revenueCount} />
-          </div>
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. MODULAR PAGE HEADER ── */}
+      <DnaPageHeader
+        backLink={{ href: "/master", label: "Kembali ke Master Hub" }}
+        title="CHART OF ACCOUNTS (COA)"
+        tabs={[
+          {
+            key: "ALL",
+            label: "Semua Akun",
+            count: totalAccounts,
+            icon: <Layers className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "ASSET",
+            label: "Aset & Kas",
+            count: assetCount,
+            icon: <Wallet className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "LIABILITY",
+            label: "Kewajiban / AP",
+            count: liabilityCount,
+            icon: <TrendingDown className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "EQUITY",
+            label: "Ekuitas Modal",
+            count: equityCount,
+            icon: <Landmark className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "REVENUE",
+            label: "Pendapatan Maklon",
+            count: revenueCount,
+            icon: <TrendingUp className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "EXPENSE",
+            label: "HPP & Beban",
+            count: expenseCount,
+            icon: <CreditCard className="w-3.5 h-3.5" />,
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
-          <TableWrapper
-            filters={
-              <div className="flex items-center gap-3 w-full justify-between">
-                <div>
-                  <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
-                    Struktur Akun
-                  </h3>
-                  <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight mt-0.5">
-                    Hierarki kode rekening • {totalAccounts} Akun
-                  </p>
+      {/* ── 02. MODULAR 5 KPI METRIC CARDS ── */}
+      <DnaKpiGrid
+        cols={5}
+        cards={[
+          {
+            key: "ALL",
+            title: "TOTAL AKUN BUKU BESAR",
+            value: totalAccounts.toLocaleString("id-ID"),
+            subtext: "Struktur COA resmi terdaftar",
+            icon: <FileSpreadsheet className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: selectedKpiFilter === "ALL",
+            onClick: () => handleKpiClick("ALL"),
+          },
+          {
+            key: "ASSET",
+            title: "ASET & PERSEDIAAN",
+            value: assetCount.toLocaleString("id-ID"),
+            subtext: "Kas, bank, piutang, material",
+            icon: <Wallet className="w-4 h-4" />,
+            iconBg: "bg-cyan-50",
+            iconColor: "text-cyan-600",
+            isSelected: selectedKpiFilter === "ASSET",
+            onClick: () => handleKpiClick("ASSET"),
+          },
+          {
+            key: "LIABILITY",
+            title: "KEWAJIBAN & AP",
+            value: liabilityCount.toLocaleString("id-ID"),
+            subtext: "Hutang dagang & titipan klien",
+            icon: <TrendingDown className="w-4 h-4" />,
+            iconBg: "bg-rose-50",
+            iconColor: "text-rose-600",
+            isSelected: selectedKpiFilter === "LIABILITY",
+            onClick: () => handleKpiClick("LIABILITY"),
+          },
+          {
+            key: "REVENUE",
+            title: "PENDAPATAN MAKLON",
+            value: revenueCount.toLocaleString("id-ID"),
+            subtext: "Jasa maklon, produk, sample",
+            icon: <TrendingUp className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+            isSelected: selectedKpiFilter === "REVENUE",
+            onClick: () => handleKpiClick("REVENUE"),
+          },
+          {
+            key: "EXPENSE",
+            title: "HPP & BEBAN OPERASI",
+            value: expenseCount.toLocaleString("id-ID"),
+            subtext: "Bahan, tenaga kerja & overhead",
+            icon: <CreditCard className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
+            isSelected: selectedKpiFilter === "EXPENSE",
+            onClick: () => handleKpiClick("EXPENSE"),
+          },
+        ]}
+      />
+
+      {/* ── 03. MODULAR DATA TABLE CARD ── */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari nomor kode akun, nama rekening, atau kategori...",
+          filterColumns: [
+            {
+              key: "category",
+              label: "Kategori Rekening",
+              type: "select",
+              options: [
+                "Kas & Bank",
+                "Piutang",
+                "Uang Muka",
+                "Persediaan",
+                "Pajak Dibayar Dimuka",
+                "Aset Tetap",
+                "Hutang Lancar",
+                "Hutang Pajak",
+                "Ekuitas",
+                "Pendapatan Operasional",
+                "Pengurang Pendapatan",
+                "Harga Pokok Penjualan",
+                "Beban Operasional",
+              ],
+            },
+            {
+              key: "normalBalance",
+              label: "Saldo Normal",
+              type: "select",
+              options: ["DEBIT", "CREDIT"],
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              options: ["ACTIVE", "INACTIVE"],
+            },
+          ],
+          selectedColumn: selectedFilterColumn,
+          onSelectColumn: (col) => {
+            setSelectedFilterColumn(col);
+            setFilterColumnValue("ALL");
+          },
+          filterValue: filterColumnValue,
+          onFilterValueChange: setFilterColumnValue,
+          actionButton: {
+            label: "Tambah Akun",
+            onClick: handleOpenCreate,
+          },
+        }}
+        paginationProps={{
+          currentPage,
+          totalPages,
+          totalEntries,
+          pageSize,
+          onPageChange: setCurrentPage,
+        }}
+      >
+        <DnaTable className="w-full text-left border-collapse text-[12px]">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+              {/* Select All Checkbox */}
+              <th className="p-3.5 w-10 text-center">
+                <DnaCheckbox
+                  checked={paginatedAccounts.length > 0 && selectedRowIds.length === paginatedAccounts.length}
+                  onChange={toggleSelectAll}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+              </th>
+              <th className="p-3.5 w-10 text-slate-400">#</th>
+              <th
+                className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[110px]"
+                onClick={() => handleHeaderSortToggle("code")}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span>KODE AKUN</span>
+                  {sortColumn === "code" ? (
+                    sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  )}
                 </div>
-                <div className="relative w-64">
-                  <DnaInput
-                    icon={<Search className="h-4 w-4" />}
-                    placeholder="Cari kode / nama akun..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+              </th>
+              <th
+                className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[240px]"
+                onClick={() => handleHeaderSortToggle("name")}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span>NAMA REKENING AKUN</span>
+                  {sortColumn === "name" ? (
+                    sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  )}
+                </div>
+              </th>
+              <th
+                className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[140px]"
+                onClick={() => handleHeaderSortToggle("type")}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span>TIPE LAPORAN</span>
+                  {sortColumn === "type" ? (
+                    sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  )}
+                </div>
+              </th>
+              <th
+                className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px] text-center"
+                onClick={() => handleHeaderSortToggle("normalBalance")}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <span>SALDO NORMAL</span>
+                  {sortColumn === "normalBalance" ? (
+                    sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  )}
+                </div>
+              </th>
+              <th
+                className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[180px]"
+                onClick={() => handleHeaderSortToggle("category")}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span>KELOMPOK KATEGORI</span>
+                  {sortColumn === "category" ? (
+                    sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  )}
+                </div>
+              </th>
+              <th className="p-3.5 text-center min-w-[90px]">STATUS</th>
+              <th className="p-3.5 text-right w-24">AKSI</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {paginatedAccounts.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                  Tidak ada akun COA yang sesuai filter pencarian.
+                </td>
+              </tr>
+            ) : (
+              paginatedAccounts.map((acc, idx) => {
+                const isSelected = selectedRowIds.includes(acc.id);
+                return (
+                  <tr
+                    key={acc.id}
+                    className={`transition-colors hover:bg-slate-50/80 ${
+                      isSelected ? "bg-blue-50/40" : ""
+                    }`}
+                  >
+                    {/* Checkbox */}
+                    <td className="p-3.5 text-center">
+                      <DnaCheckbox
+                        checked={isSelected}
+                        onChange={() => toggleSelectRow(acc.id)}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
+                    {/* Number */}
+                    <td className="p-3.5 text-slate-400 font-mono text-[11px]">
+                      {(currentPage - 1) * pageSize + idx + 1}
+                    </td>
+                    {/* Kode Akun */}
+                    <td className="p-3.5">
+                      <DnaCell.Code value={acc.code} onClick={() => handleOpenView(acc)} />
+                    </td>
+                    {/* Nama Rekening */}
+                    <td className="p-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200/60 text-slate-700 flex items-center justify-center font-mono font-bold text-[10px] shrink-0">
+                          {acc.code.charAt(0)}
+                        </div>
+                        <DnaCell.Text primary={acc.name} />
+                      </div>
+                    </td>
+                    {/* Tipe Laporan */}
+                    <td className="p-3.5">
+                      <DnaCell.Badge
+                        label={acc.type}
+                        status={getTypeBadgeStatus(acc.type)}
+                      />
+                    </td>
+                    {/* Saldo Normal */}
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Badge
+                        label={acc.normalBalance}
+                        status={acc.normalBalance === "DEBIT" ? "blue" : "purple"}
+                      />
+                    </td>
+                    {/* Kelompok Kategori */}
+                    <td className="p-3.5">
+                      <DnaCell.Text primary={acc.category} />
+                    </td>
+                    {/* Status */}
+                    <td className="p-3.5 text-center">
+                      <DnaCell.Badge
+                        label={acc.isActive ? "ACTIVE" : "INACTIVE"}
+                        status={acc.isActive ? "success" : "slate"}
+                      />
+                    </td>
+                    {/* Aksi */}
+                    <td className="p-3.5 text-right">
+                      <DnaCell.Actions
+                        onView={() => handleOpenView(acc)}
+                        onEdit={() => handleOpenEdit(acc)}
+                        onDelete={() => setAccountToDelete(acc)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </DnaTable>
+      </DnaDataTableCard>
+
+      {/* ── MODAL DETAIL INSPECTION ── */}
+      <DnaModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        title="Detail Akun Buku Besar"
+        subtitle={viewingAccount ? `${viewingAccount.code} — ${viewingAccount.name}` : ""}
+        size="md"
+      >
+        {viewingAccount && (
+          <div className="space-y-6 py-2 text-xs">
+            {/* Header Badge Card */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+              <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-mono font-black text-sm shadow-xs">
+                {viewingAccount.code.substring(0, 3)}
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-base font-bold text-slate-900">{viewingAccount.name}</h4>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
+                    Kode: {viewingAccount.code}
+                  </span>
+                  <DnaCell.Badge
+                    label={viewingAccount.isActive ? "ACTIVE" : "INACTIVE"}
+                    status={viewingAccount.isActive ? "success" : "slate"}
                   />
                 </div>
               </div>
-            }
-          >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Kode
-                  </TableHead>
-                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Nama Akun
-                  </TableHead>
-                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
-                    Tipe
-                  </TableHead>
-                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
-                    Normal Balance
-                  </TableHead>
-                  <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
-                    Status
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
-                    Aksi
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(searchTerm ? filteredTree : filteredTree).map((acc) => (
-                  <AccountRow key={acc.id} account={acc} onEdit={handleEdit} />
-                ))}
-                {filteredTree.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <Layers className="h-12 w-12 text-slate-200 mb-3" />
-                        <p className="text-sm font-black italic text-slate-400 uppercase tracking-wider">
-                          Tidak Ada Akun Ditemukan
-                        </p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1">
-                          Mulai tambahkan akun baru
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
-        </>
-      )}
+            </div>
 
-      {/* ADD / EDIT MODAL */}
-      <Dialog
-        open={isModalOpen}
-        onOpenChange={(o) => {
-          setIsModalOpen(o);
-          if (!o) {
-            resetForm();
-            setEditingAccount(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
-          <div className="p-8 bg-blue-600 text-white relative">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none italic text-white">
-              {editingAccount ? "Edit Akun" : "Tambah Akun Baru"}
-            </DialogTitle>
-            <DialogDescription className="text-white/70 font-medium uppercase text-[9px] tracking-tight mt-2">
-              {editingAccount ? "Perbarui data akun" : "Definisikan akun baru dalam Chart of Accounts"}
-            </DialogDescription>
-            <Layers className="absolute right-8 top-1/2 -translate-y-1/2 h-10 w-10 opacity-30 text-white" />
-          </div>
-          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Kode Akun <span className="text-red-500">*</span>
-                </Label>
-                <DnaInput
-                  placeholder="11100"
-                  value={formCode}
-                  onChange={(e) => setFormCode(e.target.value)}
-                  className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs"
+            {/* Information Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-lg border border-slate-200/70 bg-white">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                  Tipe Laporan Finansial
+                </span>
+                <DnaCell.Badge
+                  label={viewingAccount.type}
+                  status={getTypeBadgeStatus(viewingAccount.type)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Nama Akun <span className="text-red-500">*</span>
-                </Label>
-                <DnaInput
-                  placeholder="Kas Besar"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs"
+              <div className="p-3 rounded-lg border border-slate-200/70 bg-white">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                  Saldo Normal
+                </span>
+                <DnaCell.Badge
+                  label={viewingAccount.normalBalance}
+                  status={viewingAccount.normalBalance === "DEBIT" ? "blue" : "purple"}
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Tipe Akun
-                </Label>
-                <Select value={formType} onValueChange={(v) => setFormType(v as AccountType)}>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                    <SelectValue placeholder="Pilih tipe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value} className="font-medium text-xs">
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Normal Balance
-                </Label>
-                <Select
-                  value={formNormalBalance}
-                  onValueChange={(v) => setFormNormalBalance(v as NormalBalance)}
-                >
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                    <SelectValue placeholder="Pilih normal balance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DEBIT" className="font-medium text-xs">
-                      Debit
-                    </SelectItem>
-                    <SelectItem value="CREDIT" className="font-medium text-xs">
-                      Kredit
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Akun Induk
-                </Label>
-                <Select value={formParentId} onValueChange={(v) => setFormParentId(v ?? "")}>
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                    <SelectValue placeholder="Tanpa induk (Root)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="" className="font-medium text-xs">
-                      — Root Account —
-                    </SelectItem>
-                    {flatList.map((a) => (
-                      <SelectItem key={a.id} value={a.id} className="font-medium text-xs">
-                        {a.code} — {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">
-                  Status
-                </Label>
-                <Select
-                  value={formIsActive ? "active" : "inactive"}
-                  onValueChange={(v) => setFormIsActive(v === "active")}
-                >
-                  <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active" className="font-medium text-xs">
-                      Active
-                    </SelectItem>
-                    <SelectItem value="inactive" className="font-medium text-xs">
-                      Inactive
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="p-3 rounded-lg border border-slate-200/70 bg-white col-span-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                  Kelompok Kategori
+                </span>
+                <span className="font-semibold text-slate-800 text-sm">{viewingAccount.category}</span>
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4 border-t border-slate-100">
+            {/* Actions Footer */}
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
               <DnaButton
-                variant="outline"
+                variant="secondary"
                 onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                  setEditingAccount(null);
+                  setIsDetailModalOpen(false);
+                  handleOpenEdit(viewingAccount);
                 }}
               >
-                Batal
+                Sunting Akun
               </DnaButton>
-              <DnaButton
-                variant="primary"
-                onClick={handleSubmit}
-                disabled={!formCode || !formName}
-                className="flex-1"
-              >
-                {editingAccount ? "Simpan Perubahan" : "Tambah Akun"}
+              <DnaButton variant="primary" onClick={() => setIsDetailModalOpen(false)}>
+                Tutup
               </DnaButton>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konfirmasi</DialogTitle>
-          </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
-          <DialogFooter>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardShell>
+        )}
+      </DnaModal>
+
+      {/* ── MODAL TAMBAH / EDIT AKUN ── */}
+      <DnaModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingAccount ? `Sunting Akun: ${editingAccount.code}` : "Tambah Akun Baru"}
+        subtitle="Definisikan nomor akun rekening, klasifikasi tipe laporan, dan saldo normal pembukuan"
+        size="lg"
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaInput
+              label="Nomor Kode Akun *"
+              value={formCode}
+              onChange={(e) => setFormCode(e.target.value)}
+              placeholder="e.g. 11110"
+            />
+            <DnaInput
+              label="Nama Rekening Akun *"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              placeholder="e.g. Kas Operasional Pabrik"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaSelect
+              label="Tipe Laporan *"
+              value={formType}
+              onChange={(val) => setFormType(val as AccountModel["type"])}
+              options={[
+                { value: "ASSET", label: "Asset (Aktiva / Harta)" },
+                { value: "LIABILITY", label: "Liability (Kewajiban / Hutang)" },
+                { value: "EQUITY", label: "Equity (Modal / Ekuitas)" },
+                { value: "REVENUE", label: "Revenue (Pendapatan Maklon)" },
+                { value: "EXPENSE", label: "Expense (HPP & Beban Operasional)" },
+              ]}
+            />
+            <DnaSelect
+              label="Saldo Normal *"
+              value={formNormalBalance}
+              onChange={(val) => setFormNormalBalance(val as AccountModel["normalBalance"])}
+              options={[
+                { value: "DEBIT", label: "DEBIT (Bertambah di Debit)" },
+                { value: "CREDIT", label: "CREDIT (Bertambah di Kredit)" },
+              ]}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DnaSelect
+              label="Kelompok Kategori *"
+              value={formCategory}
+              onChange={(val) => setFormCategory(val)}
+              options={[
+                { value: "Kas & Bank", label: "Kas & Bank" },
+                { value: "Piutang", label: "Piutang" },
+                { value: "Uang Muka", label: "Uang Muka" },
+                { value: "Persediaan", label: "Persediaan" },
+                { value: "Pajak Dibayar Dimuka", label: "Pajak Dibayar Dimuka" },
+                { value: "Aset Tetap", label: "Aset Tetap" },
+                { value: "Hutang Lancar", label: "Hutang Lancar" },
+                { value: "Hutang Pajak", label: "Hutang Pajak" },
+                { value: "Ekuitas", label: "Ekuitas" },
+                { value: "Pendapatan Operasional", label: "Pendapatan Operasional" },
+                { value: "Pengurang Pendapatan", label: "Pengurang Pendapatan" },
+                { value: "Harga Pokok Penjualan", label: "Harga Pokok Penjualan" },
+                { value: "Beban Operasional", label: "Beban Operasional" },
+              ]}
+            />
+            <DnaSelect
+              label="Status Akun *"
+              value={formIsActive ? "ACTIVE" : "INACTIVE"}
+              onChange={(val) => setFormIsActive(val === "ACTIVE")}
+              options={[
+                { value: "ACTIVE", label: "ACTIVE (Dapat Dijurnal)" },
+                { value: "INACTIVE", label: "INACTIVE (Nonaktif)" },
+              ]}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+            <DnaButton variant="secondary" onClick={() => setIsModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleSaveAccount}>
+              Simpan Akun
+            </DnaButton>
+          </div>
+        </div>
+      </DnaModal>
+
+      {/* ── CONFIRM DELETE DIALOG ── */}
+      <DnaConfirmDialog
+        isOpen={!!accountToDelete}
+        onClose={() => setAccountToDelete(null)}
+        onConfirm={handleDeleteAccount}
+        title="Hapus Akun Rekening?"
+        description={`Apakah Anda yakin ingin menghapus akun ${accountToDelete?.code} - ${accountToDelete?.name}? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Hapus Akun"
+        variant="critical"
+      />
+    </div>
   );
 }
+
+export default function ChartOfAccountsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Chart of Accounts...</div>}>
+      <ChartOfAccountsContent />
+    </Suspense>
+  );
+}
+

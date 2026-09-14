@@ -4,6 +4,7 @@ import { CategoriesController } from './controllers/categories.controller';
 import { WarehousesController } from './controllers/warehouses.controller';
 import { SuppliersController } from './controllers/suppliers.controller';
 import { CustomersController } from './controllers/customers.controller';
+import { MaterialsService } from './services/materials.service';
 import { CategoriesService } from './services/categories.service';
 import { WarehousesService } from './services/warehouses.service';
 import { SuppliersService } from './services/suppliers.service';
@@ -20,12 +21,14 @@ import { PrismaModule } from '../../prisma/prisma.module';
     CustomersController,
   ],
   providers: [
+    MaterialsService,
     CategoriesService,
     WarehousesService,
     SuppliersService,
     CustomersService,
   ],
   exports: [
+    MaterialsService,
     CategoriesService,
     WarehousesService,
     SuppliersService,

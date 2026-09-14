@@ -1,0 +1,1571 @@
+openapi: 3.0.3
+info:
+  title: NEX ERP API Contract
+  version: 0.1.1
+  description: |
+    First-cut API contract generated from NEX_ERP_SCREEN_AND_API_CATALOG.json v2.0.0.
+    Covers critical business flows: PO Inbound, SO Pipeline, Closing Period, Escrow,
+    Approval Workflow, Master Data (representative), Dashboard & Report (representative).
+
+    Documented endpoints: 49 (representative first-cut)
+    Actual backend endpoints: ~686 (per scan 2026-09-11, includes Phase 2 finance stubs)
+
+    Source catalog: docs/legacy-erp/NEX_ERP_SCREEN_AND_API_CATALOG.json (176 screens)
+    Generated: 2026-09-10T07:07:38.224Z
+    Last updated: 2026-09-11 (v0.1.1 — Phase 2 marker, coverage gap noted)
+
+    NOTE: This is a STARTING POINT. Each endpoint should be reviewed against:
+    - specialRequirementsNotes in JSON catalog (full text)
+    - master spec NEX_ERP_MASTER_SPECIFICATION.md
+    - existing backend NestJS controllers
+    - ADR decisions (ADR-001 through ADR-015)
+
+    COVERAGE GAP (as of 2026-09-11):
+    - Phase 2 finance stubs (~112 endpoints across DownPayment, APPayment, ARReceipt,
+      journal automation, auto-posting, period management) NOT yet documented here.
+    - Update path: scan backend/src/modules/finance/**/*.controller.ts, extract
+      @Get/@Post/@Put/@Patch/@Delete decorators, generate OpenAPI operations.
+    - Target: v0.2 with 161+ endpoints covering critical finance flows.
+    
+servers:
+  - url: https://nexerp.id
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: mod-01
+    description: MOD-01 Master Data Management (107 screens)
+  - name: mod-02
+    description: MOD-02 BusDev & CRM (12 screens)
+  - name: mod-03
+    description: MOD-03 R&D & Formulation (8 screens)
+  - name: mod-04
+    description: MOD-04 SCM & Purchasing (25 screens)
+  - name: mod-05
+    description: MOD-05 Warehouse & Inventory (4 screens)
+  - name: mod-07
+    description: MOD-07 QC & Compliance (7 screens)
+  - name: mod-12
+    description: MOD-12 Executive & Analytics (13 screens)
+
+paths:
+  /v1/scm/purchase-approval:
+    get:
+      operationId: list_scr_058
+      summary: Pembelian ~
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-058 | Flow: PO Inbound Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_058
+      summary: Create Pembelian ~
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-058 | Flow: PO Inbound Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/purchase-return-out:
+    get:
+      operationId: list_scr_090
+      summary: Retur Pembelian
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-090 | Flow: PO Inbound Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_090
+      summary: Create Retur Pembelian
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-090 | Flow: PO Inbound Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/purchase-in:
+    get:
+      operationId: list_scr_091
+      summary: Pembelian Masuk
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-091 | Flow: PO Inbound Flow]
+        "" | Poin 44, 50, 51, 53: Penerimaan barang wajib mencantumkan rincian jumlah free, jumlah cacat/reject, dan jumlah kondisi bagus. Pembayaran vendor HANYA untuk kondisi bagus. Input free dicatat di si
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_091
+      summary: Create Pembelian Masuk
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-091 | Flow: PO Inbound Flow]
+        "" | Poin 44, 50, 51, 53: Penerimaan barang wajib mencantumkan rincian jumlah free, jumlah cacat/reject, dan jumlah kondisi bagus. Pembayaran vendor HANYA untuk kondisi bagus. Input free dicatat di si
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/scm/purchase-down-payment:
+    get:
+      operationId: list_scr_104
+      summary: DP Pembelian
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-104 | Flow: PO Inbound Flow]
+        Saat Faktur Pembelian dibuat untuk vendor dengan DP outstanding, sistem notifikasi untuk potong/apply DP ke invoice | Poin 9: Urutan card & tab selaras dengan Bayar Pembelian lalu DP Pembelian
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_104
+      summary: Create DP Pembelian
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-104 | Flow: PO Inbound Flow]
+        Saat Faktur Pembelian dibuat untuk vendor dengan DP outstanding, sistem notifikasi untuk potong/apply DP ke invoice | Poin 9: Urutan card & tab selaras dengan Bayar Pembelian lalu DP Pembelian
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/scm/purchase-down-payment/create:
+    post:
+      operationId: submit_scr_105
+      summary: Submit Buat DP Pembelian
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-105 | Flow: PO Inbound Flow]
+        Nomor DP otomatis DPB-YYMM-XXXX
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/bussdev/dashboard-guest-book:
+    get:
+      operationId: list_scr_001
+      summary: D. Buku Tamu
+      tags: [MOD-02]
+      description: |
+        [Source: SCR-001 | Flow: SO Pipeline Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_001
+      summary: Create D. Buku Tamu
+      tags: [MOD-02]
+      description: |
+        [Source: SCR-001 | Flow: SO Pipeline Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/rnd/dashboard-sample:
+    get:
+      operationId: list_scr_022
+      summary: D. Sample
+      tags: [MOD-03]
+      description: |
+        [Source: SCR-022 | Flow: SO Pipeline Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_022
+      summary: Create D. Sample
+      tags: [MOD-03]
+      description: |
+        [Source: SCR-022 | Flow: SO Pipeline Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/bank-account-manage/create:
+    post:
+      operationId: submit_scr_038
+      summary: Submit Buat Bank Account
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-038 | Flow: SO Pipeline Flow]
+        Nomor akun otomatis dan mapping ke akun neraca kas/bank
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/tax-setup:
+    get:
+      operationId: list_scr_039
+      summary: Tax Setup
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-039 | Flow: SO Pipeline Flow]
+        Setup oleh Finance Admin. Ruang lingkup: PPN, PPh 23, rekap PPh 21 (tanpa e-Faktur/e-Bupot DJP langsung) | Poin 35: Modul Pajak dan e-Faktur TIDAK PERLU DIKERJAKAN (di-skip dari scope pengerjaan sesua
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_039
+      summary: Create Tax Setup
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-039 | Flow: SO Pipeline Flow]
+        Setup oleh Finance Admin. Ruang lingkup: PPN, PPh 23, rekap PPh 21 (tanpa e-Faktur/e-Bupot DJP langsung) | Poin 35: Modul Pajak dan e-Faktur TIDAK PERLU DIKERJAKAN (di-skip dari scope pengerjaan sesua
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/user-manage/create:
+    post:
+      operationId: submit_scr_049
+      summary: Submit Buat Pengguna
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-049 | Flow: SO Pipeline Flow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/closing-checklist:
+    get:
+      operationId: get_scr_070
+      summary: Closing Checklist & Period Lock
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-070 | Flow: Closing Period Flow]
+        Fitur Period Lock: Soft Lock memberikan peringatan saat transaksi; Hard Lock mengunci total seluruh transaksi di periode tersebut (read-only). Transaksi susulan wajib lewat Adjustment Journal
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/adjustment-journal:
+    get:
+      operationId: list_scr_074
+      summary: Adjustment Journal
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-074 | Flow: Closing Period Flow]
+        Satu-satunya jalur sah untuk memasukkan transaksi ke periode yang sudah berstatus Hard Lock
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_074
+      summary: Create Adjustment Journal
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-074 | Flow: Closing Period Flow]
+        Satu-satunya jalur sah untuk memasukkan transaksi ke periode yang sudah berstatus Hard Lock
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/scm/asset-transfer-disposal:
+    get:
+      operationId: get_scr_075
+      summary: Asset Transfer / Disposal
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-075 | Flow: Closing Period Flow]
+        Memerlukan persetujuan Finance Manager sebelum menghapus aset dari neraca
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/client-escrow:
+    get:
+      operationId: get_scr_077
+      summary: Client Escrow / Pass-Through Disbursement Ledger
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-077 | Flow: Escrow Flow]
+        Uang titipan BPOM/HKI/uji lab klien BUKAN REVENUE Dreamlab. Jika biaya aktual lebih besar, sistem memunculkan tagihan top-up ke klien
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/sales-approval:
+    get:
+      operationId: list_scr_059
+      summary: Penjualan Produk ~
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-059 | Flow: Approval Workflow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_059
+      summary: Create Penjualan Produk ~
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-059 | Flow: Approval Workflow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/rnd/sales-sample-approval:
+    get:
+      operationId: list_scr_060
+      summary: Penjualan Sample ~
+      tags: [MOD-03]
+      description: |
+        [Source: SCR-060 | Flow: Approval Workflow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_060
+      summary: Create Penjualan Sample ~
+      tags: [MOD-03]
+      description: |
+        [Source: SCR-060 | Flow: Approval Workflow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/goods-request-approval:
+    get:
+      operationId: list_scr_061
+      summary: Permintaan Barang ~
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-061 | Flow: Approval Workflow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_061
+      summary: Create Permintaan Barang ~
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-061 | Flow: Approval Workflow]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/goods-manage:
+    get:
+      operationId: list_scr_029
+      summary: Barang
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-029 | Flow: Master Data (representative)]
+        "" | Poin 48-52: Kolom kondisi bagus & cacat dihapus, diganti Real Stok. Menampilkan supplier asal barang, wujud fisik & kondisi bahan, serta lama barang ada di gudang (aging barang)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_029
+      summary: Create Barang
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-029 | Flow: Master Data (representative)]
+        "" | Poin 48-52: Kolom kondisi bagus & cacat dihapus, diganti Real Stok. Menampilkan supplier asal barang, wujud fisik & kondisi bahan, serta lama barang ada di gudang (aging barang)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/coa-manage:
+    get:
+      operationId: list_scr_032
+      summary: CoA
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-032 | Flow: Master Data (representative)]
+        Delete hanya jika belum ada transaksi (referential integrity); jika ada -> deactivate. Auto numbering by type (1xxx Asset, 2xxx Liability, dst)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_032
+      summary: Create CoA
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-032 | Flow: Master Data (representative)]
+        Delete hanya jika belum ada transaksi (referential integrity); jika ada -> deactivate. Auto numbering by type (1xxx Asset, 2xxx Liability, dst)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/customer-manage/create:
+    post:
+      operationId: submit_scr_043
+      summary: Submit Buat Pelanggan
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-043 | Flow: Master Data (representative)]
+        "" | Poin 2: Field klasifikasi Sample, Produksi, Legalitas
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/scm/supplier-manage/create:
+    post:
+      operationId: submit_scr_057
+      summary: Submit Buat Supplier
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-057 | Flow: Master Data (representative)]
+        PKP Status menentukan perhitungan otomatis PPN Masukan pada Faktur Pembelian | Poin 3: Kategorisasi pengadaan dilakukan berdasarkan COA saja
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/other-deposit/create:
+    post:
+      operationId: submit_scr_082
+      summary: Submit Buat Kas Bank Masuk
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-082 | Flow: Master Data (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/delivery-out/create:
+    post:
+      operationId: submit_scr_087
+      summary: Submit Buat Pengiriman Barang
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-087 | Flow: Master Data (representative)]
+        Memiliki sub-tabel keranjang/item dinamis
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/executive/dashboard-executive:
+    get:
+      operationId: list_scr_007
+      summary: D. Eksekutif
+      tags: [MOD-12]
+      description: |
+        [Source: SCR-007 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_007
+      summary: Create D. Eksekutif
+      tags: [MOD-12]
+      description: |
+        [Source: SCR-007 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/executive/dashboard-warehouse:
+    get:
+      operationId: list_scr_008
+      summary: D. Gudang
+      tags: [MOD-12]
+      description: |
+        [Source: SCR-008 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_008
+      summary: Create D. Gudang
+      tags: [MOD-12]
+      description: |
+        [Source: SCR-008 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/executive/dashboard-human-resources:
+    get:
+      operationId: list_scr_009
+      summary: D. HR
+      tags: [MOD-12]
+      description: |
+        [Source: SCR-009 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      operationId: create_scr_009
+      summary: Create D. HR
+      tags: [MOD-12]
+      description: |
+        [Source: SCR-009 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/sales/create:
+    post:
+      operationId: submit_scr_124
+      summary: Submit Buat Penjualan (SO)
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-124 | Flow: Dashboard & Report (representative)]
+        "" | Poin 38: Input deadline per PIC | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (t
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/warehouse/stock-adjustment/create:
+    post:
+      operationId: submit_scr_126
+      summary: Submit Buat Penyesuaian Stok
+      tags: [MOD-05]
+      description: |
+        [Source: SCR-126 | Flow: Dashboard & Report (representative)]
+        
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/goods-manage/{id}:
+    get:
+      operationId: detail_scr_029
+      summary: Barang detail
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-029 | Flow: Detail extensions]
+        "" | Poin 48-52: Kolom kondisi bagus & cacat dihapus, diganti Real Stok. Menampilkan supplier asal barang, wujud fisik & kondisi bahan, serta lama barang ada di gudang (aging barang)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/coa-manage/{id}:
+    get:
+      operationId: detail_scr_032
+      summary: CoA detail
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-032 | Flow: Detail extensions]
+        Delete hanya jika belum ada transaksi (referential integrity); jika ada -> deactivate. Auto numbering by type (1xxx Asset, 2xxx Liability, dst)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/customer-manage/create/{id}:
+    get:
+      operationId: detail_scr_043
+      summary: Buat Pelanggan detail
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-043 | Flow: Detail extensions]
+        "" | Poin 2: Field klasifikasi Sample, Produksi, Legalitas
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/scm/supplier-manage/create/{id}:
+    get:
+      operationId: detail_scr_057
+      summary: Buat Supplier detail
+      tags: [MOD-04]
+      description: |
+        [Source: SCR-057 | Flow: Detail extensions]
+        PKP Status menentukan perhitungan otomatis PPN Masukan pada Faktur Pembelian | Poin 3: Kategorisasi pengadaan dilakukan berdasarkan COA saja
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /v1/master/bank-account-manage/create/{id}:
+    get:
+      operationId: detail_scr_038
+      summary: Buat Bank Account detail
+      tags: [MOD-01]
+      description: |
+        [Source: SCR-038 | Flow: Detail extensions]
+        Nomor akun otomatis dan mapping ke akun neraca kas/bank
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        default: 25
+        maximum: 100
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    ApiResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          description: Response payload (varies per endpoint)
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            pageSize:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+          description: RFC 7807 envelope (per memory: api_envelope)
+
+    CreateOrUpdateRequest:
+      type: object
+      additionalProperties: true
+      description: |
+        Request body shape varies per endpoint. See JSON catalog screen.formInputs[]
+        for the specific fields. Use camelCase per memory naming_convention.
+        Code prefixes use Universal Code Engine (ADR-003):
+        - Format lengkap: DL-{DIV}-{TYPE}-{DDMMYYYY}-{seq}
+        - Format ringkas: {TYPE}-{DDMMYYYY}-{seq}
+        - Sequence GLOBAL, no reset per memory
+
+    ProblemDetails:
+      type: object
+      description: RFC 7807 Problem Details for HTTP APIs
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Unauthorized - missing or invalid JWT
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    ServerError:
+      description: Internal server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'

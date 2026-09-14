@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
-const API_BASE = '/api';
+const API_BASE = '*://*/api';
 
 export const handlers = [
   // Bussdev - Dashboard
@@ -526,4 +526,7 @@ export const handlers = [
       totalSamples: 22,
     });
   }),
+
+  // Catch-all 404 for unmatched /api/* paths
+  http.all('*://*/api/*', () => new HttpResponse(null, { status: 404 })),
 ];

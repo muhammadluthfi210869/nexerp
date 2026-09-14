@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/app/(dashboard)/marketing/management-task/**/*.ts",
+    "src/app/(dashboard)/marketing/management-task/**/*.tsx",
+    "src/app/(dashboard)/marketing/social-tracker/**/*.ts",
+    "src/app/(dashboard)/marketing/social-tracker/**/*.tsx",
+    "src/components/dna/**/*.ts",
+    "src/components/dna/**/*.tsx",
+    "src/components/layout/**/*.ts",
+    "src/components/layout/**/*.tsx",
+    "src/components/marketing/**/*.ts",
+    "src/components/marketing/**/*.tsx",
+    "src/hooks/**/*.ts",
+    "src/hooks/**/*.tsx",
+    "src/lib/**/*.ts",
+    "src/lib/**/*.tsx",
+    "src/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", "tests"]
+}

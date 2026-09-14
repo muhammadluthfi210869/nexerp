@@ -17,7 +17,7 @@ import { Roles } from '../../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('rnd/formulas')
+@Controller(['rnd/formulas', 'v1/rnd/formulas'])
 export class FormulasController {
   constructor(private readonly formulasService: FormulasService) {}
 

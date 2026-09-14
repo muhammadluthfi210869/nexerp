@@ -1,13 +1,13 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { DnaCard } from "@/components/dna";
 import { ArrowRightLeft, Warehouse, Clock } from "lucide-react";
 
 export function VelocityMatrix({ audit }: { audit: any }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* 🚀 JALUR MASUK (A) */}
-      <Card className="bento-card p-8 bg-white border-l-4 border-l-blue-500 hover:translate-y-[-5px] transition-all">
+      <DnaCard className="bento-card p-8 bg-white border-l-4 border-l-blue-500 hover:translate-y-[-5px] transition-all">
         <div className="flex items-center justify-between mb-8">
            <div className="flex items-center gap-2">
               <Warehouse className="w-4 h-4 text-blue-500" />
@@ -25,10 +25,10 @@ export function VelocityMatrix({ audit }: { audit: any }) {
               <p className="text-2xl font-black text-amber-600 tabular italic">{audit?.jalurA?.karantina || 0}</p>
            </div>
         </div>
-      </Card>
+      </DnaCard>
 
       {/* 🔄 JALUR INTERNAL (B) */}
-      <Card className="bento-card p-8 bg-white border-l-4 border-l-indigo-500 hover:translate-y-[-5px] transition-all">
+      <DnaCard className="bento-card p-8 bg-white border-l-4 border-l-indigo-500 hover:translate-y-[-5px] transition-all">
         <div className="flex items-center justify-between mb-8">
            <div className="flex items-center gap-2">
               <ArrowRightLeft className="w-4 h-4 text-indigo-500" />
@@ -50,10 +50,10 @@ export function VelocityMatrix({ audit }: { audit: any }) {
               <p className="text-lg font-black text-emerald-600 tabular italic">{audit?.jalurB?.handover || 0}</p>
            </div>
         </div>
-      </Card>
+      </DnaCard>
 
       {/* 📦 JALUR KELUAR (C) */}
-      <Card className="bento-card p-8 bg-white border-l-4 border-l-violet-500 hover:translate-y-[-5px] transition-all">
+      <DnaCard className="bento-card p-8 bg-white border-l-4 border-l-violet-500 hover:translate-y-[-5px] transition-all">
         <div className="flex items-center justify-between mb-8">
            <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-violet-500" />
@@ -75,7 +75,7 @@ export function VelocityMatrix({ audit }: { audit: any }) {
               <p className="text-lg font-black text-emerald-600 tabular italic">{audit?.jalurC?.delivered || 0}</p>
            </div>
         </div>
-      </Card>
+      </DnaCard>
     </div>
   );
 }

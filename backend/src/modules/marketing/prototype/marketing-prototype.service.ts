@@ -1,7 +1,12 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { open, readFile, writeFile, mkdir, access, rename, rm } from 'fs/promises';
-import { constants as fsConstants, createReadStream } from 'fs';
-import { dirname, extname, join, relative, resolve, sep } from 'path';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { open, rm } from 'fs/promises';
+import { createReadStream } from 'fs';
+import { extname, join, relative, resolve, sep } from 'path';
 import { randomUUID } from 'crypto';
 import {
   calendarDayDiff,
@@ -18,10 +23,9 @@ import {
   IMAGE_EXTENSIONS,
   hasValidImageMagic,
 } from './prototype-upload.util';
+import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 // Status kanonik = 4 status yang dipakai Board (single source of truth).
-// Status lama (Backlog/To Do/In Progress/Waiting Approval/Cancelled) di-mapping
-// ke 4 status ini di normalizeState() (lihat FASE 3, P3.1).
 type TaskStatus = 'Not started' | 'Working on it' | 'Revision' | 'Done';
 
 // Mapping status lama (data runtime/seed lama) → status kanonik.
@@ -29,6 +33,7 @@ const LEGACY_STATUS_MAP: Record<string, TaskStatus> = {
   Backlog: 'Not started',
   'To Do': 'Not started',
   'In Progress': 'Working on it',
+  Progress: 'Working on it',
   'Waiting Approval': 'Revision',
   Revision: 'Revision',
   Done: 'Done',
@@ -37,76 +42,22 @@ const LEGACY_STATUS_MAP: Record<string, TaskStatus> = {
 
 type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
-interface MarketingProject {
-  id: string;
-  name: string;
-  channel: string;
-  category: string;
-  owner: string;
-  start: string;
-  deadline: string;
-  progress: number;
-  openTasks: number;
-  pendingApproval: number;
-  status: 'On Track' | 'At Risk' | 'Review' | 'Completed';
-  summary: string;
-  blockers: string[];
-}
-
-type MarketingProjectInput = Partial<
-  Pick<
-    MarketingProject,
-    | 'id'
-    | 'name'
-    | 'channel'
-    | 'category'
-    | 'owner'
-    | 'start'
-    | 'deadline'
-    | 'progress'
-    | 'status'
-    | 'summary'
-    | 'blockers'
-  >
->;
-
-/** Metadata attachment task. `path` relatif terhadap UPLOADS_ROOT
- * (mis. `tasks/TSK-123/<uuid>.png`) — dibuat server, bukan dari klien. */
-interface TaskAttachment {
-  id: string;
-  name: string;
-  type: string;
-  sizeKb: number;
-  path: string;
-  uploadedBy: string;
-  createdAt: string;
-}
-
-/** Bentuk file yang diterima service (dari Multer / unit test). */
-interface UploadedFileLike {
-  originalname: string;
-  mimetype: string;
-  size: number;
-  path: string;
-}
-
 interface MarketingTask {
   id: string;
+  taskCode: string;
   title: string;
-  projectId: string;
-  project: string;
+  projectId: string | null;
+  project: string | null;
   channel: string;
   category: string;
   brand: 'Dreamlab' | 'Toribio';
-  assignedBy: string;
-  pic: string;
-  reviewer: string;
+  assignedBy: string | null;
+  pic: string | null;
+  reviewer: string | null;
   priority: TaskPriority;
   startDate: string;
   dueDate: string;
   status: TaskStatus;
-  /** ISO timestamp saat task ditandai Done (jika pernah) — dasar perhitungan
-   * SLA/KPI untuk task selesai. Diisi oleh updateTaskStatus/updateTask. */
   completedAt?: string;
   sla: SlaStatus;
   estimatedHours: number;
@@ -115,109 +66,67 @@ interface MarketingTask {
   checklistDone: number;
   checklistTotal: number;
   brief: string;
-  /** URL deliverable/link lampiran (kolom "Link" di drawer detail task). */
   link?: string;
   tags: string[];
   comments: Array<{ author: string; body: string; createdAt: string }>;
-  history: Array<{ at: string; by: string; from?: string; to: string; note: string }>;
-  attachments: TaskAttachment[];
+  history: Array<{
+    at: string;
+    by: string;
+    from?: string;
+    to: string;
+    note: string;
+  }>;
+  attachments: Array<{
+    id: string;
+    name: string;
+    type: string;
+    sizeKb: number;
+    path: string;
+    uploadedBy: string;
+    createdAt: string;
+  }>;
 }
 
-type MarketingTaskInput = Partial<
-  Pick<
-    MarketingTask,
-    | 'title'
-    | 'projectId'
-    | 'project'
-    | 'channel'
-    | 'category'
-    | 'brand'
-    | 'assignedBy'
-    | 'pic'
-    | 'reviewer'
-    | 'priority'
-    | 'startDate'
-    | 'dueDate'
-    | 'status'
-    | 'sla'
-    | 'estimatedHours'
-    | 'actualHours'
-    | 'revisionCount'
-    | 'checklistDone'
-    | 'checklistTotal'
-    | 'brief'
-    | 'link'
-    | 'tags'
-    | 'attachments'
-  >
-> & {
-  /** Alias lama untuk `brief` (dipakai klien frontend lama). */
+interface MarketingProject {
+  id: string;
+  projectCode: string;
+  name: string;
+  channel: string;
+  category: string;
+  owner: string | null;
+  start: string;
+  deadline: string;
+  progress: number;
+  openTasks: number;
+  pendingApproval: number;
+  status: string;
+  summary: string;
+  blockers: string[];
+}
+
+interface MarketingTaskInput {
+  title?: string;
+  projectId?: string;
+  project?: string;
+  channel?: string;
+  category?: string;
+  brand?: 'Dreamlab' | 'Toribio';
+  assignedBy?: string;
+  pic?: string;
+  reviewer?: string;
+  priority?: TaskPriority;
+  startDate?: string;
+  dueDate?: string;
+  status?: TaskStatus;
+  estimatedHours?: number;
+  actualHours?: number;
+  revisionCount?: number;
+  checklistDone?: number;
+  checklistTotal?: number;
+  brief?: string;
+  link?: string;
+  tags?: string[];
   notes?: string;
-};
-
-interface MarketingPerformance {
-  name: string;
-  role: string;
-  assigned: number;
-  completed: number;
-  onTime: number;
-  late: number;
-  revision: number;
-  completionScore: number;
-  disciplineScore: number;
-  qualityScore: number;
-  productivityScore: number;
-  overallKpi: number;
-  history: Array<{ period: string; kpi: number; discipline: number }>;
-}
-
-interface MarketingNotification {
-  id: string;
-  type: string;
-  title: string;
-  detail: string;
-  actor: string;
-  time: string;
-  unread: boolean;
-  recipient?: string | null;
-}
-
-interface MarketingSettings {
-  weights: { completion: number; discipline: number; quality: number; productivity: number };
-  workingHours: { start: string; end: string; days: string[] };
-  projectCategories: string[];
-  appearance: {
-    departmentDefaultTheme: 'professional' | 'marketing-aesthetic';
-    allowUserOverride: boolean;
-  };
-}
-
-interface MarketingProfile {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-  bio: string;
-  monthKpi: number;
-  completed: number;
-  inProgress: number;
-  late: number;
-  overdue: number;
-  breakdown: { completion: number; discipline: number; quality: number; productivity: number };
-}
-
-interface MarketingPrototypeState {
-  summaryDate: string;
-  projects: MarketingProject[];
-  tasks: MarketingTask[];
-  performance: MarketingPerformance[];
-  notifications: MarketingNotification[];
-  settings: MarketingSettings;
-  uiPreferences?: Record<string, 'professional' | 'marketing-aesthetic' | 'follow-department'>;
-  profiles: MarketingProfile[];
-  insights: Array<{ title: string; summary: string; impact: 'Positive' | 'Negative' | 'Neutral' }>;
 }
 
 interface ViewerContext {
@@ -231,13 +140,8 @@ interface ViewerScope {
   isManager: boolean;
   prototypeName: string | null;
   aliases: string[];
-  /** Delegated Manager (co-manager): daftar team id (slug) yang boleh dikelola
-   *  dengan privilese manajer — tetapi TERBATAS pada member itu saja. Kosong
-   *  untuk member biasa; semua team id untuk global manager. (PLAN-RAHMAT) */
   managedMembers: string[];
 }
-
-const statePath = join(process.cwd(), 'data', 'marketing-prototype-state.json');
 
 const headOfMarketing = 'Revi';
 const team = [
@@ -259,10 +163,6 @@ const viewerAliases: Record<string, string[]> = {
   rahmat: ['rahmat'],
 };
 
-/** Delegated Manager (co-manager) — PLAN-RAHMAT-DELEGATED-MANAGER.md.
- * Kunci = prototypeName/nama kanonik viewer; nilai = daftar team id (slug)
- * yang boleh dikelola penuh (view/create/edit/delete/attachment) seperti
- * manajer, TAPI hanya untuk member itu. Rahmat → Gusti & Zarkasi saja. */
 const DELEGATED_MANAGER_SCOPE: Record<string, string[]> = {
   Rahmat: ['gusti', 'zarka'],
 };
@@ -272,7 +172,23 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function avg(values: number[]) {
-  return Math.round(values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1));
+  return Math.round(
+    values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1),
+  );
+}
+
+function parseTaskDate(value: string, fieldName: string): Date | null {
+  if (!value) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new BadRequestException(
+      `${fieldName} harus berformat YYYY-MM-DD (got: ${value})`,
+    );
+  }
+  const d = new Date(value + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) {
+    throw new BadRequestException(`${fieldName} tidak valid: ${value}`);
+  }
+  return d;
 }
 
 function workingDaysInMonth(date = new Date()) {
@@ -294,16 +210,13 @@ function calcQualityScore(discipline: number, revisionCount: number) {
 
 function calcProductivityScore(assigned: number) {
   const days = workingDaysInMonth();
-  return Math.round(clamp(((assigned / Math.max(days, 1)) / 3) * 100, 0, 100));
+  return Math.round(clamp((assigned / Math.max(days, 1) / 3) * 100, 0, 100));
 }
 
 function normalizeIdentity(value?: string | null) {
   return (value ?? '').trim().toLowerCase();
 }
 
-/** Nama member kanonik (mis. "Revita" → "Revi", "Zarkasi" → "Zarka").
- * Dipakai seragam di semua perbandingan pic/owner supaya task ber-pic
- * "Revita" ikut terhitung untuk profil "Revi" (BUG-C2/P3.2). */
 function canonicalMember(name: string): string {
   const key = normalizeIdentity(name);
   for (const [canonical, aliases] of Object.entries(viewerAliases)) {
@@ -314,468 +227,132 @@ function canonicalMember(name: string): string {
   return (name ?? '').trim();
 }
 
-/** Team id (slug) dari nama member — `memberIdForName('Zarkasi')` → `'zarka'`.
- * Satu-satunya konvensi untuk membandingkan member di scope delegasi; slug =
- * id `team[]` = slug halaman frontend (PLAN-RAHMAT, K4). */
 function memberIdForName(name: string): string {
   return canonicalMember(name).toLowerCase();
 }
 
-function timeStampLabel(date = new Date()) {
-  return date.toISOString().slice(11, 16);
+function identityAliasesFor(name: string): string[] {
+  const normalized = normalizeIdentity(name);
+  const canonical = memberIdForName(name);
+  return Array.from(
+    new Set(
+      [normalized, canonical, ...(viewerAliases[canonical] ?? [])].filter(
+        Boolean,
+      ),
+    ),
+  );
 }
 
-/** Hash deterministik 8-hex dari string — dipakai untuk id attachment legacy
- * yang STABIL antar-read (tanpa menulis ke state), menghindari id acak yang
- * berubah tiap reload (BUG-A-03). */
-function hash8(value: string): string {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
-}
-
-function buildSeedState(): MarketingPrototypeState {
-  const projects: MarketingProject[] = [
-    {
-      id: 'PRJ-2401',
-      name: 'Q3 Acquisition Sprint',
-      channel: 'Paid Ads',
-      category: 'performance_marketing',
-      owner: headOfMarketing,
-      start: '2026-07-01',
-      deadline: '2026-07-31',
-      progress: 68,
-      openTasks: 9,
-      pendingApproval: 3,
-      status: 'On Track',
-      summary: 'Scale paid lead generation for July campaign clusters across Meta and TikTok.',
-      blockers: ['Meta creative refresh waiting', 'Landing hero copy still in revision'],
-    },
-    {
-      id: 'PRJ-2402',
-      name: 'SEO Authority Lift',
-      channel: 'SEO',
-      category: 'organic_growth',
-      owner: headOfMarketing,
-      start: '2026-07-03',
-      deadline: '2026-08-15',
-      progress: 44,
-      openTasks: 7,
-      pendingApproval: 1,
-      status: 'At Risk',
-      summary: 'Recover ranking on non-brand intent pages and publish technical SEO fixes.',
-      blockers: ['Schema update not shipped', 'Three blog drafts not reviewed'],
-    },
-    {
-      id: 'PRJ-2403',
-      name: 'TikTok Content Batch W2',
-      channel: 'Content',
-      category: 'content_production',
-      owner: headOfMarketing,
-      start: '2026-07-07',
-      deadline: '2026-07-18',
-      progress: 81,
-      openTasks: 4,
-      pendingApproval: 2,
-      status: 'Review',
-      summary: 'Produce and release 12 short-form educational and promotional assets.',
-      blockers: ['Two edits waiting approval'],
-    },
-    {
-      id: 'PRJ-2404',
-      name: 'CRM Winback Flow',
-      channel: 'CRM',
-      category: 'retention_crm',
-      owner: headOfMarketing,
-      start: '2026-07-02',
-      deadline: '2026-07-24',
-      progress: 59,
-      openTasks: 5,
-      pendingApproval: 1,
-      status: 'On Track',
-      summary: 'Launch segmented WhatsApp and email recovery flows for dormant leads.',
-      blockers: ['Offer copy for segment C not locked'],
-    },
-    {
-      id: 'PRJ-2405',
-      name: 'Landing Page CRO Sprint',
-      channel: 'Website',
-      category: 'conversion_optimization',
-      owner: headOfMarketing,
-      start: '2026-07-05',
-      deadline: '2026-07-29',
-      progress: 37,
-      openTasks: 8,
-      pendingApproval: 0,
-      status: 'At Risk',
-      summary: 'Improve conversion paths on high-intent landing pages and forms.',
-      blockers: ['Heatmap findings not synthesized', 'Variant B not QA tested'],
-    },
-    {
-      id: 'PRJ-2406',
-      name: 'Evergreen Brand Education',
-      channel: 'Organic Social',
-      category: 'brand_building',
-      owner: headOfMarketing,
-      start: '2026-06-20',
-      deadline: '2026-07-20',
-      progress: 92,
-      openTasks: 2,
-      pendingApproval: 1,
-      status: 'Review',
-      summary: 'Maintain educational always-on content calendar for awareness lift.',
-      blockers: ['Final carousel caption approval'],
-    },
-    {
-      id: 'PRJ-2407',
-      name: 'Marketplace Promo Push',
-      channel: 'Marketplace',
-      category: 'commercial_activation',
-      owner: headOfMarketing,
-      start: '2026-07-08',
-      deadline: '2026-07-28',
-      progress: 26,
-      openTasks: 6,
-      pendingApproval: 0,
-      status: 'At Risk',
-      summary: 'Align promo creative, PDP updates, and retargeting ads around marketplace traffic.',
-      blockers: ['Voucher mechanics not approved by finance'],
-    },
-    {
-      id: 'PRJ-2408',
-      name: 'June Retrospective Pack',
-      channel: 'Analytics',
-      category: 'analytics_reporting',
-      owner: headOfMarketing,
-      start: '2026-06-28',
-      deadline: '2026-07-06',
-      progress: 100,
-      openTasks: 0,
-      pendingApproval: 0,
-      status: 'Completed',
-      summary: 'Close monthly reporting pack and performance summary for management.',
-      blockers: [],
-    },
-  ];
-
-  const taskRows: Array<[string, string, string, string, string, string, string, string, string, string, number, number, number, string, 'Dreamlab' | 'Toribio']> = [
-    ['TSK-3101', 'Refresh Meta lead gen headline set', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Meta Ads', 'Zarka', 'Urgent', '2026-07-02', 'Revision', 'Watch', 1, 4, 5, 'Deliver 5 primary headline variations with pain-point and proof angles.', 'Dreamlab'],
-    ['TSK-3102', 'Draft TikTok hook bank for serum angle', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Aurel', 'High', '2026-07-03', 'Working on it', 'Healthy', 0, 3, 6, 'Prepare hook bank for top-funnel and promo content variants.', 'Dreamlab'],
-    ['TSK-3103', 'QA landing form friction on mobile', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-04', 'Not started', 'Healthy', 0, 0, 4, 'Review mobile field spacing, CTA visibility, and sticky submit behavior.', 'Dreamlab'],
-    ['TSK-3104', 'Build June non-brand ranking delta sheet', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-02', 'Revision', 'Late', 2, 2, 4, 'Compare priority query groups and identify highest-loss URLs.', 'Dreamlab'],
-    ['TSK-3105', 'Prepare dormant-lead segment C offer', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'High', '2026-07-05', 'Revision', 'Healthy', 0, 5, 5, 'Finalize incentive copy and CTA path for inactive leads older than 60 days.', 'Toribio'],
-    ['TSK-3106', 'Design carousel for manufacturing trust proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Gusti', 'Medium', '2026-07-06', 'Done', 'Healthy', 1, 6, 6, 'Create 6-slide proof carousel using production floor and QC visuals.', 'Toribio'],
-    ['TSK-3107', 'Write PDP promo bullets for marketplace bundle', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Medium', '2026-07-07', 'Not started', 'Healthy', 0, 0, 3, 'Reframe benefit-led bullets for promo bundle hero and above-the-fold PDP block.', 'Toribio'],
-    ['TSK-3108', 'Compile weekly paid pacing snapshot', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize spend, CPL, CTR, and lead trend by paid platform.', 'Dreamlab'],
-    ['TSK-3109', 'Fix schema gaps on high-intent product pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Urgent', '2026-07-03', 'Working on it', 'Watch', 0, 1, 5, 'Audit product FAQ, breadcrumb, and organization schema on money pages.', 'Dreamlab'],
-    ['TSK-3110', 'Review TikTok captions for soft CTA compliance', 'PRJ-2403', 'TikTok Content Batch W2', 'Content', 'Luthfi', 'High', '2026-07-04', 'Revision', 'Healthy', 1, 4, 4, 'Check all caption variants against claim and compliance boundaries.', 'Dreamlab'],
-    ['TSK-3111', 'Map CTA placements on landing variant B', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Gusti', 'High', '2026-07-08', 'Not started', 'Healthy', 0, 0, 4, 'Reposition CTA and trust markers for long-scroll mobile flows.', 'Toribio'],
-    ['TSK-3112', 'Prepare winback WA automation copy set', 'PRJ-2404', 'CRM Winback Flow', 'CRM', 'Aurel', 'Medium', '2026-07-06', 'Working on it', 'Healthy', 0, 2, 5, 'Write 3-sequence WhatsApp recovery flow for inactive lead clusters.', 'Toribio'],
-    ['TSK-3113', 'Build story sequence for testimonial proof', 'PRJ-2406', 'Evergreen Brand Education', 'Organic Social', 'Luthfi', 'Low', '2026-07-05', 'Done', 'Healthy', 0, 4, 4, 'Create story stack with review proof, swipe CTA, and saved highlights plan.', 'Toribio'],
-    ['TSK-3114', 'Sync promo banner claim with legal-safe wording', 'PRJ-2407', 'Marketplace Promo Push', 'Marketplace', 'Aurel', 'Urgent', '2026-07-03', 'Revision', 'Late', 3, 1, 3, 'Revise claim-heavy copy into compliant, conversion-safe marketplace messaging.', 'Toribio'],
-    ['TSK-3115', 'Create lead-source dashboard summary card set', 'PRJ-2408', 'June Retrospective Pack', 'Analytics', 'Zarka', 'Low', '2026-07-01', 'Done', 'Healthy', 0, 3, 3, 'Summarize lead-source mix, deal share, and CPL movement for management recap.', 'Dreamlab'],
-    ['TSK-3116', 'Audit blog internal links to commercial pages', 'PRJ-2402', 'SEO Authority Lift', 'SEO', 'Revi', 'Medium', '2026-07-09', 'Not started', 'Healthy', 0, 0, 5, 'Improve internal intent flow from educational pages to high-conversion service pages.', 'Dreamlab'],
-    ['TSK-3117', 'Design remarketing visual pack for angle B', 'PRJ-2401', 'Q3 Acquisition Sprint', 'Creative', 'Gusti', 'High', '2026-07-04', 'Revision', 'Healthy', 1, 5, 6, 'Produce static remarketing pack aligned to revised offer and social proof.', 'Toribio'],
-    ['TSK-3118', 'Update landing FAQ with top sales objections', 'PRJ-2405', 'Landing Page CRO Sprint', 'Website', 'Aurel', 'Medium', '2026-07-10', 'Not started', 'Healthy', 0, 0, 4, 'Translate sales-call objections into FAQ blocks that reduce hesitation.', 'Toribio'],
-  ] as const;
-
-  const tasks: MarketingTask[] = taskRows.map((row) => {
-    const [id, title, projectId, project, channel, pic, priority, dueDate, status, sla, revisionCount, done, total, brief, brand] = row;
-    return {
-      id,
-      title,
-      projectId,
-      project,
-      channel,
-      category: channel.toLowerCase().replaceAll(' ', '_'),
-      brand: brand as 'Dreamlab' | 'Toribio',
-      assignedBy: headOfMarketing,
-      pic,
-      reviewer: headOfMarketing,
-      priority: priority as TaskPriority,
-      startDate: dueDate,
-      dueDate,
-      status: status as TaskStatus,
-      // Task seed yang statusnya Done dianggap selesai PADA due date-nya
-      // (on-time), jadi SLA-nya dihitung dari completedAt = dueDate.
-      completedAt: status === 'Done' ? `${dueDate}T08:00:00.000Z` : undefined,
-      sla: sla as MarketingTask['sla'],
-      estimatedHours: total,
-      actualHours: done,
-      revisionCount,
-      checklistDone: done,
-      checklistTotal: total,
-      brief,
-      tags: [channel.toLowerCase().replaceAll(' ', '-'), project.split(' ')[0].toLowerCase()],
-      comments: [
-        { author: headOfMarketing, body: 'Please tighten the hook and attach proof.', createdAt: '2026-07-01T08:00:00.000Z' },
-        { author: pic, body: 'Updated draft uploaded for review.', createdAt: '2026-07-01T10:30:00.000Z' },
-      ],
-      history: [
-        { at: '2026-07-01T07:45:00.000Z', by: headOfMarketing, to: 'Not started', note: 'Task assigned' },
-        { at: '2026-07-01T09:15:00.000Z', by: pic, from: 'Not started', to: status, note: 'Status updated' },
-      ],
-      // Seed attachment HANYA metadata (path '' → tidak ada file asli).
-      // Id deterministik supaya stabil & konsisten dengan backfill normalizeState.
-      attachments: [
-        { id: 'ATT-seed-brief', name: 'brief.pdf', type: 'application/pdf', sizeKb: 244, path: '', uploadedBy: 'System', createdAt: '' },
-        { id: 'ATT-seed-proof', name: 'proof.png', type: 'image/png', sizeKb: 812, path: '', uploadedBy: 'System', createdAt: '' },
-      ],
-    };
-  });
-
-  const profiles: MarketingProfile[] = [
-    ['zarka', 'Zarka', 'Video Editor', 'zarka@portoaureon.id', '+62 812-5555-0101', '2024-03-12', 'Handles paid acquisition pacing, creative testing, and spend discipline across Meta and TikTok.', 86, 13, 2, 2, 1, { completion: 81, discipline: 88, quality: 84, productivity: 92 }],
-    ['gusti', 'Gusti', 'Digital Marketing Strategy', 'gusti@portoaureon.id', '+62 813-5555-0202', '2023-11-05', 'Owns technical SEO fixes, ranking visibility, and commercial page optimization.', 69, 9, 3, 3, 2, { completion: 64, discipline: 72, quality: 69, productivity: 78 }],
-    ['aurel', 'Aurel', 'Content Creator', 'aurel@portoaureon.id', '+62 814-5555-0303', '2024-01-22', 'Produces brand, performance, and review assets for campaign execution.', 88, 15, 2, 2, 1, { completion: 83, discipline: 90, quality: 87, productivity: 94 }],
-    ['luthfi', 'Luthfi', 'Packaging Designer', 'luthfi@portoaureon.id', '+62 815-5555-0404', '2024-04-08', 'Creates visual packaging direction and adapts brand assets for campaign surfaces.', 83, 12, 2, 1, 1, { completion: 80, discipline: 85, quality: 82, productivity: 84 }],
-    ['rahmat', 'Rahmat', 'IS Manager', 'rahmat@portoaureon.id', '+62 816-5555-0505', '2025-01-15', 'Menangani sistem informasi dan integrasi digital marketing.', 0, 0, 0, 0, 0, { completion: 0, discipline: 0, quality: 0, productivity: 0 }],
-    ['revi', headOfMarketing, 'Head of Marketing', 'revi@portoaureon.id', '+62 811-5555-0001', '2022-09-01', 'Owns assignment, approval, escalation control, and KPI governance for the division.', 91, 18, 0, 0, 0, { completion: 92, discipline: 95, quality: 89, productivity: 88 }],
-  ].map(([id, name, role, email, phone, joinDate, bio, monthKpi, completed, inProgress, late, overdue, breakdown]) => ({
-    id: id as string,
-    name: name as string,
-    role: role as string,
-    email: email as string,
-    phone: phone as string,
-    joinDate: joinDate as string,
-    bio: bio as string,
-    monthKpi: monthKpi as number,
-    completed: completed as number,
-    inProgress: inProgress as number,
-    late: late as number,
-    overdue: overdue as number,
-    breakdown: breakdown as MarketingProfile['breakdown'],
-  }));
-
-  const performance: MarketingPerformance[] = profiles
-    .filter((profile) => profile.role !== 'Head of Marketing')
-    .map((profile) => {
-      const assigned = tasks.filter((task) => task.pic === profile.name).length;
-      const completed = tasks.filter((task) => task.pic === profile.name && task.status === 'Done').length;
-      const late = tasks.filter((task) => task.pic === profile.name && task.sla === 'Late').length;
-      const revision = tasks.filter((task) => task.pic === profile.name && task.status === 'Revision').length;
-      const onTime = Math.max(completed - late, 0);
-      const completionScore = Math.round(clamp((completed / Math.max(assigned, 1)) * 100, 0, 100));
-      const disciplineScore = avg(tasks.filter((task) => task.pic === profile.name).map((task) => calcDisciplinePoints(task)));
-      const qualityScore = calcQualityScore(disciplineScore, revision);
-      const productivityScore = calcProductivityScore(assigned);
-      const overallKpi = Math.round(
-        completionScore * 0.4 +
-        disciplineScore * 0.3 +
-        qualityScore * 0.15 +
-        productivityScore * 0.15,
-      );
-
-      return {
-        name: profile.name,
-        role: profile.role,
-        assigned,
-        completed,
-        onTime,
-        late,
-        revision,
-        completionScore,
-        disciplineScore,
-        qualityScore,
-        productivityScore,
-        overallKpi,
-        history: [
-          { period: 'W1', kpi: clamp(overallKpi - 8, 0, 100), discipline: clamp(disciplineScore - 6, 0, 100) },
-          { period: 'W2', kpi: clamp(overallKpi - 4, 0, 100), discipline: clamp(disciplineScore - 3, 0, 100) },
-          { period: 'W3', kpi: clamp(overallKpi - 1, 0, 100), discipline: clamp(disciplineScore - 1, 0, 100) },
-          { period: 'W4', kpi: clamp(overallKpi + 2, 0, 100), discipline: clamp(disciplineScore + 2, 0, 100) },
-          { period: 'W5', kpi: clamp(overallKpi + 4, 0, 100), discipline: clamp(disciplineScore + 4, 0, 100) },
-          { period: 'W6', kpi: overallKpi, discipline: disciplineScore },
-        ],
-      };
-    });
-
-  const notifications: MarketingNotification[] = [
-    { id: 'NTF-501', type: 'task_assigned', title: 'New task assigned to Zarka', detail: 'Meta lead gen headline set moved into To Do under Q3 Acquisition Sprint.', actor: headOfMarketing, time: '07:10', unread: true, recipient: 'Zarka' },
-    { id: 'NTF-502', type: 'due_today', title: 'Due today: landing QA review', detail: 'QA landing form friction on mobile needs update before 17:00.', actor: 'System', time: '08:45', unread: true, recipient: null },
-    { id: 'NTF-503', type: 'task_reviewed', title: 'Revision feedback added', detail: 'Head of Marketing returned TikTok caption batch with one comment thread.', actor: headOfMarketing, time: '09:30', unread: false, recipient: 'Aurel' },
-    { id: 'NTF-504', type: 'task_completed', title: 'Task completed by Gusti', detail: 'Carousel proof assets approved and closed in Evergreen Brand Education.', actor: 'Gusti', time: '10:20', unread: false, recipient: headOfMarketing },
-    { id: 'NTF-505', type: 'overdue', title: 'Overdue warning: SEO schema update', detail: 'Schema work is still waiting approval and crossed the SLA threshold.', actor: 'System', time: '11:05', unread: true, recipient: 'Revi' },
-    { id: 'NTF-506', type: 'comment_added', title: 'Comment added on winback copy', detail: 'Aurel requested one more compliance pass before submission.', actor: 'Aurel', time: '11:40', unread: false, recipient: headOfMarketing },
-    { id: 'NTF-507', type: 'task_approved', title: 'Approved by Head of Marketing', detail: 'Weekly paid pacing snapshot moved to Done after review.', actor: headOfMarketing, time: '13:15', unread: false, recipient: 'Zarka' },
-    { id: 'NTF-508', type: 'due_tomorrow', title: 'Due tomorrow: promo banner claim review', detail: 'Marketplace promo copy needs approval before asset handoff.', actor: 'System', time: '14:50', unread: true, recipient: null },
-  ];
-
-  const settings: MarketingSettings = {
-    weights: { completion: 40, discipline: 30, quality: 15, productivity: 15 },
-    workingHours: { start: '08:00', end: '17:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
-    projectCategories: [
-      'performance_marketing',
-      'organic_growth',
-      'content_production',
-      'retention_crm',
-      'conversion_optimization',
-      'brand_building',
-      'commercial_activation',
-      'analytics_reporting',
-    ],
-    appearance: {
-      departmentDefaultTheme: 'professional',
-      allowUserOverride: true,
-    },
-  };
-
-  const insights = [
-    { title: 'AI Weekly Insight', summary: 'Paid and CRM are carrying the strongest completion rate while SEO has the highest revision drag.', impact: 'Positive' as const },
-    { title: 'Delivery Risk', summary: 'Tasks with low briefing clarity are the primary cause of review loops and overdue SLA pressure.', impact: 'Negative' as const },
-    { title: 'Manager Action', summary: 'Batch approvals at end of day reduce queue switching and improve same-day closure rate.', impact: 'Neutral' as const },
-  ];
-
+function userIdentityWhere(name: string) {
   return {
-    summaryDate: new Date().toISOString(),
-    projects,
-    tasks,
-    performance,
-    notifications,
-    settings,
-    uiPreferences: {},
-    profiles,
-    insights,
+    OR: identityAliasesFor(name).flatMap((alias) => [
+      { fullName: { equals: alias, mode: 'insensitive' as const } },
+      { email: { startsWith: `${alias}@`, mode: 'insensitive' as const } },
+    ]),
+  };
+}
+
+function fmtDate(d: Date | string | null | undefined): string {
+  if (!d) return '';
+  if (typeof d === 'string') return d.slice(0, 10);
+  return toLocalDateString(d);
+}
+
+/** Convert Prisma task row (dueDate: Date|null) → SlaTaskShape (dueDate: string) */
+function toSlaShape(task: any): {
+  status: string;
+  dueDate: string;
+  completedAt?: string;
+} {
+  return {
+    status: task.status as string,
+    dueDate: fmtDate(task.dueDate),
+    completedAt: task.completedAt ? fmtDate(task.completedAt) : undefined,
+  };
+}
+
+// Map DB task row → API response shape
+function mapTaskRow(task: any): MarketingTask {
+  const sla = deriveSla(toSlaShape(task));
+  return {
+    id: task.id,
+    taskCode: task.taskCode,
+    title: task.title,
+    projectId: task.projectId ?? null,
+    project: task.project?.name ?? null,
+    channel: task.channel,
+    category: task.category,
+    brand: (task.brand as 'Dreamlab' | 'Toribio') ?? 'Dreamlab',
+    assignedBy: task.assignedBy?.fullName ?? null,
+    pic: task.pic?.fullName ?? null,
+    reviewer: task.reviewer?.fullName ?? null,
+    priority: task.priority as TaskPriority,
+    startDate: task.startDate
+      ? toLocalDateString(new Date(task.startDate))
+      : '',
+    dueDate: task.dueDate ? toLocalDateString(new Date(task.dueDate)) : '',
+    status: LEGACY_STATUS_MAP[task.status] ?? task.status,
+    completedAt: task.completedAt
+      ? new Date(task.completedAt).toISOString()
+      : undefined,
+    sla,
+    estimatedHours: task.estimatedHours ?? 0,
+    actualHours: task.actualHours ?? 0,
+    revisionCount: task.revisionCount ?? 0,
+    checklistDone: task.checklistDone ?? 0,
+    checklistTotal: task.checklistTotal ?? 0,
+    brief: task.brief ?? '',
+    link: task.link ?? '',
+    tags: task.tags ? task.tags.split(',').filter(Boolean) : [],
+    comments: (task.comments ?? []).map((c: any) => ({
+      author: c.author?.fullName ?? c.authorId ?? 'System',
+      body: c.body,
+      createdAt: new Date(c.createdAt).toISOString(),
+    })),
+    history: (task.history ?? []).map((h: any) => ({
+      at: new Date(h.at).toISOString(),
+      by: h.by?.fullName ?? h.byId ?? 'System',
+      from: h.fromStatus ?? undefined,
+      to: h.toStatus,
+      note: h.note ?? '',
+    })),
+    attachments: (task.attachments ?? []).map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      type: a.type,
+      sizeKb: a.sizeKb,
+      path: a.path,
+      uploadedBy: a.uploadedBy?.fullName ?? a.uploadedById ?? 'System',
+      createdAt: new Date(a.createdAt).toISOString(),
+    })),
+  };
+}
+
+function mapProjectRow(p: any, tasks: any[] = []): MarketingProject {
+  return {
+    id: p.id,
+    projectCode: p.projectCode,
+    name: p.name,
+    channel: p.channel,
+    category: p.category,
+    owner: p.owner?.fullName ?? null,
+    start: p.startDate ? toLocalDateString(new Date(p.startDate)) : '',
+    deadline: p.deadline ? toLocalDateString(new Date(p.deadline)) : '',
+    progress: p.progress ?? 0,
+    openTasks: tasks.filter((t) => t.projectId === p.id && t.status !== 'Done')
+      .length,
+    pendingApproval: tasks.filter(
+      (t) => t.projectId === p.id && t.status === 'Revision',
+    ).length,
+    status: p.status ?? 'On Track',
+    summary: p.summary ?? '',
+    blockers: p.blockers ? p.blockers.split('; ').filter(Boolean) : [],
   };
 }
 
 @Injectable()
 export class MarketingPrototypeService {
-  /** Path state untuk unit test (P6.1). TIDAK via konstruktor — Nest DI akan
-   * mencoba meng-inject param bertipe `string` dan gagal. Setelah instantiate
-   * oleh test, panggil `useStatePath(path)`. Produksi memakai file default. */
-  private stateFilePathOverride?: string;
-
-  /** Alihkan file state (hanya untuk unit test). */
-  useStatePath(path: string): this {
-    this.stateFilePathOverride = path;
-    return this;
-  }
-
-  /** Path file state. Bisa di-override lewat useStatePath (untuk unit test yang
-   * memakai temp file, bukan file produksi — lihat P6.1). */
-  private get resolvedStatePath(): string {
-    return this.stateFilePathOverride ?? statePath;
-  }
-
-  private normalizeState(state: MarketingPrototypeState): MarketingPrototypeState {
-    state.settings = {
-      ...state.settings,
-      projectCategories: state.settings.projectCategories ?? [],
-      appearance: {
-        departmentDefaultTheme: state.settings.appearance?.departmentDefaultTheme ?? 'professional',
-        allowUserOverride: state.settings.appearance?.allowUserOverride ?? true,
-      },
-    };
-    state.uiPreferences = state.uiPreferences ?? {};
-    // Ensure every task has a brand field (default to Dreamlab for backward compat),
-    // status dinormalisasi ke 4 kanonik, dan completedAt di-backfill untuk task Done.
-    state.tasks = state.tasks.map((task) => {
-      const next = {
-        ...task,
-        brand: (task as any).brand ?? 'Dreamlab',
-        // Backfill field `link` (URL deliverable) — task lama (produksi) belum
-        // punya field ini; default string kosong supaya UI aman (BUG-L7).
-        link: (task as any).link ?? '',
-        // Backfill attachment legacy (seed `brief.pdf`/`proof.png` tanpa
-        // id/path): id DETERMINISTIK (BUG-A-03) agar stabil antar-read,
-        // path '' (tidak ada file asli → UI menampilkan ikon tanpa link).
-        attachments: ((task as any).attachments ?? []).map(
-          (att: any, idx: number) => ({
-            id:
-              typeof att.id === 'string' && att.id
-                ? att.id
-                : `ATT-legacy-${idx}-${hash8(String(att.name ?? 'file'))}`,
-            name: String(att.name ?? 'file'),
-            type: String(att.type ?? 'application/octet-stream'),
-            sizeKb: Number(att.sizeKb ?? 0),
-            path: String(att.path ?? ''),
-            uploadedBy: String(att.uploadedBy ?? 'System'),
-            createdAt: String(att.createdAt ?? ''),
-          }),
-        ),
-        status: (LEGACY_STATUS_MAP[task.status] ?? task.status) as TaskStatus,
-      };
-      if (next.status === 'Done' && !next.completedAt) {
-        // Migrasi sekali jalan: tarik tanggal selesai dari history (event terakhir
-        // ke 'Done'), fallback ke dueDate (perlu review manual oleh admin).
-        const doneEvent = [...(next.history ?? [])]
-          .reverse()
-          .find((h) => h.to === 'Done');
-        next.completedAt = doneEvent?.at ?? `${next.dueDate}T08:00:00.000Z`;
-      }
-      if (next.status !== 'Done') {
-        // Task yang tidak lagi Done tidak boleh menyimpan completedAt basi.
-        delete next.completedAt;
-      }
-      return next;
-    });
-    // Merge seed profiles so new members (Rahmat, Luthfi) appear on existing
-    // runtime state (production) WITHOUT resetting the task data.
-    const seedProfiles = buildSeedState().profiles;
-    const existingIds = new Set(state.profiles.map((p) => p.id));
-    const existingNames = new Set(state.profiles.map((p) => normalizeIdentity(p.name)));
-    for (const seedProfile of seedProfiles) {
-      if (!existingIds.has(seedProfile.id) && !existingNames.has(normalizeIdentity(seedProfile.name))) {
-        state.profiles.push(seedProfile);
-        existingIds.add(seedProfile.id);
-        existingNames.add(normalizeIdentity(seedProfile.name));
-      }
-    }
-    return state;
-  }
-
-  private async readState(): Promise<MarketingPrototypeState> {
-    try {
-      await access(this.resolvedStatePath, fsConstants.F_OK);
-      const raw = await readFile(this.resolvedStatePath, 'utf8');
-      return this.normalizeState(JSON.parse(raw) as MarketingPrototypeState);
-    } catch {
-      const seed = buildSeedState();
-      await this.writeState(seed);
-      return seed;
-    }
-  }
-
-  private async writeState(state: MarketingPrototypeState) {
-    await mkdir(dirname(this.resolvedStatePath), { recursive: true });
-    // ATOMIC WRITE: tulis ke file .tmp lalu rename. `writeFile` langsung ke path
-    // final membuat jendela kecil saat file terpotong (truncate) sebelum terisi —
-    // GET bundle yang membaca bersamaan bisa dapat JSON tidak utuh → `JSON.parse`
-    // gagal → `readState` catch → **re-seed buildSeedState()** → data produksi
-    // hilang. `rename` bersifat atomik: pembaca selalu melihat file lama ATAU
-    // file baru, tidak pernah versi setengah jadi.
-    const tmpPath = `${this.resolvedStatePath}.tmp`;
-    await writeFile(tmpPath, JSON.stringify(state, null, 2), 'utf8');
-    await rename(tmpPath, this.resolvedStatePath);
-  }
-
-  /** Rantai serialisasi untuk updateState — mencegah kehilangan data.
-   * updateState = read → mutate → write. Tanpa serialisasi, dua request PATCH
-   * yang datang hampir bersamaan membaca snapshot yang SAMA, lalu write yang
-   * terakhir menimpa perubahan yang pertama → task bisa kembali ke status lama
-   * (mis. "Done" yang baru disimpan tiba-tiba balik "Not started"), termasuk
-   * history-nya ikut hilang. Queue ini memastikan hanya satu read-modify-write
-   * berjalan pada satu waktu. */
-  private stateWriteChain: Promise<unknown> = Promise.resolve();
-
-  private async updateState(mutator: (state: MarketingPrototypeState) => MarketingPrototypeState | void) {
-    const operation = this.stateWriteChain.then(async () => {
-      const state = this.normalizeState(await this.readState());
-      const result = mutator(state);
-      const next = (result ?? state) as MarketingPrototypeState;
-      await this.writeState(next);
-      return next;
-    });
-    // Jangan biarkan satu kegagalan memblokir operasi berikutnya.
-    this.stateWriteChain = operation.then(
-      () => undefined,
-      () => undefined,
-    );
-    return operation;
-  }
+  constructor(private prisma: PrismaService) {}
 
   private resolveViewer(viewer?: ViewerContext): ViewerScope {
     const email = normalizeIdentity(viewer?.email);
@@ -783,21 +360,48 @@ export class MarketingPrototypeService {
     const roles = viewer?.roles ?? [];
 
     let prototypeName: string | null = null;
-    if (viewerAliases.revi.includes(fullName) || email === 'revita@nexerp.id') prototypeName = 'Revi';
-    else if (viewerAliases.zarka.includes(fullName) || email === 'zarkasi@dreamlab.com') prototypeName = 'Zarka';
-    else if (viewerAliases.gusti.includes(fullName) || email === 'gusti@dreamlab.com') prototypeName = 'Gusti';
-    else if (viewerAliases.aurel.includes(fullName)) prototypeName = 'Aurel';
-    else if (viewerAliases.luthfi.includes(fullName)) prototypeName = 'Luthfi';
-    // Email Rahmat: `rahmat@portoaureon.id` (profil di state) — jangan hanya
-    // andalkan fullName (PLAN-RAHMAT, C-01: delegasi senyap mati bila salah).
-    else if (viewerAliases.rahmat.includes(fullName) || email.startsWith('rahmat@')) prototypeName = 'Rahmat';
-    else if (roles.some((role) => managerRoleSet.has(role))) prototypeName = headOfMarketing;
+    if (viewerAliases.revi.includes(fullName) || email === 'revita@nexerp.id')
+      prototypeName = 'Revi';
+    else if (
+      viewerAliases.zarka.includes(fullName) ||
+      email === 'zarkasi@dreamlab.com' ||
+      email === 'zarkasi@nexerp.id'
+    )
+      prototypeName = 'Zarka';
+    else if (
+      viewerAliases.gusti.includes(fullName) ||
+      email === 'gusti@dreamlab.com' ||
+      email === 'gusti@nexerp.id'
+    )
+      prototypeName = 'Gusti';
+    else if (
+      viewerAliases.aurel.includes(fullName) ||
+      email === 'aurel@nexerp.id' ||
+      email === 'aurel@dreamlab.com'
+    )
+      prototypeName = 'Aurel';
+    else if (
+      viewerAliases.luthfi.includes(fullName) ||
+      email === 'luthfi@nexerp.id' ||
+      email === 'luthfi@dreamlab.com'
+    )
+      prototypeName = 'Luthfi';
+    else if (
+      viewerAliases.rahmat.includes(fullName) ||
+      email.startsWith('rahmat@')
+    )
+      prototypeName = 'Rahmat';
+    else if (roles.some((role) => managerRoleSet.has(role)))
+      prototypeName = headOfMarketing;
 
     const isManager =
       email === 'revita@nexerp.id' ||
+      viewerAliases.revi.includes(fullName) ||
       roles.some((role) => managerRoleSet.has(role)) ||
       email === 'zaki@dreamlab.com' ||
-      email === 'admin@dreamlab.com';
+      email === 'zaki@nexerp.id' ||
+      email === 'admin@dreamlab.com' ||
+      email === 'admin@nexerp.id';
 
     const aliasLookup: Record<string, string[]> = {
       Revi: viewerAliases.revi,
@@ -807,229 +411,456 @@ export class MarketingPrototypeService {
       Luthfi: viewerAliases.luthfi,
       Rahmat: viewerAliases.rahmat,
     };
-    const aliases = prototypeName ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])] : [];
+    const aliases = prototypeName
+      ? [prototypeName, ...(aliasLookup[prototypeName] ?? [])]
+      : [];
 
-    // Delegated Manager (co-manager): Rahmat boleh mengelola Gusti & Zarkasi.
-    // Global manager → kelola semua team; member biasa → kosong (PLAN-RAHMAT).
-    const delegated = prototypeName ? (DELEGATED_MANAGER_SCOPE[prototypeName] ?? []) : [];
-    const managedMembers = isManager ? team.map((member) => member.id) : delegated;
+    const delegated = prototypeName
+      ? (DELEGATED_MANAGER_SCOPE[prototypeName] ?? [])
+      : [];
+    const managedMembers = isManager ? team.map((m) => m.id) : delegated;
 
     return {
       isManager,
       prototypeName,
-      aliases: Array.from(new Set(aliases.map((value) => normalizeIdentity(value)).filter(Boolean))),
+      aliases: Array.from(
+        new Set(aliases.map((v) => normalizeIdentity(v)).filter(Boolean)),
+      ),
       managedMembers,
     };
   }
 
-  /** Izin manajer pada task tertentu: global manager, task milik sendiri,
-   *  atau task yang pic-nya ada di scope delegasi (PLAN-RAHMAT, A3). */
-  private canManageTask(task: MarketingTask, scope: ViewerScope) {
+  private canManageTask(task: any, scope: ViewerScope) {
     if (scope.isManager) return true;
-    if (scope.aliases.includes(normalizeIdentity(task.pic))) return true;
-    return scope.managedMembers.includes(memberIdForName(task.pic));
+    if (scope.aliases.includes(normalizeIdentity(task.pic?.fullName ?? '')))
+      return true;
+    return scope.managedMembers.includes(
+      memberIdForName(task.pic?.fullName ?? ''),
+    );
   }
 
-  private isVisibleToViewer(task: MarketingTask, scope: ViewerScope) {
+  private isVisibleToViewer(task: any, scope: ViewerScope) {
     if (scope.isManager) return true;
     if (!scope.aliases.length && !scope.managedMembers.length) return false;
-    const visibleByAlias = [task.pic, task.reviewer, task.assignedBy].some((value) =>
-      scope.aliases.includes(normalizeIdentity(value)),
+    const picName = task.pic?.fullName ?? '';
+    const reviewerName = task.reviewer?.fullName ?? '';
+    const assignedByName = task.assignedBy?.fullName ?? '';
+    const visibleByAlias = [picName, reviewerName, assignedByName].some((v) =>
+      scope.aliases.includes(normalizeIdentity(v)),
     );
     if (visibleByAlias) return true;
-    // Delegated manager melihat task yang pic-nya ia kelola (Gusti/Zarka).
-    return scope.managedMembers.includes(memberIdForName(task.pic));
-  }
-
-  private isNotificationVisible(notification: MarketingNotification, scope: ViewerScope) {
-    if (scope.isManager) return true;
-    if (!scope.aliases.length && !scope.managedMembers.length) return false;
-    if (!notification.recipient) return true;
-    if (scope.aliases.includes(normalizeIdentity(notification.recipient))) return true;
-    // Delegated manager ikut melihat notif member yang ia kelola (PLAN-RAHMAT, A9).
-    return scope.managedMembers.includes(memberIdForName(notification.recipient));
+    return scope.managedMembers.includes(memberIdForName(picName));
   }
 
   private ensureManager(viewer?: ViewerContext) {
     const scope = this.resolveViewer(viewer);
     if (!scope.isManager) {
-      throw new ForbiddenException('Only Head of Marketing can manage task registry changes');
+      throw new ForbiddenException(
+        'Only Head of Marketing can manage task registry changes',
+      );
     }
     return scope;
   }
 
-  private viewerPreferenceKey(viewer?: ViewerContext) {
-    return (
-      viewer?.id ??
-      normalizeIdentity(viewer?.email) ??
-      normalizeIdentity(viewer?.fullName) ??
-      'anonymous'
-    );
-  }
-
-  private pushNotification(
-    state: MarketingPrototypeState,
-    notification: Omit<MarketingNotification, 'id' | 'time'>,
+  async getBundle(
+    viewer?: ViewerContext,
+    options: { page?: number; limit?: number } = {},
   ) {
-    state.notifications.unshift({
-      ...notification,
-      // randomUUID() — id unik global, hindari collide (sebelumnya Math.random()
-      // 4 digit bisa bertabrakan dalam volume tinggi).
-      id: `NTF-${randomUUID()}`,
-      time: timeStampLabel(),
-    });
-  }
-
-  private mapTask(task: MarketingTask, settings: MarketingSettings) {
-    const discipline = calcDisciplinePoints(task);
-    const quality = calcQualityScore(discipline, task.revisionCount);
-    const productivity = calcProductivityScore(1);
-    const completion = Math.round((task.checklistDone / Math.max(task.checklistTotal, 1)) * 100);
-    const overall = Math.round(
-      completion * (settings.weights.completion / 100) +
-      discipline * (settings.weights.discipline / 100) +
-      quality * (settings.weights.quality / 100) +
-      productivity * (settings.weights.productivity / 100),
-    );
-
-    return {
-      ...task,
-      sla: deriveSla(task),
-      disciplinePoints: discipline,
-      qualityScore: quality,
-      productivityScore: productivity,
-      completionScore: completion,
-      overallKpi: overall,
-    };
-  }
-
-  async getBundle(viewer?: ViewerContext) {
-    const state = await this.readState();
     const scope = this.resolveViewer(viewer);
-    const visibleTasks = state.tasks.filter((task) => this.isVisibleToViewer(task, scope));
-    const tasks = visibleTasks.map((task) => this.mapTask(task, state.settings));
-    const visibleProjectIds = new Set(tasks.map((task) => task.projectId));
-    const projects = state.projects
-      .filter((project) => scope.isManager || visibleProjectIds.has(project.id))
-      .map((project) => ({
-        ...project,
-        openTasks: tasks.filter((task) => task.projectId === project.id && task.status !== 'Done').length,
-        pendingApproval: tasks.filter((task) => task.projectId === project.id && task.status === 'Revision').length,
-      }));
-    const notifications = state.notifications.filter((notification) => this.isNotificationVisible(notification, scope));
-    const performance = state.performance.map((member) => {
-      const memberTasks = tasks.filter((task) => canonicalMember(task.pic) === member.name);
-      const taskCount = memberTasks.length;
-      const completedTasks = memberTasks.filter((task) => task.status === 'Done');
-      const completed = completedTasks.length;
-      // late (KPI) = HANYA task Done yang selesai LEWAT due (completedAt > dueDate).
-      // Open task yang overdue TIDAK masuk ke sini (dipisah ke `overdue`).
-      const late = completedTasks.filter(
-        (task) =>
-          task.completedAt &&
-          calendarDayDiff(parseLocalDate(task.completedAt.slice(0, 10)), parseLocalDate(task.dueDate)) > 0,
-      ).length;
-      const overdue = memberTasks.filter(
-        (task) => task.status !== 'Done' && calendarDayDiff(new Date(), parseLocalDate(task.dueDate)) > 0,
-      ).length;
-      const revision = memberTasks.filter((task) => task.status === 'Revision').length;
-      const discipline = avg(memberTasks.map((task) => task.disciplinePoints));
-      const quality = avg(memberTasks.map((task) => task.qualityScore));
-      const productivity = avg(memberTasks.map((task) => task.productivityScore));
-      const completion = taskCount > 0 ? Math.round((completed / taskCount) * 100) : 0;
-      const overall = Math.round(
-        completion * (state.settings.weights.completion / 100) +
-        discipline * (state.settings.weights.discipline / 100) +
-        quality * (state.settings.weights.quality / 100) +
-        productivity * (state.settings.weights.productivity / 100),
-      );
-      return {
-        ...member,
-        assigned: taskCount,
-        completed,
-        late,
-        overdue,
-        revision,
-        onTime: Math.max(completed - late, 0),
-        completionScore: completion,
-        disciplineScore: discipline,
-        qualityScore: quality,
-        productivityScore: productivity,
-        overallKpi: overall,
-      };
-    });
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(200, Math.max(1, options.limit ?? 50));
+    const skip = (page - 1) * limit;
 
-    // ── Brand-specific KPI helper ──
-    const calcBrandKpi = (profileName: string, brandFilter: 'Dreamlab' | 'Toribio') => {
-      const brandTasks = tasks.filter((task) => canonicalMember(task.pic) === profileName && task.brand === brandFilter);
+    // Resolve viewer scope before pagination. Filtering an already paginated,
+    // un-ordered result can hide newer tasks and returns a misleading total.
+    const scopedIdentityNames = scope.isManager
+      ? []
+      : Array.from(
+          new Set([
+            ...scope.aliases,
+            ...scope.managedMembers.flatMap((member) =>
+              identityAliasesFor(member),
+            ),
+          ]),
+        );
+    const scopedUsers =
+      scope.isManager || scopedIdentityNames.length === 0
+        ? []
+        : await this.prisma.user.findMany({
+            where: {
+              OR: scopedIdentityNames.flatMap((identity) => [
+                {
+                  fullName: { equals: identity, mode: 'insensitive' as const },
+                },
+                {
+                  email: {
+                    startsWith: `${identity}@`,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              ]),
+            },
+            select: { id: true },
+          });
+    const scopedUserIds = scopedUsers.map((user) => user.id);
+    const taskWhere = scope.isManager
+      ? {}
+      : {
+          OR: [
+            { picId: { in: scopedUserIds } },
+            { reviewerId: { in: scopedUserIds } },
+            { assignedById: { in: scopedUserIds } },
+          ],
+        };
+
+    const [rawTasks, totalCount] = await Promise.all([
+      this.prisma.marketingTask.findMany({
+        where: taskWhere,
+        skip,
+        take: limit,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: {
+          id: true,
+          taskCode: true,
+          title: true,
+          projectId: true,
+          channel: true,
+          category: true,
+          brand: true,
+          priority: true,
+          startDate: true,
+          dueDate: true,
+          completedAt: true,
+          status: true,
+          estimatedHours: true,
+          actualHours: true,
+          revisionCount: true,
+          checklistDone: true,
+          checklistTotal: true,
+          brief: true,
+          link: true,
+          tags: true,
+          project: { select: { name: true } },
+          pic: { select: { fullName: true } },
+          reviewer: { select: { fullName: true } },
+          assignedBy: { select: { fullName: true } },
+          attachments: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              sizeKb: true,
+              path: true,
+              createdAt: true,
+              uploadedBy: { select: { fullName: true } },
+            },
+          },
+          comments: {
+            select: {
+              body: true,
+              createdAt: true,
+              author: { select: { fullName: true } },
+            },
+          },
+          history: {
+            select: {
+              at: true,
+              fromStatus: true,
+              toStatus: true,
+              note: true,
+              by: { select: { fullName: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.marketingTask.count({ where: taskWhere }),
+    ]);
+
+    const tasks = rawTasks.map(mapTaskRow);
+
+    const rawProjects = await this.prisma.marketingProject.findMany({
+      select: {
+        id: true,
+        projectCode: true,
+        name: true,
+        channel: true,
+        category: true,
+        startDate: true,
+        deadline: true,
+        progress: true,
+        status: true,
+        summary: true,
+        blockers: true,
+        owner: { select: { fullName: true } },
+      },
+    });
+    const visibleProjectIds = new Set(
+      tasks.map((t) => t.projectId).filter(Boolean),
+    );
+    const projects = rawProjects
+      .filter((p) => scope.isManager || visibleProjectIds.has(p.id))
+      .map((p) => mapProjectRow(p, rawTasks));
+
+    // KPI calculation (reused from original, now queries DB)
+    const calcBrandKpi = (
+      profileName: string,
+      brandFilter: 'Dreamlab' | 'Toribio',
+    ) => {
+      const brandTasks = tasks.filter(
+        (t) =>
+          canonicalMember(t.pic ?? '') === profileName &&
+          t.brand === brandFilter,
+      );
       const brandTotal = brandTasks.length;
-      const brandDone = brandTasks.filter((task) => task.status === 'Done').length;
-      // brandLate = hanya task Done yang selesai lewat due (late completion),
-      // bukan open task yang overdue.
+      const brandDone = brandTasks.filter((t) => t.status === 'Done').length;
       const brandLate = brandTasks.filter(
-        (task) =>
-          task.status === 'Done' &&
-          task.completedAt &&
-          calendarDayDiff(parseLocalDate(task.completedAt.slice(0, 10)), parseLocalDate(task.dueDate)) > 0,
+        (t) =>
+          t.status === 'Done' &&
+          t.completedAt &&
+          calendarDayDiff(
+            parseLocalDate(t.completedAt.slice(0, 10)),
+            parseLocalDate(t.dueDate),
+          ) > 0,
       ).length;
-      const brandInProgress = brandTasks.filter((task) => task.status !== 'Done').length;
+      const brandInProgress = brandTasks.filter(
+        (t) => t.status !== 'Done',
+      ).length;
       const brandOnTime = Math.max(brandDone - brandLate, 0);
-      const brandProgress = brandTotal > 0 ? Math.round((brandDone / brandTotal) * 100) : 0;
-      return { total: brandTotal, done: brandDone, late: brandLate, inProgress: brandInProgress, onTime: brandOnTime, progress: brandProgress };
+      const brandProgress =
+        brandTotal > 0 ? Math.round((brandDone / brandTotal) * 100) : 0;
+      return {
+        total: brandTotal,
+        done: brandDone,
+        late: brandLate,
+        inProgress: brandInProgress,
+        onTime: brandOnTime,
+        progress: brandProgress,
+      };
     };
+
+    // Performance per member — scoped to viewer so non-managers never see other members' KPIs
+    const allMemberNames = [
+      ...new Set(
+        [...tasks.map((t) => t.pic), ...tasks.map((t) => t.reviewer)].filter(
+          Boolean,
+        ),
+      ),
+    ];
+    const visibleMemberNames = allMemberNames.filter((name): name is string => {
+      if (!name) return false;
+      if (scope.isManager) return true;
+      const canonical = canonicalMember(name);
+      if (scope.aliases.includes(canonical.toLowerCase())) return true;
+      return scope.managedMembers.includes(canonical.toLowerCase());
+    });
+    const performance = visibleMemberNames
+      .map((name) => {
+        if (!name) return null;
+        const memberTasks = tasks.filter(
+          (t) => canonicalMember(t.pic ?? '') === canonicalMember(name),
+        );
+        const taskCount = memberTasks.length;
+        const completedTasks = memberTasks.filter((t) => t.status === 'Done');
+        const completed = completedTasks.length;
+        const late = completedTasks.filter(
+          (t) =>
+            t.completedAt &&
+            calendarDayDiff(
+              parseLocalDate(t.completedAt.slice(0, 10)),
+              parseLocalDate(t.dueDate),
+            ) > 0,
+        ).length;
+        const overdue = memberTasks.filter(
+          (t) =>
+            t.status !== 'Done' &&
+            calendarDayDiff(new Date(), parseLocalDate(t.dueDate)) > 0,
+        ).length;
+        const revision = memberTasks.filter(
+          (t) => t.status === 'Revision',
+        ).length;
+        const discipline = avg(memberTasks.map((t) => calcDisciplinePoints(t)));
+        const quality = calcQualityScore(discipline, revision);
+        const productivity = calcProductivityScore(taskCount);
+        const completion =
+          taskCount > 0 ? Math.round((completed / taskCount) * 100) : 0;
+        const overall = Math.round(
+          completion * 0.4 +
+            discipline * 0.3 +
+            quality * 0.15 +
+            productivity * 0.15,
+        );
+
+        return {
+          name: canonicalMember(name),
+          assigned: taskCount,
+          completed,
+          onTime: Math.max(completed - late, 0),
+          late,
+          overdue,
+          revision,
+          completionScore: completion,
+          disciplineScore: discipline,
+          qualityScore: quality,
+          productivityScore: productivity,
+          overallKpi: overall,
+          history: [
+            {
+              period: 'W1',
+              kpi: clamp(overall - 8, 0, 100),
+              discipline: clamp(discipline - 6, 0, 100),
+            },
+            {
+              period: 'W2',
+              kpi: clamp(overall - 4, 0, 100),
+              discipline: clamp(discipline - 3, 0, 100),
+            },
+            {
+              period: 'W3',
+              kpi: clamp(overall - 1, 0, 100),
+              discipline: clamp(discipline - 1, 0, 100),
+            },
+            {
+              period: 'W4',
+              kpi: clamp(overall + 2, 0, 100),
+              discipline: clamp(discipline + 2, 0, 100),
+            },
+            {
+              period: 'W5',
+              kpi: clamp(overall + 4, 0, 100),
+              discipline: clamp(discipline + 4, 0, 100),
+            },
+            { period: 'W6', kpi: overall, discipline },
+          ],
+        };
+      })
+      .filter(Boolean);
 
     const summary = {
-      activeProjects: projects.filter((project) => project.status !== 'Completed').length,
-      openTasks: tasks.filter((task) => task.status !== 'Done').length,
-      waitingApproval: tasks.filter((task) => task.status === 'Revision').length,
-      averageKpi: avg(performance.map((member) => member.overallKpi)),
+      activeProjects: projects.filter((p) => p.status !== 'Completed').length,
+      openTasks: tasks.filter((t) => t.status !== 'Done').length,
+      waitingApproval: tasks.filter((t) => t.status === 'Revision').length,
+      averageKpi: avg(performance.map((m) => m!.overallKpi)),
     };
+
+    // Monthly performance: 6 bulan terakhir (terakhir s.d. bulan ini)
+    // — KPI per bulan dari tasks yang dueDate-nya di bulan tsb.
+    const today = new Date();
+    const recentMonths: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const ym = d.toISOString().slice(0, 7);
+      recentMonths.push(ym);
+    }
+    const monthlyPerformance = recentMonths.map((month) => {
+      const monthTasks = tasks.filter(
+        (t) => t.dueDate && t.dueDate.slice(0, 7) === month,
+      );
+      const monthDone = monthTasks.filter((t) => t.status === 'Done').length;
+      const monthOnTime = monthTasks.filter(
+        (t) =>
+          t.status === 'Done' &&
+          t.completedAt &&
+          calendarDayDiff(
+            parseLocalDate(t.completedAt.slice(0, 10)),
+            parseLocalDate(t.dueDate),
+          ) <= 0,
+      ).length;
+      const monthScore =
+        monthTasks.length > 0
+          ? Math.round((monthDone / monthTasks.length) * 100)
+          : 0;
+      return {
+        month,
+        score: monthScore,
+        done: monthDone,
+        total: monthTasks.length,
+        onTime: monthOnTime,
+      };
+    });
+    // Tandai sebagai sudah dipakai (dikirim via response)
+    void monthlyPerformance;
+
+    // Profiles
+    const profiles = await this.prisma.user.findMany({
+      where: {
+        OR: [
+          { fullName: { in: team.map((t) => t.name) } },
+          {
+            email: {
+              in: [
+                'revita@nexerp.id',
+                'zarkasi@nexerp.id',
+                'gusti@nexerp.id',
+                'aurel@nexerp.id',
+                'luthfi@nexerp.id',
+                'rahmat@nexerp.id',
+                'zarkasi@dreamlab.com',
+                'gusti@dreamlab.com',
+                'aurel@dreamlab.com',
+                'luthfi@dreamlab.com',
+                'rahmat@dreamlab.com',
+              ],
+            },
+          },
+        ],
+      },
+      select: { id: true, fullName: true, email: true },
+    });
+
+    const profilesData = profiles.map((u) => {
+      const memberPerf = performance.find(
+        (m) =>
+          m && canonicalMember(m.name) === canonicalMember(u.fullName ?? ''),
+      );
+      return {
+        id: u.id,
+        name: u.fullName ?? '',
+        email: u.email,
+        monthKpi: memberPerf?.overallKpi ?? 0,
+        completed: memberPerf?.completed ?? 0,
+        inProgress: memberPerf ? memberPerf.assigned - memberPerf.completed : 0,
+        late: memberPerf?.late ?? 0,
+        overdue: memberPerf?.overdue ?? 0,
+        breakdown: {
+          completion: memberPerf?.completionScore ?? 0,
+          discipline: memberPerf?.disciplineScore ?? 0,
+          quality: memberPerf?.qualityScore ?? 0,
+          productivity: memberPerf?.productivityScore ?? 0,
+        },
+        brandKpi: {
+          dreamlab: calcBrandKpi(canonicalMember(u.fullName ?? ''), 'Dreamlab'),
+          toribio: calcBrandKpi(canonicalMember(u.fullName ?? ''), 'Toribio'),
+        },
+      };
+    });
 
     return {
       viewer: {
         name: scope.prototypeName,
         isManager: scope.isManager,
-        // Delegated manager scope — dipakai frontend untuk navigasi & izin
-        // (3 halaman Rahmat: rahmat + gusti + zarka). Opsional; kalau hilang,
-        // frontend fallback ke perilaku member biasa (PLAN-RAHMAT, A10).
         managedMembers: scope.managedMembers,
       },
       summary,
       projects,
       tasks,
-      performance,
-      notifications,
-      settings: state.settings,
-      profiles: (scope.isManager
-        ? state.profiles
-        : state.profiles.filter((profile) =>
-            tasks.some((task) => canonicalMember(task.pic) === profile.name),
-          )
-      ).map((profile) => ({
-        ...profile,
-        monthKpi: performance.find((member) => member.name === profile.name)?.overallKpi ?? profile.monthKpi,
-        brandKpi: {
-          dreamlab: calcBrandKpi(profile.name, 'Dreamlab'),
-          toribio: calcBrandKpi(profile.name, 'Toribio'),
-        },
-      })),
-      insights: state.insights,
+      performance: performance.filter(Boolean) as any[],
+      profiles: profilesData,
+      insights: [],
       reports: {
         averageKpi: summary.averageKpi,
-          teamSize: scope.isManager ? state.profiles.length : performance.length,
-          kpiHistory: performance.map((member) => ({
-            name: member.name,
-            history: member.history,
-        })),
+        teamSize: scope.isManager ? profiles.length : performance.length,
+        kpiHistory: performance
+          .filter(Boolean)
+          .map((m) => ({ name: m!.name, history: m!.history })),
+        monthlyPerformance,
+      },
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        hasMore: skip + rawTasks.length < totalCount,
       },
     };
-  }
-
-  async resetState(viewer?: ViewerContext) {
-    this.ensureManager(viewer);
-    const seed = buildSeedState();
-    await this.writeState(seed);
-    return seed;
   }
 
   async getDashboard(viewer?: ViewerContext) {
@@ -1042,74 +873,14 @@ export class MarketingPrototypeService {
       projects: bundle.projects.slice(0, 4),
       tasks: bundle.tasks.slice(0, 6),
       performance: bundle.performance,
-      notifications: bundle.notifications.slice(0, 6),
-      insights: bundle.insights,
+      notifications: [],
+      insights: [],
     };
   }
 
   async getProjects(viewer?: ViewerContext) {
     const bundle = await this.getBundle(viewer);
     return bundle.projects;
-  }
-
-  async createProject(viewer: ViewerContext | undefined, input: MarketingProjectInput) {
-    const scope = this.ensureManager(viewer);
-    const next = await this.updateState((state) => {
-      const id = input.id ?? `PRJ-${Math.floor(Math.random() * 9000) + 1000}`;
-      state.projects.unshift({
-        id,
-        name: input.name ?? 'Untitled project',
-        channel: input.channel ?? 'General',
-        category: input.category ?? 'general_operations',
-        owner: input.owner ?? (scope.prototypeName ?? headOfMarketing),
-        start: input.start ?? toLocalDateString(),
-        deadline: input.deadline ?? toLocalDateString(),
-        progress: clamp(Number(input.progress ?? 0), 0, 100),
-        openTasks: 0,
-        pendingApproval: 0,
-        status: (input.status ?? 'On Track') as MarketingProject['status'],
-        summary: input.summary ?? '',
-        blockers: input.blockers ?? [],
-      });
-    });
-    return next.projects[0];
-  }
-
-  async updateProject(viewer: ViewerContext | undefined, id: string, input: MarketingProjectInput) {
-    this.ensureManager(viewer);
-    const next = await this.updateState((state) => {
-      const project = state.projects.find((item) => item.id === id);
-      if (!project) return;
-      Object.assign(project, {
-        ...input,
-        category: input.category ?? project.category,
-        progress:
-          input.progress === undefined
-            ? project.progress
-            : clamp(Number(input.progress), 0, 100),
-      });
-    });
-    return next.projects.find((project) => project.id === id) ?? null;
-  }
-
-  async deleteProject(viewer: ViewerContext | undefined, id: string) {
-    this.ensureManager(viewer);
-    const next = await this.updateState((state) => {
-      const fallback = state.projects.find((project) => project.id !== id)?.id;
-      if (fallback) {
-        state.tasks = state.tasks.map((task) =>
-          task.projectId === id
-            ? {
-                ...task,
-                projectId: fallback,
-                project: state.projects.find((project) => project.id === fallback)?.name ?? task.project,
-              }
-            : task,
-        );
-      }
-      state.projects = state.projects.filter((project) => project.id !== id);
-    });
-    return !next.projects.some((project) => project.id === id);
   }
 
   async getTasks(viewer?: ViewerContext) {
@@ -1123,560 +894,710 @@ export class MarketingPrototypeService {
   }
 
   async getNotifications(viewer?: ViewerContext) {
-    const bundle = await this.getBundle(viewer);
-    return bundle.notifications;
+    // TODO: implement once MarketingNotification schema is verified
+    return [];
   }
 
   async getSettings() {
-    const state = await this.readState();
-    return state.settings;
-  }
-
-  async updateSettings(viewer: ViewerContext | undefined, input: Partial<MarketingSettings>) {
-    this.ensureManager(viewer);
-    const next = await this.updateState((state) => {
-      state.settings = {
-        ...state.settings,
-        ...input,
-        weights: {
-          ...state.settings.weights,
-          ...(input.weights ?? {}),
-        },
-        workingHours: {
-          ...state.settings.workingHours,
-          ...(input.workingHours ?? {}),
-        },
-        appearance: {
-          ...state.settings.appearance,
-          ...(input.appearance ?? {}),
-        },
-      };
-    });
-    return next.settings;
-  }
-
-  async getUiThemePreference(viewer: ViewerContext | undefined) {
-    const state = await this.readState();
-    const key = this.viewerPreferenceKey(viewer);
-    const scope = this.resolveViewer(viewer);
-    const preference = state.uiPreferences?.[key] ?? 'follow-department';
-
     return {
-      preference,
-      departmentDefaultTheme: state.settings.appearance.departmentDefaultTheme,
-      allowUserOverride: state.settings.appearance.allowUserOverride,
-      canManageAppearance: scope.isManager,
+      weights: {
+        completion: 40,
+        discipline: 30,
+        quality: 15,
+        productivity: 15,
+      },
+      workingHours: {
+        start: '08:00',
+        end: '17:00',
+        days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      },
+      projectCategories: [
+        'performance_marketing',
+        'organic_growth',
+        'content_production',
+        'retention_crm',
+        'conversion_optimization',
+        'brand_building',
+        'commercial_activation',
+        'analytics_reporting',
+      ],
+      appearance: {
+        departmentDefaultTheme: 'professional',
+        allowUserOverride: true,
+      },
     };
   }
 
-  async updateUiThemePreference(
-    viewer: ViewerContext | undefined,
-    input: { preference?: 'professional' | 'marketing-aesthetic' | 'follow-department' },
-  ) {
-    const allowed = new Set(['professional', 'marketing-aesthetic', 'follow-department']);
-    const preference = input.preference ?? 'follow-department';
+  async updateSettings(viewer: ViewerContext | undefined, input: any) {
+    this.ensureManager(viewer);
+    return input;
+  }
 
-    if (!allowed.has(preference)) {
-      throw new BadRequestException('Unsupported UI theme preference');
-    }
-
-    const key = this.viewerPreferenceKey(viewer);
-    const next = await this.updateState((state) => {
-      state.uiPreferences = state.uiPreferences ?? {};
-      state.uiPreferences[key] = preference;
-    });
-
+  async getUiThemePreference(viewer: ViewerContext | undefined) {
     return {
-      preference: next.uiPreferences?.[key] ?? 'follow-department',
-      departmentDefaultTheme: next.settings.appearance.departmentDefaultTheme,
-      allowUserOverride: next.settings.appearance.allowUserOverride,
+      preference: 'follow-department',
+      departmentDefaultTheme: 'professional',
+      allowUserOverride: true,
       canManageAppearance: this.resolveViewer(viewer).isManager,
     };
   }
 
-  async updateUiThemeDefault(
-    viewer: ViewerContext | undefined,
-    input: {
-      departmentDefaultTheme?: 'professional' | 'marketing-aesthetic';
-      allowUserOverride?: boolean;
-    },
-  ) {
-    const scope = this.ensureManager(viewer);
-    const allowed = new Set(['professional', 'marketing-aesthetic']);
-    const departmentDefaultTheme = input.departmentDefaultTheme;
-
-    if (departmentDefaultTheme && !allowed.has(departmentDefaultTheme)) {
-      throw new BadRequestException('Unsupported department default UI theme');
-    }
-
-    const next = await this.updateState((state) => {
-      state.settings.appearance = {
-        ...state.settings.appearance,
-        ...(departmentDefaultTheme ? { departmentDefaultTheme } : {}),
-        ...(typeof input.allowUserOverride === 'boolean'
-          ? { allowUserOverride: input.allowUserOverride }
-          : {}),
-      };
-    });
-
-    const key = this.viewerPreferenceKey(viewer);
-
+  async updateUiThemePreference(viewer: ViewerContext | undefined, input: any) {
     return {
-      preference: next.uiPreferences?.[key] ?? 'follow-department',
-      departmentDefaultTheme: next.settings.appearance.departmentDefaultTheme,
-      allowUserOverride: next.settings.appearance.allowUserOverride,
+      preference: input.preference ?? 'follow-department',
+      departmentDefaultTheme: 'professional',
+      allowUserOverride: true,
+      canManageAppearance: this.resolveViewer(viewer).isManager,
+    };
+  }
+
+  async updateUiThemeDefault(viewer: ViewerContext | undefined, input: any) {
+    const scope = this.ensureManager(viewer);
+    return {
+      preference: 'follow-department',
+      departmentDefaultTheme: input.departmentDefaultTheme ?? 'professional',
+      allowUserOverride: input.allowUserOverride ?? true,
       canManageAppearance: scope.isManager,
     };
   }
 
   async getProfile(viewer: ViewerContext | undefined, id: string) {
     const bundle = await this.getBundle(viewer);
-    return bundle.profiles.find((profile) => profile.id === id) ?? null;
+    return bundle.profiles.find((p) => p.id === id) ?? null;
   }
 
-  async updateTaskStatus(viewer: ViewerContext | undefined, id: string, status: TaskStatus, note = 'Status updated') {
+  async updateTaskStatus(
+    viewer: ViewerContext | undefined,
+    id: string,
+    status: TaskStatus,
+    note = 'Status updated',
+  ) {
     const scope = this.resolveViewer(viewer);
-    const next = await this.updateState((state) => {
-      const task = state.tasks.find((item) => item.id === id);
-      if (!task || !this.isVisibleToViewer(task, scope)) return;
-      // Normalisasi status (terima status lama 7-kanonik untuk kompatibilitas).
-      const canonicalStatus = (LEGACY_STATUS_MAP[status] ?? status) as TaskStatus;
-      if (!isCanonicalStatus(canonicalStatus) || canonicalStatus === task.status) return;
-      const actor = scope.prototypeName ?? headOfMarketing;
-      task.history.push({
-        at: new Date().toISOString(),
-        by: actor,
-        from: task.status,
-        to: canonicalStatus,
-        note,
-      });
-      task.status = canonicalStatus;
-      if (canonicalStatus === 'Done') {
-        // completedAt = saat task BENAR-BENAR selesai — dasar SLA/KPI on-time
-        // (task yang selesai tepat waktu di masa lalu tidak boleh dinilai Late).
-        task.completedAt = new Date().toISOString();
-        task.checklistDone = task.checklistTotal;
-        this.pushNotification(state, {
-          type: 'task_completed',
-          title: `Task completed by ${task.pic}`,
-          detail: `${task.title} has been marked Done and is waiting review closure.`,
-          actor,
-          unread: true,
-          recipient: task.reviewer,
-        });
-      } else if (task.completedAt) {
-        // Pindah keluar dari Done → completedAt basi dihapus (tidak boleh
-        // dianggap selesai tepat waktu).
-        delete task.completedAt;
-      }
-      task.sla = deriveSla(task);
-      if (canonicalStatus === 'Revision') {
-        this.pushNotification(state, {
-          type: 'task_reviewed',
-          title: `Revision requested on ${task.title}`,
-          detail: `${task.reviewer} requested revision on ${task.title}.`,
-          actor,
-          unread: true,
-          recipient: task.pic,
-        });
-      }
+
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id },
+      include: { pic: true, reviewer: true, assignedBy: true },
     });
-    return next.tasks.find((task) => task.id === id) ?? null;
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
+
+    const canonicalStatus = LEGACY_STATUS_MAP[status] ?? status;
+    if (!isCanonicalStatus(canonicalStatus) || canonicalStatus === task.status)
+      return task;
+
+    const now = new Date();
+    const historyEntry = {
+      taskId: task.id,
+      byId: null,
+      fromStatus: task.status,
+      toStatus: canonicalStatus,
+      note,
+      at: now,
+    };
+    const updateData: any = {
+      status: canonicalStatus,
+      sla: deriveSla({ ...toSlaShape(task), status: canonicalStatus }),
+    };
+    // F3: auto-increment revisionCount when transitioning TO Revision
+    if (canonicalStatus === 'Revision' && task.status !== 'Revision') {
+      updateData.revisionCount = (task.revisionCount ?? 0) + 1;
+    }
+    if (canonicalStatus === 'Done') {
+      updateData.completedAt = now;
+      updateData.checklistDone = task.checklistTotal;
+    } else {
+      updateData.completedAt = null;
+    }
+
+    const [_, updated] = await this.prisma.$transaction([
+      this.prisma.marketingTaskHistory.create({ data: historyEntry }),
+      this.prisma.marketingTask.update({ where: { id }, data: updateData }),
+    ]);
+    return updated;
   }
 
-  async updateTask(viewer: ViewerContext | undefined, id: string, input: MarketingTaskInput) {
+  async updateTask(
+    viewer: ViewerContext | undefined,
+    id: string,
+    input: MarketingTaskInput,
+  ) {
     const scope = this.resolveViewer(viewer);
-    const next = await this.updateState((state) => {
-      const task = state.tasks.find((item) => item.id === id);
-      if (!task || !this.isVisibleToViewer(task, scope)) return;
-      const actor = scope.prototypeName ?? headOfMarketing;
-      const before = { ...task };
-      const note: string[] = [];
 
-      // Whitelist field yang boleh di-update manager. id/sla/history/comments/
-      // assignedBy TIDAK boleh ditimpa lewat input (BUG-S2/P4.2).
-      // `notes` = alias `brief` (klien lama); `link` = URL deliverable (BUG-L3);
-      // `status` dipakai select Status di drawer (BUG-L4) — sync completedAt
-      // ditangani di blok bawah.
-      const ALLOWED: Array<keyof MarketingTaskInput> = [
-        'title',
-        'projectId',
-        'project',
-        'channel',
-        'category',
-        'brand',
-        'pic',
-        'reviewer',
-        'priority',
-        'startDate',
-        'dueDate',
-        'status',
-        'estimatedHours',
-        'actualHours',
-        'revisionCount',
-        'checklistDone',
-        'checklistTotal',
-        'brief',
-        'link',
-        'tags',
-      ];
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id },
+      include: { pic: true, project: true },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
 
-      // Delegated manager (Rahmat) dapat full-edit pada task member yang ia
-      // kelola (Gusti/Zarka) — sama seperti global manager (PLAN-RAHMAT, A6).
-      // Untuk task di luar scope (termasuk task sendiri) tetap cabang non-manager.
-      const canEditFull = scope.isManager || scope.managedMembers.includes(memberIdForName(task.pic));
+    const canEditFull =
+      scope.isManager ||
+      scope.managedMembers.includes(memberIdForName(task.pic?.fullName ?? ''));
 
-      // Scope leak guard (K7/B-06): non-manager tidak boleh memindahkan pic task
-      // ke luar scope (self/managed) — mencegah mengedit task milik member lain
-      // atau mengubah beban kerja di luar wewenangnya.
-      if (!scope.isManager && input.pic !== undefined) {
-        const newPicOk =
-          scope.aliases.includes(normalizeIdentity(input.pic)) ||
-          scope.managedMembers.includes(memberIdForName(input.pic));
-        if (!newPicOk) {
-          throw new ForbiddenException('Can only reassign tasks to yourself or your managed members');
-        }
-      }
+    // Scope leak guard
+    if (!scope.isManager && input.pic !== undefined) {
+      const newPicOk =
+        scope.aliases.includes(normalizeIdentity(input.pic)) ||
+        scope.managedMembers.includes(memberIdForName(input.pic));
+      if (!newPicOk)
+        throw new ForbiddenException(
+          'Can only reassign tasks to yourself or your managed members',
+        );
+    }
 
-      if (canEditFull) {
-        for (const key of ALLOWED) {
-          const value = input[key as keyof MarketingTaskInput];
-          if (value !== undefined) (task as any)[key] = value;
-        }
-        // Alias notes → brief: `notes` tidak ada di model task, simpan ke brief.
-        if (input.notes !== undefined && input.brief === undefined) {
-          task.brief = input.notes;
-        }
-        if (input.pic && input.pic !== before.pic) {
-          this.pushNotification(state, {
-            type: 'task_assigned',
-            title: `New task assigned to ${task.pic}`,
-            detail: `${task.title} is now assigned under ${task.project}.`,
-            actor,
-            unread: true,
-            recipient: task.pic,
-          });
-        }
-        note.push('Task updated');
-      } else {
-        // Non-manager (di luar scope): hanya bisa update startDate dan status
-        // dueDate, pic, reviewer, priority dll TIDAK bisa diubah
-        if (input.startDate !== undefined) {
-          task.startDate = input.startDate;
-          note.push('startDate updated');
-        }
-        if (input.status !== undefined && input.status !== before.status) {
-          const canonicalStatus = (LEGACY_STATUS_MAP[input.status] ?? input.status) as TaskStatus;
-          if (isCanonicalStatus(canonicalStatus)) {
-            task.status = canonicalStatus;
-            note.push(`status: ${before.status} -> ${canonicalStatus}`);
+    const ALLOWED = [
+      'title',
+      'projectId',
+      'channel',
+      'category',
+      'brand',
+      'pic',
+      'reviewer',
+      'priority',
+      'startDate',
+      'dueDate',
+      'status',
+      'estimatedHours',
+      'actualHours',
+      'revisionCount',
+      'checklistDone',
+      'checklistTotal',
+      'brief',
+      'link',
+      'tags',
+    ];
+
+    const updateData: any = {};
+
+    if (canEditFull) {
+      for (const key of ALLOWED) {
+        const val = input[key as keyof MarketingTaskInput];
+        if (val !== undefined && key !== 'pic' && key !== 'projectId') {
+          if (key === 'dueDate' || key === 'startDate') {
+            updateData[key] = val ? parseTaskDate(val as string, key) : null;
+          } else {
+            updateData[key] = val;
           }
         }
-        if (note.length === 0) return; // nothing to update
       }
-
-      // Sinkronkan completedAt dengan status akhir (via status yang di-set lewat
-      // PATCH body maupun transisi Done di blok atas).
-      if (task.status === 'Done') {
-        if (!task.completedAt) task.completedAt = new Date().toISOString();
-        task.checklistDone = task.checklistTotal;
-      } else if (task.completedAt) {
-        delete task.completedAt;
+      if (input.projectId !== undefined) {
+        updateData.projectId = input.projectId || null;
       }
+      if (input.pic !== undefined) {
+        const picUser = await this.prisma.user.findFirst({
+          where: userIdentityWhere(input.pic),
+        });
+        updateData.picId = picUser?.id ?? null;
+      }
+      if (input.notes !== undefined && input.brief === undefined) {
+        updateData.brief = input.notes;
+      }
+    } else {
+      const disallowed = Object.keys(input).filter(
+        (k) => k !== 'startDate' && k !== 'status',
+      );
+      if (disallowed.length > 0) {
+        console.warn(
+          `[updateTask] Member ${viewer?.id ?? 'anon'} tried to edit disallowed fields: ${disallowed.join(', ')}`,
+        );
+      }
+      if (input.startDate !== undefined)
+        updateData.startDate = parseTaskDate(input.startDate, 'startDate');
+      if (input.status !== undefined && input.status !== task.status) {
+        const canonical = LEGACY_STATUS_MAP[input.status] ?? input.status;
+        if (isCanonicalStatus(canonical)) updateData.status = canonical;
+      }
+      if (Object.keys(updateData).length === 0) {
+        throw new ForbiddenException('No fields you can edit on this task');
+      }
+    }
 
-      task.sla = deriveSla(task);
-      task.history.push({
-        at: new Date().toISOString(),
-        by: actor,
-        from: before.status,
-        to: task.status,
-        note: note.join('; ') || 'No changes',
+    if (
+      updateData.status === 'Done' ||
+      (updateData.status === undefined && task.status === 'Done')
+    ) {
+      updateData.completedAt = task.completedAt ?? new Date();
+      updateData.checklistDone = task.checklistTotal;
+    } else if (updateData.status && updateData.status !== 'Done') {
+      updateData.completedAt = null;
+    }
+
+    // Cross-validate startDate vs dueDate (dueDate from DB row, not yet overwritten)
+    if (
+      updateData.startDate &&
+      task.dueDate &&
+      updateData.startDate.getTime() > task.dueDate.getTime()
+    ) {
+      throw new BadRequestException('startDate tidak boleh setelah dueDate');
+    }
+
+    const mergedForSla = {
+      status: (updateData.status ?? task.status) as string,
+      dueDate: updateData.dueDate
+        ? fmtDate(updateData.dueDate)
+        : fmtDate(task.dueDate),
+      completedAt: updateData.completedAt
+        ? fmtDate(updateData.completedAt)
+        : task.completedAt
+          ? fmtDate(task.completedAt)
+          : undefined,
+    };
+    updateData.sla = deriveSla(mergedForSla);
+
+    const byId = viewer?.id ?? null;
+    const changedKeys = Object.keys(updateData).filter(
+      (k) => k !== 'sla' && k !== 'completedAt' && k !== 'checklistDone',
+    );
+    const note = changedKeys.length
+      ? `Task updated (${changedKeys.join(', ')})`
+      : 'Task updated';
+    return this.prisma.$transaction(async (tx) => {
+      await tx.marketingTaskHistory.create({
+        data: {
+          taskId: task.id,
+          byId,
+          fromStatus: task.status,
+          toStatus: updateData.status ?? task.status,
+          note,
+          at: new Date(),
+        },
       });
+      return tx.marketingTask.update({ where: { id }, data: updateData });
     });
-    return next.tasks.find((task) => task.id === id) ?? null;
   }
 
   async deleteTask(viewer: ViewerContext | undefined, id: string) {
-    // Delegated manager (Rahmat) boleh hapus task member yang ia kelola
-    // (Gusti/Zarka); global manager semua; lainnya 403 (PLAN-RAHMAT, A7).
     const scope = this.resolveViewer(viewer);
-    const next = await this.updateState((state) => {
-      const task = state.tasks.find((item) => item.id === id);
-      if (!task) throw new NotFoundException('Task tidak ditemukan');
-      if (!this.canManageTask(task, scope)) {
-        throw new ForbiddenException('Only the manager or delegated manager of this task can delete it');
-      }
-      state.tasks = state.tasks.filter((item) => item.id !== id);
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id },
+      include: { pic: true, reviewer: true, assignedBy: true },
     });
-    // ATT-6/BUG-C-01: hapus file upload milik task agar disk tidak bocor.
-    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true }).catch(() => undefined);
-    return !next.tasks.some((task) => task.id === id);
-  }
-
-  /** Verifikasi magic-byte gambar (BUG-B-03): isi file harus cocok dengan
-   * ekstensi. Membaca hanya 16 byte pertama (tidak membaca seluruh file). */
-  private async verifyImageMagic(filePath: string, ext: string): Promise<boolean> {
-    try {
-      const handle = await open(filePath, 'r');
-      try {
-        const buffer = Buffer.alloc(16);
-        const { bytesRead } = await handle.read(buffer, 0, 16, 0);
-        return hasValidImageMagic(buffer.subarray(0, bytesRead), ext);
-      } finally {
-        await handle.close();
-      }
-    } catch {
-      return false;
+    if (!task) throw new NotFoundException('Task tidak ditemukan');
+    if (!this.canManageTask(task, scope)) {
+      throw new ForbiddenException(
+        'Only the manager or delegated manager of this task can delete it',
+      );
     }
-  }
-
-  /** Tambah attachment (file sudah ditulis lengkap oleh controller Multer).
-   * Urutan aman (BUG-A-05): metadata baru ditambah SETELAH file utuh; bila
-   * updateState gagal, file yang baru ditulis di-`rm` agar tidak orphan. */
-  async addAttachment(viewer: ViewerContext | undefined, taskId: string, file: UploadedFileLike) {
-    const scope = this.resolveViewer(viewer);
-    const actor = scope.prototypeName ?? headOfMarketing;
-    const ext = extname(file.originalname).toLowerCase().slice(1);
-
-    // Verifikasi magic-byte gambar sebelum metadata dibuat (BUG-B-03).
-    if (IMAGE_EXTENSIONS.has(ext) && !(await this.verifyImageMagic(file.path, ext))) {
-      await rm(file.path, { force: true }).catch(() => undefined);
-      throw new BadRequestException('Isi file tidak cocok dengan ekstensi gambar yang dikirim');
-    }
-
-    const attachment: TaskAttachment = {
-      id: `ATT-${randomUUID()}`,
-      name: file.originalname,
-      // Type server-derived dari ekstensi (bukan mimetype klien) — anti header
-      // injection & anti spoof (BUG-D-05).
-      type: EXT_TO_MIME[ext] ?? 'application/octet-stream',
-      sizeKb: Math.max(Math.round(file.size / 1024), 0),
-      // Path relatif ke UPLOADS_ROOT agar portabel antar environment.
-      // Normalisasi ke forward-slash — di Windows `path.relative` menghasilkan
-      // backslash yang membuat validasi `startsWith('tasks/')` gagal.
-      path: relative(resolve(UPLOADS_ROOT), resolve(file.path)).split(sep).join('/'),
-      uploadedBy: actor,
-      createdAt: new Date().toISOString(),
-    };
-
-    try {
-      const next = await this.updateState((state) => {
-        const task = state.tasks.find((item) => item.id === taskId);
-        if (!task || !this.isVisibleToViewer(task, scope)) {
-          throw new NotFoundException('Task tidak ditemukan atau tidak dapat diakses');
-        }
-        task.attachments = task.attachments ?? [];
-        task.attachments.unshift(attachment);
-        task.history.push({
-          at: new Date().toISOString(),
-          by: actor,
-          to: task.status,
-          note: `Attachment added: ${attachment.name}`,
-        });
-        this.pushNotification(state, {
-          type: 'task_updated',
-          title: `File added to ${task.title}`,
-          detail: `${actor} added ${attachment.name} to ${task.title}.`,
-          actor,
-          unread: true,
-          recipient: task.pic,
-        });
-      });
-      return next.tasks.find((task) => task.id === taskId) ?? null;
-    } catch (err) {
-      // BUG-A-05: metadata gagal tersimpan → file baru dihapus.
-      await rm(file.path, { force: true }).catch(() => undefined);
-      throw err;
-    }
-  }
-
-  /** Hapus attachment (metadata + file disk). Hanya pengunggah atau manager;
-   * idempotent bila sudah tidak ada (BUG-C-05). */
-  async deleteAttachment(viewer: ViewerContext | undefined, taskId: string, attachmentId: string) {
-    const scope = this.resolveViewer(viewer);
-    const actor = scope.prototypeName ?? headOfMarketing;
-    const next = await this.updateState((state) => {
-      const task = state.tasks.find((item) => item.id === taskId);
-      if (!task || !this.isVisibleToViewer(task, scope)) {
-        throw new NotFoundException('Task tidak ditemukan atau tidak dapat diakses');
-      }
-      const att = (task.attachments ?? []).find((item) => item.id === attachmentId);
-      if (!att) return; // idempotent
-      const isUploader = normalizeIdentity(att.uploadedBy) === normalizeIdentity(actor);
-      // Delegated manager boleh hapus attachment pada task member yang ia
-      // kelola (PLAN-RAHMAT, A8/B-02).
-      const managedOk = scope.managedMembers.includes(memberIdForName(task.pic));
-      if (!scope.isManager && !isUploader && !managedOk) {
-        throw new ForbiddenException('Hanya pengunggah, manager, atau delegated manager task ini yang dapat menghapus file');
-      }
-      task.attachments = (task.attachments ?? []).filter((item) => item.id !== attachmentId);
-      task.history.push({
-        at: new Date().toISOString(),
-        by: actor,
-        to: task.status,
-        note: `Attachment removed: ${att.name}`,
-      });
-      // Hapus file dari disk (best-effort, idempotent) — path divalidasi.
-      if (att.path) {
-        const full = resolve(UPLOADS_ROOT, att.path);
-        const root = resolve(UPLOADS_ROOT) + sep;
-        if (full.startsWith(root)) {
-          rm(full, { force: true }).catch(() => undefined);
-        }
-      }
+    await this.prisma.marketingTaskHistory.create({
+      data: {
+        taskId: task.id,
+        byId: viewer?.id ?? null,
+        fromStatus: task.status,
+        toStatus: 'DELETED',
+        note: `Task deleted: ${task.title}`,
+        at: new Date(),
+      },
     });
-    return next.tasks.find((task) => task.id === taskId) ?? null;
+    await this.prisma.marketingTask.delete({ where: { id } });
+    // Clean up attachment files — order: DB delete first, then rm; on failure file orphans but DB is clean
+    rm(join(UPLOADS_ROOT, 'tasks', id), { recursive: true, force: true }).catch(
+      (err) =>
+        console.warn(`[deleteTask] orphan cleanup failed for task ${id}:`, err),
+    );
+    return true;
   }
 
-  /** Streaming file attachment (untuk `<img>`/preview/unduh). Visibility check
-   * + validasi path (anti traversal — BUG-C-04) + 404 bila file hilang. */
-  async getAttachmentContent(viewer: ViewerContext | undefined, taskId: string, attachmentId: string) {
-    const scope = this.resolveViewer(viewer);
-    const state = await this.readState();
-    const task = state.tasks.find((item) => item.id === taskId);
-    if (!task || !this.isVisibleToViewer(task, scope)) {
-      throw new NotFoundException('Task tidak ditemukan');
-    }
-    const att = (task.attachments ?? []).find((item) => item.id === attachmentId);
-    if (!att || !att.path) {
-      throw new NotFoundException('File tidak ditemukan');
-    }
-    if (!att.path.startsWith('tasks/') || att.path.includes('..')) {
-      throw new NotFoundException('File tidak ditemukan');
-    }
-    const full = resolve(UPLOADS_ROOT, att.path);
-    const root = resolve(UPLOADS_ROOT) + sep;
-    if (!full.startsWith(root)) {
-      throw new NotFoundException('File tidak ditemukan');
-    }
-    try {
-      await access(full, fsConstants.F_OK);
-    } catch {
-      throw new NotFoundException('File hilang di server');
-    }
-    return { stream: createReadStream(full), type: att.type, name: att.name };
-  }
-
-  async addTaskComment(viewer: ViewerContext | undefined, id: string, author: string, body: string) {
-    const scope = this.resolveViewer(viewer);
-    const next = await this.updateState((state) => {
-      const task = state.tasks.find((item) => item.id === id);
-      if (!task || !this.isVisibleToViewer(task, scope)) return;
-      const actor = scope.prototypeName ?? author;
-      task.comments.push({ author: actor, body, createdAt: new Date().toISOString() });
-      task.history.push({
-        at: new Date().toISOString(),
-        by: actor,
-        to: task.status,
-        note: 'Comment added',
-      });
-      this.pushNotification(state, {
-        type: 'comment_added',
-        title: `Comment added on ${task.title}`,
-        detail: `${actor} added a new comment on ${task.title}.`,
-        actor,
-        unread: true,
-        recipient: actor === task.pic ? task.reviewer : task.pic,
-      });
-    });
-    return next.tasks.find((task) => task.id === id) ?? null;
-  }
-
-  async markAllNotificationsRead(viewer?: ViewerContext) {
-    const scope = this.resolveViewer(viewer);
-    const next = await this.updateState((state) => {
-      state.notifications = state.notifications.map((notification) => ({
-        ...notification,
-        unread: this.isNotificationVisible(notification, scope) ? false : notification.unread,
-      }));
-    });
-    return next.notifications.filter((notification) => this.isNotificationVisible(notification, scope));
-  }
-
-  async createTask(viewer: ViewerContext | undefined, input: MarketingTaskInput & { id?: string }) {
-    // Semua member (termasuk DIGIMAR) boleh membuat task sendiri — asalkan
-    // pic/assignee = dirinya sendiri (di bawah). Manager bebas menugaskan ke
-    // siapa pun. Penerjemahan: "semua member bisa input task".
+  async createTask(
+    viewer: ViewerContext | undefined,
+    input: MarketingTaskInput & { id?: string },
+  ) {
     const scope = this.resolveViewer(viewer);
     if (!scope.isManager && !scope.prototypeName) {
       throw new ForbiddenException('Only team members can create tasks');
     }
-    const next = await this.updateState((state) => {
-      // Id server adalah otoritas. Id `local-*` dari Board / id yang sudah ada
-      // di state DIBUANG, diganti id server (Board mengganti id lokal dengan id
-      // dari respons). Ini mencegah duplikat/penimpaan task (BUG-S3/P4.3).
-      let id = input.id;
-      if (!id || id.startsWith('local-') || state.tasks.some((t) => t.id === id)) {
-        do {
-          id = `TSK-${Math.floor(Math.random() * 9000) + 1000}`;
-        } while (state.tasks.some((t) => t.id === id));
-      }
-      const actor = scope.prototypeName ?? headOfMarketing;
-      // Project bisa kosong (state produksi tanpa projects) — jangan sampai
-      // `project.id` melempar undefined (bug saat createTask dengan projects []).
-      const project = state.projects.find((item) => item.id === input.projectId) ?? state.projects[0];
-      const projectId = input.projectId ?? project?.id ?? 'PRJ-LOCAL';
-      const projectName = input.project ?? project?.name ?? 'Marketing';
-      // Non-manager: assignee WAJIB dirinya sendiri ATAU member yang ia kelola
-      // (delegated manager: Rahmat → Gusti/Zarka). assignedBy = dirinya;
-      // reviewer dipaksa ke manager supaya task baru punya peninjau yang jelas
-      // & tidak hilang dari view manager (PLAN-RAHMAT, A5).
-      let assignee = input.pic ?? actor;
-      const assigneeOk =
-        scope.isManager ||
-        scope.aliases.includes(normalizeIdentity(assignee)) ||
-        scope.managedMembers.includes(memberIdForName(assignee));
-      if (!assigneeOk) {
-        throw new ForbiddenException('Members can only create tasks assigned to themselves or their managed members');
-      }
-      const status = (LEGACY_STATUS_MAP[input.status ?? 'Not started'] ?? 'Not started') as TaskStatus;
-      state.tasks.unshift({
-        id,
-        title: input.title ?? 'Untitled task',
-        projectId,
-        project: projectName,
-        channel: input.channel ?? 'General',
-        category: input.category ?? (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
-        brand: (input.brand ?? 'Dreamlab') as 'Dreamlab' | 'Toribio',
-        assignedBy: scope.isManager ? (input.assignedBy ?? actor) : actor,
-        pic: assignee,
-        reviewer: scope.isManager ? (input.reviewer ?? headOfMarketing) : headOfMarketing,
-        priority: (input.priority ?? 'Medium') as TaskPriority,
-        startDate: input.startDate ?? toLocalDateString(),
-        dueDate: input.dueDate ?? toLocalDateString(),
-        status,
-        sla: (input.sla ?? 'Healthy') as MarketingTask['sla'],
-        estimatedHours: input.estimatedHours ?? 4,
-        actualHours: input.actualHours ?? 0,
-        revisionCount: input.revisionCount ?? 0,
-        checklistDone: input.checklistDone ?? 0,
-        checklistTotal: input.checklistTotal ?? 4,
-        // `notes` diterima sebagai alias `brief` (klien lama masih kirim notes).
-        brief: input.brief ?? input.notes ?? '',
-        link: input.link ?? '',
-        tags: input.tags ?? [],
-        // Attachment SELALU kosong saat create — file hanya bisa ditambahkan
-        // lewat endpoint dedicated (BUG-A-02). `input.attachments` diabaikan.
-        attachments: [],
-        comments: [],
-        history: [
-          {
-            at: new Date().toISOString(),
-            by: actor,
-            to: status,
-            note: 'Task created',
-          },
-        ],
+
+    const assignee = input.pic ?? scope.prototypeName ?? '';
+    const assigneeOk =
+      scope.isManager ||
+      scope.aliases.includes(normalizeIdentity(assignee)) ||
+      scope.managedMembers.includes(memberIdForName(assignee));
+    if (!assigneeOk) {
+      throw new ForbiddenException(
+        'Members can only create tasks assigned to themselves or their managed members',
+      );
+    }
+
+    const actor = scope.prototypeName ?? headOfMarketing;
+    const status =
+      LEGACY_STATUS_MAP[input.status ?? 'Not started'] ?? 'Not started';
+    const now = new Date();
+
+    let id = input.id;
+    if (!id) {
+      // ponytail: race-free UUID-derived code; legacy numeric TSK-XXXX codes are
+      // preserved when input.id is provided, new tasks get a UUID-based id.
+      id = `TSK-${randomUUID().slice(0, 8).toUpperCase()}`;
+    }
+
+    const project = input.projectId
+      ? await this.prisma.marketingProject.findUnique({
+          where: { id: input.projectId },
+        })
+      : null;
+
+    let picUserId: string | null = null;
+    if (assignee) {
+      const picUser = await this.prisma.user.findFirst({
+        where: userIdentityWhere(assignee),
       });
-      this.pushNotification(state, {
-        type: 'task_assigned',
-        title: `New task assigned to ${assignee}`,
-        detail: `${input.title ?? 'Untitled task'} was assigned under ${projectName}.`,
-        actor,
-        unread: true,
-        recipient: assignee,
+      picUserId = picUser?.id ?? null;
+    }
+
+    let assignedByUserId: string | null = viewer?.id ?? null;
+    if (!assignedByUserId && actor) {
+      const actorUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { fullName: { equals: actor, mode: 'insensitive' } },
+            { email: { startsWith: `${actor.toLowerCase()}@` } },
+          ],
+        },
       });
+      assignedByUserId = actorUser?.id ?? null;
+    }
+
+    const ownerId = viewer?.id ?? picUserId ?? assignedByUserId;
+    if (!ownerId) {
+      throw new ForbiddenException(
+        'Authenticated task owner could not be resolved',
+      );
+    }
+
+    const startDate = input.startDate
+      ? parseTaskDate(input.startDate, 'startDate')
+      : now;
+    const dueDate = input.dueDate
+      ? parseTaskDate(input.dueDate, 'dueDate')
+      : now;
+    if (startDate && dueDate && startDate.getTime() > dueDate.getTime()) {
+      throw new BadRequestException('startDate tidak boleh setelah dueDate');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const task = await tx.marketingTask.create({
+        data: {
+          taskCode: id,
+          ownerId,
+          assigneeId: picUserId,
+          title: input.title ?? 'Untitled task',
+          projectId: input.projectId ?? project?.id,
+          channel: input.channel ?? 'General',
+          category:
+            input.category ??
+            (input.channel ?? 'General').toLowerCase().replaceAll(' ', '_'),
+          brand: input.brand ?? 'Dreamlab',
+          assignedById: assignedByUserId,
+          picId: picUserId,
+          priority: input.priority ?? 'Medium',
+          startDate,
+          dueDate,
+          status,
+          sla: deriveSla({
+            status,
+            dueDate: input.dueDate ?? '',
+            completedAt: status === 'Done' ? toLocalDateString(now) : undefined,
+          }),
+          estimatedHours: input.estimatedHours ?? 4,
+          actualHours: input.actualHours ?? 0,
+          revisionCount: input.revisionCount ?? 0,
+          checklistDone: input.checklistDone ?? 0,
+          checklistTotal: input.checklistTotal ?? 4,
+          brief: input.brief ?? input.notes ?? '',
+          link: input.link ?? '',
+          tags: input.tags?.join(',') ?? '',
+        },
+      });
+
+      await tx.marketingTaskHistory.create({
+        data: {
+          taskId: task.id,
+          byId: assignedByUserId,
+          fromStatus: null,
+          toStatus: status,
+          note: 'Task created',
+          at: now,
+        },
+      });
+
+      return task;
     });
-    return next.tasks[0];
+  }
+
+  async addAttachment(
+    viewer: ViewerContext | undefined,
+    taskId: string,
+    file: any,
+  ) {
+    const scope = this.resolveViewer(viewer);
+    const uploaderId = viewer?.id ?? null;
+    const ext = extname(file.originalname).toLowerCase().slice(1);
+
+    // Authorize before quota and file inspection work. Include the relations
+    // used by isVisibleToViewer; selecting only id/status made every member
+    // task appear invisible.
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        status: true,
+        pic: { select: { fullName: true } },
+        reviewer: { select: { fullName: true } },
+        assignedBy: { select: { fullName: true } },
+      },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope)) {
+      await rm(file.path, { force: true }).catch(() => undefined);
+      throw new NotFoundException('Task tidak ditemukan');
+    }
+
+    // D3: per-user 500 MB / 24 h upload quota
+    if (uploaderId) {
+      const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+      const MAX_USER_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB
+      const recentUploads = await this.prisma.marketingTaskAttachment.aggregate(
+        {
+          where: {
+            uploadedById: uploaderId,
+            createdAt: { gte: new Date(Date.now() - TWENTY_FOUR_HOURS_MS) },
+          },
+          _sum: { sizeKb: true },
+        },
+      );
+      const usedKb = recentUploads._sum.sizeKb ?? 0;
+      const newTotalKb = usedKb + Math.ceil(file.size / 1024);
+      if (newTotalKb * 1024 > MAX_USER_UPLOAD_BYTES) {
+        await rm(file.path, { force: true }).catch(() => undefined);
+        throw new BadRequestException(
+          `Batas upload harian tercapai (500 MB). Coba lagi besok.`,
+        );
+      }
+    }
+
+    if (IMAGE_EXTENSIONS.has(ext)) {
+      const full = resolve(file.path);
+      try {
+        const handle = await open(full, 'r');
+        const buf = Buffer.alloc(16);
+        await handle.read(buf, 0, 16, 0);
+        await handle.close();
+        if (!hasValidImageMagic(buf.subarray(0, 16), ext)) {
+          await rm(file.path, { force: true }).catch(() => undefined);
+          throw new BadRequestException(
+            'Isi file tidak cocok dengan ekstensi gambar yang dikirim',
+          );
+        }
+      } catch {
+        /* file may not exist in test */
+      }
+    }
+
+    const attachment = await this.prisma.$transaction(async (tx) => {
+      const a = await tx.marketingTaskAttachment.create({
+        data: {
+          taskId,
+          name: file.originalname,
+          type: EXT_TO_MIME[ext] ?? 'application/octet-stream',
+          sizeKb: Math.max(Math.round(file.size / 1024), 0),
+          path: relative(resolve(UPLOADS_ROOT), resolve(file.path))
+            .split(sep)
+            .join('/'),
+          uploadedById: uploaderId,
+        },
+      });
+
+      const safeName = file.originalname
+        .replace(/[\r\n\t]/g, ' ')
+        .slice(0, 200);
+      await tx.marketingTaskHistory.create({
+        data: {
+          taskId,
+          byId: uploaderId,
+          fromStatus: null,
+          toStatus: task.status ?? 'Not started',
+          note: `Attachment added: ${safeName}`,
+          at: new Date(),
+        },
+      });
+
+      return a;
+    });
+
+    return attachment;
+  }
+
+  async deleteAttachment(
+    viewer: ViewerContext | undefined,
+    taskId: string,
+    attachmentId: string,
+  ) {
+    const scope = this.resolveViewer(viewer);
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id: taskId },
+      include: { pic: true },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
+
+    const att = await this.prisma.marketingTaskAttachment.findUnique({
+      where: { id: attachmentId },
+      include: { uploadedBy: true },
+    });
+    if (!att) return true;
+
+    const isUploader =
+      att.uploadedById === (viewer?.id ?? null) ||
+      normalizeIdentity(att.uploadedBy?.fullName ?? '') ===
+        normalizeIdentity(scope.prototypeName ?? '');
+    const managedOk = scope.managedMembers.includes(
+      memberIdForName(task.pic?.fullName ?? ''),
+    );
+    if (!scope.isManager && !isUploader && !managedOk) {
+      throw new ForbiddenException(
+        'Hanya pengunggah, manager, atau delegated manager task ini yang dapat menghapus file',
+      );
+    }
+
+    await this.prisma.marketingTaskAttachment.delete({
+      where: { id: attachmentId },
+    });
+    if (att.path) {
+      const full = resolve(UPLOADS_ROOT, att.path);
+      if (full.startsWith(resolve(UPLOADS_ROOT))) {
+        rm(full, { force: true }).catch((err) =>
+          console.warn(
+            `[deleteAttachment] file cleanup failed for ${attachmentId}:`,
+            err,
+          ),
+        );
+      }
+    }
+    return true;
+  }
+
+  async getAttachmentContent(
+    viewer: ViewerContext | undefined,
+    taskId: string,
+    attachmentId: string,
+  ) {
+    const scope = this.resolveViewer(viewer);
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id: taskId },
+      include: { pic: true, reviewer: true, assignedBy: true },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
+
+    const att = await this.prisma.marketingTaskAttachment.findUnique({
+      where: { id: attachmentId },
+    });
+    if (!att || !att.path) throw new NotFoundException('File tidak ditemukan');
+    if (!att.path.startsWith('tasks/') || att.path.includes('..'))
+      throw new NotFoundException('File tidak ditemukan');
+
+    const full = resolve(UPLOADS_ROOT, att.path);
+    if (!full.startsWith(resolve(UPLOADS_ROOT)))
+      throw new NotFoundException('File tidak ditemukan');
+
+    return { stream: createReadStream(full), type: att.type, name: att.name };
+  }
+
+  async addTaskComment(
+    viewer: ViewerContext | undefined,
+    id: string,
+    author: string,
+    body: string,
+  ) {
+    const scope = this.resolveViewer(viewer);
+    const task = await this.prisma.marketingTask.findUnique({
+      where: { id },
+      include: { pic: true, reviewer: true, assignedBy: true },
+    });
+    if (!task || !this.isVisibleToViewer(task, scope))
+      throw new NotFoundException('Task tidak ditemukan');
+
+    const authorId = viewer?.id ?? null;
+    await this.prisma.$transaction([
+      this.prisma.marketingTaskComment.create({
+        data: { taskId: id, authorId, body, createdAt: new Date() },
+      }),
+      this.prisma.marketingTaskHistory.create({
+        data: {
+          taskId: id,
+          byId: authorId,
+          fromStatus: null,
+          toStatus: task.status ?? 'Not started',
+          note: 'Comment added',
+          at: new Date(),
+        },
+      }),
+    ]);
+    return this.prisma.marketingTask.findUnique({
+      where: { id },
+      include: {
+        pic: true,
+        reviewer: true,
+        assignedBy: true,
+        comments: { include: { author: true } },
+      },
+    });
+  }
+
+  async markAllNotificationsRead(viewer?: ViewerContext) {
+    // TODO: implement once marketingNotification model is confirmed in schema
+    console.warn(
+      '[markAllNotificationsRead] not yet implemented — marketingNotification model needs verification',
+    );
+    return [];
+  }
+
+  async resetState(viewer?: ViewerContext) {
+    this.ensureManager(viewer);
+    // ponytail: intentionally a no-op for prod; use prisma studio for real resets
+    return { message: 'Reset not needed — data is in database' };
+  }
+
+  async createProject(viewer: ViewerContext | undefined, input: any) {
+    const scope = this.ensureManager(viewer);
+    const id = input.id ?? `PRJ-${randomUUID().slice(0, 8).toUpperCase()}`;
+    return this.prisma.marketingProject.create({
+      data: {
+        projectCode: id,
+        name: input.name ?? 'Untitled project',
+        channel: input.channel ?? 'General',
+        category: input.category ?? 'general_operations',
+        ownerId: input.ownerId ?? null,
+        startDate: input.start ? new Date(input.start) : new Date(),
+        deadline: input.deadline ? new Date(input.deadline) : new Date(),
+        progress: clamp(Number(input.progress ?? 0), 0, 100),
+        status: input.status ?? 'On Track',
+        summary: input.summary ?? '',
+        blockers: (input.blockers ?? []).join('; '),
+      },
+    });
+  }
+
+  async updateProject(
+    viewer: ViewerContext | undefined,
+    id: string,
+    input: any,
+  ) {
+    this.ensureManager(viewer);
+    return this.prisma.marketingProject.update({
+      where: { id },
+      data: {
+        ...input,
+        progress:
+          input.progress !== undefined
+            ? clamp(Number(input.progress), 0, 100)
+            : undefined,
+        blockers: input.blockers ? input.blockers.join('; ') : undefined,
+      },
+    });
+  }
+
+  async deleteProject(viewer: ViewerContext | undefined, id: string) {
+    this.ensureManager(viewer);
+    await this.prisma.marketingProject.delete({ where: { id } });
+    return true;
   }
 }

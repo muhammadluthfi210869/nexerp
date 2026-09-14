@@ -1,0 +1,29 @@
+﻿
+> backend@0.0.1 test
+> jest
+
+node.exe : ● Multiple configurations found:
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo          : NotSpecified: (● Multiple configur 
+   ations found::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+    * C:/GAWE/Web Dev/Porto Aureon/ERP FROM 
+ZERO/backend/jest.config.js
+    * `jest` key in C:/GAWE/Web Dev/Porto Aureon/ERP FROM 
+ZERO/backend/package.json
+
+  Implicit config resolution does not allow multiple 
+configuration files.
+  Either remove unused config files or select one explicitly 
+with `--config`.
+
+  Configuration Documentation:
+  https://jestjs.io/docs/configuration
+
+

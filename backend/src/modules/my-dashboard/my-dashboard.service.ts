@@ -6,11 +6,21 @@ export class MyDashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getPersonalStats(userId: string) {
-    const [leadsCount, dealsCount, activitiesCount, pendingAudits, assignedWOs] = await Promise.all([
+    const [
+      leadsCount,
+      dealsCount,
+      activitiesCount,
+      pendingAudits,
+      assignedWOs,
+    ] = await Promise.all([
       this.prisma.salesLead.count({ where: { bdId: userId } }),
-      this.prisma.salesLead.count({ where: { bdId: userId, status: 'WON_DEAL' } }),
+      this.prisma.salesLead.count({
+        where: { bdId: userId, status: 'WON_DEAL' },
+      }),
       this.prisma.activityStream.count({ where: { lead: { bdId: userId } } }),
-      this.prisma.qCAudit.count({ where: { qcId: userId, status: { not: 'GOOD' } } }),
+      this.prisma.qCAudit.count({
+        where: { qcId: userId, status: { not: 'GOOD' } },
+      }),
       this.prisma.workOrder.count({ where: { lead: { bdId: userId } } }),
     ]);
 

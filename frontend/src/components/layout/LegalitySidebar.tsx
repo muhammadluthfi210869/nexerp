@@ -28,7 +28,7 @@ const legalityLinks = [
   },
   {
     name: "Regulatory Pipeline",
-    href: "/legality/pipeline",
+    href: "/penjualan/pipeline-legal",
     icon: LayoutDashboard,
     description: "Live Control Tower"
   },
@@ -55,12 +55,6 @@ const legalityLinks = [
     href: "/legality/permits",
     icon: Scale,
     description: "Legal Registry"
-  },
-  {
-    name: "Master INCI",
-    href: "/legality/master-inci",
-    icon: Beaker,
-    description: "Regulatory Brain"
   }
 ];
 

@@ -586,7 +586,11 @@ export class QCAuditsService {
             data.total > 0 ? Math.round((data.reject / data.total) * 100) : 0,
           quality: acceptRate,
           delivery: Math.min(100, data.total * 10),
-          compliance: Math.max(0, 100 - Math.round((data.reject / Math.max(1, data.total)) * 100 * 1.5)),
+          compliance: Math.max(
+            0,
+            100 -
+              Math.round((data.reject / Math.max(1, data.total)) * 100 * 1.5),
+          ),
         };
       })
       .sort((a, b) => b.rejectRate - a.rejectRate);
@@ -766,14 +770,24 @@ export class QCAuditsService {
       },
     });
 
-    const phaseKeys = ['INBOUND', 'MIXING', 'FILLING', 'PACKING', 'FINAL'] as const;
+    const phaseKeys = [
+      'INBOUND',
+      'MIXING',
+      'FILLING',
+      'PACKING',
+      'FINAL',
+    ] as const;
 
     const phases = phaseKeys.map((phase) => {
       const phaseAudits = audits.filter((a) => a.phase === phase);
       const totalAudits = phaseAudits.length;
       const passCount = phaseAudits.filter((a) => a.status === 'GOOD').length;
-      const rejectCount = phaseAudits.filter((a) => a.status === 'REJECT').length;
-      const holdCount = phaseAudits.filter((a) => a.status === 'QUARANTINE').length;
+      const rejectCount = phaseAudits.filter(
+        (a) => a.status === 'REJECT',
+      ).length;
+      const holdCount = phaseAudits.filter(
+        (a) => a.status === 'QUARANTINE',
+      ).length;
       const passRate =
         passCount + rejectCount > 0
           ? Math.round((passCount / (passCount + rejectCount)) * 100 * 10) / 10

@@ -1,0 +1,15 @@
+﻿=== Resolve Orphan Task Histories ===
+Mode: APPLY (akan hapus)
+
+Found 4 orphan rows (taskId tidak ada di marketing_tasks):
+  - id=1495d9ef-131d-4287-a4e1-b44d418b06fe taskId=093a9a99-7a9d-4b5d-8878-a09cb528fdfe fromStatus=null toStatus=Not started
+  - id=72caf0c5-53b7-4862-af10-24543ae23ea5 taskId=f099d8b3-9292-4cc9-ab6f-b0eeb4bf2fa7 fromStatus=Done toStatus=DELETED
+  - id=ab23a00b-6682-47ab-ad99-83b164e7a983 taskId=f099d8b3-9292-4cc9-ab6f-b0eeb4bf2fa7 fromStatus=Not started toStatus=Done
+  - id=f955cc5f-3360-49c4-9a12-e81c47d0f38d taskId=f099d8b3-9292-4cc9-ab6f-b0eeb4bf2fa7 fromStatus=null toStatus=Not started
+
+[BACKUP] 4 orphan rows saved to C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\evidence\2026-09-10\06-migrations\orphan-task-histories-backup.json
+[DELETE] Removed 4 orphan history rows
+
+Done. 4 rows dihapus, backup tersimpan di:
+  C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\evidence\2026-09-10\06-migrations\orphan-task-histories-backup.json
+

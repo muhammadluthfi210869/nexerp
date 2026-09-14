@@ -2,84 +2,107 @@
 
 import React from "react";
 
-interface KpiCardProps {
-  label: string;
-  value: string;
-  targetPct: number;
+export interface KpiCardProps {
+  label?: string;
+  title?: string;
+  value: string | number;
+  targetPct?: number;
   subValue?: string;
-  icon?: React.ReactNode;
+  subtext?: string;
+  trend?: any;
+  variant?: string;
+  color?: string;
+  active?: boolean;
+  onClick?: () => void;
+  icon?: React.ReactNode | React.ComponentType<{ className?: string }>;
+  className?: string;
 }
 
-export function KpiCard({ label, value, targetPct, subValue, icon }: KpiCardProps) {
-  const isUnder = targetPct < 70;
-  const isOnTrack = targetPct >= 100;
+export function KpiCard({
+  label,
+  title,
+  value,
+  targetPct,
+  subValue,
+  subtext,
+  icon,
+  className,
+  onClick,
+}: KpiCardProps) {
+  const displayLabel = label || title || "";
+  const displaySub = subValue || subtext || "";
+  const pct = targetPct ?? 100;
+  const isUnder = pct < 70;
+  const isOnTrack = pct >= 100;
 
   const borderClass = isUnder
-    ? "border-rose-300"
+    ? "border-rose-300 dark:border-rose-800"
     : isOnTrack
-    ? "border-emerald-300"
-    : "";
+    ? "border-emerald-300 dark:border-emerald-800"
+    : "border-slate-200/80 dark:border-slate-800";
 
   const valueClass = isUnder
-    ? "text-rose-600"
+    ? "text-rose-600 dark:text-rose-400"
     : isOnTrack
-    ? "text-emerald-600"
-    : "";
+    ? "text-emerald-600 dark:text-emerald-400"
+    : "text-slate-900 dark:text-slate-100";
 
-  const barColor = isUnder ? "bg-rose-400" : isOnTrack ? "bg-emerald-500" : "bg-slate-900";
+  const barColor = isUnder ? "bg-rose-400" : isOnTrack ? "bg-emerald-500" : "bg-blue-600";
 
   const iconEl = React.isValidElement(icon) ? (
     <div
-      className={`p-3.5 rounded-xl shrink-0 ${
+      className={`p-3 rounded-xl shrink-0 ${
         isUnder
-          ? "bg-rose-50 text-rose-400"
+          ? "bg-rose-50 text-rose-500 dark:bg-rose-950/50"
           : isOnTrack
-          ? "bg-emerald-50 text-emerald-400"
-          : "bg-slate-50 text-slate-400"
+          ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+          : "bg-slate-50 text-slate-500 dark:bg-slate-800"
       }`}
     >
-      <span className="[&>svg]:w-[16px] [&>svg]:h-[16px]">{icon}</span>
+      <span className="[&>svg]:w-4 [&>svg]:h-4">{icon}</span>
+    </div>
+  ) : typeof icon === "function" ? (
+    <div
+      className={`p-3 rounded-xl shrink-0 ${
+        isUnder
+          ? "bg-rose-50 text-rose-500 dark:bg-rose-950/50"
+          : isOnTrack
+          ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+          : "bg-slate-50 text-slate-500 dark:bg-slate-800"
+      }`}
+    >
+      {React.createElement(icon as React.ComponentType<{ className?: string }>, { className: "w-4 h-4" })}
     </div>
   ) : null;
 
-  const bgIcon = React.isValidElement(icon)
-    ? React.cloneElement(icon as React.ReactElement<SVGElement>, {
-        className: "w-[110px] h-[110px] stroke-[0.75px] text-slate-300/25 transition-all duration-700",
-      })
-    : null;
-
   return (
     <div
-      className={`bg-white border rounded-[24px] p-7 shadow-sm transition-all group overflow-hidden relative h-[148px] flex items-center justify-between animate-fade-slide-in ${borderClass}`}
-      style={
-        isUnder
-          ? { animation: "kpi-pulse-border 2s cubic-bezier(0.22, 1, 0.36, 1) infinite" }
-          : undefined
-      }
+      onClick={onClick}
+      className={`bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between ${borderClass} ${onClick ? "cursor-pointer hover:shadow-sm" : ""} ${className || ""}`}
     >
       <div className="flex justify-between items-center relative z-10 w-full">
         <div className="space-y-1.5 flex-1 min-w-0 pr-4">
-          <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.1em]">{label}</p>
-          <h3 className={`text-[32px] font-black tracking-[-0.02em] tabular leading-tight ${valueClass}`}>
+          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{displayLabel}</p>
+          <h3 className={`text-2xl font-bold tracking-tight tabular-nums leading-tight ${valueClass}`}>
             {value}
           </h3>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full ${barColor} rounded-full`}
-                style={{ width: `${Math.min(targetPct, 100)}%` }}
-              />
+          {targetPct !== undefined ? (
+            <div className="flex items-center gap-2 pt-0.5">
+              <div className="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${barColor} rounded-full`}
+                  style={{ width: `${Math.min(pct, 100)}%` }}
+                />
+              </div>
+              <span className={`text-[10px] font-semibold tabular-nums ${valueClass}`}>{pct}%</span>
             </div>
-            <span className={`text-[9px] font-black tabular ${valueClass}`}>{targetPct}%</span>
-          </div>
+          ) : displaySub ? (
+            <p className="text-[11px] font-normal text-slate-500 dark:text-slate-400">{displaySub}</p>
+          ) : null}
         </div>
         {iconEl}
       </div>
-      {bgIcon && (
-        <div className="absolute -bottom-5 -right-5 pointer-events-none select-none z-0">
-          {bgIcon}
-        </div>
-      )}
     </div>
   );
 }
+

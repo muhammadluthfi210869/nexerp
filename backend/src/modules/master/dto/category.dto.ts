@@ -8,6 +8,10 @@ export enum CategoryType {
 }
 
 export class CreateCategoryDto {
+  @IsOptional()
+  @IsString()
+  code?: string;
+
   @IsString()
   name!: string;
 
@@ -21,6 +25,9 @@ export class CreateCategoryDto {
 }
 
 export class UpdateCategoryDto {
+  @IsOptional()
+  @IsString()
+  code?: string;
   @IsOptional()
   @IsString()
   name?: string;

@@ -15,7 +15,8 @@ export class KommoService {
   }
 
   getAccountBaseUrl(): string {
-    const raw = this.readEnv('KOMMO_BASE_URL') ?? this.readEnv('KOMMO_SUBDOMAIN');
+    const raw =
+      this.readEnv('KOMMO_BASE_URL') ?? this.readEnv('KOMMO_SUBDOMAIN');
     if (!raw) throw new Error('KOMMO_SUBDOMAIN or KOMMO_BASE_URL not set');
 
     const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -44,7 +45,8 @@ export class KommoService {
       this.readEnv('TOKEN_BERUMUR_PANJANG') ??
       this.readEnv('KOMMO_LONG_LIVED_TOKEN') ??
       this.readEnv('KOMMO_API_TOKEN');
-    if (!token) throw new Error('TOKEN_BERUMUR_PANJANG or KOMMO_API_TOKEN not set');
+    if (!token)
+      throw new Error('TOKEN_BERUMUR_PANJANG or KOMMO_API_TOKEN not set');
     return token;
   }
 
@@ -55,7 +57,11 @@ export class KommoService {
     };
   }
 
-  private async fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 20_000) {
+  private async fetchWithTimeout(
+    url: string,
+    init: RequestInit = {},
+    timeoutMs = 20_000,
+  ) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -66,7 +72,9 @@ export class KommoService {
   }
 
   async getAccountStatus() {
-    const res = await fetch(`${this.getBaseUrl()}/account`, { headers: this.getHeaders() });
+    const res = await fetch(`${this.getBaseUrl()}/account`, {
+      headers: this.getHeaders(),
+    });
     const text = await res.text().catch(() => '');
 
     if (!res.ok) {
@@ -95,7 +103,9 @@ export class KommoService {
   // ──────────────────────────────────────────────
 
   async pullAllLeads(dateFrom?: string, dateTo?: string) {
-    this.logger.log(`[Kommo Pull] Starting... dateFrom=${dateFrom || 'all'} dateTo=${dateTo || 'all'}`);
+    this.logger.log(
+      `[Kommo Pull] Starting... dateFrom=${dateFrom || 'all'} dateTo=${dateTo || 'all'}`,
+    );
 
     const leads: any[] = [];
     let page = 1;
@@ -113,7 +123,9 @@ export class KommoService {
       if (dateFrom) url.searchParams.set('filter[created_at][from]', dateFrom);
       if (dateTo) url.searchParams.set('filter[created_at][to]', dateTo);
 
-      const res = await this.fetchWithTimeout(url.toString(), { headers: this.getHeaders() });
+      const res = await this.fetchWithTimeout(url.toString(), {
+        headers: this.getHeaders(),
+      });
       if (!res.ok) {
         const text = await res.text().catch(() => '');
         throw new Error(`Kommo API error ${res.status}: ${text.slice(0, 200)}`);
@@ -149,14 +161,20 @@ export class KommoService {
   }
 
   private async fetchPipelines(): Promise<any[]> {
-    const res = await this.fetchWithTimeout(`${this.getBaseUrl()}/leads/pipelines`, { headers: this.getHeaders() });
+    const res = await this.fetchWithTimeout(
+      `${this.getBaseUrl()}/leads/pipelines`,
+      { headers: this.getHeaders() },
+    );
     if (!res.ok) return [];
     const data = await res.json();
     return data?._embedded?.pipelines ?? [];
   }
 
   private async fetchUsers(): Promise<any[]> {
-    const res = await this.fetchWithTimeout(`${this.getBaseUrl()}/users?limit=250`, { headers: this.getHeaders() });
+    const res = await this.fetchWithTimeout(
+      `${this.getBaseUrl()}/users?limit=250`,
+      { headers: this.getHeaders() },
+    );
     if (!res.ok) return [];
     const data = await res.json();
     return data?._embedded?.users ?? [];
@@ -167,7 +185,10 @@ export class KommoService {
     const limit = 250;
 
     for (let page = 1; page <= 80; page++) {
-      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}/talks?limit=${limit}&page=${page}`, { headers: this.getHeaders() });
+      const res = await this.fetchWithTimeout(
+        `${this.getBaseUrl()}/talks?limit=${limit}&page=${page}`,
+        { headers: this.getHeaders() },
+      );
       if (!res.ok) break;
       const data = await res.json();
       const batch = data?._embedded?.talks ?? [];
@@ -183,14 +204,21 @@ export class KommoService {
     const limit = 100;
 
     for (let page = 1; page <= 30; page++) {
-      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}/events?limit=${limit}&page=${page}`, { headers: this.getHeaders() });
+      const res = await this.fetchWithTimeout(
+        `${this.getBaseUrl()}/events?limit=${limit}&page=${page}`,
+        { headers: this.getHeaders() },
+      );
       if (!res.ok) break;
       const data = await res.json();
       const batch = data?._embedded?.events ?? [];
-      events.push(...batch.filter((event: any) =>
-        event?.entity_type === 'lead' &&
-        (event?.type === 'incoming_chat_message' || event?.type === 'outgoing_chat_message')
-      ));
+      events.push(
+        ...batch.filter(
+          (event: any) =>
+            event?.entity_type === 'lead' &&
+            (event?.type === 'incoming_chat_message' ||
+              event?.type === 'outgoing_chat_message'),
+        ),
+      );
       if (batch.length < limit) break;
     }
 
@@ -207,13 +235,20 @@ export class KommoService {
 
     for (let i = 0; i < batches.length; i += 5) {
       const group = batches.slice(i, i + 5);
-      const results = await Promise.all(group.map(async (batch) => {
-        const url = `${this.getBaseUrl()}/contacts?` + batch.map(id => `id[]=${id}`).join('&') + '&limit=50';
-        const res = await this.fetchWithTimeout(url, { headers: this.getHeaders() });
-        if (!res.ok) return [];
-        const data = await res.json();
-        return data?._embedded?.contacts ?? [];
-      }));
+      const results = await Promise.all(
+        group.map(async (batch) => {
+          const url =
+            `${this.getBaseUrl()}/contacts?` +
+            batch.map((id) => `id[]=${id}`).join('&') +
+            '&limit=50';
+          const res = await this.fetchWithTimeout(url, {
+            headers: this.getHeaders(),
+          });
+          if (!res.ok) return [];
+          const data = await res.json();
+          return data?._embedded?.contacts ?? [];
+        }),
+      );
       contacts.push(...results.flat());
     }
 
@@ -224,7 +259,9 @@ export class KommoService {
   //  FIND CONTACT BY PHONE
   // ──────────────────────────────────────────────
 
-  async findContactByPhone(phone: string): Promise<{ name: string; phone: string } | null> {
+  async findContactByPhone(
+    phone: string,
+  ): Promise<{ name: string; phone: string } | null> {
     try {
       const cleaned = phone.replace(/[^0-9]/g, '');
       const last10 = cleaned.slice(-10);
@@ -240,7 +277,9 @@ export class KommoService {
       clearTimeout(timeout);
 
       if (!res.ok) {
-        this.logger.error(`[Kommo] Search failed: ${res.status} ${res.statusText}`);
+        this.logger.error(
+          `[Kommo] Search failed: ${res.status} ${res.statusText}`,
+        );
         return null;
       }
 
@@ -254,10 +293,12 @@ export class KommoService {
       let foundPhone = phone;
       if (contact.custom_fields_values) {
         for (const field of contact.custom_fields_values) {
-          if (field.field_name?.toLowerCase().includes('phone') ||
-              field.field_name?.toLowerCase().includes('telepon') ||
-              field.field_name?.toLowerCase().includes('hp') ||
-              field.field_code === 'PHONE') {
+          if (
+            field.field_name?.toLowerCase().includes('phone') ||
+            field.field_name?.toLowerCase().includes('telepon') ||
+            field.field_name?.toLowerCase().includes('hp') ||
+            field.field_code === 'PHONE'
+          ) {
             const val = field.values?.[0]?.value;
             if (val) foundPhone = String(val);
             break;
@@ -285,7 +326,9 @@ export class KommoService {
         const name = contact?.name;
         const phones = this.extractPhones(contact);
         for (const phone of phones) {
-          this.logger.log(`[Kommo Webhook] ${action} contact: ${name} | Phone: ${phone}`);
+          this.logger.log(
+            `[Kommo Webhook] ${action} contact: ${name} | Phone: ${phone}`,
+          );
           processed++;
         }
       } catch (err) {
@@ -294,7 +337,9 @@ export class KommoService {
     };
 
     (body.contacts.add ?? []).forEach((c: any) => processContact(c, 'Added'));
-    (body.contacts.update ?? []).forEach((c: any) => processContact(c, 'Updated'));
+    (body.contacts.update ?? []).forEach((c: any) =>
+      processContact(c, 'Updated'),
+    );
 
     return { processed };
   }
@@ -306,10 +351,15 @@ export class KommoService {
       for (const field of contact.custom_fields_values) {
         const fname = (field.field_name || '').toLowerCase();
         const fcode = (field.field_code || '').toUpperCase();
-        if (fname.includes('phone') || fname.includes('telepon') ||
-            fname.includes('hp') || fname.includes('wa') ||
-            fcode === 'PHONE' || fcode === 'PHONE_WORK') {
-          for (const val of (field.values || [])) {
+        if (
+          fname.includes('phone') ||
+          fname.includes('telepon') ||
+          fname.includes('hp') ||
+          fname.includes('wa') ||
+          fcode === 'PHONE' ||
+          fcode === 'PHONE_WORK'
+        ) {
+          for (const val of field.values || []) {
             if (val.value) phones.push(String(val.value));
           }
         }

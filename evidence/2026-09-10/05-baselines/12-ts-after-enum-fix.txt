@@ -1,0 +1,12 @@
+﻿src/modules/digimar/digimar.gateway.ts(44,47): error TS2554: Expected 1 arguments, but got 0.
+src/modules/digimar/digimar.service.ts(73,7): error TS2322: Type 'null' is not assignable to type 'Sheets'.
+src/modules/digimar/digimar.service.ts(75,84): error TS18046: 'err' is of type 'unknown'.
+src/modules/digimar/digimar.service.ts(76,7): error TS2322: Type 'null' is not assignable to type 'Sheets'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(98,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(99,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(106,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(107,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(114,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(115,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/lead-capture.service.ts(185,11): error TS2353: Object literal may only specify known properties, and 'waName' does not exist in type '(Without<LeadCaptureUpdateInput, LeadCaptureUncheckedUpdateInput> & LeadCaptureUncheckedUpdateInput) | (Without<...> & LeadCaptureUpdateInput)'.
+src/modules/wa-webhook/__tests__/wa-gateway.spec.ts(16,15): error TS2554: Expected 2 arguments, but got 1.

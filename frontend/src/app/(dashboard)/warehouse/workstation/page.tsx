@@ -2,12 +2,17 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+import {
+  DnaButton,
+  DnaInput,
+  DnaSelect,
+  DnaDialog,
+  DnaDialogContent,
+  DnaDialogHeader,
+  DnaDialogTitle,
+  DnaDialogFooter,
+  DnaTabNav,
+} from "@/components/dna";
 import { 
   Truck, 
   ArrowRightLeft, 
@@ -37,29 +42,18 @@ import {
   Zap,
   Box
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { DnaBadge } from "@/components/dna/DnaBadge";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export default function WarehouseWorkstation() {
   const queryClient = useQueryClient();
@@ -212,19 +206,17 @@ export default function WarehouseWorkstation() {
     >
 
       {/* 📑 II. EXECUTION TABS */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <div className="w-full">
          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-            <TabsList className="h-14 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-100">
-               <TabsTrigger value="procurement" className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest italic flex gap-2 data-[state=active]:bg-brand-black data-[state=active]:text-white data-[state=active]:shadow-xl transition-all">
-                  <Truck className="w-4 h-4" /> 01. PROCUREMENT
-               </TabsTrigger>
-               <TabsTrigger value="internal" className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest italic flex gap-2 data-[state=active]:bg-brand-black data-[state=active]:text-white data-[state=active]:shadow-xl transition-all">
-                  <ArrowRightLeft className="w-4 h-4" /> 02. INTERNAL
-               </TabsTrigger>
-               <TabsTrigger value="logistics" className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest italic flex gap-2 data-[state=active]:bg-brand-black data-[state=active]:text-white data-[state=active]:shadow-xl transition-all">
-                  <PackageCheck className="w-4 h-4" /> 03. LOGISTICS
-               </TabsTrigger>
-            </TabsList>
+             <DnaTabNav
+               tabs={[
+                 { id: "procurement", label: "01. PROCUREMENT", icon: Truck },
+                 { id: "internal", label: "02. INTERNAL", icon: ArrowRightLeft },
+                 { id: "logistics", label: "03. LOGISTICS", icon: PackageCheck },
+               ]}
+               activeTab={activeTab}
+               onChange={setActiveTab}
+             />
 
             <div className="relative w-full max-w-sm group">
                <Scan className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-hover:text-blue-600 transition-colors" />
@@ -237,7 +229,7 @@ export default function WarehouseWorkstation() {
          </div>
 
          {/* Tab 1: Procurement */}
-         <TabsContent value="procurement" className="space-y-6">
+         <div hidden={activeTab !== "procurement"} className="space-y-6">
             <div className="flex items-center gap-2">
                <div className="w-1 h-4 bg-brand-black rounded-full" />
                <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">PENDING INBOUND & RECEIVING</h3>
@@ -255,10 +247,10 @@ export default function WarehouseWorkstation() {
                   />
                ))}
             </div>
-         </TabsContent>
+         </div>
 
          {/* Tab 2: Internal */}
-         <TabsContent value="internal" className="space-y-12">
+         <div hidden={activeTab !== "internal"} className="space-y-12">
             <div className="space-y-6">
                <div className="flex items-center gap-2">
                   <div className="w-1 h-4 bg-blue-600 rounded-full" />
@@ -299,10 +291,10 @@ export default function WarehouseWorkstation() {
                   ))}
                </div>
             </div>
-         </TabsContent>
+         </div>
 
          {/* Tab 3: Logistics */}
-         <TabsContent value="logistics" className="space-y-6">
+         <div hidden={activeTab !== "logistics"} className="space-y-6">
             <div className="flex items-center gap-2">
                <div className="w-1 h-4 bg-emerald-600 rounded-full" />
                <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">PENDING PRODUCTION REQUISITIONS</h3>
@@ -340,8 +332,8 @@ export default function WarehouseWorkstation() {
                   </div>
                ))}
             </div>
-         </TabsContent>
-      </Tabs>
+         </div>
+      </div>
 
       {/* 🛡️ FEFO SECURITY GATE DIALOG */}
       <Dialog open={!!selectedIssueItem} onOpenChange={(open) => !open && setSelectedIssueItem(null)}>

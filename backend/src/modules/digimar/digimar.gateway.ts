@@ -12,11 +12,17 @@ import { Logger } from '@nestjs/common';
 @WebSocketGateway({
   namespace: '/digimar',
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['https://nexerp.id', 'https://www.nexerp.id', 'https://dreamlab.id'],
+    origin: process.env.CORS_ORIGIN?.split(',') ?? [
+      'https://nexerp.id',
+      'https://www.nexerp.id',
+      'https://dreamlab.id',
+    ],
     credentials: true,
   },
 })
-export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class DigimarGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(DigimarGateway.name);
   private refreshInterval: NodeJS.Timeout | null = null;
@@ -41,7 +47,7 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
       let remainingSockets = 0;
       try {
         const sockets = this.server.sockets?.adapter
-          ? await this.server.sockets.adapter.fetchSockets?.()
+          ? await (this.server.sockets.adapter.fetchSockets as any)?.()
           : null;
         remainingSockets = sockets?.length ?? 0;
       } catch {
@@ -54,23 +60,29 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
         this.logger.log('Auto-refresh stopped (no clients)');
       }
     } catch (err) {
-      this.logger.warn(`Error checking remaining sockets: ${(err as Error).message}`);
+      this.logger.warn(
+        `Error checking remaining sockets: ${(err as Error).message}`,
+      );
     }
   }
 
   private startAutoRefresh() {
     const interval = Number(process.env.TORIBIO_REFRESH_INTERVAL_MS) || 60_000;
-    this.refreshInterval = setInterval(async () => {
-      try {
-        this.digimarService.invalidateCache();
-        const data = await this.digimarService.getAll();
-        this.server.emit('digimar:update', data);
-        this.logger.debug('Auto-refresh: pushed update to clients');
-      } catch (err) {
-        this.logger.error('Auto-refresh error', err);
-      }
+    this.refreshInterval = setInterval(() => {
+      void this.runAutoRefreshTick();
     }, interval);
     this.logger.log(`Auto-refresh started (interval: ${interval}ms)`);
+  }
+
+  private async runAutoRefreshTick(): Promise<void> {
+    try {
+      this.digimarService.invalidateCache();
+      const data = await this.digimarService.getAll();
+      this.server.emit('digimar:update', data);
+      this.logger.debug('Auto-refresh: pushed update to clients');
+    } catch (err) {
+      this.logger.error('Auto-refresh error', err);
+    }
   }
 
   @SubscribeMessage('subscribe')
@@ -92,8 +104,14 @@ export class DigimarGateway implements OnGatewayConnection, OnGatewayDisconnect 
   }
 
   @SubscribeMessage('subscribe:weekly')
-  async handleWeeklySubscribe(client: Socket, payload: { month?: string; platform?: string }) {
-    const data = await this.digimarService.getWeekly(payload?.month, payload?.platform);
+  async handleWeeklySubscribe(
+    client: Socket,
+    payload: { month?: string; platform?: string },
+  ) {
+    const data = await this.digimarService.getWeekly(
+      payload?.month,
+      payload?.platform,
+    );
     client.emit('digimar:weekly', data);
   }
 

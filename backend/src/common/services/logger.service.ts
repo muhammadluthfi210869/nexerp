@@ -18,11 +18,11 @@ const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.printf(
     ({ timestamp, level, message, context, trace, ...meta }) => {
-      const ctx = context ? `[${context}]` : '';
+      const ctx = context ? `[${String(context as string)}]` : '';
       const metaStr = Object.keys(meta).length
         ? ` ${JSON.stringify(meta)}`
         : '';
-      const traceStr = trace ? `\n  trace: ${trace}` : '';
+      const traceStr = trace ? `\n  trace: ${String(trace as string)}` : '';
       return `${timestamp} ${level} ${ctx} ${message}${metaStr}${traceStr}`;
     },
   ),

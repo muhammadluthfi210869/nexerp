@@ -116,19 +116,24 @@ model JournalEntry {
   planId           String? @db.Uuid
   requisitionId    String? @db.Uuid
   invoiceId        String? @db.Uuid
+  billId           String? @db.Uuid
+  salesInvoiceId   String? @db.Uuid
 
-  salesOrder      SalesOrder?          @relation(fields: [soId], references: [id])
-  purchaseOrder   PurchaseOrder?       @relation(fields: [poId], references: [id])
-  payment         Payment?             @relation("PaymentToJournal", fields: [paymentId], references: [id])
-  stockAdjustment StockAdjustment?     @relation(fields: [adjustmentId], references: [id])
-  salesReturn     SalesReturn?         @relation(fields: [returnId], references: [id])
-  purchaseReturn  PurchaseReturn?      @relation(fields: [purchaseReturnId], references: [id])
-  productionPlan  ProductionPlan?      @relation(fields: [planId], references: [id])
-  requisition     MaterialRequisition? @relation(fields: [requisitionId], references: [id])
-  invoice         Invoice?             @relation(fields: [invoiceId], references: [id])
-  stockOpnames    StockOpname[]
-  copqRecords     COPQRecord[]
-  lines           JournalLine[]
+  salesOrder       SalesOrder?          @relation(fields: [soId], references: [id])
+  purchaseOrder    PurchaseOrder?       @relation(fields: [poId], references: [id])
+  payment          Payment?             @relation("PaymentToJournal", fields: [paymentId], references: [id])
+  stockAdjustment  StockAdjustment?     @relation(fields: [adjustmentId], references: [id])
+  salesReturn      SalesReturn?         @relation(fields: [returnId], references: [id])
+  purchaseReturn   PurchaseReturn?      @relation(fields: [purchaseReturnId], references: [id])
+  productionPlan   ProductionPlan?      @relation(fields: [planId], references: [id])
+  requisition      MaterialRequisition? @relation(fields: [requisitionId], references: [id])
+  invoice          Invoice?             @relation(fields: [invoiceId], references: [id])
+  bill             Bill?                @relation("BillJournalEntries", fields: [billId], references: [id])
+  salesInvoice     SalesInvoice?        @relation("SalesInvoiceJournalEntries", fields: [salesInvoiceId], references: [id])
+  stockOpnames     StockOpname[]
+  copqRecords      COPQRecord[]
+  bankTransactions BankTransaction[]
+  lines            JournalLine[]
 
   @@map("journal_entries")
 }
@@ -198,9 +203,10 @@ model TaxRate {
   isActive    Boolean @default(true)
   description String?
 
-  soEntries     SalesOrder[]
-  soItemEntries SalesOrderItem[]
-  poItemEntries PurchaseOrderItem[]
+  soEntries       SalesOrder[]
+  soItemEntries   SalesOrderItem[]
+  poItemEntries   PurchaseOrderItem[]
+  taxTransactions TaxTransaction[]
 
   @@map("master_tax_rates")
 }
@@ -219,14 +225,358 @@ model Currency {
 }
 
 model AutoJournalConfig {
-  transactionType String    @id
-  coaDebetId      String    @db.Uuid
-  coaCreditId     String    @db.Uuid
+  transactionType String   @id
+  coaDebetId      String   @db.Uuid
+  coaCreditId     String   @db.Uuid
   description     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("auto_journal_configs")
+}
+
+// ==========================================
+// SPRINT 1 — Backend Schema Foundation
+// 18 additional models appended per Foundation Phase Plan Task 5
+// (Bill, DownPayment, APPayment, BankAccount, BankTransaction,
+//  TaxTransaction already exist in finance-extension.prisma)
+// ==========================================
+
+/// Customer — AR-side customer (mirrors Supplier for AP side)
+model Customer {
+  id            String         @id @default(uuid()) @db.Uuid
+  code          String         @unique // CUST-XXXX format
+  name          String
+  brand         String? // Brand name
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  npwp          String?
+  creditLimit   Decimal        @default(0) @db.Decimal(15, 2)
+  paymentTerms  Int            @default(30) // days
+  isActive      Boolean        @default(true)
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  invoices      SalesInvoice[]
+  receipts      ARReceipt[]
+  escrow        ClientEscrow[]
+
+  @@map("customers")
+}
+
+/// SalesInvoice = AR-side customer invoice (mirrors unified Invoice for clean AR schema)
+model SalesInvoice {
+  id             String                 @id @default(uuid()) @db.Uuid
+  invoiceNumber  String                 @unique
+  customerId     String                 @db.Uuid
+  invoiceDate    DateTime
+  dueDate        DateTime
+  subtotal       Decimal                @db.Decimal(15, 2)
+  taxAmount      Decimal                @default(0) @db.Decimal(15, 2)
+  totalAmount    Decimal                @db.Decimal(15, 2)
+  paidAmount     Decimal                @default(0) @db.Decimal(15, 2)
+  paymentStatus  PaymentStatus          @default(PENDING)
+  deliveryStatus String                 @default("PENDING") // PENDING | RELEASED | BLOCKED
+  notes          String?
+  attachmentUrls String[]               @default([])
+  postedAt       DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  customer       Customer               @relation(fields: [customerId], references: [id])
+  lineItems      SalesInvoiceLineItem[]
+  receipts       ARReceipt[]
+  journalEntries JournalEntry[]         @relation("SalesInvoiceJournalEntries")
+
+  @@index([customerId, paymentStatus])
+  @@index([dueDate, paymentStatus])
+  @@map("sales_invoices")
+}
+
+/// SalesInvoiceLineItem = Line items of customer invoice
+model SalesInvoiceLineItem {
+  id        String       @id @default(uuid()) @db.Uuid
+  invoiceId String       @db.Uuid
+  itemCode  String
+  itemName  String
+  qty       Decimal      @db.Decimal(15, 2)
+  unit      String
+  price     Decimal      @db.Decimal(15, 2)
+  discount  Decimal      @default(0) @db.Decimal(15, 2)
+  total     Decimal      @db.Decimal(15, 2)
+  invoice   SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("sales_invoice_line_items")
+}
+
+/// ARReceipt = Payment received from customer (Pelunasan/tagihan)
+model ARReceipt {
+  id             String        @id @default(uuid()) @db.Uuid
+  receiptNumber  String        @unique
+  customerId     String        @db.Uuid
+  invoiceId      String?       @db.Uuid
+  receiptDate    DateTime
+  amount         Decimal       @db.Decimal(15, 2)
+  pph23Amount    Decimal?      @db.Decimal(15, 2)
+  bankAccountId  String?       @db.Uuid
+  notes          String?
+  attachmentUrls String[]      @default([])
+  createdAt      DateTime      @default(now())
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  invoice        SalesInvoice? @relation(fields: [invoiceId], references: [id])
+  bankAccount    BankAccount?  @relation(fields: [bankAccountId], references: [id])
+
+  @@index([customerId, receiptDate])
+  @@map("ar_receipts")
+}
+
+/// SampleFee = Sample fee charged to customer (Biaya Sample)
+model SampleFee {
+  id           String   @id @default(uuid()) @db.Uuid
+  feeNumber    String   @unique
+  customerId   String   @db.Uuid
+  amount       Decimal  @db.Decimal(15, 2)
+  feeDate      DateTime
+  notes        String?
+  offsetToDPId String?  @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("sample_fees")
+}
+
+/// FixedAsset = Company owned fixed assets (Aset Tetap)
+model FixedAsset {
+  id                String                 @id @default(uuid()) @db.Uuid
+  assetNumber       String                 @unique
+  assetName         String
+  assetCategory     String // e.g., "Kendaraan", "Peralatan", "Bangunan"
+  acquisitionDate   DateTime
+  acquisitionCost   Decimal                @db.Decimal(15, 2)
+  usefulLife        Int // in months
+  salvageValue      Decimal                @default(0) @db.Decimal(15, 2)
+  status            String                 @default("ACTIVE") // ACTIVE | DISPOSED | TRANSFERRED
+  location          String?
+  responsiblePerson String?
+  notes             String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  schedules         DepreciationSchedule[]
+  transfers         AssetTransfer[]
+  disposals         AssetDisposal[]
+
+  @@map("fixed_assets")
+}
+
+/// DepreciationSchedule = Monthly depreciation entries per asset
+model DepreciationSchedule {
+  id          String     @id @default(uuid()) @db.Uuid
+  assetId     String     @db.Uuid
+  period      DateTime // Monthly period (first day of month)
+  amount      Decimal    @db.Decimal(15, 2)
+  accumulated Decimal    @default(0) @db.Decimal(15, 2)
+  notes       String?
+  asset       FixedAsset @relation(fields: [assetId], references: [id])
+
+  @@unique([assetId, period])
+  @@index([assetId])
+  @@map("depreciation_schedules")
+}
+
+/// AssetTransfer = Asset location/responsibility transfer
+model AssetTransfer {
+  id           String     @id @default(uuid()) @db.Uuid
+  assetId      String     @db.Uuid
+  transferDate DateTime
+  fromLocation String
+  toLocation   String
+  fromPerson   String?
+  toPerson     String?
+  notes        String?
+  createdAt    DateTime   @default(now())
+  asset        FixedAsset @relation(fields: [assetId], references: [id])
+
+  @@index([assetId])
+  @@map("asset_transfers")
+}
+
+/// AssetDisposal = Asset sale or write-off
+model AssetDisposal {
+  id           String     @id @default(uuid()) @db.Uuid
+  assetId      String     @db.Uuid
+  disposalDate DateTime
+  disposalType String // SALE | WRITE_OFF | SCRAP
+  proceeds     Decimal    @db.Decimal(15, 2)
+  gainLoss     Decimal    @db.Decimal(15, 2)
+  buyer        String?
+  notes        String?
+  createdAt    DateTime   @default(now())
+  asset        FixedAsset @relation(fields: [assetId], references: [id])
+
+  @@index([assetId])
+  @@map("asset_disposals")
+}
+
+/// IntangibleAsset = Non-physical assets (software, licenses, patents)
+model IntangibleAsset {
+  id                 String   @id @default(uuid()) @db.Uuid
+  assetNumber        String   @unique
+  assetName          String
+  acquisitionDate    DateTime
+  acquisitionCost    Decimal  @db.Decimal(15, 2)
+  amortizationPeriod Int // in months
+  amortizationMethod String   @default("STRAIGHT_LINE")
+  status             String   @default("ACTIVE")
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("intangible_assets")
+}
+
+/// PeriodLock = Month/year period locking (penutupan periode)
+model PeriodLock {
+  id        String    @id @default(uuid()) @db.Uuid
+  period    DateTime  @unique // First day of locked month
+  isLocked  Boolean   @default(false)
+  lockedBy  String?   @db.Uuid
+  lockedAt  DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  @@map("period_locks")
+}
+
+/// ClosingChecklist = Period closing checklist items
+model ClosingChecklist {
+  id          String    @id @default(uuid()) @db.Uuid
+  period      DateTime
+  department  String
+  item        String
+  category    String? // e.g., "AR", "AP", "Inventory", "Finance"
+  completed   Boolean   @default(false)
+  completedBy String?   @db.Uuid
+  completedAt DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([period, department])
+  @@map("closing_checklists")
+}
+
+/// AdjustmentJournal = Manual adjusting entries (Jurnal Penyesuaian)
+model AdjustmentJournal {
+  id             String   @id @default(uuid()) @db.Uuid
+  journalNumber  String   @unique
+  period         DateTime
+  description    String
+  totalAmount    Decimal  @db.Decimal(15, 2)
+  attachmentUrls String[] @default([])
+  preparedBy     String?  @db.Uuid
+  reviewedBy     String?  @db.Uuid
+  approvedBy     String?  @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("adjustment_journals")
+}
+
+/// JobOrderCosting = Job order cost tracking (Harga Poket Pesanan)
+model JobOrderCosting {
+  id             String    @id @default(uuid()) @db.Uuid
+  jobOrderNumber String    @unique
+  description    String?
+  totalCost      Decimal   @db.Decimal(15, 2)
+  totalRevenue   Decimal   @default(0) @db.Decimal(15, 2)
+  recordedAt     DateTime  @default(now())
+  closedAt       DateTime?
+
+  @@map("job_order_costings")
+}
+
+/// CostVariance = Standard vs actual cost variance per job
+model CostVariance {
+  id           String   @id @default(uuid()) @db.Uuid
+  jobOrderId   String   @db.Uuid
+  varianceType String // MATERIAL | LABOR | OVERHEAD
+  standardCost Decimal  @db.Decimal(15, 2)
+  actualCost   Decimal  @db.Decimal(15, 2)
+  variance     Decimal  @db.Decimal(15, 2)
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@index([jobOrderId])
+  @@map("cost_variances")
+}
+
+/// ProductProfitability = Per-product profit analysis
+model ProductProfitability {
+  id          String   @id @default(uuid()) @db.Uuid
+  productId   String   @db.Uuid
+  productName String
+  period      DateTime
+  revenue     Decimal  @db.Decimal(15, 2)
+  cost        Decimal  @db.Decimal(15, 2)
+  profit      Decimal  @db.Decimal(15, 2)
+  margin      Decimal  @db.Decimal(5, 2) // percentage
+  createdAt   DateTime @default(now())
+
+  @@unique([productId, period])
+  @@map("product_profitabilities")
+}
+
+/// CostAllocation = Overhead cost allocation to departments/products
+model CostAllocation {
+  id               String   @id @default(uuid()) @db.Uuid
+  allocationDate   DateTime
+  amount           Decimal  @db.Decimal(15, 2)
+  fromCostCenter   String
+  toCostCenter     String
+  allocationMethod String   @default("DIRECT") // DIRECT | STEP_DOWN | RECIPROCAL
+  basis            String? // e.g., "square_feet", "headcount", "revenue"
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  @@map("cost_allocations")
+}
+
+/// ClientEscrow = Client trust fund / escrow account (Dana Titipan Klien)
+model ClientEscrow {
+  id          String    @id @default(uuid()) @db.Uuid
+  customerId  String    @db.Uuid
+  amount      Decimal   @db.Decimal(15, 2)
+  depositDate DateTime
+  releaseDate DateTime?
+  status      String    @default("HELD") // HELD | RELEASED | RETURNED | FORFEITED
+  purpose     String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  customer    Customer  @relation(fields: [customerId], references: [id])
+
+  @@index([customerId, status])
+  @@map("client_escrows")
+}
+
+/// InventoryOwnership = Inventory owner tracking (ownership of stock)
+model InventoryOwnership {
+  id          String   @id @default(uuid()) @db.Uuid
+  materialId  String   @db.Uuid
+  warehouseId String   @db.Uuid
+  ownerType   String // COMPANY | CONSIGNMENT | CUSTOMER_OWNED | SUPPLIER_OWNED
+  ownerId     String?  @db.Uuid
+  quantity    Decimal  @db.Decimal(15, 4)
+  unitCost    Decimal  @default(0) @db.Decimal(15, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([materialId, warehouseId, ownerType, ownerId])
+  @@index([ownerType])
+  @@map("inventory_ownerships")
 }
 
 /// Specialized ledger for high-performance executive dashboards.

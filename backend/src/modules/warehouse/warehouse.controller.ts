@@ -5,6 +5,7 @@ import {
   Get,
   Body,
   UseGuards,
+  UseInterceptors,
   Patch,
   Request,
   Query,
@@ -16,13 +17,15 @@ import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { RequisitionService } from './services/requisition.service';
 import { StockIntelligenceService } from './services/stock-intelligence.service';
+import { IdempotencyInterceptor } from '../../common/interceptors/idempotency.interceptor';
+import { Idempotent } from '../../common/decorators/idempotent.decorator';
 import {
   CreateRequisitionDto,
   UpdateRequisitionStatusDto,
 } from './dto/requisition.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('warehouse')
+@Controller(['warehouse', 'v1/warehouse'])
 export class WarehouseController {
   constructor(
     private readonly warehouseService: WarehouseService,
@@ -49,7 +52,18 @@ export class WarehouseController {
   }
 
   @Get('warehouses')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.WAREHOUSE,
+    UserRole.DIRECTOR,
+    UserRole.ADMIN,
+    UserRole.PURCHASING,
+    UserRole.PRODUCTION,
+    UserRole.FINANCE,
+    UserRole.SCM,
+    UserRole.COMMERCIAL,
+    UserRole.RND,
+  )
   async getWarehouses() {
     return this.warehouseService.getActiveWarehouses();
   }
@@ -79,12 +93,16 @@ export class WarehouseController {
   }
 
   @Post('validate-handover')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async validateHandover(@Body() data: any) {
     return this.warehouseService.validateHandover(data);
   }
 
   @Post('opname/:id/approve')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveOpname(
     @Param('id') id: string,
@@ -94,12 +112,16 @@ export class WarehouseController {
   }
 
   @Post('release/:workOrderId')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async releaseMaterial(@Param('workOrderId') workOrderId: string) {
     return this.warehouseService.releaseMaterial(workOrderId);
   }
 
   @Post('batches/:id/status')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async updateBatchStatus(
     @Param('id') id: string,
@@ -115,6 +137,8 @@ export class WarehouseController {
   // === PHASE 2: Transfer Orders ===
 
   @Post('transfers')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createTransfer(@Body() data: any) {
     return this.warehouseService.createTransferOrder(data);
@@ -127,6 +151,8 @@ export class WarehouseController {
   }
 
   @Post('transfers/:id/execute')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async executeTransfer(
     @Param('id') id: string,
@@ -138,6 +164,8 @@ export class WarehouseController {
   // === PHASE 2: Stock Opname ===
 
   @Post('opname')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createOpname(@Body() data: any) {
     return this.warehouseService.createOpname(data);
@@ -150,6 +178,8 @@ export class WarehouseController {
   }
 
   @Post('opname/:id/approve-pin')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveOpnameWithPin(
     @Param('id') id: string,
@@ -171,6 +201,8 @@ export class WarehouseController {
   }
 
   @Post('inbounds')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createInbound(@Body() data: any) {
     return this.warehouseService.createInbound(data);
@@ -185,12 +217,16 @@ export class WarehouseController {
   }
 
   @Post('adjustments')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async createAdjustment(@Body() data: any) {
     return this.warehouseService.createAdjustment(data);
   }
 
   @Post('adjustments/:id/approve')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveAdjustment(
     @Param('id') id: string,
@@ -214,6 +250,8 @@ export class WarehouseController {
   // === QUARANTINE RELEASE ===
 
   @Post('inbounds/:id/release')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.QC_LAB)
   async releaseFromQuarantine(
     @Param('id') id: string,
@@ -263,6 +301,8 @@ export class WarehouseController {
   // === REQUISITIONS (Permintaan Barang) ===
 
   @Post('requisitions')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PRODUCTION)
   async createRequisition(
     @Body() dto: CreateRequisitionDto,
@@ -290,5 +330,17 @@ export class WarehouseController {
     @Body() dto: UpdateRequisitionStatusDto,
   ) {
     return this.requisitionService.updateStatus(id, dto);
+  }
+
+  // Item 53: Stock summary grouped by bahanType
+  @Get('stock-summary')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.WAREHOUSE,
+    UserRole.PURCHASING,
+    UserRole.DIRECTOR,
+  )
+  async getStockSummary(@Query('groupBy') groupBy?: string) {
+    return this.warehouseService.getStockSummaryByBahanType();
   }
 }

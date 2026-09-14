@@ -11,7 +11,12 @@
 
 export type SlaStatus = 'Healthy' | 'Watch' | 'Late';
 
-export const CANONICAL_TASK_STATUS = ['Not started', 'Working on it', 'Revision', 'Done'] as const;
+export const CANONICAL_TASK_STATUS = [
+  'Not started',
+  'Working on it',
+  'Revision',
+  'Done',
+] as const;
 
 /** Bentuk minimum task yang dibutuhkan untuk penilaian SLA. */
 export interface SlaTaskShape {
@@ -38,13 +43,23 @@ export function toLocalDateString(date: Date = new Date()): string {
 /** Parse "YYYY-MM-DD" sebagai tengah malam WAKTU LOKAL (bukan UTC).
  * new Date("YYYY-MM-DD") = UTC tengah malam (07:00 WIB) → menggeser batas
  * SLA. Fungsi ini membuat perbandingan hari kalender selalu lokal. */
-export function parseLocalDate(value: string): Date {
-  const [y, m, d] = value.split('-').map(Number);
-  return new Date(y, m - 1, d);
+export function parseLocalDate(value?: string | null): Date {
+  if (!value || typeof value !== 'string') return new Date(NaN);
+  const parts = value.split('-').map(Number);
+  if (parts.length < 3 || parts.some((n) => Number.isNaN(n)))
+    return new Date(NaN);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
 }
 
 /** Selisih HARI KALENDER lokal (tanpa rounding pecahan jam). */
-export function calendarDayDiff(from: Date, to: Date): number {
+export function calendarDayDiff(from?: Date | null, to?: Date | null): number {
+  if (
+    !from ||
+    !to ||
+    Number.isNaN(from.getTime()) ||
+    Number.isNaN(to.getTime())
+  )
+    return 0;
   const a = new Date(from.getFullYear(), from.getMonth(), from.getDate());
   const b = new Date(to.getFullYear(), to.getMonth(), to.getDate());
   return Math.round((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
@@ -53,10 +68,14 @@ export function calendarDayDiff(from: Date, to: Date): number {
 /** Referensi tanggal untuk penilaian SLA: task yang sudah selesai memakai
  * completedAt (bukan "hari ini") agar task on-time di masa lalu tidak dinilai
  * Late/Watch. Task terbuka memakai hari ini. */
-export function slaReferenceDate(task: SlaTaskShape, now: Date = new Date()): Date {
+export function slaReferenceDate(
+  task: SlaTaskShape,
+  now: Date = new Date(),
+): Date {
   const isDoneState = task.status === 'Done';
   if (isDoneState && task.completedAt) {
-    return parseLocalDate(task.completedAt.slice(0, 10));
+    const parsed = parseLocalDate(task.completedAt.slice(0, 10));
+    if (!Number.isNaN(parsed.getTime())) return parsed;
   }
   return now;
 }
@@ -65,9 +84,14 @@ export function slaReferenceDate(task: SlaTaskShape, now: Date = new Date()): Da
  *   delta <= 0 → Healthy (tepat waktu / belum lewat)
  *   delta === 1 → Watch  (telat 1 hari)
  *   delta >= 2 → Late   (telat ≥2 hari) */
-export function deriveSla(task: SlaTaskShape, now: Date = new Date()): SlaStatus {
+export function deriveSla(
+  task: SlaTaskShape,
+  now: Date = new Date(),
+): SlaStatus {
   if (!isCanonicalStatus(task.status)) return 'Healthy';
+  if (!task.dueDate) return 'Healthy';
   const due = parseLocalDate(task.dueDate);
+  if (Number.isNaN(due.getTime())) return 'Healthy';
   const reference = slaReferenceDate(task, now);
   const delta = calendarDayDiff(reference, due);
   if (delta <= 0) return 'Healthy';
@@ -80,9 +104,14 @@ export function deriveSla(task: SlaTaskShape, now: Date = new Date()): SlaStatus
  * hari ini vs dueDate. Menghapus kebutuhan daftar pengecualian hardcode
  * ON_TIME_TASK_IDS — task yang selesai tepat waktu di masa lalu tidak lagi
  * dinilai Late/Watch. */
-export function calcDisciplinePoints(task: SlaTaskShape, now: Date = new Date()): number {
+export function calcDisciplinePoints(
+  task: SlaTaskShape,
+  now: Date = new Date(),
+): number {
   if (!isCanonicalStatus(task.status)) return 0;
+  if (!task.dueDate) return 100;
   const due = parseLocalDate(task.dueDate);
+  if (Number.isNaN(due.getTime())) return 100;
   const reference = slaReferenceDate(task, now);
   const delta = calendarDayDiff(reference, due); // reference - due (hari kalender)
   const doneState = task.status === 'Done';

@@ -30,28 +30,25 @@ import {
   Loader2,
   History,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, KpiCard, TableWrapper } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav, DnaSelect, DnaTextarea } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+  DnaDialog as Dialog,
+  DnaDialogContent as DialogContent,
+  DnaDialogHeader as DialogHeader,
+  DnaDialogTitle as DialogTitle,
+  DnaDialogFooter as DialogFooter,
+  DnaDialogDescription as DialogDescription,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import Link from "next/link";
 import { cn, formatCurrency } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 /* ───────────────────────────────────────────
    Types
@@ -122,9 +119,9 @@ function FakturJualTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard label="Total Receivables" value="Rp 170.0M" subValue="Rp 45.0M Overdue 14 Days" icon={<CreditCard className="text-blue-600" />} />
-        <KpiCard label="Collected (MTD)" value="Rp 89.2M" targetPct={65} icon={<Wallet className="text-emerald-500" />} />
-        <StatCard label="Pending Approval" value="4 Invoices" subValue="Execute Review Gate" icon={<AlertTriangle className="text-amber-500" />} />
+        <DnaStatCard label="Total Receivables" value="Rp 170.0M" subValue="Rp 45.0M Overdue 14 Days" icon={<CreditCard className="text-blue-600" />} />
+        <DnaStatCard label="Collected (MTD)" value="Rp 89.2M" subValue="65% Target" icon={<Wallet className="text-emerald-500" />} />
+        <DnaStatCard label="Pending Approval" value="4 Invoices" subValue="Execute Review Gate" icon={<AlertTriangle className="text-amber-500" />} />
       </div>
 
       <div className="flex justify-between items-center">
@@ -134,8 +131,8 @@ function FakturJualTab() {
         </Link>
       </div>
 
-      <TableWrapper
-        filters={
+      <DnaDataTableCard
+        customToolbar={
           <div className="relative w-full max-w-md">
             <DnaInput icon={<Search className="h-4 w-4" />} placeholder="Search invoices..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
@@ -195,7 +192,7 @@ function FakturJualTab() {
             )}
           </TableBody>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
     </div>
   );
 }
@@ -227,10 +224,10 @@ function FakturBeliTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard label="Total Debt (AP)" value="Rp 170.0M" icon={<AlertCircle className="text-rose-600" />} />
-        <StatCard label="Monthly Expense" value="Rp 45.0M" icon={<CreditCard className="text-amber-600" />} />
-        <StatCard label="Uncollected AR" value="Rp 12.5M" icon={<Package className="text-slate-500" />} />
-        <StatCard label="Cash In (MTD)" value="Rp 89.2M" icon={<Receipt className="text-emerald-600" />} />
+        <DnaStatCard label="Total Debt (AP)" value="Rp 170.0M" icon={<AlertCircle className="text-rose-600" />} />
+        <DnaStatCard label="Monthly Expense" value="Rp 45.0M" icon={<CreditCard className="text-amber-600" />} />
+        <DnaStatCard label="Uncollected AR" value="Rp 12.5M" icon={<Package className="text-slate-500" />} />
+        <DnaStatCard label="Cash In (MTD)" value="Rp 89.2M" icon={<Receipt className="text-emerald-600" />} />
       </div>
 
       <div className="flex justify-between items-center">
@@ -240,8 +237,8 @@ function FakturBeliTab() {
         </Link>
       </div>
 
-      <TableWrapper
-        filters={
+      <DnaDataTableCard
+        customToolbar={
           <div className="relative w-full max-w-md">
             <DnaInput icon={<Search className="h-4 w-4" />} placeholder="Search bills..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
@@ -304,7 +301,7 @@ function FakturBeliTab() {
             )}
           </TableBody>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
     </div>
   );
 }
@@ -371,8 +368,8 @@ function SalesOrdersTab() {
         </div>
       )}
 
-      <TableWrapper
-        filters={
+      <DnaDataTableCard
+        customToolbar={
           <div className="relative w-full max-w-md">
             <DnaInput icon={<Search className="h-4 w-4" />} placeholder="Search orders, clients, or IDs..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
@@ -450,7 +447,7 @@ function SalesOrdersTab() {
             ))}
           </TableBody>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
 
       <Dialog open={isProofModalOpen} onOpenChange={setIsProofModalOpen}>
         <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
@@ -539,10 +536,10 @@ function ARHubTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard label="Total Receivables" value="Rp 125.4M" subValue="+12.5% MTD" icon={<TrendingUp className="text-blue-600" />} />
-        <StatCard label="Overdue (30+ Days)" value="Rp 12.0M" subValue="Risk Profile: Low" icon={<CreditCard className="text-rose-600" />} />
-        <KpiCard label="Collections (MTD)" value="Rp 89.2M" targetPct={70} icon={<Wallet className="text-emerald-500" />} />
-        <StatCard label="Sample Revenue" value="Rp 2.4M" subValue="R&D Commitment" icon={<FlaskConical className="text-amber-500" />} />
+        <DnaStatCard label="Total Receivables" value="Rp 125.4M" subValue="+12.5% MTD" icon={<TrendingUp className="text-blue-600" />} />
+        <DnaStatCard label="Overdue (30+ Days)" value="Rp 12.0M" subValue="Risk Profile: Low" icon={<CreditCard className="text-rose-600" />} />
+        <DnaStatCard label="Collections (MTD)" value="Rp 89.2M" subValue="70% Target" icon={<Wallet className="text-emerald-500" />} />
+        <DnaStatCard label="Sample Revenue" value="Rp 2.4M" subValue="R&D Commitment" icon={<FlaskConical className="text-amber-500" />} />
       </div>
 
       <div className="flex justify-between items-center">
@@ -552,37 +549,26 @@ function ARHubTab() {
         </Link>
       </div>
 
-      <Tabs defaultValue="products" className="w-full">
-      <TableWrapper
-        filters={
+      <div className="w-full">
+      <DnaDataTableCard
+        customToolbar={
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 w-full">
-            <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-14 border border-slate-100">
-              <TabsTrigger
-                value="products"
-                className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-              >
-                <Package className="mr-2 h-4 w-4" /> Regular Products
-              </TabsTrigger>
-              <TabsTrigger
-                value="samples"
-                className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-              >
-                <FlaskConical className="mr-2 h-4 w-4" /> R&D Samples
-              </TabsTrigger>
-              <TabsTrigger
-                value="returns"
-                className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-              >
-                <RotateCcw className="mr-2 h-4 w-4" /> Retur
-              </TabsTrigger>
-            </TabsList>
+            <DnaTabNav
+              tabs={[
+                { id: "products", label: "Regular Products", icon: Package },
+                { id: "samples", label: "R&D Samples", icon: FlaskConical },
+                { id: "returns", label: "Retur", icon: RotateCcw },
+              ]}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
             <DnaButton variant="outline" className="h-11 w-11 p-0 rounded-xl bg-slate-50 text-slate-400">
               <History className="h-5 w-5" />
             </DnaButton>
           </div>
         }
       >
-        <TabsContent value="products" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div hidden={activeTab !== "products"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
           <Table className="table-dense">
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
@@ -647,9 +633,9 @@ function ARHubTab() {
               ))}
             </TableBody>
           </Table>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="samples" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div hidden={activeTab !== "samples"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <Table className="table-dense">
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-slate-100">
@@ -708,9 +694,9 @@ function ARHubTab() {
               ))}
             </TableBody>
           </Table>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="returns" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div hidden={activeTab !== "returns"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <div className="p-8">
             <div className="rounded-2xl border border-dashed border-slate-200 p-8 bg-slate-50/50 text-center">
               <RotateCcw className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -734,9 +720,9 @@ function ARHubTab() {
               </div>
             </div>
           </div>
-        </TabsContent>
-      </TableWrapper>
-      </Tabs>
+        </div>
+      </DnaDataTableCard>
+      </div>
 
       <AnimatePresence>
         {isModalOpen && selectedInvoice && (
@@ -785,11 +771,14 @@ function ARHubTab() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Target Account</label>
-                    <select className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs appearance-none focus:ring-4 focus:ring-blue-500/5 transition-all outline-none px-4">
+                    <DnaSelect
+                      className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs"
+                      options={["BCA Main (2640...)", "Mandiri Corporate", "Petty Cash (IDR)"]}
+                    >
                       <option>BCA Main (2640...)</option>
                       <option>Mandiri Corporate</option>
                       <option>Petty Cash (IDR)</option>
-                    </select>
+                    </DnaSelect>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -801,7 +790,7 @@ function ARHubTab() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Remarks / Reference</label>
-                  <textarea
+                  <DnaTextarea
                     rows={3}
                     placeholder="E.g., Bank transfer reference..."
                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
@@ -841,52 +830,38 @@ function ARHubTab() {
    Page Root
    ─────────────────────────────────────────── */
 export default function PiutangPage() {
+  const [activeTab, setActiveTab] = useState("faktur-jual");
+
   return (
     <DashboardShell title="Piutang" titleAccent="&amp; Hutang" subtitle="Manajemen Piutang &amp; Hutang Terintegrasi">
-      <Tabs defaultValue="faktur-jual" className="w-full">
-        <TabsList className="bg-slate-50 p-1.5 rounded-2xl border border-slate-100 mb-8">
-          <TabsTrigger
-            value="faktur-jual"
-            className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-          >
-            <FileCheck2 className="mr-2 h-3.5 w-3.5" /> Faktur Penjualan
-          </TabsTrigger>
-          <TabsTrigger
-            value="faktur-beli"
-            className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-          >
-            <Receipt className="mr-2 h-3.5 w-3.5" /> Faktur Pembelian
-          </TabsTrigger>
-          <TabsTrigger
-            value="sales-orders"
-            className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-          >
-            <ShoppingCart className="mr-2 h-3.5 w-3.5" /> Sales Orders
-          </TabsTrigger>
-          <TabsTrigger
-            value="ar-hub"
-            className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all"
-          >
-            <ShieldCheck className="mr-2 h-3.5 w-3.5" /> AR Hub
-          </TabsTrigger>
-        </TabsList>
+      <div className="w-full space-y-4">
+        <DnaTabNav
+          tabs={[
+            { id: "faktur-jual", label: "Faktur Penjualan", icon: FileCheck2 },
+            { id: "faktur-beli", label: "Faktur Pembelian", icon: Receipt },
+            { id: "sales-orders", label: "Sales Orders", icon: ShoppingCart },
+            { id: "ar-hub", label: "AR Hub", icon: ShieldCheck },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
-        <TabsContent value="faktur-jual" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div hidden={activeTab !== "faktur-jual"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
           <FakturJualTab />
-        </TabsContent>
+        </div>
 
-        <TabsContent value="faktur-beli" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div hidden={activeTab !== "faktur-beli"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
           <FakturBeliTab />
-        </TabsContent>
+        </div>
 
-        <TabsContent value="sales-orders" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div hidden={activeTab !== "sales-orders"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
           <SalesOrdersTab />
-        </TabsContent>
+        </div>
 
-        <TabsContent value="ar-hub" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div hidden={activeTab !== "ar-hub"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
           <ARHubTab />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </DashboardShell>
   );
 }

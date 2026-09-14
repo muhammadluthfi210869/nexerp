@@ -1,4 +1,10 @@
-import { BadRequestException, Catch, ExceptionFilter, ArgumentsHost, PayloadTooLargeException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Catch,
+  ExceptionFilter,
+  ArgumentsHost,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { mkdirSync } from 'fs';
 import { extname, join } from 'path';
@@ -22,12 +28,20 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 /** Ekstensi yang boleh diunggah (tanpa svg/html/xml — BUG-A-06). */
 export const ALLOWED_EXTENSIONS = new Set([
-  'png', 'jpg', 'jpeg', 'gif', 'webp',
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'webp',
   'pdf',
-  'doc', 'docx',
-  'xls', 'xlsx',
-  'ppt', 'pptx',
-  'txt', 'csv',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'txt',
+  'csv',
   'zip',
 ]);
 
@@ -94,13 +108,30 @@ export function attachmentFileFilter(
 /** Verifikasi magic-byte untuk gambar raster (BUG-B-03). `head` = 16 byte awal. */
 export function hasValidImageMagic(head: Buffer, ext: string): boolean {
   if (ext === 'png') {
-    return head.length >= 8 && head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47;
+    return (
+      head.length >= 8 &&
+      head[0] === 0x89 &&
+      head[1] === 0x50 &&
+      head[2] === 0x4e &&
+      head[3] === 0x47
+    );
   }
   if (ext === 'jpg' || ext === 'jpeg') {
-    return head.length >= 3 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+    return (
+      head.length >= 3 &&
+      head[0] === 0xff &&
+      head[1] === 0xd8 &&
+      head[2] === 0xff
+    );
   }
   if (ext === 'gif') {
-    return head.length >= 4 && head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46 && head[3] === 0x38;
+    return (
+      head.length >= 4 &&
+      head[0] === 0x47 &&
+      head[1] === 0x49 &&
+      head[2] === 0x46 &&
+      head[3] === 0x38
+    );
   }
   if (ext === 'webp') {
     return (
@@ -117,7 +148,10 @@ export function hasValidImageMagic(head: Buffer, ext: string): boolean {
  *  PayloadTooLargeException (413) di FileInterceptor — tangkap keduanya. */
 @Catch(MulterError, PayloadTooLargeException)
 export class MulterErrorFilter implements ExceptionFilter {
-  catch(exception: MulterError | PayloadTooLargeException, host: ArgumentsHost) {
+  catch(
+    exception: MulterError | PayloadTooLargeException,
+    host: ArgumentsHost,
+  ) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();

@@ -1,4 +1,5 @@
-import {
+﻿import {
+  Logger,
   Injectable,
   BadRequestException,
   NotFoundException,
@@ -14,6 +15,7 @@ import { IdGeneratorService } from '../system/id-generator.service';
 
 @Injectable()
 export class WarehouseService {
+  private readonly logger = new Logger(WarehouseService.name);
   private statsCache: { data: any; timestamp: number } | null = null;
   private readonly CACHE_TTL = 30000; // 30 seconds
 
@@ -38,6 +40,7 @@ export class WarehouseService {
   }) {
     const schedule = await this.prisma.productionSchedule.findUnique({
       where: { id: payload.scheduleId },
+      include: { workOrder: true },
     });
     if (!schedule) return;
 
@@ -78,6 +81,55 @@ export class WarehouseService {
           where: { id: item.materialId },
           data: { stockQty: { decrement: Number(item.qty) } },
         });
+      }
+
+      // [MFG-001 REMEDIATION]: Authoritative Finished Goods Receipt from Packaging Completion
+      if (schedule.stage === 'PACKING' && Number(schedule.resultQty) > 0) {
+        let planId = schedule.workOrder?.planId;
+        if (!planId && schedule.workOrder) {
+          const matchedPlan = await tx.productionPlan.findFirst({
+            where: {
+              OR: [
+                { id: schedule.workOrderId },
+                { so: { leadId: schedule.workOrder.leadId } },
+              ],
+            },
+          });
+          if (matchedPlan) planId = matchedPlan.id;
+        }
+
+        if (planId) {
+          // Idempotency check: ensure this schedule completion hasn't already credited Finished Goods
+          const alreadyCredited = await tx.stateTransitionLog.findFirst({
+            where: {
+              entityType: 'FINISHED_GOOD_INBOUND',
+              entityId: schedule.id,
+            },
+          });
+
+          if (!alreadyCredited) {
+            await tx.finishedGood.upsert({
+              where: { woId: planId },
+              update: {
+                stockQty: { increment: Number(schedule.resultQty) },
+              },
+              create: {
+                woId: planId,
+                stockQty: Number(schedule.resultQty),
+              },
+            });
+
+            await tx.stateTransitionLog.create({
+              data: {
+                entityType: 'FINISHED_GOOD_INBOUND',
+                entityId: schedule.id,
+                fromState: 'PACKAGING_COMPLETED',
+                toState: 'FINISHED_GOOD_CREDITED',
+                reason: `MFG-001: Authoritative Finished Good receipt of ${schedule.resultQty} units for schedule ${schedule.scheduleNumber}`,
+              },
+            });
+          }
+        }
       }
 
       await tx.stateTransitionLog.create({
@@ -1196,40 +1248,42 @@ export class WarehouseService {
     notes?: string;
     items: { materialId: string; systemQty: number; actualQty: number }[];
   }) {
-    const opnameNumber = await this.idGenerator.generateId('OPN');
+    return this.prisma.$transaction(async (tx) => {
+      const opnameNumber = await this.idGenerator.generateId('OPN');
 
-    const opname = await this.prisma.stockOpname.create({
-      data: {
+      const opname = await tx.stockOpname.create({
+        data: {
+          opnameNumber,
+          warehouseId: data.warehouseId,
+          picId: data.picId,
+          notes: data.notes,
+          items: {
+            create: data.items.map((i) => ({
+              materialId: i.materialId,
+              systemQty: i.systemQty,
+              actualQty: i.actualQty,
+              difference: i.actualQty - i.systemQty,
+            })),
+          },
+        },
+        include: { items: { include: { material: true } } },
+      });
+
+      this.eventEmitter.emit('activity.logged', {
+        action: 'OPNAME_CREATED',
+        entityType: 'StockOpname',
+        entityId: opname.id,
+        detail: `Opname ${opnameNumber} created with ${data.items.length} items`,
+        senderDivision: 'WAREHOUSE',
+      });
+      this.eventEmitter.emit('warehouse.opname.created', {
+        opnameId: opname.id,
         opnameNumber,
         warehouseId: data.warehouseId,
-        picId: data.picId,
-        notes: data.notes,
-        items: {
-          create: data.items.map((i) => ({
-            materialId: i.materialId,
-            systemQty: i.systemQty,
-            actualQty: i.actualQty,
-            difference: i.actualQty - i.systemQty,
-          })),
-        },
-      },
-      include: { items: { include: { material: true } } },
-    });
+      });
 
-    this.eventEmitter.emit('activity.logged', {
-      action: 'OPNAME_CREATED',
-      entityType: 'StockOpname',
-      entityId: opname.id,
-      detail: `Opname ${opnameNumber} created with ${data.items.length} items`,
-      senderDivision: 'WAREHOUSE',
+      return opname;
     });
-    this.eventEmitter.emit('warehouse.opname.created', {
-      opnameId: opname.id,
-      opnameNumber,
-      warehouseId: data.warehouseId,
-    });
-
-    return opname;
   }
 
   async approveOpnameWithPin(opnameId: string, userId: string, pin: string) {
@@ -1247,12 +1301,15 @@ export class WarehouseService {
       throw new BadRequestException('Invalid escalation PIN.');
     }
 
-    await this.prisma.stockOpname.update({
-      where: { id: opnameId },
-      data: {
-        approvalStatus: 'APPROVED',
-        approvedById: userId,
-      },
+    // Update approval status within a transaction before calling approveOpname
+    await this.prisma.$transaction(async (tx) => {
+      await tx.stockOpname.update({
+        where: { id: opnameId },
+        data: {
+          approvalStatus: 'APPROVED',
+          approvedById: userId,
+        },
+      });
     });
 
     return this.approveOpname(opnameId, userId);
@@ -1459,47 +1516,51 @@ export class WarehouseService {
     accountId?: string;
     notes?: string;
   }) {
-    const adjustment = await this.prisma.stockAdjustment.create({
-      data: {
-        type:
-          data.type === 'WRITE_OFF' || data.type === 'DISPOSAL' ? 'OUT' : 'IN',
-        warehouseId: data.warehouseId,
-        accountId:
-          data.accountId ||
-          (await this.prisma.account.findFirst())?.id ||
-          '00000000-0000-0000-0000-000000000001',
-        notes: data.notes || '',
-        date: new Date(),
-        items: {
-          create: {
-            materialId: data.materialId,
-            qty: Math.abs(data.qty),
+    return this.prisma.$transaction(async (tx) => {
+      const adjustment = await tx.stockAdjustment.create({
+        data: {
+          type:
+            data.type === 'WRITE_OFF' || data.type === 'DISPOSAL'
+              ? 'OUT'
+              : 'IN',
+          warehouseId: data.warehouseId,
+          accountId:
+            data.accountId ||
+            (await tx.account.findFirst())?.id ||
+            '00000000-0000-0000-0000-000000000001',
+          notes: data.notes || '',
+          date: new Date(),
+          items: {
+            create: {
+              materialId: data.materialId,
+              qty: Math.abs(data.qty),
+            },
           },
         },
-      },
-      include: {
-        items: {
-          include: { material: { select: { name: true, unit: true } } },
+        include: {
+          items: {
+            include: { material: { select: { name: true, unit: true } } },
+          },
+          warehouse: { select: { name: true } },
         },
-        warehouse: { select: { name: true } },
-      },
-    });
+      });
 
-    this.eventEmitter.emit('warehouse.adjustment.created', {
-      adjustmentId: adjustment.id,
-      type: data.type,
-      qty: Math.abs(data.qty),
-      materialId: data.materialId,
-    });
-    this.eventEmitter.emit('activity.logged', {
-      action: 'STOCK_ADJUSTMENT_CREATED',
-      entityType: 'StockAdjustment',
-      entityId: adjustment.id,
-      detail: `Adjustment ${data.type} for ${Math.abs(data.qty)} units`,
-      senderDivision: 'WAREHOUSE',
-    });
+      this.eventEmitter.emit('warehouse.adjustment.created', {
+        adjustmentId: adjustment.id,
+        type: data.type,
+        qty: Math.abs(data.qty),
+        materialId: data.materialId,
+      });
+      this.eventEmitter.emit('activity.logged', {
+        action: 'STOCK_ADJUSTMENT_CREATED',
+        entityType: 'StockAdjustment',
+        entityId: adjustment.id,
+        detail: `Adjustment ${data.type} for ${Math.abs(data.qty)} units`,
+        senderDivision: 'WAREHOUSE',
+      });
 
-    return adjustment;
+      return adjustment;
+    });
   }
 
   async approveAdjustment(id: string, status: string, userId: string) {
@@ -1599,25 +1660,40 @@ export class WarehouseService {
           id: key,
           relNumber: `REL-${key.slice(0, 4).toUpperCase()}`,
           woNumber,
-          productName: req.workOrder?.lead?.brandName || 'Unknown Product',
-          requester: 'PRODUCTION',
+          batchNumber: woNumber,
+          soCode: `SO-${key.slice(0, 6).toUpperCase()}`,
+          productName:
+            req.workOrder?.lead?.brandName || 'Produk Maklon Kosmetik',
+          requester: 'PRODUCTION (PPIC)',
           date: new Date().toISOString().split('T')[0],
           status: 'WAITING' as const,
           itemsCount: 0,
           materials: [],
+          items: [],
+          auditHistory: [],
         });
       }
       const group = grouped.get(key);
       group.itemsCount++;
+      const matName = req.material?.name || 'Material Item';
+      const matUnit = req.material?.unit || 'KG';
       group.materials.push({
-        name: req.material?.name || 'Unknown',
-        requested: `${req.qtyRequested} ${req.material?.unit || ''}`,
-        available: `${req.qtyRequested} ${req.material?.unit || ''}`,
+        name: matName,
+        requested: `${req.qtyRequested} ${matUnit}`,
+        available: `${req.qtyRequested} ${matUnit}`,
         status: 'OK' as const,
+      });
+      group.items.push({
+        materialCode: `MAT-${String(group.itemsCount).padStart(3, '0')}`,
+        materialName: matName,
+        requestedQty: Number(req.qtyRequested) || 1,
+        availableQty: Number(req.qtyRequested) || 1,
+        releasedQty: 0,
+        unit: matUnit,
       });
     }
 
-    return Array.from(grouped.values()).slice(0, 10);
+    return Array.from(grouped.values()).slice(0, 50);
   }
 
   // === PHASE 1: Cross-Module Event Listeners ===
@@ -1751,5 +1827,39 @@ export class WarehouseService {
     }
 
     return { status: 'OK', utility: currentUtility };
+  }
+
+  // Item 53: Get stock summary grouped by bahanType
+  async getStockSummaryByBahanType() {
+    // Aggregate inventory by bahanType
+    const inventories = await this.prisma.materialInventory.findMany({
+      where: { currentStock: { gt: 0 } },
+      include: { material: { select: { bahanType: true } } },
+    });
+
+    const summary = new Map<
+      string,
+      { totalBagus: number; totalReject: number; count: number }
+    >();
+
+    for (const inv of inventories) {
+      const bt = inv.material.bahanType || 'LAINNYA';
+      const current = Number(inv.currentStock);
+      if (!summary.has(bt)) {
+        summary.set(bt, { totalBagus: 0, totalReject: 0, count: 0 });
+      }
+      const entry = summary.get(bt)!;
+      if (inv.qcStatus === 'GOOD') {
+        entry.totalBagus += current;
+      } else if (inv.qcStatus === 'REJECT') {
+        entry.totalReject += current;
+      }
+      entry.count += 1;
+    }
+
+    return Array.from(summary.entries()).map(([bahanType, data]) => ({
+      bahanType,
+      ...data,
+    }));
   }
 }

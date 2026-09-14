@@ -1,7 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../users.service';
+
+const DEFAULT_JWT_SECRET = 'ERP_SECRET_DEV_ONLY';
+const jwtSecret = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
+
+if (jwtSecret === DEFAULT_JWT_SECRET && process.env.NODE_ENV === 'production') {
+  Logger.warn(
+    '⚠️  JWT_SECRET is using DEFAULT value! Set JWT_SECRET environment variable for production security.',
+    'JwtStrategy',
+  );
+}
 
 interface JwtPayload {
   sub: string;
@@ -15,9 +25,22 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private usersService: UsersService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // Header Authorization (Bearer) tetap prioritas; fallback cookie `token`
+      // agar permintaan non-XHR (mis. `<img src="/api/.../content">`) bisa
+      // terautentikasi — login sudah men-set cookie token di klien
+      // (frontend LoginForm). Backward compatible (header tetap didukung).
+      jwtFromRequest: (req) => {
+        const fromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        if (fromHeader) return fromHeader;
+        const cookieHeader = (req?.headers?.cookie ?? '') as string;
+        const pair = cookieHeader
+          .split(';')
+          .map((part) => part.trim())
+          .find((part) => part.startsWith('token='));
+        return pair ? pair.slice('token='.length) : null;
+      },
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'ERP_SECRET', // Ideally should use config service
+      secretOrKey: jwtSecret,
     });
   }
 

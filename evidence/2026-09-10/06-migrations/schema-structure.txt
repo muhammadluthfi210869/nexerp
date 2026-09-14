@@ -1,0 +1,22 @@
+﻿Schema files (multi-file layout):
+Location: backend\prisma\schema\
+
+  auth.prisma - 82 lines, 5817 bytes
+  base.prisma - 8 lines, 178 bytes
+  bussdev.prisma - 259 lines, 10945 bytes
+  creative.prisma - 56 lines, 1978 bytes
+  document-automation.prisma - 48 lines, 1558 bytes
+  enums.prisma - 578 lines, 7475 bytes
+  finance.prisma - 526 lines, 22928 bytes
+  finance-extension.prisma - 227 lines, 10371 bytes
+  hr.prisma - 161 lines, 6170 bytes
+  legal.prisma - 146 lines, 5310 bytes
+  marketing.prisma - 731 lines, 33007 bytes
+  master-extension.prisma - 60 lines, 2667 bytes
+  production.prisma - 269 lines, 12618 bytes
+  qc.prisma - 125 lines, 4787 bytes
+  rnd.prisma - 154 lines, 6588 bytes
+  scm.prisma - 22 lines, 765 bytes
+  system.prisma - 125 lines, 3868 bytes
+  warehouse.prisma - 438 lines, 20907 bytes
+  website.prisma - 63 lines, 1780 bytes

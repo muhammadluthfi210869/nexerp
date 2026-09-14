@@ -1,0 +1,14 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "src",
+  "testEnvironment": "node",
+  "roots": ["<rootDir>"],
+  "testMatch": ["**/modules/lead-capture/__tests__/*.spec.ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", { "diagnostics": false, "isolatedModules": true }]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/$1"
+  },
+  "noStackTrace": true
+}

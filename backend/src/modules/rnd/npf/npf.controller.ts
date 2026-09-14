@@ -7,7 +7,7 @@ import { Roles } from '../../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('rnd/npf')
+@Controller(['rnd/npf', 'v1/rnd/npf'])
 export class NpfController {
   constructor(private readonly rndService: RndService) {}
 

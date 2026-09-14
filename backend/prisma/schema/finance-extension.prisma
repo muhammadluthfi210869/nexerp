@@ -1,0 +1,250 @@
+// ==========================================
+// FINANCE EXTENSION — Sprint 1 additions
+// Per /plan/NEX_ERP_REFACTOR_ROADMAP.md Sprint 1
+// ==========================================
+// Adds 8 critical models needed for Faktur Pembelian + AP cycle + Cash & Bank:
+//   - Bill (vendor invoice with line items)
+//   - BillLineItem
+//   - DownPayment (vendor advance)
+//   - APPayment
+//   - BankAccount
+//   - BankTransaction
+//   - TaxTransaction
+//   - BankReconciliation
+//
+// Note: Split from unified Invoice model — keeps AP/AR schemas clean.
+// Migration strategy: backfill Bill from existing Invoice (category=AP),
+//                     backfill SalesInvoice from Invoice (category=AR).
+
+// ==========================================
+// AP CYCLE
+// ==========================================
+
+/// Bill = Vendor Invoice (Faktur Pembelian)
+/// Separate from Invoice (SalesInvoice AR-side) for clean AP schema.
+model Bill {
+  id                  String            @id @default(uuid()) @db.Uuid
+  billNumber          String            @unique // FP-202609-000001 format
+  poNumber            String? // Link to PO Reference (free text for now)
+  vendorId            String            @db.Uuid
+  procurementCategory String // e.g., "Bahan Baku (11510)" — Kategori COA
+  invoiceDate         DateTime // Custom date, not locked to system date
+  dueDate             DateTime
+  subtotal            Decimal           @db.Decimal(15, 2)
+  totalDiscount       Decimal           @default(0) @db.Decimal(15, 2)
+  taxAmount           Decimal           @db.Decimal(15, 2)
+  grandTotal          Decimal           @db.Decimal(15, 2)
+  paidAmount          Decimal           @default(0) @db.Decimal(15, 2)
+  paymentStatus       PaymentStatus     @default(PENDING)
+  unpaidReason        String? // Alasan belum dibayar
+  notes               String?
+  pic                 String // Person in charge
+  attachmentUrls      String[]          @default([])
+  postedAt            DateTime? // When bill is Posted → triggers journal
+  cancelledAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  vendor              Supplier          @relation("SupplierBills", fields: [vendorId], references: [id])
+  items               BillLineItem[]
+  allocations         BillAllocation[]
+  downPayments        DownPayment[]     @relation("DownPaymentAppliedToBill")
+  matchResults        BillMatchResult[]
+  journalEntries      JournalEntry[]    @relation("BillJournalEntries")
+
+  @@index([vendorId, paymentStatus])
+  @@index([dueDate, paymentStatus]) // For AP Aging queries
+  @@map("bills")
+}
+
+/// BillLineItem = Line items of vendor invoice (barang, qty, harga, diskon)
+model BillLineItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  billId    String  @db.Uuid
+  itemCode  String // e.g., BBK00028
+  itemName  String
+  qty       Decimal @db.Decimal(15, 2)
+  unit      String // gr, pcs, kg, etc
+  price     Decimal @db.Decimal(15, 2)
+  discount  Decimal @default(0) @db.Decimal(15, 2)
+  total     Decimal @db.Decimal(15, 2)
+  rejectQty Decimal @default(0) @db.Decimal(15, 2)
+  bill      Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@index([billId])
+  @@map("bill_line_items")
+}
+
+/// BillMatchResult = 4-way matching (PO ↔ GR ↔ QC ↔ Invoice)
+model BillMatchResult {
+  id            String   @id @default(uuid()) @db.Uuid
+  billId        String   @db.Uuid
+  matchStatus   String // "MATCHED" | "EXCEPTION" | "PARTIAL"
+  qtyVariance   Decimal  @db.Decimal(5, 2) // %
+  priceVariance Decimal  @db.Decimal(5, 2) // %
+  notes         String?
+  matchedAt     DateTime @default(now())
+  bill          Bill     @relation(fields: [billId], references: [id])
+
+  @@index([billId])
+  @@map("bill_match_results")
+}
+
+/// DownPayment = Vendor advance (Uang Muka Pembelian)
+model DownPayment {
+  id              String        @id @default(uuid()) @db.Uuid
+  dpNumber        String        @unique // DPB-YYMM-XXXX format
+  vendorId        String        @db.Uuid
+  date            DateTime
+  amount          Decimal       @db.Decimal(15, 2)
+  remainingAmount Decimal       @db.Decimal(15, 2)
+  status          PaymentStatus @default(PENDING)
+  notes           String?
+  appliedToBillId String?       @db.Uuid // FK to Bill when applied
+  appliedAmount   Decimal       @default(0) @db.Decimal(15, 2)
+  appliedAt       DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  vendor          Supplier      @relation("SupplierDownPayments", fields: [vendorId], references: [id])
+  appliedToBill   Bill?         @relation("DownPaymentAppliedToBill", fields: [appliedToBillId], references: [id])
+
+  @@index([vendorId, status])
+  @@map("down_payments")
+}
+
+/// APPayment = Payment to vendor (Bayar Pembelian)
+model APPayment {
+  id              String           @id @default(uuid()) @db.Uuid
+  paymentNumber   String           @unique // BPB-YYMM-XXXX format
+  vendorId        String           @db.Uuid
+  paymentDate     DateTime
+  totalAmount     Decimal          @db.Decimal(15, 2)
+  bankAccountId   String?          @db.Uuid // Source bank account
+  notes           String?
+  attachmentUrls  String[]         @default([])
+  status          PaymentStatus    @default(PAID)
+  verifiedBy      String?          @db.Uuid
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  vendor          Supplier         @relation("SupplierAPPayments", fields: [vendorId], references: [id])
+  bankAccount     BankAccount?     @relation(fields: [bankAccountId], references: [id])
+  verifier        User?            @relation("APVerifier", fields: [verifiedBy], references: [id])
+  billAllocations BillAllocation[]
+
+  @@index([vendorId, paymentDate])
+  @@map("ap_payments")
+}
+
+/// BillAllocation = Allocation of APPayment to specific Bill (many-to-many)
+model BillAllocation {
+  id        String    @id @default(uuid()) @db.Uuid
+  paymentId String    @db.Uuid
+  billId    String    @db.Uuid
+  amount    Decimal   @db.Decimal(15, 2)
+  payment   APPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  bill      Bill      @relation(fields: [billId], references: [id])
+
+  @@unique([paymentId, billId])
+  @@index([billId])
+  @@map("bill_allocations")
+}
+
+// ==========================================
+// CASH & BANK
+// ==========================================
+
+/// BankAccount = Master data bank accounts (BCA, Mandiri, Cash, Petty Cash)
+model BankAccount {
+  id              String               @id @default(uuid()) @db.Uuid
+  accountCode     String               @unique
+  bankName        String // BCA, Mandiri, Cash, Petty Cash
+  accountNumber   String
+  accountType     String // "BANK" | "CASH" | "PETTY_CASH"
+  currencyCode    String               @default("IDR")
+  currentBalance  Decimal              @default(0) @db.Decimal(18, 2)
+  glAccountId     String?              @db.Uuid // Link to GL Account for posting
+  isActive        Boolean              @default(true)
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  transactions    BankTransaction[]
+  apPayments      APPayment[]
+  arReceipts      ARReceipt[]
+  reconciliations BankReconciliation[]
+
+  @@map("bank_accounts")
+}
+
+/// BankTransaction = All bank movements (auto-generated from subledger + manual entries)
+model BankTransaction {
+  id              String        @id @default(uuid()) @db.Uuid
+  bankAccountId   String        @db.Uuid
+  date            DateTime
+  transactionType String // "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "ADJUSTMENT"
+  amount          Decimal       @db.Decimal(15, 2)
+  sourceType      String? // "PAYMENT" | "BILL_PAYMENT" | "MANUAL"
+  sourceId        String?       @db.Uuid // FK to source document (Payment, APPayment, etc)
+  description     String
+  reconciled      Boolean       @default(false)
+  reconciledAt    DateTime?
+  reconciledBy    String?       @db.Uuid
+  journalEntryId  String?       @db.Uuid
+  attachmentUrls  String[]      @default([])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  bankAccount     BankAccount   @relation(fields: [bankAccountId], references: [id])
+  journalEntry    JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  @@index([bankAccountId, date])
+  @@index([sourceType, sourceId])
+  @@map("bank_transactions")
+}
+
+/// BankReconciliation = Reconciliation session (bank statement vs book balance)
+model BankReconciliation {
+  id               String      @id @default(uuid()) @db.Uuid
+  bankAccountId    String      @db.Uuid
+  periodStart      DateTime
+  periodEnd        DateTime
+  statementBalance Decimal     @db.Decimal(18, 2)
+  bookBalance      Decimal     @db.Decimal(18, 2)
+  difference       Decimal     @db.Decimal(18, 2)
+  status           String      @default("OPEN") // "OPEN" | "RECONCILED"
+  attachmentUrls   String[]    @default([])
+  notes            String?
+  reconciledBy     String?     @db.Uuid
+  reconciledAt     DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  bankAccount      BankAccount @relation(fields: [bankAccountId], references: [id])
+  reconciler       User?       @relation("Reconciler", fields: [reconciledBy], references: [id])
+
+  @@index([bankAccountId, periodStart, periodEnd])
+  @@map("bank_reconciliations")
+}
+
+// ==========================================
+// TAX
+// ==========================================
+
+/// TaxTransaction = Per-transaction tax records (PPN Masukan/Keluaran, PPh 23)
+model TaxTransaction {
+  id         String    @id @default(uuid()) @db.Uuid
+  taxTypeId  String    @db.Uuid
+  sourceType String // "BILL" | "SALES_INVOICE" | "PAYMENT"
+  sourceId   String    @db.Uuid
+  baseAmount Decimal   @db.Decimal(15, 2)
+  taxRate    Decimal   @db.Decimal(5, 2)
+  taxAmount  Decimal   @db.Decimal(15, 2)
+  status     String    @default("ACCRUED") // "ACCRUED" | "REPORTED" | "PAID"
+  reportedAt DateTime?
+  paidAt     DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  taxRateRel TaxRate   @relation(fields: [taxTypeId], references: [id])
+
+  @@index([sourceType, sourceId])
+  @@index([status, taxTypeId])
+  @@map("tax_transactions")
+}

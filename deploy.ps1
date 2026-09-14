@@ -1,33 +1,10 @@
-# ERP FROM ZERO - Final Automated Deployment
-$IP = "5.223.80.88"
-$User = "root"
+# ERP FROM ZERO - Automated Deployment to Biznet (103.93.134.215)
+# This script forwards execution to the hardened production pipeline (deploy-production.ps1)
 
-Clear-Host
-Write-Host "STARTING FINAL DEPLOYMENT..." -ForegroundColor Cyan
-
-# 1. Clean and Archive
-Write-Host "Archiving files..." -ForegroundColor Yellow
-if (Test-Path "deploy.tar.gz") { Remove-Item "deploy.tar.gz" -Force }
-
-tar -czf deploy.tar.gz backend frontend docker-compose.prod.yml nginx.conf setup_hetzner.sh deploy-remote.sh
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ARCHIVE FAILED!" -ForegroundColor Red
-    exit
+$scriptPath = Join-Path $PSScriptRoot "deploy-production.ps1"
+if (Test-Path $scriptPath) {
+    & $scriptPath @args
+} else {
+    Write-Host "Error: deploy-production.ps1 not found in $PSScriptRoot" -ForegroundColor Red
+    exit 1
 }
-
-# 2. Upload
-Write-Host "Uploading to Hetzner..." -ForegroundColor Yellow
-scp deploy.tar.gz "${User}@${IP}:/root/"
-
-# 3. Remote Execution
-Write-Host "Running Setup on Server..." -ForegroundColor Yellow
-$RemoteCmd = "cd /root && tar -xzf deploy.tar.gz && chmod +x setup_hetzner.sh deploy-remote.sh && ./setup_hetzner.sh && ./deploy-remote.sh"
-
-ssh "${User}@${IP}" $RemoteCmd
-
-Write-Host ""
-Write-Host "DEPLOYMENT COMPLETE!" -ForegroundColor Green
-Write-Host "-------------------------------------------------------"
-Write-Host "Open: https://nexerp.id"
-Write-Host "-------------------------------------------------------"

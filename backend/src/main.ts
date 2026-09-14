@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
+import compression from 'compression';
 
 // Load ENV from root or backend folder
 dotenv.config({ path: path.join(process.cwd(), '.env') });
@@ -11,12 +12,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const compression = require('compression');
+import { validationExceptionFactory } from './common/validation/validation-error.factory';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Public reverse proxy maps /api/* to /v1/*; keep this contract stable for
+  // every browser bundle and existing integration.
+  app.setGlobalPrefix('v1');
 
   // Enable Global Response Standardization
   app.useGlobalFilters(new GlobalExceptionFilter());
@@ -30,25 +33,37 @@ async function bootstrap() {
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
+      exceptionFactory: validationExceptionFactory,
     }),
   );
 
   // Enable CORS — locked to production domain, wide open for dev
+  // CORS_ORIGIN mendukung daftar comma-separated (mis.
+  // "http://localhost:3000,https://nexerp.id") — dulu string utuh dianggap
+  // SATU origin sehingga health-check localhost tidak pernah match.
   const corsOrigin =
     process.env.NODE_ENV === 'production'
-      ? [
-          process.env.CORS_ORIGIN || 'https://nexerp.id',
-          'https://nexerp.id',
-          'https://www.nexerp.id',
-          'https://dreamlab.id',
-          'https://www.dreamlab.id',
-        ].filter(Boolean)
+      ? Array.from(
+          new Set(
+            [
+              ...(process.env.CORS_ORIGIN || 'https://nexerp.id')
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean),
+              'https://nexerp.id',
+              'https://www.nexerp.id',
+              'https://dreamlab.id',
+              'https://www.dreamlab.id',
+            ],
+          ),
+        )
       : true;
   app.enableCors({
     origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    allowedHeaders:
+      'Content-Type, Accept, Authorization, X-Requested-With, Idempotency-Key, X-Idempotency-Key',
   });
 
   // --- SWAGGER CONFIGURATION (Dev Only) ---

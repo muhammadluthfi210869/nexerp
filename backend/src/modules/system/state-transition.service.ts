@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import * as bcrypt from 'bcrypt';
 
 // --- Types ---
@@ -148,7 +148,10 @@ const GATE_CONTROLLED_TRANSITIONS: Record<string, GateInfo> = {
 
 @Injectable()
 export class StateTransitionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   /**
    * Validate that a state transition is allowed by the canonical map.
@@ -243,6 +246,21 @@ export class StateTransitionService {
         metadata: options?.metadata || {},
       },
     });
+
+    // 4. Emit notification event for gate-controlled transitions
+    if (gateInfo) {
+      const gateEventMap: Record<GateType, string> = {
+        G1_SAMPLE: 'finance.gate1.verified',
+        G2_PRODUCTION: 'finance.gate2.verified',
+        G3_DELIVERY: 'finance.gate3.verified',
+      };
+      this.eventEmitter.emit(gateEventMap[gateInfo.gate], {
+        leadId: entityId,
+        clientName: options?.metadata?.clientName || 'Unknown',
+        brandName: options?.metadata?.brandName,
+        verifiedBy: options?.changedById || 'SYSTEM',
+      });
+    }
   }
 
   /**

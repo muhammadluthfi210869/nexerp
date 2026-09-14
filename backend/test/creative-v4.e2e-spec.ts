@@ -38,7 +38,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ transform: true, whitelist: true }),
+    );
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
@@ -111,14 +113,18 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
 
     it('Rejects apjReview with missing pin', async () => {
       await request(app.getHttpServer())
-        .patch(`/creative/task/${testTaskId || '00000000-0000-4000-a000-000000000000'}/apj-review`)
+        .patch(
+          `/creative/task/${testTaskId || '00000000-0000-4000-a000-000000000000'}/apj-review`,
+        )
         .send({ status: ApprovalStatus.APPROVED })
         .expect(400);
     });
 
     it('Rejects clientReview with invalid status', async () => {
       await request(app.getHttpServer())
-        .patch(`/creative/task/${testTaskId || '00000000-0000-4000-a000-000000000000'}/client-review`)
+        .patch(
+          `/creative/task/${testTaskId || '00000000-0000-4000-a000-000000000000'}/client-review`,
+        )
         .send({ status: 'INVALID_STATUS' })
         .expect(400);
     });
@@ -133,7 +139,11 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
     beforeAll(async () => {
       const res = await request(app.getHttpServer())
         .post('/creative/task')
-        .send({ leadId: testLeadId, brief: 'State machine test', taskType: 'PACKAGING_DESIGN' })
+        .send({
+          leadId: testLeadId,
+          brief: 'State machine test',
+          taskType: 'PACKAGING_DESIGN',
+        })
         .expect(201);
       taskId = res.body.id;
       testTaskId = taskId;
@@ -151,7 +161,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .attach('artwork', Buffer.from('art'), 'artwork.pdf')
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.IN_PROGRESS);
     });
 
@@ -160,7 +172,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .patch(`/creative/task/${taskId}/submit`)
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.WAITING_APJ);
     });
 
@@ -180,10 +194,16 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
     it('APJ rejects → REVISION', async () => {
       await request(app.getHttpServer())
         .patch(`/creative/task/${taskId}/apj-review`)
-        .send({ status: ApprovalStatus.REJECTED, notes: 'Fix logo', pin: CORRECT_PIN })
+        .send({
+          status: ApprovalStatus.REJECTED,
+          notes: 'Fix logo',
+          pin: CORRECT_PIN,
+        })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.REVISION);
     });
 
@@ -206,7 +226,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ status: ApprovalStatus.APPROVED, pin: CORRECT_PIN })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.WAITING_CLIENT);
 
       // Client approves → LOCKED
@@ -215,7 +237,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ status: ApprovalStatus.APPROVED })
         .expect(200);
 
-      const locked = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const locked = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(locked!.kanbanState).toBe(DesignState.LOCKED);
     });
 
@@ -259,12 +283,17 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
     it('Upload V1 → revisionCount 0', async () => {
       await request(app.getHttpServer())
         .patch(`/creative/task/${taskId}/version`)
-        .field('printSpecs', JSON.stringify({ finish: 'Glossy', paper: 'Art Carton' }))
+        .field(
+          'printSpecs',
+          JSON.stringify({ finish: 'Glossy', paper: 'Art Carton' }),
+        )
         .attach('artwork', Buffer.from('v1'), 'artwork.pdf')
         .attach('mockup', Buffer.from('m1'), 'mockup.jpg')
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.revisionCount).toBe(0);
 
       const version = await prisma.designVersion.findFirst({
@@ -283,7 +312,11 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
     it('APJ rejects with notes → REVISION, feedback created', async () => {
       await request(app.getHttpServer())
         .patch(`/creative/task/${taskId}/apj-review`)
-        .send({ status: ApprovalStatus.REJECTED, notes: 'Wrong font size', pin: CORRECT_PIN })
+        .send({
+          status: ApprovalStatus.REJECTED,
+          notes: 'Wrong font size',
+          pin: CORRECT_PIN,
+        })
         .expect(200);
 
       const feedback = await prisma.designFeedback.findFirst({
@@ -300,7 +333,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .attach('artwork', Buffer.from('v2'), 'v2.pdf')
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.revisionCount).toBe(1);
     });
 
@@ -313,17 +348,24 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ status: ApprovalStatus.APPROVED, pin: CORRECT_PIN })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.WAITING_CLIENT);
     });
 
     it('Client rejects → REVISION with feedback', async () => {
       await request(app.getHttpServer())
         .patch(`/creative/task/${taskId}/client-review`)
-        .send({ status: ApprovalStatus.REJECTED, notes: 'Change background color' })
+        .send({
+          status: ApprovalStatus.REJECTED,
+          notes: 'Change background color',
+        })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.REVISION);
     });
 
@@ -345,7 +387,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ status: ApprovalStatus.APPROVED })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.LOCKED);
       expect(task!.isFinal).toBe(true);
       expect(task!.finalArtworkUrl).toBeDefined();
@@ -414,7 +458,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
     });
 
     it('Blocks upload at revision limit', async () => {
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.isLocked).toBe(true);
 
       await request(app.getHttpServer())
@@ -443,7 +489,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ action: 'WAIVE', managerPin: '654321' })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.isLocked).toBe(false);
     });
 
@@ -458,7 +506,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .expect(200);
 
       // Task should now be locked — upload is blocked by CAP
-      const locked = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const locked = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(locked!.isLocked).toBe(true);
       expect(locked!.revisionCount).toBe(3);
 
@@ -467,7 +517,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ action: 'CHARGE' })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.isLocked).toBe(false);
     });
   });
@@ -507,7 +559,9 @@ describe('Creative & Packaging Design V4 (e2e)', () => {
         .send({ status: ApprovalStatus.APPROVED })
         .expect(200);
 
-      const task = await prisma.designTask.findUnique({ where: { id: taskId } });
+      const task = await prisma.designTask.findUnique({
+        where: { id: taskId },
+      });
       expect(task!.kanbanState).toBe(DesignState.LOCKED);
 
       const po = await prisma.purchaseOrder.findFirst({

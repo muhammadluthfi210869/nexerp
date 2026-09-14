@@ -1,0 +1,25 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "roots": ["<rootDir>/src/modules/marketing"],
+  "testEnvironment": "node",
+  "testMatch": [
+    "**/prototype/__tests__/*.spec.ts",
+    "**/social-planner/*.spec.ts",
+    "**/canonical/__tests__/*.spec.ts"
+  ],
+  "maxWorkers": 1,
+  "cacheDirectory": "<rootDir>/.jest-cache/marketing",
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "diagnostics": false,
+        "tsconfig": "<rootDir>/tsconfig.marketing-test.json"
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  }
+}

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { Prisma, LeadSource, LeadStatus, WorkflowStatus } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -42,8 +38,8 @@ export class LeadCaptureService {
     city?: string;
     country?: string;
     sessionId?: string;
-    assignedName?: string;   // Round-robin agent name
-    assignedPhone?: string;  // Round-robin agent phone number
+    assignedName?: string; // Round-robin agent name
+    assignedPhone?: string; // Round-robin agent phone number
   }) {
     const trackingCode = this.generateTrackingCode();
 
@@ -57,7 +53,9 @@ export class LeadCaptureService {
         assignedName = agent.name;
         assignedPhone = agent.phoneNumber;
       } catch (err) {
-        this.logger.warn(`⚠️ Round-robin tidak tersedia saat track: ${(err as any)?.message || err}`);
+        this.logger.warn(
+          `⚠️ Round-robin tidak tersedia saat track: ${(err as any)?.message || err}`,
+        );
       }
     }
 
@@ -72,7 +70,9 @@ export class LeadCaptureService {
       },
     });
 
-    this.logger.log(`🎯 Lead tracked: ${trackingCode} | intent: ${data.intent || 'N/A'} | page: ${data.pageUrl || 'N/A'}`);
+    this.logger.log(
+      `🎯 Lead tracked: ${trackingCode} | intent: ${data.intent || 'N/A'} | page: ${data.pageUrl || 'N/A'}`,
+    );
 
     return {
       trackingCode,
@@ -98,12 +98,15 @@ export class LeadCaptureService {
   //  UPDATE: When user messages on WA (via API or manual)
   // ──────────────────────────────────────────────
 
-  async updateFromWhatsApp(trackingCode: string, data: {
-    phone: string;
-    waName?: string;
-    waMessage?: string;
-    msgId?: string;
-  }) {
+  async updateFromWhatsApp(
+    trackingCode: string,
+    data: {
+      phone: string;
+      waName?: string;
+      waMessage?: string;
+      msgId?: string;
+    },
+  ) {
     const lead = await this.prisma.leadCapture.findUnique({
       where: { trackingCode },
     });
@@ -111,15 +114,18 @@ export class LeadCaptureService {
     let updated: { id: string };
     if (!lead) {
       // If tracking code not found, create a new lead record
-      this.logger.warn(`Tracking code ${trackingCode} not found, creating orphan lead`);
+      this.logger.warn(
+        `Tracking code ${trackingCode} not found, creating orphan lead`,
+      );
       updated = await this.prisma.leadCapture.create({
         data: {
           trackingCode,
           phone: data.phone,
-          waName: data.waName,
+          waProfileName: data.waName,
           waMessage: data.waMessage,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
+          kommoFirstResponseSec: 0,
         },
       });
     } else {
@@ -127,10 +133,16 @@ export class LeadCaptureService {
         where: { trackingCode },
         data: {
           phone: data.phone,
-          waName: data.waName,
+          waProfileName: data.waName,
           waMessage: data.waMessage,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
+          kommoFirstResponseSec:
+            lead.createdAt && !lead.kommoFirstResponseSec
+              ? Math.round(
+                  (Date.now() - new Date(lead.createdAt).getTime()) / 1000,
+                )
+              : (lead.kommoFirstResponseSec ?? null),
         },
       });
     }
@@ -158,27 +170,36 @@ export class LeadCaptureService {
    * diupdate ke lead yang sama — bukan bikin lead baru (anti doppelganger).
    * `waMessage` = pesan TERAKHIR; riwayat lengkap ada di tabel LeadMessage.
    */
-  async upsertOrphanLead(phone: string, waName: string, text: string, msgId?: string) {
+  async upsertOrphanLead(
+    phone: string,
+    waName: string,
+    text: string,
+    msgId?: string,
+  ) {
     const normalizedPhone = this.normalizePhone(phone);
-    const windowMs = Number(process.env.ORPHAN_DEDUP_WINDOW_MS) || 7 * 24 * 60 * 60 * 1000;
+    const windowMs =
+      Number(process.env.ORPHAN_DEDUP_WINDOW_MS) || 7 * 24 * 60 * 60 * 1000;
 
     const existing = await this.prisma.leadCapture.findFirst({
       where: {
         phone: normalizedPhone,
         status: { notIn: ['CONVERTED', 'DISQUALIFIED'] as LeadStatus[] },
-        workflowStatus: { notIn: ['WON_DEAL', 'LOST', 'ABORTED'] as WorkflowStatus[] },
+        workflowStatus: {
+          notIn: ['WON_DEAL', 'LOST', 'ABORTED'] as WorkflowStatus[],
+        },
         createdAt: { gte: new Date(Date.now() - windowMs) },
       },
       orderBy: { createdAt: 'desc' },
     });
 
     if (existing) {
-      this.logger.log(`🔄 Dedup: ${normalizedPhone} → update lead ${existing.trackingCode}`);
+      this.logger.log(
+        `🔄 Dedup: ${normalizedPhone} → update lead ${existing.trackingCode}`,
+      );
       const updated = await this.prisma.leadCapture.update({
         where: { id: existing.id },
         data: {
           phone: normalizedPhone,
-          waName,
           waMessage: text,
           status: 'WA_CONTACTED' as LeadStatus,
           contactedAt: new Date(),
@@ -242,6 +263,119 @@ export class LeadCaptureService {
 
     // Fase 3.1: auto-extraction dengan throttle (tidak memblokir webhook)
     void this.maybeAutoExtract(leadId);
+
+    // T3: fire-and-forget name extraction
+    void this.maybeExtractAndUpdateName(leadId);
+  }
+
+  // ──────────────────────────────────────────────
+  //  NAME EXTRACTION (T3)
+  // ──────────────────────────────────────────────
+
+  async extractName(conversationText: string): Promise<{
+    name: string | null;
+    confidence: number;
+  }> {
+    const baseUrl = process.env.MINIMAX_BASE_URL;
+    const apiKey = process.env.MINIMAX_API_KEY;
+    const model = process.env.MINIMAX_MODEL || 'MiniMax-M3';
+
+    const systemPrompt = `Kamu adalah asisten ekstraksi nama dari percakapan WhatsApp customer service.
+
+Ekstrak nama asli customer dari teks. Hanya nama orang, bukan nama perusahaan atau produk.
+
+Balas JSON:
+- {"name": "Nama Customer", "confidence": 0.0-1.0} jika ada
+- {"name": null, "confidence": 0.0} jika tidak ada
+
+Gunakan confidence 0.85+ hanya jika nama jelas disebutkan sendiri (contoh: "nama saya Ahmad").`;
+
+    try {
+      const resp = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: conversationText },
+          ],
+          temperature: 0.1,
+          max_tokens: 100,
+        }),
+      });
+
+      if (!resp.ok) throw new Error(`MiniMax API error ${resp.status}`);
+
+      const data: any = await resp.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) throw new Error('MiniMax returned empty content');
+
+      const parsed = JSON.parse(content);
+      return {
+        name: parsed.name ?? null,
+        confidence: Number(parsed.confidence) || 0,
+      };
+    } catch (err: any) {
+      this.logger.warn(`⚠️ extractName error: ${err.message}`);
+      return { name: null, confidence: 0 };
+    }
+  }
+
+  private async maybeExtractAndUpdateName(leadId: string): Promise<void> {
+    try {
+      const messages = await this.prisma.leadMessage.findMany({
+        where: { leadId, direction: 'INBOUND' },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+      if (!messages.length) return;
+
+      const conversationText = messages
+        .reverse()
+        .map((m) => m.body)
+        .join('\n');
+      const { name, confidence } = await this.extractName(conversationText);
+      if (!name || confidence < 0.5) return;
+
+      const lead = await this.prisma.leadCapture.findUnique({
+        where: { id: leadId },
+      });
+      if (!lead) return;
+
+      if (lead.extractedFullName && (lead.nameConfidence ?? 0) >= confidence)
+        return;
+
+      await this.prisma.leadCapture.update({
+        where: { id: leadId },
+        data: {
+          extractedFullName: name,
+          nameConfidence: confidence,
+          nameMatch: lead.waProfileName
+            ? lead.waProfileName.toLowerCase() === name.toLowerCase()
+            : null,
+          approvalNeeded: confidence < 0.85,
+        },
+      });
+
+      await this.prisma.leadValidationLog.create({
+        data: {
+          leadId,
+          type: 'NAME_EXTRACT',
+          input: conversationText,
+          output: JSON.stringify({ name, confidence }),
+          confidence,
+          action: confidence >= 0.85 ? 'SAVED' : 'FLAGGED',
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `maybeExtractAndUpdateName failed for ${leadId}: ${err.message}`,
+      );
+    }
   }
 
   /** Normalisasi nomor: buang karakter non-digit (+ / spasi / tanda hubung) */
@@ -254,14 +388,35 @@ export class LeadCaptureService {
   // ──────────────────────────────────────────────
 
   /** Key yang diekstrak — scalable, bisa ditambah tanpa migrasi */
-  private readonly EXTRACTION_FIELDS = ['fullName', 'company', 'niche', 'brand', 'domisili', 'moq', 'budget'] as const;
+  private readonly EXTRACTION_FIELDS = [
+    'fullName',
+    'company',
+    'niche',
+    'brand',
+    'domisili',
+    'moq',
+    'budget',
+  ] as const;
 
   /** Stage pipeline yang valid (sinkron dengan enum WorkflowStatus di Prisma) */
   private readonly WORKFLOW_STAGES = [
-    'NEW_LEAD', 'CONTACTED', 'FOLLOW_UP_1', 'FOLLOW_UP_2', 'FOLLOW_UP_3',
-    'NEGOTIATION', 'SAMPLE_REQUESTED', 'SAMPLE_SENT', 'SAMPLE_APPROVED',
-    'SPK_SIGNED', 'WAITING_FINANCE_APPROVAL', 'DP_PAID', 'PRODUCTION_PLAN',
-    'READY_TO_SHIP', 'WON_DEAL', 'LOST', 'ABORTED',
+    'NEW_LEAD',
+    'CONTACTED',
+    'FOLLOW_UP_1',
+    'FOLLOW_UP_2',
+    'FOLLOW_UP_3',
+    'NEGOTIATION',
+    'SAMPLE_REQUESTED',
+    'SAMPLE_SENT',
+    'SAMPLE_APPROVED',
+    'SPK_SIGNED',
+    'WAITING_FINANCE_APPROVAL',
+    'DP_PAID',
+    'PRODUCTION_PLAN',
+    'READY_TO_SHIP',
+    'WON_DEAL',
+    'LOST',
+    'ABORTED',
   ] as const;
 
   /**
@@ -277,7 +432,9 @@ export class LeadCaptureService {
     });
 
     if (!lead || !lead.messages || lead.messages.length === 0) {
-      this.logger.warn(`⚠️ extractAiForLead: tidak ada pesan untuk lead ${leadId}`);
+      this.logger.warn(
+        `⚠️ extractAiForLead: tidak ada pesan untuk lead ${leadId}`,
+      );
       return null;
     }
 
@@ -286,7 +443,10 @@ export class LeadCaptureService {
     try {
       rawContent = await this.callExtractionLlm(conversation);
     } catch (err: any) {
-      this.logger.error(`❌ LLM call gagal untuk lead ${leadId}:`, err?.message || err);
+      this.logger.error(
+        `❌ LLM call gagal untuk lead ${leadId}:`,
+        err?.message || err,
+      );
       await this.prisma.leadCapture.update({
         where: { id: leadId },
         data: { aiStatus: 'ERROR', aiExtractedAt: new Date() },
@@ -296,7 +456,9 @@ export class LeadCaptureService {
 
     const parsed = this.parseAndValidateExtraction(rawContent);
     if (!parsed) {
-      this.logger.warn(`⚠️ Hasil LLM tidak valid untuk lead ${leadId}: ${rawContent.slice(0, 200)}`);
+      this.logger.warn(
+        `⚠️ Hasil LLM tidak valid untuk lead ${leadId}: ${rawContent.slice(0, 200)}`,
+      );
       await this.prisma.leadCapture.update({
         where: { id: leadId },
         data: { aiStatus: 'ERROR', aiExtractedAt: new Date() },
@@ -311,13 +473,19 @@ export class LeadCaptureService {
     });
     const confirmedKeys = new Set(existingConfirmed.map((e) => e.key));
 
-    const suggestions = this.EXTRACTION_FIELDS
-      .filter((key) => !confirmedKeys.has(key))
+    const suggestions = this.EXTRACTION_FIELDS.filter(
+      (key) => !confirmedKeys.has(key),
+    )
       .map((key) => {
         const f = parsed[key] || { value: null, confidence: 0, source: null };
         // value kolom = String — konversi semua (mis. moq yang berupa angka)
         const strValue = f.value === null ? null : String(f.value);
-        return { key, value: strValue, confidence: f.confidence, source: f.source };
+        return {
+          key,
+          value: strValue,
+          confidence: f.confidence,
+          source: f.source,
+        };
       })
       .filter((s) => s.value !== null); // hanya simpan yang benar-benar ada (anti-hallucination)
 
@@ -327,9 +495,13 @@ export class LeadCaptureService {
           this.prisma.leadAttribute.upsert({
             where: { leadId_key: { leadId, key: s.key } },
             create: { leadId, ...s, confirmed: false },
-            update: { value: s.value, confidence: s.confidence, source: s.source },
-          })
-        )
+            update: {
+              value: s.value,
+              confidence: s.confidence,
+              source: s.source,
+            },
+          }),
+        ),
       );
     }
 
@@ -356,10 +528,16 @@ export class LeadCaptureService {
 
   /** Fase 3.3 — terapkan saran stage → pindahkan workflowStatus lead */
   async confirmAiStage(leadId: string) {
-    const lead = await this.prisma.leadCapture.findUnique({ where: { id: leadId } });
+    const lead = await this.prisma.leadCapture.findUnique({
+      where: { id: leadId },
+    });
     if (!lead) throw new NotFoundException('Lead tidak ditemukan');
 
-    const stage = (lead as any).aiStage as { stage?: string; confidence?: number; reason?: string } | null;
+    const stage = (lead as any).aiStage as {
+      stage?: string;
+      confidence?: number;
+      reason?: string;
+    } | null;
     if (!stage?.stage) {
       throw new NotFoundException('Tidak ada saran stage untuk lead ini');
     }
@@ -377,12 +555,19 @@ export class LeadCaptureService {
   }
 
   /** Konfirmasi / tolak / edit satu atribut hasil AI */
-  async confirmAttribute(leadId: string, attrId: string, dto: { confirmed?: boolean; value?: string }) {
-    const attr = await this.prisma.leadAttribute.findFirst({ where: { id: attrId, leadId } });
+  async confirmAttribute(
+    leadId: string,
+    attrId: string,
+    dto: { confirmed?: boolean; value?: string },
+  ) {
+    const attr = await this.prisma.leadAttribute.findFirst({
+      where: { id: attrId, leadId },
+    });
     if (!attr) throw new NotFoundException('Atribut tidak ditemukan');
 
     const value = dto.value !== undefined ? dto.value : attr.value;
-    const confirmed = dto.confirmed !== undefined ? dto.confirmed : attr.confirmed;
+    const confirmed =
+      dto.confirmed !== undefined ? dto.confirmed : attr.confirmed;
 
     const updated = await this.prisma.leadAttribute.update({
       where: { id: attrId },
@@ -391,12 +576,20 @@ export class LeadCaptureService {
 
     // Petakan atribut utama ke kolom first-class agar bisa difilter/ditampilkan di tabel
     if (attr.key === 'fullName' && value) {
-      await this.prisma.leadCapture.update({ where: { id: leadId }, data: { fullName: value } });
+      await this.prisma.leadCapture.update({
+        where: { id: leadId },
+        data: { fullName: value },
+      });
     } else if (attr.key === 'company' && value) {
-      await this.prisma.leadCapture.update({ where: { id: leadId }, data: { company: value } });
+      await this.prisma.leadCapture.update({
+        where: { id: leadId },
+        data: { company: value },
+      });
     }
 
-    const remaining = await this.prisma.leadAttribute.count({ where: { leadId, confirmed: false } });
+    const remaining = await this.prisma.leadAttribute.count({
+      where: { leadId, confirmed: false },
+    });
     await this.prisma.leadCapture.update({
       where: { id: leadId },
       data: { aiStatus: remaining === 0 ? 'CONFIRMED' : 'SUGGESTED' },
@@ -483,7 +676,9 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
 
     if (!resp.ok) {
       const errBody = await resp.text();
-      this.logger.error(`❌ LLM API error ${resp.status}: ${errBody.slice(0, 300)}`);
+      this.logger.error(
+        `❌ LLM API error ${resp.status}: ${errBody.slice(0, 300)}`,
+      );
       throw new Error(`LLM API error ${resp.status}`);
     }
 
@@ -524,7 +719,8 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       const source = typeof raw.source === 'string' ? raw.source : null;
 
       if (key === 'moq') {
-        const isNum = typeof value === 'number' && Number.isFinite(value) && value > 0;
+        const isNum =
+          typeof value === 'number' && Number.isFinite(value) && value > 0;
         result[key] = {
           value: isNum ? Math.round(value) : null,
           confidence: isNum ? confidence : 0,
@@ -544,15 +740,18 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     const stageRaw = obj?.stage;
     if (stageRaw && typeof stageRaw === 'object') {
       const knownStages = new Set<string>(this.WORKFLOW_STAGES);
-      const stageVal = typeof stageRaw.stage === 'string' ? stageRaw.stage : null;
+      const stageVal =
+        typeof stageRaw.stage === 'string' ? stageRaw.stage : null;
       const stage = stageVal && knownStages.has(stageVal) ? stageVal : null;
       result.stage = {
         stage,
         confidence: stage
           ? Math.min(Math.max(Number(stageRaw.confidence) || 0, 0), 1)
           : 0,
-        reason: stage && typeof stageRaw.reason === 'string' ? stageRaw.reason : null,
-        source: stage && typeof stageRaw.source === 'string' ? stageRaw.source : null,
+        reason:
+          stage && typeof stageRaw.reason === 'string' ? stageRaw.reason : null,
+        source:
+          stage && typeof stageRaw.source === 'string' ? stageRaw.source : null,
       };
     } else {
       result.stage = { stage: null, confidence: 0, reason: null, source: null };
@@ -574,7 +773,11 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       if (msgCount < 2) return; // butuh minimal 2 pesan biar ada konteks
       if (lead?.aiStatus === 'REJECTED') return; // jangan ganggu yang sudah ditolak
       const sixHours = 6 * 60 * 60 * 1000;
-      if (lead?.aiExtractedAt && Date.now() - lead.aiExtractedAt.getTime() < sixHours) return; // throttle
+      if (
+        lead?.aiExtractedAt &&
+        Date.now() - lead.aiExtractedAt.getTime() < sixHours
+      )
+        return; // throttle
       await this.extractAiForLead(leadId);
     } catch (err) {
       this.logger.error(`❌ maybeAutoExtract gagal untuk ${leadId}:`, err);
@@ -585,17 +788,20 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
   //  UPDATE LEAD INFO (name, notes, status, etc.)
   // ──────────────────────────────────────────────
 
-  async updateLead(id: string, data: {
-    fullName?: string;
-    company?: string;
-    email?: string;
-    phone?: string;
-    notes?: string;
-    status?: LeadStatus;
-    workflowStatus?: WorkflowStatus;
-    assignedTo?: string;
-    lostReason?: string;
-  }) {
+  async updateLead(
+    id: string,
+    data: {
+      fullName?: string;
+      company?: string;
+      email?: string;
+      phone?: string;
+      notes?: string;
+      status?: LeadStatus;
+      workflowStatus?: WorkflowStatus;
+      assignedTo?: string;
+      lostReason?: string;
+    },
+  ) {
     const lead = await this.prisma.leadCapture.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException('Lead not found');
 
@@ -607,7 +813,8 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.workflowStatus !== undefined) updateData.workflowStatus = data.workflowStatus;
+    if (data.workflowStatus !== undefined)
+      updateData.workflowStatus = data.workflowStatus;
     if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo;
     if (data.lostReason !== undefined) updateData.lostReason = data.lostReason;
 
@@ -633,7 +840,7 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     search?: string;
     dateFrom?: string;
     dateTo?: string;
-    noPhone?: string;   // "1"/"true" → hanya lead yang belum punya nomor WA
+    noPhone?: string; // "1"/"true" → hanya lead yang belum punya nomor WA
     page?: number;
     limit?: number;
     sortBy?: string;
@@ -648,7 +855,10 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     if (query.status) where.status = query.status;
     if (query.workflowStatus) where.workflowStatus = query.workflowStatus;
     if (query.source) where.source = query.source;
-    if (query.noPhone && ['1', 'true'].includes(String(query.noPhone).toLowerCase())) {
+    if (
+      query.noPhone &&
+      ['1', 'true'].includes(String(query.noPhone).toLowerCase())
+    ) {
       where.phone = null;
     }
     if (query.dateFrom || query.dateTo) {
@@ -798,9 +1008,21 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     ] = await Promise.all([
       this.prisma.leadCapture.count({ where }),
       this.prisma.leadCapture.groupBy({ by: ['status'], where, _count: true }),
-      this.prisma.leadCapture.groupBy({ by: ['workflowStatus'], where, _count: true }),
-      this.prisma.leadCapture.groupBy({ by: ['assignedTo', 'status'], where, _count: true }),
-      this.prisma.leadCapture.groupBy({ by: ['assignedTo', 'workflowStatus'], where, _count: true }),
+      this.prisma.leadCapture.groupBy({
+        by: ['workflowStatus'],
+        where,
+        _count: true,
+      }),
+      this.prisma.leadCapture.groupBy({
+        by: ['assignedTo', 'status'],
+        where,
+        _count: true,
+      }),
+      this.prisma.leadCapture.groupBy({
+        by: ['assignedTo', 'workflowStatus'],
+        where,
+        _count: true,
+      }),
       this.prisma.leadCapture.findMany({
         where,
         select: {
@@ -826,7 +1048,9 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       }),
       this.prisma.leadCapture.count({ where: { ...where, assignedTo: null } }),
       this.prisma.leadCapture.count({ where: { ...where, phone: null } }),
-      this.prisma.leadCapture.count({ where: { ...where, fullName: null, waName: null } }),
+      this.prisma.leadCapture.count({
+        where: { ...where, fullName: null, waProfileName: null },
+      }),
       this.prisma.leadCapture.count({
         where: {
           ...where,
@@ -840,14 +1064,26 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
           createdAt: { ...(where.createdAt || {}), gte: sevenDaysAgo },
         },
       }),
-      this.prisma.leadCapture.count({ where: { ...where, workflowStatus: 'WON_DEAL' } }),
-      this.prisma.leadCapture.count({ where: { ...where, workflowStatus: 'LOST' } }),
-      this.prisma.leadCapture.count({ where: { ...where, trackingCode: { startsWith: 'KM' } } }),
-      this.prisma.leadCapture.count({ where: { ...where, trackingCode: { startsWith: 'DL' } } }),
-      this.prisma.leadCapture.count({ where: { ...where, trackingCode: { startsWith: 'CSV' } } }),
+      this.prisma.leadCapture.count({
+        where: { ...where, workflowStatus: 'WON_DEAL' },
+      }),
+      this.prisma.leadCapture.count({
+        where: { ...where, workflowStatus: 'LOST' },
+      }),
+      this.prisma.leadCapture.count({
+        where: { ...where, trackingCode: { startsWith: 'KM' } },
+      }),
+      this.prisma.leadCapture.count({
+        where: { ...where, trackingCode: { startsWith: 'DL' } },
+      }),
+      this.prisma.leadCapture.count({
+        where: { ...where, trackingCode: { startsWith: 'CSV' } },
+      }),
     ]);
 
-    const userIds = Array.from(new Set(leads.map((lead) => lead.assignedTo).filter(Boolean) as string[]));
+    const userIds = Array.from(
+      new Set(leads.map((lead) => lead.assignedTo).filter(Boolean) as string[]),
+    );
     const users = userIds.length
       ? await this.prisma.user.findMany({
           where: { id: { in: userIds } },
@@ -895,16 +1131,20 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       const item = busdevMap.get(key);
       item.total++;
       item.byStatus[lead.status] = (item.byStatus[lead.status] || 0) + 1;
-      item.byWorkflow[lead.workflowStatus] = (item.byWorkflow[lead.workflowStatus] || 0) + 1;
+      item.byWorkflow[lead.workflowStatus] =
+        (item.byWorkflow[lead.workflowStatus] || 0) + 1;
       if (lead.status === 'WA_CONTACTED') item.contacted++;
       if (lead.status === 'QUALIFIED') item.qualified++;
       if (lead.workflowStatus === 'WON_DEAL') item.won++;
       if (lead.workflowStatus === 'LOST') item.lost++;
-      if (!['WON_DEAL', 'LOST', 'ABORTED'].includes(lead.workflowStatus)) item.active++;
-      if (lead.kommoTalkIsInWork || lead.kommoTalkStatus === 'in_work') item.conversationsInWork++;
+      if (!['WON_DEAL', 'LOST', 'ABORTED'].includes(lead.workflowStatus))
+        item.active++;
+      if (lead.kommoTalkIsInWork || lead.kommoTalkStatus === 'in_work')
+        item.conversationsInWork++;
       if (lead.kommoTalkIsRead === false) item.unanswered++;
       if (lead.kommoFirstResponseSec != null) {
-        item._responseTotal = (item._responseTotal || 0) + lead.kommoFirstResponseSec;
+        item._responseTotal =
+          (item._responseTotal || 0) + lead.kommoFirstResponseSec;
         item.responseSamples++;
       }
     }
@@ -918,22 +1158,37 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       if (item) item.byWorkflow[row.workflowStatus] = row._count;
     }
 
-    const qualified = byStatus.find((row) => row.status === 'QUALIFIED')?._count || 0;
+    const qualified =
+      byStatus.find((row) => row.status === 'QUALIFIED')?._count || 0;
     const busdev = Array.from(busdevMap.values())
       .map((item) => ({
         ...item,
         _responseTotal: undefined,
-        avgResponseSec: item.responseSamples > 0 ? Math.round(item._responseTotal / item.responseSamples) : null,
+        avgResponseSec:
+          item.responseSamples > 0
+            ? Math.round(item._responseTotal / item.responseSamples)
+            : null,
         conversionRate: item.total > 0 ? item.won / item.total : 0,
         qualificationRate: item.total > 0 ? item.qualified / item.total : 0,
       }))
       .sort((a, b) => b.total - a.total);
 
-    const conversationsInWork = leads.filter((lead) => lead.kommoTalkIsInWork || lead.kommoTalkStatus === 'in_work').length;
-    const unanswered = leads.filter((lead) => lead.kommoTalkIsRead === false).length;
-    const responseSamples = leads.filter((lead) => lead.kommoFirstResponseSec != null);
+    const conversationsInWork = leads.filter(
+      (lead) => lead.kommoTalkIsInWork || lead.kommoTalkStatus === 'in_work',
+    ).length;
+    const unanswered = leads.filter(
+      (lead) => lead.kommoTalkIsRead === false,
+    ).length;
+    const responseSamples = leads.filter(
+      (lead) => lead.kommoFirstResponseSec != null,
+    );
     const avgResponseSec = responseSamples.length
-      ? Math.round(responseSamples.reduce((sum, lead) => sum + (lead.kommoFirstResponseSec || 0), 0) / responseSamples.length)
+      ? Math.round(
+          responseSamples.reduce(
+            (sum, lead) => sum + (lead.kommoFirstResponseSec || 0),
+            0,
+          ) / responseSamples.length,
+        )
       : null;
 
     return {
@@ -941,9 +1196,17 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       newLast7Days,
       conversionRate: total > 0 ? won / total : 0,
       qualificationRate: total > 0 ? qualified / total : 0,
-      byStatus: byStatus.reduce((acc, row) => ({ ...acc, [row.status]: row._count }), {}),
-      byWorkflow: byWorkflow.reduce((acc, row) => ({ ...acc, [row.workflowStatus]: row._count }), {}),
-      bySource: Object.fromEntries([...sourceMap.entries()].sort((a, b) => b[1] - a[1])),
+      byStatus: byStatus.reduce(
+        (acc, row) => ({ ...acc, [row.status]: row._count }),
+        {},
+      ),
+      byWorkflow: byWorkflow.reduce(
+        (acc, row) => ({ ...acc, [row.workflowStatus]: row._count }),
+        {},
+      ),
+      bySource: Object.fromEntries(
+        [...sourceMap.entries()].sort((a, b) => b[1] - a[1]),
+      ),
       dailyTrend: [...dailyMap.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([date, count]) => ({ date, count })),
@@ -986,14 +1249,28 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       lead.kommoPipelineName,
       lead.utmSource,
       lead.source,
-    ].filter(Boolean).join(' ').toLowerCase();
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
 
-    if (raw.includes('link tree') || raw.includes('linktree')) return 'Linktree';
+    if (raw.includes('link tree') || raw.includes('linktree'))
+      return 'Linktree';
     if (raw.includes('tiktok') || raw.includes('tik tok')) return 'TikTok';
     if (raw.includes('meta')) return 'Meta Ads';
-    if (raw.includes('instagram') || raw.includes('ig/fb') || raw.includes(' dm')) return 'Instagram DM';
+    if (
+      raw.includes('instagram') ||
+      raw.includes('ig/fb') ||
+      raw.includes(' dm')
+    )
+      return 'Instagram DM';
     if (raw.includes('google')) return 'Google';
-    if (raw.includes('sales smaple') || raw.includes('sales sample') || raw.includes('sample')) return 'Sales Sample';
+    if (
+      raw.includes('sales smaple') ||
+      raw.includes('sales sample') ||
+      raw.includes('sample')
+    )
+      return 'Sales Sample';
     if (raw.includes('webinar')) return 'Webinar';
     if (raw.includes('webform') || raw.includes('website')) return 'Website';
     if (lead.source) return String(lead.source);
@@ -1009,24 +1286,32 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     if (normalized.includes('jessica')) return 'Jessica';
     if (normalized.includes('ami')) return 'Ami';
     if (normalized.includes('sansan')) return 'Sansan';
-    if (normalized.includes('dilla') || normalized.includes('dila')) return 'Bu Dilla';
+    if (normalized.includes('dilla') || normalized.includes('dila'))
+      return 'Bu Dilla';
     if (normalized.includes('anisa')) return 'Anisa';
     if (normalized.includes('mutmah')) return 'Mutmah';
     if (normalized.includes('shierly')) return 'Bu Shierly';
     if (normalized.includes('mada')) return 'Bu Mada';
     if (normalized.includes('round robin')) return 'Round Robin';
-    return pipelineName.replace(/_/g, ' ').replace(/\s*pipeline\s*busdev\s*/ig, '').replace(/\s+/g, ' ').trim();
+    return pipelineName
+      .replace(/_/g, ' ')
+      .replace(/\s*pipeline\s*busdev\s*/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   // ──────────────────────────────────────────────
   //  BULK UPDATE
   // ──────────────────────────────────────────────
 
-  async bulkUpdate(ids: string[], data: {
-    status?: LeadStatus;
-    workflowStatus?: WorkflowStatus;
-    assignedTo?: string;
-  }) {
+  async bulkUpdate(
+    ids: string[],
+    data: {
+      status?: LeadStatus;
+      workflowStatus?: WorkflowStatus;
+      assignedTo?: string;
+    },
+  ) {
     const updateData: any = { ...data };
     if (data.status === 'CONVERTED') updateData.wonAt = new Date();
 
@@ -1090,7 +1375,7 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
                 "updatedAt"    = NOW()
           WHERE id = 'singleton'
         RETURNING "currentIndex"`,
-        agents.length
+        agents.length,
       );
 
       const newIndex = Number(rows[0]?.currentIndex ?? 0);
@@ -1111,7 +1396,9 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       };
     });
 
-    this.logger.log(`🔄 Round Robin: ${result.name} (${result.phoneNumber}) — lead #${result.orderIndex + 1}`);
+    this.logger.log(
+      `🔄 Round Robin: ${result.name} (${result.phoneNumber}) — lead #${result.orderIndex + 1}`,
+    );
 
     return result;
   }
@@ -1159,11 +1446,72 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     return this.prisma.leadCapture.findMany({
       where: {
         phone: { not: null },
-        waName: null,
+        waProfileName: null,
       },
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // ──────────────────────────────────────────────
+  //  INTENT CLASSIFICATION (MiniMax-M3)
+  // ──────────────────────────────────────────────
+
+  async classifyIntent(text: string): Promise<{
+    intent: 'PROSPEK' | 'SPAM' | 'JUNK' | 'UNCLEAR';
+    confidence: number;
+    reasoning?: string;
+  }> {
+    const baseUrl = process.env.MINIMAX_BASE_URL;
+    const apiKey = process.env.MINIMAX_API_KEY;
+    const model = process.env.MINIMAX_MODEL || 'MiniMax-M3';
+
+    const systemPrompt = `Kamu adalah filter spam untuk chat WhatsApp customer service perusahaan manufaktur kosmetik.
+
+Klasifikasikan pesan berikut ke salah satu:
+- PROSPEK: calon customer nyata (bertanya produk, minta sample, minta penawaran)
+- SPAM: pinjol/slot/gacor/iklan tidak relevan
+- JUNK: pesan tidak bermakna (test, abc, emoji saja, <2 kata)
+- UNCLEAR: tidak yakin, butuh review manusia
+
+Balas JSON: {"intent": "...", "confidence": 0.0-1.0, "reasoning": "..."}`;
+
+    try {
+      const resp = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: text },
+          ],
+          temperature: 0.1,
+          max_tokens: 150,
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`MiniMax API error ${resp.status}`);
+      }
+
+      const data: any = await resp.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) throw new Error('MiniMax returned empty content');
+
+      const parsed = JSON.parse(content);
+      return {
+        intent: parsed.intent,
+        confidence: Number(parsed.confidence) || 0,
+        reasoning: parsed.reasoning,
+      };
+    } catch (err: any) {
+      this.logger.warn(`⚠️ classifyIntent error: ${err.message}`);
+      return { intent: 'UNCLEAR', confidence: 0, reasoning: err.message };
+    }
   }
 
   // ──────────────────────────────────────────────
@@ -1173,14 +1521,21 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
   async saveKommoLeads(
     leads: any[],
     contacts: any[],
-    metadata?: { pipelines?: any[]; users?: any[]; talks?: any[]; events?: any[] },
+    metadata?: {
+      pipelines?: any[];
+      users?: any[];
+      talks?: any[];
+      events?: any[];
+    },
   ): Promise<number> {
     const contactMap = new Map<string, any>();
     for (const c of contacts) {
       contactMap.set(String(c.id), c);
     }
     const pipelineMap = this.buildPipelineMap(metadata?.pipelines ?? []);
-    const userMap = new Map((metadata?.users ?? []).map((user) => [Number(user.id), user]));
+    const userMap = new Map(
+      (metadata?.users ?? []).map((user) => [Number(user.id), user]),
+    );
     const talkMap = this.buildTalkMap(metadata?.talks ?? []);
     const responseMap = this.buildFirstResponseMap(metadata?.events ?? []);
 
@@ -1195,59 +1550,72 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       });
       const existingCodes = new Set(existing.map((lead) => lead.trackingCode));
 
-      const enriched = batch.map((lead) => this.mapKommoLeadRow(
-        lead,
-        contactMap,
-        pipelineMap,
-        userMap,
-        talkMap,
-        responseMap,
-      ));
+      const enriched = batch.map((lead) =>
+        this.mapKommoLeadRow(
+          lead,
+          contactMap,
+          pipelineMap,
+          userMap,
+          talkMap,
+          responseMap,
+        ),
+      );
 
-      const rows = enriched.filter((row) => !existingCodes.has(row.trackingCode));
+      const rows = enriched.filter(
+        (row) => !existingCodes.has(row.trackingCode),
+      );
 
       if (rows.length > 0) {
-        await this.prisma.leadCapture.createMany({ data: rows, skipDuplicates: true });
+        await this.prisma.leadCapture.createMany({
+          data: rows,
+          skipDuplicates: true,
+        });
         saved += rows.length;
       }
 
-      const updates = enriched.filter((row) => existingCodes.has(row.trackingCode));
+      const updates = enriched.filter((row) =>
+        existingCodes.has(row.trackingCode),
+      );
       for (let j = 0; j < updates.length; j += 50) {
         const updateBatch = updates.slice(j, j + 50);
-        await Promise.all(updateBatch.map((row) =>
-          this.prisma.leadCapture.update({
-            where: { trackingCode: row.trackingCode },
-            data: {
-              fullName: row.fullName,
-              phone: row.phone,
-              source: row.source,
-              intent: row.intent,
-              status: row.status,
-              workflowStatus: row.workflowStatus,
-              wonAt: row.wonAt,
-              lostAt: row.lostAt,
-              kommoLeadId: row.kommoLeadId,
-              kommoResponsibleUserId: row.kommoResponsibleUserId,
-              kommoResponsibleUserName: row.kommoResponsibleUserName,
-              kommoPipelineId: row.kommoPipelineId,
-              kommoPipelineName: row.kommoPipelineName,
-              kommoStatusId: row.kommoStatusId,
-              kommoStatusName: row.kommoStatusName,
-              kommoSourceName: row.kommoSourceName,
-              kommoTags: row.kommoTags,
-              kommoTalkStatus: row.kommoTalkStatus,
-              kommoTalkOrigin: row.kommoTalkOrigin,
-              kommoTalkIsRead: row.kommoTalkIsRead,
-              kommoTalkIsInWork: row.kommoTalkIsInWork,
-              kommoFirstResponseSec: row.kommoFirstResponseSec,
-            },
-          })
-        ));
+        await Promise.all(
+          updateBatch.map((row) =>
+            this.prisma.leadCapture.update({
+              where: { trackingCode: row.trackingCode },
+              data: {
+                fullName: row.fullName,
+                phone: row.phone,
+                source: row.source,
+                intent: row.intent,
+                status: row.status,
+                workflowStatus: row.workflowStatus,
+                wonAt: row.wonAt,
+                lostAt: row.lostAt,
+                kommoLeadId: row.kommoLeadId,
+                kommoResponsibleUserId: row.kommoResponsibleUserId,
+                kommoResponsibleUserName: row.kommoResponsibleUserName,
+                kommoPipelineId: row.kommoPipelineId,
+                kommoPipelineName: row.kommoPipelineName,
+                kommoStatusId: row.kommoStatusId,
+                kommoStatusName: row.kommoStatusName,
+                kommoSourceName: row.kommoSourceName,
+                kommoTags: row.kommoTags,
+                kommoTalkStatus: row.kommoTalkStatus,
+                kommoTalkOrigin: row.kommoTalkOrigin,
+                kommoTalkIsRead: row.kommoTalkIsRead,
+                kommoTalkIsInWork: row.kommoTalkIsInWork,
+                kommoFirstResponseSec: row.kommoFirstResponseSec,
+              },
+            }),
+          ),
+        );
         updated += updateBatch.length;
       }
     }
 
-    this.logger.log(`[Kommo Save] Saved ${saved} new leads, updated ${updated} existing leads`);
+    this.logger.log(
+      `[Kommo Save] Saved ${saved} new leads, updated ${updated} existing leads`,
+    );
     return saved;
   }
 
@@ -1278,7 +1646,10 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       phone: this.extractPhoneFromLead(lead, contact),
       source: this.detectSource(lead, status?.name, pipeline?.name),
       intent: lead.name || null,
-      status: workflowStatus === 'WON_DEAL' ? 'CONVERTED' as LeadStatus : 'PENDING' as LeadStatus,
+      status:
+        workflowStatus === 'WON_DEAL'
+          ? ('CONVERTED' as LeadStatus)
+          : ('PENDING' as LeadStatus),
       workflowStatus,
       createdAt: this.fromKommoTimestamp(lead.created_at) || new Date(),
       wonAt: workflowStatus === 'WON_DEAL' ? closedAt || new Date() : null,
@@ -1295,7 +1666,8 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       kommoTalkStatus: talk?.status || null,
       kommoTalkOrigin: talk?.origin || null,
       kommoTalkIsRead: typeof talk?.is_read === 'boolean' ? talk.is_read : null,
-      kommoTalkIsInWork: typeof talk?.is_in_work === 'boolean' ? talk.is_in_work : null,
+      kommoTalkIsInWork:
+        typeof talk?.is_in_work === 'boolean' ? talk.is_in_work : null,
       kommoFirstResponseSec: responseMap.get(Number(lead.id)) ?? null,
     };
   }
@@ -1317,7 +1689,10 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     for (const talk of talks) {
       if (talk.entity_type !== 'lead' || !talk.entity_id) continue;
       const current = map.get(Number(talk.entity_id));
-      if (!current || Number(talk.updated_at || 0) > Number(current.updated_at || 0)) {
+      if (
+        !current ||
+        Number(talk.updated_at || 0) > Number(current.updated_at || 0)
+      ) {
         map.set(Number(talk.entity_id), talk);
       }
     }
@@ -1336,7 +1711,9 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     }
 
     for (const [leadId, leadEvents] of grouped.entries()) {
-      const sorted = leadEvents.sort((a, b) => Number(a.created_at || 0) - Number(b.created_at || 0));
+      const sorted = leadEvents.sort(
+        (a, b) => Number(a.created_at || 0) - Number(b.created_at || 0),
+      );
       let incomingAt: number | null = null;
       for (const event of sorted) {
         if (event.type === 'incoming_chat_message' && incomingAt == null) {
@@ -1358,7 +1735,11 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
       if (contact.custom_fields_values) {
         for (const field of contact.custom_fields_values) {
           const fname = (field.field_name || '').toLowerCase();
-          if (fname.includes('phone') || fname.includes('hp') || fname.includes('wa')) {
+          if (
+            fname.includes('phone') ||
+            fname.includes('hp') ||
+            fname.includes('wa')
+          ) {
             const val = field.values?.[0]?.value;
             if (val) return String(val);
           }
@@ -1369,7 +1750,11 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     return null;
   }
 
-  private detectSource(lead: any, statusName?: string, pipelineName?: string): LeadSource | null {
+  private detectSource(
+    lead: any,
+    statusName?: string,
+    pipelineName?: string,
+  ): LeadSource | null {
     // Try to detect source from custom fields or pipeline
     if (lead.custom_fields_values) {
       for (const field of lead.custom_fields_values) {
@@ -1381,54 +1766,99 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
         }
       }
     }
-    const embeddedSource = lead._embedded?.source?.external_id || lead._embedded?.source?.type || lead._embedded?.source?.name;
+    const embeddedSource =
+      lead._embedded?.source?.external_id ||
+      lead._embedded?.source?.type ||
+      lead._embedded?.source?.name;
     if (embeddedSource) return this.mapLeadSource(String(embeddedSource));
-    const fromStatus = this.mapLeadSource([statusName, pipelineName, this.extractKommoTags(lead)].filter(Boolean).join(' '));
+    const fromStatus = this.mapLeadSource(
+      [statusName, pipelineName, this.extractKommoTags(lead)]
+        .filter(Boolean)
+        .join(' '),
+    );
     if (fromStatus) return fromStatus;
     return null;
   }
 
   private mapLeadSource(value: string): LeadSource | null {
     const normalized = value.toLowerCase();
-    if (normalized.includes('instagram') || normalized.includes('ig')) return 'INSTAGRAM';
+    if (normalized.includes('instagram') || normalized.includes('ig'))
+      return 'INSTAGRAM';
     if (normalized.includes('tiktok')) return 'TIKTOK';
-    if (normalized.includes('linktree') || normalized.includes('link tree')) return 'LINKTREE';
+    if (normalized.includes('linktree') || normalized.includes('link tree'))
+      return 'LINKTREE';
     if (normalized.includes('google')) return 'GOOGLE';
-    if (normalized.includes('website') || normalized.includes('web')) return 'WEBSITE';
+    if (normalized.includes('website') || normalized.includes('web'))
+      return 'WEBSITE';
     if (normalized.includes('referral')) return 'REFERRAL';
     if (normalized.includes('direct')) return 'DIRECT';
     if (normalized.includes('offline')) return 'OFFLINE';
     return null;
   }
 
-  private mapKommoWorkflowStatus(lead: any, resolvedStatusName?: string): WorkflowStatus {
+  private mapKommoWorkflowStatus(
+    lead: any,
+    resolvedStatusName?: string,
+  ): WorkflowStatus {
     if (lead.closed_at && lead.status_id === 142) return 'WON_DEAL';
     if (lead.closed_at && lead.loss_reason_id) return 'LOST';
-    const statusName = String(resolvedStatusName || lead._embedded?.status?.name || lead.status_name || '').toLowerCase();
-    if (statusName.includes('won') || statusName.includes('deal')) return 'WON_DEAL';
-    if (statusName.includes('lost') || statusName.includes('reject')) return 'LOST';
-    if (statusName.includes('sample') || statusName.includes('smaple')) return 'SAMPLE_REQUESTED';
-    if (statusName.includes('follow') || statusName.includes('fu ')) return 'FOLLOW_UP_1';
+    const statusName = String(
+      resolvedStatusName ||
+        lead._embedded?.status?.name ||
+        lead.status_name ||
+        '',
+    ).toLowerCase();
+    if (statusName.includes('won') || statusName.includes('deal'))
+      return 'WON_DEAL';
+    if (statusName.includes('lost') || statusName.includes('reject'))
+      return 'LOST';
+    if (statusName.includes('sample') || statusName.includes('smaple'))
+      return 'SAMPLE_REQUESTED';
+    if (statusName.includes('follow') || statusName.includes('fu '))
+      return 'FOLLOW_UP_1';
     if (statusName.includes('hot')) return 'NEGOTIATION';
     if (statusName.includes('warm')) return 'FOLLOW_UP_2';
     if (statusName.includes('cold')) return 'NEW_LEAD';
-    if (statusName.includes('negotiation') || statusName.includes('nego')) return 'NEGOTIATION';
-    if (statusName.includes('contact') || statusName.includes('traffic')) return 'CONTACTED';
+    if (statusName.includes('negotiation') || statusName.includes('nego'))
+      return 'NEGOTIATION';
+    if (statusName.includes('contact') || statusName.includes('traffic'))
+      return 'CONTACTED';
     return 'NEW_LEAD';
   }
 
-  private extractKommoSourceName(lead: any, statusName?: string): string | null {
-    const source = lead._embedded?.source?.name || lead._embedded?.source?.type || lead._embedded?.source?.external_id;
-    const raw = [source, statusName, this.extractKommoTags(lead)].filter(Boolean).join(' ');
+  private extractKommoSourceName(
+    lead: any,
+    statusName?: string,
+  ): string | null {
+    const source =
+      lead._embedded?.source?.name ||
+      lead._embedded?.source?.type ||
+      lead._embedded?.source?.external_id;
+    const raw = [source, statusName, this.extractKommoTags(lead)]
+      .filter(Boolean)
+      .join(' ');
     const normalized = raw.toLowerCase();
-    if (normalized.includes('link tree') || normalized.includes('linktree')) return 'Linktree';
-    if (normalized.includes('tiktok') || normalized.includes('tik tok')) return 'TikTok';
+    if (normalized.includes('link tree') || normalized.includes('linktree'))
+      return 'Linktree';
+    if (normalized.includes('tiktok') || normalized.includes('tik tok'))
+      return 'TikTok';
     if (normalized.includes('meta')) return 'Meta Ads';
-    if (normalized.includes('instagram') || normalized.includes('ig/fb') || normalized.includes(' dm')) return 'Instagram DM';
+    if (
+      normalized.includes('instagram') ||
+      normalized.includes('ig/fb') ||
+      normalized.includes(' dm')
+    )
+      return 'Instagram DM';
     if (normalized.includes('google')) return 'Google';
-    if (normalized.includes('sales smaple') || normalized.includes('sales sample') || normalized.includes('sample')) return 'Sales Sample';
+    if (
+      normalized.includes('sales smaple') ||
+      normalized.includes('sales sample') ||
+      normalized.includes('sample')
+    )
+      return 'Sales Sample';
     if (normalized.includes('webinar')) return 'Webinar';
-    if (normalized.includes('webform') || normalized.includes('website')) return 'Website';
+    if (normalized.includes('webform') || normalized.includes('website'))
+      return 'Website';
     return source ? String(source) : null;
   }
 
@@ -1448,7 +1878,15 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
   //  BULK IMPORT from CSV
   // ──────────────────────────────────────────────
 
-  async bulkImportLeads(leads: { date?: string; name?: string; phone?: string; source?: string; intent?: string }[]): Promise<number> {
+  async bulkImportLeads(
+    leads: {
+      date?: string;
+      name?: string;
+      phone?: string;
+      source?: string;
+      intent?: string;
+    }[],
+  ): Promise<number> {
     let imported = 0;
     for (const item of leads) {
       if (!item.phone && !item.name) continue;
@@ -1488,25 +1926,29 @@ Output JSON persis dengan skema ini (hanya JSON, tanpa teks lain):
     const lead = await this.prisma.leadCapture.findFirst({
       where: {
         OR: variants.map((p) => ({ phone: { contains: p.slice(-10) } })),
-        waName: null,
+        waProfileName: null,
       },
       orderBy: { createdAt: 'desc' },
     });
 
     if (!lead) {
-      this.logger.warn(`[Kommo] No lead found for phone: ${phone} (cleaned: ${cleaned})`);
+      this.logger.warn(
+        `[Kommo] No lead found for phone: ${phone} (cleaned: ${cleaned})`,
+      );
       return null;
     }
 
     const updated = await this.prisma.leadCapture.update({
       where: { id: lead.id },
       data: {
-        waName: name,
+        waProfileName: name,
         fullName: lead.fullName || name,
       },
     });
 
-    this.logger.log(`[Kommo] Updated lead ${lead.trackingCode} with name: ${name}`);
+    this.logger.log(
+      `[Kommo] Updated lead ${lead.trackingCode} with name: ${name}`,
+    );
     return updated;
   }
 }

@@ -59,7 +59,12 @@ describe('CreativeService — Unit', () => {
       prisma.salesOrder.findUnique = jest
         .fn()
         .mockResolvedValue({ id: 'SO-1', leadId: 'LEAD-1' });
-      const result = await service.createTask({ soId: 'SO-1', leadId: 'LEAD-1', brief: 'Test brief', createdBy: 'user-1' });
+      const result = await service.createTask({
+        soId: 'SO-1',
+        leadId: 'LEAD-1',
+        brief: 'Test brief',
+        createdBy: 'user-1',
+      });
       expect(result.kanbanState).toBe('INBOX');
     });
   });

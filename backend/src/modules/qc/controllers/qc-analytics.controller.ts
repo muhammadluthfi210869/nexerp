@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 import { QCAuditsService } from '../services/qc-audits.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('qc/analytics')
+@Controller(['qc/analytics', 'v1/qc/analytics'])
 export class QCAnalyticsController {
   constructor(private readonly qcService: QCAuditsService) {}
 
@@ -42,8 +42,17 @@ export class QCAnalyticsController {
   }
 
   @Get('phase-breakdown')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR, UserRole.PRODUCTION, UserRole.PRODUCTION_OP)
-  @ApiOperation({ summary: 'Get per-phase quality breakdown with pass/reject counts and defect details' })
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.QC_LAB,
+    UserRole.DIRECTOR,
+    UserRole.PRODUCTION,
+    UserRole.PRODUCTION_OP,
+  )
+  @ApiOperation({
+    summary:
+      'Get per-phase quality breakdown with pass/reject counts and defect details',
+  })
   getPhaseBreakdown(@Query('from') from?: string, @Query('to') to?: string) {
     return this.qcService.getPhaseBreakdown(from, to);
   }

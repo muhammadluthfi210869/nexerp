@@ -1,0 +1,53 @@
+﻿=== Columns of marketing_task_histories ===
+  id                             uuid                           nullable=NO
+  task_id                        uuid                           nullable=YES
+  at                             timestamp without time zone    nullable=YES
+  by_id                          uuid                           nullable=YES
+  from_status                    character varying              nullable=YES
+  to_status                      character varying              nullable=YES
+  note                           text                           nullable=YES
+  task                           text                           nullable=YES
+  taskId                         uuid                           nullable=YES
+  byId                           uuid                           nullable=YES
+  fromStatus                     text                           nullable=YES
+  toStatus                       text                           nullable=YES
+
+=== FK constraints on marketing_task_histories ===
+  (none)
+
+=== _prisma_migrations state ===
+  20260430122705_phase1                                        APPLIED
+  20260430123412_phase2_hpp_integrity                          APPLIED
+  20260720_add_mkt_proto_tables                                APPLIED
+  20260721_add_rnd_tasks_and_projects                          APPLIED
+  20260822080000_r4_fix_legacy_leadstatus_unused_enum          APPLIED
+  20260822081953_lead_attribution_journey                      APPLIED
+  20260822085000_r4_fix_formulas_id_to_uuid                    APPLIED
+  20260822085000_r4_fix_text_id_columns_to_uuid                APPLIED
+  20260822086000_r4_create_missing_goods_requirement_tables    APPLIED
+  20260822095959_marketing_batch3_placeholder_repair           APPLIED
+  20260822100000_batch3_so_formula_pinning                     APPLIED
+  20260822110000_batch3_legal_applicability                    APPLIED
+  20260822120000_regulatory_pipeline_unique                    APPLIED
+  20260823090000_batch4_requirement_procurement_lineage        APPLIED
+  20260823093000_batch5_receiving_inventory_integrity          APPLIED
+  20260823130000_batch5_requisition_issue_return               APPLIED
+  20260823150000_batch6_production_qc_finished_flow            APPLIED
+  20260823170000_batch7_finance_lineage                        APPLIED
+  20260823200000_r4_create_self_qr_devices                     APPLIED
+  20260824090000_marketing_sales_roster_alignment              APPLIED
+  20260824200000_r2_shipment_lot_lineage                       APPLIED
+  20260825090000_r4_prodlight_to_canonical                     APPLIED
+  20260902120000_phase2_marketing_command                      APPLIED
+  20260902140000_add_director_user_role                        APPLIED
+  20260902150000_zaki_director_role                            APPLIED
+  20260902180000_lead_captures_kommo_columns                   APPLIED
+  20260902200000_omni_crm_state                                APPLIED
+  20260902210000_marketing_tasks                               APPLIED
+  20260902220000_omni_crm_and_tasks                            APPLIED
+  20260904120000_marketing_management_tasks_full               APPLIED
+  20260908230000_fix_marketing_tasks_columns                   APPLIED
+  20260909033000_add_marketing_task_owner_id                   APPLIED
+  20260909034500_align_management_task_runtime_schema          PENDING
+  add_assigned_phone                                           APPLIED
+

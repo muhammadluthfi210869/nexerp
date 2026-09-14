@@ -1,0 +1,94 @@
+﻿node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], Remote 
+   Exception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+<--- Last few GCs --->
+
+[11644:00000205B229D000]    90774 ms: Scavenge (interleaved) 
+4045.8 (4123.8) -> 4040.1 (4141.0) MB, pooled: 0 MB, 23.06 / 
+0.00 ms  (average mu = 0.691, current mu = 0.491) allocation 
+failure; 
+[11644:00000205B229D000]    95069 ms: Mark-Compact 4055.5 
+(4141.8) -> 4043.0 (4145.0) MB, pooled: 0 MB, 4223.17 / 0.00 ms  
+(average mu = 0.444, current mu = 0.156) allocation failure; 
+scavenge might not succeed
+
+
+<--- JS stacktrace --->
+
+
+<--- Last few GCs --->
+
+[12108:000001C87F1DD000]    91254 ms: Scavenge 4046.9 (4125.3) 
+-> 4041.4 (4142.3) MB, pooled: 0 MB, 15.86 / 0.00 ms  (average 
+mu = 0.677, current mu = 0.457) allocation failure; 
+[12108:000001C87F1DD000]    95539 ms: Mark-Compact 4056.7 
+(4143.0) -> 4044.3 (4146.5) MB, pooled: 0 MB, 4216.43 / 0.00 ms  
+(average mu = 0.439, current mu = 0.170) allocation failure; 
+scavenge might not succeed
+
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript 
+heap out of memory
+----- Native stack trace -----
+
+FAIL test/unit/bussdev.controller.unit-spec.ts
+  ● Test suite failed to run
+
+    Jest worker ran out of memory and crashed
+
+      at ChildProcessWorker._onExit 
+(../node_modules/jest-worker/build/index.js:928:26)
+
+FAIL test/unit/bussdev.unit-spec.ts
+  ● Test suite failed to run
+
+    Jest worker ran out of memory and crashed
+
+      at ChildProcessWorker._onExit 
+(../node_modules/jest-worker/build/index.js:928:26)
+
+
+<--- Last few GCs --->
+
+[15672:000001E87B5BB000]    93503 ms: Mark-Compact 4054.5 
+(4140.3) -> 4042.0 (4143.8) MB, pooled: 0 MB, 2256.19 / 0.00 ms  
+(average mu = 0.527, current mu = 0.262) allocation failure; 
+scavenge might not succeed
+[15672:000001E87B5BB000]    97488 ms: Mark-Compact 4046.6 
+(4143.8) -> 4042.9 (4144.5) MB, pooled: 0 MB, 3578.66 / 0.00 ms  
+(average mu = 0.325, current mu = 0.102) allocation failure; GC 
+in old space requested
+
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript 
+heap out of memory
+----- Native stack trace -----
+
+FAIL test/unit/bussdev.service.unit-spec.ts
+  ● Test suite failed to run
+
+    Jest worker ran out of memory and crashed
+
+      at ChildProcessWorker._onExit 
+(../node_modules/jest-worker/build/index.js:928:26)
+
+Test Suites: 3 failed, 3 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        98.742 s
+Ran all test suites matching bussdev.
+Force exiting Jest: Have you considered using 
+`--detectOpenHandles` to detect async operations that kept 
+running after all tests finished?
+

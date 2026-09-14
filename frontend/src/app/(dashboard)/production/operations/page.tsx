@@ -5,27 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DataCard, TableWrapper, StatCard, DnaBadge } from "@/components/dna";
+import { DnaStatCard, DnaBadge, DnaDataTableCard, DnaModal, DnaTextarea, DnaSelect, DnaTabNav, DnaCell } from "@/components/dna";
 import {
   ClipboardList,
   FlaskConical,
@@ -33,7 +14,6 @@ import {
   Package,
   ArrowRight,
   Clock,
-  ChevronDown,
   Send,
   Loader2,
   Factory,
@@ -41,6 +21,9 @@ import {
 import Link from "next/link";
 import { WoDetailDrawer } from "@/components/production/WoDetailDrawer";
 import { toast } from "sonner";
+import { DnaButton } from "@/components/dna";
+
+// SPEC: SCR-PROD-OPS-001 — Production Operations (Mixing / Filling / Packing) tracking
 
 const STAGE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   NOT_STARTED: { label: "Not Started", color: "text-slate-600", bg: "bg-slate-100" },
@@ -151,111 +134,91 @@ function OperationsContent() {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
-          <StatCard label={`Total ${stageName}`} value={items.length} />
-          <StatCard label="In Progress" value={items.filter((i: any) => i.status === "IN_PROGRESS").length} />
-          <StatCard label="Done" value={items.filter((i: any) => i.status === "DONE" || i.status === "COMPLETED").length} />
+          <DnaStatCard label={`Total ${stageName}`} value={items.length} variant="blue" icon={<Icon />} />
+          <DnaStatCard label="In Progress" value={items.filter((i: any) => i.status === "IN_PROGRESS").length} variant="amber" />
+          <DnaStatCard label="Done" value={items.filter((i: any) => i.status === "DONE" || i.status === "COMPLETED").length} variant="emerald" />
         </div>
 
-        <DataCard>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
+        <DnaDataTableCard
+          title={`${stageName} Schedule`}
+          count={items.length}
+          customToolbar={
+            <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2 bg-white">
               <Icon className="h-4 w-4 text-slate-400" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{stageName} Schedule</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">{stageName} Schedule</h3>
             </div>
-          </div>
-          <TableWrapper>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Schedule</th>
-                  <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Work Order</th>
-                  <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Progress</th>
-                  <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Aging</th>
-                  <th className="text-right py-3 px-4 text-[10px] font-black uppercase text-slate-400">Action</th>
+          }
+        >
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold tracking-wider">
+                <th className="py-3 px-4">Schedule</th>
+                <th className="py-3 px-4">Work Order</th>
+                <th className="py-3 px-4 text-center">Progress</th>
+                <th className="py-3 px-4 text-center">Aging</th>
+                <th className="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-xs text-slate-400">No {stageName.toLowerCase()} schedules</td>
                 </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-xs text-slate-400">No {stageName.toLowerCase()} schedules</td>
-                  </tr>
-                ) : (
-                  items.map((item: any) => {
-                    const status = item.status === "COMPLETED" || item.status === "DONE" ? "DONE"
-                      : item.status === "IN_PROGRESS" ? "IN_PROGRESS" : "NOT_STARTED";
-                    const config = STAGE_CONFIG[status] || STAGE_CONFIG.NOT_STARTED;
-                    const aging = getAgingDays(item.startTime);
+              ) : (
+                items.map((item: any) => {
+                  const status = item.status === "COMPLETED" || item.status === "DONE" ? "DONE"
+                    : item.status === "IN_PROGRESS" ? "IN_PROGRESS" : "NOT_STARTED";
+                  const config = STAGE_CONFIG[status] || STAGE_CONFIG.NOT_STARTED;
+                  const aging = getAgingDays(item.startTime);
 
-                    return (
-                      <tr key={item.id} className="border-b border-slate-50 hover:bg-slate-50">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", config.bg)}>
-                              <Icon className={cn("h-4 w-4", config.color)} />
-                            </div>
-                            <span className="text-xs font-black text-slate-900">{item.scheduleCode || item.scheduleNumber || item.id?.slice(0, 8)}</span>
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/80">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", config.bg)}>
+                            <Icon className={cn("h-4 w-4", config.color)} />
                           </div>
-                        </td>
-                        <td className="py-3 px-4 text-xs text-slate-600">
-                          {item.workOrder?.woNumber || item.woNumber || "-"}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                className={cn(
-                                  "rounded-lg px-3 py-1.5 font-black uppercase text-[9px] shadow-sm flex items-center gap-1.5 cursor-pointer mx-auto",
-                                  config.bg,
-                                  config.color
-                                )}
-                              >
-                                {config.label}
-                                <ChevronDown className="h-3 w-3" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="rounded-xl border-none shadow-sm p-2 bg-white min-w-[150px]">
-                              {STAGE_OPTIONS.map((opt) => (
-                                <DropdownMenuItem
-                                  key={opt.value}
-                                  onClick={() => handleProgressClick(item, opt.value)}
-                                  className={cn(
-                                    "rounded-lg h-9 px-3 font-black uppercase text-[8px] cursor-pointer flex justify-between",
-                                    status === opt.value ? "bg-slate-100" : "hover:bg-slate-50"
-                                  )}
-                                >
-                                  {opt.label}
-                                  {status !== opt.value && <ArrowRight className="h-3 w-3 text-blue-500" />}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Clock className={cn("h-3 w-3", aging > 3 ? "text-amber-500" : "text-slate-300")} />
-                            <span className={cn("text-xs font-black", aging > 3 ? "text-amber-600" : "text-slate-500")}>
-                              {aging > 0 ? `${aging}d` : "—"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          {status !== "DONE" && (
-                            <button
-                              onClick={() => handleProgressClick(item, status === "NOT_STARTED" ? "IN_PROGRESS" : "DONE")}
-                              className="h-8 px-4 rounded-xl font-black uppercase text-[9px] bg-blue-600 hover:bg-blue-700 text-white"
-                            >
-                              {status === "NOT_STARTED" ? "Start" : "Complete"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </TableWrapper>
-        </DataCard>
+                          <span className="text-xs font-bold text-slate-900">{item.scheduleCode || item.scheduleNumber || item.id?.slice(0, 8)}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600">
+                        {item.workOrder?.woNumber || item.woNumber || "-"}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <DnaSelect
+                          value={status}
+                          onChange={(val) => val && handleProgressClick(item, val)}
+                          options={STAGE_OPTIONS}
+                          className="w-[150px] mx-auto text-[9px] font-bold uppercase h-8"
+                        />
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Clock className={cn("h-3 w-3", aging > 3 ? "text-amber-500" : "text-slate-300")} />
+                          <span className={cn("text-xs font-bold", aging > 3 ? "text-amber-600" : "text-slate-500")}>
+                            {aging > 0 ? `${aging}d` : "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {status !== "DONE" && (
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleProgressClick(item, status === "NOT_STARTED" ? "IN_PROGRESS" : "DONE")}
+                            className="bg-blue-600 hover:bg-blue-700 text-[9px]"
+                          >
+                            {status === "NOT_STARTED" ? "Start" : "Complete"}
+                          </DnaButton>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </DnaDataTableCard>
       </div>
     );
   };
@@ -266,59 +229,58 @@ function OperationsContent() {
       titleAccent="Produksi"
       subtitle="Work orders & progress tracking"
     >
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-14 w-full bg-slate-100 rounded-2xl p-1 border border-slate-200">
-          <TabsTrigger value="work-orders" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <ClipboardList className="mr-2 h-4 w-4" />
-            Work Orders
-          </TabsTrigger>
-          <TabsTrigger value="mixing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <FlaskConical className="mr-2 h-4 w-4" />
-            Mixing
-          </TabsTrigger>
-          <TabsTrigger value="filling" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <Droplets className="mr-2 h-4 w-4" />
-            Filling
-          </TabsTrigger>
-          <TabsTrigger value="packing" className="h-full rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md font-black uppercase tracking-tight text-[10px]">
-            <Package className="mr-2 h-4 w-4" />
-            Packing
-          </TabsTrigger>
-        </TabsList>
+      <DnaTabNav
+        tabs={[
+          { id: "work-orders", label: "Work Orders", icon: ClipboardList },
+          { id: "mixing", label: "Mixing", icon: FlaskConical },
+          { id: "filling", label: "Filling", icon: Droplets },
+          { id: "packing", label: "Packing", icon: Package },
+        ]}
+        activeTab={tab}
+        onTabChange={setTab}
+        className="mb-6"
+      />
 
-        <TabsContent value="work-orders" className="mt-6 space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <StatCard label="Total WO" value={woList.length} />
-            <StatCard label="Active" value={woList.filter((w: any) => w.status === "IN_PROGRESS").length} />
-            <StatCard label="Finished" value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length} />
-          </div>
-          <DataCard>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Daftar Work Orders</h3>
-              <Link href="/production/work-orders" className="flex items-center gap-1 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800">
-                Kelola WO <ArrowRight className="h-3 w-3" />
-              </Link>
+      <div className="mt-6 space-y-4">
+        {tab === "work-orders" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <DnaStatCard label="Total WO" value={woList.length} variant="blue" icon={<ClipboardList />} />
+              <DnaStatCard label="Active" value={woList.filter((w: any) => w.status === "IN_PROGRESS").length} variant="amber" />
+              <DnaStatCard label="Finished" value={woList.filter((w: any) => w.status === "DONE" || w.status === "COMPLETED").length} variant="emerald" />
             </div>
-            <TableWrapper>
-              <table className="w-full">
+
+            <DnaDataTableCard
+              title="Daftar Work Orders"
+              count={woList.length}
+              customToolbar={
+                <div className="px-5 py-3 border-b border-slate-100 flex justify-between items-center bg-white">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Daftar Work Orders</h3>
+                  <Link href="/production/work-orders" className="flex items-center gap-1 text-[10px] font-bold uppercase text-blue-600 hover:text-blue-800">
+                    Kelola WO <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              }
+            >
+              <table className="w-full text-left border-collapse text-[12px]">
                 <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">WO</th>
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Produk</th>
-                    <th className="text-left py-3 px-4 text-[10px] font-black uppercase text-slate-400">Stage</th>
-                    <th className="text-center py-3 px-4 text-[10px] font-black uppercase text-slate-400">Progress</th>
-                    <th className="text-right py-3 px-4 text-[10px] font-black uppercase text-slate-400">Target</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold tracking-wider">
+                    <th className="py-3 px-4">WO</th>
+                    <th className="py-3 px-4">Produk</th>
+                    <th className="py-3 px-4">Stage</th>
+                    <th className="py-3 px-4 text-center">Progress</th>
+                    <th className="py-3 px-4 text-right">Target</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {woList.slice(0, 15).map((wo: any) => (
-                    <tr key={wo.id} className="border-b border-slate-50 hover:bg-slate-50">
+                    <tr key={wo.id} className="hover:bg-slate-50/80">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center">
                             <Factory className="h-4 w-4 text-slate-500" />
                           </div>
-                          <span className="text-xs font-black text-slate-900">{wo.woNumber || wo.id?.slice(0, 8)}</span>
+                          <span className="text-xs font-bold text-slate-900">{wo.woNumber || wo.id?.slice(0, 8)}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-600">{wo.productName || wo.lead?.clientName || "-"}</td>
@@ -346,87 +308,72 @@ function OperationsContent() {
                   )}
                 </tbody>
               </table>
-            </TableWrapper>
-          </DataCard>
-        </TabsContent>
+            </DnaDataTableCard>
+          </div>
+        )}
 
-        <TabsContent value="mixing" className="mt-6">
-          {renderProgressTable(mixingList, "Mixing", "MIXING")}
-        </TabsContent>
-
-        <TabsContent value="filling" className="mt-6">
-          {renderProgressTable(fillingList, "Filling", "FILLING")}
-        </TabsContent>
-
-        <TabsContent value="packing" className="mt-6">
-          {renderProgressTable(packingList, "Packing", "PACKING")}
-        </TabsContent>
-      </Tabs>
+        {tab === "mixing" && renderProgressTable(mixingList, "Mixing", "MIXING")}
+        {tab === "filling" && renderProgressTable(fillingList, "Filling", "FILLING")}
+        {tab === "packing" && renderProgressTable(packingList, "Packing", "PACKING")}
+      </div>
 
       <WoDetailDrawer woId={selectedWoId} onClose={() => setSelectedWoId(null)} />
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white border border-slate-200 shadow-sm rounded-2xl">
-          <div className="p-5 space-y-4">
-            <div className="space-y-1">
-              <DialogTitle className="text-base font-black text-slate-900 uppercase tracking-tight truncate">
-                Update Progress
-              </DialogTitle>
-            </div>
-
-            <div className="flex items-center gap-3 py-3 px-4 bg-slate-50 rounded-xl">
-              <span className="text-[10px] font-black text-slate-500 uppercase bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                {selectedItem?.scheduleCode || selectedItem?.woNumber || "—"}
-              </span>
-              <ArrowRight className="h-4 w-4 text-slate-300 shrink-0" />
-              <span
-                className={cn(
-                  "text-[10px] font-black uppercase px-2.5 py-1 rounded-lg",
-                  STAGE_CONFIG[targetStage]?.bg || "bg-blue-100",
-                  STAGE_CONFIG[targetStage]?.color || "text-blue-600"
-                )}
-              >
-                {STAGE_CONFIG[targetStage]?.label || targetStage}
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                Notes <span className="text-slate-300">(optional)</span>
-              </label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add notes..."
-                className="min-h-[60px] rounded-xl border-slate-200 bg-slate-50 text-xs font-black p-3 focus:bg-white transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="p-4 pt-0 flex gap-2 justify-end">
-            <button
-              onClick={() => {
-                setConfirmOpen(false);
-                setNotes("");
-                setSelectedItem(null);
-                setTargetStage("");
-              }}
-              className="h-10 px-5 rounded-xl font-black uppercase text-[10px] text-slate-500 hover:bg-slate-100"
-            >
-              Cancel
-            </button>
-            <button
+      <DnaModal
+        isOpen={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+          setNotes("");
+          setSelectedItem(null);
+          setTargetStage("");
+        }}
+        title="Update Progress"
+        subtitle="Catat perubahan status produksi"
+        size="md"
+        badge={<Send className="h-3 w-3 text-blue-500" />}
+        footer={
+          <>
+            <DnaButton variant="ghost" onClick={() => {
+              setConfirmOpen(false);
+              setNotes("");
+              setSelectedItem(null);
+              setTargetStage("");
+            }}>Cancel</DnaButton>
+            <DnaButton
+              variant="primary"
               onClick={handleConfirmUpdate}
               disabled={updateStageMutation.isPending}
-              className="h-10 px-5 rounded-xl font-black uppercase text-[10px] bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              icon={updateStageMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
             >
-              {updateStageMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <Send className="h-3.5 w-3.5" />
               Update
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </DnaButton>
+          </>
+        }
+      >
+        <div className="flex items-center gap-3 py-3 px-4 bg-slate-50 rounded-xl">
+          <span className="text-[10px] font-bold text-slate-500 uppercase bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+            {selectedItem?.scheduleCode || selectedItem?.woNumber || "—"}
+          </span>
+          <ArrowRight className="h-4 w-4 text-slate-300 shrink-0" />
+          <span
+            className={cn(
+              "text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg",
+              STAGE_CONFIG[targetStage]?.bg || "bg-blue-100",
+              STAGE_CONFIG[targetStage]?.color || "text-blue-600"
+            )}
+          >
+            {STAGE_CONFIG[targetStage]?.label || targetStage}
+          </span>
+        </div>
+
+        <DnaTextarea
+          label="Notes (optional)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Add notes..."
+          rows={3}
+        />
+      </DnaModal>
     </DashboardShell>
   );
 }

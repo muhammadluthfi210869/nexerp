@@ -1,0 +1,1249 @@
+{
+  "generatedAt": "2026-09-10T12:54:50.395Z",
+  "source": "frontend/src/app/(dashboard)/ actual page.tsx files",
+  "totalPages": 229,
+  "byFunction": {
+    "approvals": 13,
+    "master": 25,
+    "penjualan": 21,
+    "exec": 24,
+    "samples": 22,
+    "quality": 20,
+    "production": 15,
+    "inventory": 22,
+    "reports": 12,
+    "finance": 35,
+    "pembelian": 20
+  },
+  "routes": [
+    {
+      "url": "/approvals/goods-request",
+      "file": "approvals/goods-request",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/purchase",
+      "file": "approvals/purchase",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/purchase-approval",
+      "file": "approvals/purchase-approval",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/purchase-request",
+      "file": "approvals/purchase-request",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/purchase-return",
+      "file": "approvals/purchase-return",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/request-cogs",
+      "file": "approvals/request-cogs",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/sales",
+      "file": "approvals/sales",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/sales-return",
+      "file": "approvals/sales-return",
+      "fn": "approvals"
+    },
+    {
+      "url": "/approvals/sales-sample",
+      "file": "approvals/sales-sample",
+      "fn": "approvals"
+    },
+    {
+      "url": "/automation",
+      "file": "automation",
+      "fn": "master"
+    },
+    {
+      "url": "/bussdev/client-manager",
+      "file": "bussdev/client-manager",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/dashboard",
+      "file": "bussdev/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/bussdev/down-payment",
+      "file": "bussdev/down-payment",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/intake",
+      "file": "bussdev/intake",
+      "fn": "samples"
+    },
+    {
+      "url": "/bussdev/lost",
+      "file": "bussdev/lost",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/my-performance",
+      "file": "bussdev/my-performance",
+      "fn": "exec"
+    },
+    {
+      "url": "/bussdev/pipeline",
+      "file": "bussdev/pipeline",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/retention-engine",
+      "file": "bussdev/retention-engine",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/retur-penjualan",
+      "file": "bussdev/retur-penjualan",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/sales-orders",
+      "file": "bussdev/sales-orders",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/sales-target",
+      "file": "bussdev/sales-target",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/sample-sales/input",
+      "file": "bussdev/sample-sales/input",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/sample-sales",
+      "file": "bussdev/sample-sales",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/bussdev/sample-tracking",
+      "file": "bussdev/sample-tracking",
+      "fn": "samples"
+    },
+    {
+      "url": "/checklist",
+      "file": "checklist",
+      "fn": "quality"
+    },
+    {
+      "url": "/creative/board",
+      "file": "creative/board",
+      "fn": "production",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/dashboard/commercial",
+      "file": "dashboard/commercial",
+      "fn": "exec"
+    },
+    {
+      "url": "/dashboard/finance",
+      "file": "dashboard/finance",
+      "fn": "exec"
+    },
+    {
+      "url": "/dashboard/fulfillment",
+      "file": "dashboard/fulfillment",
+      "fn": "exec"
+    },
+    {
+      "url": "/dashboard",
+      "file": "dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/dashboard/production-floor",
+      "file": "dashboard/production-floor",
+      "fn": "production"
+    },
+    {
+      "url": "/dashboard/production-planning",
+      "file": "dashboard/production-planning",
+      "fn": "production"
+    },
+    {
+      "url": "/dashboard/qc",
+      "file": "dashboard/qc",
+      "fn": "exec"
+    },
+    {
+      "url": "/dashboard/super-admin",
+      "file": "dashboard/super-admin",
+      "fn": "exec"
+    },
+    {
+      "url": "/dashboard/warehouse",
+      "file": "dashboard/warehouse",
+      "fn": "inventory"
+    },
+    {
+      "url": "/design/artwork-approval",
+      "file": "design/artwork-approval",
+      "fn": "approvals"
+    },
+    {
+      "url": "/dna-visual/golden-reference",
+      "file": "dna-visual/golden-reference",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/dna-visual",
+      "file": "dna-visual",
+      "fn": "master"
+    },
+    {
+      "url": "/document-center",
+      "file": "document-center",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/documents/drafts",
+      "file": "documents/drafts",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/executive/audit",
+      "file": "executive/audit",
+      "fn": "reports",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/executive/dashboard",
+      "file": "executive/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/executive/notifications",
+      "file": "executive/notifications",
+      "fn": "reports"
+    },
+    {
+      "url": "/finance/accounting/auto-journal",
+      "file": "finance/accounting/auto-journal",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/accounting/coa",
+      "file": "finance/accounting/coa",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/actual-costing",
+      "file": "finance/actual-costing",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/ap-aging",
+      "file": "finance/ap-aging",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/approvals",
+      "file": "finance/approvals",
+      "fn": "approvals"
+    },
+    {
+      "url": "/finance/ar-hub",
+      "file": "finance/ar-hub",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/assets",
+      "file": "finance/assets",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/bank-accounts",
+      "file": "finance/bank-accounts",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/bank-reconciliation",
+      "file": "finance/bank-reconciliation",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/bayar",
+      "file": "finance/bayar",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/bayar-pembelian",
+      "file": "finance/bayar-pembelian",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/finance/bayar-penjualan",
+      "file": "finance/bayar-penjualan",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/finance/bayar-sample",
+      "file": "finance/bayar-sample",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/bills",
+      "file": "finance/bills",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/budget",
+      "file": "finance/budget",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/cash-in",
+      "file": "finance/cash-in",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/cash-out",
+      "file": "finance/cash-out",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/client-escrow",
+      "file": "finance/client-escrow",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/closing",
+      "file": "finance/closing",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/cogs-request",
+      "file": "finance/cogs-request",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/collections",
+      "file": "finance/collections",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/compliance-asset",
+      "file": "finance/compliance-asset",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/cost-variance",
+      "file": "finance/cost-variance",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/dashboard",
+      "file": "finance/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/finance/dp",
+      "file": "finance/dp",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/finance/dp-pembelian",
+      "file": "finance/dp-pembelian",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/finance/dp-penjualan",
+      "file": "finance/dp-penjualan",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/finance/faktur-pembelian",
+      "file": "finance/faktur-pembelian",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/finance/faktur-penjualan",
+      "file": "finance/faktur-penjualan",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/finance/fund",
+      "file": "finance/fund",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/fund-requests",
+      "file": "finance/fund-requests",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/input",
+      "file": "finance/input",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/invoices",
+      "file": "finance/invoices",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/jurnal",
+      "file": "finance/jurnal",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/jurnal-umum",
+      "file": "finance/jurnal-umum",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/kas",
+      "file": "finance/kas",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/laba-rugi",
+      "file": "finance/laba-rugi",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/ledger",
+      "file": "finance/ledger",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/piutang",
+      "file": "finance/piutang",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/profitability",
+      "file": "finance/profitability",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/reports/ar-aging",
+      "file": "finance/reports/ar-aging",
+      "fn": "finance"
+    },
+    {
+      "url": "/finance/reports/balance-sheet",
+      "file": "finance/reports/balance-sheet",
+      "fn": "reports"
+    },
+    {
+      "url": "/finance/reports/cash-flow",
+      "file": "finance/reports/cash-flow",
+      "fn": "reports"
+    },
+    {
+      "url": "/finance/reports",
+      "file": "finance/reports",
+      "fn": "reports"
+    },
+    {
+      "url": "/finance/reports/trial-balance",
+      "file": "finance/reports/trial-balance",
+      "fn": "reports"
+    },
+    {
+      "url": "/finance/sales-orders",
+      "file": "finance/sales-orders",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/finance/transactions",
+      "file": "finance/transactions",
+      "fn": "finance"
+    },
+    {
+      "url": "/hr/attendance",
+      "file": "hr/attendance",
+      "fn": "master"
+    },
+    {
+      "url": "/hr/dashboard",
+      "file": "hr/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/hr/kpi",
+      "file": "hr/kpi",
+      "fn": "exec"
+    },
+    {
+      "url": "/hr",
+      "file": "hr",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/hr/payroll",
+      "file": "hr/payroll",
+      "fn": "master"
+    },
+    {
+      "url": "/hr/recruitment",
+      "file": "hr/recruitment",
+      "fn": "master"
+    },
+    {
+      "url": "/hr/tickets",
+      "file": "hr/tickets",
+      "fn": "approvals",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/kpi-management/department",
+      "file": "kpi-management/department",
+      "fn": "master"
+    },
+    {
+      "url": "/kpi-management/department/[departmentId]",
+      "file": "kpi-management/department/[departmentId]",
+      "fn": "master"
+    },
+    {
+      "url": "/kpi-management/individual",
+      "file": "kpi-management/individual",
+      "fn": "master"
+    },
+    {
+      "url": "/kpi-management/individual/[employeeId]",
+      "file": "kpi-management/individual/[employeeId]",
+      "fn": "master"
+    },
+    {
+      "url": "/kpi-management/settings",
+      "file": "kpi-management/settings",
+      "fn": "exec"
+    },
+    {
+      "url": "/legality/apj-release",
+      "file": "legality/apj-release",
+      "fn": "quality"
+    },
+    {
+      "url": "/legality/ckpb-audit",
+      "file": "legality/ckpb-audit",
+      "fn": "quality",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/legality/dashboard",
+      "file": "legality/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/legality/inbox",
+      "file": "legality/inbox",
+      "fn": "quality",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/legality/input",
+      "file": "legality/input",
+      "fn": "quality",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/legality/master-inci",
+      "file": "legality/master-inci",
+      "fn": "master"
+    },
+    {
+      "url": "/legality/permits",
+      "file": "legality/permits",
+      "fn": "quality",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/legality/pipeline",
+      "file": "legality/pipeline",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/legality/records",
+      "file": "legality/records",
+      "fn": "quality",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/logistics/delivery-orders",
+      "file": "logistics/delivery-orders",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/logistics/fleet",
+      "file": "logistics/fleet",
+      "fn": "inventory",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/logistics/logs",
+      "file": "logistics/logs",
+      "fn": "reports",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/logistics/outbound",
+      "file": "logistics/outbound",
+      "fn": "inventory"
+    },
+    {
+      "url": "/marketing/calendar",
+      "file": "marketing/calendar",
+      "fn": "exec",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/crm-leads",
+      "file": "marketing/crm-leads",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/marketing/dashboard",
+      "file": "marketing/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/marketing/digital",
+      "file": "marketing/digital",
+      "fn": "exec",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/input",
+      "file": "marketing/input",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/kpi",
+      "file": "marketing/kpi",
+      "fn": "exec"
+    },
+    {
+      "url": "/marketing/landing-tracker",
+      "file": "marketing/landing-tracker",
+      "fn": "reports",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/lead-capture",
+      "file": "marketing/lead-capture",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/leaderboard",
+      "file": "marketing/leaderboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/marketing/logs",
+      "file": "marketing/logs",
+      "fn": "reports",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/management-task",
+      "file": "marketing/management-task",
+      "fn": "samples"
+    },
+    {
+      "url": "/marketing/management-task/[member]",
+      "file": "marketing/management-task/[member]",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/notifications",
+      "file": "marketing/notifications",
+      "fn": "reports"
+    },
+    {
+      "url": "/marketing/omni-crm",
+      "file": "marketing/omni-crm",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/performance",
+      "file": "marketing/performance",
+      "fn": "exec"
+    },
+    {
+      "url": "/marketing/profile/[id]",
+      "file": "marketing/profile/[id]",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/projects",
+      "file": "marketing/projects",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/reports",
+      "file": "marketing/reports",
+      "fn": "reports"
+    },
+    {
+      "url": "/marketing/settings",
+      "file": "marketing/settings",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/social-tracker",
+      "file": "marketing/social-tracker",
+      "fn": "samples"
+    },
+    {
+      "url": "/marketing/tasks",
+      "file": "marketing/tasks",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/team",
+      "file": "marketing/team",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/marketing/toribio",
+      "file": "marketing/toribio",
+      "fn": "reports",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/master/categories",
+      "file": "master/categories",
+      "fn": "master"
+    },
+    {
+      "url": "/master/customers",
+      "file": "master/customers",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/master/goods",
+      "file": "master/goods",
+      "fn": "master"
+    },
+    {
+      "url": "/master",
+      "file": "master",
+      "fn": "master"
+    },
+    {
+      "url": "/master/personnel",
+      "file": "master/personnel",
+      "fn": "master"
+    },
+    {
+      "url": "/master/suppliers",
+      "file": "master/suppliers",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/master/vendors",
+      "file": "master/vendors",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/master/warehouses",
+      "file": "master/warehouses",
+      "fn": "inventory"
+    },
+    {
+      "url": "/my-dashboard",
+      "file": "my-dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/my-requests",
+      "file": "my-requests",
+      "fn": "approvals",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/penjualan/guest-book",
+      "file": "penjualan/guest-book",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/production/audit",
+      "file": "production/audit",
+      "fn": "production"
+    },
+    {
+      "url": "/production/batch-records",
+      "file": "production/batch-records",
+      "fn": "production"
+    },
+    {
+      "url": "/production/filling",
+      "file": "production/filling",
+      "fn": "production"
+    },
+    {
+      "url": "/production/formula-adjustment",
+      "file": "production/formula-adjustment",
+      "fn": "inventory"
+    },
+    {
+      "url": "/production/material-requisition",
+      "file": "production/material-requisition",
+      "fn": "production"
+    },
+    {
+      "url": "/production/mixing",
+      "file": "production/mixing",
+      "fn": "production"
+    },
+    {
+      "url": "/production/my-performance",
+      "file": "production/my-performance",
+      "fn": "exec"
+    },
+    {
+      "url": "/production/operations",
+      "file": "production/operations",
+      "fn": "production"
+    },
+    {
+      "url": "/production/packaging",
+      "file": "production/packaging",
+      "fn": "production"
+    },
+    {
+      "url": "/production",
+      "file": "production",
+      "fn": "production"
+    },
+    {
+      "url": "/production/qc-release",
+      "file": "production/qc-release",
+      "fn": "quality"
+    },
+    {
+      "url": "/production/schedule",
+      "file": "production/schedule",
+      "fn": "production"
+    },
+    {
+      "url": "/production/spk",
+      "file": "production/spk",
+      "fn": "production"
+    },
+    {
+      "url": "/production/warehouse",
+      "file": "production/warehouse",
+      "fn": "inventory"
+    },
+    {
+      "url": "/production/work-orders",
+      "file": "production/work-orders",
+      "fn": "production"
+    },
+    {
+      "url": "/project-control/checklist-tracking",
+      "file": "project-control/checklist-tracking",
+      "fn": "quality"
+    },
+    {
+      "url": "/project-control",
+      "file": "project-control",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/project-control/[projectId]",
+      "file": "project-control/[projectId]",
+      "fn": "samples",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/qc/checklist/progress",
+      "file": "qc/checklist/progress",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/checklist/tracking",
+      "file": "qc/checklist/tracking",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/coa",
+      "file": "qc/coa",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/dashboard",
+      "file": "qc/dashboard",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/inspections",
+      "file": "qc/inspections",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/report",
+      "file": "qc/report",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/stability",
+      "file": "qc/stability",
+      "fn": "quality"
+    },
+    {
+      "url": "/qc/workbench",
+      "file": "qc/workbench",
+      "fn": "quality"
+    },
+    {
+      "url": "/quality/checklist-category",
+      "file": "quality/checklist-category",
+      "fn": "quality"
+    },
+    {
+      "url": "/rnd/batch-record",
+      "file": "rnd/batch-record",
+      "fn": "production"
+    },
+    {
+      "url": "/rnd/cogs-request",
+      "file": "rnd/cogs-request",
+      "fn": "finance"
+    },
+    {
+      "url": "/rnd/dashboard",
+      "file": "rnd/dashboard",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/design",
+      "file": "rnd/design",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/formula",
+      "file": "rnd/formula",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/formula/[id]",
+      "file": "rnd/formula/[id]",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/formula-adjustment",
+      "file": "rnd/formula-adjustment",
+      "fn": "inventory"
+    },
+    {
+      "url": "/rnd/inbox",
+      "file": "rnd/inbox",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/lab-test",
+      "file": "rnd/lab-test",
+      "fn": "quality"
+    },
+    {
+      "url": "/rnd/master-inci",
+      "file": "rnd/master-inci",
+      "fn": "master"
+    },
+    {
+      "url": "/rnd/npf",
+      "file": "rnd/npf",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/pipeline",
+      "file": "rnd/pipeline",
+      "fn": "penjualan"
+    },
+    {
+      "url": "/rnd/project-monitoring",
+      "file": "rnd/project-monitoring",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/repository",
+      "file": "rnd/repository",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/revision-tracker",
+      "file": "rnd/revision-tracker",
+      "fn": "samples"
+    },
+    {
+      "url": "/rnd/schedule",
+      "file": "rnd/schedule",
+      "fn": "samples"
+    },
+    {
+      "url": "/scm/checklist-progress",
+      "file": "scm/checklist-progress",
+      "fn": "quality"
+    },
+    {
+      "url": "/scm/dashboard",
+      "file": "scm/dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/scm/kebutuhan-barang",
+      "file": "scm/kebutuhan-barang",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/mrp",
+      "file": "scm/mrp",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/pembelian/create",
+      "file": "scm/pembelian/create",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/pembelian",
+      "file": "scm/pembelian",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/purchase-requests",
+      "file": "scm/purchase-requests",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/purchase-returns",
+      "file": "scm/purchase-returns",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/purchasing/down-payment",
+      "file": "scm/purchasing/down-payment",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/purchasing",
+      "file": "scm/purchasing",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/purchasing/payments",
+      "file": "scm/purchasing/payments",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/rangkuman-kebutuhan",
+      "file": "scm/rangkuman-kebutuhan",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/receiving",
+      "file": "scm/receiving",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/vendors/performance",
+      "file": "scm/vendors/performance",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/scm/warehouse/mutation",
+      "file": "scm/warehouse/mutation",
+      "fn": "inventory"
+    },
+    {
+      "url": "/scm/warehouse/requisition",
+      "file": "scm/warehouse/requisition",
+      "fn": "inventory"
+    },
+    {
+      "url": "/system/audit-ledger",
+      "file": "system/audit-ledger",
+      "fn": "finance"
+    },
+    {
+      "url": "/system/change-requests",
+      "file": "system/change-requests",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/system/company",
+      "file": "system/company",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/system/error-dashboard",
+      "file": "system/error-dashboard",
+      "fn": "exec"
+    },
+    {
+      "url": "/system/profile",
+      "file": "system/profile",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/system/request-list",
+      "file": "system/request-list",
+      "fn": "pembelian"
+    },
+    {
+      "url": "/system/settings",
+      "file": "system/settings",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/user/todo",
+      "file": "user/todo",
+      "fn": "master",
+      "autoClassified": false,
+      "manualOverride": true
+    },
+    {
+      "url": "/warehouse/adjustment",
+      "file": "warehouse/adjustment",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/gudang",
+      "file": "warehouse/gudang",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/hub",
+      "file": "warehouse/hub",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/inbound",
+      "file": "warehouse/inbound",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/map",
+      "file": "warehouse/map",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/mutasi-stok",
+      "file": "warehouse/mutasi-stok",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/opname",
+      "file": "warehouse/opname",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse",
+      "file": "warehouse",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/pindah-gudang",
+      "file": "warehouse/pindah-gudang",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/release",
+      "file": "warehouse/release",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/stok",
+      "file": "warehouse/stok",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/transfers",
+      "file": "warehouse/transfers",
+      "fn": "inventory"
+    },
+    {
+      "url": "/warehouse/workstation",
+      "file": "warehouse/workstation",
+      "fn": "inventory"
+    }
+  ],
+  "reviewNeeded": 0,
+  "classified": 229,
+  "classifier": "keyword + manual review",
+  "hybridFunctions": [
+    "samples",
+    "pembelian",
+    "penjualan",
+    "inventory",
+    "production",
+    "quality",
+    "finance",
+    "master",
+    "approvals",
+    "reports",
+    "exec"
+  ]
+}

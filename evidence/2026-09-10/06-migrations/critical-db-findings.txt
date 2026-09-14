@@ -1,0 +1,39 @@
+﻿CRITICAL DATABASE FINDINGS (captured 2026-09-10T14:01:23Z)
+==========================================================================
+Missing tables (in schema, NOT in DB): 12
+  - MarketingBrand
+  - MarketingTaskChecklistItem
+  - SocialPostMedia
+  - SocialPostMetricSnapshot
+  - MarketingReportingPeriod
+  - BrandChannelMetric
+  - WeeklySocialReport
+  - StoryDailyMetric
+  - MarketingChannelFunnel
+  - MarketingIntegrationConnection
+  - MarketingIntegrationSyncJob
+  - MetaInsightsSnapshot
+
+
+Existing tables with 0 rows: 
+MarketingTask
+MarketingTaskHistory
+MarketingTaskAttachment
+MarketingTaskComment
+MarketingProject
+SocialPost
+SocialChecklistItem
+CampaignOkr
+MetaAccountConfig
+
+
+ROOT CAUSE ANALYSIS:
+- 6 pending migrations should create missing tables
+- prisma migrate dev needed (NOT db push, NOT deploy in prod without review)
+- This explains 'fix this error fix that error' symptom
+
+NEXT STEPS:
+1. Review each pending migration for reversibility
+2. Apply: npx prisma migrate dev (in dev) / prisma migrate deploy (prod)
+3. Re-run db:status to confirm 0 MISSING
+4. Backend TS errors should drop substantially

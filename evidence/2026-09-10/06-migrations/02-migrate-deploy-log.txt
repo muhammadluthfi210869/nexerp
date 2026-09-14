@@ -1,0 +1,37 @@
+﻿node.exe : Loaded Prisma config from prisma.config.ts.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Prisma schema loaded from prisma\schema.
+Datasource "db": PostgreSQL database "erp_db_test", schema "public" at "localhost:5432"
+
+37 migrations found in prisma/migrations
+
+Applying migration `20260902140000_add_director_user_role`
+Applying migration `20260908230000_fix_marketing_tasks_columns`
+Applying migration `20260909033000_add_marketing_task_owner_id`
+Applying migration `20260909034500_align_management_task_runtime_schema`
+Error: P3018
+
+A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: 
+https://pris.ly/d/migrate-resolve
+
+Migration name: 20260909034500_align_management_task_runtime_schema
+
+Database error code: 23503
+
+Database error:
+ERROR: insert or update on table "marketing_task_histories" violates foreign key constraint "marketing_task_histories_taskId_fkey"
+DETAIL: Key (taskId)=(093a9a99-7a9d-4b5d-8878-a09cb528fdfe) is not present in table "marketing_tasks".
+
+DbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E23503), message: "insert or update on table \"marketing_task_histories\" violates foreign key constraint 
+\"marketing_task_histories_taskId_fkey\"", detail: Some("Key (taskId)=(093a9a99-7a9d-4b5d-8878-a09cb528fdfe) is not present in table \"marketing_tasks\"."), hint: None, position: None, 
+where_: Some("SQL statement \"ALTER TABLE \"marketing_task_histories\" ADD CONSTRAINT \"marketing_task_histories_taskId_fkey\"\n      FOREIGN KEY (\"taskId\") REFERENCES 
+\"marketing_tasks\"(\"id\") ON DELETE CASCADE\"\nPL/pgSQL function inline_code_block line 8 at SQL statement"), schema: Some("public"), table: Some("marketing_task_histories"), column: 
+None, datatype: None, constraint: Some("marketing_task_histories_taskId_fkey"), file: Some("ri_triggers.c"), line: Some(2619), routine: Some("ri_ReportViolation") }
+
+

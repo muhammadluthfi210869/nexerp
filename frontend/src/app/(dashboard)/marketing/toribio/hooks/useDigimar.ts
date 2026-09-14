@@ -95,42 +95,56 @@ export function useDigimarMonths() {
 }
 
 // ── WebSocket updater hook ──
-// Call this once in the root client component
+// Optional live socket connection
 import { useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
 
 export function useDigimarSocket(month?: string) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const socket: Socket = isLocal
-      ? io('http://localhost:3002/digimar', { transports: ['websocket', 'polling'] })
-      : io(window.location.origin + '/digimar', {
-          path: '/api/socket.io',
-          transports: ['websocket', 'polling'],
+    let socket: any = null;
+    let isMounted = true;
+
+    // Dynamically import socket.io-client if installed
+    import(/* webpackIgnore: true */ 'socket.io-client' as any)
+      .then((ioModule: any) => {
+        if (!isMounted) return;
+        const io = ioModule.io || ioModule.default || ioModule;
+        const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        socket = isLocal
+          ? io('http://localhost:3002/digimar', { transports: ['websocket', 'polling'] })
+          : io(window.location.origin + '/digimar', {
+              path: '/api/socket.io',
+              transports: ['websocket', 'polling'],
+            });
+
+        socket.on('connect', () => {
+          console.log('[DigimarSocket] connected');
+          socket.emit('subscribe', { month });
         });
 
-    socket.on('connect', () => {
-      console.log('[DigimarSocket] connected');
-      socket.emit('subscribe', { month });
-    });
+        socket.on('digimar:update', (data: AllData) => {
+          queryClient.setQueryData(KEYS.allInOne(month), data);
+          queryClient.setQueryData(KEYS.summary, data.summary);
+        });
 
-    socket.on('digimar:update', (data: AllData) => {
-      queryClient.setQueryData(KEYS.allInOne(month), data);
-      queryClient.setQueryData(KEYS.summary, data.summary);
-    });
+        socket.on('digimar:error', (err: any) => {
+          console.error('[DigimarSocket] error:', err);
+        });
 
-    socket.on('digimar:error', (err) => {
-      console.error('[DigimarSocket] error:', err);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('[DigimarSocket] disconnected');
-    });
+        socket.on('disconnect', () => {
+          console.log('[DigimarSocket] disconnected');
+        });
+      })
+      .catch(() => {
+        // socket.io-client not bundled, polling fallback handled by react-query refetchInterval
+      });
 
     return () => {
-      socket.disconnect();
+      isMounted = false;
+      if (socket && typeof socket.disconnect === 'function') {
+        socket.disconnect();
+      }
     };
   }, [month, queryClient]);
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Settings2, 
-  History, 
+import {
+  Settings2,
+  History,
   BookOpen,
-  Plus, 
-  Save, 
+  Plus,
+  Save,
   ShieldCheck,
   Activity,
   GitMerge,
@@ -18,9 +18,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { DnaButton, DnaBadge } from "@/components/dna";
-import { TableShell } from "@/components/layout/TableShell";
+import { DnaPageContainer, DnaPageHeader, DnaCard, DnaButton, DnaBadge, DnaSelect } from "@/components/dna";
 
 // Static Data from Plan
 const STATIC_COA = [
@@ -107,29 +105,30 @@ export default function AutoJournalConfigPrototype() {
   };
 
   return (
-    <TableShell
-      title="Jurnal"
-      titleAccent="Otomatis"
-      subtitle="Automated Journal Entry Configuration & Chart of Accounts Mapping Hub"
-      actions={
-        <div className="flex gap-4">
-          <DnaButton 
-            variant="outline"
-            className="h-14 px-6 border border-slate-200 rounded-2xl"
-            icon={<History className="h-4 w-4 text-amber-500" />}
-          >
-            Audit Log
-          </DnaButton>
-          <DnaButton 
-            variant="primary"
-            className="h-14 px-8 bg-blue-600 hover:bg-blue-700 rounded-2xl hover:scale-105"
-            icon={<Save className="h-5 w-5 text-blue-400" />}
-          >
-            Save Configuration
-          </DnaButton>
-        </div>
-      }
-    >
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="Jurnal"
+        titleAccent="Otomatis"
+        subtitle="Automated Journal Entry Configuration & Chart of Accounts Mapping Hub"
+        actions={
+          <div className="flex gap-4">
+            <DnaButton
+              variant="outline"
+              className="h-14 px-6 border border-slate-200 rounded-2xl"
+              icon={<History className="h-4 w-4 text-amber-500" />}
+            >
+              Audit Log
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              className="h-14 px-8 bg-blue-600 hover:bg-blue-700 rounded-2xl hover:scale-105"
+              icon={<Save className="h-5 w-5 text-blue-400" />}
+            >
+              Save Configuration
+            </DnaButton>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
          {/* Main Config Area */}
@@ -141,7 +140,7 @@ export default function AutoJournalConfigPrototype() {
                 initial="hidden"
                 animate="visible"
               >
-                 <Card className="rounded-2xl border border-slate-200 shadow-sm p-12 bg-white space-y-10">
+                 <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-12 bg-white space-y-10">
                     <div className="flex items-center gap-3">
                        <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shadow-sm", group.bg, group.color)}>
                           <group.icon className="h-5 w-5" />
@@ -159,16 +158,16 @@ export default function AutoJournalConfigPrototype() {
                             <div className="md:col-span-8 flex gap-4">
                                <div className="relative flex-1">
                                   <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                  <select 
+<DnaSelect 
                                     value={mappings[item.id] || ""}
-                                    onChange={(e) => handleUpdateMapping(item.id, e.target.value)}
+                                    onChange={(value) => handleUpdateMapping(item.id, value)}
                                     className="w-full h-11 pl-12 pr-10 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] appearance-none focus:ring-2 focus:ring-blue-500 transition-all italic outline-none cursor-pointer"
                                   >
                                      <option value="">— SELECT COA —</option>
                                      {STATIC_COA.map(coa => (
                                        <option key={coa.kode} value={coa.kode}>{coa.kode} — {coa.nama}</option>
                                      ))}
-                                  </select>
+                                  </DnaSelect>
                                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
                                 </div>
                                 <DnaButton variant="ghost" className="h-11 w-11 p-0 rounded-xl bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white transition-all shrink-0" icon={<Plus className="h-5 w-5" />} />
@@ -176,7 +175,7 @@ export default function AutoJournalConfigPrototype() {
                          </div>
                        ))}
                     </div>
-                 </Card>
+                 </DnaCard>
               </motion.div>
             ))}
          </div>
@@ -184,7 +183,7 @@ export default function AutoJournalConfigPrototype() {
          {/* Sidebar Stats & Info */}
          <div className="lg:col-span-4 space-y-10">
             <div className="sticky top-10 space-y-10">
-               <Card className="rounded-2xl border border-slate-200 shadow-sm p-10 bg-white overflow-hidden relative">
+               <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-10 bg-white overflow-hidden relative">
                   <div className="relative z-10 space-y-10">
                      <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Configuration Ledger</p>
@@ -197,10 +196,10 @@ export default function AutoJournalConfigPrototype() {
                            <p className="text-2xl font-black text-gray-900 tabular-nums">{Object.keys(mappings).length} <span className="text-xs text-slate-400">/ 12</span></p>
                         </div>
                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                           <motion.div 
+                           <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${(Object.keys(mappings).length / 12) * 100}%` }}
-                              className="h-full bg-blue-500" 
+                              className="h-full bg-blue-500"
                            />
                         </div>
                      </div>
@@ -213,9 +212,9 @@ export default function AutoJournalConfigPrototype() {
                      </div>
                   </div>
                   <Settings2 className="h-48 w-48 text-slate-100/40 absolute -right-12 -bottom-12 rotate-12" />
-               </Card>
+               </DnaCard>
 
-               <Card className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
+               <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
                   <div className="flex items-center gap-3">
                      <Lock className="h-5 w-5 text-blue-600" />
                      <h3 className="text-sm font-black uppercase tracking-tighter text-slate-900">Access Governance</h3>
@@ -234,7 +233,7 @@ export default function AutoJournalConfigPrototype() {
                        </div>
                      ))}
                   </div>
-               </Card>
+               </DnaCard>
             </div>
          </div>
       </div>
@@ -254,6 +253,6 @@ export default function AutoJournalConfigPrototype() {
          </div>
          <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.3em]">Institutional Grade Financial OS © 2026</p>
       </div>
-    </TableShell>
+    </DnaPageContainer>
   );
 }

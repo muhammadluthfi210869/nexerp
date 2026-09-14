@@ -20,29 +20,20 @@ import {
   MoreVertical,
   Clock
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaSelect } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+  DnaDialog as Dialog,
+  DnaDialogContent as DialogContent,
+  DnaDialogHeader as DialogHeader,
+  DnaDialogTitle as DialogTitle,
+  DnaDialogTrigger as DialogTrigger,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -135,20 +126,12 @@ export default function VendorBillsPage() {
                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Vendor Entity</label>
-                        <Select
-                          value={billForm.vendorId}
-                          onValueChange={(val) => setBillForm({ ...billForm, vendorId: val || "" })}
-                        >
-                            <SelectTrigger className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-xs uppercase focus:ring-4 focus:ring-blue-500/5 transition-all">
-                              <SelectValue placeholder="Select Vendor..." />
-                           </SelectTrigger>
-                           <SelectContent>
-                              {vendors?.map((v: any) => (
-                                 <SelectItem key={v.id} value={v.id || ""}>{v.name}</SelectItem>
-                              ))}
-                           </SelectContent>
-                        </Select>
+                         <DnaSelect
+                           label="Vendor Entity"
+                           value={billForm.vendorId}
+                           onChange={(val) => setBillForm({ ...billForm, vendorId: val })}
+                           options={vendors?.map((v: any) => ({ label: v.name, value: v.id || "" }))}
+                         />
                      </div>
                      <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Bill Reference ID</label>
@@ -214,22 +197,22 @@ export default function VendorBillsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <StatCard 
+         <DnaStatCard 
            label="Total Debt (AP)" 
            value={`Rp ${stats?.apTotal?.toLocaleString("id-ID") || 0}`} 
            icon={<AlertCircle className="text-rose-600" />} 
          />
-         <StatCard 
+         <DnaStatCard 
            label="Monthly Expense" 
            value={`Rp ${stats?.expense?.toLocaleString("id-ID") || 0}`} 
            icon={<CreditCard className="text-amber-600" />} 
          />
-         <StatCard 
+         <DnaStatCard 
            label="Uncollected AR" 
            value={`Rp ${stats?.uncollected?.toLocaleString("id-ID") || 0}`} 
            icon={<Truck className="text-slate-500" />} 
          />
-         <StatCard 
+         <DnaStatCard 
            label="Cash In (MTD)" 
            value={`Rp ${stats?.cashIn?.toLocaleString("id-ID") || 0}`} 
            icon={<Receipt className="text-emerald-600" />} 
@@ -237,8 +220,8 @@ export default function VendorBillsPage() {
       </div>
 
       {/* Bills Table */}
-      <TableWrapper
-        filters={
+      <DnaDataTableCard
+        customToolbar={
           <div className="relative w-full max-w-md">
             <DnaInput 
               icon={<Search className="h-4 w-4" />}
@@ -312,7 +295,7 @@ export default function VendorBillsPage() {
             )}
          </TableBody>
         </Table>
-      </TableWrapper>
+      </DnaDataTableCard>
     </DashboardShell>
   );
 }

@@ -1,0 +1,199 @@
+﻿src/modules/creative/creative.controller.ts(68,19): error TS2339: Property 'leadId' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(69,18): error TS2339: Property 'brief' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(70,17): error TS2339: Property 'soId' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(71,21): error TS2339: Property 'taskType' does not exist on type 'CreateTaskDto'.
+src/modules/creative/creative.controller.ts(142,13): error TS2339: Property 'printSpecs' does not exist on type 'UploadVersionDto'.
+src/modules/creative/creative.controller.ts(144,37): error TS2339: Property 'printSpecs' does not exist on type 'UploadVersionDto'.
+src/modules/creative/creative.controller.ts(181,19): error TS2339: Property 'status' does not exist on type 'ApjReviewDto'.
+src/modules/creative/creative.controller.ts(182,18): error TS2339: Property 'notes' does not exist on type 'ApjReviewDto'.
+src/modules/creative/creative.controller.ts(184,16): error TS2339: Property 'pin' does not exist on type 'ApjReviewDto'.
+src/modules/creative/creative.controller.ts(192,54): error TS2339: Property 'status' does not exist on type 'ClientReviewDto'.
+src/modules/creative/creative.controller.ts(192,66): error TS2339: Property 'notes' does not exist on type 'ClientReviewDto'.
+src/modules/creative/creative.controller.ts(204,19): error TS2339: Property 'action' does not exist on type 'UnlockTaskDto'.
+src/modules/creative/creative.controller.ts(205,23): error TS2339: Property 'managerPin' does not exist on type 'UnlockTaskDto'.
+src/modules/digimar/digimar.gateway.ts(20,22): error TS2564: Property 'server' has no initializer and is not definitely assigned in the constructor.
+src/modules/digimar/digimar.gateway.ts(44,47): error TS2554: Expected 1 arguments, but got 0.
+src/modules/digimar/digimar.service.ts(19,11): error TS2564: Property 'sheets' has no initializer and is not definitely assigned in the constructor.
+src/modules/digimar/digimar.service.ts(73,7): error TS2322: Type 'null' is not assignable to type 'Sheets'.
+src/modules/digimar/digimar.service.ts(75,84): error TS18046: 'err' is of type 'unknown'.
+src/modules/digimar/digimar.service.ts(76,7): error TS2322: Type 'null' is not assignable to type 'Sheets'.
+src/modules/finance/adjustment-journals/dto/create-adjustment-journals.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/adjustment-journals/dto/create-adjustment-journals.dto.ts(8,3): error TS2564: Property 'journalNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/adjustment-journals/dto/create-adjustment-journals.dto.ts(11,3): error TS2564: Property 'period' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/adjustment-journals/dto/create-adjustment-journals.dto.ts(17,3): error TS2564: Property 'totalAmount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ap-payments/dto/create-ap-payments.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ap-payments/dto/create-ap-payments.dto.ts(8,3): error TS2564: Property 'paymentNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ap-payments/dto/create-ap-payments.dto.ts(11,3): error TS2564: Property 'vendorId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ap-payments/dto/create-ap-payments.dto.ts(14,3): error TS2564: Property 'paymentDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ap-payments/dto/create-ap-payments.dto.ts(17,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ap-payments/dto/create-ap-payments.dto.ts(20,3): error TS2564: Property 'bankAccountId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(8,3): error TS2564: Property 'receiptNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(11,3): error TS2564: Property 'customerId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(14,3): error TS2564: Property 'invoiceId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(17,3): error TS2564: Property 'receiptDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(20,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/ar-receipts/dto/create-ar-receipts.dto.ts(23,3): error TS2564: Property 'bankAccountId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-disposals/dto/create-asset-disposals.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-disposals/dto/create-asset-disposals.dto.ts(8,3): error TS2564: Property 'assetId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-disposals/dto/create-asset-disposals.dto.ts(11,3): error TS2564: Property 'disposalDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-disposals/dto/create-asset-disposals.dto.ts(14,3): error TS2564: Property 'disposalType' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-disposals/dto/create-asset-disposals.dto.ts(17,3): error TS2564: Property 'proceeds' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-disposals/dto/create-asset-disposals.dto.ts(20,3): error TS2564: Property 'gainLoss' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(8,3): error TS2564: Property 'assetId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(11,3): error TS2564: Property 'transferDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(14,3): error TS2564: Property 'fromLocation' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(17,3): error TS2564: Property 'toLocation' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(20,3): error TS2564: Property 'fromPerson' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/asset-transfers/dto/create-asset-transfers.dto.ts(23,3): error TS2564: Property 'toPerson' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-accounts/dto/create-bank-accounts.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-accounts/dto/create-bank-accounts.dto.ts(8,3): error TS2564: Property 'accountCode' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-accounts/dto/create-bank-accounts.dto.ts(11,3): error TS2564: Property 'bankName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-accounts/dto/create-bank-accounts.dto.ts(14,3): error TS2564: Property 'accountName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-accounts/dto/create-bank-accounts.dto.ts(17,3): error TS2564: Property 'accountNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-accounts/dto/create-bank-accounts.dto.ts(20,3): error TS2564: Property 'currentBalance' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(8,3): error TS2564: Property 'bankAccountId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(11,3): error TS2564: Property 'periodStart' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(14,3): error TS2564: Property 'periodEnd' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(17,3): error TS2564: Property 'statementBalance' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(20,3): error TS2564: Property 'bookBalance' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(23,3): error TS2564: Property 'diff' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-reconciliations/dto/create-bank-reconciliations.dto.ts(26,3): error TS2564: Property 'status' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-transactions/dto/create-bank-transactions.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-transactions/dto/create-bank-transactions.dto.ts(8,3): error TS2564: Property 'bankAccountId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-transactions/dto/create-bank-transactions.dto.ts(11,3): error TS2564: Property 'date' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-transactions/dto/create-bank-transactions.dto.ts(14,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-transactions/dto/create-bank-transactions.dto.ts(17,3): error TS2564: Property 'type' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bank-transactions/dto/create-bank-transactions.dto.ts(23,3): error TS2564: Property 'sourceType' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(8,3): error TS2564: Property 'billId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(11,3): error TS2564: Property 'itemCode' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(14,3): error TS2564: Property 'itemName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(17,3): error TS2564: Property 'quantity' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(20,3): error TS2564: Property 'unit' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(23,3): error TS2564: Property 'price' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bill-line-items/dto/create-bill-line-items.dto.ts(26,3): error TS2564: Property 'total' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(8,3): error TS2564: Property 'billNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(11,3): error TS2564: Property 'vendorId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(14,3): error TS2564: Property 'billDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(17,3): error TS2564: Property 'dueDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(20,3): error TS2564: Property 'totalAmount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/bills/dto/create-bills.dto.ts(23,3): error TS2564: Property 'status' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/client-escrows/dto/create-client-escrows.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/client-escrows/dto/create-client-escrows.dto.ts(8,3): error TS2564: Property 'customerId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/client-escrows/dto/create-client-escrows.dto.ts(11,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/client-escrows/dto/create-client-escrows.dto.ts(14,3): error TS2564: Property 'depositDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/client-escrows/dto/create-client-escrows.dto.ts(17,3): error TS2564: Property 'releaseDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/client-escrows/dto/create-client-escrows.dto.ts(20,3): error TS2564: Property 'status' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/closing-checklists/dto/create-closing-checklists.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/closing-checklists/dto/create-closing-checklists.dto.ts(8,3): error TS2564: Property 'period' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/closing-checklists/dto/create-closing-checklists.dto.ts(11,3): error TS2564: Property 'department' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/closing-checklists/dto/create-closing-checklists.dto.ts(14,3): error TS2564: Property 'item' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/closing-checklists/dto/create-closing-checklists.dto.ts(17,3): error TS2564: Property 'completed' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/closing-checklists/dto/create-closing-checklists.dto.ts(20,3): error TS2564: Property 'completedBy' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-allocations/dto/create-cost-allocations.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-allocations/dto/create-cost-allocations.dto.ts(8,3): error TS2564: Property 'allocationDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-allocations/dto/create-cost-allocations.dto.ts(11,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-allocations/dto/create-cost-allocations.dto.ts(14,3): error TS2564: Property 'fromCostCenter' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-allocations/dto/create-cost-allocations.dto.ts(17,3): error TS2564: Property 'toCostCenter' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-allocations/dto/create-cost-allocations.dto.ts(20,3): error TS2564: Property 'allocationMethod' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-variances/dto/create-cost-variances.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-variances/dto/create-cost-variances.dto.ts(8,3): error TS2564: Property 'jobOrderId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-variances/dto/create-cost-variances.dto.ts(11,3): error TS2564: Property 'varianceType' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-variances/dto/create-cost-variances.dto.ts(14,3): error TS2564: Property 'standardCost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-variances/dto/create-cost-variances.dto.ts(17,3): error TS2564: Property 'actualCost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/cost-variances/dto/create-cost-variances.dto.ts(20,3): error TS2564: Property 'variance' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/depreciation-schedules/dto/create-depreciation-schedules.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/depreciation-schedules/dto/create-depreciation-schedules.dto.ts(8,3): error TS2564: Property 'assetId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/depreciation-schedules/dto/create-depreciation-schedules.dto.ts(11,3): error TS2564: Property 'period' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/depreciation-schedules/dto/create-depreciation-schedules.dto.ts(14,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/depreciation-schedules/dto/create-depreciation-schedules.dto.ts(17,3): error TS2564: Property 'accumulated' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/down-payments/dto/create-down-payments.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/down-payments/dto/create-down-payments.dto.ts(8,3): error TS2564: Property 'dpNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/down-payments/dto/create-down-payments.dto.ts(11,3): error TS2564: Property 'vendorId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/down-payments/dto/create-down-payments.dto.ts(14,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/down-payments/dto/create-down-payments.dto.ts(17,3): error TS2564: Property 'dpDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/down-payments/dto/create-down-payments.dto.ts(20,3): error TS2564: Property 'status' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(8,3): error TS2564: Property 'assetNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(11,3): error TS2564: Property 'assetName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(14,3): error TS2564: Property 'assetCategory' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(17,3): error TS2564: Property 'acquisitionDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(20,3): error TS2564: Property 'acquisitionCost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(23,3): error TS2564: Property 'usefulLife' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(26,3): error TS2564: Property 'salvageValue' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/fixed-assets/dto/create-fixed-assets.dto.ts(29,3): error TS2564: Property 'status' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(8,3): error TS2564: Property 'assetNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(11,3): error TS2564: Property 'assetName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(14,3): error TS2564: Property 'acquisitionDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(17,3): error TS2564: Property 'acquisitionCost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(20,3): error TS2564: Property 'amortizationPeriod' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/intangible-assets/dto/create-intangible-assets.dto.ts(23,3): error TS2564: Property 'status' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(8,3): error TS2564: Property 'materialId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(11,3): error TS2564: Property 'warehouseId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(14,3): error TS2564: Property 'ownerType' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(17,3): error TS2564: Property 'ownerId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(20,3): error TS2564: Property 'quantity' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/inventory-ownerships/dto/create-inventory-ownerships.dto.ts(23,3): error TS2564: Property 'unitCost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/job-order-costings/dto/create-job-order-costings.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/job-order-costings/dto/create-job-order-costings.dto.ts(8,3): error TS2564: Property 'jobOrderNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/job-order-costings/dto/create-job-order-costings.dto.ts(14,3): error TS2564: Property 'totalCost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/job-order-costings/dto/create-job-order-costings.dto.ts(17,3): error TS2564: Property 'totalRevenue' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/job-order-costings/dto/create-job-order-costings.dto.ts(20,3): error TS2564: Property 'closedAt' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/period-locks/dto/create-period-locks.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/period-locks/dto/create-period-locks.dto.ts(8,3): error TS2564: Property 'period' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/period-locks/dto/create-period-locks.dto.ts(11,3): error TS2564: Property 'isLocked' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/period-locks/dto/create-period-locks.dto.ts(14,3): error TS2564: Property 'lockedBy' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/period-locks/dto/create-period-locks.dto.ts(17,3): error TS2564: Property 'lockedAt' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(8,3): error TS2564: Property 'productId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(11,3): error TS2564: Property 'productName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(14,3): error TS2564: Property 'period' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(17,3): error TS2564: Property 'revenue' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(20,3): error TS2564: Property 'cost' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(23,3): error TS2564: Property 'profit' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/product-profitabilities/dto/create-product-profitabilities.dto.ts(26,3): error TS2564: Property 'margin' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(8,3): error TS2564: Property 'invoiceId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(11,3): error TS2564: Property 'itemCode' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(14,3): error TS2564: Property 'itemName' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(17,3): error TS2564: Property 'qty' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(20,3): error TS2564: Property 'unit' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(23,3): error TS2564: Property 'price' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoice-line-items/dto/create-sales-invoice-line-items.dto.ts(26,3): error TS2564: Property 'total' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(8,3): error TS2564: Property 'invoiceNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(11,3): error TS2564: Property 'customerId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(14,3): error TS2564: Property 'invoiceDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(17,3): error TS2564: Property 'dueDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(20,3): error TS2564: Property 'totalAmount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(23,3): error TS2564: Property 'paymentStatus' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sales-invoices/dto/create-sales-invoices.dto.ts(26,3): error TS2564: Property 'deliveryStatus' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sample-fees/dto/create-sample-fees.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sample-fees/dto/create-sample-fees.dto.ts(8,3): error TS2564: Property 'feeNumber' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sample-fees/dto/create-sample-fees.dto.ts(11,3): error TS2564: Property 'customerId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sample-fees/dto/create-sample-fees.dto.ts(14,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/sample-fees/dto/create-sample-fees.dto.ts(17,3): error TS2564: Property 'feeDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/tax-transactions/dto/create-tax-transactions.dto.ts(5,3): error TS2564: Property 'id' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/tax-transactions/dto/create-tax-transactions.dto.ts(8,3): error TS2564: Property 'taxTypeId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/tax-transactions/dto/create-tax-transactions.dto.ts(11,3): error TS2564: Property 'sourceType' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/tax-transactions/dto/create-tax-transactions.dto.ts(14,3): error TS2564: Property 'sourceId' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/tax-transactions/dto/create-tax-transactions.dto.ts(17,3): error TS2564: Property 'amount' has no initializer and is not definitely assigned in the constructor.
+src/modules/finance/tax-transactions/dto/create-tax-transactions.dto.ts(20,3): error TS2564: Property 'transactionDate' has no initializer and is not definitely assigned in the constructor.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(98,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(99,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(106,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(107,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(114,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/__tests__/lead-capture-e2e.spec.ts(115,12): error TS18047: 'l' is possibly 'null'.
+src/modules/lead-capture/lead-capture.service.ts(185,11): error TS2353: Object literal may only specify known properties, and 'waName' does not exist in type '(Without<LeadCaptureUpdateInput, LeadCaptureUncheckedUpdateInput> & LeadCaptureUncheckedUpdateInput) | (Without<...> & LeadCaptureUpdateInput)'.
+src/modules/wa-webhook/__tests__/wa-gateway.spec.ts(16,15): error TS2554: Expected 2 arguments, but got 1.
+
+
+=== MARKETING ===
+

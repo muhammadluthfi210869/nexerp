@@ -17,33 +17,17 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('🌱 RESETTING DATABASE...');
   
-  // Cleanup
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE
-    kpi_point_logs, kpi_scores, attendances, payroll_items, payrolls,
-    employee_role_mappings, employees, sales_order_items, sales_orders,
-    inventory_transactions, material_inventories, inbound_items, warehouse_inbounds,
-    purchase_order_items, purchase_orders, bill_of_materials, work_orders,
-    production_step_logs, production_schedules, production_plans,
-    sample_stage_logs, sample_feedback, sample_revisions, sample_requests,
-    sales_leads, bussdev_staffs, lost_deals, lead_activities, lead_timeline_logs,
-    material_items, suppliers, users, financial_periods,
-    kpi_metric_definitions, accounts, master_categories, account_health_logs,
-    activity_streams, articles, artwork_reviews, audit_escalations, content_assets,
-    copq_records, daily_ads_metrics, delivery_orders, design_feedbacks, design_tasks,
-    design_versions, finished_goods, formula_items, formula_phases, formulas,
-    fund_requests, guest_logs, hki_records, internal_audits, journal_entries,
-    journal_lines, lab_test_results, labor_rates, legal_staffs, legal_timeline_logs,
-    machines, marketing_targets, new_product_forms, payments, pnbp_requests,
-    production_logs, purchase_request_items, purchase_requests, 
-    qc_audits, qc_parameters, regulatory_pipelines, reject_executions,
-    material_requisitions, material_valuations,
-    retention_engine, sales_return_items, sales_returns, sales_targets,
-    shipment_items, shipments,
-    stock_adjustment_items, stock_adjustments, stock_opname_items, stock_opnames,
-    system_configs, system_override_logs, tickets, transfer_order_items,
-    transfer_orders, unified_invoices, warehouse_locations, warehouses, website_products,
-    work_orders
-  RESTART IDENTITY CASCADE`);
+  // Cleanup — daftar manual dulu sering basi (mis. "sample_revisions" sudah tidak
+  // ada di schema → seed gagal total). Ambil daftar tabel LANGSUNG dari DB,
+  // selalu sinkron dengan schema yang terpasang. _prisma_migrations dikecualikan.
+  const publicTables: Array<{ tablename: string }> = await prisma.$queryRawUnsafe(
+    `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`
+  );
+  if (publicTables.length > 0) {
+    await prisma.$executeRawUnsafe(
+      `TRUNCATE TABLE ${publicTables.map(t => `"${t.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`
+    );
+  }
 
   console.log('');
   console.log('🌱 FASE 1: Seeding Personnel (24 Real Users)...');

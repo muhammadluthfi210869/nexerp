@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
+import {
   DollarSign,
   TrendingUp,
   CreditCard,
@@ -14,6 +14,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DnaCard, DnaDataTableCard, DnaBadge, DnaTable, DnaTableHead, DnaTableBody, DnaTableRow, DnaTh, DnaTd } from "@/components/dna";
 
 const FALLBACK_TRANSACTIONS = [
   { id: 'TX-5001', date: '2024-04-02', type: 'IN', cat: 'REVENUE', ref: 'SALES (INV-2041)', amount: '125,000,000', method: 'BANK TRANSFER', status: 'PAID' },
@@ -101,7 +102,7 @@ export default function FinanceDashboardPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1.25rem", marginBottom: "3rem" }}>
         
         {/* Card A: REVENUE & COLLECTION */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+        <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-6">
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
             <TrendingUp className="w-4 h-4 text-blue-500" />
             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>A. REVENUE & COLLECTION</p>
@@ -127,10 +128,10 @@ export default function FinanceDashboardPage() {
               </span>
             </div>
           </div>
-        </div>
+        </DnaCard>
 
         {/* Card B: EXPENSE CONTROL */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+        <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-6">
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
             <CreditCard className="w-4 h-4 text-yellow-500" style={{ color: "#EAB308" }} />
             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>B. EXPENSE CONTROL</p>
@@ -159,10 +160,10 @@ export default function FinanceDashboardPage() {
               <span style={{ fontSize: "11px", fontWeight: 950, color: "#EAB308" }}>{metrics?.expenseRatio ?? 65.6}%</span>
             </div>
           </div>
-        </div>
+        </DnaCard>
 
         {/* Card C: CASH FLOW HEALTH */}
-        <div style={{ background: "#F0FDF4", padding: "1.5rem", borderRadius: "24px", border: "1px solid #DCFCE7", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+        <DnaCard className="rounded-2xl border border-emerald-200 shadow-sm p-6">
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
             <ShieldCheck className="w-4 h-4 text-emerald-500" style={{ color: "#10B981" }} />
             <p style={{ fontSize: "11px", fontWeight: 950, color: "#166534", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>C. CASH FLOW HEALTH</p>
@@ -192,10 +193,10 @@ export default function FinanceDashboardPage() {
               CURRENT BALANCE: <span style={{ color: "#1E293B", fontWeight: 950 }}>{formatMilyarJuta(metrics?.currentBalance, "Rp 4.5 M")}</span>
             </p>
           </div>
-        </div>
+        </DnaCard>
 
         {/* Card D: PROFITABILITY */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+        <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-6">
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
             <BarChart3 className="w-4 h-4 text-purple-500" style={{ color: "#8B5CF6" }} />
             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>D. PROFITABILITY</p>
@@ -224,10 +225,10 @@ export default function FinanceDashboardPage() {
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{metrics?.gpMargin ?? 59.4}%</span>
             </div>
           </div>
-        </div>
+        </DnaCard>
 
         {/* Card E: FINANCIAL RISK */}
-        <div style={{ background: "#FFF1F2", padding: "1.5rem", borderRadius: "24px", border: "1px solid #FECDD3", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+        <DnaCard className="rounded-2xl border border-rose-200 shadow-sm p-6">
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
             <ShieldAlert className="w-4 h-4 text-rose-600" style={{ color: "#E11D48" }} />
             <p style={{ fontSize: "11px", fontWeight: 950, color: "#9F1239", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>E. FINANCIAL RISK</p>
@@ -252,66 +253,57 @@ export default function FinanceDashboardPage() {
               </p>
             </div>
           </div>
-        </div>
+        </DnaCard>
 
       </div>
 
       {/* II. TRANSACTION LOG */}
       <div style={{ marginBottom: "4rem" }}>
         <h3 className="section-label" style={{ marginBottom: "1.25rem" }}>🔴 1. FINANCIAL TRANSACTION LOG (CENTRAL LEDGER)</h3>
-        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TRANS ID / DATE</th>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TYPE / CATEGORY</th>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>REFERENCE (REF ID)</th>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>AMOUNT</th>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>METHOD</th>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(metrics?.transactions?.length ? metrics.transactions : FALLBACK_TRANSACTIONS).map((row: any, i: number) => {
-                  const isIn = row.type === 'IN';
-                  return (
-                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                      <td style={{ padding: "1.25rem 1.5rem" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.id}</div>
-                        <div style={{ fontSize: "9px", fontWeight: 800, color: "#64748B" }}>{row.date}</div>
-                      </td>
-                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 950, color: isIn ? "#10B981" : "#EF4444" }}>
-                          {row.type} / {row.cat || 'COGS'}
-                        </div>
-                      </td>
-                      <td style={{ padding: "1.25rem 1.5rem" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.ref}</div>
-                      </td>
-                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "14px", fontWeight: 950, color: isIn ? "#10B981" : "#1E293B" }}>
-                        Rp {row.amount}
-                      </td>
-                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 850 }}>{row.method}</td>
-                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                        <span style={{ 
-                          background: row.status === 'PAID' ? "#10B981" : "#F59E0B", 
-                          color: "white", 
-                          padding: "4px 10px", 
-                          borderRadius: "6px", 
-                          fontSize: "9px", 
-                          fontWeight: 950 
-                        }}>
-                          {row.status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DnaDataTableCard>
+          <DnaTable style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+            <DnaTableHead>
+              <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                <DnaTh style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TRANS ID / DATE</DnaTh>
+                <DnaTh style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TYPE / CATEGORY</DnaTh>
+                <DnaTh style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>REFERENCE (REF ID)</DnaTh>
+                <DnaTh style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>AMOUNT</DnaTh>
+                <DnaTh style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>METHOD</DnaTh>
+                <DnaTh style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>STATUS</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {(metrics?.transactions?.length ? metrics.transactions : FALLBACK_TRANSACTIONS).map((row: any, i: number) => {
+                const isIn = row.type === 'IN';
+                return (
+                  <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <DnaTd style={{ padding: "1.25rem 1.5rem" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.id}</div>
+                      <div style={{ fontSize: "9px", fontWeight: 800, color: "#64748B" }}>{row.date}</div>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 950, color: isIn ? "#10B981" : "#EF4444" }}>
+                        {row.type} / {row.cat || 'COGS'}
+                      </div>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "1.25rem 1.5rem" }}>
+                      <div style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.ref}</div>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "14px", fontWeight: 950, color: isIn ? "#10B981" : "#1E293B" }}>
+                      Rp {row.amount}
+                    </DnaTd>
+                    <DnaTd style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 850 }}>{row.method}</DnaTd>
+                    <DnaTd style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <DnaBadge status={row.status === 'PAID' ? "success" : "warning"}>
+                        {row.status}
+                      </DnaBadge>
+                    </DnaTd>
+                  </DnaTableRow>
+                );
+              })}
+            </DnaTableBody>
+          </DnaTable>
+        </DnaDataTableCard>
       </div>
 
       {/* III. AR & AP DUAL GRID */}
@@ -320,91 +312,77 @@ export default function FinanceDashboardPage() {
         {/* accounts receivable */}
         <div>
           <h3 className="section-label" style={{ color: "#3B82F6", marginBottom: "1.25rem" }}>🔵 2. ACCOUNTS RECEIVABLE (PIUTANG)</h3>
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>INVOICE / CUSTOMER</th>
-                  <th style={{ padding: "1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>OUTSTANDING</th>
-                  <th style={{ padding: "1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DnaDataTableCard>
+            <DnaTable style={{ width: "100%", borderCollapse: "collapse" }}>
+              <DnaTableHead>
+                <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <DnaTh style={{ padding: "1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>INVOICE / CUSTOMER</DnaTh>
+                  <DnaTh style={{ padding: "1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>OUTSTANDING</DnaTh>
+                  <DnaTh style={{ padding: "1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>STATUS</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(metrics?.receivables?.length ? metrics.receivables : FALLBACK_AR).map((row: any, i: number) => {
                   const isOverdue = row.status === 'OVERDUE';
                   return (
-                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                      <td style={{ padding: "1rem", textAlign: "left" }}>
+                    <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <DnaTd style={{ padding: "1rem", textAlign: "left" }}>
                         <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.id}</div>
                         <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>{row.name}</div>
-                      </td>
-                      <td style={{ padding: "1rem", textAlign: "right" }}>
+                      </DnaTd>
+                      <DnaTd style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ fontSize: "12px", fontWeight: 950, color: isOverdue ? "#EF4444" : "#1E293B" }}>Rp {row.out}</div>
                         <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", marginTop: "2px" }}>{row.due}</div>
-                      </td>
-                      <td style={{ padding: "1rem", textAlign: "center" }}>
-                        <span style={{ 
-                          background: isOverdue ? "#EF4444" : "#F59E0B", 
-                          color: "white", 
-                          padding: "2px 6px", 
-                          borderRadius: "4px", 
-                          fontSize: "8px", 
-                          fontWeight: 950 
-                        }}>
+                      </DnaTd>
+                      <DnaTd style={{ padding: "1rem", textAlign: "center" }}>
+                        <DnaBadge status={isOverdue ? "critical" : "warning"}>
                           {row.status}
-                        </span>
-                      </td>
-                    </tr>
+                        </DnaBadge>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
         </div>
 
         {/* accounts payable */}
         <div>
           <h3 className="section-label" style={{ color: "#F59E0B", marginBottom: "1.25rem" }}>🟠 3. ACCOUNTS PAYABLE (HUTANG)</h3>
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>BILL / SUPPLIER</th>
-                  <th style={{ padding: "1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>OUTSTANDING</th>
-                  <th style={{ padding: "1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DnaDataTableCard>
+            <DnaTable style={{ width: "100%", borderCollapse: "collapse" }}>
+              <DnaTableHead>
+                <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <DnaTh style={{ padding: "1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>BILL / SUPPLIER</DnaTh>
+                  <DnaTh style={{ padding: "1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>OUTSTANDING</DnaTh>
+                  <DnaTh style={{ padding: "1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>STATUS</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(metrics?.payables?.length ? metrics.payables : FALLBACK_AP).map((row: any, i: number) => {
                   const isOverdue = row.status === 'OVERDUE';
                   return (
-                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                      <td style={{ padding: "1rem", textAlign: "left" }}>
+                    <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <DnaTd style={{ padding: "1rem", textAlign: "left" }}>
                         <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.id}</div>
                         <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>{row.name}</div>
-                      </td>
-                      <td style={{ padding: "1rem", textAlign: "right" }}>
+                      </DnaTd>
+                      <DnaTd style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ fontSize: "12px", fontWeight: 950, color: isOverdue ? "#EF4444" : "#1E293B" }}>Rp {row.out}</div>
                         <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", marginTop: "2px" }}>{row.due}</div>
-                      </td>
-                      <td style={{ padding: "1rem", textAlign: "center" }}>
-                        <span style={{ 
-                          background: isOverdue ? "#EF4444" : row.status === 'PARTIAL' ? "#F59E0B" : "#94A3B8", 
-                          color: "white", 
-                          padding: "2px 6px", 
-                          borderRadius: "4px", 
-                          fontSize: "8px", 
-                          fontWeight: 950 
-                        }}>
+                      </DnaTd>
+                      <DnaTd style={{ padding: "1rem", textAlign: "center" }}>
+                        <DnaBadge status={isOverdue ? "critical" : row.status === 'PARTIAL' ? "warning" : "default"}>
                           {row.status}
-                        </span>
-                      </td>
-                    </tr>
+                        </DnaBadge>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
         </div>
 
       </div>
@@ -415,63 +393,63 @@ export default function FinanceDashboardPage() {
         {/* Expense breakdown */}
         <div>
           <h3 className="section-label" style={{ color: "#EAB308", marginBottom: "1.25rem" }}>🟢 4. EXPENSE BREAKDOWN (DEPT AUDIT)</h3>
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>CATEGORY / DEPT</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>AMOUNT</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DnaDataTableCard>
+            <DnaTable style={{ width: "100%", borderCollapse: "collapse" }}>
+              <DnaTableHead>
+                <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>CATEGORY / DEPT</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>AMOUNT</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(metrics?.expenseBreakdown?.length ? metrics.expenseBreakdown : FALLBACK_EXPENSE).map((row: any, i: number) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
+                  <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                       <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.cat}</div>
                       <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>{row.sub}</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
                       {row.amount}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
         </div>
 
         {/* Revenue breakdown */}
         <div>
           <h3 className="section-label" style={{ color: "#3B82F6", marginBottom: "1.25rem" }}>🔵 5. REVENUE BREAKDOWN (GROWTH AUDIT)</h3>
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>CUSTOMER / PRODUCT</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>SOURCE</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>AMOUNT</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DnaDataTableCard>
+            <DnaTable style={{ width: "100%", borderCollapse: "collapse" }}>
+              <DnaTableHead>
+                <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>CUSTOMER / PRODUCT</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>SOURCE</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>AMOUNT</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(metrics?.revenueBreakdown?.length ? metrics.revenueBreakdown : FALLBACK_REVENUE).map((row: any, i: number) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
+                  <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                       <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.name}</div>
                       <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>{row.prod}</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
-                      <span style={{ background: "#3B82F6", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "8px", fontWeight: 950 }}>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
+                      <DnaBadge status="info">
                         {row.type}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#10B981" }}>
+                      </DnaBadge>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#10B981" }}>
                       {row.amount}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
         </div>
 
       </div>
@@ -482,70 +460,70 @@ export default function FinanceDashboardPage() {
         {/* cash position */}
         <div>
           <h3 className="section-label" style={{ color: "#475569", marginBottom: "1.25rem" }}>📁 6. DAILY CASH POSITION</h3>
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>DATE</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>IN / OUT</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>CLOSING</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DnaDataTableCard>
+            <DnaTable style={{ width: "100%", borderCollapse: "collapse" }}>
+              <DnaTableHead>
+                <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>DATE</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>IN / OUT</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>CLOSING</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(metrics?.cashPosition?.length ? metrics.cashPosition : FALLBACK_CASH).map((row: any, i: number) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
+                  <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                       <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.date}</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
                       <div style={{ fontSize: "10px", fontWeight: 950, color: "#10B981" }}>{row.in}</div>
                       <div style={{ fontSize: "10px", fontWeight: 950, color: "#EF4444", marginTop: "2px" }}>{row.out}</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
+                    </DnaTd>
+                    <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>
                       {row.closing}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
         </div>
 
         {/* kpi performance */}
         <div>
           <h3 className="section-label" style={{ color: "#EC4899", marginBottom: "1.25rem" }}>🌸 7. KPI PERFORMANCE (FINANCIAL SCORE)</h3>
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>PERIOD</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>MARGIN / COLL</th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>HEALTH SCORE</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DnaDataTableCard>
+            <DnaTable style={{ width: "100%", borderCollapse: "collapse" }}>
+              <DnaTableHead>
+                <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontWeight: 950 }}>PERIOD</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "9px", fontWeight: 950 }}>MARGIN / COLL</DnaTh>
+                  <DnaTh style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "9px", fontWeight: 950 }}>HEALTH SCORE</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(metrics?.kpiPerformance?.length ? metrics.kpiPerformance : FALLBACK_KPI).map((row: any, i: number) => {
                   const isStable = row.status === 'STABLE';
                   return (
-                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                      <td style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
+                    <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "left" }}>
                         <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.period}</div>
-                        <div style={{ fontSize: "7px", fontWeight: 950, color: isStable ? "#10B981" : "#EF4444", textTransform: "uppercase", marginTop: "2px" }}>
+                        <DnaBadge status={isStable ? "success" : "warning"} className="mt-1">
                           {row.status}
-                        </div>
-                      </td>
-                      <td style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
+                        </DnaBadge>
+                      </DnaTd>
+                      <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
                         {row.margin} / {row.coll}
-                      </td>
-                      <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "18px", fontWeight: 950, color: isStable ? "#10B981" : "#F59E0B" }}>
+                      </DnaTd>
+                      <DnaTd style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "18px", fontWeight: 950, color: isStable ? "#10B981" : "#F59E0B" }}>
                         {row.score}
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
         </div>
 
       </div>

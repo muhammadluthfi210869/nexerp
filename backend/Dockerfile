@@ -14,10 +14,8 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Compile seed files
-RUN npx tsc prisma/seed-master.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true
-RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true
-RUN for f in prisma/seed-*.ts; do npx tsc "$f" --outDir dist/prisma --esModuleInterop --skipLibCheck --module commonjs 2>/dev/null || true; done
+# Compile seed file — output ke dist/prisma/seed.js
+RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --skipLibCheck --module commonjs 2>&1
 
 # Stage 2: Runtime
 FROM node:20-alpine
@@ -30,6 +28,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/scripts ./scripts
 COPY init-db.sh ./
 RUN sed -i 's/\r$//' init-db.sh && chmod +x init-db.sh
 

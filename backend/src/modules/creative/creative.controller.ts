@@ -65,10 +65,10 @@ export class CreativeController {
   @Post('task')
   createTask(@Body() dto: CreateTaskDto, @Req() req: any) {
     return this.creativeService.createTask({
-      leadId: dto.leadId,
-      brief: dto.brief,
-      soId: dto.soId,
-      taskType: dto.taskType,
+      leadId: dto.leadId!,
+      brief: dto.brief!,
+      soId: dto.soId!,
+      taskType: dto.taskType!,
       createdBy: req.user?.id,
     });
   }
@@ -178,10 +178,10 @@ export class CreativeController {
   ) {
     return this.creativeService.apjReview({
       taskId: id,
-      status: dto.status,
-      notes: dto.notes,
+      status: dto.status!,
+      notes: dto.notes!,
       authorId: req.user?.id,
-      pin: dto.pin,
+      pin: dto.pin!,
       ipAddress: req.ip ?? null,
     });
   }
@@ -189,7 +189,7 @@ export class CreativeController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
   @Patch('task/:id/client-review')
   clientReview(@Param('id') id: string, @Body() dto: ClientReviewDto) {
-    return this.creativeService.clientReview(id, dto.status, dto.notes);
+    return this.creativeService.clientReview(id, dto.status!, dto.notes);
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
@@ -201,8 +201,8 @@ export class CreativeController {
   ) {
     return this.creativeService.unlockTask({
       taskId: id,
-      action: dto.action,
-      managerPin: dto.managerPin,
+      action: dto.action!,
+      managerPin: dto.managerPin!,
       userId: req.user?.id,
     });
   }

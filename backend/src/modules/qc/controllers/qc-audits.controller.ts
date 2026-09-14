@@ -16,7 +16,7 @@ import { QCAuditsService } from '../services/qc-audits.service';
 import { CreateQCAuditDto } from '../dto/create-audit.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('qc/audits')
+@Controller(['qc/audits', 'v1/qc/audits'])
 export class QCAuditsController {
   constructor(private readonly qcService: QCAuditsService) {}
 
@@ -28,8 +28,17 @@ export class QCAuditsController {
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.PRODUCTION_OP)
-  findAll(@Request() req: any, @Query('status') status?: string, @Query('type') type?: string, @Query('mine') mine?: string) {
-    return this.qcService.findAll(status, type, mine === 'true' ? req.user.id : undefined);
+  findAll(
+    @Request() req: any,
+    @Query('status') status?: string,
+    @Query('type') type?: string,
+    @Query('mine') mine?: string,
+  ) {
+    return this.qcService.findAll(
+      status,
+      type,
+      mine === 'true' ? req.user.id : undefined,
+    );
   }
 
   @Get(':id')

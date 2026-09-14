@@ -1,10 +1,10 @@
-﻿// Single source of truth untuk alias member marketing (dipakai seragam oleh
+// Single source of truth untuk alias member marketing (dipakai seragam oleh
 // Board, backend, dan filter mana pun — lihat BUG-C2/P3.2 di dokumen
 // docs/REMEDIATION-MANAGEMENT-TASK.md). Nama kanonik = nama profil backend.
 export const MEMBER_ALIASES: Record<string, string[]> = {
   Aurel: ["aurel"],
-  Revi: ["revi", "revita", "fadhilah", "nisa"],
-  Zarka: ["zarka", "zarkasi"],
+  Revi: ["revi", "revita", "revita yustianawati", "fadhilah", "nisa"],
+  Zarka: ["zarka", "zarkasi", "muhammad zarkasi"],
   Gusti: ["gusti"],
   Luthfi: ["luthfi"],
   Rahmat: ["rahmat"],

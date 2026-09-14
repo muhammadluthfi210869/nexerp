@@ -21,7 +21,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, StatCard, DataCard, DnaBadge, DnaButton } from "@/components/dna";
+import { DnaDataTableCard, DnaStatCard, DnaCard, DnaBadge, DnaButton, DnaInput, DnaCell } from "@/components/dna";
 
 export default function LegalityHub() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,36 +118,20 @@ export default function LegalityHub() {
       <div className="space-y-6 animate-fade-slide-in">
         {/* Compliance Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <StatCard 
-            label="ACTIVE PERMITS" 
-            value={activePermits} 
-            icon={<Verified className="text-emerald-500" />} 
-          />
-          <StatCard 
-            label="EXPIRING SOON" 
-            value={expiringSoon} 
-            icon={<Clock className="text-amber-500" />} 
-          />
-          <StatCard 
-            label="IN PROGRESS" 
-            value={inProgress} 
-            icon={<Zap className="text-blue-500" />} 
-          />
-          <StatCard 
-            label="REGULATORY HEALTH" 
-            value={healthScore} 
-            icon={<ShieldCheck className="text-slate-500" />} 
-          />
+          <DnaStatCard label="ACTIVE PERMITS" value={activePermits} icon={<Verified />} variant="emerald" />
+          <DnaStatCard label="EXPIRING SOON" value={expiringSoon} icon={<Clock />} variant="amber" />
+          <DnaStatCard label="IN PROGRESS" value={inProgress} icon={<Zap />} variant="blue" />
+          <DnaStatCard label="REGULATORY HEALTH" value={healthScore} icon={<ShieldCheck />} variant="neutral" />
         </div>
 
-        {/* Permits Table wrapped in TableWrapper */}
-        <TableWrapper
-          filters={
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Permits Table wrapped in DnaDataTableCard */}
+        <DnaDataTableCard
+          customToolbar={
+            <div className="px-5 py-3 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
               <div className="flex items-center gap-3">
-                <span className="status-dot bg-amber-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                 <div>
-                  <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
+                  <h3 className="font-bold text-slate-900 uppercase tracking-tight text-sm">
                     PERMITS & LICENSING INDEX
                   </h3>
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">
@@ -155,18 +139,13 @@ export default function LegalityHub() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="CARI PERMIT ID / PENERBIT..."
-                    className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
-                  />
-                </div>
-              </div>
+              <DnaInput
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="CARI PERMIT ID / PENERBIT..."
+                className="w-full md:w-64"
+              />
             </div>
           }
         >
@@ -267,10 +246,10 @@ export default function LegalityHub() {
               </tbody>
             </table>
           </div>
-        </TableWrapper>
+        </DnaDataTableCard>
 
         {/* Regulatory Calendar Preview */}
-        <DataCard
+        <DnaCard
           dotColor="bg-amber-500"
           title="REGULATORY INTELLIGENCE"
           titleColor="text-slate-400"
@@ -302,7 +281,7 @@ export default function LegalityHub() {
               Regulatory Map
             </DnaButton>
           </div>
-        </DataCard>
+        </DnaCard>
 
         {/* Advance Status Dialog */}
         {advancePermit && (

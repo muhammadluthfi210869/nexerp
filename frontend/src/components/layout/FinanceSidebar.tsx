@@ -73,25 +73,25 @@ const financeSections = [
     items: [
       {
         name: "DP Pembelian",
-        href: "/finance/dp-pembelian",
+        href: "/pembelian/dp-pembelian",
         icon: Receipt,
         description: "Uang Muka Pembelian"
       },
       {
         name: "DP Penjualan",
-        href: "/finance/dp-penjualan",
+        href: "/penjualan/dp-penjualan-finance",
         icon: Handshake,
         description: "Uang Muka Penjualan"
       },
       {
         name: "Bayar Pembelian",
-        href: "/finance/bayar-pembelian",
+        href: "/pembelian/bayar-pembelian",
         icon: CreditCard,
         description: "Pembayaran Faktur Supplier"
       },
       {
         name: "Bayar Penjualan",
-        href: "/finance/bayar-penjualan",
+        href: "/penjualan/bayar-penjualan",
         icon: DollarSign,
         description: "Penerimaan Pembayaran Piutang"
       },
@@ -126,7 +126,7 @@ const financeSections = [
       },
       {
         name: "Sales Orders",
-        href: "/finance/sales-orders",
+        href: "/penjualan/sales-orders-finance",
         icon: ShoppingCart,
         description: "Order Penjualan"
       }
@@ -154,7 +154,7 @@ const financeSections = [
     items: [
       {
         name: "Laporan Keuangan",
-        href: "/finance/reports",
+        href: "/reports/finance-reports",
         icon: ShieldCheck,
         description: "Pusat Pelaporan Terpadu"
       },
@@ -166,7 +166,7 @@ const financeSections = [
       },
       {
         name: "Approvals",
-        href: "/finance/approvals",
+        href: "/approvals/finance-approvals",
         icon: BadgeCheck,
         description: "Persetujuan Transaksi"
       }

@@ -1,7 +1,13 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { validateEnv } from './common/config/env.validation';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { CommonModule } from './common/common.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
@@ -35,6 +41,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { EventsModule } from './modules/events/events.module';
 import { SystemModule } from './modules/system/system.module';
 import { DocumentAutomationModule } from './modules/document-automation/document-automation.module';
+import { TodoModule } from './modules/todo/todo.module';
 
 import { MasterModule } from './modules/master/master.module';
 import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
@@ -43,11 +50,30 @@ import { join } from 'path';
 
 @Module({
   imports: [
+    // Fail-fast env validation: app won't boot with missing/invalid config
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      validate: validateEnv,
+    }),
+
+    // Rate limiting (default: 100 req/min/IP — override via env THROTTLE_LIMIT)
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => [
+        {
+          ttl: 60_000,
+          limit: cfg.get<number>('THROTTLE_LIMIT', 100),
+        },
+      ],
+    }),
+
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
     PrismaModule,
+    CommonModule,
     UsersModule,
     AuthModule,
     MarketingModule,
@@ -83,8 +109,21 @@ import { join } from 'path';
     EventsModule,
     SystemModule,
     DocumentAutomationModule,
+    TodoModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Apply ThrottlerGuard globally
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Apply correlation ID to all routes
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

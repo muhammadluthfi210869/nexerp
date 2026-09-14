@@ -42,6 +42,9 @@ enum LeadSource {
   LINKTREE
   GOOGLE
   OFFLINE
+  WEBSITE
+  DIRECT
+  REFERRAL
 }
 
 enum LeadStatus {
@@ -70,6 +73,9 @@ enum WorkflowStatus {
   WON_DEAL
   LOST
   ABORTED
+  COLD
+  WARM
+  HOT
 }
 
 enum ActivityType {
@@ -144,6 +150,15 @@ enum ContentCategory {
   ENTERTAINMENT
   BEHIND_THE_SCENES
   OTHER
+}
+
+enum PostStatus {
+  IDEA
+  SCRIPTING
+  REVIEW
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
 }
 
 enum GuestCategory {
@@ -565,6 +580,7 @@ enum LaborGrade {
 }
 
 enum EscalationType {
+  SOURCE_OVERRIDE
   VENDOR_BLACKLIST_PO
   FTY_THRESHOLD_BREACH
   SPOILAGE_RISK_OVERRIDE

@@ -1,17 +1,16 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { TableWrapper, SectionLabel } from "@/components/dna";
+import { DnaCard, DnaDataTableCard, DnaTable } from "@/components/dna";
 
 export function Rankings({ audit }: { audit: any }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* 🧬 IV. TOP 10 LIST BAHAN BAKU */}
       <div className="space-y-4">
-        <SectionLabel as="h3">🧬 IV. TOP 10 BAHAN BAKU</SectionLabel>
-        <TableWrapper>
+        <DnaCard title="🧬 IV. TOP 10 BAHAN BAKU">
+        <DnaDataTableCard>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <DnaTable className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   <th className="px-6 py-4 text-table-header text-slate-400">NAMA BAHAN</th>
@@ -34,17 +33,18 @@ export function Rankings({ audit }: { audit: any }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
-        </TableWrapper>
+        </DnaDataTableCard>
+      </DnaCard>
       </div>
 
       {/* 📦 V. TOP 10 LIST KEMASAN */}
       <div className="space-y-4">
-        <SectionLabel as="h3">📦 V. TOP 10 KEMASAN</SectionLabel>
-        <TableWrapper>
+        <DnaCard title="📦 V. TOP 10 KEMASAN">
+        <DnaDataTableCard>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <DnaTable className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   <th className="px-6 py-4 text-table-header text-slate-400">NAMA KEMASAN</th>
@@ -67,15 +67,16 @@ export function Rankings({ audit }: { audit: any }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DnaTable>
           </div>
-        </TableWrapper>
+        </DnaDataTableCard>
+      </DnaCard>
       </div>
 
       {/* 🏆 TEAM PRODUCTIVITY RANK */}
       <div className="space-y-4">
-        <SectionLabel as="h3">🏆 TEAM WAREHOUSE RANK</SectionLabel>
-        <Card className="bento-card p-8 bg-white">
+        <DnaCard title="🏆 TEAM WAREHOUSE RANK">
+        <DnaCard className="bento-card p-8 bg-white">
           <div className="space-y-4">
             {audit?.productivity?.map((rank: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group cursor-default">
@@ -94,7 +95,8 @@ export function Rankings({ audit }: { audit: any }) {
               </div>
             ))}
           </div>
-        </Card>
+        </DnaCard>
+        </DnaCard>
       </div>
     </div>
   );

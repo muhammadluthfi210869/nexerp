@@ -303,9 +303,9 @@ describe('FinanceService — Unit', () => {
         lines: [],
       });
 
-      await expect(
-        service.reverseJournalEntry('rev-1'),
-      ).rejects.toThrow('Cannot reverse a reversal');
+      await expect(service.reverseJournalEntry('rev-1')).rejects.toThrow(
+        'Cannot reverse a reversal',
+      );
     });
   });
 });

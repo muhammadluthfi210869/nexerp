@@ -1,4 +1,4 @@
-import {
+﻿import {
   Injectable,
   NotFoundException,
   BadRequestException,
@@ -194,5 +194,206 @@ export class PurchaseOrdersService {
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
       },
     });
+  }
+
+  // Item 46+47: Calculate rounding discount based on packing size
+  // discountRounding = (qtyRounded - qty) * price
+  calculateRounding(qty: number, packingSize: number, price: number): number {
+    if (packingSize <= 0) return 0;
+    const qtyRounded = Math.ceil(qty / packingSize) * packingSize;
+    const rounding = qtyRounded - qty;
+    return rounding * price;
+  }
+
+  // Item 39: Update product-supplier history when PO is approved
+  async updateProductSupplierHistory(poId: string): Promise<void> {
+    const po = await this.prisma.purchaseOrder.findUnique({
+      where: { id: poId },
+      include: { items: true, supplier: true },
+    });
+    if (!po || po.status !== 'APPROVED') return;
+
+    for (const item of po.items) {
+      const qty = Number(item.quantity);
+      await this.prisma.productSupplierHistory.upsert({
+        where: {
+          productId_supplierId: {
+            productId: item.materialId,
+            supplierId: po.supplierId!,
+          },
+        },
+        create: {
+          productId: item.materialId,
+          supplierId: po.supplierId!,
+          firstSeenAt: new Date(),
+          lastPurchaseAt: new Date(),
+          totalQtyPurchased: qty,
+        },
+        update: {
+          lastPurchaseAt: new Date(),
+          totalQtyPurchased: { increment: qty },
+        },
+      });
+    }
+  }
+
+  // Item 71: Get default source (PO or STOCK) based on stock availability
+  async getDefaultSource(
+    materialId: string,
+    qtyNeeded: number,
+    warehouseId?: string,
+  ): Promise<'PO' | 'STOCK'> {
+    const where: any = {
+      materialId,
+      currentStock: { gt: 0 },
+      qcStatus: 'GOOD',
+    };
+    if (warehouseId) {
+      where.location = { warehouseId };
+    }
+    const inventories = await this.prisma.materialInventory.findMany({ where });
+    const totalStock = inventories.reduce(
+      (sum, inv) => sum + Number(inv.currentStock),
+      0,
+    );
+    return totalStock >= qtyNeeded ? 'STOCK' : 'PO';
+  }
+
+  // Item 71: Validate source selection and check stock availability
+  async validateSourceSelection(
+    materialId: string,
+    qty: number,
+    source: string,
+    warehouseId?: string,
+  ): Promise<{ valid: boolean; error?: string }> {
+    if (source !== 'STOCK') return { valid: true };
+
+    const where: any = {
+      materialId,
+      currentStock: { gt: 0 },
+      qcStatus: 'GOOD',
+    };
+    if (warehouseId) {
+      where.location = { warehouseId };
+    }
+    const inventories = await this.prisma.materialInventory.findMany({ where });
+    const totalStock = inventories.reduce(
+      (sum, inv) => sum + Number(inv.currentStock),
+      0,
+    );
+
+    if (totalStock < qty) {
+      return {
+        valid: false,
+        error: `Stok tidak cukup untuk material ini. Tersedia: ${totalStock}, Butuh: ${qty}`,
+      };
+    }
+    return { valid: true };
+  }
+
+  // Item 72: Recalculate HPP for a product based on recent approved POs
+  async recalcHpp(materialId: string): Promise<number | null> {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const result = await this.prisma.purchaseOrderItem.aggregate({
+      where: {
+        materialId,
+        po: {
+          status: 'APPROVED',
+          updatedAt: { gte: ninetyDaysAgo },
+        },
+      },
+      _sum: { totalPrice: true },
+      _count: true,
+    });
+
+    // Note: This uses totalPrice which includes qty * unitPrice
+    // For proper HPP we need qtyBagus, but since we don't have that field yet,
+    // we use the item-level data
+    const approvedItems = await this.prisma.purchaseOrderItem.findMany({
+      where: {
+        materialId,
+        po: { status: 'APPROVED', updatedAt: { gte: ninetyDaysAgo } },
+      },
+      include: { po: true },
+    });
+
+    let totalQty = 0;
+    let totalValue = 0;
+    for (const item of approvedItems) {
+      const qty = Number(item.quantity);
+      const price = Number(item.unitPrice);
+      totalQty += qty;
+      totalValue += qty * price;
+    }
+
+    if (totalQty === 0) {
+      await this.prisma.materialItem.update({
+        where: { id: materialId },
+        data: { autoCalculatedHpp: null },
+      });
+      return null;
+    }
+
+    const autoCalculatedHpp = totalValue / totalQty;
+    await this.prisma.materialItem.update({
+      where: { id: materialId },
+      data: { autoCalculatedHpp },
+    });
+    return autoCalculatedHpp;
+  }
+
+  // Item 72: Get HPP breakdown for a product
+  async getHppBreakdown(materialId: string) {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const items = await this.prisma.purchaseOrderItem.findMany({
+      where: {
+        materialId,
+        po: { status: 'APPROVED', updatedAt: { gte: ninetyDaysAgo } },
+      },
+      include: {
+        po: { select: { poNumber: true, updatedAt: true, supplier: true } },
+      },
+      orderBy: { po: { updatedAt: 'desc' } },
+    });
+
+    const product = await this.prisma.materialItem.findUnique({
+      where: { id: materialId },
+      select: { autoCalculatedHpp: true, manualOverrideHpp: true },
+    });
+
+    let totalQty = 0;
+    let totalValue = 0;
+    const breakdown = items.map((item) => {
+      const qty = Number(item.quantity);
+      const price = Number(item.unitPrice);
+      const value = qty * price;
+      totalQty += qty;
+      totalValue += value;
+      return {
+        poNumber: item.po.poNumber,
+        date: item.po.updatedAt,
+        supplier: item.po.supplier?.name,
+        qty,
+        unitPrice: price,
+        value,
+      };
+    });
+
+    return {
+      materialId,
+      autoCalculatedHpp: product?.autoCalculatedHpp,
+      manualOverrideHpp: product?.manualOverrideHpp,
+      effectiveHpp: product?.manualOverrideHpp ?? product?.autoCalculatedHpp,
+      breakdown,
+      summary: {
+        totalQty,
+        totalValue,
+        averageHpp: totalQty > 0 ? totalValue / totalQty : null,
+      },
+    };
   }
 }

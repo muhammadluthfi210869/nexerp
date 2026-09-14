@@ -23,17 +23,16 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DnaInput, DnaButton, DnaBadge, DnaStatCard, DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaSelect, DnaTabNav, DnaTextarea } from "@/components/dna";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 
 // Static Data from Plan
 const STATIC_SALES_INVOICES = [
@@ -61,60 +60,74 @@ export default function ARHubPrototype() {
   };
 
   return (
-    <DashboardShell
-      title="PENERIMAAN"
-      titleAccent="PIUTANG"
-      subtitle="Enterprise Revenue Recognition & Collection Control"
-      actions={
-        <div className="flex gap-4">
-          <DnaButton 
-            variant="outline"
-            className="h-12 px-6 rounded-2xl uppercase tracking-tight text-[10px]"
-          >
-            <History className="mr-2 h-4 w-4 text-amber-500" /> Riwayat
-          </DnaButton>
-          <DnaButton 
-            variant="primary"
-            className="h-12 px-8 rounded-2xl tracking-tighter text-sm transition-all hover:scale-105"
-          >
-            <ShieldCheck className="mr-2 h-5 w-5" /> Validasi
-          </DnaButton>
-        </div>
-      }
-    >
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="PENERIMAAN PIUTANG"
+        subtitle="Enterprise Revenue Recognition & Collection Control"
+        actions={
+          <div className="flex gap-4">
+            <DnaButton
+              variant="outline"
+              className="h-12 px-6 rounded-2xl uppercase tracking-tight text-[10px]"
+            >
+              <History className="mr-2 h-4 w-4 text-amber-500" /> Riwayat
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              className="h-12 px-8 rounded-2xl tracking-tighter text-sm transition-all hover:scale-105"
+            >
+              <ShieldCheck className="mr-2 h-5 w-5" /> Validasi
+            </DnaButton>
+          </div>
+        }
+      />
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
           label="Total Receivables"
           value="Rp 125.4M"
-          subValue="+12.5% MTD"
+          delta={{ value: "+12.5% MTD", isPositive: true }}
           icon={<TrendingUp className="text-blue-600" />}
+          variant="blue"
         />
-        <StatCard
+        <DnaStatCard
           label="Overdue (30+ Days)"
           value="Rp 12.0M"
-          subValue="Risk Profile: Low"
+          delta={{ value: "Risk Profile: Low", isPositive: false }}
           icon={<CreditCard className="text-rose-600" />}
+          variant="rose"
         />
-        <StatCard
+        <DnaStatCard
           label="Collections (MTD)"
           value="Rp 89.2M"
-          subValue="70% Target Completion"
+          delta={{ value: "70% Target Completion", isPositive: true }}
           icon={<Wallet className="text-emerald-500" />}
+          variant="emerald"
         />
-        <StatCard
+        <DnaStatCard
           label="Sample Revenue"
           value="Rp 2.4M"
-          subValue="R&D Commitment"
+          delta={{ value: "R&D Commitment", isPositive: true }}
           icon={<FlaskConical className="text-amber-500" />}
+          variant="amber"
         />
-      </div>
+      </DnaKpiGrid>
 
       {/* Main Content Area */}
-      <Tabs defaultValue="products" onValueChange={setActiveTab} className="w-full mt-6">
-        <TableWrapper
-          filters={
+      <div className="w-full mt-6 space-y-4">
+        <DnaTabNav
+          tabs={[
+            { id: "products", label: "Regular Products", icon: Package },
+            { id: "samples", label: "R&D Samples", icon: FlaskConical },
+            { id: "returns", label: "Retur", icon: RotateCcw },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+        <DnaDataTableCard
+          customToolbar={
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="contents">
               <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-14 border border-slate-100">
                 <TabsTrigger value="products" className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all">
                   <Package className="mr-2 h-4 w-4" /> Regular Products
@@ -126,6 +139,7 @@ export default function ARHubPrototype() {
                   <RotateCcw className="mr-2 h-4 w-4" /> Retur
                 </TabsTrigger>
               </TabsList>
+              </Tabs>
 
               <div className="flex gap-4 items-center">
                 <div className="relative w-64">
@@ -138,7 +152,7 @@ export default function ARHubPrototype() {
             </div>
           }
         >
-          <TabsContent value="products" className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div hidden={activeTab !== "products"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
             <Table className="table-dense">
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-slate-100">
@@ -205,9 +219,9 @@ export default function ARHubPrototype() {
                 ))}
               </TableBody>
             </Table>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="samples" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div hidden={activeTab !== "samples"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
             <Table className="table-dense">
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-slate-100">
@@ -268,9 +282,9 @@ export default function ARHubPrototype() {
                 ))}
               </TableBody>
             </Table>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="returns" className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div hidden={activeTab !== "returns"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="p-8">
               <div className="rounded-2xl border border-dashed border-slate-200 p-8 bg-slate-50/50 text-center">
                 <RotateCcw className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -295,9 +309,9 @@ export default function ARHubPrototype() {
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </TableWrapper>
-      </Tabs>
+          </div>
+        </DnaDataTableCard>
+      </div>
 
       {/* Payment Modal Overlay */}
       <AnimatePresence>
@@ -353,11 +367,14 @@ export default function ARHubPrototype() {
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Target Account</label>
                     <div className="relative">
                       <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <select className="w-full h-11 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs appearance-none focus:ring-4 focus:ring-blue-500/5 transition-all outline-none">
-                        <option>BCA Main (2640...)</option>
-                        <option>Mandiri Corporate</option>
-                        <option>Petty Cash (IDR)</option>
-                      </select>
+                      <DnaSelect
+                        placeholder="Pilih akun..."
+                        className="h-11 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-xs"
+                      >
+                        <option value="bca">BCA Main (2640...)</option>
+                        <option value="mandiri">Mandiri Corporate</option>
+                        <option value="petty">Petty Cash (IDR)</option>
+                      </DnaSelect>
                     </div>
                   </div>
                 </div>
@@ -376,7 +393,7 @@ export default function ARHubPrototype() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-tight ml-1">Remarks / Reference</label>
-                  <textarea 
+                  <DnaTextarea
                     rows={3}
                     placeholder="E.g., Bank transfer reference..."
                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
@@ -413,11 +430,11 @@ export default function ARHubPrototype() {
         <div className="space-y-1">
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 italic">Owner Insight: Revenue Integrity</p>
           <p className="text-xs font-medium text-slate-500 leading-relaxed uppercase">
-            Sample revenue collection is critical for R&D overhead coverage. 
+            Sample revenue collection is critical for R&D overhead coverage.
             Ensure all <span className="text-blue-600 font-black">R&D Samples</span> with outstanding balances are flagged in the next executive pipeline review.
           </p>
         </div>
       </div>
-    </DashboardShell>
+    </DnaPageContainer>
   );
 }

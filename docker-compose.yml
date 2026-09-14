@@ -1,66 +1,147 @@
+# ═══════════════════════════════════════════════════════════════
+#  NexERP — Satu file untuk Semua Environment
+# ═══════════════════════════════════════════════════════════════
+#  Lokal:  docker compose up --build          (build dari ./backend ./frontend)
+#  Server: bash scripts/deploy.sh <sha>       (pull image dari GHCR — TANPA build)
+#
+#  Prinsip: file ini IDENTIK di lokal dan server.
+#  Yang beda cuma file .env (isi secret masing-masing) + IMAGE_TAG.
+#  `up -d` tanpa --build memakai image: GHCR yang sudah di-pull;
+#  `--build` (dev lokal) membangun ulang image yang sama secara lokal.
+# ═══════════════════════════════════════════════════════════════
+
 services:
+  # ── Database ────────────────────────────────────────────────
   db:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: erp_user
-      POSTGRES_PASSWORD: erp_password_secure
-      POSTGRES_DB: erp_database
+      POSTGRES_USER: ${DB_USER:-erp_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-erp_password_secure}
+      POSTGRES_DB: ${DB_NAME:-erp_database}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_database"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-erp_user} -d ${DB_NAME:-erp_database}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ── Backend (NestJS + Prisma) ───────────────────────────────
   backend:
+    image: ghcr.io/muhammadluthfi210869/nexerp/backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: always
     environment:
-      DATABASE_URL: postgresql://erp_user:erp_password_secure@db:5432/erp_database?schema=public
-      PORT: 3002
+      DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
+      PORT: 3001
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dreamlab_prod_jwt_secret_2026}
-      JWT_EXPIRES_IN: 60m
+      # 4GB VPS guard — full ERP (36 modul) harus aman di memory
+      NODE_OPTIONS: ${BACKEND_NODE_OPTIONS:---max-old-space-size=1536}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-60m}
       AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
-      CORS_ORIGIN: http://localhost:3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      # ── Google Sheets API (Toribio Dashboard) ──
+      GOOGLE_SHEETS_PRIVATE_KEY: ${GOOGLE_SHEETS_PRIVATE_KEY:-}
+      GOOGLE_SHEETS_CLIENT_EMAIL: ${GOOGLE_SHEETS_CLIENT_EMAIL:-}
+      TORIBIO_SPREADSHEET_ID: ${TORIBIO_SPREADSHEET_ID:-1J1sdzYNVThhUGanHyYWETH6Lr3dlT77ckKZ5d89OEvU}
+      TORIBIO_REFRESH_INTERVAL_MS: ${TORIBIO_REFRESH_INTERVAL_MS:-60000}
+      KOMMO_SUBDOMAIN: ${KOMMO_SUBDOMAIN:-}
+      TOKEN_BERUMUR_PANJANG: ${TOKEN_BERUMUR_PANJANG:-}
+      KOMMO_LONG_LIVED_TOKEN: ${KOMMO_LONG_LIVED_TOKEN:-}
+      KOMMO_API_TOKEN: ${KOMMO_API_TOKEN:-}
+      KOMMO_AUTO_PULL_ENABLED: ${KOMMO_AUTO_PULL_ENABLED:-true}
+      KOMMO_AUTO_PULL_INTERVAL_MS: ${KOMMO_AUTO_PULL_INTERVAL_MS:-300000}
+      # ── WhatsApp Cloud API (Meta) ──
+      WA_BUSINESS_PHONE: ${WA_BUSINESS_PHONE:-}
+      WA_WEBHOOK_VERIFY_TOKEN: ${WA_WEBHOOK_VERIFY_TOKEN:-}
+      WA_PHONE_NUMBER_ID: ${WA_PHONE_NUMBER_ID:-}
+      WA_WABA_ID: ${WA_WABA_ID:-}
+      WA_ACCESS_TOKEN: ${WA_ACCESS_TOKEN:-}
+      # ── Dedup lead orphan ──
+      ORPHAN_DEDUP_WINDOW_MS: ${ORPHAN_DEDUP_WINDOW_MS:-604800000}
+      # ── AI Extraction (LLM) ──
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
+      - ./backend/dirlif-project-cbab4f5a2ec6.json:/app/dirlif-project-cbab4f5a2ec6.json:ro
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "3002:3002"
+      - "${BACKEND_PORT:-3001}:3001"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:3002/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3001/v1/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
+  # ── Frontend (Next.js Standalone) ───────────────────────────
   frontend:
+    image: ghcr.io/muhammadluthfi210869/nexerp/frontend:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/v1}
+        NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
+        JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/v1}
+      NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
       NODE_ENV: production
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:3000 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3000 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
+
+  # ═══════════════════════════════════════════════════════════
+  #  Layanan SERVER — hanya aktif dengan --profile server
+  #  Di lokal: docker compose up --build  (services ini DI-SKIP)
+  #  Di VPS:   bash scripts/deploy.sh <sha>  (pull GHCR, tanpa build)
+  # ═══════════════════════════════════════════════════════════
+
+  # ── Nginx Reverse Proxy + SSL ───────────────────────────────
+  nginx:
+    profiles: ["server"]
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+
+  # ── Certbot (SSL Auto-Renew) ────────────────────────────────
+  certbot:
+    profiles: ["server"]
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
 
 volumes:
   postgres_data:

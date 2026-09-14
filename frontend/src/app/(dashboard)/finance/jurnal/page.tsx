@@ -5,10 +5,16 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { BookOpen, Layers, GitMerge, Search, Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
+import {
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +48,7 @@ const MAPPING_ITEMS = [
 ];
 
 export default function JurnalPage() {
+  const [activeTab, setActiveTab] = useState("jurnal-umum");
   const [searchJurnal, setSearchJurnal] = useState("");
   const [searchCoa, setSearchCoa] = useState("");
 
@@ -103,21 +110,25 @@ export default function JurnalPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <StatCard icon={<BookOpen className="text-blue-600" />} label="Total Jurnal" value={totalJurnal} subValue={stats?.totalTransactions ? `${stats.totalTransactions} transaksi` : undefined} />
-            <StatCard icon={<Layers className="text-emerald-600" />} label="Total Akun (COA)" value={totalAkun} />
-            <StatCard icon={<GitMerge className="text-purple-600" />} label="Active Auto Mappings" value={`${activeMappings} / ${MAPPING_ITEMS.length}`} />
+            <DnaStatCard icon={<BookOpen className="text-blue-600" />} label="Total Jurnal" value={totalJurnal} subValue={stats?.totalTransactions ? `${stats.totalTransactions} transaksi` : undefined} />
+            <DnaStatCard icon={<Layers className="text-emerald-600" />} label="Total Akun (COA)" value={totalAkun} />
+            <DnaStatCard icon={<GitMerge className="text-purple-600" />} label="Active Auto Mappings" value={`${activeMappings} / ${MAPPING_ITEMS.length}`} />
           </div>
 
-          <Tabs defaultValue="jurnal-umum" className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="jurnal-umum">Jurnal Umum</TabsTrigger>
-              <TabsTrigger value="coa">COA</TabsTrigger>
-              <TabsTrigger value="auto-journal">Auto Journal</TabsTrigger>
-            </TabsList>
+          <div className="w-full space-y-4">
+            <DnaTabNav
+              tabs={[
+                { id: "jurnal-umum", label: "Jurnal Umum" },
+                { id: "coa", label: "COA" },
+                { id: "auto-journal", label: "Auto Journal" },
+              ]}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
 
-            <TabsContent value="jurnal-umum">
-              <TableWrapper
-                filters={
+            <div hidden={activeTab !== "jurnal-umum"}>
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center gap-3 w-full justify-between">
                     <div>
                       <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Jurnal Umum</h3>
@@ -164,12 +175,12 @@ export default function JurnalPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
-            </TabsContent>
+              </DnaDataTableCard>
+            </div>
 
-            <TabsContent value="coa">
-              <TableWrapper
-                filters={
+            <div hidden={activeTab !== "coa"}>
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center gap-3 w-full justify-between">
                     <div>
                       <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Chart of Accounts</h3>
@@ -222,12 +233,12 @@ export default function JurnalPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
-            </TabsContent>
+              </DnaDataTableCard>
+            </div>
 
-            <TabsContent value="auto-journal">
-              <TableWrapper
-                filters={
+            <div hidden={activeTab !== "auto-journal"}>
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center gap-3 w-full justify-between">
                     <div>
                       <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Auto Journal Mapping</h3>
@@ -269,9 +280,9 @@ export default function JurnalPage() {
                     })}
                   </TableBody>
                 </Table>
-              </TableWrapper>
-            </TabsContent>
-          </Tabs>
+              </DnaDataTableCard>
+            </div>
+          </div>
         </>
       )}
     </DashboardShell>

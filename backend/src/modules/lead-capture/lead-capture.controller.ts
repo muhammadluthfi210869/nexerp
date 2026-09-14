@@ -34,8 +34,8 @@ class TrackDto {
   city?: string;
   country?: string;
   sessionId?: string;
-  assignedName?: string;   // Round-robin agent name
-  assignedPhone?: string;  // Round-robin agent phone number
+  assignedName?: string; // Round-robin agent name
+  assignedPhone?: string; // Round-robin agent phone number
 }
 
 class WhatsAppUpdateDto {
@@ -198,14 +198,22 @@ export class LeadCaptureController {
   @HttpCode(HttpStatus.OK)
   async kommoPull(@Body() body?: { dateFrom?: string; dateTo?: string }) {
     try {
-      const result = await this.kommo.pullAllLeads(body?.dateFrom, body?.dateTo);
+      const result = await this.kommo.pullAllLeads(
+        body?.dateFrom,
+        body?.dateTo,
+      );
       // Save pulled leads to database
-      const saved = await this.service.saveKommoLeads(result.leads, result.contacts, result);
+      const saved = await this.service.saveKommoLeads(
+        result.leads,
+        result.contacts,
+        result,
+      );
       return { pulled: result.leads.length, saved };
     } catch (err: any) {
       return {
         error: err.message || 'Failed to pull from Kommo',
-        details: 'Pastikan KOMMO_API_TOKEN adalah access token aktif untuk subdomain Kommo yang benar'
+        details:
+          'Pastikan KOMMO_API_TOKEN adalah access token aktif untuk subdomain Kommo yang benar',
       };
     }
   }
@@ -235,13 +243,16 @@ export class LeadCaptureController {
   }
 
   @Post('round-robin/agents')
-  async upsertAgent(@Body() dto: {
-    id?: string;
-    name: string;
-    phoneNumber: string;
-    orderIndex: number;
-    isActive?: boolean;
-  }) {
+  async upsertAgent(
+    @Body()
+    dto: {
+      id?: string;
+      name: string;
+      phoneNumber: string;
+      orderIndex: number;
+      isActive?: boolean;
+    },
+  ) {
     return this.service.upsertRoundRobinAgent(dto);
   }
 
@@ -256,7 +267,10 @@ export class LeadCaptureController {
   async aiExtract(@Param('id') id: string) {
     const result = await this.service.extractAiForLead(id);
     if (!result) {
-      return { status: 'no_result', message: 'Tidak ada pesan atau ekstraksi gagal' };
+      return {
+        status: 'no_result',
+        message: 'Tidak ada pesan atau ekstraksi gagal',
+      };
     }
     return { status: 'suggested', suggestion: result };
   }

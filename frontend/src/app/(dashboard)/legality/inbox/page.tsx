@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,12 +28,11 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DataCard, DnaBadge, DnaButton } from "@/components/dna";
+import { DnaDataTableCard, DnaCard, DnaBadge, DnaButton, DnaInput, DnaTextarea, DnaCell } from "@/components/dna";
 
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [activeTask, setActiveTask] = useState<any>(null);
 
   const { data: tasks, isLoading, isError, refetch } = useQuery({
     queryKey: ["compliance-tasks"],
@@ -44,7 +43,7 @@ export default function ComplianceInboxPage() {
   });
 
   const submitReviewMutation = useMutation({
-    mutationFn: ({ pipelineId, isApproved, notes }: any) => 
+    mutationFn: ({ pipelineId, isApproved, notes }: any) =>
       api.post(`/legality/pipeline/${pipelineId}/artwork-review`, { isApproved, notes }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["compliance-tasks"] });
@@ -52,6 +51,13 @@ export default function ComplianceInboxPage() {
       setSelectedTaskId(null);
     }
   });
+
+  // Derive activeTask from tasks + selectedTaskId during render (no useEffect needed).
+  // Auto-select first task when no selection and tasks available.
+  const effectiveSelectedId =
+    selectedTaskId ?? tasks?.[0]?.id ?? null;
+  const activeTask =
+    tasks?.find((t: any) => t.id === effectiveSelectedId) ?? null;
 
   const { data: validationResult, isLoading: isValidating } = useQuery({
     queryKey: ["formula-validation", activeTask?.formulaId],
@@ -61,20 +67,6 @@ export default function ComplianceInboxPage() {
     },
     enabled: !!activeTask && activeTask.type === "FORMULA_VALIDATION" && !!activeTask.formulaId,
   });
-
-  useEffect(() => {
-    if (tasks && tasks.length > 0) {
-      if (!selectedTaskId) {
-        setSelectedTaskId(tasks[0].id);
-        setActiveTask(tasks[0]);
-      } else {
-        const current = tasks.find((t: any) => t.id === selectedTaskId);
-        if (current) setActiveTask(current);
-      }
-    } else {
-      setActiveTask(null);
-    }
-  }, [tasks, selectedTaskId]);
 
   const getDnaPriority = (priority: string) => {
     switch (priority) {
@@ -90,7 +82,7 @@ export default function ComplianceInboxPage() {
       titleAccent="INBOX"
       subtitle="Regulatory curation task inbox and AI verification center"
     >
-      <div className="flex h-[calc(100vh-180px)] bg-white overflow-hidden rounded-2xl border border-slate-200 shadow-card animate-fade-slide-in">
+      <div className="flex h-[calc(100vh-180px)] rounded-2xl border border-slate-200 shadow-sm bg-white">
         {/* Left Sidebar: Task List */}
         <aside className="w-[360px] border-r border-slate-100 flex flex-col bg-slate-50/30 shrink-0">
           <div className="p-5 pb-3">
@@ -111,10 +103,10 @@ export default function ComplianceInboxPage() {
               </button>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <input 
-                placeholder="FILTER TASKS..." 
-                className="w-full h-11 pl-9 pr-4 bg-white border border-slate-200 rounded-xl font-black text-[10px] tracking-wider uppercase placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+              <DnaInput
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+                placeholder="FILTER TASKS..."
+                className="text-[10px] font-bold uppercase"
               />
             </div>
           </div>
@@ -137,7 +129,7 @@ export default function ComplianceInboxPage() {
             
             {!isLoading && !isError && (!tasks || tasks.length === 0) && (
               <div className="p-8 text-center space-y-4">
-                <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-slate-100">
+                <div className="h-14 w-14 rounded-2xl border border-slate-200 shadow-sm bg-white flex items-center justify-center mx-auto">
                   <Sparkles className="w-7 h-7 text-blue-400" />
                 </div>
                 <div>
@@ -155,7 +147,7 @@ export default function ComplianceInboxPage() {
             {tasks?.map((task: any) => (
               <button
                 key={task.id}
-                onClick={() => { setSelectedTaskId(task.id); setActiveTask(task); }}
+                onClick={() => { setSelectedTaskId(task.id); }}
                 className={cn(
                   "w-full text-left p-4 rounded-xl transition-all border relative overflow-hidden group cursor-pointer",
                   selectedTaskId === task.id 
@@ -227,10 +219,10 @@ export default function ComplianceInboxPage() {
                 {activeTask.type === "ARTWORK_REVIEW" && (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                     <div className="col-span-12 lg:col-span-8 space-y-6">
-                      <div className="aspect-video bg-slate-100 border border-slate-200 rounded-2xl relative overflow-hidden group flex items-center justify-center shadow-inner">
+                      <div className="aspect-video rounded-2xl border border-slate-200 shadow-sm bg-white relative overflow-hidden group flex items-center justify-center">
                         <ImageIcon className="w-12 h-12 text-slate-300 absolute pointer-events-none" />
-                        <Image 
-                          src="https://placehold.co/1200x800/f8fafc/cbd5e1?text=ARTWORK+PREVIEW" 
+                        <Image
+                          src="https://placehold.co/1200x800/f8fafc/cbd5e1?text=ARTWORK+PREVIEW"
                           alt="Artwork Preview"
                           width={1200}
                           height={800}
@@ -244,14 +236,12 @@ export default function ComplianceInboxPage() {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <DataCard
-                          dotColor="bg-blue-500"
-                          title="REGULATORY CHECKLIST"
-                          titleColor="text-slate-400"
-                          className="!p-5 rounded-2xl bg-slate-50/30"
-                          noShadow
-                        >
-                          <div className="space-y-2 mt-1">
+                        <DnaCard>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">REGULATORY CHECKLIST</h3>
+                          </div>
+                          <div className="space-y-2">
                             {["Batch Number", "Composition", "Net Weight", "Manufacturer"].map((check) => (
                               <div key={check} className="flex items-center gap-2 py-0.5">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -259,28 +249,25 @@ export default function ComplianceInboxPage() {
                               </div>
                             ))}
                           </div>
-                        </DataCard>
-                        <DataCard
-                          dotColor="bg-amber-500"
-                          title="DESIGNER NOTES"
-                          titleColor="text-slate-400"
-                          className="!p-5 rounded-2xl bg-slate-50/30"
-                          noShadow
-                        >
-                          <p className="text-[11px] font-bold text-slate-500 italic leading-relaxed uppercase mt-1">
+                        </DnaCard>
+                        <DnaCard>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="w-2 h-2 rounded-full bg-amber-500" />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">DESIGNER NOTES</h3>
+                          </div>
+                          <p className="text-[11px] font-bold text-slate-500 italic leading-relaxed uppercase">
                             "Updated version based on revision #3. Adjusted font size to meet requirements."
                           </p>
-                        </DataCard>
+                        </DnaCard>
                       </div>
                     </div>
 
                     <div className="col-span-12 lg:col-span-4">
-                      <DataCard
-                        dotColor="bg-blue-600"
-                        title="FINAL VERDICT"
-                        titleColor="text-blue-600"
-                        className="!p-5 rounded-2xl"
-                      >
+                      <DnaCard>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-blue-600" />
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">FINAL VERDICT</h3>
+                        </div>
                         <div className="flex flex-col gap-2 mt-2">
                           <DnaButton 
                             variant="primary"
@@ -297,22 +284,24 @@ export default function ComplianceInboxPage() {
                           </DnaButton>
                         </div>
                         <div className="space-y-1.5 mt-4">
-                          <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Comments</label>
-                          <textarea className="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-bold italic focus:outline-none focus:border-blue-500 focus:bg-white transition-all" />
+                          <DnaTextarea
+                            label="Comments"
+                            className="text-xs font-bold italic"
+                            rows={3}
+                          />
                         </div>
-                      </DataCard>
+                      </DnaCard>
                     </div>
                   </div>
                 )}
 
                 {activeTask.type === "FORMULA_VALIDATION" && (
                   <div className="space-y-6">
-                    <DataCard
-                      dotColor="bg-indigo-500"
-                      title="AI SCREENING HUB"
-                      titleColor="text-indigo-500"
-                      className="!p-5 rounded-2xl"
-                    >
+                    <DnaCard>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-500">AI SCREENING HUB</h3>
+                      </div>
                       <div className="flex justify-between items-end mb-6">
                         <div>
                           <h3 className="text-xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">Formula Shield V4</h3>
@@ -320,7 +309,7 @@ export default function ComplianceInboxPage() {
                         {isValidating ? (
                           <div className="animate-pulse bg-slate-100 h-6 w-24 rounded-lg" />
                         ) : (
-                          <DnaBadge 
+                          <DnaBadge
                             status={
                               validationResult?.riskScore === "LOW" ? "success" :
                               validationResult?.riskScore === "MEDIUM" ? "warning" :
@@ -332,43 +321,41 @@ export default function ComplianceInboxPage() {
                         )}
                       </div>
 
-                      <TableWrapper>
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-4 py-3 text-left text-table-header text-slate-400 uppercase tracking-widest">Ingredient</th>
-                                <th className="px-4 py-3 text-center text-table-header text-slate-400 uppercase tracking-widest">Conc (%)</th>
-                                <th className="px-4 py-3 text-center text-table-header text-slate-400 uppercase tracking-widest">Limit</th>
-                                <th className="px-4 py-3 text-right text-table-header text-slate-400 uppercase tracking-widest">Violation</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                              {validationResult?.violations?.length > 0 ? (
-                                validationResult.violations.map((v: any) => (
-                                  <tr key={v.ingredient} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                                    <td className="px-4 py-2.5 font-black italic text-slate-700 uppercase text-xs">{v.ingredient}</td>
-                                    <td className="px-4 py-2.5 text-center font-sans text-slate-600 text-xs">{v.actual}%</td>
-                                    <td className="px-4 py-2.5 text-center text-[10px] font-bold text-slate-400 uppercase italic">{v.limit}%</td>
-                                    <td className="px-4 py-2.5 text-right">
-                                      <DnaBadge status="critical">
-                                        {v.type}
-                                      </DnaBadge>
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={4} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase italic">
-                                    {isValidating ? "Validating..." : "No violations detected. Formula is clean."}
+                      <DnaDataTableCard>
+                        <table className="w-full border-collapse text-[12px]">
+                          <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                              <th className="px-4 py-3 text-left">Ingredient</th>
+                              <th className="px-4 py-3 text-center">Conc (%)</th>
+                              <th className="px-4 py-3 text-center">Limit</th>
+                              <th className="px-4 py-3 text-right">Violation</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {validationResult?.violations?.length > 0 ? (
+                              validationResult.violations.map((v: any) => (
+                                <tr key={v.ingredient} className="hover:bg-slate-50/80">
+                                  <td className="px-4 py-2.5 font-bold italic text-slate-700 uppercase text-xs">{v.ingredient}</td>
+                                  <td className="px-4 py-2.5 text-center font-sans text-slate-600 text-xs">{v.actual}%</td>
+                                  <td className="px-4 py-2.5 text-center text-[10px] font-bold text-slate-400 uppercase italic">{v.limit}%</td>
+                                  <td className="px-4 py-2.5 text-right">
+                                    <DnaBadge status="critical">
+                                      {v.type}
+                                    </DnaBadge>
                                   </td>
                                 </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </TableWrapper>
-                    </DataCard>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={4} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase italic">
+                                  {isValidating ? "Validating..." : "No violations detected. Formula is clean."}
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </DnaDataTableCard>
+                    </DnaCard>
 
                     {validationResult?.violations?.length > 0 && (
                       <div className="flex flex-col md:flex-row gap-4">
@@ -414,12 +401,11 @@ export default function ComplianceInboxPage() {
 
                 {activeTask.type === "PNBP_FILING" && (
                   <div className="max-w-2xl mx-auto space-y-6">
-                    <DataCard
-                      dotColor="bg-emerald-500"
-                      title="PNBP FILING PORTAL"
-                      titleColor="text-slate-400"
-                      className="!p-5 rounded-2xl"
-                    >
+                    <DnaCard>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">PNBP FILING PORTAL</h3>
+                      </div>
                       <div className="flex items-center gap-3.5 mb-6">
                         <div className="h-11 w-11 bg-emerald-50 rounded-xl flex items-center justify-center border border-emerald-100 shrink-0">
                           <CreditCard className="w-5 h-5 text-emerald-600" />
@@ -430,7 +416,7 @@ export default function ComplianceInboxPage() {
                         </div>
                       </div>
 
-                      <form 
+                      <form
                         onSubmit={(e: any) => {
                           e.preventDefault();
                           const amount = e.target.amount.value;
@@ -445,24 +431,20 @@ export default function ComplianceInboxPage() {
                         className="space-y-4"
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Total Amount (IDR)</label>
-                            <input name="amount" type="number" defaultValue="500000" className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-sm text-brand-black focus:outline-none focus:border-blue-500 focus:bg-white transition-all" />
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Billing Code / SPS</label>
-                            <input name="billingCode" placeholder="E.g. 82739182" className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-sm text-brand-black focus:outline-none focus:border-blue-500 focus:bg-white transition-all" />
-                          </div>
+                          <DnaInput label="Total Amount (IDR)" name="amount" type="number" defaultValue="500000" />
+                          <DnaInput label="Billing Code / SPS" name="billingCode" placeholder="E.g. 82739182" />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">Context / Description</label>
-                          <textarea name="description" className="w-full h-24 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-bold italic focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none" defaultValue={`PNBP Registration for ${activeTask.title}`} />
-                        </div>
+                        <DnaTextarea
+                          label="Context / Description"
+                          name="description"
+                          rows={3}
+                          defaultValue={`PNBP Registration for ${activeTask.title}`}
+                        />
                         <DnaButton type="submit" variant="primary" className="w-full h-12">
                           Submit Billing to Finance
                         </DnaButton>
                       </form>
-                    </DataCard>
+                    </DnaCard>
 
                     <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 items-center">
                       <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />

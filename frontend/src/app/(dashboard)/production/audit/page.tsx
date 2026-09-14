@@ -13,11 +13,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { StatCard, DnaBadge, DnaInput } from "@/components/dna";
+import { DnaStatCard, DnaBadge, DnaInput } from "@/components/dna";
 import { SectionDivider } from "@/components/layout/SectionDivider";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataTable, DataTableHead, DataTableTh, DataTableBody, DataTableRow, DataTableCell } from "@/components/layout/DataTable";
+
+// SPEC: SCR-PROD-AUDIT-001 — Production Execution Audit
+// Columns preserved: Material/Labor/Overhead cost attribution, Mass Balance, Reject %, QC Status
 
 export default function ProductionAuditPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,30 +62,33 @@ export default function ProductionAuditPage() {
 
       {/* COST ATTRIBUTION ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard
+        <DnaStatCard
           label="Total Labor Cost"
           value="Rp 12,450,000"
-          subValue="Current Month Attribution"
-          icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
+          subtext="Current Month Attribution"
+          icon={<DollarSign />}
+          variant="emerald"
         />
-        <StatCard
+        <DnaStatCard
           label="Machine Overhead"
           value="Rp 28,120,000"
-          subValue="Active Asset Utilization"
-          icon={<Cpu className="w-6 h-6 text-blue-600" />}
+          subtext="Active Asset Utilization"
+          icon={<Cpu />}
+          variant="blue"
         />
-        <StatCard
+        <DnaStatCard
           label="Avg. Reject Rate"
           value="0.84%"
-          subValue="Quality Performance Metric"
-          icon={<TrendingDown className="w-6 h-6 text-rose-600" />}
+          subtext="Quality Performance Metric"
+          icon={<TrendingDown />}
+          variant="rose"
         />
       </div>
 
       {/* AUDIT LOG TABLE */}
       <div>
         <SectionDivider number={1} title="DETAILED EXECUTION LOGS" accentColor="primary" />
-        <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+        <div className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
           <DataTable>
             <DataTableHead>
               <DataTableTh>WORK ORDER</DataTableTh>
@@ -149,7 +154,7 @@ export default function ProductionAuditPage() {
               ))}
             </DataTableBody>
           </DataTable>
-        </Card>
+        </div>
       </div>
     </DashboardShell>
   );

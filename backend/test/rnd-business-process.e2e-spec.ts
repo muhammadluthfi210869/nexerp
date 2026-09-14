@@ -4,11 +4,7 @@ import { FormulasService } from '../src/modules/rnd/formulas/formulas.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { LegalityService } from '../src/modules/legality/legality.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  SampleStage,
-  FormulaStatus,
-  RevisionStatus,
-} from '@prisma/client';
+import { SampleStage, FormulaStatus, RevisionStatus } from '@prisma/client';
 
 /**
  * RND Business Process E2E — Full Golden Path
@@ -142,7 +138,7 @@ describe('RND Business Process — Golden Path', () => {
 
     it('1.4 sample exists in inbox (QUEUE)', async () => {
       const inbox = await rndService.getInboxSamples();
-      const found = inbox.find(s => s.id === sampleId);
+      const found = inbox.find((s) => s.id === sampleId);
       expect(found).toBeTruthy();
       expect(found!.stage).toBe(SampleStage.QUEUE);
     });
@@ -167,7 +163,9 @@ describe('RND Business Process — Golden Path', () => {
           leadId: lead.id,
           productName: `${TEST_PREFIX} Accept Serum`,
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       sampleId = sample.id;
@@ -179,11 +177,11 @@ describe('RND Business Process — Golden Path', () => {
 
       expect(result.sample.stage).toBe(SampleStage.FORMULATING);
       expect(result.formula).toBeTruthy();
-      expect(result.formula!.version).toBe(1);
-      expect(result.formula!.status).toBe(FormulaStatus.DRAFT);
-      expect(result.formula!.formulaCode).toMatch(/^F-/);
+      expect(result.formula.version).toBe(1);
+      expect(result.formula.status).toBe(FormulaStatus.DRAFT);
+      expect(result.formula.formulaCode).toMatch(/^F-/);
 
-      formulaId = result.formula!.id;
+      formulaId = result.formula.id;
     });
 
     it('2.2 Formula V1 has default Phase A + QC parameters', async () => {
@@ -217,12 +215,14 @@ describe('RND Business Process — Golden Path', () => {
           leadId: lead.id,
           productName: `${TEST_PREFIX} Edit Serum`,
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       await markAsPaid(sample.id, lead.id);
       const result = await rndService.acceptSample(sample.id);
-      formulaId = result.formula!.id;
+      formulaId = result.formula.id;
     });
 
     it('3.1 updates formula with 2 phases and items totaling 100%', async () => {
@@ -298,13 +298,13 @@ describe('RND Business Process — Golden Path', () => {
       expect(formula!.phases).toHaveLength(2);
 
       // Phase A
-      const phaseA = formula!.phases.find(p => p.prefix === 'A');
+      const phaseA = formula!.phases.find((p) => p.prefix === 'A');
       expect(phaseA).toBeTruthy();
       expect(phaseA!.customName).toBe('Water Phase');
       expect(phaseA!.items).toHaveLength(2);
 
       // Phase B
-      const phaseB = formula!.phases.find(p => p.prefix === 'B');
+      const phaseB = formula!.phases.find((p) => p.prefix === 'B');
       expect(phaseB).toBeTruthy();
       expect(phaseB!.customName).toBe('Oil Phase');
       expect(phaseB!.items).toHaveLength(1);
@@ -315,7 +315,8 @@ describe('RND Business Process — Golden Path', () => {
 
       // Total dosage = 100%
       const totalDosage = formula!.phases.reduce(
-        (sum, p) => sum + p.items.reduce((s, i) => s + Number(i.dosagePercentage), 0),
+        (sum, p) =>
+          sum + p.items.reduce((s, i) => s + Number(i.dosagePercentage), 0),
         0,
       );
       expect(totalDosage).toBe(100);
@@ -337,12 +338,14 @@ describe('RND Business Process — Golden Path', () => {
           leadId: lead.id,
           productName: `${TEST_PREFIX} QC Serum`,
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       await markAsPaid(sample.id, lead.id);
       const result = await rndService.acceptSample(sample.id);
-      formulaId = result.formula!.id;
+      formulaId = result.formula.id;
     });
 
     it('4.1 sets QC parameters', async () => {
@@ -401,13 +404,15 @@ describe('RND Business Process — Golden Path', () => {
           leadId: lead.id,
           productName: `${TEST_PREFIX} Approve Serum`,
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       sampleId = sample.id;
       await markAsPaid(sample.id, lead.id);
       const result = await rndService.acceptSample(sample.id);
-      formulaId = result.formula!.id;
+      formulaId = result.formula.id;
 
       // Fill with valid formula (100% + real materials)
       const material = await prisma.materialItem.create({
@@ -424,12 +429,20 @@ describe('RND Business Process — Golden Path', () => {
       });
       await formulasService.updateFormulaV4(formulaId, {
         targetYieldGram: 1000,
-        phases: [{
-          prefix: 'A',
-          customName: 'Single Phase',
-          order: 1,
-          items: [{ materialId: material.id, dosagePercentage: 100, costSnapshot: 50000 }],
-        }],
+        phases: [
+          {
+            prefix: 'A',
+            customName: 'Single Phase',
+            order: 1,
+            items: [
+              {
+                materialId: material.id,
+                dosagePercentage: 100,
+                costSnapshot: 50000,
+              },
+            ],
+          },
+        ],
       } as any);
     });
 
@@ -464,7 +477,9 @@ describe('RND Business Process — Golden Path', () => {
 
     it('5.5 formula appears in repository', async () => {
       const formulas = await formulasService.findAll();
-      const found = formulas.find(f => f.sampleRequest?.productName?.includes('[BP] Approve Serum'));
+      const found = formulas.find((f) =>
+        f.sampleRequest?.productName?.includes('[BP] Approve Serum'),
+      );
       expect(found).toBeTruthy();
     });
   });
@@ -484,7 +499,9 @@ describe('RND Business Process — Golden Path', () => {
           leadId: lead.id,
           productName: `${TEST_PREFIX} Stage Serum`,
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       sampleId = sample.id;
@@ -526,7 +543,7 @@ describe('RND Business Process — Golden Path', () => {
       });
       expect(logs.length).toBeGreaterThanOrEqual(8);
       // Each log should have enteredAt
-      logs.forEach(log => {
+      logs.forEach((log) => {
         expect(log.enteredAt).toBeTruthy();
       });
     });
@@ -548,13 +565,15 @@ describe('RND Business Process — Golden Path', () => {
           leadId: lead.id,
           productName: `${TEST_PREFIX} Revision Serum`,
           targetFunction: 'Test',
-          textureReq: 'A', colorReq: 'B', aromaReq: 'C',
+          textureReq: 'A',
+          colorReq: 'B',
+          aromaReq: 'C',
         },
       });
       sampleId = sample.id;
       await markAsPaid(sample.id, lead.id);
       const result = await rndService.acceptSample(sample.id);
-      formulaId = result.formula!.id;
+      formulaId = result.formula.id;
     });
 
     it('7.1 sample in NOT_STARTED initially', async () => {
@@ -577,7 +596,7 @@ describe('RND Business Process — Golden Path', () => {
 
     it('7.3 active revision appears in getRevisions', async () => {
       const revisions = await rndService.getRevisions();
-      const found = revisions.find(r => r.id === sampleId);
+      const found = revisions.find((r) => r.id === sampleId);
       expect(found).toBeTruthy();
     });
 
@@ -592,7 +611,7 @@ describe('RND Business Process — Golden Path', () => {
 
     it('7.5 completed revision appears in revision history', async () => {
       const history = await rndService.getRevisionHistory();
-      const found = history.find(r => r.id === sampleId);
+      const found = history.find((r) => r.id === sampleId);
       expect(found).toBeTruthy();
     });
   });

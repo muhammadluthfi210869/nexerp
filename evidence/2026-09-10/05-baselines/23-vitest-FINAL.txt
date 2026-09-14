@@ -1,0 +1,93 @@
+﻿
+> frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.5 C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/frontend
+
+ ❯ test/production-workorders.test.tsx (3 tests | 3 failed) 57ms
+     × renders the page without crashing 38ms
+     × shows empty state when no work orders 5ms
+     × renders stat cards 5ms
+ ❯ test/production-operations.test.tsx (3 tests | 3 failed) 55ms
+     × renders the page without crashing 35ms
+     × renders tab navigation 6ms
+     × renders stat cards 5ms
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/production-operations.test.tsx > Operations Page > renders the page without crashing
+ FAIL  test/production-operations.test.tsx > Operations Page > renders tab navigation
+ FAIL  test/production-operations.test.tsx > Operations Page > renders stat cards
+Error: [vitest] No "DnaDataTableCard" export is defined on the "@/components/dna" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@/components/dna"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ OperationsContent src/app/(dashboard)/production/operations/page.tsx:252:14
+    250|             </div>
+    251|
+    252|             <DnaDataTableCard
+       |              ^
+    253|               title="Daftar Work Orders"
+    254|               count={woList.length}
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > renders the page without crashing
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > shows empty state when no work orders
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > renders stat cards
+Error: [vitest] No "DnaKpiGrid" export is defined on the "@/components/dna" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@/components/dna"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ WorkOrdersPage src/app/(dashboard)/production/work-orders/page.tsx:405:8
+    403|
+    404|       {/* KPI Grid */}
+    405|       <DnaKpiGrid cols={4}>
+       |        ^
+    406|         <DnaStatCard
+    407|           label="Total SPK Aktif"
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  2 failed | 32 passed (34)
+      Tests  6 failed | 300 passed | 1 skipped (307)
+   Start at  15:10:55
+   Duration  15.86s (transform 1.71s, setup 26.44s, import 19.41s, tests 15.29s, environment 85.64s)
+
+

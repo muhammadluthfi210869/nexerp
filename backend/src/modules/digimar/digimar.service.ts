@@ -16,15 +16,18 @@ import { ContentData, ContentRow } from './interfaces/content.interface';
 @Injectable()
 export class DigimarService implements OnModuleInit {
   private readonly logger = new Logger(DigimarService.name);
-  private sheets: sheets_v4.Sheets;
+  private sheets: sheets_v4.Sheets | null = null;
   private spreadsheetId: string;
 
   // ── Cache ──
   private cache = new Map<string, { data: any; timestamp: number }>();
-  private readonly CACHE_TTL = Number(process.env.TORIBIO_REFRESH_INTERVAL_MS) || 60_000;
+  private readonly CACHE_TTL =
+    Number(process.env.TORIBIO_REFRESH_INTERVAL_MS) || 60_000;
 
   constructor() {
-    this.spreadsheetId = process.env.TORIBIO_SPREADSHEET_ID || '1J1sdzYNVThhUGanHyYWETH6Lr3dlT77ckKZ5d89OEvU';
+    this.spreadsheetId =
+      process.env.TORIBIO_SPREADSHEET_ID ||
+      '1J1sdzYNVThhUGanHyYWETH6Lr3dlT77ckKZ5d89OEvU';
   }
 
   async onModuleInit() {
@@ -51,7 +54,10 @@ export class DigimarService implements OnModuleInit {
       }
 
       // Fallback: load JSON file
-      const jsonPath = path.resolve(process.cwd(), 'dirlif-project-cbab4f5a2ec6.json');
+      const jsonPath = path.resolve(
+        process.cwd(),
+        'dirlif-project-cbab4f5a2ec6.json',
+      );
       if (fs.existsSync(jsonPath)) {
         const credentials = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
         const auth = new google.auth.JWT({
@@ -67,19 +73,24 @@ export class DigimarService implements OnModuleInit {
       // No credentials found — log warning and continue without sheets
       this.logger.warn(
         '⚠️  Google Sheets credentials not configured. ' +
-        'Digimar Toribio dashboard will be unavailable until GOOGLE_SHEETS_PRIVATE_KEY ' +
-        'and GOOGLE_SHEETS_CLIENT_EMAIL are set.'
+          'Digimar Toribio dashboard will be unavailable until GOOGLE_SHEETS_PRIVATE_KEY ' +
+          'and GOOGLE_SHEETS_CLIENT_EMAIL are set.',
       );
       this.sheets = null;
     } catch (err) {
-      this.logger.warn('Google Sheets client initialization skipped (non-fatal):', err.message);
+      this.logger.warn(
+        `Google Sheets client initialization skipped (non-fatal): ${(err as Error).message}`,
+      );
       this.sheets = null;
     }
   }
 
   // ── Generic cache wrapper ──
 
-  private async getCached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  private async getCached<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+  ): Promise<T> {
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       return cached.data as T;
@@ -98,7 +109,9 @@ export class DigimarService implements OnModuleInit {
 
   private async readRange(range: string): Promise<string[][]> {
     if (!this.sheets) {
-      this.logger.warn(`Google Sheets not initialized — cannot read range: ${range}`);
+      this.logger.warn(
+        `Google Sheets not initialized — cannot read range: ${range}`,
+      );
       return [];
     }
     try {
@@ -124,11 +137,12 @@ export class DigimarService implements OnModuleInit {
     if (!this.sheets) {
       return [];
     }
+    const sheets = this.sheets;
     return this.getCached('sheetNames', async () => {
-      const response = await this.sheets.spreadsheets.get({
+      const response = await sheets.spreadsheets.get({
         spreadsheetId: this.spreadsheetId,
       });
-      return response.data.sheets?.map(s => s.properties?.title || '') || [];
+      return response.data.sheets?.map((s) => s.properties?.title || '') || [];
     });
   }
 
@@ -136,7 +150,7 @@ export class DigimarService implements OnModuleInit {
 
   async getMonths(): Promise<string[]> {
     const summary = await this.getSummary();
-    const months = summary.instagram.map(r => r.month).filter(Boolean);
+    const months = summary.instagram.map((r) => r.month).filter(Boolean);
     return months;
   }
 
@@ -148,14 +162,17 @@ export class DigimarService implements OnModuleInit {
     return this.getCached('summary', async () => {
       const rows = await this.readSheetByName('Summary Performance');
       if (rows.length < 46) {
-        this.logger.warn(`Summary Performance sheet has only ${rows.length} rows, expected 46+`);
+        this.logger.warn(
+          `Summary Performance sheet has only ${rows.length} rows, expected 46+`,
+        );
       }
 
       // ── Stories KPI (IG: R4-R15, TT: same rows but col K-P) ──
       const igStories: StoriesKpiRow[] = [];
       const ttStories: StoriesKpiRow[] = [];
 
-      for (let i = 3; i < 15; i++) {  // R4-R15 (0-indexed: 3-14)
+      for (let i = 3; i < 15; i++) {
+        // R4-R15 (0-indexed: 3-14)
         const row = rows[i] || [];
         const month = str(row[0]);
 
@@ -238,43 +255,52 @@ export class DigimarService implements OnModuleInit {
   // ══════════════════════════════════════════════
 
   async getWeekly(month?: string, platform?: string): Promise<WeeklyData> {
-    return this.getCached(`weekly:${month || 'all'}:${platform || 'all'}`, async () => {
-      const rows = await this.readSheetByName('Platform Weekly');
-      // Skip header row (index 0)
-      const dataRows = rows.slice(1).filter(r => r.length >= 2 && str(r[0]));
+    return this.getCached(
+      `weekly:${month || 'all'}:${platform || 'all'}`,
+      async () => {
+        const rows = await this.readSheetByName('Platform Weekly');
+        // Skip header row (index 0)
+        const dataRows = rows
+          .slice(1)
+          .filter((r) => r.length >= 2 && str(r[0]));
 
-      let filtered = dataRows;
-      if (month) {
-        filtered = filtered.filter(r => str(r[0]).toLowerCase() === month.toLowerCase());
-      }
-      if (platform) {
-        filtered = filtered.filter(r => str(r[1]).toLowerCase() === platform.toLowerCase());
-      }
+        let filtered = dataRows;
+        if (month) {
+          filtered = filtered.filter(
+            (r) => str(r[0]).toLowerCase() === month.toLowerCase(),
+          );
+        }
+        if (platform) {
+          filtered = filtered.filter(
+            (r) => str(r[1]).toLowerCase() === platform.toLowerCase(),
+          );
+        }
 
-      const parsed: WeeklyRow[] = filtered.map(r => ({
-        month: str(r[0]),
-        platform: str(r[1]) as 'Instagram' | 'TikTok',
-        week: str(r[2]),
-        follow: num(r[3]),
-        unfollow: num(r[4]),
-        viewers: num(r[5]),
-        profileVisit: num(r[6]),
-        dm: num(r[7]),
-        like: num(r[8]),
-        save: num(r[9]),
-        share: num(r[10]),
-        storiesCount: num(r[11]),
-        storiesViews: num(r[12]),
-        leads: num(r[13]),
-        notes: str(r[14]),
-      }));
+        const parsed: WeeklyRow[] = filtered.map((r) => ({
+          month: str(r[0]),
+          platform: str(r[1]) as 'Instagram' | 'TikTok',
+          week: str(r[2]),
+          follow: num(r[3]),
+          unfollow: num(r[4]),
+          viewers: num(r[5]),
+          profileVisit: num(r[6]),
+          dm: num(r[7]),
+          like: num(r[8]),
+          save: num(r[9]),
+          share: num(r[10]),
+          storiesCount: num(r[11]),
+          storiesViews: num(r[12]),
+          leads: num(r[13]),
+          notes: str(r[14]),
+        }));
 
-      return {
-        rows: parsed,
-        instagram: parsed.filter(r => r.platform === 'Instagram'),
-        tiktok: parsed.filter(r => r.platform === 'TikTok'),
-      };
-    });
+        return {
+          rows: parsed,
+          instagram: parsed.filter((r) => r.platform === 'Instagram'),
+          tiktok: parsed.filter((r) => r.platform === 'TikTok'),
+        };
+      },
+    );
   }
 
   // ══════════════════════════════════════════════
@@ -284,14 +310,16 @@ export class DigimarService implements OnModuleInit {
   async getPaidAds(month?: string): Promise<PaidAdsData> {
     return this.getCached(`paidAds:${month || 'all'}`, async () => {
       const rows = await this.readSheetByName('Paid Ads and Results');
-      const dataRows = rows.slice(1).filter(r => r.length >= 2 && str(r[0]));
+      const dataRows = rows.slice(1).filter((r) => r.length >= 2 && str(r[0]));
 
       let filtered = dataRows;
       if (month) {
-        filtered = filtered.filter(r => str(r[0]).toLowerCase() === month.toLowerCase());
+        filtered = filtered.filter(
+          (r) => str(r[0]).toLowerCase() === month.toLowerCase(),
+        );
       }
 
-      const parsed: PaidAdsRow[] = filtered.map(r => ({
+      const parsed: PaidAdsRow[] = filtered.map((r) => ({
         month: str(r[0]),
         channel: str(r[1]),
         budget: num(r[2]),
@@ -331,14 +359,16 @@ export class DigimarService implements OnModuleInit {
     return this.getCached(`content:${month || 'all'}`, async () => {
       const rows = await this.readSheetByName('Content and Posts');
       // Include rows even if month is empty (old data without month column)
-      const dataRows = rows.slice(1).filter(r => r.length >= 4);
+      const dataRows = rows.slice(1).filter((r) => r.length >= 4);
 
       let filtered = dataRows;
       if (month) {
-        filtered = filtered.filter(r => str(r[0]).toLowerCase() === month.toLowerCase());
+        filtered = filtered.filter(
+          (r) => str(r[0]).toLowerCase() === month.toLowerCase(),
+        );
       }
 
-      const parsed: ContentRow[] = filtered.map(r => ({
+      const parsed: ContentRow[] = filtered.map((r) => ({
         month: str(r[0]),
         date: str(r[1]),
         day: str(r[2]),
@@ -359,7 +389,7 @@ export class DigimarService implements OnModuleInit {
       }));
 
       // Best content: sort by engagement (likes + comments + saves) descending
-      const withEngagement = parsed.map(c => ({
+      const withEngagement = parsed.map((c) => ({
         ...c,
         engagement: (c.likes || 0) + (c.comments || 0) + (c.saves || 0),
       }));
@@ -370,8 +400,10 @@ export class DigimarService implements OnModuleInit {
 
       return {
         rows: parsed,
-        instagram: parsed.filter(r => r.platform.toLowerCase() === 'instagram'),
-        tiktok: parsed.filter(r => r.platform.toLowerCase() === 'tiktok'),
+        instagram: parsed.filter(
+          (r) => r.platform.toLowerCase() === 'instagram',
+        ),
+        tiktok: parsed.filter((r) => r.platform.toLowerCase() === 'tiktok'),
         bestContent,
       };
     });

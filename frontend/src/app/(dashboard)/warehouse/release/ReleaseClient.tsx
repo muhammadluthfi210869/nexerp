@@ -12,17 +12,21 @@ import {
   ExternalLink,
   Layers,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { StatCard } from "@/components/dna/StatCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { TableWrapper } from "@/components/dna/TableWrapper";
+  DnaInput,
+  DnaButton,
+  DnaCard,
+  DnaDialog,
+  DnaDialogContent,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaTable,
+  DnaBadge,
+} from "@/components/dna";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { Dialog } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog";
 
 interface ReleaseRequest {
   id: string;
@@ -95,16 +99,16 @@ export default function ReleaseClient() {
 
       {/* 1. KPI CARDS */}
       <div className="grid grid-cols-3 gap-6">
-        <StatCard value={`${pendingCount} REQ`} label="Pending Release" />
-        <StatCard value={factoryAssets} label="Factory Assets" />
-        <StatCard value={shortageCount.toString().padStart(2, '0')} label="Shortage" />
+        <DnaStatCard value={`${pendingCount} REQ`} label="Pending Release" />
+        <DnaStatCard value={factoryAssets} label="Factory Assets" />
+        <DnaStatCard value={shortageCount.toString().padStart(2, '0')} label="Shortage" />
       </div>
 
       {/* 2. SEARCH & FILTER BAR */}
-      <Card className="bg-white border-gray-200 p-4 rounded-[24px] flex gap-4 items-center shadow-sm">
+      <DnaCard className="bg-white border-gray-200 p-4 rounded-[24px] flex gap-4 items-center shadow-sm">
          <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
+            <DnaInput
               type="text"
               placeholder="SEARCH BY RELEASE ID OR WO..."
               className="w-full bg-gray-100 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-[11px] font-black text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-all placeholder:text-gray-400"
@@ -121,11 +125,11 @@ export default function ReleaseClient() {
          <button className="bg-gray-100 border border-gray-200 p-3 rounded-xl text-gray-500 hover:text-gray-900 transition-all">
             <Filter className="w-4 h-4" />
          </button>
-      </Card>
+      </DnaCard>
 
       {/* 3. TABLE SECTION */}
-      <TableWrapper>
-        <table className="w-full border-collapse">
+      <DnaDataTableCard>
+        <DnaTable className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="px-6 py-4 text-left text-table-header text-slate-400">REL#</th>
@@ -180,8 +184,8 @@ export default function ReleaseClient() {
               </tr>
             ))}
           </tbody>
-        </table>
-      </TableWrapper>
+        </DnaTable>
+      </DnaDataTableCard>
 
       {/* 4. EXECUTE DIALOG */}
       <Dialog open={isExecuteOpen} onOpenChange={setIsExecuteOpen}>
@@ -203,7 +207,7 @@ export default function ReleaseClient() {
               <div className="space-y-3">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Material Requirements Checklist</p>
                  <div className="bg-gray-50 rounded-[1.5rem] border border-gray-200 overflow-hidden">
-                    <table className="w-full">
+                    <DnaTable className="w-full">
                        <thead>
                           <tr className="bg-gray-100 border-b border-gray-200">
                              <th className="px-5 py-3 text-left text-[8px] font-black text-slate-600 uppercase">Material</th>
@@ -228,7 +232,7 @@ export default function ReleaseClient() {
                              </tr>
                           ))}
                        </tbody>
-                    </table>
+                    </DnaTable>
                  </div>
               </div>
 
@@ -246,13 +250,14 @@ export default function ReleaseClient() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                 <Button variant="ghost" className="flex-1 rounded-xl h-14 text-gray-500 font-black tracking-widest hover:bg-gray-100" onClick={() => setIsExecuteOpen(false)}>CANCEL</Button>
-                 <Button 
-                   className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-14 font-black uppercase italic tracking-tighter text-[13px] shadow-2xl shadow-emerald-500/20"
+                 <DnaButton variant="ghost" className="flex-1 rounded-xl h-14 text-gray-500 font-black tracking-widest hover:bg-gray-100" onClick={() => setIsExecuteOpen(false)}>CANCEL</DnaButton>
+<DnaButton
+                    variant="primary"
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-14 font-black uppercase italic tracking-tighter text-[13px] shadow-2xl shadow-emerald-500/20"
                    onClick={() => selectedRequest && handleExecute(selectedRequest.id)}
                  >
                     CONFIRM & RELEASE MATERIALS
-                 </Button>
+                 </DnaButton>
               </div>
            </div>
         </DialogContent>

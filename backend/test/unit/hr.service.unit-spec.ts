@@ -12,8 +12,16 @@ describe('HrService — Unit', () => {
 
   beforeEach(async () => {
     const hrCollections = [
-      'employee', 'attendance', 'ticket', 'systemConfig', 'kpiScore',
-      'kpiPointLog', 'employeeRoleMapping', 'payroll', 'payrollItem', 'financialPeriod',
+      'employee',
+      'attendance',
+      'ticket',
+      'systemConfig',
+      'kpiScore',
+      'kpiPointLog',
+      'employeeRoleMapping',
+      'payroll',
+      'payrollItem',
+      'financialPeriod',
     ];
     const hrOverrides: Record<string, any> = {};
     for (const col of hrCollections) {
@@ -44,7 +52,9 @@ describe('HrService — Unit', () => {
         {
           provide: GeofencingService,
           useValue: {
-            isWithinRadius: jest.fn().mockReturnValue({ isWithin: true, distance: 10 }),
+            isWithinRadius: jest
+              .fn()
+              .mockReturnValue({ isWithin: true, distance: 10 }),
           },
         },
       ],

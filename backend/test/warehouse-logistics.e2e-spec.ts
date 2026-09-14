@@ -23,15 +23,28 @@ describe('Warehouse Logistics & Financial Gate Audit (Phase 5)', () => {
         ScmService,
         PrismaService,
         EventEmitter2,
-        { provide: FinanceService, useValue: { createInventoryAdjustmentJournal: jest.fn(), createMaterialHandoverJournal: jest.fn() } },
-        { provide: ModuleRef, useValue: {
+        {
+          provide: FinanceService,
+          useValue: {
+            createInventoryAdjustmentJournal: jest.fn(),
+            createMaterialHandoverJournal: jest.fn(),
+          },
+        },
+        {
+          provide: ModuleRef,
+          useValue: {
             get: jest.fn().mockResolvedValue({
-              createInventoryAdjustmentJournal: jest.fn().mockImplementation(async (dto: any) => {
-                const { PrismaService } = require('../src/prisma/prisma/prisma.service');
-              }),
+              createInventoryAdjustmentJournal: jest
+                .fn()
+                .mockImplementation(async (dto: any) => {
+                  const {
+                    PrismaService,
+                  } = require('../src/prisma/prisma/prisma.service');
+                }),
               createMaterialHandoverJournal: jest.fn(),
             }),
-          } },
+          },
+        },
       ],
     }).compile();
 
@@ -41,20 +54,35 @@ describe('Warehouse Logistics & Financial Gate Audit (Phase 5)', () => {
     // Initial Cleanup - wrapped to handle FK issues gracefully
     try {
       await prisma.$transaction(async (tx: any) => {
-        const auditMats = await tx.materialItem.findMany({ where: { code: { contains: 'AUDIT' } }, select: { id: true } });
+        const auditMats = await tx.materialItem.findMany({
+          where: { code: { contains: 'AUDIT' } },
+          select: { id: true },
+        });
         const auditIds = auditMats.map((m: any) => m.id);
         if (auditIds.length > 0) {
-          await tx.inventoryTransaction.deleteMany({ where: { materialId: { in: auditIds } } });
-          await tx.materialInventory.deleteMany({ where: { materialId: { in: auditIds } } });
+          await tx.inventoryTransaction.deleteMany({
+            where: { materialId: { in: auditIds } },
+          });
+          await tx.materialInventory.deleteMany({
+            where: { materialId: { in: auditIds } },
+          });
         }
-        await tx.stockOpnameItem.deleteMany({ where: { opname: { notes: { contains: 'AUDIT' } } } });
-        await tx.stockOpname.deleteMany({ where: { notes: { contains: 'AUDIT' } } });
-        await tx.journalEntry.deleteMany({ where: { reference: { contains: 'AUDIT' } } });
+        await tx.stockOpnameItem.deleteMany({
+          where: { opname: { notes: { contains: 'AUDIT' } } },
+        });
+        await tx.stockOpname.deleteMany({
+          where: { notes: { contains: 'AUDIT' } },
+        });
+        await tx.journalEntry.deleteMany({
+          where: { reference: { contains: 'AUDIT' } },
+        });
         if (auditIds.length > 0) {
           await tx.materialItem.deleteMany({ where: { id: { in: auditIds } } });
         }
       });
-    } catch { /* non-critical cleanup */ }
+    } catch {
+      /* non-critical cleanup */
+    }
 
     // Ensure Master Data exists
     const warehouse = await prisma.warehouse.findFirst();

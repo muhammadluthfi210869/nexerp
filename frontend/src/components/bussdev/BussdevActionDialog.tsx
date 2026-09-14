@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ActivityType, WorkflowStatus, ProductCategory, LostReason } from "@prisma/client";
+import { ActivityType, WorkflowStatus, ProductCategory, LostReason } from "@/types/enums";
 import { 
   Send, 
   Loader2,

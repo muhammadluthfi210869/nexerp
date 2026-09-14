@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "incremental": false,
+    "isolatedModules": true,
+    "sourceMap": false
+  },
+  "include": [
+    "src/modules/marketing/**/*.ts",
+    "src/prisma/**/*.ts"
+  ]
+}

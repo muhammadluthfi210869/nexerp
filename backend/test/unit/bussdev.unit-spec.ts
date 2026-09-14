@@ -39,7 +39,10 @@ describe('BussdevService — Unit', () => {
           useValue: { generateId: jest.fn().mockResolvedValue('SMP-00001') },
         },
         { provide: ScmService, useValue: { createPR: jest.fn() } },
-        { provide: CacheService, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
+        {
+          provide: CacheService,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -171,12 +174,10 @@ describe('BussdevService — Unit', () => {
     });
 
     it.skip('allows DP_PAID and PRODUCTION_PLAN stage advancement', async () => {
-      prisma.salesLead.findUnique = jest
-        .fn()
-        .mockResolvedValue({
-          ...lead,
-          status: WorkflowStatus.SPK_SIGNED,
-        });
+      prisma.salesLead.findUnique = jest.fn().mockResolvedValue({
+        ...lead,
+        status: WorkflowStatus.SPK_SIGNED,
+      });
 
       const resultDp = await service.advanceLeadStage(
         leadId,

@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { 
-  Sheet, 
-  SheetContent, 
-} from "@/components/ui/sheet";
+import { useState, useRef } from "react";
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/dna";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  FileText, 
-  History, 
-  Upload, 
-  Lock, 
-  ChevronRight,
+import {
+  FileText,
+  History,
+  Upload,
+  Lock,
   ShieldCheck,
   XCircle,
   CheckCircle,
@@ -220,7 +219,7 @@ export function DesignHubDrawer({
                                 {new Date(f.createdAt).toLocaleDateString()}
                               </span>
                            </div>
-                           <p className="text-sm text-slate-600 font-medium italic leading-relaxed">"{f.content}"</p>
+                           <p className="text-sm text-slate-600 font-medium italic leading-relaxed">&ldquo;{f.content}&rdquo;</p>
                            <div className="pt-4 border-t border-slate-200/50 flex items-center justify-between opacity-50">
                               <div className="flex items-center gap-2">
                                  <ShieldCheck className="w-3 h-3 text-emerald-500" />

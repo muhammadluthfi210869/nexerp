@@ -19,7 +19,7 @@ import { QCChecklistsService } from '../services/qc-checklists.service';
 @ApiTags('qc')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('qc/checklists')
+@Controller(['qc/checklists', 'v1/qc/checklists'])
 export class QCChecklistsController {
   constructor(private readonly checklistsService: QCChecklistsService) {}
 

@@ -26,8 +26,17 @@ const mockTx = {
   leadTimelineLog: { create: jest.fn() },
   activityStream: { create: jest.fn() },
   leadActivity: { create: jest.fn(), count: jest.fn(), aggregate: jest.fn() },
-  sampleRequest: { create: jest.fn(), findFirst: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
-  newProductForm: { findFirst: jest.fn(), create: jest.fn(), update: jest.fn() },
+  sampleRequest: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+  },
+  newProductForm: {
+    findFirst: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
   salesOrder: { create: jest.fn(), findUnique: jest.fn() },
   workOrder: { findMany: jest.fn(), updateMany: jest.fn() },
 };

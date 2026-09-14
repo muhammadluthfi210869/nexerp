@@ -18,16 +18,15 @@ import {
   ArrowRight,
   AlertTriangle,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, StatCard, TableWrapper } from "@/components/dna";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DnaTable as Table,
+  DnaTableBody as TableBody,
+  DnaTd as TableCell,
+  DnaTh as TableHead,
+  DnaTableHead as TableHeader,
+  DnaTableRow as TableRow,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
 
@@ -39,6 +38,7 @@ const statusMap: Record<string, { label: string; badge: "success" | "warning" | 
 
 export default function BayarConsolidatedPage() {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("pembelian");
   const [searchPembelian, setSearchPembelian] = useState("");
   const [searchPenjualan, setSearchPenjualan] = useState("");
   const [searchSample, setSearchSample] = useState("");
@@ -116,33 +116,22 @@ export default function BayarConsolidatedPage() {
 
   return (
     <DashboardShell
-      title="BAYAR"
-      titleAccent="HUB"
-      subtitle="Pembayaran Pembelian, Penjualan & Sample — Payment Hub"
+      title="Report"
+      titleAccent="PENJUALAN"
+      subtitle="Penerimaan piutang penjualan, pelunasan, dan rekonsiliasi payments."
     >
-      <Tabs defaultValue="pembelian" className="space-y-6">
-        <div className="relative">
-          <TabsList className="bg-slate-100/50 backdrop-blur-md p-1.5 rounded-2xl h-14 inline-flex gap-1 border border-slate-200/50 shadow-inner">
-            {[
-              { id: "pembelian", label: "Bayar Pembelian", icon: Receipt },
-              { id: "penjualan", label: "Bayar Penjualan", icon: CircleDollarSign },
-              { id: "sample", label: "Bayar Sample", icon: FileCheck2 },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="relative rounded-xl px-6 h-full data-[state=active]:text-slate-900 data-[state=active]:bg-white data-[state=active]:shadow-sm text-slate-500 transition-all duration-300 text-[10px] font-black uppercase tracking-tight"
-              >
-                <div className="flex items-center gap-2">
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </div>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+      <>
+        <DnaTabNav
+          tabs={[
+            { id: "pembelian", label: "Bayar Pembelian", icon: Receipt },
+            { id: "penjualan", label: "Bayar Penjualan", icon: CircleDollarSign },
+            { id: "sample", label: "Bayar Sample", icon: FileCheck2 },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
-        <TabsContent value="pembelian" className="space-y-6 animate-fade-slide-in">
+        <div hidden={activeTab !== "pembelian"} className="space-y-6 animate-fade-slide-in">
           {billsLoading ? (
             <QueryLoading message="Memuat faktur pembelian..." />
           ) : billsError ? (
@@ -150,12 +139,12 @@ export default function BayarConsolidatedPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard label="Total Faktur" value={(bills || []).length} icon={<Receipt className="text-blue-600" />} />
-                <StatCard label="Total Terutang" value={`Rp ${totalBillOutstanding.toLocaleString("id-ID")}`} icon={<AlertTriangle className="text-rose-500" />} />
-                <StatCard label="Supplier" value={`${new Set((bills || []).map((b: any) => b.vendorName)).size} Vendor`} icon={<Building2 className="text-slate-500" />} />
+                <DnaStatCard label="Total Faktur" value={(bills || []).length} icon={<Receipt className="text-blue-600" />} />
+                <DnaStatCard label="Total Terutang" value={`Rp ${totalBillOutstanding.toLocaleString("id-ID")}`} icon={<AlertTriangle className="text-rose-500" />} />
+                <DnaStatCard label="Supplier" value={`${new Set((bills || []).map((b: any) => b.vendorName)).size} Vendor`} icon={<Building2 className="text-slate-500" />} />
               </div>
-              <TableWrapper
-                filters={
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center justify-between w-full">
                     <div className="relative w-full max-w-md">
                       <DnaInput icon={<Search className="h-4 w-4" />} placeholder="Cari invoice / supplier..." value={searchPembelian} onChange={(e) => setSearchPembelian(e.target.value)} />
@@ -211,12 +200,12 @@ export default function BayarConsolidatedPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
+              </DnaDataTableCard>
             </>
           )}
-        </TabsContent>
+        </div>
 
-        <TabsContent value="penjualan" className="space-y-6 animate-fade-slide-in">
+        <div hidden={activeTab !== "penjualan"} className="space-y-6 animate-fade-slide-in">
           {invLoading ? (
             <QueryLoading message="Memuat faktur penjualan..." />
           ) : invError ? (
@@ -224,12 +213,12 @@ export default function BayarConsolidatedPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard label="Total Piutang" value={`Rp ${totalReceivable.toLocaleString("id-ID")}`} icon={<Wallet className="text-emerald-600" />} />
-                <StatCard label="Overdue" value={overdueCount.toString()} subValue="Faktur jatuh tempo" icon={<Clock className="text-rose-500" />} />
-                <StatCard label="Outstanding" value={`${filteredInvoices.length} Faktur`} icon={<FileCheck2 className="text-amber-500" />} />
+                <DnaStatCard label="Total Piutang" value={`Rp ${totalReceivable.toLocaleString("id-ID")}`} icon={<Wallet className="text-emerald-600" />} />
+                <DnaStatCard label="Overdue" value={overdueCount.toString()} subValue="Faktur jatuh tempo" icon={<Clock className="text-rose-500" />} />
+                <DnaStatCard label="Outstanding" value={`${filteredInvoices.length} Faktur`} icon={<FileCheck2 className="text-amber-500" />} />
               </div>
-              <TableWrapper
-                filters={
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center justify-between w-full">
                     <div className="relative w-full max-w-md">
                       <DnaInput icon={<Search className="h-4 w-4" />} placeholder="Cari invoice / pelanggan..." value={searchPenjualan} onChange={(e) => setSearchPenjualan(e.target.value)} />
@@ -289,12 +278,12 @@ export default function BayarConsolidatedPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
+              </DnaDataTableCard>
             </>
           )}
-        </TabsContent>
+        </div>
 
-        <TabsContent value="sample" className="space-y-6 animate-fade-slide-in">
+        <div hidden={activeTab !== "sample"} className="space-y-6 animate-fade-slide-in">
           {sampLoading ? (
             <QueryLoading message="Memuat data sample..." />
           ) : sampError ? (
@@ -302,12 +291,12 @@ export default function BayarConsolidatedPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard label="Total Outstanding" value={`Rp ${totalSampleOutstanding.toLocaleString("id-ID")}`} icon={<Wallet className="text-rose-500" />} />
-                <StatCard label="Menunggu Bayar" value={(samples || []).filter((s: any) => s.remainingAmount > 0).length} subValue="Sample pending" icon={<Clock className="text-amber-500" />} />
-                <StatCard label="Total Sample" value={`${filteredSamples.length} Order`} icon={<FileCheck2 className="text-blue-600" />} />
+                <DnaStatCard label="Total Outstanding" value={`Rp ${totalSampleOutstanding.toLocaleString("id-ID")}`} icon={<Wallet className="text-rose-500" />} />
+                <DnaStatCard label="Menunggu Bayar" value={(samples || []).filter((s: any) => s.remainingAmount > 0).length} subValue="Sample pending" icon={<Clock className="text-amber-500" />} />
+                <DnaStatCard label="Total Sample" value={`${filteredSamples.length} Order`} icon={<FileCheck2 className="text-blue-600" />} />
               </div>
-              <TableWrapper
-                filters={
+              <DnaDataTableCard
+                customToolbar={
                   <div className="flex items-center justify-between w-full">
                     <div className="relative w-full max-w-md">
                       <DnaInput icon={<Search className="h-4 w-4" />} placeholder="Cari kode sample / customer..." value={searchSample} onChange={(e) => setSearchSample(e.target.value)} />
@@ -364,11 +353,11 @@ export default function BayarConsolidatedPage() {
                     )}
                   </TableBody>
                 </Table>
-              </TableWrapper>
+              </DnaDataTableCard>
             </>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </>
     </DashboardShell>
   );
 }

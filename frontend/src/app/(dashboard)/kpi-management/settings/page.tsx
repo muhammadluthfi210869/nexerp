@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { MOCK_SETTINGS_CONFIG } from "@/components/kpi-management/mock-data";
 import { KpiNavTabs } from "@/components/kpi-management/KpiManagementComponents";
-import { KPISettingsConfig } from "@/types/kpi-management";
+import { type KPISettingsConfig } from "@/types/kpi-management";
 
 export default function KpiSettingsPage() {
   const [configs, setConfigs] = useState<KPISettingsConfig[]>(MOCK_SETTINGS_CONFIG);

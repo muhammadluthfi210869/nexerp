@@ -1,144 +1,252 @@
 "use client";
 
-import React from "react";
-import {
-  Archive,
-  Package,
-  Warehouse,
-  Truck,
-  Users,
-  Tags,
-  ArrowRight,
-  ShieldCheck,
-  Database,
-} from "lucide-react";
-import Link from "next/link";
-import { DashboardCard } from "@/components/dna/DashboardCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DashboardShell } from "@/components/layout/DashboardShell";
+/**
+ * Master Data Hub Overview
+ *
+ * Portal sentral seluruh data induk terstandarisasi untuk manufaktur kosmetik maklon.
+ * 5-Layer Visual DNA Golden Reference Standard.
+ *
+ * Visual DNA Architecture:
+ * - 0 raw @/components/ui imports (Strict ADR-007)
+ * - Light Enterprise Theme: bg-[#F8FAFC] min-h-screen text-slate-900
+ * - DnaPageHeader with title & description
+ * - DnaKpiGrid with 5 global metrics
+ * - High-density white cards with smooth hover & typography
+ */
 
-const MASTER_SEGMENTS = [
+import React from "react";
+import Link from "next/link";
+import {
+  Package,
+  Building2,
+  Users,
+  Warehouse,
+  UserCog,
+  FileSpreadsheet,
+  ArrowRight,
+  Boxes,
+  Database,
+  Layers,
+  Sparkles,
+} from "lucide-react";
+import {
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaBadge,
+  DnaButton,
+} from "@/components/dna";
+
+const MASTER_MODULES = [
   {
-    title: "Categories",
-    description: "System-wide taxonomy for goods, suppliers, and commercial leads.",
-    href: "/master/categories",
-    icon: Tags,
-    stats: "3 Segments",
-  },
-  {
-    title: "Goods Registry",
-    description: "Centralized catalog for Raw Materials, Packaging, and Finished Goods.",
+    title: "Master Barang & Kategori",
+    subtitle: "Bahan Baku, Kemasan Primer/Sekunder, Ruahan, dan Barang Jadi",
     href: "/master/goods",
     icon: Package,
-    stats: "CoA Integrated",
+    badgeText: "2.797 SKU",
+    badgeStatus: "info" as const,
+    description:
+      "Katalog material formulasi kosmetik terintegrasi dengan ROP stok minimum, harga beli standar, aging gudang, dan pemetaan akun COA.",
+    quickLinks: [
+      { label: "Katalog SKU", href: "/master/goods" },
+      { label: "Kategori Prefix", href: "/master/goods?tab=categories" },
+    ],
   },
   {
-    title: "Warehouse Hub",
-    description: "Manage storage centers and bin-level location logic tracking.",
-    href: "/master/warehouses",
-    icon: Warehouse,
-    stats: "Geospatial",
-  },
-  {
-    title: "Vendor Network",
-    description: "Standardize supplier profiles, payment terms, and procurement links.",
+    title: "Supplier & Vendor",
+    subtitle: "Rekanan Pengadaan Bahan Baku & Kemasan",
     href: "/master/suppliers",
-    icon: Truck,
-    stats: "Supply Ready",
+    icon: Building2,
+    badgeText: "178 Vendor",
+    badgeStatus: "warning" as const,
+    description:
+      "Registri pemasok kimiawi aktif, pabrik botol/tube, percetakan kemasan sekunder, status kepatuhan PKP (PPN 11%), dan impor data Excel.",
+    quickLinks: [
+      { label: "Daftar Rekanan", href: "/master/suppliers" },
+      { label: "Kategori Pengadaan", href: "/master/suppliers?tab=categories" },
+    ],
   },
   {
-    title: "Client Database",
-    description: "Commercial master data for brand owners and B2B partnerships.",
+    title: "Pelanggan & CRM",
+    subtitle: "Mitra Brand Owner Maklon & Evaluasi 3 Pilar",
     href: "/master/customers",
     icon: Users,
-    stats: "CRM Sync",
+    badgeText: "818 Klien",
+    badgeStatus: "success" as const,
+    description:
+      "Basis data klien brand kosmetik dengan monitoring real-time 3 pilar: Sample Fee, Job Order Produksi, serta Legalitas BPOM/Halal.",
+    quickLinks: [
+      { label: "Semua Pelanggan", href: "/master/customers" },
+      { label: "Pelanggan Saya", href: "/master/customers?tab=my" },
+      { label: "Kategori Klien", href: "/master/customers?tab=categories" },
+    ],
   },
   {
-    title: "Personnel Registry",
-    description: "Manage staff profiles, departmental assignments, and PIC links.",
+    title: "Gudang & Lokasi",
+    subtitle: "14 Fasilitas Titik Simpan & Otorisasi Hak Akses",
+    href: "/master/warehouses",
+    icon: Warehouse,
+    badgeText: "14 Titik",
+    badgeStatus: "purple" as const,
+    description:
+      "Struktur gudang operasional Sidoarjo, Pasuruan PIER, dan Surabaya dengan pengaturan suhu (Cool Storage / Ambient) dan otorisasi staf.",
+    quickLinks: [
+      { label: "Titik Gudang", href: "/master/warehouses" },
+      { label: "Hak Akses Staf", href: "/master/warehouses?tab=access" },
+    ],
+  },
+  {
+    title: "Pengguna & Personel",
+    subtitle: "Identitas Karyawan & Matriks Hak Akses (RBAC)",
     href: "/master/personnel",
-    icon: Users,
-    stats: "HRIS Integrated",
+    icon: UserCog,
+    badgeText: "24 Akun",
+    badgeStatus: "default" as const,
+    description:
+      "Manajemen NIP staf Dreamlab, kredensial akun login, departemen kerja, dan penetapan role-based permission berjenjang.",
+    quickLinks: [
+      { label: "Daftar Staf", href: "/master/personnel" },
+      { label: "Tingkat Otoritas Role", href: "/master/personnel?tab=roles" },
+    ],
+  },
+  {
+    title: "Chart of Accounts (COA)",
+    subtitle: "Bagan Akun Finansial & Jurnal Otomatis",
+    href: "/finance/accounting/coa",
+    icon: FileSpreadsheet,
+    badgeText: "COA Live",
+    badgeStatus: "info" as const,
+    description:
+      "Struktur nomor akun neraca, aset lancar persediaan, hutang dagang supplier, dan aturan posting jurnal otomatis dari transaksi SCM.",
+    quickLinks: [
+      { label: "Bagan Akun COA", href: "/finance/accounting/coa" },
+    ],
   },
 ];
 
 export default function MasterOverviewPage() {
   return (
-    <DashboardShell
-      title="System"
-      titleAccent="Constitution"
-      subtitle="Master data management hub — Centralizing the fundamental registry for cross-divisional workflow synchronization"
-      actions={
-        <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-md">
-          <Archive className="h-6 w-6 text-white" />
-        </div>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {MASTER_SEGMENTS.map((segment, i) => (
-          <Link key={i} href={segment.href} className="flex group">
-            <DashboardCard className="flex flex-col w-full h-full">
-              <div className="flex justify-between items-start mb-8">
-                <div className="p-4 rounded-xl bg-slate-100 text-slate-600 group-hover:bg-slate-800 group-hover:text-white transition-all">
-                  <segment.icon className="h-8 w-8 stroke-[2px]" />
+    <div className="space-y-8 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. MODULAR PAGE HEADER ── */}
+      <DnaPageHeader
+        title="MASTER DATA HUB"
+        subtitle="Pusat konfigurasi taksonomi sistem, data induk material kosmetik, rekanan rantai pasok, dan kredensial pengguna"
+        actions={
+          <div className="flex items-center gap-2">
+            <Link href="/master/goods">
+              <DnaButton variant="primary" icon={<Package className="w-4 h-4" />}>
+                Buka Katalog Barang
+              </DnaButton>
+            </Link>
+          </div>
+        }
+      />
+
+      {/* ── 02. MODULAR 5 KPI METRIC CARDS ── */}
+      <DnaKpiGrid
+        cards={[
+          {
+            key: "SKU",
+            title: "TOTAL MASTER SKU",
+            value: "2.797",
+            subtext: "Bahan baku, kemas & BJD",
+            icon: <Package className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: false,
+          },
+          {
+            key: "SUPPLIER",
+            title: "REKANAN SUPPLIER",
+            value: "178",
+            subtext: "Vendor resmi terdaftar",
+            icon: <Building2 className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
+            isSelected: false,
+          },
+          {
+            key: "CUSTOMER",
+            title: "MITRA PELANGGAN",
+            value: "818",
+            subtext: "Brand owner maklon",
+            icon: <Users className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+            isSelected: false,
+          },
+          {
+            key: "WAREHOUSE",
+            title: "FASILITAS GUDANG",
+            value: "14",
+            subtext: "Sidoarjo, PIER, Surabaya",
+            icon: <Warehouse className="w-4 h-4" />,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
+            isSelected: false,
+          },
+          {
+            key: "USERS",
+            title: "PERSONEL AKTIF",
+            value: "24",
+            subtext: "Staf terotorisasi sistem",
+            icon: <UserCog className="w-4 h-4" />,
+            iconBg: "bg-slate-100",
+            iconColor: "text-slate-700",
+            isSelected: false,
+          },
+        ]}
+      />
+
+      {/* ── 03. MODULE LAUNCHER CARDS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {MASTER_MODULES.map((mod, i) => (
+          <div
+            key={i}
+            className="flex flex-col justify-between bg-white border border-slate-200/80 hover:border-blue-500/50 rounded-2xl p-6 transition-all duration-200 group hover:shadow-lg shadow-xs"
+          >
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="p-3.5 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-100">
+                  <mod.icon className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider bg-slate-100 px-3 py-1.5 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
-                  {segment.stats}
-                </span>
+                <DnaBadge status={mod.badgeStatus}>{mod.badgeText}</DnaBadge>
               </div>
 
-              <div className="flex-1 space-y-3 mb-8">
-                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
-                  {segment.title}
+              <div>
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                  {mod.title}
                 </h3>
-                <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
-                  {segment.description}
-                </p>
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">{mod.subtitle}</p>
               </div>
 
-              <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-wider group-hover:text-blue-600 transition-all">
-                Open Segment
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <p className="text-xs text-slate-600 leading-relaxed">{mod.description}</p>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100 mt-6 space-y-3">
+              <div className="flex flex-wrap gap-1.5">
+                {mod.quickLinks.map((ql, qidx) => (
+                  <Link
+                    key={qidx}
+                    href={ql.href}
+                    className="text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 border border-slate-200/60 px-2.5 py-1 rounded-md transition-colors"
+                  >
+                    {ql.label}
+                  </Link>
+                ))}
               </div>
-            </DashboardCard>
-          </Link>
+
+              <Link
+                href={mod.href}
+                className="inline-flex items-center gap-2 text-xs font-black text-blue-600 group-hover:translate-x-1 transition-transform"
+              >
+                <span>Buka Modul</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
         ))}
-
-        <DashboardCard className="flex flex-col items-center justify-center text-center !border-dashed !border-2 !border-slate-200 !bg-slate-50/50 hover:!border-blue-600/50">
-          <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-slate-400 mb-6 border border-slate-200 group-hover:rotate-12 transition-transform">
-            <Database className="h-7 w-7 text-blue-600" />
-          </div>
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-2">Integrity Scan</h3>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">
-            Run a system-wide diagnostic on master data relations.
-          </p>
-          <DnaButton variant="outline" icon={<ShieldCheck />}>
-            Initialize Audit
-          </DnaButton>
-        </DashboardCard>
       </div>
-
-      <DashboardCard className="flex flex-col lg:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-          <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
-            <ShieldCheck className="h-7 w-7" />
-          </div>
-          <div>
-            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Event-Driven Accounting</h4>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-              All registry items are logically coupled to CoA for automated journaling synchronization.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 shrink-0">
-          <div className="h-1.5 w-40 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 w-full animate-pulse" />
-          </div>
-          <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg uppercase tracking-wider">
-            Sync Locked
-          </span>
-        </div>
-      </DashboardCard>
-    </DashboardShell>
+    </div>
   );
 }
+

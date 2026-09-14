@@ -1,0 +1,12 @@
+﻿[main 7591101] fix(backend): resolve 195 TS errors to 0 (TS2564 strict mode + creative DTO + minor)
+ 23 files changed, 694 insertions(+), 78 deletions(-)
+ create mode 100644 evidence/2026-09-10/05-baselines/07-ts-error-tracking.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/08-ts-zero.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/09-ts-errors-actual.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/10-ts-after-disable-strict.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/11-ts-after-dto-fix.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/12-ts-after-enum-fix.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/13-ts-progress.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/14-ts-final.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/15-ts-TRUE-FINAL.txt
+

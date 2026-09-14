@@ -1,0 +1,21 @@
+﻿C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\marketing\prototype\__tests__\marketing-prototype.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\marketing\prototype\__tests__\sla.util.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\lead-capture-ai.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\scm\services\purchase-payments.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\scm\services\purchase-invoices.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\marketing\canonical\__tests__\canonical-marketing.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\lead-capture-dedup.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\scm\services\supplier-score.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\lead-capture-e2e.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\marketing\canonical\__tests__\marketing-domain.policy.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\scm\services\scm.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\outbound-counter.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\lead-capture-fields.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\wa-webhook\__tests__\wa-gateway.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\lead-capture-name-extract.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\shared\storage\file-storage.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\lead-capture\__tests__\lead-capture-intent.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\app.controller.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\prisma\prisma\prisma.service.spec.ts
+C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\backend\src\modules\marketing\omni-crm\__tests__\omni-crm-conversation.service.spec.ts
+

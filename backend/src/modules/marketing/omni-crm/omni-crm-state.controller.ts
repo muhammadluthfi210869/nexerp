@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   Put,
@@ -14,12 +15,19 @@ import { UserRole } from '@prisma/client';
 import { OmniCrmStateService } from './omni-crm-state.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('marketing/omni-crm')
+@Controller(['v1/marketing/omni-crm', 'marketing/omni-crm'])
 export class OmniCrmStateController {
   constructor(private readonly service: OmniCrmStateService) {}
 
   @Get('state')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.MARKETING, UserRole.DIGIMAR, UserRole.DIRECTOR)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.MARKETING,
+    UserRole.DIGIMAR,
+    UserRole.COMMERCIAL,
+    UserRole.DIRECTOR,
+  )
   async getState(@Req() req: { user: User }) {
     const row = await this.service.getOrNull(req.user.id);
     if (!row) return { state: null, version: null };
@@ -27,17 +35,28 @@ export class OmniCrmStateController {
   }
 
   @Put('state')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.MARKETING, UserRole.DIGIMAR, UserRole.DIRECTOR)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.MARKETING,
+    UserRole.DIGIMAR,
+    UserRole.COMMERCIAL,
+    UserRole.DIRECTOR,
+  )
   async putState(
     @Req() req: { user: User },
     @Body() body: { state: unknown; version?: number },
   ) {
     try {
-      const updated = await this.service.upsert(req.user.id, body.state, body.version);
+      const updated = await this.service.upsert(
+        req.user.id,
+        body.state,
+        body.version,
+      );
       return { state: updated.state, version: updated.version };
     } catch (e) {
       if ((e as Error).message === 'VERSION_CONFLICT') {
-        return { error: 'VERSION_CONFLICT', statusCode: 409 };
+        throw new ConflictException('VERSION_CONFLICT');
       }
       throw e;
     }

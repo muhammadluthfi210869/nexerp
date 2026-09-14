@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -13,22 +13,45 @@ import { usePerformanceAudit } from "@/hooks/usePerformanceAudit";
 import { BusDevActivityStream } from "@/components/dashboard/BusDevActivityStream";
 import { SectionLabel } from "@/components/dna";
 import { TableWrapper } from "@/components/dna/TableWrapper";
+import { CalendarDays } from "lucide-react";
+
+function getCurrentMonthValue() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthRange(month: string) {
+  if (!month) return null;
+  const [year, monthNumber] = month.split("-").map(Number);
+  if (!year || !monthNumber) return null;
+  const start = new Date(year, monthNumber - 1, 1);
+  const end = new Date(year, monthNumber, 0, 23, 59, 59, 999);
+  return { dateFrom: start.toISOString(), dateTo: end.toISOString() };
+}
 
 export default function BussdevDashboardClient() {
   usePerformanceAudit("Bussdev Dashboard");
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue());
   const { data: granularData } = useGranularData();
 
-  const { data: dashboard, isLoading: dashLoading } = useQuery({
-    queryKey: ["dashboardAnalytics"],
-    queryFn: async () => (await api.get("/bussdev/dashboard")).data,
+  const range = useMemo(() => getMonthRange(selectedMonth), [selectedMonth]);
+
+  const { data: dashboard } = useQuery({
+    queryKey: ["dashboardAnalytics", selectedMonth],
+    queryFn: async () => {
+      const params: Record<string, string> = {};
+      if (range) { params.dateFrom = range.dateFrom; params.dateTo = range.dateTo; }
+      const res = await api.get("/bussdev/dashboard", params as any);
+      return res.data;
+    },
     staleTime: 30000,
     refetchInterval: 60000,
   });
 
-  const { data: staffPerformance, isLoading: staffLoading } = useQuery({
-    queryKey: ["staffPerformance"],
+  const { data: staffPerformance } = useQuery({
+    queryKey: ["staffPerformance", selectedMonth],
     queryFn: async () => (await api.get("/bussdev/analytics/staff-performance")).data,
     staleTime: 30000,
     refetchInterval: 60000,
@@ -38,6 +61,26 @@ export default function BussdevDashboardClient() {
 
   return (
     <>
+      {/* Month Filter Bar */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3">
+          <CalendarDays className="h-4 w-4 text-slate-400" />
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-600 outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setSelectedMonth("")}
+            className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-700"
+          >
+            All
+          </button>
+        </div>
+      </div>
+
       <DashboardCards variant="dashboard" data={dashboard} />
 
       {/* 📊 II & III. PERFORMANCE & CHURN MATRIX */}

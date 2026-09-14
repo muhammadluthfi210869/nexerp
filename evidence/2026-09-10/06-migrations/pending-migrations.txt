@@ -1,0 +1,18 @@
+﻿PENDING MIGRATIONS (6 dari 36 total):
+======================================
+20260902140000_add_director_user_role
+20260908230000_fix_marketing_tasks_columns
+20260909033000_add_marketing_task_owner_id
+20260909034500_align_management_task_runtime_schema
+20260909060000_add_social_tracker_tables
+20260910150000_marketing_task_social_foundation
+
+IMPLIKASI:
+- 199 TS errors kemungkinan dari schema yang belum match runtime expectation
+- Backend primitive (MOD-01 Master) mungkin reference field yang belum ada
+- 'fix this error fix that error' = drift antara code expectation dan applied schema
+
+NEXT ACTION:
+- Reviewed tiap migration.sql untuk reversibility
+- Apply dengan: npx prisma migrate deploy (production discipline)
+- Atau: npx prisma migrate dev --name <name> (kalau ada schema drift)

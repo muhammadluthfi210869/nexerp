@@ -14,7 +14,12 @@ import {
 import { Response } from 'express';
 import { DocumentAutomationService } from '../services/document-automation.service';
 import { PdfEngineService } from '../services/pdf-engine.service';
-import { ApproveDraftDto, RejectDraftDto, UpdateDraftDto, FilterDraftsDto } from '../dto/draft.dto';
+import {
+  ApproveDraftDto,
+  RejectDraftDto,
+  UpdateDraftDto,
+  FilterDraftsDto,
+} from '../dto/draft.dto';
 
 @Controller('document-automation')
 export class DocumentAutomationController {
@@ -108,7 +113,9 @@ export class DocumentAutomationController {
 
   @Post('generate/goods-requirement/:salesOrderId')
   async generateGoodsRequirement(@Param('salesOrderId') salesOrderId: string) {
-    return this.docAutomationService.generateGoodsRequirementDraft(salesOrderId);
+    return this.docAutomationService.generateGoodsRequirementDraft(
+      salesOrderId,
+    );
   }
 
   @Post('generate/delivery-order/:workOrderId')
@@ -124,7 +131,12 @@ export class DocumentAutomationController {
   @Post('pdf')
   @HttpCode(HttpStatus.OK)
   async generatePdfDirect(
-    @Body() body: { documentType: string; data: Record<string, any>; documentNumber: string },
+    @Body()
+    body: {
+      documentType: string;
+      data: Record<string, any>;
+      documentNumber: string;
+    },
     @Res() res: Response,
   ) {
     const pdfBuffer = await this.pdfService.generatePdf(

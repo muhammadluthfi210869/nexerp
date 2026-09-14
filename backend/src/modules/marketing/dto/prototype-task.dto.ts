@@ -1,4 +1,20 @@
-import { IsString, IsOptional, IsIn, IsDateString, IsNumber, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsUrl,
+  IsISO8601,
+  IsNumber,
+  IsDateString,
+  MaxLength,
+  MinLength,
+  IsIn,
+  ArrayMaxSize,
+  Matches,
+  ValidateIf,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateTaskDto {
   @IsOptional()
@@ -7,22 +23,33 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   title?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   projectId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   project?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   channel?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   category?: string;
 
   @IsOptional()
@@ -34,8 +61,21 @@ export class CreateTaskDto {
   priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
 
   @IsOptional()
-  @IsIn(['Not started', 'Working on it', 'Revision', 'Done'])
-  status?: 'Not started' | 'Working on it' | 'Revision' | 'Done';
+  @IsIn([
+    'Not started',
+    'Working on it',
+    'Progress',
+    'In Progress',
+    'Revision',
+    'Done',
+  ])
+  status?:
+    | 'Not started'
+    | 'Working on it'
+    | 'Progress'
+    | 'In Progress'
+    | 'Revision'
+    | 'Done';
 
   @IsOptional()
   @IsIn(['Healthy', 'Watch', 'Late'])
@@ -43,22 +83,28 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   pic?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   assignedBy?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   reviewer?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   startDate?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   dueDate?: string;
 
   @IsOptional()
@@ -83,14 +129,33 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   brief?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => typeof o.link === 'string' && o.link.trim().length > 0)
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(500)
+  @Transform(({ value }) =>
+    typeof value === 'string' && value.trim() === ''
+      ? undefined
+      : typeof value === 'string'
+        ? value.trim()
+        : value,
+  )
   link?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
+  @Transform(({ value }) =>
+    Array.isArray(value)
+      ? value.map((v: any) => (typeof v === 'string' ? v.trim() : v))
+      : value,
+  )
   tags?: string[];
 
   @IsOptional()
@@ -101,20 +166,29 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   notes?: string;
 }
 
 export class UpdateTaskDto {
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   title?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   projectId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   project?: string;
 
   @IsOptional()
@@ -126,48 +200,95 @@ export class UpdateTaskDto {
   priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
 
   @IsOptional()
-  @IsIn(['Not started', 'Working on it', 'Revision', 'Done'])
-  status?: 'Not started' | 'Working on it' | 'Revision' | 'Done';
+  @IsIn([
+    'Not started',
+    'Working on it',
+    'Progress',
+    'In Progress',
+    'Revision',
+    'Done',
+  ])
+  status?:
+    | 'Not started'
+    | 'Working on it'
+    | 'Progress'
+    | 'In Progress'
+    | 'Revision'
+    | 'Done';
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   pic?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   startDate?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   dueDate?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   brief?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => typeof o.link === 'string' && o.link.trim().length > 0)
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(500)
+  @Transform(({ value }) =>
+    typeof value === 'string' && value.trim() === ''
+      ? undefined
+      : typeof value === 'string'
+        ? value.trim()
+        : value,
+  )
   link?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   notes?: string;
 }
 
 export class UpdateTaskStatusDto {
-  @IsIn(['Not started', 'Working on it', 'Revision', 'Done'])
-  status!: 'Not started' | 'Working on it' | 'Revision' | 'Done';
+  @IsIn([
+    'Not started',
+    'Working on it',
+    'Progress',
+    'In Progress',
+    'Revision',
+    'Done',
+  ])
+  status!:
+    | 'Not started'
+    | 'Working on it'
+    | 'Progress'
+    | 'In Progress'
+    | 'Revision'
+    | 'Done';
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   note?: string;
 }
 
 export class CreateTaskCommentDto {
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   author!: string;
 
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   body!: string;
 }
 
@@ -178,26 +299,34 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   name?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   channel?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   category?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   owner?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   start?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   deadline?: string;
 
   @IsOptional()
@@ -210,36 +339,54 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   summary?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(255, { each: true })
+  @Transform(({ value }) =>
+    Array.isArray(value)
+      ? value.map((v: any) => (typeof v === 'string' ? v.trim() : v))
+      : value,
+  )
   blockers?: string[];
 }
 
 export class UpdateProjectDto {
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   name?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   channel?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   category?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   owner?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   start?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsISO8601({ strict: true })
   deadline?: string;
 
   @IsOptional()
@@ -252,10 +399,20 @@ export class UpdateProjectDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   summary?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(255, { each: true })
+  @Transform(({ value }) =>
+    Array.isArray(value)
+      ? value.map((v: any) => (typeof v === 'string' ? v.trim() : v))
+      : value,
+  )
   blockers?: string[];
 }
 

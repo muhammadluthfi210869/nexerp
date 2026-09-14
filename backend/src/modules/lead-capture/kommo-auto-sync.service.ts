@@ -34,21 +34,34 @@ export class KommoAutoSyncService implements OnModuleInit {
 
     try {
       const result = await this.kommo.pullAllLeads();
-      const saved = await this.leads.saveKommoLeads(result.leads, result.contacts, result);
-      this.logger.log(`[Kommo Auto Sync] ${reason}: pulled=${result.leads.length}, saved=${saved}`);
+      const saved = await this.leads.saveKommoLeads(
+        result.leads,
+        result.contacts,
+        result,
+      );
+      this.logger.log(
+        `[Kommo Auto Sync] ${reason}: pulled=${result.leads.length}, saved=${saved}`,
+      );
     } catch (err: any) {
-      this.logger.warn(`[Kommo Auto Sync] ${reason} failed: ${err?.message || err}`);
+      this.logger.warn(
+        `[Kommo Auto Sync] ${reason} failed: ${err?.message || err}`,
+      );
     } finally {
       this.running = false;
     }
   }
 
   private isEnabled() {
-    return String(process.env.KOMMO_AUTO_PULL_ENABLED || 'true').toLowerCase() !== 'false';
+    return (
+      String(process.env.KOMMO_AUTO_PULL_ENABLED || 'true').toLowerCase() !==
+      'false'
+    );
   }
 
   private getIntervalMs() {
-    const value = Number(process.env.KOMMO_AUTO_PULL_INTERVAL_MS || 5 * 60 * 1000);
+    const value = Number(
+      process.env.KOMMO_AUTO_PULL_INTERVAL_MS || 5 * 60 * 1000,
+    );
     return Number.isFinite(value) && value >= 60_000 ? value : 5 * 60 * 1000;
   }
 }

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# DNA compliance check sebelum commit
+# Runs DNA import enforcement + hardcode pattern detection
+./frontend/scripts/audit/dna-compliance.sh
+./frontend/scripts/audit/hardcode-pattern.sh HEAD

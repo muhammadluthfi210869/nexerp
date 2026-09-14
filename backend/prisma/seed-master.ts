@@ -52,23 +52,21 @@ async function main() {
   const hashed = await bcrypt.hash('password123', 10);
 
   for (const u of USERS) {
-    await prisma.user.upsert({
-      where: { email: u.email },
-      update: {
-        fullName: u.fullName,
-        passwordHash: hashed,
-        roles: u.roles,
-        status: UserStatus.ACTIVE,
-      },
-      create: {
-        email: u.email,
-        fullName: u.fullName,
-        passwordHash: hashed,
-        roles: u.roles,
-        status: UserStatus.ACTIVE,
-      },
-    });
-    console.log(`  ✅ ${u.email} (${u.fullName}) — ${u.roles.join(', ')}`);
+    const existing = await prisma.user.findUnique({ where: { email: u.email } });
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          email: u.email,
+          fullName: u.fullName,
+          passwordHash: hashed,
+          roles: u.roles,
+          status: UserStatus.ACTIVE,
+        },
+      });
+      console.log(`  ✅ Created: ${u.email} (${u.fullName}) — ${u.roles.join(', ')}`);
+    } else {
+      console.log(`  ℹ️ Exists: ${u.email} (${existing.fullName}) — skipped overwrite`);
+    }
   }
 
   console.log(`\n💎 MASTER SEED COMPLETE. ${USERS.length} users created/updated.`);
