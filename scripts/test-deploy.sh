@@ -50,7 +50,9 @@ LOGIN=$(curl -sf -X POST "$BASE_URL/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@dreamlab.com","password":"password123"}' 2>/dev/null || echo "FAIL")
 if [ "$LOGIN" != "FAIL" ]; then
-  TOKEN=$(echo "$LOGIN" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null || echo "")
+  # python3 TIDAK ada di Git Bash/Windows → fallback parsing murni sed/grep
+  TOKEN=$(echo "$LOGIN" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null \
+    || echo "$LOGIN" | grep -oE '"access_token":"[^"]+' | head -1 | cut -d'"' -f4)
   if [ -n "$TOKEN" ]; then
     green "POST /auth/login → access_token received ✓"
     PASS=$((PASS+1))

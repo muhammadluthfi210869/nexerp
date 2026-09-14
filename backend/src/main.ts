@@ -38,15 +38,25 @@ async function bootstrap() {
   );
 
   // Enable CORS — locked to production domain, wide open for dev
+  // CORS_ORIGIN mendukung daftar comma-separated (mis.
+  // "http://localhost:3000,https://nexerp.id") — dulu string utuh dianggap
+  // SATU origin sehingga health-check localhost tidak pernah match.
   const corsOrigin =
     process.env.NODE_ENV === 'production'
-      ? [
-          process.env.CORS_ORIGIN || 'https://nexerp.id',
-          'https://nexerp.id',
-          'https://www.nexerp.id',
-          'https://dreamlab.id',
-          'https://www.dreamlab.id',
-        ].filter(Boolean)
+      ? Array.from(
+          new Set(
+            [
+              ...(process.env.CORS_ORIGIN || 'https://nexerp.id')
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean),
+              'https://nexerp.id',
+              'https://www.nexerp.id',
+              'https://dreamlab.id',
+              'https://www.dreamlab.id',
+            ],
+          ),
+        )
       : true;
   app.enableCors({
     origin: corsOrigin,

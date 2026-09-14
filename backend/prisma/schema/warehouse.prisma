@@ -472,8 +472,8 @@ model EmergencyPurchaseRequest {
 
 model ProductSupplierHistory {
   id                String       @id @default(uuid()) @db.Uuid
-  productId         String
-  supplierId        String
+  productId         String       @db.Uuid
+  supplierId        String       @db.Uuid
   firstSeenAt       DateTime     @default(now())
   lastPurchaseAt    DateTime?
   totalQtyPurchased Float        @default(0)
