@@ -8,6 +8,7 @@
 ## 🔧 Operasi & Deploy
 | Dokumen | Isi |
 |---|---|
+| [PANDUAN-TESTING-DAN-DEPLOY-LENGKAP.md](PANDUAN-TESTING-DAN-DEPLOY-LENGKAP.md) | ⭐ PANDUAN UTUH: piramida testing level 0–5 (parity localhost↔server), alur deploy, rollback, backup/DR, skema db push, monitoring, secret, histori insiden cutover |
 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Topologi 1 branch + diagram stack deploy GHCR→VPS |
 | [DEPLOY.md](../DEPLOY.md) | SOP deploy/rollback harian (`scripts/deploy.sh <sha>`) |
 | [RUNBOOK.md](../RUNBOOK.md) | Incident response P0/P1/P2 |

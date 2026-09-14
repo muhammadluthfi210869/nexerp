@@ -34,7 +34,7 @@ bencana e75fbe1).
 | C5 | Cutover (runbook DEPLOY.md) + health gate + smoke checklist live (login, management-task CRUD, lead-capture, toribio, omni-crm, webhook WA, **sidebar delegasi manajemen** — satu-satunya fix light yang TIDAK di-port (nav main beda total), verifikasi visual wajib) | 🟡 cutover EKS 14:25–14:33 UTC + smoke otomatis hijau (lihat Ronde 4); **verifikasi visual user belum** |
 | C6 | Rollback di-tes sekali di VPS (sha lama → baru → lama) | 🟡 drill mekanisme: 3.1 detik, skip-pull cache OK, health gate OK. Rollback lintas-era (image light lama) TIDAK berlaku lagi — skema sudah superset; rollback resmi = `rollback.sh <sha>` antar-SHA pipeline baru |
 | C7 | Monitoring memori 24 jam (`docker stats`; backend < ~512MB) | 🟡 awal: backend 235MB / frontend 72MB / db 91MB — mulai 14:33 UTC, cek ulang +24 jam |
-| C8 | Arsip branch (`production-light`, `phase-3`, `release/*`, `codex/*` → tag `archive/*`) setelah stabil | ⬜ |
+| C8 | Arsip branch (`production-light`, `phase-3`, `release/*`, `codex/*` → tag `archive/*`) setelah stabil | 🟡 `production-light` SELESAI (2026-09-15): tip diverifikasi identik `b73a514` → tag `archive/production-light` di-push → branch remote+lokal dihapus (dihapus) → local tip lama terbukti ancestor tag (0 commit hilang). Sisanya (`phase-3`, `codex/*`) masuk Fase 5 |
 
 ## Catatan temuan
 - **Kontrak prefix API**: `main` menaruh semua route NestJS di bawah `/v1`
@@ -116,6 +116,14 @@ Temuan VPS lain: ada **checkout kedua proyek `nexerp`+`nexerp-r4`** dari sesi
 terbengkalai (compose `nexerp-db` masih jalan 5 hari, DB `erp_database` terpisah
 — tidak disentuh, masuk Fase 5); `nginx` container healthcheck-nya sendiri cacat
 (`wget --spider localhost/` ikut redirect ke https → unhealthy semu, site sehat).
+
+### Ronde 5 — live = tip main, smoke production 6/6 (`61b3678`)
+CI main `61b3678` hijau → VPS `git pull --ff-only` + pull image GHCR + `up -d`
+(kontainer kini berjalan dari tag per-SHA `61b3678…`, terverifikasi
+`docker inspect`). Health `/v1/health` ok (uptime 12s).
+`bash scripts/test-deploy.sh https://nexerp.id/api` → **6/6 PASS**
+(gagal 1 di ronde 4 terbukti bug probe, kini tetap 6/6 dengan probe per-target).
+Ambisi "artifact yang di-test = artifact yang live" tercapai penuh.
 
 ## Putusan
 Kode **siap di-review lewat PR** (C1). **DILARANG menyebut deploy baru
