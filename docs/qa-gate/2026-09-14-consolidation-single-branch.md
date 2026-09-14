@@ -27,10 +27,10 @@ bencana e75fbe1).
 
 | # | Gerbang | Status |
 |---|---|---|
-| C1 | Push cabang + PR → CI `build-and-test` hijau di runner (boot backend 36 modul vs Postgres kosong via init-db.sh yang baru) | ⬜ perlu push (menunggu izin user — ada 148 commit `main` lokal belum ter-push) |
-| C2 | Backup DB live terverifikasi + tag image `pre-consolidation` di VPS | ⬜ aksi VPS |
-| C3 | Analisis drift skema (dry-run skema main vs DB live; harus murni aditif; cek enum) | ⬜ aksi VPS — JANGAN cutover tanpa ini |
-| C4 | `docker login ghcr.io` di VPS + swap 2GB + secret CI `JWT_SECRET` | ⬜ aksi VPS/GitHub |
+| C1 | Push cabang + PR → CI `build-and-test` hijau di runner (boot backend 36 modul vs Postgres kosong via init-db.sh yang baru) | ✅ hijau di `5934b06` (8m35s) — ronde 3 `e73d10f` menyusul |
+| C2 | Backup DB live terverifikasi + tag image `pre-consolidation` di VPS | ✅ `pg_dumpall` erp_database → gzip 2.3MB → **restore diverifikasi** (kontainer sementara: 0 error, 221=221 tabel, users 129=129 baris) → salinan laptop di `~/nexerp-backups/`; image backend+frontend di-tag `pre-consolidation` |
+| C3 | Analisis drift skema (dry-run vs DB live; harus aditif / semua DROP diaudit baris-per-baris) | ✅ lihat Ronde 3 — 2 gerbang data diselamatkan, sisa DROP terbukti 0 baris, disetujui user |
+| C4 | `docker login ghcr.io` di VPS + swap + secret CI `JWT_SECRET` | ✅ repo PUBLIC → pull GHCR anonim, tanpa login; swap 4GB sudah aktif (RAM 8GB, bukan 4); `JWT_SECRET` GitHub secret disinkron dari `.env` live |
 | C5 | Cutover (runbook DEPLOY.md) + health gate + smoke checklist live (login, management-task CRUD, lead-capture, toribio, omni-crm, webhook WA, **sidebar delegasi manajemen** — satu-satunya fix light yang TIDAK di-port (nav main beda total), verifikasi visual wajib) | ⬜ |
 | C6 | Rollback di-tes sekali di VPS (sha lama → baru → lama) | ⬜ |
 | C7 | Monitoring memori 24 jam (`docker stats`; backend < ~512MB) | ⬜ |
@@ -78,6 +78,42 @@ via `/v1`). `test-deploy.sh` juga dibuat jalan tanpa python3 (Git Bash).
 
 ⚠️ Implikasi cutover: `.env` VPS perlu `NEXT_PUBLIC_API_URL=https://nexerp.id/api/v1`
    (SSR/server-side); nginx.conf baru otomatis dipakai setelah `git checkout main`.
+
+### Ronde 3 — Drift-analysis VPS menangkap 2 gap merge NYATA (`e73d10f`)
+Eksekusi VPS Batch 1 langsung via SSH (key non-interaktif terverifikasi).
+`prisma migrate diff` DB live vs skema konsolidasi menghasilkan **DROP atas data
+produksi sungguhan** — gerbang C3 bekerja persis seperti didesain:
+
+1. **`marketing_team_members` (35 baris live)** — model `MarketingTeamMember`
+   dideklarasikan di light (`marketing.prisma:845`) tapi tidak ikut ke branch
+   konsolidasi; frontend `useCanonicalMarketing` → `GET /marketing/members`
+   hanya ada di backend light. Tanpa fix: halaman anggota 404 + tabel ter-DROP.
+   Fix: port superset canonical light (controller/service/dto/auth-guard/spec —
+   main tidak pernah menyentuh `canonical/` sejak fork, terbukti `git log` kosong)
+   + model + relasi balik User di `auth.prisma`.
+2. **Kolom journey atribusi `lead_captures` (8622 baris terisi di `sourcePage`)**
+   — dibuat migration era main `20260822081953_lead_attribution_journey` tapi
+   tidak pernah dideklarasikan di file skema (schema↔migration drift sejak Agustus).
+   Fix: 10 field dideklarasikan persis tipe/default/nama-index migration.
+   Catatan: `whatsappClickedAt`/`assignedSalesId`/`verificationStatus` terisi 0 —
+   pipeline Batch-4 tidak pernah live; kolom tetap dipertahankan (dipakai codepath
+   round-robin lama + murah dipertahankan).
+
+Koreksi verifikasi lama: klaim "backend main superset light" salah untuk modul
+**canonical** (verifikasi dulu hanya membandingkan modul prototype).
+
+Audit sisa DROP (pasca-fix, ronde 2 diff): 33 tabel + 26 kolom + 14 enum —
+semuanya **0 baris / 0 non-null** (audit otomatis per kolom via SQL) — artefak
+eksperimen codex/r4 yang ditinggalkan sesi lain (ditemukan: DB live sudah berisi
+push skema codex sejak 03:48 UTC, `nexerp-r4*`, shadow dbs). `SET NOT NULL`
+satu-satunya terjadi di tabel kosong. User menyetujui penghapusan sisa ini.
+Laporan lengkap: `/home/dreamlab/backups/drift-report-20260914.sql` (ronde 1)
+dan `drift-report-round2-20260914.sql`.
+
+Temuan VPS lain: ada **checkout kedua proyek `nexerp`+`nexerp-r4`** dari sesi
+terbengkalai (compose `nexerp-db` masih jalan 5 hari, DB `erp_database` terpisah
+— tidak disentuh, masuk Fase 5); `nginx` container healthcheck-nya sendiri cacat
+(`wget --spider localhost/` ikut redirect ke https → unhealthy semu, site sehat).
 
 ## Putusan
 Kode **siap di-review lewat PR** (C1). **DILARANG menyebut deploy baru
