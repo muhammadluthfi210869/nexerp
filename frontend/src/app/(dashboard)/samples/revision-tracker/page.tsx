@@ -11,16 +11,22 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { StatCard, TableWrapper, DnaInput, DnaButton } from "@/components/dna";
 import {
+  StatCard,
+  TableWrapper,
+  DnaInput,
+  DnaButton,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { api } from "@/lib/api";
 

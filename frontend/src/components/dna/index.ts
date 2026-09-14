@@ -13,6 +13,8 @@ export { DnaButton } from "./DnaButton";
 export { DnaBadge } from "./DnaBadge";
 export { TabButton, TabButtonGroup } from "./TabButton";
 export { FilterBar } from "./FilterBar";
+export { dnaToast, dnaToastApi, DnaToaster as DnaToastProvider, useDnaToast } from "./DnaToast";
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 // ── NEW MODULAR DNA COMPONENTS ──
 
@@ -161,14 +163,16 @@ export {
   DnaExportButton,
   DnaLineItemsTable,
   DnaWorkflowBar,
-  useDnaToast,
   DnaCascadingAddress,
   DnaInfoCard,
-  DnaCard,
   DnaRadioGroup,
   DnaStickyFooter,
-  DnaToastProvider,
 } from "./DnaInteractiveElements";
+
+// DnaCard: re-export from the proper DnaCard.tsx file (supports variant/padding)
+// rather than the legacy DnaInteractiveElements.DnaCard (header-only API).
+export { DnaCard } from "./DnaCard";
+export type { DnaCardProps, DnaCardVariant, DnaCardPadding } from "./DnaCard";
 
 export type {
   DnaCurrencyInputProps,

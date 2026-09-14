@@ -34,12 +34,7 @@ import {
   Link2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { Input } from "@/components/ui/input";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { StatCard } from "@/components/dna/StatCard";
+import { Card, Input, DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper, SectionLabel } from "@/components/dna";
 import {
   XAxis,
   YAxis,
@@ -55,8 +50,6 @@ import {
   Area,
 } from "recharts";
 import { cn } from "@/lib/utils";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { SectionLabel } from "@/components/dna/SectionLabel";
 
 const COLORS = ["#2563EB", "#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#EF4444", "#6B7280"];
 

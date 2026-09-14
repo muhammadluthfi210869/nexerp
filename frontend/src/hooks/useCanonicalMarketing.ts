@@ -6,7 +6,21 @@ import { api } from "@/lib/api";
 export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "IN_REVIEW" | "REVISION" | "DONE" | "CANCELLED";
 export type SocialStatus = "IDEA" | "DRAFT" | "SCRIPTING" | "PRODUCTION" | "IN_REVIEW" | "REVISION" | "APPROVED" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
 
-export interface MarketingMember { id: string; fullName: string; email: string; roles?: string[] }
+export interface MarketingMember {
+  id: string;
+  userId?: string;
+  fullName: string;
+  name?: string;
+  email?: string;
+  roles?: string[];
+  initial?: string;
+  role?: string;
+  avatarColor?: string;
+  // Phase-3 per-path checkout extensions:
+  avatarBg?: string;      // CSS class for avatar background
+  department?: string;    // e.g., "DIGIMAR", "CREATIVE"
+  phone?: string;
+}
 export interface MarketingBrand { id: string; code: string; name: string; handle?: string | null; primaryPlatform?: string | null; accentToken?: string; isActive?: boolean }
 export interface MarketingProject { id: string; projectCode: string; name: string; channel: string; category: string; status: string; progress: number; version: number; brandId?: string | null; deadline?: string | null; _count?: { tasks: number } }
 export interface ChecklistItem { id: string; text: string; done: boolean; isRequired: boolean; sortOrder: number }

@@ -8,6 +8,12 @@ interface DashboardShellProps {
   subtitle?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
+  // Phase-3 per-path checkout: these props were used by phase-3 components.
+  // Kept optional + ignored to preserve their API surface without changing
+  // the visual contract.
+  variant?: string;
+  padding?: string;
+  className?: string;
 }
 
 /**

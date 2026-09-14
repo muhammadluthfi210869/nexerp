@@ -175,7 +175,6 @@ export default function OmniCrmClient() {
   const activeBusDevCount = (state.busDevs || []).filter((b) => b.status === 'AKTIF').length;
   const totalLeads = (state.leads || []).length;
   const totalPipelineValue = (state.leads || []).reduce((acc, l) => acc + (l.value || 0), 0);
-  // NOTE: currentUserLeadsCount dihitung setelah `currentUser` dideklarasikan (TDZ).
 
   // Real Backend API Queries & Mutations (Meta Cloud API Integration)
   const { data: serverConversations, refetch: refetchConversations, isFetching: isSyncingBackend, isError: conversationsError } = useConversations();
@@ -203,7 +202,6 @@ export default function OmniCrmClient() {
     isSuperAdmin,
     whatsappAccountKey: matchedBusDev?.whatsappAccountKey,
   };
-
   const currentUserLeadsCount = currentUser.isSuperAdmin
     ? totalLeads
     : (state.leads || []).filter((l) => l.assignedTo === currentUser.id).length;

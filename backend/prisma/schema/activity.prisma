@@ -1,0 +1,39 @@
+// WS-D Activity Tracking — append-only activity log
+// See docs/ssot/PHASE_4_PLAN.md §4 (Activity Tracking)
+//
+// Append-only: application layer enforces no UPDATE/DELETE.
+// Retention: 90-day rolling purge via scheduled cron.
+
+model ActivityLog {
+  id         String          @id @default(uuid()) @db.Uuid
+  userId     String?         @db.Uuid
+  division   Division?
+  type       LogActivityType
+  method     String? // HTTP method for CRUD ops (POST/PUT/PATCH/DELETE)
+  entityType String? // polymorphic: "SalesLead", "PurchaseOrder", etc.
+  entityId   String? // polymorphic UUID
+  path       String? // API path or frontend route
+  status     Int? // HTTP status for CRUD
+  metadata   Json? // body subset, transition details
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime        @default(now())
+
+  user       User?           @relation("ActivityActor", fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+enum LogActivityType {
+  CREATE
+  UPDATE
+  DELETE
+  PAGE_VIEW
+  STATE_TRANSITION
+  LOGIN_SUCCESS
+  LOGIN_FAIL
+  LOGOUT
+}

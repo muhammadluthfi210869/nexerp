@@ -2,7 +2,7 @@ import React from "react"
 import { cn } from "@/lib/utils"
 
 interface DnaButtonProps {
-  variant: "primary" | "secondary" | "outline" | "ghost" | "danger"
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger"
   size?: "sm" | "md" | "lg" | "icon"
   icon?: React.ReactNode
   children?: React.ReactNode
@@ -34,7 +34,7 @@ const sizeClasses: Record<string, string> = {
 }
 
 export function DnaButton({
-  variant,
+  variant = "primary",
   size = "md",
   icon,
   children,

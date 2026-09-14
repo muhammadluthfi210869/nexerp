@@ -1,0 +1,88 @@
+// OmniCRM MVP — CrmLead + GuestbookEvent + LeadAudit
+// See docs/marketing/PHASE-0-OMNICRM-CONTRACT.md (frozen 2026-09-11)
+//
+// crm_leads: the kanban inbox entry. One row per lead arriving from
+//   dreamlab.id via POST /crm/leads/ingest (HMAC-signed webhook).
+//   Denormalizes phone + source from LeadCapture for fast inbox load.
+// guestbook_events: visitor log awaiting BusDev approval. One row per
+//   ingested lead; approval flips status to APPROVED/REJECTED.
+// lead_audits: append-only state-transition log. One row per stage change.
+//
+// Reuses existing User (for assignedTo FK), BussdevStaff (for BusDev
+// profile — extended later if needed), and LeadCapture (FK only).
+
+model CrmLead {
+  id            String     @id @default(uuid()) @db.Uuid
+  leadCaptureId String     @unique @db.Uuid
+  trackingCode  String?    @unique @db.VarChar(50)
+  stage         CrmStage   @default(LEADS_MASUK)
+  displayName   String?    @db.VarChar(120)
+  phone         String     @db.VarChar(30)
+  source        LeadSource
+  pageUrl       String?    @db.Text
+  pageTitle     String?    @db.VarChar(255)
+  referrer      String?    @db.Text
+  intent        String?    @db.VarChar(50)
+  deviceType    String?    @db.VarChar(30)
+  browser       String?    @db.VarChar(50)
+
+  // Assignment + first-touch timestamps (denormalized for KPI speed).
+  assignedToId    String?   @db.Uuid
+  firstInboundAt  DateTime?
+  firstOutboundAt DateTime?
+  firstResponseAt DateTime?
+  lastInboundAt   DateTime?
+  lastOutboundAt  DateTime?
+  replyRate       Float? // 0..1 — recomputed by KPI service
+
+  // Lifecycle
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  wonAt      DateTime?
+  lostAt     DateTime?
+  lostReason String?   @db.VarChar(255)
+
+  guestbookEvent GuestbookEvent?
+  audits         LeadAudit[]
+
+  @@index([assignedToId, createdAt])
+  @@index([createdAt])
+  @@map("crm_leads")
+}
+
+model GuestbookEvent {
+  id             String            @id @default(uuid()) @db.Uuid
+  crmLeadId      String            @unique @db.Uuid
+  approvalStatus GuestbookApproval @default(PENDING)
+  approverId     String?           @db.Uuid
+  approvedAt     DateTime?
+  approverNote   String?           @db.VarChar(500)
+  pageUrl        String            @db.Text
+  pageTitle      String?           @db.VarChar(255)
+  referrer       String?           @db.Text
+  intent         String?           @db.VarChar(50)
+  source         String            @db.VarChar(50)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  lead CrmLead @relation(fields: [crmLeadId], references: [id], onDelete: Cascade)
+
+  @@index([crmLeadId, createdAt])
+  @@map("guestbook_events")
+}
+
+model LeadAudit {
+  id        String   @id @default(uuid()) @db.Uuid
+  crmLeadId String   @db.Uuid
+  actorId   String?  @db.Uuid
+  action    String   @db.VarChar(50) // "STAGE_CHANGE", "DISPLAY_NAME_UPDATE", "ASSIGN", "INGEST", "APPROVE"
+  fromStage String?  @db.VarChar(30)
+  toStage   String?  @db.VarChar(30)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  lead CrmLead @relation(fields: [crmLeadId], references: [id], onDelete: Cascade)
+
+  @@index([crmLeadId, createdAt])
+  @@map("lead_audits")
+}
