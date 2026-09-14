@@ -41,17 +41,17 @@ echo ""
 
 # ── 3. Cek compose config ──
 echo "📋 Step 3/6: Validating docker-compose config..."
-if docker compose -f docker-compose.prod.yml config >/dev/null 2>&1; then
-  echo "  ✅ docker-compose.prod.yml is valid"
+if docker compose -f docker-compose.yml config >/dev/null 2>&1; then
+  echo "  ✅ docker-compose.yml is valid"
 else
-  echo "  ❌ docker-compose.prod.yml has errors"
-  docker compose -f docker-compose.prod.yml config 2>&1 || true
+  echo "  ❌ docker-compose.yml has errors"
+  docker compose -f docker-compose.yml config 2>&1 || true
 fi
 echo ""
 
 # ── 4. Build test ──
 echo "📋 Step 4/6: Testing production build..."
-docker compose -f docker-compose.prod.yml build --parallel 2>&1 | tail -5
+docker compose -f docker-compose.yml build --parallel 2>&1 | tail -5
 echo "  ✅ Build command issued (check output above for errors)"
 echo ""
 
@@ -68,14 +68,14 @@ echo ""
 
 # ── 6. Uji coba di local dulu ──
 echo "📋 Step 6/6: Starting local test (prod config)..."
-docker compose -f docker-compose.prod.yml up -d db backend
+docker compose -f docker-compose.yml up -d db backend
 echo "  ⏳ Waiting 15s for backend to start..."
 sleep 15
 if curl -sf http://localhost:3001/health 2>/dev/null; then
   echo "  ✅ Backend health check PASSED"
 else
   echo "  ❌ Backend health check FAILED"
-  docker compose -f docker-compose.prod.yml logs backend --tail 20
+  docker compose -f docker-compose.yml logs backend --tail 20
 fi
 
 echo ""
@@ -88,4 +88,4 @@ fi
 echo "═══════════════════════════════════════════════"
 
 # Cleanup
-docker compose -f docker-compose.prod.yml down 2>/dev/null || true
+docker compose -f docker-compose.yml down 2>/dev/null || true

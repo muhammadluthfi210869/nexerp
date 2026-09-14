@@ -104,8 +104,7 @@ backend/dirlif-project-*.json
 # Base64 encoded blobs (sensitive)
 *.b64
 
-# Documentation & Excel files
-docs/
+# Excel files only (docs/ is tracked — qa-gate reports etc.)
 *.xlsx
 
 # Frontend screenshots
@@ -117,3 +116,12 @@ quality-skill-sources-tmp/
 # Windows reserved filenames
 nul
 NUL
+
+# tmp/ dev-scratch (Phase 1.2 cleanup)
+tmp/*.sql
+tmp/*.tar.gz
+tmp/*.png
+tmp/*-spec.ts
+tmp/Dockerfile.*-hotfix
+tmp/inspect*.ps1
+tmp/filter_*.ps1

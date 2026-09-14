@@ -1,5 +1,13 @@
 # ERP FROM ZERO - Project Guide
 
+## 📚 Navigation
+- [ARCHITECTURE.md](ARCHITECTURE.md) — branch topology + deploy stack diagram
+- [DEPLOY.md](DEPLOY.md) — single-env compose workflow
+- [RUNBOOK.md](RUNBOOK.md) — incident response (P0/P1/P2)
+- [docs/BridgePattern.md](docs/BridgePattern.md) — phase-3 → production-light workflow (BINDING)
+- [PRODUCTION_LIGHT.md](PRODUCTION_LIGHT.md) — why ERP is pruned
+- [docs/INDEX.md](docs/INDEX.md) — full doc navigation hub
+
 ## ⛩️ QA GATE — ATURAN WAJIB (BACA SETIAP SESI)
 
 **Jangan pernah menyatakan fitur "selesai" / "siap dikirim" sebelum `docs/QA_GATE.md`
