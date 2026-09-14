@@ -66,7 +66,7 @@ jobs:
           load: true
           tags: nexerp-frontend:test
           build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost:3001
+            NEXT_PUBLIC_API_URL=http://localhost:3001/v1
             JWT_SECRET=test-secret-do-not-use-in-production
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -86,7 +86,7 @@ jobs:
           echo "⏳ Menunggu backend siap..."
           for i in $(seq 1 60); do
             sleep 2
-            HEALTH=$(curl -sf http://localhost:3001/health 2>/dev/null || echo "")
+            HEALTH=$(curl -sf http://localhost:3001/v1/health 2>/dev/null || echo "")
             if [ -n "$HEALTH" ]; then
               echo "✅ Backend siap setelah ${i}x2s"
               break
@@ -101,7 +101,7 @@ jobs:
       - name: 🩺 Integration Tests
         run: |
           chmod +x scripts/test-deploy.sh
-          bash scripts/test-deploy.sh http://localhost:3001
+          bash scripts/test-deploy.sh http://localhost:3001/v1
 
       - name: 🧪 Consolidation Regression Tests
         run: |
@@ -154,7 +154,7 @@ jobs:
             ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api' }}
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api/v1' }}
             NEXT_PUBLIC_WA_PHONE=${{ vars.NEXT_PUBLIC_WA_PHONE || '6287793032556' }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
           cache-from: type=gha

@@ -1,0 +1,93 @@
+﻿
+> frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.5 C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/frontend
+
+ ❯ test/production-workorders.test.tsx (3 tests | 3 failed) 75ms
+     × renders the page without crashing 34ms
+     × shows empty state when no work orders 5ms
+     × renders stat cards 5ms
+ ❯ test/production-operations.test.tsx (3 tests | 3 failed) 97ms
+     × renders the page without crashing 40ms
+     × renders tab navigation 29ms
+     × renders stat cards 15ms
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/production-operations.test.tsx > Operations Page > renders the page without crashing
+ FAIL  test/production-operations.test.tsx > Operations Page > renders tab navigation
+ FAIL  test/production-operations.test.tsx > Operations Page > renders stat cards
+Error: [vitest] No "DnaStatCard" export is defined on the "@/components/dna" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@/components/dna"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ OperationsContent src/app/(dashboard)/production/operations/page.tsx:247:16
+    245|           <div className="space-y-4">
+    246|             <div className="grid grid-cols-3 gap-4">
+    247|               <DnaStatCard label="Total WO" value={woList.length} vari…
+       |                ^
+    248|               <DnaStatCard label="Active" value={woList.filter((w: any…
+    249|               <DnaStatCard label="Finished" value={woList.filter((w: a…
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > renders the page without crashing
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > shows empty state when no work orders
+ FAIL  test/production-workorders.test.tsx > Work Orders Page > renders stat cards
+Error: [vitest] No "useDnaToast" export is defined on the "@/components/dna" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@/components/dna"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ WorkOrdersPage src/app/(dashboard)/production/work-orders/page.tsx:216:17
+    214| export default function WorkOrdersPage() {
+    215|   const queryClient = useQueryClient();
+    216|   const toast = useDnaToast();
+       |                 ^
+    217|
+    218|   const [activeTab, setActiveTab] = useState<string>("ALL");
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  2 failed | 32 passed (34)
+      Tests  6 failed | 300 passed | 1 skipped (307)
+   Start at  15:09:25
+   Duration  15.96s (transform 1.81s, setup 28.00s, import 18.92s, tests 15.01s, environment 83.93s)
+
+

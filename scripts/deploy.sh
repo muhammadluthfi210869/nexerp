@@ -19,7 +19,7 @@ DEPLOY_SHA="${1:-latest}"
 # (rename project = volume baru = data hilang). Nama boleh diganti nanti
 # lewat prosedur rebind volume yang terencana.
 COMPOSE_PROJECT="${COMPOSE_PROJECT_NAME:-production-light}"
-HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3001/health}"
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3001/v1/health}"
 
 echo ""
 echo "═══════════════════════════════════════════════════"

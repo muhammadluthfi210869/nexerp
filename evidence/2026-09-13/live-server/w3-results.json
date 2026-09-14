@@ -1,0 +1,141 @@
+{
+  "pages": [
+    {
+      "path": "/login",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2F",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/management-task/overview",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Fmanagement-task%2Foverview",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/management-task/achmad-bagir",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Fmanagement-task%2Fachmad-bagir",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/reports/dreamlab",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Freports%2Fdreamlab",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/reports/toribio",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Freports%2Ftoribio",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/social-tracker",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Fsocial-tracker",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/social-tracker/reporting",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Fsocial-tracker%2Freporting",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/social-tracker/integrations",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Fsocial-tracker%2Fintegrations",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/marketing/omnicrm",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fmarketing%2Fomnicrm",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    },
+    {
+      "path": "/samples/omni-crm",
+      "status": 200,
+      "title": "NexERP | Production",
+      "finalUrl": "https://103.93.134.215/login?redirect=%2Fsamples%2Fomni-crm",
+      "hasStub": false,
+      "bodyPreview": "NEX ERP\n\nINSTITUTIONAL CONTROL HUB\n\nSign In\n\nSecure authentication for authorized personnel\n\nCORPORATE EMAIL\nSECRET KEY\nFORGOT?\nINITIALIZE SESSION\n\nPOWERED BY NEX SYSTEMS • V9.0",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()"
+      ],
+      "networkFailures": []
+    }
+  ],
+  "summary": {
+    "pass": 11,
+    "fail": 0,
+    "total": 11
+  }
+}

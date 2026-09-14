@@ -6,7 +6,7 @@
 # ═══════════════════════════════════════════════════════
 set -euo pipefail
 
-BASE_URL="${1:-http://localhost:3001}"
+BASE_URL="${1:-http://localhost:3001/v1}"
 PASS=0
 FAIL=0
 

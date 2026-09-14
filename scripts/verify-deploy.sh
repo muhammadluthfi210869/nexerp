@@ -71,7 +71,7 @@ echo "📋 Step 6/6: Starting local test (prod config)..."
 docker compose -f docker-compose.yml up -d db backend
 echo "  ⏳ Waiting 15s for backend to start..."
 sleep 15
-if curl -sf http://localhost:3001/health 2>/dev/null; then
+if curl -sf http://localhost:3001/v1/health 2>/dev/null; then
   echo "  ✅ Backend health check PASSED"
 else
   echo "  ❌ Backend health check FAILED"

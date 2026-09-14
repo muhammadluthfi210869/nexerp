@@ -1,0 +1,6 @@
+{
+  "name": "Dreamlab ERP — Task & Social Media Management",
+  "description": "Sistem ERP terpadu untuk tim: Task Management harian dan proyek, Social Media Planner, dan Social Media Reporting untuk setiap brand.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

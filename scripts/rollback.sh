@@ -41,7 +41,7 @@ echo "🩺 Health gate..."
 OK=0
 for i in $(seq 1 20); do
   sleep 2
-  if curl -sf "${HEALTH_URL:-http://127.0.0.1:3001/health}" >/dev/null 2>&1; then OK=1; break; fi
+  if curl -sf "${HEALTH_URL:-http://127.0.0.1:3001/v1/health}" >/dev/null 2>&1; then OK=1; break; fi
 done
 if [ "$OK" -eq 1 ]; then
   echo "  ✅ Backend sehat — rollback ke $TARGET selesai"

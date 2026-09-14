@@ -45,3 +45,7 @@ docker-compose.override.yml
 # Windows redirect fossils
 nul
 null
+
+# tool caches
+backend/.jest-cache/
+.kilo/

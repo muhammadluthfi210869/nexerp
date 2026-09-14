@@ -1,0 +1,13 @@
+﻿[main b13d5bd] fix(frontend): vitest 86 fails -> 0 (MSW routing + dna mocks)
+ 21 files changed, 20054 insertions(+), 22 deletions(-)
+ create mode 100644 evidence/2026-09-10/05-baselines/16-vitest-baseline.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/17-vitest-after-baseurl-fix.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/18-vitest-node-env.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/19-vitest-localhost.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/20-vitest-wildcard.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/23-vitest-FINAL.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/24-vitest-PROXY.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/25-vitest-importOriginal.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/26-vitest-shell.txt
+ create mode 100644 evidence/2026-09-10/05-baselines/27-vitest-GREEN.txt
+

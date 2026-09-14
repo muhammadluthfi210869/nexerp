@@ -78,7 +78,7 @@ services:
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3001/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3001/v1/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -91,12 +91,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/v1}
         NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
         JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/v1}
       NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
       NODE_ENV: production
@@ -114,7 +114,7 @@ services:
   # ═══════════════════════════════════════════════════════════
   #  Layanan SERVER — hanya aktif dengan --profile server
   #  Di lokal: docker compose up --build  (services ini DI-SKIP)
-  #  Di VPS:   docker compose --profile server up -d --build
+  #  Di VPS:   bash scripts/deploy.sh <sha>  (pull GHCR, tanpa build)
   # ═══════════════════════════════════════════════════════════
 
   # ── Nginx Reverse Proxy + SSL ───────────────────────────────
