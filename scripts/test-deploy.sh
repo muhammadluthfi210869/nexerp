@@ -32,8 +32,16 @@ fi
 
 # ── 2. CORS Headers ──────────────────────────────────
 echo "📋 Test 2/6: CORS Headers"
+# Origin probe mengikuti target: whitelist CORS production hanya berisi
+# nexerp.id — mengirim origin localhost ke production adalah false alarm
+# (browser asli tidak pernah begitu). Lokal/CI tetap pakai localhost:3000.
+if echo "$BASE_URL" | grep -q "localhost"; then
+  CORS_ORIGIN_PROBE="http://localhost:3000"
+else
+  CORS_ORIGIN_PROBE=$(echo "$BASE_URL" | grep -oE '^https?://[^/]+')
+fi
 # Kirim Origin header biar NestJS merespon dengan CORS headers
-CORS=$(curl -s -I -X OPTIONS -H "Origin: http://localhost:3000" "$BASE_URL/health" 2>/dev/null | grep -i "access-control-allow-origin" || echo "")
+CORS=$(curl -s -I -X OPTIONS -H "Origin: $CORS_ORIGIN_PROBE" "$BASE_URL/health" 2>/dev/null | grep -i "access-control-allow-origin" || echo "")
 if [ -n "$CORS" ]; then
   green "CORS headers present: $(echo $CORS | tr -d '\r')"
   PASS=$((PASS+1))
