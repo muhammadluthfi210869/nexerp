@@ -3,6 +3,16 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+// Production-light's client-side resolver. Routes the entry page to the
+// member workspace that matches the logged-in user's email/fullName/role.
+// Falls back to `/aurel` if nothing matches (safest default; first member
+// in the marketingAliases map).
+//
+// NOTE: phase-3 previously used a server-side `redirect()` to either
+// `/overview` (404, broken) or self (loop). Migrating to this client-side
+// resolver matches what production-light ships and what the E2E regression
+// test `management-task-redirect-bug.spec.ts` asserts.
+
 const managerRoleSet = new Set(["SUPER_ADMIN", "HEAD_OPS", "MARKETING"]);
 
 const marketingAliases: Record<string, string[]> = {

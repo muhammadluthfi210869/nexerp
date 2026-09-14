@@ -61,6 +61,17 @@ const MODULE_STRUCTURE: NavGroup[] = [
           { name: "Gusti", href: "/marketing/management-task/gusti", type: "action", memberSlug: "gusti" },
           { name: "Luthfi", href: "/marketing/management-task/luthfi", type: "action", memberSlug: "luthfi" },
           { name: "Rahmat", href: "/marketing/management-task/rahmat", type: "action", memberSlug: "rahmat" },
+          { name: "Overview Semua Task", href: "/marketing/management-task/overview", type: "dashboard" },
+        ],
+      },
+      { name: "OmniCRM", href: "/marketing/omni-crm", type: "dashboard", badge: "LIVE", badgeVariant: "default" },
+      {
+        name: "Social Media Brands",
+        href: "/marketing/reports/dreamlab",
+        type: "dashboard",
+        children: [
+          { name: "Dreamlab", href: "/marketing/reports/dreamlab", type: "dashboard" },
+          { name: "Toribio", href: "/marketing/reports/toribio", type: "dashboard" },
         ],
       },
       { name: "Toribio Dashboard", href: "/marketing/toribio", type: "dashboard" },

@@ -4,6 +4,12 @@ import { MarketingPrototypeController } from './prototype/marketing-prototype.co
 import { MarketingPrototypeService } from './prototype/marketing-prototype.service';
 import { CanonicalMarketingController } from './canonical/canonical-marketing.controller';
 import { CanonicalMarketingService } from './canonical/canonical-marketing.service';
+import { LeadCaptureModule } from '../lead-capture/lead-capture.module';
+import { OmniCrmStateController } from './omni-crm/omni-crm-state.controller';
+import { OmniCrmStateService } from './omni-crm/omni-crm-state.service';
+import { OmniCrmConversationController } from './omni-crm/omni-crm-conversation.controller';
+import { OmniCrmConversationService } from './omni-crm/omni-crm-conversation.service';
+import { DreamlabRrSyncService } from './omni-crm/dreamlab-rr-sync.service';
 
 // PRODUCTION-LIGHT bridge 2026-09-14: introduce CanonicalMarketingController
 // alongside the prototype. Both serve /v1/marketing/* — prototype under the
@@ -13,9 +19,20 @@ import { CanonicalMarketingService } from './canonical/canonical-marketing.servi
 // future TaskWorkspaceV2 work targets canonical.
 
 @Module({
-  imports: [PrismaModule],
-  providers: [MarketingPrototypeService, CanonicalMarketingService],
-  controllers: [MarketingPrototypeController, CanonicalMarketingController],
-  exports: [MarketingPrototypeService, CanonicalMarketingService],
+  imports: [PrismaModule, LeadCaptureModule],
+  providers: [
+    MarketingPrototypeService,
+    CanonicalMarketingService,
+    OmniCrmStateService,
+    OmniCrmConversationService,
+    DreamlabRrSyncService,
+  ],
+  controllers: [
+    MarketingPrototypeController,
+    CanonicalMarketingController,
+    OmniCrmStateController,
+    OmniCrmConversationController,
+  ],
+  exports: [MarketingPrototypeService, CanonicalMarketingService, DreamlabRrSyncService],
 })
 export class MarketingModule {}
