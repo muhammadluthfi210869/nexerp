@@ -28,6 +28,13 @@ if ! grep -qE '\.schema-drift|.drift-marker|drift-acknowledged' "$SCRIPT"; then
   exit 1
 fi
 
+# 1b. Must temporarily disable `set -e` around the db push. Without this, a drift-blocked
+#     push exit code triggers `set -e` BEFORE the marker can be written → restart loop.
+if ! grep -qE 'set \+e' "$SCRIPT"; then
+  echo "❌ $SCRIPT does not disable set -e around db push (crash-loop on drift)"
+  exit 1
+fi
+
 # 2. db push call must be CONDITIONAL (currently `npx prisma db push` runs unconditionally twice)
 #    Acceptable patterns: 'if [ ! -f marker ]; then db push fi' OR 'if db push; then ... fi'
 PUSH_LINE=$(grep -n 'npx prisma db push' "$SCRIPT" | head -1 || true)
@@ -36,13 +43,15 @@ if [ -z "$PUSH_LINE" ]; then
   exit 1
 fi
 
-# 3. The first db push line must be guarded — surrounded by an if/fi block, NOT bare.
-#    Parse a few lines before the push line and confirm there's a conditional.
+# 3. The first db push line must be guarded — inside an if/fi block, NOT bare.
+#    Count `if` and `fi` lines before the push: more ifs than fis = we are inside a block.
 LINE_NO=$(echo "$PUSH_LINE" | cut -d: -f1)
 if [ -n "$LINE_NO" ]; then
-  CONTEXT=$(sed -n "$((LINE_NO-5)),${LINE_NO}p" "$SCRIPT")
-  if ! echo "$CONTEXT" | grep -qE '^\s*(if|elif)\s+'; then
-    echo "❌ $SCRIPT: db push at line $LINE_NO is unconditional (will re-run on every container start)"
+  PRECEDING=$(sed -n "1,$((LINE_NO-1))p" "$SCRIPT")
+  IF_COUNT=$(echo "$PRECEDING" | grep -cE '^\s*(if|elif)\s+' || true)
+  FI_COUNT=$(echo "$PRECEDING" | grep -cE '^\s*fi\s*$' || true)
+  if [ "$IF_COUNT" -le "$FI_COUNT" ]; then
+    echo "❌ $SCRIPT: db push at line $LINE_NO is not inside any conditional block ($IF_COUNT ifs ≤ $FI_COUNT fis)"
     exit 1
   fi
 fi

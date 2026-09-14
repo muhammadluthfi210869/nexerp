@@ -20,8 +20,12 @@ if [ -f "$DRIFT_MARKER" ]; then
   echo "⏭️  Drift marker present at $DRIFT_MARKER — skipping db push (idempotent restart)"
 else
   echo "Running prisma db push (first start or after operator cleared marker)..."
+  # `set -e` is active at top; disable around the push so a drift-blocked exit code
+  # can be captured and turned into the marker instead of triggering a crash loop.
+  set +e
   npx prisma db push --accept-data-loss 2>&1
   PUSH_EXIT=$?
+  set -e
   echo "prisma db push exit code: $PUSH_EXIT"
 
   if [ $PUSH_EXIT -ne 0 ]; then
