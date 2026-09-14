@@ -43,9 +43,12 @@ fi
 
 # ── 3. Login API ─────────────────────────────────────
 echo "📋 Test 3/6: Login Endpoint"
+# admin@dreamlab.com = satu-satunya akun yang ada di SEMUA seed era
+# (production-light, recovery, maupun seed personnel full-ERP) → portable
+# untuk CI (DB kosong di-seed) maupun smoke test di nexerp.id.
 LOGIN=$(curl -sf -X POST "$BASE_URL/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@nexerp.id","password":"password123"}' 2>/dev/null || echo "FAIL")
+  -d '{"email":"admin@dreamlab.com","password":"password123"}' 2>/dev/null || echo "FAIL")
 if [ "$LOGIN" != "FAIL" ]; then
   TOKEN=$(echo "$LOGIN" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null || echo "")
   if [ -n "$TOKEN" ]; then
