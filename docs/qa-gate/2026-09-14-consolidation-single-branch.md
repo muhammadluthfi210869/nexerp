@@ -37,6 +37,18 @@ bencana e75fbe1).
 | C8 | Arsip branch (`production-light`, `phase-3`, `release/*`, `codex/*` → tag `archive/*`) setelah stabil | ⬜ |
 
 ## Catatan temuan
+- **Kontrak prefix API**: `main` menaruh semua route NestJS di bawah `/v1`
+  (era light tanpa prefix). Semua alat operasi (compose healthcheck, CI boot
+  poll, `test-deploy.sh`, `deploy.sh`/`rollback.sh` health gate, default
+  `NEXT_PUBLIC_API_URL`) diselaraskan ke `/v1`, dan endpoint `/health` era
+  light diport ke `AppController` → kini `/v1/health`. Commit `8f0469c`.
+  ⚠️ Konsekuensi VPS: `.env` di server WAJIB diubah
+  `NEXT_PUBLIC_API_URL=https://nexerp.id/api/v1` saat cutover (nginx sudah
+  me-rewrite `/api/*` → `/*`, jadi publik = `/api/v1/...`).
+- `npx jest` suite marketing/local OOM di laptop (worker crash, 0 test
+  jalan) — gerbang jest TIDAK ada di CI; verifikasi backend lewat boot CI
+  + `test-deploy.sh` + smoke live.
+
 - `docs/QA_GATE.md` selama ini **dangling reference** (tidak pernah ada di
   branch mana pun) — navigasi kini menunjuk folder `docs/qa-gate/` + gate
   minimal tertulis di CLAUDE.md/DEPLOY.md.
