@@ -18,7 +18,7 @@ import {
   ArrowRight,
   AlertTriangle,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaTabNav } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

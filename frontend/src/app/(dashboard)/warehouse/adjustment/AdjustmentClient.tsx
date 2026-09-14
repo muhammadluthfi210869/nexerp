@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import {
   DnaInput,
   DnaSelect,
-  DnaDnaStatCard,
+  DnaStatCard,
   DnaDataTableCard,
   DnaTable,
   DnaBadge,

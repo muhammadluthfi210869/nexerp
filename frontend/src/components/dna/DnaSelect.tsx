@@ -1,10 +1,11 @@
 import React from "react"
 import { cn } from "@/lib/utils"
+import { renderIcon } from "./DnaInput"
 
 export interface DnaSelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "onChange"> {
   icon?: React.ReactNode
   error?: string
-  label?: string
+  label?: string | React.ReactNode
   placeholder?: string
   options?: Array<{ label: string; value: string | number } | string>
   onChange?: (value: string) => void
@@ -22,7 +23,7 @@ export const DnaSelect = React.forwardRef<HTMLSelectElement, DnaSelectProps>(
         <div className="relative">
         {icon && (
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 [&>svg]:w-3.5 [&>svg]:h-3.5 pointer-events-none">
-            {icon}
+            {renderIcon(icon)}
           </div>
         )}
         <select

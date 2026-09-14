@@ -15,7 +15,7 @@ export interface DnaModalProps {
   badge?: React.ReactNode;
   size?: DnaModalSize;
   maxWidth?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
   contentClassName?: string;

@@ -4,7 +4,23 @@ import { cn } from "@/lib/utils"
 export interface DnaInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode
   error?: string
-  label?: string
+  label?: string | React.ReactNode
+}
+
+// icon boleh berupa elemen (<Tag/>) ATAU referensi komponen (Tag) — keduanya
+// dipakai di halaman-halaman dashboard; komponen dirender jadi elemen di sini
+// supaya tidak "Objects are not valid as a React child" saat prerender.
+export function renderIcon(icon: React.ReactNode) {
+  if (React.isValidElement(icon)) return icon
+  const maybeComp = icon as unknown as React.ComponentType<{ className?: string }> | null
+  if (
+    typeof maybeComp === "function" ||
+    (typeof maybeComp === "object" && maybeComp && (maybeComp as any).$$typeof)
+  ) {
+    const Comp = maybeComp as React.ComponentType<{ className?: string }>
+    return <Comp className="h-3.5 w-3.5" />
+  }
+  return icon
 }
 
 export const DnaInput = React.forwardRef<HTMLInputElement, DnaInputProps>(
@@ -19,7 +35,7 @@ export const DnaInput = React.forwardRef<HTMLInputElement, DnaInputProps>(
         <div className="relative">
           {icon && (
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 [&>svg]:w-3.5 [&>svg]:h-3.5">
-              {icon}
+              {renderIcon(icon)}
             </div>
           )}
           <input

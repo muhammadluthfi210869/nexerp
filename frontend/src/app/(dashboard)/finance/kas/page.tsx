@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, Plus } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaTabNav } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

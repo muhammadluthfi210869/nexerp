@@ -30,7 +30,7 @@ import {
   Loader2,
   History,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaTabNav, DnaSelect, DnaTextarea } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav, DnaSelect, DnaTextarea } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

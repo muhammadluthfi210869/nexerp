@@ -52,7 +52,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { TabsContent } from "@/components/ui/tabs";
+
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export default function WarehouseWorkstation() {
@@ -294,7 +294,7 @@ export default function WarehouseWorkstation() {
          </div>
 
          {/* Tab 3: Logistics */}
-         <TabsContent value="logistics" className="space-y-6">
+         <div hidden={activeTab !== "logistics"} className="space-y-6">
             <div className="flex items-center gap-2">
                <div className="w-1 h-4 bg-emerald-600 rounded-full" />
                <h3 className="text-sm font-black uppercase tracking-widest text-brand-black italic">PENDING PRODUCTION REQUISITIONS</h3>
@@ -332,7 +332,7 @@ export default function WarehouseWorkstation() {
                   </div>
                ))}
             </div>
-         </TabsContent>
+         </div>
       </div>
 
       {/* 🛡️ FEFO SECURITY GATE DIALOG */}

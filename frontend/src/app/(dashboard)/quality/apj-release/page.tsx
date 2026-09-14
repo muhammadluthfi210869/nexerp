@@ -192,8 +192,8 @@ export default function ApjReleasePage() {
 
         <DnaTabNav
           tabs={[
-            { key: "log", label: "RELEASE LOG", count: totalReleases, icon: <FileText className="w-4 h-4" /> },
-            { key: "new", label: "NEW RELEASE", icon: <PlusCircle className="w-4 h-4" /> },
+            { id: "log", label: "RELEASE LOG", count: totalReleases, icon: FileText },
+            { id: "new", label: "NEW RELEASE", icon: PlusCircle },
           ]}
           activeTab={activeTab}
           onTabChange={(k) => setActiveTab(k as "log" | "new")}

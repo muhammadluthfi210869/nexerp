@@ -40,3 +40,8 @@ backend_out.txt
 # Playwright & Tests
 playwright-report/
 test-results/
+docker-compose.override.yml
+
+# Windows redirect fossils
+nul
+null

@@ -1391,15 +1391,17 @@ export function DnaCard({
   children,
   className,
   dotColor,
+  titleColor,
 }: {
   title?: string;
   subtitle?: string;
   icon?: React.ComponentType<{ className?: string }>;
   badge?: React.ReactNode;
   actions?: React.ReactNode;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   dotColor?: string;
+  titleColor?: string;
 }) {
   return (
     <div className={cn("bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden", className)}>
@@ -1413,7 +1415,7 @@ export function DnaCard({
               </div>
             )}
             <div>
-              {title && <h3 className="text-[14px] font-bold text-slate-900">{title}</h3>}
+              {title && <h3 className={cn("text-[14px] font-bold", titleColor || "text-slate-900")}>{title}</h3>}
               {subtitle && <p className="text-[12px] text-slate-500 mt-0.5">{subtitle}</p>}
             </div>
             {badge}
@@ -1421,7 +1423,7 @@ export function DnaCard({
           {actions}
         </div>
       )}
-      <div className="p-5">{children}</div>
+      {children && <div className="p-5">{children}</div>}
     </div>
   );
 }

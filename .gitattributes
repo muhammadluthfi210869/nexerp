@@ -1,0 +1,15 @@
+# ── Line ending policy ──
+# Shell script WAJIB LF (biar jalan di server Linux)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Markdown & dokumen
+*.md text
+
+# Jangan pernah normalize file biner
+*.tar.gz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.sql.gz binary

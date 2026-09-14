@@ -20,7 +20,7 @@ import {
   MoreVertical,
   Clock
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaSelect } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaSelect } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

@@ -18,13 +18,15 @@ import {
   DnaCard,
   DnaDialog,
   DnaDialogContent,
-  DnaDnaStatCard,
+  DnaStatCard,
   DnaDataTableCard,
   DnaTable,
   DnaBadge,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { Dialog } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog";
 
 interface ReleaseRequest {
   id: string;

@@ -38,12 +38,12 @@ const FORM_CONFIGS: Record<FormType, { dotColor: string; title: string; submitLa
     title: "HKI BRANDING REGISTRY",
     submitLabel: "FILE HKI RECORD",
     fields: [
-      { label: "HKI ID / Application Number", name: "hkiId", icon: <Tag className="w-4 h-4 text-slate-400" />, placeholder: "e.g. IPT20240001", required: true },
-      { label: "Brand Name", name: "brandName", icon: <ShieldCheck className="w-4 h-4 text-slate-400" />, placeholder: "e.g. Nex White", required: true },
-      { label: "Type / Class", name: "type", icon: <FileCheck className="w-4 h-4 text-slate-400" />, placeholder: "e.g. Cosmetic Class 3", required: true },
-      { label: "Client Name", name: "clientName", icon: <Building2 className="w-4 h-4 text-slate-400" />, placeholder: "e.g. PT Nex Industri", required: true },
-      { label: "Application Date", name: "applicationDate", icon: <Calendar className="w-4 h-4 text-slate-400" />, type: "date", required: true },
-      { label: "Expiry Date (Optional)", name: "expiryDate", icon: <Clock className="w-4 h-4 text-slate-400" />, type: "date" },
+      { label: "HKI ID / Application Number", name: "hkiId", icon: Tag, placeholder: "e.g. IPT20240001", required: true },
+      { label: "Brand Name", name: "brandName", icon: ShieldCheck, placeholder: "e.g. Nex White", required: true },
+      { label: "Type / Class", name: "type", icon: FileCheck, placeholder: "e.g. Cosmetic Class 3", required: true },
+      { label: "Client Name", name: "clientName", icon: Building2, placeholder: "e.g. PT Nex Industri", required: true },
+      { label: "Application Date", name: "applicationDate", icon: Calendar, type: "date", required: true },
+      { label: "Expiry Date (Optional)", name: "expiryDate", icon: Clock, type: "date" },
     ],
   },
   bpom: {
@@ -51,12 +51,12 @@ const FORM_CONFIGS: Record<FormType, { dotColor: string; title: string; submitLa
     title: "BPOM PRODUCT REGISTRY",
     submitLabel: "FILE BPOM RECORD",
     fields: [
-      { label: "BPOM ID / NI Number", name: "bpomId", icon: <Tag className="w-4 h-4 text-slate-400" />, placeholder: "e.g. NA18240001", required: true },
-      { label: "Product Name", name: "productName", icon: <FlaskConical className="w-4 h-4 text-slate-400" />, placeholder: "e.g. Anti-Aging Serum", required: true },
-      { label: "Category", name: "category", icon: <FileCheck className="w-4 h-4 text-slate-400" />, placeholder: "e.g. Skin Care", required: true },
-      { label: "Client Name", name: "clientName", icon: <Building2 className="w-4 h-4 text-slate-400" />, placeholder: "e.g. PT Artha Prima", required: true },
-      { label: "Application Date", name: "applicationDate", icon: <Calendar className="w-4 h-4 text-slate-400" />, type: "date", required: true },
-      { label: "Expiry Date (Optional)", name: "expiryDate", icon: <Clock className="w-4 h-4 text-slate-400" />, type: "date" },
+      { label: "BPOM ID / NI Number", name: "bpomId", icon: Tag, placeholder: "e.g. NA18240001", required: true },
+      { label: "Product Name", name: "productName", icon: FlaskConical, placeholder: "e.g. Anti-Aging Serum", required: true },
+      { label: "Category", name: "category", icon: FileCheck, placeholder: "e.g. Skin Care", required: true },
+      { label: "Client Name", name: "clientName", icon: Building2, placeholder: "e.g. PT Artha Prima", required: true },
+      { label: "Application Date", name: "applicationDate", icon: Calendar, type: "date", required: true },
+      { label: "Expiry Date (Optional)", name: "expiryDate", icon: Clock, type: "date" },
     ],
   },
   halal: {
@@ -64,12 +64,12 @@ const FORM_CONFIGS: Record<FormType, { dotColor: string; title: string; submitLa
     title: "HALAL CERTIFICATION REGISTRY",
     submitLabel: "FILE HALAL RECORD",
     fields: [
-      { label: "Halal ID / Certificate Number", name: "halalId", icon: <Tag className="w-4 h-4 text-slate-400" />, placeholder: "e.g. ID001100000001", required: true },
-      { label: "Product Name", name: "productName", icon: <Moon className="w-4 h-4 text-slate-400" />, placeholder: "e.g. Serum Whitening", required: true },
-      { label: "Manufacturer", name: "manufacturer", icon: <Building2 className="w-4 h-4 text-slate-400" />, placeholder: "e.g. PT Nex Industri", required: true },
-      { label: "Category", name: "category", icon: <FileCheck className="w-4 h-4 text-slate-400" />, placeholder: "e.g. Kosmetik", required: true },
-      { label: "Application Date", name: "applicationDate", icon: <Calendar className="w-4 h-4 text-slate-400" />, type: "date", required: true },
-      { label: "Expiry Date (Optional)", name: "expiryDate", icon: <Clock className="w-4 h-4 text-slate-400" />, type: "date" },
+      { label: "Halal ID / Certificate Number", name: "halalId", icon: Tag, placeholder: "e.g. ID001100000001", required: true },
+      { label: "Product Name", name: "productName", icon: Moon, placeholder: "e.g. Serum Whitening", required: true },
+      { label: "Manufacturer", name: "manufacturer", icon: Building2, placeholder: "e.g. PT Nex Industri", required: true },
+      { label: "Category", name: "category", icon: FileCheck, placeholder: "e.g. Kosmetik", required: true },
+      { label: "Application Date", name: "applicationDate", icon: Calendar, type: "date", required: true },
+      { label: "Expiry Date (Optional)", name: "expiryDate", icon: Clock, type: "date" },
     ],
   },
 };
@@ -161,9 +161,9 @@ export default function ComplianceInput() {
     >
       <DnaTabNav
         tabs={[
-          { key: "hki", label: "HKI BRANDING" },
-          { key: "bpom", label: "BPOM PRODUCT" },
-          { key: "halal", label: "HALAL CERT" },
+          { id: "hki", label: "HKI BRANDING" },
+          { id: "bpom", label: "BPOM PRODUCT" },
+          { id: "halal", label: "HALAL CERT" },
         ]}
         activeTab={activeTab}
         onTabChange={(k) => setActiveTab(k as FormType)}

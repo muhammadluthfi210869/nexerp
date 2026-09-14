@@ -17,7 +17,7 @@ import {
   Landmark,
   UploadCloud,
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaDnaStatCard, DnaSelect, DnaTextarea } from "@/components/dna";
+import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaSelect, DnaTextarea } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,

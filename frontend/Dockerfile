@@ -1,30 +1,35 @@
 # Stage 1: Build
-FROM node:20-bookworm-slim AS builder
+FROM node:20-bookworm AS builder
 
 WORKDIR /app
 
+# Add Build Arguments
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_WA_PHONE
+ENV NEXT_PUBLIC_WA_PHONE=$NEXT_PUBLIC_WA_PHONE
+# Proxy uses JWT_SECRET to verify session tokens at edge. MUST match backend.
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
 
-# Layer cache dependencies
 COPY package*.json ./
-RUN npm install
-RUN npm install lightningcss-linux-x64-gnu @tailwindcss/oxide-linux-x64-gnu || true
+RUN npm install && npm install lightningcss-linux-x64-gnu
 
-# Copy source and build Next.js
 COPY . .
 RUN npm run build
 
 # Stage 2: Runtime
-FROM node:20-bookworm-slim AS runner
+FROM node:20-bookworm AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Next.js 16 still reads process.env.JWT_SECRET at runtime for proxy.ts.
+# Mirrored from builder stage so standalone output can resolve it.
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
 
-# Leverage Next.js standalone output
+# Automatically leverage standalone output
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

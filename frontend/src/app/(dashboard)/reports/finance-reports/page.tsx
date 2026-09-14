@@ -15,7 +15,7 @@ import {
   PieChart,
 } from "lucide-react";
 
-import { DnaButton, DnaInput, DnaBadge, DnaDnaStatCard, DnaCard, DnaDataTableCard, DnaTabNav, DnaDatePicker } from "@/components/dna";
+import { DnaButton, DnaInput, DnaBadge, DnaStatCard, DnaCard, DnaDataTableCard, DnaTabNav, DnaDatePicker } from "@/components/dna";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,
@@ -823,7 +823,7 @@ export default function FinancialReportsHub() {
               <DnaDatePicker
                 aria-label="Tanggal mulai"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(v: string) => setStartDate(v)}
                 className="bg-transparent border-none text-[11px] font-medium text-slate-700 outline-none w-28 focus:ring-0"
               />
             </div>
@@ -833,7 +833,7 @@ export default function FinancialReportsHub() {
               <DnaDatePicker
                 aria-label="Tanggal mulai"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(v: string) => setEndDate(v)}
                 className="bg-transparent border-none text-[11px] font-medium text-slate-700 outline-none w-28 focus:ring-0"
               />
             </div>

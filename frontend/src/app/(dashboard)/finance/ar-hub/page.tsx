@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 import { DnaInput, DnaButton, DnaBadge, DnaStatCard, DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaSelect, DnaTabNav, DnaTextarea } from "@/components/dna";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DnaTable as Table,
   DnaTableBody as TableBody,
@@ -126,6 +127,7 @@ export default function ARHubPrototype() {
         <DnaDataTableCard
           customToolbar={
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="contents">
               <TabsList className="bg-slate-50 p-1.5 rounded-2xl h-14 border border-slate-100">
                 <TabsTrigger value="products" className="rounded-xl px-8 h-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-black uppercase text-[10px] tracking-widest transition-all">
                   <Package className="mr-2 h-4 w-4" /> Regular Products
@@ -137,6 +139,7 @@ export default function ARHubPrototype() {
                   <RotateCcw className="mr-2 h-4 w-4" /> Retur
                 </TabsTrigger>
               </TabsList>
+              </Tabs>
 
               <div className="flex gap-4 items-center">
                 <div className="relative w-64">

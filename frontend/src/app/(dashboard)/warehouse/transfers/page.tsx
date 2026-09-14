@@ -24,13 +24,18 @@ import {
   DnaDialogHeader,
   DnaDialogTitle,
   DnaDialogFooter,
-  DnaDnaStatCard,
+  DnaStatCard,
   DnaDataTableCard,
   DnaTable,
   DnaBadge,
 } from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { Dialog } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
+import { DialogHeader } from "@/components/ui/dialog";
+import { DialogTitle } from "@/components/ui/dialog";
 
 export default function TransferOrdersPage() {
   const queryClient = useQueryClient();

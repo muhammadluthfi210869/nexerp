@@ -32,7 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { DnaInput, DnaButton, DnaDataTableCard, DnaDnaStatCard, DnaBadge, DnaSelect } from "@/components/dna";
+import { DnaInput, DnaButton, DnaDataTableCard, DnaStatCard, DnaBadge, DnaSelect } from "@/components/dna";
 
 interface TransactionLine {
   accountId: string;
