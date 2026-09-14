@@ -131,9 +131,9 @@ export default function BrandWorkspace({
   const { data: membersData } = useMarketingMembers();
   const members: Member[] = useMemo(() => (membersData ?? []).map((m) => ({
     id: m.id,
-    name: m.name,
-    role: m.role || 'MEMBER',
-    email: m.email,
+    name: m.name ?? '',
+    role: m.role || (m.roles?.[0] ?? 'MEMBER'),
+    email: m.email ?? '',
     phone: m.phone ?? '',
     avatarBg: m.avatarBg ?? '#e8eef6',
     initial: (m.initial ?? m.name ?? '?').charAt(0).toUpperCase(),

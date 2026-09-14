@@ -14,6 +14,7 @@ export { DnaBadge } from "./DnaBadge";
 export { TabButton, TabButtonGroup } from "./TabButton";
 export { FilterBar } from "./FilterBar";
 export { dnaToast, dnaToastApi, DnaToaster as DnaToastProvider, useDnaToast } from "./DnaToast";
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 // ── NEW MODULAR DNA COMPONENTS ──
 

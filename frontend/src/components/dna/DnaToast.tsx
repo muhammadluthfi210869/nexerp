@@ -63,11 +63,13 @@ export { dnaToastCallable as dnaToast, dnaToastCallable as toast };
  * DnaToaster — drop-in replacement for the sonner <Toaster /> mount.
  * DNA-themed (dark surface, sharp typography, blue accent).
  */
-export const DnaToaster: React.FC<{ position?: React.ComponentProps<typeof SonnerToaster>["position"] }> = ({
+export const DnaToaster: React.FC<{ position?: React.ComponentProps<typeof SonnerToaster>["position"]; children?: React.ReactNode }> = ({
   position = "top-right",
+  children,
 }) => (
-  <SonnerToaster
-    position={position}
+  <>
+    <SonnerToaster
+      position={position}
     toastOptions={{
       classNames: {
         toast: cn(
@@ -81,6 +83,8 @@ export const DnaToaster: React.FC<{ position?: React.ComponentProps<typeof Sonne
       },
     }}
   />
+    {children}
+  </>
 );
 
 /**

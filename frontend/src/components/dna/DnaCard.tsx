@@ -41,8 +41,23 @@ export interface DnaCardProps extends DivProps {
   titleColor?: string;
   /** Optional dot color indicator (compat) */
   dotColor?: string;
-  /** Optional icon rendered before title (compat) */
-  icon?: React.ReactNode;
+  /**
+   * Optional icon. Accepts both forms used in the codebase:
+   * - `icon={<Foo />}` → ReactElement
+   * - `icon={Foo}` → ComponentType (compat with pre-React-19 DnaCard API)
+   */
+  icon?: React.ReactNode | React.ComponentType<{ className?: string }>;
+}
+
+// Render the icon prop safely for both forms (`<Foo />` and `Foo`).
+function renderIcon(icon: DnaCardProps["icon"]): React.ReactNode {
+  if (!icon) return null;
+  if (React.isValidElement(icon)) return icon;
+  if (typeof icon === "function" || (typeof icon === "object" && icon !== null && "render" in icon)) {
+    const IconComponent = icon as React.ComponentType<{ className?: string }>;
+    return <IconComponent className="w-4 h-4" />;
+  }
+  return icon;
 }
 
 export const DnaCard = React.forwardRef<HTMLDivElement, DnaCardProps>(
@@ -57,7 +72,7 @@ export const DnaCard = React.forwardRef<HTMLDivElement, DnaCardProps>(
         {hasCompatHeader && (
           <div className="flex items-center gap-2 p-4 border-b border-slate-100">
             {dotColor && <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />}
-            {icon}
+            {renderIcon(icon)}
             {title && <h3 className="text-base font-bold" style={{ color: titleColor }}>{title}</h3>}
           </div>
         )}

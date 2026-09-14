@@ -79,13 +79,13 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   // requires the same shape plus avatarBg/initial/department which the API also provides.
   const members: MarketingTeamMember[] = useMemo(() => (membersQuery.data ?? []).map((m) => ({
     id: m.id,
-    userId: m.userId ?? undefined,
-    name: m.name,
-    email: m.email,
-    role: m.role,
-    avatarBg: m.avatarBg,
-    initial: m.initial,
-    department: m.department,
+    userId: m.userId ?? '',
+    name: m.name ?? '',
+    email: m.email ?? '',
+    role: m.role ?? (m.roles?.[0] ?? ''),
+    avatarBg: m.avatarBg ?? '',
+    initial: m.initial ?? (m.fullName?.[0] ?? ''),
+    department: m.department ?? '',
   })), [membersQuery.data]);
   // ponytail: hook types are leaner than marketing-api; cast to canonical shape (runtime data has all fields).
   const tasks: MarketingTask[] = useMemo(() => (tasksQuery.data?.data ?? []) as MarketingTask[], [tasksQuery.data]);

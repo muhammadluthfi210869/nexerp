@@ -265,7 +265,7 @@ export function MarketingModuleSidebar({
 
               <div className="space-y-0.5 mt-1">
                 {members.map((m, idx) => {
-                  const mSlug = slug(m.name);
+                  const mSlug = slug(m.name ?? '');
                   const isSelected = activeMemberSlug === mSlug;
                   const mTasks = tasks.filter((t) => t.assigneeId === m.id);
                   const mDone = mTasks.filter((t) => t.status === "DONE").length;

@@ -41,7 +41,7 @@ export function TaskWorkspace({ memberSlug }: { memberSlug: string }) {
   const page = Number(searchParams.get("page") || 1); const limit = Number(searchParams.get("limit") || 25);
   const status = searchParams.get("status") ?? "all"; const projectId = searchParams.get("project") ?? "all"; const brandId = searchParams.get("brand") ?? "all";
   const members = useMarketingMembers(); const brands = useMarketingBrands(); const projects = useMarketingProjects();
-  const member = members.data?.find((item) => slug(item.name) === memberSlug);
+  const member = members.data?.find((item) => slug(item.name ?? '') === memberSlug);
   const assigneeId = memberSlug === "overview" ? undefined : memberSlug === "my-tasks" ? user?.id : member?.id;
   const filters = { page, limit, q: searchParams.get("q") || undefined, status: status === "all" ? undefined : status, projectId: projectId === "all" ? undefined : projectId, brandId: brandId === "all" ? undefined : brandId, assigneeId, sort: searchParams.get("sort") || "dueDate:asc" };
   const tasks = useMarketingTasks(filters);
@@ -88,7 +88,7 @@ export function TaskWorkspace({ memberSlug }: { memberSlug: string }) {
       { label: "TERLAMBAT", value: String(metrics.late), subtext: "Melewati due date", icon: AlertCircle, variant: "rose" },
       { label: "SELESAI", value: String(metrics.done), subtext: "Pada halaman ini", icon: CheckCircle2, variant: "emerald" },
     ]} />
-    <DnaTabNav activeTab={memberSlug} onChange={(id) => router.push(`/marketing/management-task/${id}`)} tabs={[{ id: "overview", label: "Overview", icon: ListChecks }, { id: "my-tasks", label: "Task Saya", icon: Users }, ...(members.data ?? []).map((item) => ({ id: slug(item.name), label: item.name, icon: Users }))]} />
+    <DnaTabNav activeTab={memberSlug} onChange={(id) => router.push(`/marketing/management-task/${id}`)} tabs={[{ id: "overview", label: "Overview", icon: ListChecks }, { id: "my-tasks", label: "Task Saya", icon: Users }, ...(members.data ?? []).map((item) => ({ id: slug(item.name ?? ''), label: item.name ?? '', icon: Users }))]} />
     <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="grid gap-3 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-5">
         <DnaInput aria-label="Cari task" icon={<Search />} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari kode atau judul..." />
