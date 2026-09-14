@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
 import {
   ShieldAlert,
   AlertTriangle,
@@ -20,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { DnaBadge, DnaButton, TableWrapper } from "@/components/dna";
+import { DnaBadge, DnaButton, DnaCard, TableWrapper } from "@/components/dna";
 import { KpiCard } from "@/components/dna/KpiCard";
 
 const LEVEL_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
@@ -108,7 +107,7 @@ export default function ErrorDashboardPage() {
       </div>
 
       {/* Timeline Chart */}
-      <Card className="p-6 rounded-3xl border border-slate-200 shadow-sm">
+      <DnaCard className="p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-4 h-4 text-slate-400" />
           <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Error Timeline</span>
@@ -135,11 +134,11 @@ export default function ErrorDashboardPage() {
           <span>{hours}h ago</span>
           <span>Now</span>
         </div>
-      </Card>
+      </DnaCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Routes */}
-        <Card className="p-6 rounded-3xl border border-slate-200 shadow-sm">
+        <DnaCard className="p-6 rounded-3xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Route className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Top Affected Routes</span>
@@ -157,10 +156,10 @@ export default function ErrorDashboardPage() {
               <p className="text-xs text-slate-300 text-center py-8">No errors recorded</p>
             )}
           </div>
-        </Card>
+        </DnaCard>
 
         {/* By Level */}
-        <Card className="p-6 rounded-3xl border border-slate-200 shadow-sm">
+        <DnaCard className="p-6 rounded-3xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Layers className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-black text-slate-400 uppercase tracking-wider">By Severity</span>
@@ -193,7 +192,7 @@ export default function ErrorDashboardPage() {
               );
             })}
           </div>
-        </Card>
+        </DnaCard>
       </div>
 
       {/* Recent Errors Table */}

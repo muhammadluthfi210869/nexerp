@@ -3,15 +3,13 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: erp_user
-      POSTGRES_PASSWORD: erp_password_secure
-      POSTGRES_DB: erp_database
+      POSTGRES_USER: ${DB_USER:-erp_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-erp_password_secure}
+      POSTGRES_DB: ${DB_NAME:-erp_database}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_database"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-erp_user} -d ${DB_NAME:-erp_database}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,23 +20,44 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      DATABASE_URL: postgresql://erp_user:erp_password_secure@db:5432/erp_database?schema=public
+      DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
       DREAMLAB_DATABASE_URL: ${DREAMLAB_DATABASE_URL:-}
-      PORT: 3002
+      PORT: 3001
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dreamlab_prod_jwt_secret_2026}
-      JWT_EXPIRES_IN: 60m
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-60m}
       AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
-      CORS_ORIGIN: http://localhost:3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      GOOGLE_SHEETS_PRIVATE_KEY: ${GOOGLE_SHEETS_PRIVATE_KEY:-}
+      GOOGLE_SHEETS_CLIENT_EMAIL: ${GOOGLE_SHEETS_CLIENT_EMAIL:-}
+      TORIBIO_SPREADSHEET_ID: ${TORIBIO_SPREADSHEET_ID:-}
+      TORIBIO_REFRESH_INTERVAL_MS: ${TORIBIO_REFRESH_INTERVAL_MS:-60000}
+      KOMMO_SUBDOMAIN: ${KOMMO_SUBDOMAIN:-}
+      TOKEN_BERUMUR_PANJANG: ${TOKEN_BERUMUR_PANJANG:-}
+      KOMMO_LONG_LIVED_TOKEN: ${KOMMO_LONG_LIVED_TOKEN:-}
+      KOMMO_API_TOKEN: ${KOMMO_API_TOKEN:-}
+      KOMMO_AUTO_PULL_ENABLED: ${KOMMO_AUTO_PULL_ENABLED:-true}
+      KOMMO_AUTO_PULL_INTERVAL_MS: ${KOMMO_AUTO_PULL_INTERVAL_MS:-300000}
+      WA_BUSINESS_PHONE: ${WA_BUSINESS_PHONE:-}
+      WA_WEBHOOK_VERIFY_TOKEN: ${WA_WEBHOOK_VERIFY_TOKEN:-}
+      WA_PHONE_NUMBER_ID: ${WA_PHONE_NUMBER_ID:-}
+      WA_WABA_ID: ${WA_WABA_ID:-}
+      WA_ACCESS_TOKEN: ${WA_ACCESS_TOKEN:-}
+      ORPHAN_DEDUP_WINDOW_MS: ${ORPHAN_DEDUP_WINDOW_MS:-604800000}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "3002:3002"
+      - "${BACKEND_PORT:-3001}:3001"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:3002/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3001/health 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -48,20 +67,50 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
+        JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_WA_PHONE: ${NEXT_PUBLIC_WA_PHONE:-6287793032556}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
       NODE_ENV: production
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:3000 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3000 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  nginx:
+    profiles: ["server"]
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+
+  certbot:
+    profiles: ["server"]
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
 
 volumes:
   postgres_data:
