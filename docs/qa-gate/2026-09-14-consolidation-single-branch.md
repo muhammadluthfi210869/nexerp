@@ -31,9 +31,9 @@ bencana e75fbe1).
 | C2 | Backup DB live terverifikasi + tag image `pre-consolidation` di VPS | ✅ `pg_dumpall` erp_database → gzip 2.3MB → **restore diverifikasi** (kontainer sementara: 0 error, 221=221 tabel, users 129=129 baris) → salinan laptop di `~/nexerp-backups/`; image backend+frontend di-tag `pre-consolidation` |
 | C3 | Analisis drift skema (dry-run vs DB live; harus aditif / semua DROP diaudit baris-per-baris) | ✅ lihat Ronde 3 — 2 gerbang data diselamatkan, sisa DROP terbukti 0 baris, disetujui user |
 | C4 | `docker login ghcr.io` di VPS + swap + secret CI `JWT_SECRET` | ✅ repo PUBLIC → pull GHCR anonim, tanpa login; swap 4GB sudah aktif (RAM 8GB, bukan 4); `JWT_SECRET` GitHub secret disinkron dari `.env` live |
-| C5 | Cutover (runbook DEPLOY.md) + health gate + smoke checklist live (login, management-task CRUD, lead-capture, toribio, omni-crm, webhook WA, **sidebar delegasi manajemen** — satu-satunya fix light yang TIDAK di-port (nav main beda total), verifikasi visual wajib) | ⬜ |
-| C6 | Rollback di-tes sekali di VPS (sha lama → baru → lama) | ⬜ |
-| C7 | Monitoring memori 24 jam (`docker stats`; backend < ~512MB) | ⬜ |
+| C5 | Cutover (runbook DEPLOY.md) + health gate + smoke checklist live (login, management-task CRUD, lead-capture, toribio, omni-crm, webhook WA, **sidebar delegasi manajemen** — satu-satunya fix light yang TIDAK di-port (nav main beda total), verifikasi visual wajib) | 🟡 cutover EKS 14:25–14:33 UTC + smoke otomatis hijau (lihat Ronde 4); **verifikasi visual user belum** |
+| C6 | Rollback di-tes sekali di VPS (sha lama → baru → lama) | 🟡 drill mekanisme: 3.1 detik, skip-pull cache OK, health gate OK. Rollback lintas-era (image light lama) TIDAK berlaku lagi — skema sudah superset; rollback resmi = `rollback.sh <sha>` antar-SHA pipeline baru |
+| C7 | Monitoring memori 24 jam (`docker stats`; backend < ~512MB) | 🟡 awal: backend 235MB / frontend 72MB / db 91MB — mulai 14:33 UTC, cek ulang +24 jam |
 | C8 | Arsip branch (`production-light`, `phase-3`, `release/*`, `codex/*` → tag `archive/*`) setelah stabil | ⬜ |
 
 ## Catatan temuan
@@ -91,13 +91,15 @@ produksi sungguhan** — gerbang C3 bekerja persis seperti didesain:
    Fix: port superset canonical light (controller/service/dto/auth-guard/spec —
    main tidak pernah menyentuh `canonical/` sejak fork, terbukti `git log` kosong)
    + model + relasi balik User di `auth.prisma`.
-2. **Kolom journey atribusi `lead_captures` (8622 baris terisi di `sourcePage`)**
-   — dibuat migration era main `20260822081953_lead_attribution_journey` tapi
-   tidak pernah dideklarasikan di file skema (schema↔migration drift sejak Agustus).
-   Fix: 10 field dideklarasikan persis tipe/default/nama-index migration.
-   Catatan: `whatsappClickedAt`/`assignedSalesId`/`verificationStatus` terisi 0 —
-   pipeline Batch-4 tidak pernah live; kolom tetap dipertahankan (dipakai codepath
-   round-robin lama + murah dipertahankan).
+2. **Kolom journey atribusi `lead_captures`** — dibuat migration era main
+   `20260822081953_lead_attribution_journey` tapi tidak pernah dideklarasikan di
+   file skema (schema↔migration drift sejak Agustus). Fix: 10 field dideklarasikan
+   persis tipe/default/nama-index migration.
+   ⚠️ Koreksi pasca-cutover (bandingkan vs backup 13:25 yang di-restore): filter
+   audit awal `OR`-nya mengenai `verificationStatus` yang NOT NULL ber-DEFAULT →
+   8622 = SEMUA baris lead, bukan data journey nyata; `sourcePage` dkk memang
+   selalu kosong. Kesimpulan tetap benar: kolom WAJIB dideklarasikan — tanpa fix,
+   db push DROP 8 kolom + 3 index dan merusak kontrak migration/code lama.
 
 Koreksi verifikasi lama: klaim "backend main superset light" salah untuk modul
 **canonical** (verifikasi dulu hanya membandingkan modul prototype).
