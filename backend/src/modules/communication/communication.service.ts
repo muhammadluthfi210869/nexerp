@@ -14,7 +14,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma, ThreadStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
-import { StateMachineService } from '../state-machine/state-machine.service';
 import {
   ResourceNotFoundException,
   BusinessRuleViolationException,
@@ -60,7 +59,6 @@ export class CommunicationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly stateMachine: StateMachineService,
     private readonly fileStorage: FileStorageService,
     private readonly activityLog: ActivityLogService,
   ) {}
@@ -122,19 +120,13 @@ export class CommunicationService {
     if (!existing) throw new ResourceNotFoundException('CommunicationThread', threadId);
 
     // State transition only when status changes — title edits don't need
-    // state-machine logging.
+    // state-machine logging. StateMachineService intentionally not wired yet
+    // (Wave 1 schema gap — eventTrigger field pending); tracked in followup.
     let stateLogId: string | undefined;
     if (patch.status && patch.status !== existing.status) {
-      const transition = await this.stateMachine.transition({
-        entityType: 'COMMUNICATION_THREAD',
-        entityId: threadId,
-        eventTrigger: this.statusToTrigger(patch.status),
-        fromState: existing.status,
-        toState: patch.status,
-        userId: actorId,
-        reason: `status ${existing.status} -> ${patch.status}`,
-      });
-      stateLogId = transition.id;
+      this.logger.debug(
+        `thread ${threadId} status ${existing.status} -> ${patch.status} (state-machine log deferred)`,
+      );
     }
 
     const updated = await this.prisma.communicationThread.update({
@@ -449,22 +441,21 @@ export class CommunicationService {
   }
 
   // ----- STATE MACHINE BRIDGE -----
+  // NOTE: statusToTrigger kept as documentation; StateMachineService not yet
+  // wired in main (Wave 1 schema gap). Re-enable when eventTrigger field is
+  // added to StateTransitionLog schema.
 
-  private statusToTrigger(
-    status: ThreadStatus,
-  ): 'APPROVAL_REQUESTED' | 'APPROVAL_GRANTED' | 'PERIOD_LOCKED' {
-    // Map thread status changes onto the closest existing trigger.
-    // OPEN -> CLOSED  = APPROVAL_GRANTED (resolved)
-    // OPEN -> ARCHIVED = PERIOD_LOCKED (archived, won't reopen)
-    // ARCHIVED -> OPEN = APPROVAL_REQUESTED (reopen)
-    switch (status) {
-      case ThreadStatus.CLOSED:
-        return 'APPROVAL_GRANTED';
-      case ThreadStatus.ARCHIVED:
-        return 'PERIOD_LOCKED';
-      case ThreadStatus.OPEN:
-      default:
-        return 'APPROVAL_REQUESTED';
-    }
-  }
+  // private statusToTrigger(
+  //   status: ThreadStatus,
+  // ): 'APPROVAL_REQUESTED' | 'APPROVAL_GRANTED' | 'PERIOD_LOCKED' {
+  //   switch (status) {
+  //     case ThreadStatus.CLOSED:
+  //       return 'APPROVAL_GRANTED';
+  //     case ThreadStatus.ARCHIVED:
+  //       return 'PERIOD_LOCKED';
+  //     case ThreadStatus.OPEN:
+  //     default:
+  //       return 'APPROVAL_REQUESTED';
+  //   }
+  // }
 }
