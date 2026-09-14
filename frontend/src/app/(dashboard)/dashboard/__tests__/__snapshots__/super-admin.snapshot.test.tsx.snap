@@ -1,0 +1,740 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marketing tab content and matches snapshot 1`] = `
+<div
+  class="w-full h-full animate-[fadeIn_0.3s_ease-out]"
+>
+  <div
+    class="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]"
+  >
+    <header
+      class="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]"
+      style="margin-bottom: var(--section-gap);"
+    >
+      <div>
+        <h1
+          class="text-dashboard-title uppercase"
+        >
+          Executive Command
+           
+          <span
+            class="text-status-action"
+          >
+            Terminal v7.0
+          </span>
+        </h1>
+        <p
+          class="font-bold text-slate-400 tracking-tight mt-1.5"
+          style="font-size: var(--module-subtitle-size);"
+        >
+          Hyper-Unified Audit Interface. Monitoring cross-departmental UX integrity and data interlocks across the entire ERP ecosystem from a single encrypted link.
+        </p>
+      </div>
+    </header>
+    <div
+      class="flex flex-col"
+      style="gap: var(--section-gap);"
+    >
+      <div
+        class="grid grid-cols-4 gap-8 mb-6"
+      >
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-emerald-300 dark:border-emerald-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                Network Status
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-emerald-600 dark:text-emerald-400"
+              >
+                ENCRYPTED
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-emerald-500 rounded-full"
+                    style="width: 100%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+                >
+                  100
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-wifi"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 20h.01"
+                  />
+                  <path
+                    d="M2 8.82a15 15 0 0 1 20 0"
+                  />
+                  <path
+                    d="M5 12.859a10 10 0 0 1 14 0"
+                  />
+                  <path
+                    d="M8.5 16.429a5 5 0 0 1 7 0"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-emerald-300 dark:border-emerald-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                Active Nodes
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-emerald-600 dark:text-emerald-400"
+              >
+                14/14
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-emerald-500 rounded-full"
+                    style="width: 100%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+                >
+                  100
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-server"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    height="8"
+                    rx="2"
+                    ry="2"
+                    width="20"
+                    x="2"
+                    y="2"
+                  />
+                  <rect
+                    height="8"
+                    rx="2"
+                    ry="2"
+                    width="20"
+                    x="2"
+                    y="14"
+                  />
+                  <line
+                    x1="6"
+                    x2="6.01"
+                    y1="6"
+                    y2="6"
+                  />
+                  <line
+                    x1="6"
+                    x2="6.01"
+                    y1="18"
+                    y2="18"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-emerald-300 dark:border-emerald-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                Logic Interlocks
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-emerald-600 dark:text-emerald-400"
+              >
+                ACTIVE
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-emerald-500 rounded-full"
+                    style="width: 100%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+                >
+                  100
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-shield-check"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                  />
+                  <path
+                    d="m9 12 2 2 4-4"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-emerald-300 dark:border-emerald-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                System Load
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-emerald-600 dark:text-emerald-400"
+              >
+                1.2ms
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-emerald-500 rounded-full"
+                    style="width: 100%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+                >
+                  100
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-zap"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="w-full space-y-8"
+        data-orientation="horizontal"
+        dir="ltr"
+      >
+        <div
+          class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl py-4 -mx-4 px-4 border-b border-gray-200"
+        >
+          <div
+            aria-orientation="horizontal"
+            class="h-10 items-center justify-start gap-1 dark:bg-slate-900 text-slate-500 dark:text-slate-400 bg-gray-50 border border-gray-200 p-1 rounded-xl w-full flex overflow-x-auto scrollbar-hide"
+            data-orientation="horizontal"
+            role="tablist"
+            style="outline: none;"
+            tabindex="0"
+          >
+            <button
+              aria-controls="radix-_r_0_-content-marketing"
+              aria-selected="true"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              data-orientation="horizontal"
+              data-radix-collection-item=""
+              data-state="active"
+              id="radix-_r_0_-trigger-marketing"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-users w-3 h-3 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                />
+                <path
+                  d="M16 3.128a4 4 0 0 1 0 7.744"
+                />
+                <path
+                  d="M22 21v-2a4 4 0 0 0-3-3.87"
+                />
+                <circle
+                  cx="9"
+                  cy="7"
+                  r="4"
+                />
+              </svg>
+               Commercial
+            </button>
+            <button
+              aria-controls="radix-_r_0_-content-rnd"
+              aria-selected="false"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              data-orientation="horizontal"
+              data-radix-collection-item=""
+              data-state="inactive"
+              id="radix-_r_0_-trigger-rnd"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-flask-conical w-3 h-3 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"
+                />
+                <path
+                  d="M6.453 15h11.094"
+                />
+                <path
+                  d="M8.5 2h7"
+                />
+              </svg>
+               R&D Lab
+            </button>
+            <button
+              aria-controls="radix-_r_0_-content-production"
+              aria-selected="false"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              data-orientation="horizontal"
+              data-radix-collection-item=""
+              data-state="inactive"
+              id="radix-_r_0_-trigger-production"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-history w-3 h-3 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+                />
+                <path
+                  d="M3 3v5h5"
+                />
+                <path
+                  d="M12 7v5l4 2"
+                />
+              </svg>
+               Factory Floor
+            </button>
+            <button
+              aria-controls="radix-_r_0_-content-finance"
+              aria-selected="false"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              data-orientation="horizontal"
+              data-radix-collection-item=""
+              data-state="inactive"
+              id="radix-_r_0_-trigger-finance"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-credit-card w-3 h-3 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="14"
+                  rx="2"
+                  width="20"
+                  x="2"
+                  y="5"
+                />
+                <line
+                  x1="2"
+                  x2="22"
+                  y1="10"
+                  y2="10"
+                />
+              </svg>
+               Treasury
+            </button>
+            <button
+              aria-controls="radix-_r_0_-content-warehouse"
+              aria-selected="false"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              data-orientation="horizontal"
+              data-radix-collection-item=""
+              data-state="inactive"
+              id="radix-_r_0_-trigger-warehouse"
+              role="tab"
+              tabindex="-1"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-boxes w-3 h-3 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"
+                />
+                <path
+                  d="m7 16.5-4.74-2.85"
+                />
+                <path
+                  d="m7 16.5 5-3"
+                />
+                <path
+                  d="M7 16.5v5.17"
+                />
+                <path
+                  d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"
+                />
+                <path
+                  d="m17 16.5-5-3"
+                />
+                <path
+                  d="m17 16.5 4.74-2.85"
+                />
+                <path
+                  d="M17 16.5v5.17"
+                />
+                <path
+                  d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"
+                />
+                <path
+                  d="M12 8 7.26 5.15"
+                />
+                <path
+                  d="m12 8 4.74-2.85"
+                />
+                <path
+                  d="M12 13.5V8"
+                />
+              </svg>
+               Logistics
+            </button>
+          </div>
+        </div>
+        <div
+          aria-labelledby="radix-_r_0_-trigger-marketing"
+          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          data-orientation="horizontal"
+          data-state="active"
+          id="radix-_r_0_-content-marketing"
+          role="tabpanel"
+          style="animation-duration: 0s;"
+          tabindex="0"
+        >
+          <div
+            class="bg-gray-50 border border-gray-200 rounded-3xl p-1 overflow-hidden"
+          >
+            <div
+              class="bg-gray-50 p-6 flex items-center justify-between border-b border-gray-200"
+            >
+              <div>
+                <h3
+                  class="text-xl font-bold text-gray-900 uppercase italic"
+                >
+                  Commercial Audit
+                </h3>
+                <p
+                  class="text-xs text-zinc-500 font-medium"
+                >
+                  Validating Lead Attribution & Prospect Funnel UX
+                </p>
+              </div>
+              <button
+                class="inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all bg-slate-50 border border-transparent hover:bg-blue-600 shadow-none h-8 px-4 text-[10px] text-zinc-500 hover:text-white group"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-search w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m21 21-4.34-4.34"
+                  />
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="8"
+                  />
+                </svg>
+                 Inspect Source Code
+              </button>
+            </div>
+            <div
+              class="p-4 bg-gray-50"
+            >
+              <div
+                data-testid="mock-commercial"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          aria-labelledby="radix-_r_0_-trigger-rnd"
+          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          data-orientation="horizontal"
+          data-state="inactive"
+          hidden=""
+          id="radix-_r_0_-content-rnd"
+          role="tabpanel"
+          tabindex="0"
+        />
+        <div
+          aria-labelledby="radix-_r_0_-trigger-production"
+          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          data-orientation="horizontal"
+          data-state="inactive"
+          hidden=""
+          id="radix-_r_0_-content-production"
+          role="tabpanel"
+          tabindex="0"
+        />
+        <div
+          aria-labelledby="radix-_r_0_-trigger-finance"
+          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          data-orientation="horizontal"
+          data-state="inactive"
+          hidden=""
+          id="radix-_r_0_-content-finance"
+          role="tabpanel"
+          tabindex="0"
+        />
+        <div
+          aria-labelledby="radix-_r_0_-trigger-warehouse"
+          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          data-orientation="horizontal"
+          data-state="inactive"
+          hidden=""
+          id="radix-_r_0_-content-warehouse"
+          role="tabpanel"
+          tabindex="0"
+        />
+      </div>
+      <div
+        class="fixed bottom-6 right-6 z-50"
+      >
+        <div
+          class="flex items-center gap-4 bg-white text-black p-4 rounded-xl shadow-[0_20px_50px_rgba(255,255,255,0.2)] animate-in slide-in-from-right duration-700 border-2 border-white overflow-hidden"
+        >
+          <div
+            class="absolute top-0 left-0 h-1 bg-gray-900"
+          />
+          <div
+            class="p-2 bg-gray-900 text-white rounded"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-zap fill-current"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p
+              class="text-[10px] font-black uppercase tracking-tight leading-none"
+            >
+              Super Admin Notice
+            </p>
+            <p
+              class="text-xs font-bold leading-none mt-1 uppercase italic"
+            >
+              Multi-View Audit Port Activated
+            </p>
+          </div>
+        </div>
+      </div>
+      <style>
+        
+        @keyframes shrink {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      
+      </style>
+    </div>
+  </div>
+</div>
+`;

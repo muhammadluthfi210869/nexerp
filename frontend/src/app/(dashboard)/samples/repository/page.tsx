@@ -14,15 +14,17 @@ import {
   Loader2,
   History as HistoryIcon
 } from "lucide-react";
-import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import {
+  DnaInput,
+  DnaButton,
+  DnaBadge,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/dna";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 

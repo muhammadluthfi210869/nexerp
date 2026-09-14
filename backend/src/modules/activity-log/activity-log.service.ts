@@ -1,0 +1,133 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { OnEvent } from '@nestjs/event-emitter';
+import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { LogActivityType, Prisma } from '@prisma/client';
+
+export interface LogInput {
+  userId?: string | null;
+  division?: Prisma.ActivityLogCreateInput['division'];
+  type: LogActivityType;
+  method?: string | null;
+  entityType?: string | null;
+  entityId?: string | null;
+  path?: string | null;
+  status?: number | null;
+  metadata?: Record<string, unknown> | null;
+  ip?: string | null;
+  userAgent?: string | null;
+}
+
+@Injectable()
+export class ActivityLogService {
+  private readonly logger = new Logger(ActivityLogService.name);
+
+  constructor(private prisma: PrismaService) {}
+
+  async log(input: LogInput): Promise<void> {
+    // ponytail: sync INSERT is acceptable for WS-D v1 — async queue can
+    // be added when write volume measurably degrades request latency.
+    await this.prisma.activityLog.create({
+      data: {
+        userId: input.userId ?? null,
+        division: input.division ?? null,
+        type: input.type,
+        method: input.method ?? null,
+        entityType: input.entityType ?? null,
+        entityId: input.entityId ?? null,
+        path: input.path ?? null,
+        status: input.status ?? null,
+        metadata: input.metadata
+          ? (input.metadata as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+        ip: input.ip ?? null,
+        userAgent: input.userAgent ?? null,
+      },
+    });
+  }
+
+  async findForUser(
+    userId: string,
+    opts: {
+      from?: Date;
+      to?: Date;
+      type?: LogActivityType;
+      entityType?: string;
+      entityId?: string;
+      limit?: number;
+    },
+  ) {
+    const { from, to, type, entityType, entityId, limit = 50 } = opts;
+    return this.prisma.activityLog.findMany({
+      where: {
+        userId,
+        ...(from || to
+          ? { createdAt: { ...(from && { gte: from }), ...(to && { lte: to }) } }
+          : {}),
+        ...(type && { type }),
+        ...(entityType && { entityType }),
+        ...(entityId && { entityId }),
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  // Retention: purge rows older than `retentionDays` (default 90).
+  // Scheduled via @nestjs/schedule; called from retention task.
+  async purgeOlderThan(retentionDays = 90): Promise<number> {
+    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    const result = await this.prisma.activityLog.deleteMany({
+      where: { createdAt: { lt: cutoff } },
+    });
+    return result.count;
+  }
+
+  // Daily purge at 03:13 (random minute to avoid midnight thundering herd
+  // when many cron jobs across services start).
+  @Cron('13 3 * * *')
+  async scheduledPurge() {
+    try {
+      const deleted = await this.purgeOlderThan(90);
+      this.logger.log(`Retention purge: ${deleted} rows removed (>90 days)`);
+    } catch (err) {
+      this.logger.error(
+        'Retention purge failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
+  }
+
+  // Hook state-machine transitions (G1/G2/G3 gates + entity status
+  // changes). Emitted from rnd.formulas, production, warehouse etc.
+  @OnEvent('state.transition')
+  async onStateTransition(event: {
+    entityType: string;
+    entityId: string;
+    fromState?: string;
+    toState: string;
+    changedById?: string;
+    reason?: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    try {
+      await this.log({
+        userId: event.changedById ?? null,
+        type: LogActivityType.STATE_TRANSITION,
+        entityType: event.entityType,
+        entityId: event.entityId,
+        metadata: {
+          fromState: event.fromState,
+          toState: event.toState,
+          reason: event.reason,
+          ...(event.metadata ?? {}),
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        'state.transition log failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
+  }
+}

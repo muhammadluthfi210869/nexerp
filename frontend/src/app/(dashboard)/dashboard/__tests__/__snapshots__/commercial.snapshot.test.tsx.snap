@@ -1,0 +1,707 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Direksi CommercialDashboard (snapshot) > renders empty state (no leads) and matches snapshot 1`] = `
+<div
+  class="w-full h-full animate-[fadeIn_0.3s_ease-out]"
+>
+  <div
+    class="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]"
+  >
+    <header
+      class="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]"
+      style="margin-bottom: var(--section-gap);"
+    >
+      <div>
+        <h1
+          class="text-dashboard-title uppercase"
+        >
+          Commercial
+           
+          <span
+            class="text-status-action"
+          >
+            Workspace
+          </span>
+        </h1>
+        <p
+          class="font-bold text-slate-400 tracking-tight mt-1.5"
+          style="font-size: var(--module-subtitle-size);"
+        >
+          Strategic lead management & digital marketing operations.
+        </p>
+      </div>
+    </header>
+    <div
+      class="flex flex-col"
+      style="gap: var(--section-gap);"
+    >
+      <div
+        class="grid grid-cols-3 gap-8 mb-6"
+      >
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-rose-300 dark:border-rose-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                Total Leads
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-rose-600 dark:text-rose-400"
+              >
+                0
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-rose-400 rounded-full"
+                    style="width: 50%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-rose-600 dark:text-rose-400"
+                >
+                  50
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-rose-50 text-rose-500 dark:bg-rose-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-users"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                  />
+                  <path
+                    d="M16 3.128a4 4 0 0 1 0 7.744"
+                  />
+                  <path
+                    d="M22 21v-2a4 4 0 0 0-3-3.87"
+                  />
+                  <circle
+                    cx="9"
+                    cy="7"
+                    r="4"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-emerald-300 dark:border-emerald-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                SLA Warning
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-emerald-600 dark:text-emerald-400"
+              >
+                0
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-emerald-500 rounded-full"
+                    style="width: 100%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+                >
+                  100
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-triangle-alert"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                  />
+                  <path
+                    d="M12 9v4"
+                  />
+                  <path
+                    d="M12 17h.01"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-emerald-300 dark:border-emerald-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                At Risk Clients
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-emerald-600 dark:text-emerald-400"
+              >
+                0
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-emerald-500 rounded-full"
+                    style="width: 100%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+                >
+                  100
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-shield-alert"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                  />
+                  <path
+                    d="M12 8v4"
+                  />
+                  <path
+                    d="M12 16h.01"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="grid grid-cols-1 lg:grid-cols-4 gap-8"
+      >
+        <div
+          class="lg:col-span-3 space-y-6"
+        >
+          <div
+            data-testid="mock-lead-board"
+          />
+        </div>
+        <div
+          class="space-y-6"
+        >
+          <div
+            data-testid="mock-retention-radar"
+          />
+          <div
+            data-testid="mock-marketing-form"
+          />
+          <div
+            class="rounded-2xl border text-slate-900 border-gray-200 bg-white shadow-sm relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500 opacity-30"
+            />
+            <div
+              class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            >
+              <h3
+                class="text-gray-900 text-xs font-bold uppercase tracking-tight flex items-center"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-zap mr-2 h-4 w-4 text-emerald-500"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+                  />
+                </svg>
+                Growth Metrics
+              </h3>
+              <p
+                class="font-normal text-[10px] text-zinc-500 font-sans"
+              >
+                Live Conversion Data
+              </p>
+            </div>
+            <div
+              class="p-5 space-y-4"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <span
+                  class="text-xs text-zinc-400"
+                >
+                  Conversion Rate
+                </span>
+                <span
+                  class="text-sm font-bold text-gray-900"
+                >
+                  —
+                </span>
+              </div>
+              <div
+                class="flex items-center justify-between"
+              >
+                <span
+                  class="text-xs text-zinc-400"
+                >
+                  SLA Violation Rate
+                </span>
+                <span
+                  class="text-sm font-bold text-red-500"
+                >
+                  —
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Direksi CommercialDashboard (snapshot) > renders with leads + retention data and matches snapshot 1`] = `
+<div
+  class="w-full h-full animate-[fadeIn_0.3s_ease-out]"
+>
+  <div
+    class="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]"
+  >
+    <header
+      class="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]"
+      style="margin-bottom: var(--section-gap);"
+    >
+      <div>
+        <h1
+          class="text-dashboard-title uppercase"
+        >
+          Commercial
+           
+          <span
+            class="text-status-action"
+          >
+            Workspace
+          </span>
+        </h1>
+        <p
+          class="font-bold text-slate-400 tracking-tight mt-1.5"
+          style="font-size: var(--module-subtitle-size);"
+        >
+          Strategic lead management & digital marketing operations.
+        </p>
+      </div>
+    </header>
+    <div
+      class="flex flex-col"
+      style="gap: var(--section-gap);"
+    >
+      <div
+        class="grid grid-cols-3 gap-8 mb-6"
+      >
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-rose-300 dark:border-rose-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                Total Leads
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-rose-600 dark:text-rose-400"
+              >
+                3
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-rose-400 rounded-full"
+                    style="width: 50%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-rose-600 dark:text-rose-400"
+                >
+                  50
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-rose-50 text-rose-500 dark:bg-rose-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-users"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                  />
+                  <path
+                    d="M16 3.128a4 4 0 0 1 0 7.744"
+                  />
+                  <path
+                    d="M22 21v-2a4 4 0 0 0-3-3.87"
+                  />
+                  <circle
+                    cx="9"
+                    cy="7"
+                    r="4"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-slate-200/80 dark:border-slate-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                SLA Warning
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-slate-900 dark:text-slate-100"
+              >
+                1
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-blue-600 rounded-full"
+                    style="width: 95%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-slate-900 dark:text-slate-100"
+                >
+                  95
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-slate-50 text-slate-500 dark:bg-slate-800"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-triangle-alert"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                  />
+                  <path
+                    d="M12 9v4"
+                  />
+                  <path
+                    d="M12 17h.01"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white dark:bg-[#0c1322] border rounded-xl p-5 shadow-2xs transition-all group overflow-hidden relative min-h-[120px] flex items-center justify-between border-rose-300 dark:border-rose-800  "
+        >
+          <div
+            class="flex justify-between items-center relative z-10 w-full"
+          >
+            <div
+              class="space-y-1.5 flex-1 min-w-0 pr-4"
+            >
+              <p
+                class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+              >
+                At Risk Clients
+              </p>
+              <h3
+                class="text-2xl font-bold tracking-tight tabular-nums leading-tight text-rose-600 dark:text-rose-400"
+              >
+                1
+              </h3>
+              <div
+                class="flex items-center gap-2 pt-0.5"
+              >
+                <div
+                  class="flex-1 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-rose-400 rounded-full"
+                    style="width: 0%;"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-semibold tabular-nums text-rose-600 dark:text-rose-400"
+                >
+                  0
+                  %
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-3 rounded-xl shrink-0 bg-rose-50 text-rose-500 dark:bg-rose-950/50"
+            >
+              <span
+                class="[&>svg]:w-4 [&>svg]:h-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-shield-alert"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                  />
+                  <path
+                    d="M12 8v4"
+                  />
+                  <path
+                    d="M12 16h.01"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="grid grid-cols-1 lg:grid-cols-4 gap-8"
+      >
+        <div
+          class="lg:col-span-3 space-y-6"
+        >
+          <div
+            data-testid="mock-lead-board"
+          />
+        </div>
+        <div
+          class="space-y-6"
+        >
+          <div
+            data-testid="mock-retention-radar"
+          />
+          <div
+            data-testid="mock-marketing-form"
+          />
+          <div
+            class="rounded-2xl border text-slate-900 border-gray-200 bg-white shadow-sm relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500 opacity-30"
+            />
+            <div
+              class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            >
+              <h3
+                class="text-gray-900 text-xs font-bold uppercase tracking-tight flex items-center"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-zap mr-2 h-4 w-4 text-emerald-500"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+                  />
+                </svg>
+                Growth Metrics
+              </h3>
+              <p
+                class="font-normal text-[10px] text-zinc-500 font-sans"
+              >
+                Live Conversion Data
+              </p>
+            </div>
+            <div
+              class="p-5 space-y-4"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <span
+                  class="text-xs text-zinc-400"
+                >
+                  Conversion Rate
+                </span>
+                <span
+                  class="text-sm font-bold text-gray-900"
+                >
+                  66.7%
+                </span>
+              </div>
+              <div
+                class="flex items-center justify-between"
+              >
+                <span
+                  class="text-xs text-zinc-400"
+                >
+                  SLA Violation Rate
+                </span>
+                <span
+                  class="text-sm font-bold text-red-500"
+                >
+                  33.3%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

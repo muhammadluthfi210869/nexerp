@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-erp_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-erp_password_secure}
+      POSTGRES_DB: ${DB_NAME:-erp_database}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-erp_user} -d ${DB_NAME:-erp_database}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
+      PORT: 3001
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-super-secret-key-change-me}
+      AES_SECRET_KEY: ${AES_SECRET_KEY:-aureon_erp_v4_ultra_secret_key_32}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://nexerp.id}
+      META_WHATSAPP_ACCESS_TOKEN: ${META_WHATSAPP_ACCESS_TOKEN:-}
+      USER_TOKEN: ${USER_TOKEN:-}
+      BUSDEV_1_PHONE_NUMBER_ID: ${BUSDEV_1_PHONE_NUMBER_ID:-116397311522216}
+      BUSDEV_2_PHONE_NUMBER_ID: ${BUSDEV_2_PHONE_NUMBER_ID:-815864727920156}
+      META_WABA_ID: ${META_WABA_ID:-341949621370175}
+      WA_WEBHOOK_VERIFY_TOKEN: ${WA_WEBHOOK_VERIFY_TOKEN:-nex_meta_verify_2026_9Q7mK2vL5xR8cT4p}
+      META_PAGE_ACCESS_TOKEN: ${META_PAGE_ACCESS_TOKEN:-}
+      META_PAGE_ID: ${META_PAGE_ID:-1359947222387450}
+      META_IG_USER_ID: ${META_IG_USER_ID:-17841462584910741}
+      DREAMLAB_DATABASE_URL: ${DREAMLAB_DATABASE_URL:-}
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - erp_network
+      - dreamlab_default
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/system/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://${DOMAIN_NAME}/api
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: https://${DOMAIN_NAME}/api
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:3000 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost/ 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+
+networks:
+  erp_network:
+    driver: bridge
+  dreamlab_default:
+    external: true
+    name: dreamlab-lead_default
+
+volumes:
+  postgres_data:

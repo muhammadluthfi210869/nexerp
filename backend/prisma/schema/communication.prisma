@@ -1,0 +1,90 @@
+// Wave 3/D1 — Communication Protocol (notes/reply/mention/attach).
+//
+// Polymorphic contextType/contextId lets any module (SalesOrder, PurchaseOrder,
+// Invoice, Project, ...) start a thread without FK rewiring. Participant
+// resolution happens at runtime via the Mention + ThreadReply tables — the
+// "who sees this thread" query is `WHERE threadId IN (replies I authored OR
+// mentioned me)`.
+
+enum ThreadStatus {
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+model CommunicationThread {
+  id          String       @id @default(uuid()) @db.Uuid
+  contextType String // polymorphic: "SalesOrder", "PurchaseOrder", "Invoice", ...
+  contextId   String // polymorphic UUID
+  title       String
+  status      ThreadStatus @default(OPEN)
+  createdById String       @db.Uuid
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  createdBy   User                       @relation("ThreadCreator", fields: [createdById], references: [id])
+  replies     CommunicationThreadReply[]
+  attachments CommunicationAttachment[]  @relation("ThreadAttachments")
+
+  @@index([contextType, contextId])
+  @@index([status, updatedAt])
+  @@index([createdById])
+  @@map("communication_threads")
+}
+
+model CommunicationThreadReply {
+  id            String   @id @default(uuid()) @db.Uuid
+  threadId      String   @db.Uuid
+  authorId      String   @db.Uuid
+  body          String
+  parentReplyId String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  thread      CommunicationThread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author      User                       @relation("ReplyAuthor", fields: [authorId], references: [id])
+  parentReply CommunicationThreadReply?  @relation("ReplyThread", fields: [parentReplyId], references: [id])
+  children    CommunicationThreadReply[] @relation("ReplyThread")
+  mentions    CommunicationMention[]
+  attachments CommunicationAttachment[]  @relation("ReplyAttachments")
+
+  @@index([threadId, createdAt])
+  @@index([authorId])
+  @@index([parentReplyId])
+  @@map("communication_thread_replies")
+}
+
+model CommunicationMention {
+  id              String    @id @default(uuid()) @db.Uuid
+  replyId         String    @db.Uuid
+  mentionedUserId String    @db.Uuid
+  notifiedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  reply         CommunicationThreadReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  mentionedUser User                     @relation("MentionedUser", fields: [mentionedUserId], references: [id])
+
+  @@unique([replyId, mentionedUserId])
+  @@index([mentionedUserId, notifiedAt])
+  @@map("communication_mentions")
+}
+
+model CommunicationAttachment {
+  id           String   @id @default(uuid()) @db.Uuid
+  threadId     String?  @db.Uuid
+  replyId      String?  @db.Uuid
+  filename     String
+  mimeType     String
+  size         Int
+  storagePath  String
+  uploadedById String   @db.Uuid
+  createdAt    DateTime @default(now())
+
+  thread     CommunicationThread?      @relation("ThreadAttachments", fields: [threadId], references: [id], onDelete: Cascade)
+  reply      CommunicationThreadReply? @relation("ReplyAttachments", fields: [replyId], references: [id], onDelete: Cascade)
+  uploadedBy User                      @relation("AttachmentUploader", fields: [uploadedById], references: [id])
+
+  @@index([threadId])
+  @@index([replyId])
+  @@map("communication_attachments")
+}
