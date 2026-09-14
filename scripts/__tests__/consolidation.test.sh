@@ -78,6 +78,33 @@ MT="frontend/src/app/(dashboard)/marketing/management-task"
 [ -f "frontend/src/app/(dashboard)/samples/omni-crm/OmniCrmClient.tsx" ] \
   && ok "omni-crm ada di /samples/" || bad "omni-crm hilang"
 
+# ── 4b. Kontrak DB live (ditemukan oleh drift-analysis cutover 2026-09-14) ──
+# Skema HARUS Deklarasikan semua yang dipakai database produksi — kalau tidak,
+# `prisma db push` saat cutover akan DROP tabel/kolom berisi data live.
+SCH=backend/prisma/schema
+grep -q "model MarketingTeamMember" $SCH/marketing.prisma \
+  && ok "schema: MarketingTeamMember (live: 35 baris data)" \
+  || bad "schema: MarketingTeamMember HILANG — db push akan DROP marketing_team_members (35 baris live!)"
+grep -q "model MarketingTaskComment" $SCH/marketing.prisma \
+  && ok "schema: MarketingTaskComment" || bad "schema: MarketingTaskComment HILANG"
+grep -q "model MarketingTaskAttachment" $SCH/marketing.prisma \
+  && ok "schema: MarketingTaskAttachment" || bad "schema: MarketingTaskAttachment HILANG"
+for col in whatsappClickedAt assignedSalesId verificationStatus sourcePage; do
+  grep -q "$col" $SCH/marketing.prisma \
+    && ok "schema: LeadCapture.$col" \
+    || bad "schema: LeadCapture.$col HILANG — db push akan DROP kolom yang dipakai live"
+done
+grep -q "marketingTeamMembers" $SCH/auth.prisma \
+  && ok "auth.prisma: relasi balik User -> MarketingTeamMember" \
+  || bad "auth.prisma: relasi marketingTeamMembers hilang"
+# Route backend yang dipanggil frontend TaskWorkspaceV2 (marketing-service HttpMarketingService):
+CC=backend/src/modules/marketing/canonical/canonical-marketing.controller.ts
+for r in "'members'" "'tasks/kpi'" "attachments" "comments"; do
+  grep -qE "@(Get|Post|Patch|Delete)\(.*$r" $CC \
+    && ok "backend: route $r tersedia" \
+    || bad "backend: route $r TIDAK ADA — frontend memanggilnya"
+done
+
 # ── 5. Bersih dari workflow dua-branch ──
 [ ! -f scripts/bridge-to-production-light.sh ] && ok "bridge script hilang" || bad "bridge script masih ada"
 [ ! -f scripts/safe-merge.sh ] && ok "safe-merge hilang" || bad "safe-merge masih ada"

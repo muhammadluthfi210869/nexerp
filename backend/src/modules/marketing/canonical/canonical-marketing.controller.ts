@@ -1,17 +1,23 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
+  HttpCode,
   Param,
   Patch,
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
-import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { CanonicalMarketingAuthGuard } from './canonical-marketing-auth.guard';
 import { Roles } from '../../auth/roles.decorator';
 import { RolesGuard } from '../../auth/roles.guard';
 import {
@@ -19,6 +25,8 @@ import {
   CreateBrandDto,
   CreateCanonicalProjectDto,
   CreateCanonicalTaskDto,
+  CreateChecklistItemDto,
+  CreateTaskCommentDto,
   PaginationQueryDto,
   ReportingQueryDto,
   TaskListQueryDto,
@@ -27,6 +35,7 @@ import {
   UpdateCanonicalProjectDto,
   UpdateCanonicalTaskDto,
   UpdateChecklistItemDto,
+  UpdateMarketingMemberDto,
   UpdateTaskStatusDto,
   UpsertChannelMetricDto,
 } from './canonical-marketing.dto';
@@ -54,7 +63,7 @@ const SOCIAL_WRITE_ROLES = [
   UserRole.DIGIMAR,
 ];
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(CanonicalMarketingAuthGuard, RolesGuard)
 @Controller('marketing')
 export class CanonicalMarketingController {
   constructor(private readonly service: CanonicalMarketingService) {}
@@ -66,6 +75,12 @@ export class CanonicalMarketingController {
     @Query() query: TaskListQueryDto,
   ): Promise<unknown> {
     return this.service.listTasks(req.user, query);
+  }
+
+  @Get('tasks/kpi')
+  @Roles(...TASK_READ_ROLES)
+  getKpi(@Req() req: any): Promise<unknown> {
+    return this.service.getKpi(req.user);
   }
 
   @Get('tasks/:id')
@@ -104,6 +119,13 @@ export class CanonicalMarketingController {
     return this.service.updateTaskStatus(req.user, id, dto);
   }
 
+  @Delete('tasks/:id')
+  @Roles(...TASK_READ_ROLES)
+  @HttpCode(204)
+  deleteTask(@Req() req: any, @Param('id') id: string): Promise<unknown> {
+    return this.service.deleteTask(req.user, id);
+  }
+
   @Patch('tasks/:taskId/checklist/:itemId')
   @Roles(...TASK_READ_ROLES)
   updateChecklist(
@@ -113,6 +135,108 @@ export class CanonicalMarketingController {
     @Body() dto: UpdateChecklistItemDto,
   ): Promise<unknown> {
     return this.service.updateChecklist(req.user, taskId, itemId, dto);
+  }
+
+  @Post('tasks/:taskId/checklist')
+  @Roles(...TASK_READ_ROLES)
+  addChecklistItem(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+    @Body() dto: CreateChecklistItemDto,
+  ): Promise<unknown> {
+    return this.service.addChecklistItem(req.user, taskId, dto);
+  }
+
+  @Get('tasks/:taskId/comments')
+  @Roles(...TASK_READ_ROLES)
+  listComments(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+  ): Promise<unknown> {
+    return this.service.listComments(req.user, taskId);
+  }
+
+  @Post('tasks/:taskId/comments')
+  @Roles(...TASK_READ_ROLES)
+  createComment(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+    @Body() dto: CreateTaskCommentDto,
+  ): Promise<unknown> {
+    return this.service.createComment(req.user, taskId, dto);
+  }
+
+  @Delete('tasks/comments/:commentId')
+  @Roles(...TASK_READ_ROLES)
+  @HttpCode(204)
+  deleteComment(
+    @Req() req: any,
+    @Param('commentId') commentId: string,
+  ): Promise<unknown> {
+    return this.service.deleteComment(req.user, commentId);
+  }
+
+  @Get('tasks/:taskId/attachments')
+  @Roles(...TASK_READ_ROLES)
+  listAttachments(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+  ): Promise<unknown> {
+    return this.service.listAttachments(req.user, taskId);
+  }
+
+  @Post('tasks/:taskId/attachments')
+  @Roles(...TASK_READ_ROLES)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      dest: 'uploads/marketing-tasks',
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async addAttachment(
+    @Req() req: any,
+    @Param('taskId') taskId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<unknown> {
+    if (!file) {
+      throw new BadRequestException({
+        code: 'ATTACHMENT_FILE_REQUIRED',
+        message: 'File lampiran wajib diisi.',
+        fieldErrors: { file: 'required' },
+      });
+    }
+    return this.service.addAttachment(req.user, taskId, {
+      name: file.originalname,
+      type: file.mimetype,
+      sizeKb: Math.ceil(file.size / 1024),
+      path: file.path,
+    });
+  }
+
+  @Delete('tasks/attachments/:attachmentId')
+  @Roles(...TASK_READ_ROLES)
+  @HttpCode(204)
+  deleteAttachment(
+    @Req() req: any,
+    @Param('attachmentId') attachmentId: string,
+  ): Promise<unknown> {
+    return this.service.deleteAttachment(req.user, attachmentId);
+  }
+
+  @Get('members')
+  @Roles(...TASK_READ_ROLES)
+  listMembers(@Req() req: any): Promise<unknown> {
+    return this.service.listMembers(req.user);
+  }
+
+  @Patch('members/:id')
+  @Roles(...TASK_READ_ROLES)
+  updateMember(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateMarketingMemberDto,
+  ): Promise<unknown> {
+    return this.service.updateMember(req.user, id, dto);
   }
 
   @Get('projects')

@@ -22,6 +22,7 @@ model User {
   marketingProjectOwner   MarketingProject[]          @relation("MarketingProjectOwner")
   marketingBrandOwner     MarketingBrand[]            @relation("MarketingBrandOwner")
   marketingTaskChecklistCompleted MarketingTaskChecklistItem[] @relation("MarketingTaskChecklistCompleter")
+  marketingTeamMembers      MarketingTeamMember[]       @relation("MarketingTeamMemberUser")
   socialPostsAssigned     SocialPost[]                 @relation("SocialPostAssignee")
   socialPostsReviewed     SocialPost[]                 @relation("SocialPostReviewer")
   socialMediaUploaded     SocialPostMedia[]            @relation("SocialPostMediaUploader")

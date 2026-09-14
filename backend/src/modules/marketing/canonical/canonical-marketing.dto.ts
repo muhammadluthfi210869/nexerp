@@ -100,6 +100,17 @@ export class UpdateChecklistItemDto {
   @IsBoolean() done!: boolean;
 }
 
+export class CreateTaskCommentDto {
+  @IsString() @MinLength(1) @MaxLength(5_000) body!: string;
+}
+
+export class AttachmentMetadataDto {
+  @IsString() @MinLength(1) @MaxLength(255) name!: string;
+  @IsString() @MinLength(1) @MaxLength(100) type!: string;
+  @IsInt() @Min(0) sizeKb!: number;
+  @IsString() @MinLength(1) path!: string;
+}
+
 export class CreateCanonicalProjectDto {
   @IsString() @MinLength(1) @MaxLength(255) name!: string;
   @IsString() @MinLength(1) @MaxLength(100) channel!: string;
@@ -192,6 +203,16 @@ export class ConfigureIntegrationDto {
 
 export class TriggerIntegrationSyncDto {
   @IsUUID() connectionId!: string;
+}
+
+export class UpdateMarketingMemberDto {
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(100) name?: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(150) role?: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(150) email?: string;
+  @IsOptional() @IsString() @MaxLength(30) phone?: string;
+  @IsOptional() @IsString() @MaxLength(20) avatarBg?: string;
+  @IsOptional() @IsString() @MaxLength(5) initial?: string;
+  @IsOptional() @IsString() @MaxLength(100) department?: string;
 }
 
 export { SOCIAL_STATUSES };

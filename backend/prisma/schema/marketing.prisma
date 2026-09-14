@@ -61,6 +61,23 @@ model LeadCapture {
   assignedName  String? @db.VarChar(100) // Nama agent round-robin yang ditugaskan
   assignedPhone String? @db.VarChar(20) // No. WA agent round-robin yang ditugaskan
 
+  // ── Lead Attribution Journey (Website → Round Robin → WhatsApp) ──
+  // Kolom ini SUDAH ADA dan berisi data di DB production (dibuat oleh
+  // migration 20260822081953_lead_attribution_journey, era main sebelum
+  // db-push dipakai). Sebelumnya tidak dideklarasikan di file skema —
+  // drift-analysis cutover 2026-09-14 menangkap ini: kalau tidak declared,
+  // `prisma db push` akan DROP kolom berisi 8600+ baris atribusi lead.
+  sourcePage         String?   @db.VarChar(500) // halaman website asal lead
+  ctaType            String?   @db.VarChar(50)
+  ctaClickedAt       DateTime?
+  thankYouPage       String?   @db.VarChar(500)
+  thankYouViewedAt   DateTime?
+  whatsappClickedAt  DateTime? // user benar-benar klik WA (bukan auto-redirect batal)
+  whatsappVerifiedAt DateTime? // match inbound chat [Kode: trackingCode] (Self QR)
+  verificationStatus String    @default("UNVERIFIED") @db.VarChar(20)
+  assignedSalesId    String?   @db.VarChar(50) // identitas stabil cs1/cs2/cs3/irma
+  assignedAt         DateTime?
+
   // ── Kommo CRM metadata (Kommo is the third-party system, not the marketing source) ──
   kommoLeadId              Int?
   kommoResponsibleUserId   Int?
@@ -91,6 +108,11 @@ model LeadCapture {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Index journey (nama sama dengan yang dibuat migration 20260822081953 di DB live)
+  @@index([verificationStatus])
+  @@index([assignedSalesId])
+  @@index([sourcePage])
 
   @@map("lead_captures")
 }
@@ -840,4 +862,25 @@ model MetaAccountConfig {
   updatedAt         DateTime @updatedAt
 
   @@map("meta_account_configs")
+}
+
+// ── Anggota tim marketing (DB live: marketing_team_members, 35 baris produksi).
+// Dideklarasikan di production-light; drift-analysis cutover 2026-09-14 menangkap
+// bahwa model ini tidak ikut ke branch konsolidasi — tanpa ini db push DROP tabel.
+model MarketingTeamMember {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String?  @unique @db.Uuid
+  user        User?    @relation("MarketingTeamMemberUser", fields: [userId], references: [id], onDelete: SetNull)
+  name        String   @db.VarChar(100)
+  role        String   @db.VarChar(150)
+  email       String   @unique @db.VarChar(150)
+  phone       String?  @db.VarChar(30)
+  avatarBg    String   @default("#e8eef6") @db.VarChar(20)
+  initial     String   @db.VarChar(5)
+  department  String   @default("Digital Marketing") @db.VarChar(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("marketing_team_members")
 }

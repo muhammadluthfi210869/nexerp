@@ -9,10 +9,13 @@ import {
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import {
+  AttachmentMetadataDto,
   ConfigureIntegrationDto,
   CreateBrandDto,
   CreateCanonicalProjectDto,
   CreateCanonicalTaskDto,
+  CreateChecklistItemDto,
+  CreateTaskCommentDto,
   PaginationQueryDto,
   ReportingQueryDto,
   TaskListQueryDto,
@@ -21,6 +24,7 @@ import {
   UpdateCanonicalProjectDto,
   UpdateCanonicalTaskDto,
   UpdateChecklistItemDto,
+  UpdateMarketingMemberDto,
   UpdateTaskStatusDto,
   UpsertChannelMetricDto,
 } from './canonical-marketing.dto';
@@ -51,15 +55,7 @@ export class CanonicalMarketingService {
     ensureMarketingTaskRole(viewer);
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
-    const where: any = {};
-    if (!isMarketingManager(viewer)) {
-      where.OR = [
-        { ownerId: viewer.id },
-        { assigneeId: viewer.id },
-        { picId: viewer.id },
-        { assignedById: viewer.id },
-      ];
-    }
+    const where: any = this.taskScope(viewer);
     if (query.status) where.canonicalStatus = query.status;
     if (query.assigneeId) where.assigneeId = query.assigneeId;
     if (query.projectId) where.projectId = query.projectId;
@@ -99,6 +95,79 @@ export class CanonicalMarketingService {
     ensureMarketingTaskRole(viewer);
     const task = await this.findVisibleTask(this.prisma, viewer, id);
     return this.taskResponse(task);
+  }
+
+  async getKpi(viewer: MarketingViewer) {
+    ensureMarketingTaskRole(viewer);
+    const scope = this.taskScope(viewer);
+    const now = new Date();
+    const where: any = { ...scope };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.marketingTask.findMany({
+        where,
+        select: {
+          id: true,
+          canonicalStatus: true,
+          dueDate: true,
+          assigneeId: true,
+          pic: { select: { id: true, fullName: true, email: true } },
+        },
+      }),
+      this.prisma.marketingTask.count({ where }),
+    ]);
+    const statusCounts = {
+      notStarted: 0,
+      inProgress: 0,
+      inReview: 0,
+      revision: 0,
+      done: 0,
+      cancelled: 0,
+    };
+    let overdue = 0;
+    const byMember = new Map<
+      string,
+      { id: string; fullName: string; email: string; count: number }
+    >();
+    for (const row of rows) {
+      const status = row.canonicalStatus as TaskStatus;
+      if (status === 'NOT_STARTED') statusCounts.notStarted++;
+      else if (status === 'IN_PROGRESS') statusCounts.inProgress++;
+      else if (status === 'IN_REVIEW') statusCounts.inReview++;
+      else if (status === 'REVISION') statusCounts.revision++;
+      else if (status === 'DONE') statusCounts.done++;
+      else if (status === 'CANCELLED') statusCounts.cancelled++;
+      if (
+        row.dueDate &&
+        row.dueDate < now &&
+        status !== 'DONE' &&
+        status !== 'CANCELLED'
+      ) {
+        overdue++;
+      }
+      const assigneeId = row.assigneeId ?? 'unassigned';
+      const existing = byMember.get(assigneeId);
+      const memberMeta = row.pic ?? {
+        id: assigneeId,
+        fullName: 'Unassigned',
+        email: null,
+      };
+      if (existing) existing.count++;
+      else
+        byMember.set(assigneeId, {
+          id: memberMeta.id,
+          fullName: memberMeta.fullName ?? 'Unassigned',
+          email: memberMeta.email ?? '',
+          count: 1,
+        });
+    }
+    return {
+      total,
+      ...statusCounts,
+      overdue,
+      byMember: Array.from(byMember.values()).sort((a, b) => b.count - a.count),
+      scope: isMarketingManager(viewer) ? 'team' : 'personal',
+      generatedAt: now.toISOString(),
+    };
   }
 
   async createTask(
@@ -195,6 +264,7 @@ export class CanonicalMarketingService {
     ensureMarketingTaskRole(viewer);
     const current = await this.findVisibleTask(this.prisma, viewer, id);
     this.ensureCanEditTask(viewer, current);
+    this.ensureMemberTaskUpdateAllowed(viewer, dto);
     if (dto.startDate || dto.dueDate) {
       this.assertDateOrder(
         dto.startDate ?? current.startDate?.toISOString(),
@@ -292,6 +362,106 @@ export class CanonicalMarketingService {
     return this.getTask(viewer, id);
   }
 
+  async deleteTask(viewer: MarketingViewer, id: string) {
+    ensureMarketingTaskRole(viewer);
+    const current = await this.findVisibleTask(this.prisma, viewer, id);
+    if (!isMarketingManager(viewer) && current.ownerId !== viewer.id) {
+      throw new ForbiddenException({
+        code: 'TASK_DELETE_FORBIDDEN',
+        message: 'Hanya pemilik atau manajer yang dapat menghapus task.',
+      });
+    }
+    await this.prisma.marketingTask.delete({
+      where: { id },
+    });
+  }
+
+  async createComment(
+    viewer: MarketingViewer,
+    taskId: string,
+    dto: CreateTaskCommentDto,
+  ) {
+    ensureMarketingTaskRole(viewer);
+    const task = await this.findVisibleTask(this.prisma, viewer, taskId);
+    this.ensureCanEditTask(viewer, task);
+    return this.prisma.marketingTaskComment.create({
+      data: {
+        taskId,
+        authorId: viewer.id,
+        body: dto.body.trim(),
+      },
+    });
+  }
+
+  async deleteComment(viewer: MarketingViewer, commentId: string) {
+    ensureMarketingTaskRole(viewer);
+    const comment = await this.prisma.marketingTaskComment.findFirst({
+      where: { id: commentId },
+    });
+    if (!comment || comment.authorId !== viewer.id)
+      throw new NotFoundException({
+        code: 'COMMENT_NOT_FOUND',
+        message: 'Komentar tidak ditemukan atau Anda tidak memiliki akses.',
+      });
+    await this.prisma.marketingTaskComment.delete({ where: { id: commentId } });
+  }
+
+  async listComments(viewer: MarketingViewer, taskId: string) {
+    ensureMarketingTaskRole(viewer);
+    await this.findVisibleTask(this.prisma, viewer, taskId);
+    return this.prisma.marketingTaskComment.findMany({
+      where: { taskId },
+      include: {
+        author: { select: USER_PUBLIC_SELECT },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async listAttachments(viewer: MarketingViewer, taskId: string) {
+    ensureMarketingTaskRole(viewer);
+    await this.findVisibleTask(this.prisma, viewer, taskId);
+    return this.prisma.marketingTaskAttachment.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async addAttachment(
+    viewer: MarketingViewer,
+    taskId: string,
+    file: AttachmentMetadataDto,
+  ) {
+    ensureMarketingTaskRole(viewer);
+    const task = await this.findVisibleTask(this.prisma, viewer, taskId);
+    this.ensureCanEditTask(viewer, task);
+    return this.prisma.marketingTaskAttachment.create({
+      data: {
+        taskId,
+        uploadedById: viewer.id,
+        name: file.name,
+        type: file.type,
+        sizeKb: file.sizeKb,
+        path: file.path,
+      },
+    });
+  }
+
+  async deleteAttachment(viewer: MarketingViewer, attachmentId: string) {
+    ensureMarketingTaskRole(viewer);
+    const att = await this.prisma.marketingTaskAttachment.findFirst({
+      where: { id: attachmentId },
+    });
+    if (!att || att.uploadedById !== viewer.id)
+      throw new NotFoundException({
+        code: 'ATTACHMENT_NOT_FOUND',
+        message: 'Lampiran tidak ditemukan atau Anda tidak memiliki akses.',
+      });
+    await this.prisma.marketingTaskAttachment.delete({
+      where: { id: attachmentId },
+    });
+  }
+
   async updateChecklist(
     viewer: MarketingViewer,
     taskId: string,
@@ -330,6 +500,34 @@ export class CanonicalMarketingService {
       await db.marketingTask.update({
         where: { id: taskId },
         data: { checklistDone: done, checklistTotal: total },
+      });
+    });
+    return this.getTask(viewer, taskId);
+  }
+
+  async addChecklistItem(
+    viewer: MarketingViewer,
+    taskId: string,
+    dto: CreateChecklistItemDto,
+  ) {
+    ensureMarketingTaskRole(viewer);
+    const task = await this.findVisibleTask(this.prisma, viewer, taskId);
+    this.ensureCanEditTask(viewer, task);
+    await this.prisma.$transaction(async (db) => {
+      await db.marketingTaskChecklistItem.create({
+        data: {
+          taskId,
+          text: dto.text.trim(),
+          isRequired: dto.isRequired ?? true,
+          sortOrder: dto.sortOrder ?? 0,
+        },
+      });
+      const required = await db.marketingTaskChecklistItem.count({
+        where: { taskId, isRequired: true },
+      });
+      await db.marketingTask.update({
+        where: { id: taskId },
+        data: { checklistTotal: required },
       });
     });
     return this.getTask(viewer, taskId);
@@ -471,6 +669,82 @@ export class CanonicalMarketingService {
         _count: { select: { tasks: true } },
       },
     });
+  }
+
+  async listMembers(viewer?: MarketingViewer) {
+    if (viewer) ensureMarketingTaskRole(viewer);
+    // Filter to marketing team only (defense-in-depth: even if isActive=true was set on stale
+    // admin/busdev rows from earlier seeds, we exclude them here). Marketing-relevant
+    // departments are an allow-list; super-admin / admin role rows are excluded by name.
+    const members = await this.prisma.marketingTeamMember.findMany({
+      where: {
+        isActive: true,
+        department: { in: ['Digital Marketing', 'Digital Strategy', 'Social Media', 'Design & Visual', 'Production'] },
+        NOT: { role: { contains: 'Admin' } },
+      },
+      orderBy: { name: 'asc' },
+    });
+    return members.map((m) => ({
+      id: m.id,
+      userId: m.userId,
+      name: m.name,
+      role: m.role,
+      email: m.email,
+      phone: m.phone || undefined,
+      avatarBg: m.avatarBg,
+      initial: m.initial,
+      department: m.department,
+    }));
+  }
+
+  async updateMember(
+    viewer: MarketingViewer,
+    id: string,
+    dto: UpdateMarketingMemberDto,
+  ) {
+    this.ensureManager(viewer);
+    const member = await this.prisma.marketingTeamMember.findUnique({
+      where: { id },
+    });
+    if (!member) {
+      throw new NotFoundException({
+        code: 'MEMBER_NOT_FOUND',
+        message: `Member dengan id ${id} tidak ditemukan.`,
+      });
+    }
+    const updated = await this.prisma.marketingTeamMember.update({
+      where: { id },
+      data: {
+        ...(dto.name ? { name: dto.name.trim() } : {}),
+        ...(dto.role ? { role: dto.role.trim() } : {}),
+        ...(dto.email ? { email: dto.email.trim() } : {}),
+        ...(dto.phone !== undefined ? { phone: dto.phone?.trim() || null } : {}),
+        ...(dto.avatarBg ? { avatarBg: dto.avatarBg } : {}),
+        ...(dto.initial ? { initial: dto.initial.trim() } : {}),
+        ...(dto.department ? { department: dto.department.trim() } : {}),
+      },
+    });
+    if (member.userId) {
+      await this.prisma.user
+        .update({
+          where: { id: member.userId },
+          data: {
+            ...(dto.name ? { fullName: dto.name.trim() } : {}),
+            ...(dto.email ? { email: dto.email.trim() } : {}),
+          },
+        })
+        .catch(() => {});
+    }
+    return {
+      id: updated.id,
+      name: updated.name,
+      role: updated.role,
+      email: updated.email,
+      phone: updated.phone || undefined,
+      avatarBg: updated.avatarBg,
+      initial: updated.initial,
+      department: updated.department,
+    };
   }
 
   async listBrands(viewer: MarketingViewer, includeInactive = false) {
@@ -798,16 +1072,7 @@ export class CanonicalMarketingService {
     viewer: MarketingViewer,
     id: string,
   ) {
-    const scope = isMarketingManager(viewer)
-      ? {}
-      : {
-          OR: [
-            { ownerId: viewer.id },
-            { assigneeId: viewer.id },
-            { picId: viewer.id },
-            { assignedById: viewer.id },
-          ],
-        };
+    const scope = this.taskScope(viewer);
     const task = await db.marketingTask.findFirst({
       where: { id, ...scope },
       include: TASK_INCLUDE,
@@ -827,6 +1092,45 @@ export class CanonicalMarketingService {
         code: 'TASK_NOT_FOUND',
         message: 'Task tidak ditemukan.',
       });
+  }
+
+  /** Members may update their delivery details, but cannot alter who owns,
+   * reviews, schedules, prioritizes, or re-scopes a task. */
+  private ensureMemberTaskUpdateAllowed(
+    viewer: MarketingViewer,
+    dto: UpdateCanonicalTaskDto,
+  ) {
+    if (isMarketingManager(viewer)) return;
+    const restricted = [
+      'projectId',
+      'brandId',
+      'assigneeId',
+      'reviewerId',
+      'priority',
+      'startDate',
+      'dueDate',
+      'estimatedMinutes',
+    ] as const;
+    const attempted = restricted.find((field) => dto[field] !== undefined);
+    if (attempted)
+      throw new ForbiddenException({
+        code: 'TASK_MEMBER_FIELD_FORBIDDEN',
+        message: `Member tidak dapat mengubah ${attempted}.`,
+        fieldErrors: { [attempted]: 'manager_required' },
+      });
+  }
+
+  private taskScope(viewer: MarketingViewer) {
+    if (isMarketingManager(viewer)) return {};
+    return {
+      OR: [
+        { ownerId: viewer.id },
+        { assigneeId: viewer.id },
+        { picId: viewer.id },
+        { assignedById: viewer.id },
+        { reviewerId: viewer.id },
+      ],
+    };
   }
 
   private ensureManager(viewer: MarketingViewer) {
@@ -951,12 +1255,12 @@ export class CanonicalMarketingService {
       .digest('hex');
     const effectiveScope = `${scope}:${viewer.id}`;
     return this.prisma.$transaction(async (db) => {
-      if (typeof db.$queryRawUnsafe === 'function') {
-        await db.$queryRawUnsafe(
-          'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-          `${effectiveScope}:${key}`,
-        );
-      }
+      // Note: pg_advisory_xact_lock was previously invoked here for serialization,
+      // but Prisma Driver Adapter (used since the Prisma 5.x upgrade) does not
+      // support returning the void result of a SELECT query — the call surfaces as
+      // "Failed to deserialize column of type 'void'" and aborts the request.
+      // The DB-level unique constraint on (scope, key) below already prevents
+      // duplicate writes, so the advisory lock is omitted by design.
       const existing = await db.marketingIdempotencyKey.findUnique({
         where: { scope_key: { scope: effectiveScope, key } },
       });
@@ -971,16 +1275,30 @@ export class CanonicalMarketingService {
       if (existing)
         await db.marketingIdempotencyKey.delete({ where: { id: existing.id } });
       const result = await work(db as any);
-      await db.marketingIdempotencyKey.create({
-        data: {
-          scope: effectiveScope,
-          key,
-          requestHash,
-          actorId: viewer.id,
-          responseBody: this.jsonSafe(result) as any,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        },
-      });
+      try {
+        await db.marketingIdempotencyKey.create({
+          data: {
+            scope: effectiveScope,
+            key,
+            requestHash,
+            actorId: viewer.id,
+            responseBody: this.jsonSafe(result) as any,
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          },
+        });
+      } catch (err: any) {
+        // P2002 = unique constraint — concurrent request beat us to it; treat as replay.
+        if (err?.code !== 'P2002') throw err;
+        const winner = await db.marketingIdempotencyKey.findUnique({
+          where: { scope_key: { scope: effectiveScope, key } },
+        });
+        if (winner && winner.requestHash === requestHash)
+          return winner.responseBody as T;
+        throw new ConflictException({
+          code: 'IDEMPOTENCY_KEY_REUSED',
+          message: 'Idempotency-Key telah digunakan untuk payload berbeda.',
+        });
+      }
       return result;
     });
   }
@@ -1092,7 +1410,7 @@ export class CanonicalMarketingService {
   }
 
   private page<T>(data: T[], page: number, limit: number, total: number) {
-    return { data, page, limit, total, hasMore: page * limit < total };
+    return { data, items: data, page, limit, total, hasMore: page * limit < total };
   }
   private code(prefix: string) {
     return `${prefix}-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${randomBytes(3).toString('hex').toUpperCase()}`;
