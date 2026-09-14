@@ -17,9 +17,9 @@ name: 🔨 CI — Build & Test
 
 on:
   push:
-    branches: [production-light, main]
+    branches: [production-light, main, phase-3]
   pull_request:
-    branches: [main]
+    branches: [main, production-light]
 
 jobs:
   build-and-test:
@@ -104,3 +104,40 @@ jobs:
       - name: 🧹 Bersihkan container
         if: always()
         run: docker rm -f nexerp-backend-test 2>/dev/null || true
+
+  bridge-size-guard:
+    name: 🛡 Bridge Size Guard (wholesale-merge foot-gun blocker)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+
+      - name: Bridge pattern size check
+        run: |
+          # If PR is targeting production-light, enforce small bridge size.
+          # Wholesale merge of phase-3 (1423 files, +410k/-509k) was the 2026-09-14
+          # disaster — see docs/qa-gate/2026-09-14-deploy-architecture-fix.md.
+          if [ "$(echo ${{ github.base_ref }})" != "production-light" ]; then
+            echo "Not targeting production-light — skipping size guard"
+            exit 0
+          fi
+
+          COUNT=$(git diff --name-only origin/production-light...HEAD | wc -l | tr -d ' ')
+          LINES=$(git diff --shortstat origin/production-light...HEAD | awk '{print $4+$6}')
+          echo "PR changed $COUNT files / ~$LINES lines vs origin/production-light"
+
+          if [ "$COUNT" -gt 50 ]; then
+            echo "❌ PR has $COUNT files changed (limit: 50). Wholesale merge BLOCKED."
+            echo "   Use bridge pattern: bash scripts/bridge-to-production-light.sh phase-3 <commit>"
+            echo "   See docs/BridgePattern.md"
+            exit 1
+          fi
+
+          if [ -n "$LINES" ] && [ "$LINES" -gt 5000 ]; then
+            echo "❌ PR has $LINES lines changed (limit: 5000). Wholesale merge BLOCKED."
+            exit 1
+          fi
+
+          echo "✅ Bridge size OK"
