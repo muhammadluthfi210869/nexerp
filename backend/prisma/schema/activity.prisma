@@ -19,6 +19,8 @@ model ActivityLog {
   userAgent  String?
   createdAt  DateTime        @default(now())
 
+  user       User?           @relation("ActivityActor", fields: [userId], references: [id])
+
   @@index([userId, createdAt])
   @@index([entityType, entityId, createdAt])
   @@index([createdAt])

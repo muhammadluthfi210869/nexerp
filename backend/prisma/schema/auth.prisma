@@ -66,6 +66,13 @@ model User {
   approvedDrafts          DocumentDraft[]             @relation("DocumentDraftApprover")
   rejectedDrafts          DocumentDraft[]             @relation("DocumentDraftRejecter")
 
+  // Communication module (phase-3 per-path checkout)
+  createdThreads          CommunicationThread[]       @relation("ThreadCreator")
+  authoredReplies         CommunicationThreadReply[]  @relation("ReplyAuthor")
+  mentionedIn             CommunicationMention[]      @relation("MentionedUser")
+  uploadedAttachments     CommunicationAttachment[]   @relation("AttachmentUploader")
+  activityLogs            ActivityLog[]               @relation("ActivityActor")
+
   // Marketing prototype relations
   // NOTE: relations to MarketingProject, MarketingTaskAttachment,
   // MarketingTaskComment, MarketingTaskHistory, and MarketingTask sub-relations

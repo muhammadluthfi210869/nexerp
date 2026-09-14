@@ -655,3 +655,20 @@ enum RequisitionHeaderStatus {
   FULFILLED
   CANCELLED
 }
+
+// CRM module (phase-3 per-path checkout)
+enum CrmStage {
+  LEADS_MASUK
+  FOLLOW_UP
+  INTERESTED
+  DEAL_NEGOTIATION
+  DEAL_WON
+  DEAL_LOST
+  NURTURING
+}
+
+enum GuestbookApproval {
+  PENDING
+  APPROVED
+  REJECTED
+}

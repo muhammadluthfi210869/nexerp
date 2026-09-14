@@ -45,10 +45,8 @@ model CrmLead {
   guestbookEvent GuestbookEvent?
   audits         LeadAudit[]
 
-  @@index([stage, createdAt])
-  @@index([assignedToId, stage])
+  @@index([assignedToId, createdAt])
   @@index([createdAt])
-  @@index([source])
   @@map("crm_leads")
 }
 
@@ -69,7 +67,7 @@ model GuestbookEvent {
 
   lead CrmLead @relation(fields: [crmLeadId], references: [id], onDelete: Cascade)
 
-  @@index([approvalStatus, createdAt])
+  @@index([crmLeadId, createdAt])
   @@map("guestbook_events")
 }
 
@@ -86,6 +84,5 @@ model LeadAudit {
   lead CrmLead @relation(fields: [crmLeadId], references: [id], onDelete: Cascade)
 
   @@index([crmLeadId, createdAt])
-  @@index([action, createdAt])
   @@map("lead_audits")
 }
