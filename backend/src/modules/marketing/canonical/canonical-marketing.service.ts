@@ -1255,12 +1255,12 @@ export class CanonicalMarketingService {
       .digest('hex');
     const effectiveScope = `${scope}:${viewer.id}`;
     return this.prisma.$transaction(async (db) => {
-      if (typeof db.$queryRawUnsafe === 'function') {
-        await db.$queryRawUnsafe(
-          'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-          `${effectiveScope}:${key}`,
-        );
-      }
+      // Note: pg_advisory_xact_lock was previously invoked here for serialization,
+      // but Prisma Driver Adapter (used since the Prisma 5.x upgrade) does not
+      // support returning the void result of a SELECT query — the call surfaces as
+      // "Failed to deserialize column of type 'void'" and aborts the request.
+      // The DB-level unique constraint on (scope, key) below already prevents
+      // duplicate writes, so the advisory lock is omitted by design.
       const existing = await db.marketingIdempotencyKey.findUnique({
         where: { scope_key: { scope: effectiveScope, key } },
       });
@@ -1275,16 +1275,30 @@ export class CanonicalMarketingService {
       if (existing)
         await db.marketingIdempotencyKey.delete({ where: { id: existing.id } });
       const result = await work(db as any);
-      await db.marketingIdempotencyKey.create({
-        data: {
-          scope: effectiveScope,
-          key,
-          requestHash,
-          actorId: viewer.id,
-          responseBody: this.jsonSafe(result) as any,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        },
-      });
+      try {
+        await db.marketingIdempotencyKey.create({
+          data: {
+            scope: effectiveScope,
+            key,
+            requestHash,
+            actorId: viewer.id,
+            responseBody: this.jsonSafe(result) as any,
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          },
+        });
+      } catch (err: any) {
+        // P2002 = unique constraint — concurrent request beat us to it; treat as replay.
+        if (err?.code !== 'P2002') throw err;
+        const winner = await db.marketingIdempotencyKey.findUnique({
+          where: { scope_key: { scope: effectiveScope, key } },
+        });
+        if (winner && winner.requestHash === requestHash)
+          return winner.responseBody as T;
+        throw new ConflictException({
+          code: 'IDEMPOTENCY_KEY_REUSED',
+          message: 'Idempotency-Key telah digunakan untuk payload berbeda.',
+        });
+      }
       return result;
     });
   }
