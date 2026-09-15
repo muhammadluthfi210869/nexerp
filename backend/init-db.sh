@@ -113,4 +113,5 @@ else
 fi
 
 echo "=== Step 3: Starting NestJS ==="
-exec node dist/main
+# ponytail: nest build outputs to dist/src/main.js (Nest convention), not dist/main.js
+exec node dist/src/main
