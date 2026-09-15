@@ -34,7 +34,9 @@ exports[`Direksi FinanceDashboard (snapshot) > renders empty sales orders state 
         class="hidden md:flex items-center gap-3"
       >
         <button
-          class="inline-flex items-center justify-center gap-2 rounded-xl transition-all border hover:bg-slate-50 shadow-sm hover:shadow-md h-8 px-3 border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]"
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]"
+          data-slot="button"
+          tabindex="0"
           type="button"
         >
           <svg
@@ -297,17 +299,22 @@ exports[`Direksi FinanceDashboard (snapshot) > renders empty sales orders state 
         class="grid grid-cols-1 lg:grid-cols-3 gap-6"
       >
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-3 border-gray-200 bg-white"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-3 border-gray-200 bg-white"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
             <div
               class="flex items-center justify-between"
             >
               <div>
-                <h3
-                  class="tracking-tight text-lg font-bold text-gray-900 flex items-center"
+                <div
+                  class="font-heading group-data-[size=sm]/card:text-sm text-lg font-bold text-gray-900 flex items-center"
+                  data-slot="card-title"
                 >
                   <svg
                     aria-hidden="true"
@@ -339,123 +346,107 @@ exports[`Direksi FinanceDashboard (snapshot) > renders empty sales orders state 
                     />
                   </svg>
                    SALES ORDER MONITORING
-                </h3>
-                <p
-                  class="text-[12px] font-normal leading-relaxed text-zinc-500"
+                </div>
+                <div
+                  class="text-sm text-zinc-500"
+                  data-slot="card-description"
                 >
                   Real-time status of commercial contracts and factory locks.
-                </p>
+                </div>
               </div>
-              <span
-                class="inline-flex items-center gap-1.5 font-black uppercase rounded-lg px-3 py-1 border shadow-sm bg-slate-50 border-gray-200 text-zinc-500 text-[10px] font-sans"
+              <div
+                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 font-black uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-gray-200 text-zinc-500 text-[10px] font-sans"
+                role="status"
               >
                 0
                  CONTRACTS
-              </span>
+              </div>
             </div>
           </div>
           <div
-            class="p-5"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3"
+            data-slot="card-content"
           >
             <div
               class="rounded-md border border-gray-200 overflow-hidden bg-gray-50"
             >
-              <table
-                class="w-full text-left border-collapse"
+              <div
+                class="relative w-full overflow-x-auto"
+                data-slot="table-container"
               >
-                <thead
-                  class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-gray-50"
+                <table
+                  class="w-full caption-bottom text-sm"
+                  data-slot="table"
                 >
-                  <tr
-                    class="dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200 hover:bg-transparent"
+                  <thead
+                    class="[&_tr]:border-b bg-gray-50"
+                    data-slot="table-header"
                   >
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
+                    <tr
+                      class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-transparent"
+                      data-slot="table-row"
                     >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          SO ID
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        SO ID
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Client Entity
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Client Entity
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Transaction Value
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Transaction Value
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Operational Gate
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase text-center"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Operational Gate
+                      </th>
+                      <th
+                        class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase text-center"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Invoice Matrix
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-right text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Invoice Matrix
+                      </th>
+                      <th
+                        class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Command
-                        </span>
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-                >
-                  <tr
-                    class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors h-[42px]"
+                        Command
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="[&_tr:last-child]:border-0"
+                    data-slot="table-body"
                   >
-                    <td
-                      class="px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium text-center py-20"
-                      colspan="6"
+                    <tr
+                      class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                      data-slot="table-row"
                     >
-                      <p
-                        class="text-gray-400 text-xs uppercase font-bold tracking-[0.3em]"
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center py-20"
+                        colspan="6"
+                        data-slot="table-cell"
                       >
-                        No Commercial Contracts in Database
-                      </p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                        <p
+                          class="text-gray-400 text-xs uppercase font-bold tracking-[0.3em]"
+                        >
+                          No Commercial Contracts in Database
+                        </p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -499,7 +490,9 @@ exports[`Direksi FinanceDashboard (snapshot) > renders loading state and matches
         class="hidden md:flex items-center gap-3"
       >
         <button
-          class="inline-flex items-center justify-center gap-2 rounded-xl transition-all border hover:bg-slate-50 shadow-sm hover:shadow-md h-8 px-3 border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]"
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]"
+          data-slot="button"
+          tabindex="0"
           type="button"
         >
           <svg
@@ -762,17 +755,22 @@ exports[`Direksi FinanceDashboard (snapshot) > renders loading state and matches
         class="grid grid-cols-1 lg:grid-cols-3 gap-6"
       >
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-3 border-gray-200 bg-white"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-3 border-gray-200 bg-white"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
             <div
               class="flex items-center justify-between"
             >
               <div>
-                <h3
-                  class="tracking-tight text-lg font-bold text-gray-900 flex items-center"
+                <div
+                  class="font-heading group-data-[size=sm]/card:text-sm text-lg font-bold text-gray-900 flex items-center"
+                  data-slot="card-title"
                 >
                   <svg
                     aria-hidden="true"
@@ -804,119 +802,103 @@ exports[`Direksi FinanceDashboard (snapshot) > renders loading state and matches
                     />
                   </svg>
                    SALES ORDER MONITORING
-                </h3>
-                <p
-                  class="text-[12px] font-normal leading-relaxed text-zinc-500"
+                </div>
+                <div
+                  class="text-sm text-zinc-500"
+                  data-slot="card-description"
                 >
                   Real-time status of commercial contracts and factory locks.
-                </p>
+                </div>
               </div>
-              <span
-                class="inline-flex items-center gap-1.5 font-black uppercase rounded-lg px-3 py-1 border shadow-sm bg-slate-50 border-gray-200 text-zinc-500 text-[10px] font-sans"
+              <div
+                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 font-black uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-gray-200 text-zinc-500 text-[10px] font-sans"
+                role="status"
               >
                 0
                  CONTRACTS
-              </span>
+              </div>
             </div>
           </div>
           <div
-            class="p-5"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3"
+            data-slot="card-content"
           >
             <div
               class="rounded-md border border-gray-200 overflow-hidden bg-gray-50"
             >
-              <table
-                class="w-full text-left border-collapse"
+              <div
+                class="relative w-full overflow-x-auto"
+                data-slot="table-container"
               >
-                <thead
-                  class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-gray-50"
+                <table
+                  class="w-full caption-bottom text-sm"
+                  data-slot="table"
                 >
-                  <tr
-                    class="dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200 hover:bg-transparent"
+                  <thead
+                    class="[&_tr]:border-b bg-gray-50"
+                    data-slot="table-header"
                   >
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
+                    <tr
+                      class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-transparent"
+                      data-slot="table-row"
                     >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          SO ID
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        SO ID
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Client Entity
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Client Entity
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Transaction Value
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Transaction Value
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Operational Gate
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase text-center"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Operational Gate
+                      </th>
+                      <th
+                        class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase text-center"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Invoice Matrix
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-right text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Invoice Matrix
+                      </th>
+                      <th
+                        class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Command
-                        </span>
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-                >
-                  <tr
-                    class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors h-[42px]"
+                        Command
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="[&_tr:last-child]:border-0"
+                    data-slot="table-body"
                   >
-                    <td
-                      class="px-3.5 dark:text-slate-200 text-center py-20 text-gray-400 italic uppercase tracking-tighter text-2xl font-black"
-                      colspan="6"
+                    <tr
+                      class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                      data-slot="table-row"
                     >
-                      Decrypting Ledger...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center py-20 text-gray-400 italic uppercase tracking-tighter text-2xl font-black"
+                        colspan="6"
+                        data-slot="table-cell"
+                      >
+                        Decrypting Ledger...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -960,7 +942,9 @@ exports[`Direksi FinanceDashboard (snapshot) > renders sales orders + invoices t
         class="hidden md:flex items-center gap-3"
       >
         <button
-          class="inline-flex items-center justify-center gap-2 rounded-xl transition-all border hover:bg-slate-50 shadow-sm hover:shadow-md h-8 px-3 border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]"
+          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold uppercase tracking-tight text-[10px]"
+          data-slot="button"
+          tabindex="0"
           type="button"
         >
           <svg
@@ -1223,17 +1207,22 @@ exports[`Direksi FinanceDashboard (snapshot) > renders sales orders + invoices t
         class="grid grid-cols-1 lg:grid-cols-3 gap-6"
       >
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-3 border-gray-200 bg-white"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-3 border-gray-200 bg-white"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
             <div
               class="flex items-center justify-between"
             >
               <div>
-                <h3
-                  class="tracking-tight text-lg font-bold text-gray-900 flex items-center"
+                <div
+                  class="font-heading group-data-[size=sm]/card:text-sm text-lg font-bold text-gray-900 flex items-center"
+                  data-slot="card-title"
                 >
                   <svg
                     aria-hidden="true"
@@ -1265,151 +1254,181 @@ exports[`Direksi FinanceDashboard (snapshot) > renders sales orders + invoices t
                     />
                   </svg>
                    SALES ORDER MONITORING
-                </h3>
-                <p
-                  class="text-[12px] font-normal leading-relaxed text-zinc-500"
+                </div>
+                <div
+                  class="text-sm text-zinc-500"
+                  data-slot="card-description"
                 >
                   Real-time status of commercial contracts and factory locks.
-                </p>
+                </div>
               </div>
-              <span
-                class="inline-flex items-center gap-1.5 font-black uppercase rounded-lg px-3 py-1 border shadow-sm bg-slate-50 border-gray-200 text-zinc-500 text-[10px] font-sans"
+              <div
+                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 font-black uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-gray-200 text-zinc-500 text-[10px] font-sans"
+                role="status"
               >
                 2
                  CONTRACTS
-              </span>
+              </div>
             </div>
           </div>
           <div
-            class="p-5"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3"
+            data-slot="card-content"
           >
             <div
               class="rounded-md border border-gray-200 overflow-hidden bg-gray-50"
             >
-              <table
-                class="w-full text-left border-collapse"
+              <div
+                class="relative w-full overflow-x-auto"
+                data-slot="table-container"
               >
-                <thead
-                  class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-gray-50"
+                <table
+                  class="w-full caption-bottom text-sm"
+                  data-slot="table"
                 >
-                  <tr
-                    class="dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200 hover:bg-transparent"
+                  <thead
+                    class="[&_tr]:border-b bg-gray-50"
+                    data-slot="table-header"
                   >
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
+                    <tr
+                      class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-transparent"
+                      data-slot="table-row"
                     >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          SO ID
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        SO ID
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Client Entity
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Client Entity
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Transaction Value
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Transaction Value
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Operational Gate
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-zinc-500 font-sans text-[10px] uppercase text-center"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Operational Gate
+                      </th>
+                      <th
+                        class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-zinc-500 font-sans text-[10px] uppercase text-center"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Invoice Matrix
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none text-right text-zinc-500 font-sans text-[10px] uppercase"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Invoice Matrix
+                      </th>
+                      <th
+                        class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right text-zinc-500 font-sans text-[10px] uppercase"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Command
-                        </span>
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-                >
-                  <tr
-                    class="dark:hover:bg-slate-800/40 h-[42px] border-gray-200 hover:bg-gray-50 transition-colors group"
+                        Command
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="[&_tr:last-child]:border-0"
+                    data-slot="table-body"
                   >
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 font-medium font-sans text-xs text-gray-900 group-hover:text-emerald-400"
+                    <tr
+                      class="border-b has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-gray-50 transition-colors group"
+                      data-slot="table-row"
                     >
-                      SO
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <p
-                        class="text-sm font-bold text-gray-900 uppercase tracking-tight"
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-xs text-gray-900 group-hover:text-emerald-400"
+                        data-slot="table-cell"
                       >
-                        PT NEX KOSMETIK
-                      </p>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 font-medium font-sans text-sm text-gray-900"
-                    >
-                      IDR 
-                      250.000.000
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <span
-                        class="inline-flex items-center gap-1.5 font-black uppercase shadow-sm font-sans text-[10px] px-2 py-0.5 rounded-none border bg-amber-500/10 text-amber-500 border-amber-500/50"
+                        SO
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
                       >
-                        PENDING_DP
-                      </span>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <div
-                        class="flex gap-2 justify-center flex-wrap"
+                        <p
+                          class="text-sm font-bold text-gray-900 uppercase tracking-tight"
+                        >
+                          PT NEX KOSMETIK
+                        </p>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-sm text-gray-900"
+                        data-slot="table-cell"
+                      >
+                        IDR 
+                        250.000.000
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
+                      >
+                        <div
+                          class="inline-flex items-center font-black uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-sans text-[10px] px-2 py-0.5 rounded-none border bg-amber-500/10 text-amber-500 border-amber-500/50"
+                          role="status"
+                        >
+                          PENDING_DP
+                        </div>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
+                      >
+                        <div
+                          class="flex gap-2 justify-center flex-wrap"
+                        >
+                          <button
+                            class="text-[9px] px-2 py-1 rounded-sm font-black uppercase transition-all hover:scale-110 flex items-center gap-1 bg-red-500/10 text-red-500 border border-red-500/20"
+                          >
+                            <svg
+                              aria-hidden="true"
+                              class="lucide lucide-credit-card h-2 w-2"
+                              fill="none"
+                              height="24"
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <rect
+                                height="14"
+                                rx="2"
+                                width="20"
+                                x="2"
+                                y="5"
+                              />
+                              <line
+                                x1="2"
+                                x2="22"
+                                y1="10"
+                                y2="10"
+                              />
+                            </svg>
+                            DP
+                             
+                          </button>
+                        </div>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right"
+                        data-slot="table-cell"
                       >
                         <button
-                          class="text-[9px] px-2 py-1 rounded-sm font-black uppercase transition-all hover:scale-110 flex items-center gap-1 bg-red-500/10 text-red-500 border border-red-500/20"
+                          class="group/button inline-flex shrink-0 items-center justify-center bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 h-8 border border-transparent hover:border-gray-200 hover:bg-gray-50 text-emerald-500"
+                          data-slot="button"
+                          tabindex="0"
+                          type="button"
                         >
                           <svg
                             aria-hidden="true"
-                            class="lucide lucide-credit-card h-2 w-2"
+                            class="lucide lucide-circle-plus mr-2 h-4 w-4"
                             fill="none"
                             height="24"
                             stroke="currentColor"
@@ -1420,109 +1439,120 @@ exports[`Direksi FinanceDashboard (snapshot) > renders sales orders + invoices t
                             width="24"
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            <rect
-                              height="14"
-                              rx="2"
-                              width="20"
-                              x="2"
-                              y="5"
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
                             />
-                            <line
-                              x1="2"
-                              x2="22"
-                              y1="10"
-                              y2="10"
+                            <path
+                              d="M8 12h8"
+                            />
+                            <path
+                              d="M12 8v8"
                             />
                           </svg>
-                          DP
-                           
+                          <span
+                            class="text-[10px] font-bold uppercase tracking-tight"
+                          >
+                            Invoice
+                          </span>
                         </button>
-                      </div>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium text-right"
+                      </td>
+                    </tr>
+                    <tr
+                      class="border-b has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-gray-50 transition-colors group"
+                      data-slot="table-row"
                     >
-                      <button
-                        class="inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all bg-slate-50 hover:text-white shadow-none px-4 text-[10px] h-8 border border-transparent hover:border-gray-200 hover:bg-gray-50 text-emerald-500"
-                        type="button"
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-xs text-gray-900 group-hover:text-emerald-400"
+                        data-slot="table-cell"
                       >
-                        <svg
-                          aria-hidden="true"
-                          class="lucide lucide-circle-plus mr-2 h-4 w-4"
-                          fill="none"
-                          height="24"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          xmlns="http://www.w3.org/2000/svg"
+                        SO
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
+                      >
+                        <p
+                          class="text-sm font-bold text-gray-900 uppercase tracking-tight"
                         >
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="10"
-                          />
-                          <path
-                            d="M8 12h8"
-                          />
-                          <path
-                            d="M12 8v8"
-                          />
-                        </svg>
-                        <span
-                          class="text-[10px] font-bold uppercase tracking-tight"
+                          CV BEAUTY MANDIRI
+                        </p>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-sm text-gray-900"
+                        data-slot="table-cell"
+                      >
+                        IDR 
+                        480.000.000
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
+                      >
+                        <div
+                          class="inline-flex items-center font-black uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-sans text-[10px] px-2 py-0.5 rounded-none border bg-emerald-500/10 text-emerald-500 border-emerald-500/50"
+                          role="status"
                         >
-                          Invoice
-                        </span>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr
-                    class="dark:hover:bg-slate-800/40 h-[42px] border-gray-200 hover:bg-gray-50 transition-colors group"
-                  >
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 font-medium font-sans text-xs text-gray-900 group-hover:text-emerald-400"
-                    >
-                      SO
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <p
-                        class="text-sm font-bold text-gray-900 uppercase tracking-tight"
+                          ACTIVE
+                        </div>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
                       >
-                        CV BEAUTY MANDIRI
-                      </p>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 font-medium font-sans text-sm text-gray-900"
-                    >
-                      IDR 
-                      480.000.000
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <span
-                        class="inline-flex items-center gap-1.5 font-black uppercase shadow-sm font-sans text-[10px] px-2 py-0.5 rounded-none border bg-emerald-500/10 text-emerald-500 border-emerald-500/50"
-                      >
-                        ACTIVE
-                      </span>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <div
-                        class="flex gap-2 justify-center flex-wrap"
+                        <div
+                          class="flex gap-2 justify-center flex-wrap"
+                        >
+                          <button
+                            class="text-[9px] px-2 py-1 rounded-sm font-black uppercase transition-all hover:scale-110 flex items-center gap-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                          >
+                            <svg
+                              aria-hidden="true"
+                              class="lucide lucide-credit-card h-2 w-2"
+                              fill="none"
+                              height="24"
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <rect
+                                height="14"
+                                rx="2"
+                                width="20"
+                                x="2"
+                                y="5"
+                              />
+                              <line
+                                x1="2"
+                                x2="22"
+                                y1="10"
+                                y2="10"
+                              />
+                            </svg>
+                            FINAL_PAYMENT
+                             
+                            ✓
+                          </button>
+                        </div>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right"
+                        data-slot="table-cell"
                       >
                         <button
-                          class="text-[9px] px-2 py-1 rounded-sm font-black uppercase transition-all hover:scale-110 flex items-center gap-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                          class="group/button inline-flex shrink-0 items-center justify-center bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 h-8 border border-transparent hover:border-gray-200 hover:bg-gray-50 text-emerald-500"
+                          data-slot="button"
+                          tabindex="0"
+                          type="button"
                         >
                           <svg
                             aria-hidden="true"
-                            class="lucide lucide-credit-card h-2 w-2"
+                            class="lucide lucide-circle-plus mr-2 h-4 w-4"
                             fill="none"
                             height="24"
                             stroke="currentColor"
@@ -1533,68 +1563,29 @@ exports[`Direksi FinanceDashboard (snapshot) > renders sales orders + invoices t
                             width="24"
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            <rect
-                              height="14"
-                              rx="2"
-                              width="20"
-                              x="2"
-                              y="5"
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
                             />
-                            <line
-                              x1="2"
-                              x2="22"
-                              y1="10"
-                              y2="10"
+                            <path
+                              d="M8 12h8"
+                            />
+                            <path
+                              d="M12 8v8"
                             />
                           </svg>
-                          FINAL_PAYMENT
-                           
-                          ✓
+                          <span
+                            class="text-[10px] font-bold uppercase tracking-tight"
+                          >
+                            Invoice
+                          </span>
                         </button>
-                      </div>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium text-right"
-                    >
-                      <button
-                        class="inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all bg-slate-50 hover:text-white shadow-none px-4 text-[10px] h-8 border border-transparent hover:border-gray-200 hover:bg-gray-50 text-emerald-500"
-                        type="button"
-                      >
-                        <svg
-                          aria-hidden="true"
-                          class="lucide lucide-circle-plus mr-2 h-4 w-4"
-                          fill="none"
-                          height="24"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="10"
-                          />
-                          <path
-                            d="M8 12h8"
-                          />
-                          <path
-                            d="M12 8v8"
-                          />
-                        </svg>
-                        <span
-                          class="text-[10px] font-bold uppercase tracking-tight"
-                        >
-                          Invoice
-                        </span>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
