@@ -2308,6 +2308,9 @@ export class FinanceService {
 
   // Item 54: Calculate payable amount for a PO - only qtyBagus counts
   // payableAmount = sum(qtyBagus * hargaSatuan) - discountManual - discountRounding + shippingCost
+  // ponytail: when no inbound QC has happened yet, qtyBagus is 0 → payable is 0
+  // until QC integration populates it. This is intentional: never pay for goods
+  // not yet QC-confirmed as Bagus.
   async calculatePayable(poId: string): Promise<{
     payableAmount: number;
     breakdown: {
@@ -2332,16 +2335,16 @@ export class FinanceService {
     const shippingCost = po.shippingCost || 0;
 
     let subtotal = 0;
-    const rejectAmount = 0;
+    let rejectAmount = 0;
 
-    // For each PO item, we would ideally have qtyBagus/qtyReject from inbound QC
-    // Since those fields don't exist on POItem yet, we use quantity as proxy
-    // and note that this should be updated when QC confirmation happens
     for (const item of po.items) {
-      const itemTotal = Number(item.quantity) * Number(item.unitPrice);
-      // TODO: When qtyBagus/qtyReject fields are added to POItem/inbound QC integration,
-      // replace item.quantity with actual qtyBagus from QC-confirmed inbound
+      // Use qtyBagus when populated by inbound QC; fall back to quantity when QC
+      // hasn't happened yet (so POs in transit still show full value).
+      const qty = Number(item.qtyBagus) > 0 ? Number(item.qtyBagus) : Number(item.quantity);
+      const itemTotal = qty * Number(item.unitPrice);
+      const rejectTotal = Number(item.qtyReject) * Number(item.unitPrice);
       subtotal += itemTotal;
+      rejectAmount += rejectTotal;
     }
 
     const payableAmount =

@@ -231,6 +231,10 @@ model PurchaseOrderItem {
   unitPrice   Decimal       @db.Decimal(15, 2)
   totalPrice  Decimal       @db.Decimal(15, 2)
   receivedQty Decimal       @default(0) @db.Decimal(15, 2)
+  // 3-pilar gudang: qtyBagus counts toward payable, qtyReject does not.
+  // Set by inbound QC integration (see finance.service calculatePayableAmount).
+  qtyBagus    Decimal       @default(0) @db.Decimal(15, 3)
+  qtyReject   Decimal       @default(0) @db.Decimal(15, 3)
   taxId       String?       @db.Uuid
   source      String        @default("PO")
   qtyRounded  Float?
