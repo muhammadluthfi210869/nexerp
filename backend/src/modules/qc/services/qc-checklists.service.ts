@@ -1,6 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
+// Legacy §3: 9-kategori kronologis per SO Checklist.
+// Order matters — Box → Label → Desain → Formula → BPOM → Mixing →
+// Filling → Packing → Delivery reflects the production lifecycle.
+// ponytail: enum-like. Trade-off: hardcoded list (no DB-level category
+// table) means changing the sequence needs a deploy. Acceptable since
+// the sequence is a regulatory workflow, not a user-configurable setting.
+export const CHECKLIST_CATEGORIES = [
+  { id: 'BOX', label: 'Box / Kemasan', order: 1, gate: 'G1' },
+  { id: 'LABEL', label: 'Label / Stiker', order: 2, gate: 'G1' },
+  { id: 'DESAIN', label: 'Desain / Artwork', order: 3, gate: 'G1' },
+  { id: 'FORMULA', label: 'Formula / Komposisi', order: 4, gate: 'G1' },
+  { id: 'BPOM', label: 'BPOM / Regulasi', order: 5, gate: 'G2' },
+  { id: 'MIXING', label: 'Mixing (Ruahan)', order: 6, gate: 'G2' },
+  { id: 'FILLING', label: 'Filling (Primer)', order: 7, gate: 'G2' },
+  { id: 'PACKING', label: 'Packing (Sekunder)', order: 8, gate: 'G3' },
+  { id: 'DELIVERY', label: 'Delivery / DO', order: 9, gate: 'G3' },
+] as const;
+
 @Injectable()
 export class QCChecklistsService {
   constructor(private prisma: PrismaService) {}
@@ -51,20 +69,35 @@ export class QCChecklistsService {
     dto: {
       title: string;
       workOrderId?: string;
-      items: { label: string; isRequired?: boolean }[];
+      salesOrderId?: string;
+      items?: { label: string; isRequired?: boolean }[];
     },
   ) {
-    const items = dto.items.map((item, idx) => ({
-      id: `ITEM-${idx + 1}`,
-      label: item.label,
-      isRequired: item.isRequired ?? false,
-      checked: false,
-    }));
+    // Legacy: 1 SO = 1 Checklist. If salesOrderId given and no custom items,
+    // default to the 9-kategori kronologis (Box→Label→...→Delivery).
+    const useLegacyCategories =
+      dto.salesOrderId && (!dto.items || dto.items.length === 0);
+    const items = useLegacyCategories
+      ? CHECKLIST_CATEGORIES.map((cat) => ({
+          id: cat.id,
+          label: cat.label,
+          order: cat.order,
+          gate: cat.gate,
+          isRequired: true,
+          checked: false,
+        }))
+      : (dto.items ?? []).map((item, idx) => ({
+          id: `ITEM-${idx + 1}`,
+          label: item.label,
+          isRequired: item.isRequired ?? false,
+          checked: false,
+        }));
 
     return this.prisma.qCChecklist.create({
       data: {
         title: dto.title,
         workOrderId: dto.workOrderId,
+        salesOrderId: dto.salesOrderId,
         createdById: userId,
         status: 'PENDING',
         items,
