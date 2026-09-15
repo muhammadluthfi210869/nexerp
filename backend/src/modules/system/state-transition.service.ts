@@ -210,11 +210,16 @@ export class StateTransitionService {
       overridePin?: string; // SUPER_ADMIN PIN for emergency override
     },
   ): Promise<void> {
-    // 1. Validate the transition
-    this.validateTransition(entityType, fromState, toState);
-
-    // 2. Check if gate-controlled
+    // 1. Check if gate-controlled first — gate transitions are pre-authorized
+    //    via Finance verification (overridePin) so we skip normal validation.
     const gateInfo = this.getGateInfo(entityType, fromState, toState);
+
+    // 2. Validate the transition (skip if gate-controlled — Finance verified)
+    if (!gateInfo) {
+      this.validateTransition(entityType, fromState, toState);
+    }
+
+    // 3. Gate enforcement
     if (gateInfo) {
       if (!options?.overridePin) {
         throw new ForbiddenException(

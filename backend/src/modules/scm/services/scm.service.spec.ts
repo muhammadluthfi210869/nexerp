@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ScmService } from './scm.service';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
@@ -8,6 +9,10 @@ describe('ScmService', () => {
 
   const mockIdGeneratorService = {
     generateId: jest.fn().mockResolvedValue('PO-AUTO-TEST-001'),
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn(),
   };
 
   const mockPrismaService: Record<string, any> = {
@@ -43,6 +48,7 @@ describe('ScmService', () => {
         ScmService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: IdGeneratorService, useValue: mockIdGeneratorService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 

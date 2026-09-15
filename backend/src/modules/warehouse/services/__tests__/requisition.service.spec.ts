@@ -82,6 +82,10 @@ describe('RequisitionService', () => {
         ...FAKE_REQ,
         status: 'APPROVED',
       });
+      prismaMock.materialRequisitionHeader.update.mockResolvedValueOnce({
+        ...FAKE_REQ,
+        status: 'FULFILLED',
+      });
       const result = await service.updateStatus('req-1', { status: 'FULFILLED' });
       expect((result as any).status).toBe('FULFILLED');
     });
