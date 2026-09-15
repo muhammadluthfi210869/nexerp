@@ -7,6 +7,8 @@ import {
   Activity,
   ShieldAlert,
   BarChart3,
+  Percent,
+  Ruler,
   Beaker,
   Layers,
   Factory,
@@ -517,6 +519,8 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Pelanggan / Customer", href: "/master/customers", icon: Users },
       { name: "Gudang & Lokasi", href: "/master/warehouses", icon: Warehouse },
       { name: "Pengguna & Personel", href: "/master/personnel", icon: UserCog },
+      { name: "Tarif Pajak", href: "/master/tax-rates", icon: Percent },
+      { name: "Satuan (UoM)", href: "/master/units", icon: Ruler },
       { name: "Chart of Accounts (CoA)", href: "/finance/accounting/coa", icon: FileSpreadsheet },
     ]
   },

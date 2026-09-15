@@ -96,7 +96,10 @@ async function main() {
         name: u.fullName,
         role: roleName,
         email: u.email,
-        department: 'DIGIMAR',
+        // ponytail: must be in CanonicalMarketingService.listMembers allow-list
+        // (['Digital Marketing','Digital Strategy','Social Media','Design & Visual','Production']).
+        // Using 'DIGIMAR' (the role enum name) returns [] on /marketing/members.
+        department: 'Digital Marketing',
         avatarBg: '#1f2937',
         initial: initials,
         isActive: true,
@@ -104,7 +107,7 @@ async function main() {
       update: {
         name: u.fullName,
         role: roleName,
-        department: 'DIGIMAR',
+        department: 'Digital Marketing',
         initial: initials,
         isActive: true,
       },

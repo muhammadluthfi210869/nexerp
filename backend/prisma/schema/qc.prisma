@@ -91,6 +91,8 @@ model RejectExecution {
 model QCChecklist {
   id             String   @id @default(uuid()) @db.Uuid
   title          String
+  // Legacy §3: 1 SO = 1 Checklist. salesOrderId ties checklist to the SO.
+  salesOrderId   String?  @db.Uuid
   workOrderId    String?  @db.Uuid
   createdById    String   @db.Uuid
   status         String   @default("PENDING")
@@ -104,6 +106,7 @@ model QCChecklist {
 
   @@index([status])
   @@index([createdById])
+  @@index([salesOrderId])
   @@map("qc_checklists")
 }
 
