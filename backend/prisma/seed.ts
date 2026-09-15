@@ -65,22 +65,23 @@ async function main() {
   console.log('🌱 FASE 5: Auto-populating marketing_team_members from DIGIMAR users...');
   // ponytail: minimal — 1 row per DIGIMAR user, idempotent on email.
   // UI MemberCardsGrid butuh roster; auto-upsert dari personnel.
+  // NOTE: Prisma relation field is `roles` (per hr.prisma:43), not `roleMappings`.
   const digimarEmployees = await prisma.employee.findMany({
     where: {
       isActive: true,
-      roleMappings: {
+      roles: {
         some: { division: Division.CREATIVE, isPrimary: true },
       },
     },
     include: {
       user: { select: { id: true, fullName: true, email: true } },
-      roleMappings: { where: { isPrimary: true }, take: 1 },
+      roles: { where: { isPrimary: true }, take: 1 },
     },
   });
   for (const emp of digimarEmployees) {
     const u = emp.user;
     if (!u) continue;
-    const roleName = emp.roleMappings[0]?.roleName ?? 'DIGIMAR';
+    const roleName = emp.roles[0]?.roleName ?? 'DIGIMAR';
     const initials = u.fullName
       .split(/\s+/)
       .filter(Boolean)

@@ -65,9 +65,8 @@ if grep -nE '^\s*exit\s+1\s*$' "$SCRIPT" | grep -A1 'db push'; then
 fi
 
 # 5. Final exec must be present so the script actually starts NestJS after sync logic
-# ponytail: nest build outputs to dist/src/main.js (Nest convention), not dist/main.js
-if ! grep -qE 'exec node dist/src/main' "$SCRIPT"; then
-  echo "❌ $SCRIPT does not exec node dist/src/main (app won't start)"
+if ! grep -qE 'exec node dist/main' "$SCRIPT"; then
+  echo "❌ $SCRIPT does not exec node dist/main (app won't start)"
   exit 1
 fi
 
