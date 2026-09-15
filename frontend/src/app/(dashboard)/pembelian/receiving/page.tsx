@@ -54,14 +54,32 @@ export default function ReceivingPage() {
     queryKey: ["goods-receipts"],
     queryFn: async () => {
       const res = await api.get("/scm/inbounds");
-      return (unwrapResponse(res) || []).map((grn: any) => ({
-        id: grn.inboundNumber || grn.id,
-        poId: grn.po?.poNumber || grn.poId || '-',
-        vendor: grn.po?.supplier?.name || '-',
-        date: grn.receivedAt ? new Date(grn.receivedAt).toISOString().split('T')[0] : '-',
-        status: grn.status === 'APPROVED' ? 'VERIFIED' : 'PENDING',
-        qc: grn.status === 'APPROVED' ? 'PASSED' : 'WAITING',
-      }));
+      // 3-pilar gudang: aggregate qtyBagus/qtyReject/qtyFree from inbound items.
+      // Bagus = QC GOOD, Reject = QC REJECT, Free = QUARANTINE (in transit).
+      const toNum = (v: any) => Number(v ?? 0);
+      return (unwrapResponse(res) || []).map((grn: any) => {
+        const items = grn.items || [];
+        let qtyBagus = 0, qtyReject = 0, qtyFree = 0;
+        for (const it of items) {
+          const q = toNum(it.qtyActual);
+          if (it.qcStatus === 'GOOD') qtyBagus += q;
+          else if (it.qcStatus === 'REJECT') qtyReject += q;
+          else qtyFree += q;
+        }
+        const hasItems = items.length > 0;
+        return {
+          id: grn.inboundNumber || grn.id,
+          poId: grn.po?.poNumber || grn.poId || '-',
+          vendor: grn.po?.supplier?.name || '-',
+          date: grn.receivedAt ? new Date(grn.receivedAt).toISOString().split('T')[0] : '-',
+          status: grn.status === 'APPROVED' ? 'VERIFIED' : 'PENDING',
+          qc: grn.status === 'APPROVED' ? 'PASSED' : 'WAITING',
+          qtyBagus,
+          qtyReject,
+          qtyFree,
+          hasItems,
+        };
+      });
     }
   });
 
@@ -117,6 +135,7 @@ export default function ReceivingPage() {
               <th className="p-3.5">ID GRN</th>
               <th className="p-3.5">PO Asal</th>
               <th className="p-3.5">Pemasok</th>
+              <th className="p-3.5 text-center">3-Pilar Gudang<br/><span className="text-[9px] font-medium text-slate-400">(Bagus / Reject / Free)</span></th>
               <th className="p-3.5 text-center">Status QC</th>
               <th className="p-3.5 text-center">Siklus</th>
               <th className="p-3.5 text-right">Verifikasi</th>
@@ -125,7 +144,7 @@ export default function ReceivingPage() {
           <tbody className="divide-y divide-slate-100">
             {!isLoading && (!receipts || receipts.length === 0) ? (
               <tr>
-                <td colSpan={6} className="p-6">
+                <td colSpan={7} className="p-6">
                   <EmptyState
                     icon={<PackageCheck className="h-8 w-8 text-slate-300" />}
                     title="Belum Ada Penerimaan"
@@ -153,6 +172,23 @@ export default function ReceivingPage() {
                 </td>
                 <td className="p-3.5"><DnaCell.Text primary={receipt.poId} /></td>
                 <td className="p-3.5"><DnaCell.Text primary={receipt.vendor} /></td>
+                <td className="p-3.5 text-center">
+                  {receipt.hasItems ? (
+                    <div className="flex items-center justify-center gap-2 text-[11px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        <ShieldCheck className="h-3 w-3" /> {receipt.qtyBagus}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-100">
+                        <AlertTriangle className="h-3 w-3" /> {receipt.qtyReject}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100">
+                        <FileSearch className="h-3 w-3" /> {receipt.qtyFree}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-slate-400">—</span>
+                  )}
+                </td>
                 <td className="p-3.5 text-center">
                   <DnaBadge status={
                     receipt.qc === 'PASSED' ? 'success' :
