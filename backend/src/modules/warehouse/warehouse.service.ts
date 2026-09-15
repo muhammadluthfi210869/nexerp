@@ -1431,6 +1431,19 @@ export class WarehouseService {
         });
       }
 
+      // Sum qtyBagus / qtyReject from inbound items per material for PO update
+      const qtyByMaterial = new Map<string, { bagus: number; reject: number }>();
+      for (const item of inbound.items) {
+        const isReject = item.qcStatus === 'REJECT';
+        const good = isReject ? 0 : Number(item.qtyActual);
+        const reject = isReject ? Number(item.qtyActual) : 0;
+        const cur = qtyByMaterial.get(item.materialId) ?? { bagus: 0, reject: 0 };
+        qtyByMaterial.set(item.materialId, {
+          bagus: cur.bagus + good,
+          reject: cur.reject + reject,
+        });
+      }
+
       for (const item of inbound.items) {
         await tx.materialInventory.create({
           data: {
@@ -1448,6 +1461,24 @@ export class WarehouseService {
           where: { id: item.materialId },
           data: { stockQty: { increment: item.qtyActual } },
         });
+      }
+
+      // 3-pilar gudang integration: populate POItem.qtyBagus/qtyReject from
+      // released inbound. This drives finance.calculatePayable() so supplier
+      // payable only counts goods QC-confirmed as Bagus.
+      // ponytail: simple aggregate — assumes inbound item materialId maps to
+      // exactly one POItem. If a single inbound can partially fill multiple
+      // POs (split deliveries), this needs POItem lookup by poId+materialId.
+      if (inbound.poId) {
+        for (const [materialId, qty] of qtyByMaterial) {
+          await tx.purchaseOrderItem.updateMany({
+            where: { poId: inbound.poId, materialId },
+            data: {
+              qtyBagus: { increment: qty.bagus },
+              qtyReject: { increment: qty.reject },
+            },
+          });
+        }
       }
 
       const updated = await tx.warehouseInbound.update({
