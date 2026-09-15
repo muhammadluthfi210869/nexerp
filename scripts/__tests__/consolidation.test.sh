@@ -70,8 +70,14 @@ grep -q -- "--print" backend/init-db.sh \
 
 # ── 4. Halaman marketing hasil recovery + fix produksi ──
 MT="frontend/src/app/(dashboard)/marketing/management-task"
-[ -f "$MT/ManagementTaskBoard.tsx" ] && ok "ManagementTaskBoard (bugfix light: dup-prevention, SLA)" || bad "ManagementTaskBoard hilang"
-[ -f "$MT/TaskWorkspaceV2.tsx" ] && ok "TaskWorkspaceV2 + components (recovery b73a514)" || bad "TaskWorkspaceV2 hilang"
+# ponytail: ManagementTaskBoard.tsx dihapus pada branch fix/mgmt-task-production-ready
+# (full cleanup; hanya TaskWorkspaceV2 yang aktif). Test ini mengunci NEGATIF-nya.
+if [ -f "$MT/ManagementTaskBoard.tsx" ]; then
+  bad "ManagementTaskBoard.tsx masih ada (dead code — dihapus pada full-cleanup)"
+else
+  ok "ManagementTaskBoard.tsx dihapus sesuai full-cleanup (canonical-only)"
+fi
+[ -f "$MT/TaskWorkspaceV2.tsx" ] && ok "TaskWorkspaceV2 + components (canonical workspace)" || bad "TaskWorkspaceV2 hilang"
 [ -f "$MT/components/TaskDetailModal.tsx" ] && ok "TaskDetailModal (attachment ala Notion)" || bad "TaskDetailModal hilang"
 [ -f "frontend/src/app/(dashboard)/samples/lead-capture/LeadCaptureDashboard.tsx" ] \
   && ok "lead-capture (WA tracking Fase 2-4) ada di /samples/" || bad "lead-capture hilang"
