@@ -72,12 +72,12 @@ export class NotificationService {
 
   async sendWhatsApp(to: string, message: string) {
     // TODO: Integrate with Fonnte / Twilio / WABlas
-    this.logger.log(`[WA] Sending to ${to}: ${message}`);
+    this.logger.warn(`[WA STUB] Not actually sent — to=${to} msg=${message.slice(0, 80)}`);
   }
 
   async sendEmail(to: string, subject: string, body: string) {
     // TODO: Integrate with Nodemailer / SendGrid
-    this.logger.log(`[EMAIL] Sending to ${to} | Subject: ${subject}`);
+    this.logger.warn(`[EMAIL STUB] Not actually sent — to=${to} subject=${subject} body=${body.slice(0, 80)}`);
   }
 
   // --- EVENT LISTENERS ---
