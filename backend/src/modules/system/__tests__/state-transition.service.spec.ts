@@ -10,7 +10,10 @@ describe('StateTransitionService', () => {
 
   beforeEach(() => {
     prismaMock = {
-      stateTransitionLog: { create: jest.fn().mockResolvedValue({ id: 'log-1' }) },
+      stateTransitionLog: {
+        create: jest.fn().mockResolvedValue({ id: 'log-1' }),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
       systemOverrideLog: { create: jest.fn().mockResolvedValue({ id: 'ovr-1' }) },
       user: { findMany: jest.fn().mockResolvedValue([]) },
     };
