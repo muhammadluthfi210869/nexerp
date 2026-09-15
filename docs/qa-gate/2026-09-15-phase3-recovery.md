@@ -69,9 +69,24 @@ Will run after CI green + merge + deploy per `docs/RUNBOOK-DEPLOY-NEXERP-V2.md`:
 - `curl https://nexerp.id/samples/omni-crm` → expect HTML with OmniCrmClient
 - `curl https://nexerp.id/api/v1/health` → expect 200
 
-## C6 — Rollback readiness
+## C5 — Manual smoke ✅ PASS (2026-09-15)
 
-- Image will be tagged per-SHA in GHCR (`ghcr.io/muhammadluthfi210869/nexerp/{backend,frontend}:<sha>`)
+- `bash scripts/test-deploy.sh https://nexerp.id/api` → **6/6 PASS**
+  - Health: ✅
+  - CORS: ✅
+  - Login: ✅ (admin@dreamlab.com)
+  - Protected endpoint auth guard: ✅
+  - 401 unauthenticated: ✅
+  - API root: ✅
+- `curl -sI https://nexerp.id/marketing/omnicrm` → 307 redirect to `/login?redirect=/marketing/omnicrm` (auth-protected as expected, route REGISTERED ✓)
+- `curl -sI https://nexerp.id/marketing/management-task` → 307 redirect (route REGISTERED ✓)
+- `curl -sI https://nexerp.id/marketing/reports/dreamlab` → 307 redirect (route REGISTERED ✓)
+
+Production stack: backend + frontend running with new images (8 min uptime), nginx OK, db healthy.
+
+## C6 — Rollback readiness ✅ READY
+
+- Image tagged per-SHA in GHCR: `ghcr.io/muhammadluthfi210869/nexerp/{backend,frontend}:ded372e51738fcc393c468514f597c67569723d6`
 - `scripts/rollback.sh <sha-lama>` available — drill 2026-09-14: 3.1s end-to-end
 - Pre-deploy DB snapshot auto-captured by `scripts/deploy.sh`
 
