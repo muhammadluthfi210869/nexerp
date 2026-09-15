@@ -39,14 +39,29 @@ api.interceptors.request.use((config) => {
 });
 
 // Response Interceptor: Handle 401 Unauthorized
+// Dedup window: 5 seconds. Multiple concurrent 401s only redirect once.
+// ponytail: simple timestamp-based dedup. Trade-off: clock skew across
+// tabs could let through 2 redirects in same window — fine since /login
+// is idempotent. Upgrade to BroadcastChannel if multi-tab dedup matters.
+const REDIRECT_DEDUP_MS = 5000;
+let lastRedirectAt = 0;
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      const onLogin = window.location.pathname === "/login";
+      const now = Date.now();
+      const withinDedupWindow = now - lastRedirectAt < REDIRECT_DEDUP_MS;
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // Clear auth cookie too (path=/ so all routes lose it)
+      document.cookie = "token=; path=/; max-age=0;";
+
+      if (!onLogin && !withinDedupWindow) {
+        lastRedirectAt = now;
+        window.location.replace("/login");
       }
     }
     return Promise.reject(error);

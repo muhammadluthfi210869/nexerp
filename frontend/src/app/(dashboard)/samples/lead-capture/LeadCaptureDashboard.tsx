@@ -9,6 +9,7 @@ import {
   DnaBadge,
   DnaButton,
   DnaInput,
+  DnaCheckbox,
   SectionLabel,
 } from "@/components/dna";
 import {
@@ -578,7 +579,7 @@ export default function LeadCaptureDashboard() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-50">
-                  <th className="p-4"><input type="checkbox" checked={selectedLeads.size === leads.length && leads.length > 0} onChange={toggleSelectAll} className="rounded" /></th>
+                  <th className="p-4"><DnaCheckbox checked={selectedLeads.size === leads.length && leads.length > 0} onChange={toggleSelectAll} /></th>
                   <th className="p-4 text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Tracking</th>
                   <th className="p-4 text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Info</th>
                   <th className="p-4 text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.1em]">Kontak</th>
@@ -603,7 +604,7 @@ export default function LeadCaptureDashboard() {
                     }}
                   >
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" checked={selectedLeads.has(lead.id)} onChange={() => toggleSelect(lead.id)} className="rounded" />
+                      <DnaCheckbox checked={selectedLeads.has(lead.id)} onChange={() => toggleSelect(lead.id)} />
                     </td>
                     <td className="p-4"><span className="font-mono text-[11px] font-bold text-slate-700">{lead.trackingCode}</span></td>
                     <td className="p-4">
@@ -1048,8 +1049,7 @@ function RoundRobinManager({ onClose }: { onClose: () => void }) {
           <DnaInput placeholder="Nomor WA (6281..)" value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
           <DnaInput placeholder="Urutan" type="number" value={String(form.orderIndex)} onChange={(e) => setForm({ ...form, orderIndex: Number(e.target.value) })} />
           <div className="flex items-center gap-2 px-1">
-            <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-            <span className="text-xs font-bold text-slate-600">Aktif</span>
+            <DnaCheckbox label="Aktif" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
           </div>
         </div>
         <DnaButton variant="primary" size="sm" onClick={save} className="w-full mb-4">Tambah / Simpan</DnaButton>

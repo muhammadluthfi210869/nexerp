@@ -36,6 +36,8 @@ const PERSONNEL: PersonnelSeed[] = [
   { email: 'revita@nexerp.id', fullName: 'Revita', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'DM Strategy', joinedAt: '05/03/2023', contractType: ContractType.CONTRACT, contractEnd: '05/03/2026' },
   { email: 'gusti@dreamlab.com', fullName: 'Gusti', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'Graphic Designer', joinedAt: '12/06/2023', contractType: ContractType.CONTRACT, contractEnd: '12/06/2024' },
   { email: 'zarkasi@dreamlab.com', fullName: 'Zarkasi', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'Video Editor', joinedAt: '01/08/2023', contractType: ContractType.CONTRACT, contractEnd: '01/08/2024' },
+  { email: 'rahmat@dreamlab.com', fullName: 'Rahmat', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'IS Manager', joinedAt: '01/01/2024', contractType: ContractType.PERMANENT },
+  { email: 'luthfi@dreamlab.com', fullName: 'Luthfi', roles: [UserRole.DIGIMAR], division: Division.CREATIVE, roleName: 'Design Logo & Packaging', joinedAt: '01/01/2024', contractType: ContractType.PERMANENT },
   // MARKETING & DEVELOPMENT
   { email: 'nisa@dreamlab.com', fullName: 'Nisa', roles: [UserRole.MARKETING], division: Division.BD, roleName: 'Marketing', joinedAt: '20/01/2022', contractType: ContractType.CONTRACT, contractEnd: '31/12/2024' },
   { email: 'diva@dreamlab.com', fullName: 'Diva', roles: [UserRole.MARKETING], division: Division.BD, roleName: 'Marketing', joinedAt: '22/01/2022', contractType: ContractType.CONTRACT, contractEnd: '31/12/2024' },

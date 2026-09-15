@@ -268,13 +268,18 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders empty state (no FG / 
         class="grid grid-cols-1 lg:grid-cols-3 gap-8"
       >
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-1 border-gray-200 bg-white h-fit"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-1 border-gray-200 bg-white h-fit"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
-            <h3
-              class="text-sm font-black text-gray-600 uppercase tracking-[0.2em] flex items-center"
+            <div
+              class="font-heading group-data-[size=sm]/card:text-sm text-sm font-black text-gray-600 uppercase tracking-[0.2em] flex items-center"
+              data-slot="card-title"
             >
               <svg
                 aria-hidden="true"
@@ -327,15 +332,17 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders empty state (no FG / 
                 />
               </svg>
                STOK BARANG JADI (FG)
-            </h3>
-            <p
+            </div>
+            <div
               class="text-[10px] uppercase font-bold text-zinc-600"
+              data-slot="card-description"
             >
               Post-production inventory ledger
-            </p>
+            </div>
           </div>
           <div
-            class="p-5 space-y-4"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3 space-y-4"
+            data-slot="card-content"
           >
             <div
               class="py-20 text-center opacity-20 bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center"
@@ -371,13 +378,18 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders empty state (no FG / 
           </div>
         </div>
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-2 border-gray-200 bg-white"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-2 border-gray-200 bg-white"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
-            <h3
-              class="text-lg font-bold text-gray-900 uppercase tracking-tighter flex items-center"
+            <div
+              class="font-heading group-data-[size=sm]/card:text-sm text-lg font-bold text-gray-900 uppercase tracking-tighter flex items-center"
+              data-slot="card-title"
             >
               <svg
                 aria-hidden="true"
@@ -413,71 +425,61 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders empty state (no FG / 
                 />
               </svg>
                ACTIVE SHIPMENT STREAM
-            </h3>
+            </div>
           </div>
           <div
-            class="p-5"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3"
+            data-slot="card-content"
           >
             <div
               class="rounded-xl border border-gray-200 overflow-hidden"
             >
-              <table
-                class="w-full text-left border-collapse"
+              <div
+                class="relative w-full overflow-x-auto"
+                data-slot="table-container"
               >
-                <thead
-                  class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-gray-50"
+                <table
+                  class="w-full caption-bottom text-sm"
+                  data-slot="table"
                 >
-                  <tr
-                    class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200"
+                  <thead
+                    class="[&_tr]:border-b bg-gray-50"
+                    data-slot="table-header"
                   >
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none font-sans text-[10px] uppercase text-zinc-500"
+                    <tr
+                      class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200"
+                      data-slot="table-row"
                     >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-[10px] uppercase text-zinc-500"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Surat Jalan
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none font-sans text-[10px] uppercase text-zinc-500"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Surat Jalan
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-[10px] uppercase text-zinc-500"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Destination
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none font-sans text-[10px] uppercase text-zinc-500"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Destination
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-[10px] uppercase text-zinc-500"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Status
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 select-none w-[150px]"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
-                      >
-                        <span />
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-                />
-              </table>
+                        Status
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0 w-[150px]"
+                        data-slot="table-head"
+                      />
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="[&_tr:last-child]:border-0"
+                    data-slot="table-body"
+                  />
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -755,13 +757,18 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders finished goods + ship
         class="grid grid-cols-1 lg:grid-cols-3 gap-8"
       >
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-1 border-gray-200 bg-white h-fit"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-1 border-gray-200 bg-white h-fit"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
-            <h3
-              class="text-sm font-black text-gray-600 uppercase tracking-[0.2em] flex items-center"
+            <div
+              class="font-heading group-data-[size=sm]/card:text-sm text-sm font-black text-gray-600 uppercase tracking-[0.2em] flex items-center"
+              data-slot="card-title"
             >
               <svg
                 aria-hidden="true"
@@ -814,15 +821,17 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders finished goods + ship
                 />
               </svg>
                STOK BARANG JADI (FG)
-            </h3>
-            <p
+            </div>
+            <div
               class="text-[10px] uppercase font-bold text-zinc-600"
+              data-slot="card-description"
             >
               Post-production inventory ledger
-            </p>
+            </div>
           </div>
           <div
-            class="p-5 space-y-4"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3 space-y-4"
+            data-slot="card-content"
           >
             <div
               class="py-20 text-center opacity-20 bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center"
@@ -858,13 +867,18 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders finished goods + ship
           </div>
         </div>
         <div
-          class="rounded-2xl border text-slate-900 shadow-sm lg:col-span-2 border-gray-200 bg-white"
+          class="group/card flex flex-col gap-4 overflow-hidden text-sm text-text-main border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:border-slate-300 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[--card-radius] *:[img:last-child]:rounded-b-[--card-radius] lg:col-span-2 border-gray-200 bg-white"
+          data-size="default"
+          data-slot="card"
+          style="border-radius: var(--card-radius); padding: var(--card-py) var(--card-px);"
         >
           <div
-            class="flex flex-col space-y-1.5 p-5 border-b border-slate-100 text-left"
+            class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-[--card-radius] px-[--card-px] group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3"
+            data-slot="card-header"
           >
-            <h3
-              class="text-lg font-bold text-gray-900 uppercase tracking-tighter flex items-center"
+            <div
+              class="font-heading group-data-[size=sm]/card:text-sm text-lg font-bold text-gray-900 uppercase tracking-tighter flex items-center"
+              data-slot="card-title"
             >
               <svg
                 aria-hidden="true"
@@ -900,154 +914,158 @@ exports[`Direksi FulfillmentDashboard (snapshot) > renders finished goods + ship
                 />
               </svg>
                ACTIVE SHIPMENT STREAM
-            </h3>
+            </div>
           </div>
           <div
-            class="p-5"
+            class="px-[--card-px] group-data-[size=sm]/card:px-3"
+            data-slot="card-content"
           >
             <div
               class="rounded-xl border border-gray-200 overflow-hidden"
             >
-              <table
-                class="w-full text-left border-collapse"
+              <div
+                class="relative w-full overflow-x-auto"
+                data-slot="table-container"
               >
-                <thead
-                  class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-gray-50"
+                <table
+                  class="w-full caption-bottom text-sm"
+                  data-slot="table"
                 >
-                  <tr
-                    class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200"
+                  <thead
+                    class="[&_tr]:border-b bg-gray-50"
+                    data-slot="table-header"
                   >
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none font-sans text-[10px] uppercase text-zinc-500"
+                    <tr
+                      class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200"
+                      data-slot="table-row"
                     >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-[10px] uppercase text-zinc-500"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Surat Jalan
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none font-sans text-[10px] uppercase text-zinc-500"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Surat Jalan
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-[10px] uppercase text-zinc-500"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Destination
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 font-bold tracking-wider dark:text-slate-300 select-none font-sans text-[10px] uppercase text-zinc-500"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
+                        Destination
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-[10px] uppercase text-zinc-500"
+                        data-slot="table-head"
                       >
-                        <span>
-                          Status
-                        </span>
-                      </div>
-                    </th>
-                    <th
-                      class="py-2.5 px-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 select-none w-[150px]"
-                    >
-                      <div
-                        class="inline-flex items-center gap-1.5 justify-start text-left"
-                      >
-                        <span />
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-                >
-                  <tr
-                    class="dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200 hover:bg-gray-50"
+                        Status
+                      </th>
+                      <th
+                        class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0 w-[150px]"
+                        data-slot="table-head"
+                      />
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="[&_tr:last-child]:border-0"
+                    data-slot="table-body"
                   >
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 font-sans text-xs font-black text-blue-400 uppercase"
+                    <tr
+                      class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-gray-50"
+                      data-slot="table-row"
                     >
-                      SHIP-001
-                    </td>
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 text-xs font-bold text-gray-900 uppercase"
-                    >
-                      PT NEX KOSMETIK
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 shadow-sm text-[9px] font-black uppercase rounded-none border bg-blue-500/10 text-blue-500 border-blue-500/30"
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-xs font-black text-blue-400 uppercase"
+                        data-slot="table-cell"
                       >
-                        PACKING
-                      </span>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium text-right"
-                    >
-                      <button
-                        class="inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all bg-white border text-slate-700 hover:bg-slate-50 shadow-sm hover:shadow-md px-3 text-[9px] h-7 border-gray-200"
-                        type="button"
+                        SHIP-001
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-xs font-bold text-gray-900 uppercase"
+                        data-slot="table-cell"
                       >
-                        SHIPPED
-                      </button>
-                    </td>
-                  </tr>
-                  <tr
-                    class="dark:hover:bg-slate-800/40 transition-colors h-[42px] border-gray-200 hover:bg-gray-50"
-                  >
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 font-sans text-xs font-black text-blue-400 uppercase"
-                    >
-                      SHIP-002
-                    </td>
-                    <td
-                      class="py-2 px-3.5 dark:text-slate-200 text-xs font-bold text-gray-900 uppercase"
-                    >
-                      CV BEAUTY MANDIRI
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium"
-                    >
-                      <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 shadow-sm text-[9px] font-black uppercase rounded-none border bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                        PT NEX KOSMETIK
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
                       >
-                        DELIVERED
-                      </span>
-                    </td>
-                    <td
-                      class="py-2 px-3.5 text-[12px] text-slate-800 dark:text-slate-200 font-medium text-right"
-                    >
-                      <svg
-                        aria-hidden="true"
-                        class="lucide lucide-circle-check h-5 w-5 text-emerald-500 ml-auto"
-                        fill="none"
-                        height="24"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        xmlns="http://www.w3.org/2000/svg"
+                        <div
+                          class="inline-flex items-center px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-primary/80 text-[9px] font-black uppercase rounded-none border bg-blue-500/10 text-blue-500 border-blue-500/30"
+                          role="status"
+                        >
+                          PACKING
+                        </div>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right"
+                        data-slot="table-cell"
                       >
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                        />
-                        <path
-                          d="m9 12 2 2 4-4"
-                        />
-                      </svg>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                        <button
+                          class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 text-[9px] h-7 border-gray-200"
+                          data-slot="button"
+                          tabindex="0"
+                          type="button"
+                        >
+                          SHIPPED
+                        </button>
+                      </td>
+                    </tr>
+                    <tr
+                      class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-gray-200 hover:bg-gray-50"
+                      data-slot="table-row"
+                    >
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 font-sans text-xs font-black text-blue-400 uppercase"
+                        data-slot="table-cell"
+                      >
+                        SHIP-002
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-xs font-bold text-gray-900 uppercase"
+                        data-slot="table-cell"
+                      >
+                        CV BEAUTY MANDIRI
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0"
+                        data-slot="table-cell"
+                      >
+                        <div
+                          class="inline-flex items-center px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-primary/80 text-[9px] font-black uppercase rounded-none border bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                          role="status"
+                        >
+                          DELIVERED
+                        </div>
+                      </td>
+                      <td
+                        class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right"
+                        data-slot="table-cell"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          class="lucide lucide-circle-check h-5 w-5 text-emerald-500 ml-auto"
+                          fill="none"
+                          height="24"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                          />
+                          <path
+                            d="m9 12 2 2 4-4"
+                          />
+                        </svg>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

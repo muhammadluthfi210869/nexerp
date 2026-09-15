@@ -203,10 +203,27 @@ export class SocialPlannerService {
         current.metaPermalink,
       ),
     });
-    const updatePayload = this.toPersistencePayload(data);
-    updatePayload.canonicalStatus = canonicalStatus;
-    updatePayload.status = canonicalStatus.toLowerCase();
-    updatePayload.version = { increment: 1 };
+    const updatePayload: Record<string, any> = {
+      ...this.toPersistencePayload(data),
+      canonicalStatus,
+      status: canonicalStatus.toLowerCase(),
+      version: { increment: 1 },
+    };
+
+    // Unpack nested performance fields into top-level columns + compute engagementRate
+    if (data.performance) {
+      const { reach, impressions, likes, comments, shares, saves } = data.performance;
+      if (reach !== undefined) updatePayload.reach = reach;
+      if (impressions !== undefined) updatePayload.impressions = impressions;
+      if (likes !== undefined) updatePayload.likes = likes;
+      if (comments !== undefined) updatePayload.comments = comments;
+      if (shares !== undefined) updatePayload.shares = shares;
+      if (saves !== undefined) updatePayload.saves = saves;
+      if (reach !== undefined && impressions !== undefined && impressions > 0) {
+        const engagements = (likes ?? 0) + (comments ?? 0) + (shares ?? 0) + (saves ?? 0);
+        updatePayload.engagementRate = Number(((engagements / impressions) * 100).toFixed(2));
+      }
+    }
 
     try {
       const expectedVersion = data.version ?? current.version;
@@ -230,6 +247,20 @@ export class SocialPlannerService {
                 done: item.done,
               })),
             });
+        }
+        if (data.performance) {
+          await db.socialPostMetricSnapshot.create({
+            data: {
+              postId: id,
+              reach: data.performance.reach ?? null,
+              impressions: data.performance.impressions ?? null,
+              likes: data.performance.likes ?? null,
+              comments: data.performance.comments ?? null,
+              shares: data.performance.shares ?? null,
+              saves: data.performance.saves ?? null,
+              engagementRate: updatePayload.engagementRate ?? null,
+            },
+          });
         }
         return db.socialPost.findUnique({
           where: { id },

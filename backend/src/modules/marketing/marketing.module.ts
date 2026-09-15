@@ -3,8 +3,6 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { LeadCaptureModule } from '../lead-capture/lead-capture.module';
 import { MarketingService } from './marketing/marketing.service';
 import { MarketingController } from './marketing/marketing.controller';
-import { MarketingPrototypeController } from './prototype/marketing-prototype.controller';
-import { MarketingPrototypeService } from './prototype/marketing-prototype.service';
 import { OmniCrmStateController } from './omni-crm/omni-crm-state.controller';
 import { OmniCrmStateService } from './omni-crm/omni-crm-state.service';
 import { OmniCrmConversationController } from './omni-crm/omni-crm-conversation.controller';
@@ -19,7 +17,6 @@ import { CanonicalMarketingService } from './canonical/canonical-marketing.servi
   imports: [PrismaModule, LeadCaptureModule],
   providers: [
     MarketingService,
-    MarketingPrototypeService,
     OmniCrmStateService,
     OmniCrmConversationService,
     DreamlabRrSyncService,
@@ -28,7 +25,6 @@ import { CanonicalMarketingService } from './canonical/canonical-marketing.servi
   ],
   controllers: [
     MarketingController,
-    MarketingPrototypeController,
     OmniCrmStateController,
     OmniCrmConversationController,
     SocialPlannerController,
@@ -36,7 +32,6 @@ import { CanonicalMarketingService } from './canonical/canonical-marketing.servi
   ],
   exports: [
     MarketingService,
-    MarketingPrototypeService,
     SocialPlannerService,
     DreamlabRrSyncService,
     CanonicalMarketingService,

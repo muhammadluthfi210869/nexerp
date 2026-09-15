@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { UsersService } from '../users.service';
+import { UsersService } from '../users/users.service';
 
 const DEFAULT_JWT_SECRET = 'ERP_SECRET_DEV_ONLY';
 const jwtSecret = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;

@@ -28,9 +28,12 @@ export class RolesGuard implements CanActivate {
       `[RolesGuard] User: ${user.email}, Roles: ${JSON.stringify(user.roles)}, Required: ${JSON.stringify(requiredRoles)}`,
     );
 
-    // SUPER_ADMIN is the only global bypass. Other roles, including DIRECTOR,
-    // must be explicitly granted by the route contract.
-    if (user.roles.includes(UserRole.SUPER_ADMIN)) {
+    // SUPER_ADMIN and DIRECTOR are global bypasses per production-light policy.
+    // Other roles must be explicitly granted by the route contract.
+    if (
+      user.roles.includes(UserRole.SUPER_ADMIN) ||
+      user.roles.includes(UserRole.DIRECTOR)
+    ) {
       return true;
     }
 

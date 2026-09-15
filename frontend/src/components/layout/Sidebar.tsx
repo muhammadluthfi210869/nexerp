@@ -203,7 +203,7 @@ const FINANCE_SECTIONS: NavSection[] = [
       { name: "Faktur Penjualan", href: "/penjualan/faktur-penjualan", icon: FileSpreadsheet },
       { name: "DP Penjualan", href: "/penjualan/dp-penjualan-finance", icon: DollarSign },
       { name: "Report Penjualan", href: "/reports/finance-reports", icon: BarChart3 },
-      { name: "AR Aging & Collections", href: "/finance/reports/ar-aging", icon: History },
+      { name: "AR Aging & Collections", href: "/reports/ar-aging", icon: History },
     ]
   },
   {
@@ -234,7 +234,7 @@ const FINANCE_SECTIONS: NavSection[] = [
     groupLabel: "AKUNTANSI & LAPORAN",
     icon: BarChart3,
     items: [
-      { name: "Buku Besar", href: "/finance/buku-besar", icon: BookOpen },
+      { name: "Buku Besar", href: "/finance/ledger", icon: BookOpen },
       { name: "Laba Rugi", href: "/finance/laba-rugi", icon: BarChart3, badge: "KIL", badgeVariant: "info" },
     ]
   },
@@ -244,7 +244,7 @@ const FINANCE_SECTIONS: NavSection[] = [
     groupLabel: "AKUNTANSI & LAPORAN",
     icon: Building2,
     isDirect: true,
-    href: "/finance/aset-tetap",
+    href: "/finance/assets",
     items: []
   },
   // 4. MASTER & SETUP
@@ -308,7 +308,7 @@ const PURCHASE_SECTIONS: NavSection[] = [
       { name: "Kebutuhan Barang", href: "/pembelian/kebutuhan", icon: Layers },
       { name: "Faktur Pembelian", href: "/pembelian/faktur-pembelian", icon: CreditCard },
       { name: "DP Pembelian", href: "/pembelian/purchasing/down-payment", icon: DollarSign },
-      { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
+      { name: "Permintaan HPP", href: "/finance/cogs-request", icon: FileSearch },
     ]
   },
   {
@@ -334,11 +334,11 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     icon: Users,
     items: [
       { name: "OmniCRM Coexistence", href: "/samples/omni-crm", icon: Layers, badge: "LIVE", badgeVariant: "purple" },
-      { name: "Buku Tamu", href: "/crm/buku-tamu", icon: ClipboardCheck },
-      { name: "Client Sample", href: "/crm/client-sample", icon: FlaskConical },
-      { name: "Client Produksi", href: "/crm/client-produksi", icon: Factory },
-      { name: "Client RO", href: "/crm/client-ro", icon: RefreshCw },
-      { name: "Client Lost", href: "/crm/client-lost", icon: UserX },
+      { name: "Buku Tamu", href: "/penjualan/guest-book", icon: ClipboardCheck },
+      { name: "Client Sample", href: "/penjualan/client-manager?tab=sample", icon: FlaskConical },
+      { name: "Client Produksi", href: "/penjualan/client-manager?tab=production", icon: Factory },
+      { name: "Client RO", href: "/penjualan/client-manager?tab=ro", icon: RefreshCw },
+      { name: "Client Lost", href: "/penjualan/lost", icon: UserX },
     ]
   },
   {
@@ -349,7 +349,7 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     items: [
       { name: "Penjualan Sample", href: "/penjualan/sample-sales", icon: FlaskConical },
       { name: "Retur Penjualan", href: "/penjualan/retur-penjualan", icon: XCircle },
-      { name: "AR Aging Piutang", href: "/bussdev/ar-aging", icon: History, badge: "AR", badgeVariant: "warning" },
+      { name: "AR Aging Piutang", href: "/reports/ar-aging", icon: History, badge: "AR", badgeVariant: "warning" },
     ]
   },
   {
@@ -358,8 +358,8 @@ const BUSSDEV_SECTIONS: NavSection[] = [
     groupLabel: "MASTER & DATA",
     icon: FolderTree,
     items: [
-      { name: "Kelola Pelanggan", href: "/bussdev/kelola-pelanggan", icon: Users },
-      { name: "Permintaan HPP", href: "/scm/hpp-requests", icon: FileSearch },
+      { name: "Kelola Pelanggan", href: "/master/customers", icon: Users },
+      { name: "Permintaan HPP", href: "/finance/cogs-request", icon: FileSearch },
       { name: "Barang", href: "/master/goods", icon: Package },
       { name: "Supplier", href: "/master/suppliers", icon: Building2 },
     ]
@@ -402,7 +402,7 @@ const RND_SECTIONS: NavSection[] = [
     items: [
       { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: ClipboardCheck, badge: "NEW", badgeVariant: "warning" },
       { name: "Formulasi Repository", href: "/samples/repository", icon: Beaker },
-      { name: "Buat Formulasi Baru", href: "/samples/formula/new", icon: PlusCircle },
+      { name: "Buat Formulasi Baru", href: "/samples/formula", icon: PlusCircle },
       { name: "Penyesuaian Formulasi", href: "/inventory/formula-adjustment-production", icon: Layers },
       { name: "Permintaan HPP (COGS)", href: "/samples/repository?tab=hpp", icon: DollarSign },
       { name: "Digital Batch Record", href: "/production/batch-records", icon: Barcode },
@@ -588,7 +588,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     icon: Beaker,
     items: [
       { name: "Formulasi Repository", href: "/samples/repository", icon: Beaker },
-      { name: "Buat Formula Baru", href: "/samples/formula/new", icon: PlusCircle },
+      { name: "Buat Formula Baru", href: "/samples/formula", icon: PlusCircle },
       { name: "Penyesuaian Formulasi", href: "/inventory/formula-adjustment-production", icon: RefreshCw },
       { name: "Permintaan HPP", href: "/samples/repository?tab=hpp", icon: Calculator },
       { name: "Sample Inbox (PNF)", href: "/samples/inbox", icon: Inbox },
@@ -597,7 +597,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Jadwal Mixing", href: "/production/schedule?type=mixing", icon: History },
       { name: "Jadwal Filling", href: "/production/schedule?type=filling", icon: History },
       { name: "Jadwal Packaging", href: "/production/schedule?type=packaging", icon: History },
-      { name: "Pengujian Lab & Stabilitas", href: "/rnd/lab-test", icon: FlaskConical },
+      { name: "Pengujian Lab & Stabilitas", href: "/quality/lab-test", icon: FlaskConical },
       { name: "Sertifikat Analisis (CoA)", href: "/quality/coa", icon: FileCheck },
     ]
   },
@@ -614,7 +614,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Produksi Mixing (Ruahan)", href: "/production/mixing", icon: Factory },
       { name: "Produksi Filling (Primer)", href: "/production/filling", icon: Factory },
       { name: "Produksi Packaging (Sekunder)", href: "/production/packaging", icon: Factory },
-      { name: "Inspeksi QC & Rilis APJ", href: "/production/qc-release", icon: ShieldCheck },
+      { name: "Inspeksi QC & Rilis APJ", href: "/quality/qc-release", icon: ShieldCheck },
       { name: "Permintaan Bahan Baku", href: "/production/material-requisition", icon: Layers },
       { name: "Detail & Cetak SPK", href: "/production/spk", icon: FileSpreadsheet },
     ]

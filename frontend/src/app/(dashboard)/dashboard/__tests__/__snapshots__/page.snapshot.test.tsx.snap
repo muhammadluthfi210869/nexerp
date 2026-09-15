@@ -496,92 +496,86 @@ exports[`Direksi DashboardPage (snapshot) > renders marketing audit with seeded 
           <div
             class="p-0"
           >
-            <table
-              class="w-full text-left border-collapse"
+            <div
+              class="relative w-full overflow-x-auto"
+              data-slot="table-container"
             >
-              <thead
-                class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-slate-50/50"
+              <table
+                class="w-full caption-bottom text-sm"
+                data-slot="table"
               >
-                <tr
-                  class="dark:hover:bg-slate-800/40 transition-colors h-[42px] hover:bg-transparent"
+                <thead
+                  class="[&_tr]:border-b bg-slate-50/50"
+                  data-slot="table-header"
                 >
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header pl-6 py-4"
+                  <tr
+                    class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted hover:bg-transparent"
+                    data-slot="table-row"
                   >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    <th
+                      class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header pl-6 py-4"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Judul Konten
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      Judul Konten
+                    </th>
+                    <th
+                      class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Kategori
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-center"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      Kategori
+                    </th>
+                    <th
+                      class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4 text-center"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Views
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-right pr-6"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      Views
+                    </th>
+                    <th
+                      class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4 text-right pr-6"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Engagement
-                      </span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-              >
-                <tr
-                  class="dark:hover:bg-slate-800/40 h-[42px] hover:bg-slate-50/50 transition-colors border-slate-50"
+                      Engagement
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  class="[&_tr:last-child]:border-0"
+                  data-slot="table-body"
                 >
-                  <td
-                    class="px-3.5 text-[12px] dark:text-slate-200 font-medium pl-6 py-4 text-brand-black uppercase"
+                  <tr
+                    class="border-b has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted hover:bg-slate-50/50 transition-colors border-slate-50"
+                    data-slot="table-row"
                   >
-                    AUREON LAUNCH
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-slate-400"
-                  >
-                    Reels
-                  </td>
-                  <td
-                    class="py-2 px-3.5 dark:text-slate-200 text-center font-bold text-sm text-brand-black tabular"
-                  >
-                    24.0
-                    k
-                  </td>
-                  <td
-                    class="py-2 px-3.5 dark:text-slate-200 text-right pr-6 font-bold text-emerald-500 text-base tabular"
-                  >
-                    4.2
-                    %
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 pl-6 py-4 text-brand-black uppercase"
+                      data-slot="table-cell"
+                    >
+                      AUREON LAUNCH
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-slate-400"
+                      data-slot="table-cell"
+                    >
+                      Reels
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center font-bold text-sm text-brand-black tabular"
+                      data-slot="table-cell"
+                    >
+                      24.0
+                      k
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right pr-6 font-bold text-emerald-500 text-base tabular"
+                      data-slot="table-cell"
+                    >
+                      4.2
+                      %
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         <div
@@ -945,141 +939,137 @@ exports[`Direksi DashboardPage (snapshot) > renders marketing audit with seeded 
           <div
             class="lg:col-span-2"
           >
-            <table
-              class="w-full text-left border-collapse"
+            <div
+              class="relative w-full overflow-x-auto"
+              data-slot="table-container"
             >
-              <thead
-                class="dark:bg-[#111827]/90 border-b border-slate-200 dark:border-slate-800 text-[11px] leading-[16px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 h-[40px] bg-slate-50/50"
+              <table
+                class="w-full caption-bottom text-sm"
+                data-slot="table"
               >
-                <tr
-                  class="dark:hover:bg-slate-800/40 transition-colors h-[42px] hover:bg-transparent"
+                <thead
+                  class="[&_tr]:border-b bg-slate-50/50"
+                  data-slot="table-header"
                 >
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header pl-8 py-4"
+                  <tr
+                    class="border-b transition-colors has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted hover:bg-transparent"
+                    data-slot="table-row"
                   >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                    <th
+                      class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header pl-8 py-4"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Platform Identity
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      Platform Identity
+                    </th>
+                    <th
+                      class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Total Spend
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-center"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      Total Spend
+                    </th>
+                    <th
+                      class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4 text-center"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Leads
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-center"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      Leads
+                    </th>
+                    <th
+                      class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4 text-center"
+                      data-slot="table-head"
                     >
-                      <span>
-                        CPL Efficiency
-                      </span>
-                    </div>
-                  </th>
-                  <th
-                    class="px-3.5 text-[11px] font-bold uppercase tracking-wider dark:text-slate-300 select-none text-table-header py-4 text-right pr-8"
-                  >
-                    <div
-                      class="inline-flex items-center gap-1.5 justify-start text-left"
+                      CPL Efficiency
+                    </th>
+                    <th
+                      class="h-10 px-2 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-table-header py-4 text-right pr-8"
+                      data-slot="table-head"
                     >
-                      <span>
-                        Ad CPC
-                      </span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="divide-y divide-slate-100 dark:divide-slate-800/80 text-[12px] leading-[18px]"
-              >
-                <tr
-                  class="dark:hover:bg-slate-800/40 h-[42px] border-slate-50 hover:bg-slate-50/50 transition-colors"
+                      Ad CPC
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  class="[&_tr:last-child]:border-0"
+                  data-slot="table-body"
                 >
-                  <td
-                    class="px-3.5 text-[12px] dark:text-slate-200 font-medium pl-8 py-5 text-brand-black uppercase"
+                  <tr
+                    class="border-b has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-slate-50 hover:bg-slate-50/50 transition-colors"
+                    data-slot="table-row"
                   >
-                    META
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-brand-black tabular"
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 pl-8 py-5 text-brand-black uppercase"
+                      data-slot="table-cell"
+                    >
+                      META
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-brand-black tabular"
+                      data-slot="table-cell"
+                    >
+                      IDR 
+                      12.000.000
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center text-brand-black tabular"
+                      data-slot="table-cell"
+                    >
+                      800
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center text-primary tabular"
+                      data-slot="table-cell"
+                    >
+                      IDR 
+                      15.000
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right pr-8 text-slate-400 tabular"
+                      data-slot="table-cell"
+                    >
+                      IDR 
+                      1.200
+                    </td>
+                  </tr>
+                  <tr
+                    class="border-b has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted border-slate-50 hover:bg-slate-50/50 transition-colors"
+                    data-slot="table-row"
                   >
-                    IDR 
-                    12.000.000
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-brand-black tabular"
-                  >
-                    800
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-primary tabular"
-                  >
-                    IDR 
-                    15.000
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-right pr-8 text-slate-400 tabular"
-                  >
-                    IDR 
-                    1.200
-                  </td>
-                </tr>
-                <tr
-                  class="dark:hover:bg-slate-800/40 h-[42px] border-slate-50 hover:bg-slate-50/50 transition-colors"
-                >
-                  <td
-                    class="px-3.5 text-[12px] dark:text-slate-200 font-medium pl-8 py-5 text-brand-black uppercase"
-                  >
-                    TIKTOK
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-brand-black tabular"
-                  >
-                    IDR 
-                    6.500.000
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-brand-black tabular"
-                  >
-                    400
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-center text-primary tabular"
-                  >
-                    IDR 
-                    16.250
-                  </td>
-                  <td
-                    class="py-2 px-3.5 text-[12px] dark:text-slate-200 font-medium text-right pr-8 text-slate-400 tabular"
-                  >
-                    IDR 
-                    950
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 pl-8 py-5 text-brand-black uppercase"
+                      data-slot="table-cell"
+                    >
+                      TIKTOK
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-brand-black tabular"
+                      data-slot="table-cell"
+                    >
+                      IDR 
+                      6.500.000
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center text-brand-black tabular"
+                      data-slot="table-cell"
+                    >
+                      400
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-center text-primary tabular"
+                      data-slot="table-cell"
+                    >
+                      IDR 
+                      16.250
+                    </td>
+                    <td
+                      class="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 text-right pr-8 text-slate-400 tabular"
+                      data-slot="table-cell"
+                    >
+                      IDR 
+                      950
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           <div
             class="w-full bg-slate-50 rounded-3xl animate-pulse flex items-center justify-center"

@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { AuthController } from "../auth.controller";
+import { AuthController } from "../auth/auth.controller";
 
 // @Throttle decorator stores metadata under "THROTTLER:LIMIT<name>" /
 // "THROTTLER:TTL<name>" (see @nestjs/throttler throttler.constants.js).

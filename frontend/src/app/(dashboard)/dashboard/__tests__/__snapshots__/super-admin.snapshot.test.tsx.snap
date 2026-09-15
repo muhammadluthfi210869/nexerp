@@ -346,7 +346,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
         >
           <div
             aria-orientation="horizontal"
-            class="h-10 items-center justify-start gap-1 dark:bg-slate-900 text-slate-500 dark:text-slate-400 bg-gray-50 border border-gray-200 p-1 rounded-xl w-full flex overflow-x-auto scrollbar-hide"
+            class="h-9 items-center justify-center text-zinc-400 bg-gray-50 border border-gray-200 p-1 rounded-xl w-full flex overflow-x-auto scrollbar-hide"
             data-orientation="horizontal"
             role="tablist"
             style="outline: none;"
@@ -355,7 +355,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
             <button
               aria-controls="radix-_r_0_-content-marketing"
               aria-selected="true"
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-700 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
               data-orientation="horizontal"
               data-radix-collection-item=""
               data-state="active"
@@ -397,7 +397,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
             <button
               aria-controls="radix-_r_0_-content-rnd"
               aria-selected="false"
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-700 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
               data-orientation="horizontal"
               data-radix-collection-item=""
               data-state="inactive"
@@ -434,7 +434,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
             <button
               aria-controls="radix-_r_0_-content-production"
               aria-selected="false"
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-700 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
               data-orientation="horizontal"
               data-radix-collection-item=""
               data-state="inactive"
@@ -471,7 +471,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
             <button
               aria-controls="radix-_r_0_-content-finance"
               aria-selected="false"
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-700 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
               data-orientation="horizontal"
               data-radix-collection-item=""
               data-state="inactive"
@@ -512,7 +512,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
             <button
               aria-controls="radix-_r_0_-content-warehouse"
               aria-selected="false"
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100 flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-700 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow flex-1 data-[state=active]:bg-white data-[state=active]:text-black text-[10px] font-black uppercase tracking-tight h-10 italic"
               data-orientation="horizontal"
               data-radix-collection-item=""
               data-state="inactive"
@@ -577,7 +577,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
         </div>
         <div
           aria-labelledby="radix-_r_0_-trigger-marketing"
-          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0"
           data-orientation="horizontal"
           data-state="active"
           id="radix-_r_0_-content-marketing"
@@ -604,7 +604,9 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
                 </p>
               </div>
               <button
-                class="inline-flex items-center justify-center gap-2 font-black uppercase rounded-xl tracking-wider transition-all bg-slate-50 border border-transparent hover:bg-blue-600 shadow-none h-8 px-4 text-[10px] text-zinc-500 hover:text-white group"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 text-zinc-500 hover:text-white group"
+                data-slot="button"
+                tabindex="0"
                 type="button"
               >
                 <svg
@@ -643,7 +645,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
         </div>
         <div
           aria-labelledby="radix-_r_0_-trigger-rnd"
-          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0"
           data-orientation="horizontal"
           data-state="inactive"
           hidden=""
@@ -653,7 +655,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
         />
         <div
           aria-labelledby="radix-_r_0_-trigger-production"
-          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0"
           data-orientation="horizontal"
           data-state="inactive"
           hidden=""
@@ -663,7 +665,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
         />
         <div
           aria-labelledby="radix-_r_0_-trigger-finance"
-          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0"
           data-orientation="horizontal"
           data-state="inactive"
           hidden=""
@@ -673,7 +675,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
         />
         <div
           aria-labelledby="radix-_r_0_-trigger-warehouse"
-          class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-xl mt-0"
+          class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0"
           data-orientation="horizontal"
           data-state="inactive"
           hidden=""

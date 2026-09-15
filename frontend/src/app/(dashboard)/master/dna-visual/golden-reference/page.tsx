@@ -43,6 +43,7 @@ import {
   DnaDataTableCard,
   type DnaDateMode,
   DnaCell,
+  DnaCheckbox,
 } from "@/components/dna";
 
 // ── Types & Interfaces ──
@@ -625,7 +626,7 @@ export default function GoldenReferencePage() {
         <table className="w-full text-left border-collapse text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-              <th className="p-3.5 w-10 text-center"><input type="checkbox" checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" /></th>
+              <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
               <th className="p-3.5 w-10 text-slate-400">#</th>
               <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("wo")}>WO #</th>
               <th className="p-3.5">REF. PO</th>
@@ -643,7 +644,7 @@ export default function GoldenReferencePage() {
           <tbody className="divide-y divide-slate-100">
             {filteredAndSortedData.map((wo, index) => (
               <tr key={wo.id} className="hover:bg-slate-50/80">
-                <td className="p-3.5 text-center"><input type="checkbox" checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} className="rounded border-slate-300 text-blue-600" /></td>
+                <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
                 <td className="p-3.5 text-slate-400 tabular-nums">{index + 1}</td>
                 <td className="p-3.5"><DnaCell.Code value={wo.wo} onClick={() => setInspectingWo(wo)} /></td>
                 <td className="p-3.5 font-mono text-slate-400">{wo.refPo}</td>
