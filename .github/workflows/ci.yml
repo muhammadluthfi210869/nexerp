@@ -154,7 +154,11 @@ jobs:
             ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api/v1' }}
+            # ponytail: nginx rewrite ^/api/(.*) /v1/$1 (nginx.conf:80).
+            # Browser hits /api/<path>; nginx adds /v1/ → backend /v1/<path>.
+            # Setting base to /api (NOT /api/v1) avoids the double-prefix 404
+            # bug (login returns /v1/v1/auth/login instead of /v1/auth/login).
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api' }}
             NEXT_PUBLIC_WA_PHONE=${{ vars.NEXT_PUBLIC_WA_PHONE || '6287793032556' }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
           cache-from: type=gha

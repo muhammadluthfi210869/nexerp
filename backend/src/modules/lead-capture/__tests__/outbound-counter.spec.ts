@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OutboundCounterService } from '../outbound-counter.service';
+import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 function mockPrisma(overrides: Record<string, any> = {}) {
   const defaultMethods = [
@@ -50,7 +51,7 @@ describe('OutboundCounterService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OutboundCounterService,
-        { provide: 'PrismaService', useValue: prisma },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
