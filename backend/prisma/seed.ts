@@ -1,6 +1,6 @@
 // @ts-nocheck
 import 'dotenv/config';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole, Division } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -59,6 +59,56 @@ async function main() {
       });
       console.log(`  ✅ Bussdev Staff: ${user.fullName}`);
     }
+  }
+
+  console.log('');
+  console.log('🌱 FASE 5: Auto-populating marketing_team_members from DIGIMAR users...');
+  // ponytail: minimal — 1 row per DIGIMAR user, idempotent on email.
+  // UI MemberCardsGrid butuh roster; auto-upsert dari personnel.
+  const digimarEmployees = await prisma.employee.findMany({
+    where: {
+      isActive: true,
+      roleMappings: {
+        some: { division: Division.CREATIVE, isPrimary: true },
+      },
+    },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+      roleMappings: { where: { isPrimary: true }, take: 1 },
+    },
+  });
+  for (const emp of digimarEmployees) {
+    const u = emp.user;
+    if (!u) continue;
+    const roleName = emp.roleMappings[0]?.roleName ?? 'DIGIMAR';
+    const initials = u.fullName
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((s: string) => s[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+    await prisma.marketingTeamMember.upsert({
+      where: { email: u.email },
+      create: {
+        userId: u.id,
+        name: u.fullName,
+        role: roleName,
+        email: u.email,
+        department: 'DIGIMAR',
+        avatarBg: '#1f2937',
+        initial: initials,
+        isActive: true,
+      },
+      update: {
+        name: u.fullName,
+        role: roleName,
+        department: 'DIGIMAR',
+        initial: initials,
+        isActive: true,
+      },
+    });
+    console.log(`  ✅ Marketing Team: ${u.fullName} (${u.email}) — ${roleName}`);
   }
 
   console.log('');
