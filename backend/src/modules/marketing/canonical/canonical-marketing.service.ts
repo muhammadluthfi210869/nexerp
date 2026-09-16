@@ -1836,17 +1836,23 @@ export class CanonicalMarketingService implements OnModuleInit {
       },
     ];
     for (const b of brands) {
-      await db.marketingBrand.upsert({
-        where: { code: b.code },
-        update: { isActive: true },
-        create: b,
-      });
+      try {
+        await db.marketingBrand.upsert({
+          where: { code: b.code },
+          update: { isActive: true },
+          create: b,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `autoSeedMarketingBrands error for ${b.code}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
   }
 
   private async autoSeedMarketingMembers(db: DbClient) {
     if (
-      typeof db?.marketingTeamMember?.upsert !== 'function' ||
+      typeof db?.marketingTeamMember?.findFirst !== 'function' ||
       typeof db?.user?.findFirst !== 'function'
     )
       return;
@@ -1904,51 +1910,90 @@ export class CanonicalMarketingService implements OnModuleInit {
     ];
 
     for (const m of defaultMembers) {
-      let user = await db.user.findFirst({
-        where: {
-          OR: [
-            { email: { equals: m.email, mode: 'insensitive' } },
-            { email: { equals: `${m.name.toLowerCase()}@nexerp.id`, mode: 'insensitive' } },
-            { fullName: { equals: m.fullName, mode: 'insensitive' } },
-          ],
-        },
-      });
-      if (!user) {
-        user = await db.user.create({
-          data: {
-            email: m.email,
-            fullName: m.fullName,
-            passwordHash:
-              '$2b$10$N/SzrZjec.yMCM7jboDw3.vN.XZYrK4vCsZiFEgygNZctiAHyCbwC',
-            roles: ['MARKETING', 'DIGIMAR'],
-            status: 'ACTIVE',
+      try {
+        let user = await db.user.findFirst({
+          where: {
+            OR: [
+              { email: { equals: m.email, mode: 'insensitive' } },
+              { email: { equals: `${m.name.toLowerCase()}@nexerp.id`, mode: 'insensitive' } },
+              { fullName: { equals: m.fullName, mode: 'insensitive' } },
+              { fullName: { equals: m.name, mode: 'insensitive' } },
+            ],
           },
         });
+        if (!user) {
+          user = await db.user.create({
+            data: {
+              email: m.email,
+              fullName: m.fullName,
+              passwordHash:
+                '$2b$10$N/SzrZjec.yMCM7jboDw3.vN.XZYrK4vCsZiFEgygNZctiAHyCbwC',
+              roles: ['MARKETING', 'DIGIMAR'],
+              status: 'ACTIVE',
+            },
+          });
+        }
+
+        // Find existing marketing team member by userId, email, or name
+        const existingByUserId = user?.id
+          ? await db.marketingTeamMember.findFirst({ where: { userId: user.id } })
+          : null;
+        const existingByEmail = await db.marketingTeamMember.findFirst({
+          where: {
+            OR: [
+              { email: { equals: m.email, mode: 'insensitive' } },
+              { email: { equals: `${m.name.toLowerCase()}@nexerp.id`, mode: 'insensitive' } },
+            ],
+          },
+        });
+        const existingByName = await db.marketingTeamMember.findFirst({
+          where: { name: { equals: m.name, mode: 'insensitive' } },
+        });
+
+        const target = existingByUserId || existingByEmail || existingByName;
+
+        if (target) {
+          // If another stale record was using m.email and is not target, clean it up
+          if (existingByEmail && existingByEmail.id !== target.id) {
+            await db.marketingTeamMember.delete({ where: { id: existingByEmail.id } }).catch(() => null);
+          }
+          await db.marketingTeamMember.update({
+            where: { id: target.id },
+            data: {
+              name: m.name,
+              role: m.role,
+              department: m.department,
+              phone: m.phone,
+              avatarBg: m.avatarBg,
+              initial: m.initial,
+              userId: user.id,
+              isActive: true,
+            },
+          });
+        } else {
+          // Check if userId is already occupied by any other record before create
+          const isUserIdTaken = user?.id
+            ? await db.marketingTeamMember.findFirst({ where: { userId: user.id } })
+            : null;
+          await db.marketingTeamMember.create({
+            data: {
+              name: m.name,
+              role: m.role,
+              department: m.department,
+              email: m.email,
+              phone: m.phone,
+              avatarBg: m.avatarBg,
+              initial: m.initial,
+              userId: isUserIdTaken ? null : user.id,
+              isActive: true,
+            },
+          });
+        }
+      } catch (err) {
+        this.logger.warn(
+          `autoSeedMarketingMembers error for ${m.name}: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
-      await db.marketingTeamMember.upsert({
-        where: { email: m.email },
-        update: {
-          name: m.name,
-          role: m.role,
-          department: m.department,
-          phone: m.phone,
-          avatarBg: m.avatarBg,
-          initial: m.initial,
-          userId: user.id,
-          isActive: true,
-        },
-        create: {
-          name: m.name,
-          role: m.role,
-          department: m.department,
-          email: m.email,
-          phone: m.phone,
-          avatarBg: m.avatarBg,
-          initial: m.initial,
-          userId: user.id,
-          isActive: true,
-        },
-      });
     }
   }
 
@@ -1970,7 +2015,14 @@ export class CanonicalMarketingService implements OnModuleInit {
     for (const m of members) {
       if (m.userId) userMap[m.name] = m.userId;
     }
-    const defaultOwner = Object.values(userMap)[0];
+    let defaultOwner = Object.values(userMap)[0];
+    if (!defaultOwner) {
+      const anyUser = await db.user.findFirst({
+        where: { status: 'ACTIVE', deletedAt: null },
+        select: { id: true },
+      });
+      if (anyUser) defaultOwner = anyUser.id;
+    }
     if (!defaultOwner) return;
 
     const brandDreamlab = await db.marketingBrand.findFirst({
@@ -2066,28 +2118,34 @@ export class CanonicalMarketingService implements OnModuleInit {
     ];
 
     for (const t of defaultTasks) {
-      const ownerId = userMap[t.assignee] || defaultOwner;
-      await db.marketingTask.upsert({
-        where: { taskCode: t.taskCode },
-        update: {},
-        create: {
-          taskCode: t.taskCode,
-          title: t.title,
-          ownerId,
-          assigneeId: ownerId,
-          picId: ownerId,
-          priority: t.priority as any,
-          status: t.status as any,
-          canonicalStatus: t.canonicalStatus as any,
-          taskType: t.taskType as any,
-          brief: t.brief,
-          brand: t.brand,
-          brandId: brandDreamlab?.id || null,
-          dueDate: t.dueDate,
-          channel: 'General',
-          category: 'general_operations',
-        },
-      });
+      try {
+        const ownerId = userMap[t.assignee] || defaultOwner;
+        await db.marketingTask.upsert({
+          where: { taskCode: t.taskCode },
+          update: {},
+          create: {
+            taskCode: t.taskCode,
+            title: t.title,
+            ownerId,
+            assigneeId: ownerId,
+            picId: ownerId,
+            priority: t.priority as any,
+            status: t.status as any,
+            canonicalStatus: t.canonicalStatus as any,
+            taskType: t.taskType as any,
+            brief: t.brief,
+            brand: t.brand,
+            brandId: brandDreamlab?.id || null,
+            dueDate: t.dueDate,
+            channel: 'General',
+            category: 'general_operations',
+          },
+        });
+      } catch (err) {
+        this.logger.warn(
+          `autoSeedMarketingTasks error for ${t.taskCode}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
   }
 }
