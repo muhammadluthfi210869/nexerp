@@ -112,5 +112,35 @@ else
   echo "✅ $USER_COUNT users already exist, skipping seed."
 fi
 
+echo "=== Step 2.5: Apply idempotent role grants + orphan reassignment (RC1/RC2 fix) ==="
+# These scripts grant MARKETING+DIGIMAR roles to the 5-user DIGIMAR roster
+# and reassign tasks previously owned by non-marketing users (e.g. Super Admin
+# picked by defaultOwner fallback). Both are idempotent: safe on every boot.
+RUN_SQL_FILE() {
+  node << NODEEOF
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
+const fs = require('fs');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+const sql = fs.readFileSync(process.argv[1], 'utf8');
+prisma.$executeRawUnsafe(sql).then(r => { console.log('  result:', r); return prisma.$disconnect(); }).catch(e => { console.error('  SQL_ERROR:', e.message); process.exit(1); });
+NODEEOF
+}
+
+if [ -f /app/scripts/db-grant-digimar-roles.sql ]; then
+  echo "Applying scripts/db-grant-digimar-roles.sql..."
+  RUN_SQL_FILE /app/scripts/db-grant-digimar-roles.sql 2>&1 \
+    && echo "✅ role grants applied" \
+    || echo "⚠️  role grants failed (continuing)"
+fi
+if [ -f /app/scripts/db-reassign-orphan-tasks.sql ]; then
+  echo "Applying scripts/db-reassign-orphan-tasks.sql..."
+  RUN_SQL_FILE /app/scripts/db-reassign-orphan-tasks.sql 2>&1 \
+    && echo "✅ orphan tasks reassigned" \
+    || echo "⚠️  orphan reassignment failed (continuing)"
+fi
+
 echo "=== Step 3: Starting NestJS ==="
 exec node dist/main
