@@ -36,7 +36,12 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
   const [activeTab, setActiveTab] = useState<'mOverview' | 'daily' | 'projects'>('mOverview');
 
   // Filter member tasks
-  const memberTasks = tasks.filter(t => t.assignee === member.name);
+  const memberTasks = tasks.filter(t => {
+    if (t.assigneeId && (t.assigneeId === member.id || t.assigneeId === member.userId)) return true;
+    const tAss = (t.assignee || '').toLowerCase();
+    const mName = (member.name || '').toLowerCase();
+    return tAss === mName || tAss.includes(mName) || mName.includes(tAss);
+  });
   const dailyTasks = memberTasks.filter(t => t.type === 'Daily');
   const projectTasks = memberTasks.filter(t => t.type === 'Project');
 

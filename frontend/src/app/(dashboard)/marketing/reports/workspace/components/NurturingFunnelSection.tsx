@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Target, 
   TrendingUp, 
   Users, 
   FlaskConical, 
@@ -73,46 +72,6 @@ export const NurturingFunnelSection: React.FC<NurturingFunnelSectionProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* HEADER BANNER */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold">
-              <Target className="w-3.5 h-3.5" />
-              <span>Funnel Pipeline: Leads Traffic &gt; Prospecting Leads &gt; Goals Sample</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              Omni-Channel Lead Generation &amp; Conversion Pipeline
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Arsitektur terpadu pelacakan konversi berjenjang: <strong className="text-blue-300">1. Leads Traffic</strong> (Audience Reach &amp; Sessions) &rarr; <strong className="text-indigo-300">2. Prospecting Leads</strong> (Inquiries &amp; Tanya Maklon) &rarr; <strong className="text-emerald-300">3. Goals Sample</strong> (Permintaan Tester Kit &amp; Formula Sample Disetujui) untuk brand <span className="font-bold text-white">{currentBrandName}</span>.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 bg-white/10 p-4 rounded-xl backdrop-blur-xs border border-white/10 shrink-0">
-            <div className="text-center px-3">
-              <div className="text-xs text-slate-300 font-medium">1. Leads Traffic</div>
-              <div className="text-2xl font-black text-white">{formatNumber(totalTraffic)}</div>
-              <div className="text-[10px] text-blue-300 font-semibold mt-0.5">Semua Kanal</div>
-            </div>
-            <div className="h-9 w-px bg-white/20 hidden sm:block" />
-            <div className="text-center px-3">
-              <div className="text-xs text-slate-300 font-medium">2. Prospecting Leads</div>
-              <div className="text-2xl font-black text-indigo-300">{formatNumber(totalLeads)}</div>
-              <div className="text-[10px] text-indigo-200 font-semibold mt-0.5">{trafficToProspectRate}% Conv</div>
-            </div>
-            <div className="h-9 w-px bg-white/20 hidden sm:block" />
-            <div className="text-center px-3">
-              <div className="text-xs text-slate-300 font-medium">3. Goals Sample</div>
-              <div className="text-2xl font-black text-emerald-300">{formatNumber(totalSamples)}</div>
-              <div className="text-[10px] text-emerald-200 font-semibold mt-0.5">{prospectToGoalsRate}% dari Leads</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* 3-STAGE CORE PIPELINE VISUAL CARDS: LEADS TRAFFIC > PROSPECTING LEADS > GOALS SAMPLE */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* STAGE 1: LEADS TRAFFIC */}

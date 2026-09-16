@@ -49,3 +49,5 @@ null
 # tool caches
 backend/.jest-cache/
 .kilo/
+backend/scratch/
+backend/backend_run.bat

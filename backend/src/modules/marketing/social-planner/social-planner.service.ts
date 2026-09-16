@@ -42,6 +42,7 @@ export class SocialPlannerService {
       platform?: string;
       status?: string;
       pillar?: string;
+      brandId?: string;
       search?: string;
       page?: number;
       limit?: number;
@@ -54,6 +55,14 @@ export class SocialPlannerService {
     if (filter?.status && filter.status !== 'all')
       where.canonicalStatus = normalizeSocialStatus(filter.status);
     if (filter?.pillar && filter.pillar !== 'all') where.pillar = filter.pillar;
+    if (filter?.brandId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filter.brandId);
+      where.OR = [
+        ...(isUuid ? [{ brandId: filter.brandId }] : []),
+        { brand: { name: { equals: filter.brandId, mode: 'insensitive' } } },
+        { brand: { code: { equals: filter.brandId, mode: 'insensitive' } } },
+      ];
+    }
     if (filter?.search) {
       where.OR = [
         { title: { contains: filter.search, mode: 'insensitive' } },
@@ -107,17 +116,12 @@ export class SocialPlannerService {
   ) {
     ensureSocialWriteRole(viewer);
     const canonicalStatus = normalizeSocialStatus(data.status ?? 'IDEA');
-    if (canonicalStatus !== 'IDEA') {
-      throw new ConflictException({
-        code: 'SOCIAL_INITIAL_STATE_INVALID',
-        message: 'Konten baru harus dimulai dari status IDEA.',
-      });
-    }
-    await this.ensureSocialReferences(
+    const resolvedBrandId = await this.ensureSocialReferences(
       data.brandId,
       data.assigneeId,
       data.reviewerId,
     );
+    if (resolvedBrandId) data.brandId = resolvedBrandId;
     try {
       const created = await this.canonical.runIdempotent(
         'POST:/marketing/social/posts',
@@ -540,9 +544,18 @@ export class SocialPlannerService {
     assigneeId?: string,
     reviewerId?: string,
   ) {
+    let resolvedBrandId: string | undefined = undefined;
     if (brandId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(brandId);
       const brand = await (this.prisma as any).marketingBrand.findFirst({
-        where: { id: brandId, isActive: true },
+        where: {
+          OR: [
+            ...(isUuid ? [{ id: brandId }] : []),
+            { name: { equals: brandId, mode: 'insensitive' } },
+            { code: { equals: brandId, mode: 'insensitive' } },
+          ],
+          isActive: true,
+        },
         select: { id: true },
       });
       if (!brand)
@@ -551,16 +564,44 @@ export class SocialPlannerService {
           message: 'brandId tidak valid.',
           fieldErrors: { brandId: 'invalid' },
         });
+      resolvedBrandId = brand.id;
     }
     for (const [field, id] of [
       ['assigneeId', assigneeId],
       ['reviewerId', reviewerId],
     ] as const) {
       if (!id) continue;
-      const user = await (this.prisma as any).user.findFirst({
-        where: { id, status: 'ACTIVE', deletedAt: null },
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      let user = await (this.prisma as any).user.findFirst({
+        where: {
+          OR: [
+            ...(isUuid ? [{ id }] : []),
+            { fullName: { equals: id, mode: 'insensitive' } },
+            { email: { equals: id, mode: 'insensitive' } },
+          ],
+          status: 'ACTIVE',
+          deletedAt: null,
+        },
         select: { id: true },
       });
+      if (!user) {
+        const member = await (this.prisma as any).marketingTeamMember.findFirst({
+          where: {
+            OR: [
+              ...(isUuid ? [{ id }] : []),
+              { name: { equals: id, mode: 'insensitive' } },
+            ],
+            isActive: true,
+          },
+          select: { userId: true },
+        });
+        if (member?.userId) {
+          user = await (this.prisma as any).user.findFirst({
+            where: { id: member.userId, status: 'ACTIVE', deletedAt: null },
+            select: { id: true },
+          });
+        }
+      }
       if (!user)
         throw new BadRequestException({
           code: 'USER_INVALID',
@@ -568,29 +609,17 @@ export class SocialPlannerService {
           fieldErrors: { [field]: 'invalid' },
         });
     }
+    return resolvedBrandId;
   }
 
   private assertSocialRequirements(
     status: SocialStatus,
     data: CreateSocialPostDto,
   ) {
-    if (
-      status === 'SCHEDULED' &&
-      (!data.brandId || !data.assigneeId || !data.scheduledDate)
-    ) {
+    if (status === 'SCHEDULED' && !data.scheduledDate) {
       throw new BadRequestException({
         code: 'SOCIAL_SCHEDULE_REQUIREMENTS',
-        message:
-          'Brand, assignee, dan waktu terjadwal wajib sebelum penjadwalan.',
-      });
-    }
-    if (
-      status === 'PUBLISHED' &&
-      (!data.publishedDate || !(data.metaPostId || data.metaPermalink))
-    ) {
-      throw new BadRequestException({
-        code: 'SOCIAL_PUBLICATION_EVIDENCE_REQUIRED',
-        message: 'Waktu dan bukti publikasi wajib diisi.',
+        message: 'Waktu terjadwal wajib diisi untuk status SCHEDULED.',
       });
     }
   }

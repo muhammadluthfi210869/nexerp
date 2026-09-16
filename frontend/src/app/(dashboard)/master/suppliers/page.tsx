@@ -19,6 +19,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
   Tags,
@@ -45,6 +46,8 @@ import {
   DnaCell,
   useDnaToast,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
 export interface MasterSupplierItem {
@@ -326,6 +329,47 @@ function MasterSuppliersContent() {
   const [selectedKpiFilter, setSelectedKpiFilter] = useState<string>("ALL");
   const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>("kategori");
   const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
+
+  // ── Backend API Query ──
+  const { data: apiSuppliers, refetch: refetchSuppliers } = useQuery({
+    queryKey: ["master-suppliers", searchQuery],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/master/suppliers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : null;
+      } catch (e) {
+        console.warn("Using fallback suppliers:", e);
+        return null;
+      }
+    },
+    staleTime: 30000,
+  });
+
+  useEffect(() => {
+    if (apiSuppliers && Array.isArray(apiSuppliers) && apiSuppliers.length > 0) {
+      const mapped: MasterSupplierItem[] = apiSuppliers.map((s: any) => ({
+        id: s.id,
+        vendorCode: s.code || `VND-${s.id.substring(0, 6)}`,
+        nama: s.name,
+        pic: s.contact || "-",
+        phone: s.phone || "-",
+        email: s.email || undefined,
+        kategoriBahan: (s.category?.name as any) || "Bahan Baku",
+        kota: s.city || "-",
+        provinsi: "",
+        alamatLengkap: s.address || s.city || "-",
+        pajakPersen: s.taxRate || 11,
+        isPkp: s.isPkp ?? true,
+        npwp: s.npwp || "-",
+        paymentTerm: `Net ${s.termOfPayment || 30}`,
+        bankAccount: s.bankAccount || "-",
+        realStokSupplier: "Tersedia Kontrak",
+        status: s.status || "ACTIVE",
+      }));
+      setSuppliersList(mapped);
+    }
+  }, [apiSuppliers]);
 
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -766,35 +810,13 @@ function MasterSuppliersContent() {
             <table className="w-full text-left border-collapse text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  {/* Select All Checkbox */}
-                  <th className="p-3.5 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={paginatedSuppliers.length > 0 && selectedRowIds.length === paginatedSuppliers.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                  <th className="p-3.5 w-10 text-slate-400">#</th>
+                  <th className="p-3.5 w-12 text-slate-400">#</th>
                   <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
-                    onClick={() => handleHeaderSortToggle("vendorCode")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>VENDOR CODE</span>
-                      {sortColumn === "vendorCode" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[200px]"
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[220px]"
                     onClick={() => handleHeaderSortToggle("nama")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>NAMA SUPPLIER</span>
+                      <span>SUPPLIER</span>
                       {sortColumn === "nama" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
@@ -803,11 +825,11 @@ function MasterSuppliersContent() {
                     </div>
                   </th>
                   <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[140px]"
                     onClick={() => handleHeaderSortToggle("pic")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>PIC KONTAK</span>
+                      <span>PIC</span>
                       {sortColumn === "pic" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
@@ -815,7 +837,20 @@ function MasterSuppliersContent() {
                       )}
                     </div>
                   </th>
-                  <th className="p-3.5 min-w-[130px]">TELEPON / WA</th>
+                  <th className="p-3.5 min-w-[130px]">TELEPON</th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
+                    onClick={() => handleHeaderSortToggle("kota")}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span>KOTA</span>
+                      {sortColumn === "kota" ? (
+                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </div>
+                  </th>
                   <th
                     className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
                     onClick={() => handleHeaderSortToggle("kategoriBahan")}
@@ -829,75 +864,42 @@ function MasterSuppliersContent() {
                       )}
                     </div>
                   </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[110px]"
-                    onClick={() => handleHeaderSortToggle("kota")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>KOTA</span>
-                      {sortColumn === "kota" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
                   <th className="p-3.5 text-center min-w-[80px]">PAJAK</th>
-                  <th className="p-3.5 min-w-[90px]">TOP</th>
-                  <th className="p-3.5 min-w-[150px]">BANK & REKENING</th>
-                  <th className="p-3.5 text-center min-w-[90px]">STATUS PKP</th>
-                  <th className="p-3.5 text-center w-28">AKSI</th>
+                  <th className="p-3.5 text-center font-bold w-24 whitespace-nowrap">#</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedSuppliers.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="p-8 text-center text-slate-400">
+                    <td colSpan={8} className="p-8 text-center text-slate-400">
                       Tidak ada data supplier yang sesuai filter.
                     </td>
                   </tr>
                 ) : (
                   paginatedSuppliers.map((sup, idx) => {
-                    const isSelected = selectedRowIds.includes(sup.id);
                     return (
                       <tr
                         key={sup.id}
-                        className={`hover:bg-slate-50/80 transition-colors cursor-default ${
-                          isSelected ? "bg-blue-50/30" : ""
-                        }`}
+                        className="hover:bg-slate-50/80 transition-colors cursor-default"
                       >
-                        {/* Checkbox */}
-                        <td className="p-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(sup.id)}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          />
-                        </td>
                         <td className="p-3.5 text-slate-400 tabular-nums">
                           {(currentPage - 1) * pageSize + idx + 1}
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Code
-                            value={sup.vendorCode}
+                        <td className="p-3.5 font-bold text-slate-900 whitespace-nowrap">
+                          <button
                             onClick={() => {
                               setSelectedSupplier(sup);
                               setIsDetailModalOpen(true);
                             }}
-                          />
+                            className="hover:text-blue-600 hover:underline text-left"
+                          >
+                            {sup.nama}
+                          </button>
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Text
-                            primary={sup.nama}
-                            secondary={sup.alamatLengkap}
-                            maxWidth="max-w-[240px]"
-                          />
-                        </td>
-                        <td className="p-3.5 font-medium text-slate-700">
+                        <td className="p-3.5 font-medium text-slate-700 whitespace-nowrap">
                           {sup.pic}
                         </td>
-                        <td className="p-3.5">
+                        <td className="p-3.5 whitespace-nowrap">
                           <a
                             href={`https://wa.me/${sup.phone.replace(/^0/, "62")}`}
                             target="_blank"
@@ -908,7 +910,10 @@ function MasterSuppliersContent() {
                             {sup.phone}
                           </a>
                         </td>
-                        <td className="p-3.5">
+                        <td className="p-3.5 text-slate-600 font-medium whitespace-nowrap">
+                          {sup.kota}
+                        </td>
+                        <td className="p-3.5 whitespace-nowrap">
                           <DnaCell.Badge
                             label={sup.kategoriBahan}
                             status={
@@ -920,10 +925,7 @@ function MasterSuppliersContent() {
                             }
                           />
                         </td>
-                        <td className="p-3.5 text-slate-600 font-medium">
-                          {sup.kota}
-                        </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <span
                             className={`font-mono font-bold px-2 py-0.5 rounded text-[11px] ${
                               sup.pajakPersen === 11
@@ -934,19 +936,7 @@ function MasterSuppliersContent() {
                             {sup.pajakPersen}%
                           </span>
                         </td>
-                        <td className="p-3.5 font-semibold text-slate-800">
-                          {sup.paymentTerm}
-                        </td>
-                        <td className="p-3.5 font-mono text-[11px] text-slate-500 truncate max-w-[160px]">
-                          {sup.bankAccount}
-                        </td>
-                        <td className="p-3.5 text-center">
-                          <DnaCell.Badge
-                            label={sup.isPkp ? "PKP" : "NON-PKP"}
-                            status={sup.isPkp ? "success" : "default"}
-                          />
-                        </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <DnaCell.Actions
                             onView={() => {
                               setSelectedSupplier(sup);

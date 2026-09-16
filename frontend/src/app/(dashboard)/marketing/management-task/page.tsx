@@ -7,11 +7,6 @@ import { useRouter } from "next/navigation";
 // member workspace that matches the logged-in user's email/fullName/role.
 // Falls back to `/aurel` if nothing matches (safest default; first member
 // in the marketingAliases map).
-//
-// NOTE: phase-3 previously used a server-side `redirect()` to either
-// `/overview` (404, broken) or self (loop). Migrating to this client-side
-// resolver matches what production-light ships and what the E2E regression
-// test `management-task-redirect-bug.spec.ts` asserts.
 
 const managerRoleSet = new Set(["SUPER_ADMIN", "HEAD_OPS", "MARKETING"]);
 
@@ -54,7 +49,6 @@ export default function ManagementTaskRedirectPage() {
       const storedUser = window.localStorage.getItem("user");
       user = storedUser ? JSON.parse(storedUser) : null;
     } catch {
-      // localStorage korup / bukan JSON → fallback null (BUG-U7/P5.6).
       user = null;
     }
     router.replace(resolveManagementTaskPath(user));

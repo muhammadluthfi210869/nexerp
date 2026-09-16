@@ -54,6 +54,16 @@ export const INITIAL_MEMBERS: Member[] = [
     avatarBg: '#dcfce7',
     initial: 'R',
     department: 'Production'
+  },
+  {
+    id: 'm5',
+    name: 'Aurel',
+    role: 'Social Media Officer & Community',
+    email: 'aurel@dreamlab.id',
+    phone: '+62 857-1234-5678',
+    avatarBg: '#e0e7ff',
+    initial: 'A',
+    department: 'Social Media'
   }
 ];
 

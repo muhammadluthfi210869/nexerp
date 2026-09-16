@@ -48,9 +48,10 @@ run_test "consolidation-single-branch"               "$SCRIPT_DIR/consolidation.
 run_test "rollback-script-exists"                    "$SCRIPT_DIR/rollback.test.sh"
 run_test "db-snapshot-script-exists"                 "$SCRIPT_DIR/db-snapshot.test.sh"
 
-# Phase 4 — CI safeguards
+# Phase 4 — CI safeguards & contracts
 run_test "ci-has-ghcr-push-images"                   "$SCRIPT_DIR/ci-ghcr.test.sh"
 run_test "init-db-idempotent-on-restart"             "$SCRIPT_DIR/init-db-idempotency.test.sh"
+run_test "contracts-mgmt-task-and-routes"            "$SCRIPT_DIR/contracts-mgmt-task.test.sh"
 
 # Phase 5 — Top-level docs
 run_test "docs-link-integrity"                       "$SCRIPT_DIR/docs-link-integrity.test.sh"

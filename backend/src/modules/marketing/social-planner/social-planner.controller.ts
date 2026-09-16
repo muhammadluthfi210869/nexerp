@@ -45,6 +45,8 @@ export class SocialPlannerController {
     @Query('platform') platform?: string,
     @Query('status') status?: string,
     @Query('pillar') pillar?: string,
+    @Query('brandId') brandId?: string,
+    @Query('brand') brand?: string,
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -53,9 +55,10 @@ export class SocialPlannerController {
       platform,
       status,
       pillar,
+      brandId: brandId || brand,
       search,
       page: Number(page || 1),
-      limit: Number(limit || 50),
+      limit: Number(limit || 100),
     });
   }
 

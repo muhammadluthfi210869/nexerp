@@ -15,6 +15,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Package,
   Tags,
@@ -60,6 +61,7 @@ import {
   useDnaToast,
 } from "@/components/dna";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
 export interface MasterBarangItem {
@@ -350,6 +352,7 @@ function MasterGoodsContent() {
   // ── State Data ──
   const [goodsList, setGoodsList] = useState<MasterBarangItem[]>(INITIAL_BARANG);
   const [categoriesList, setCategoriesList] = useState<KategoriBarangItem[]>(INITIAL_CATEGORIES);
+  const [serverTotal, setServerTotal] = useState<number | null>(null);
 
   // Filter & Search Barang
   const [searchQuery, setSearchQuery] = useState("");
@@ -367,6 +370,83 @@ function MasterGoodsContent() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // ── Backend API Queries ──
+  const { data: materialsApiResponse, isLoading: isLoadingMaterials, refetch: refetchMaterials } = useQuery({
+    queryKey: ["master-materials", currentPage, pageSize, searchQuery, filterColumnValue],
+    queryFn: async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set("page", String(currentPage));
+        params.set("limit", String(pageSize));
+        if (searchQuery.trim()) params.set("search", searchQuery.trim());
+        const res = await api.get(`/master/materials?${params.toString()}`);
+        return unwrapResponse(res);
+      } catch (err) {
+        console.warn("Using local fallback materials:", err);
+        return null;
+      }
+    },
+    staleTime: 30000,
+  });
+
+  const { data: categoriesApiResponse } = useQuery({
+    queryKey: ["master-categories"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/categories");
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 60000,
+  });
+
+  // Sync materials from backend
+  useEffect(() => {
+    if (materialsApiResponse && Array.isArray(materialsApiResponse.data) && materialsApiResponse.data.length > 0) {
+      const mapped: MasterBarangItem[] = materialsApiResponse.data.map((m: any) => ({
+        id: m.id,
+        kode: m.code || `BRG-${m.id.substring(0, 6)}`,
+        nama: m.name,
+        supplierAsal: m.supplierHistory?.[0]?.supplier?.name || "Lokal",
+        wujudFisik: m.physicalForm || "-",
+        realStok: Number(m.stockQty || 0),
+        stokMin: Number(m.reorderPoint || m.minLevel || 0),
+        hargaBeli: Number(m.unitPrice || 0),
+        kategori: m.category?.name || (m.type === "PACKAGING" ? "Kemasan" : "Bahan Baku"),
+        kategoriKode: m.category?.code || (m.type === "PACKAGING" ? "KPR" : "BBK"),
+        subKategori: m.bahanType || "-",
+        satuan: m.unit || "gr",
+        agingHari: 1,
+        imageUrl: m.imageUrl || undefined,
+        akunPersediaan: m.inventoryAccount ? `${m.inventoryAccount.code} - ${m.inventoryAccount.name}` : undefined,
+        akunCogs: undefined,
+      }));
+      setGoodsList(mapped);
+      if (typeof materialsApiResponse.total === "number") {
+        setServerTotal(materialsApiResponse.total);
+      }
+    }
+  }, [materialsApiResponse]);
+
+  // Sync categories from backend
+  useEffect(() => {
+    if (categoriesApiResponse && Array.isArray(categoriesApiResponse) && categoriesApiResponse.length > 0) {
+      const mapped: KategoriBarangItem[] = categoriesApiResponse.map((c: any) => ({
+        id: c.id,
+        kode: c.code,
+        kategori: c.name,
+        deskripsi: c.description || "-",
+        totalSku: c._count?.materials || 0,
+        akunPersediaan: "11310 - Persediaan",
+        akunCogs: "51010 - Beban Pokok",
+      }));
+      setCategoriesList(mapped);
+    }
+  }, [categoriesApiResponse]);
 
   // Unique lists
   const uniqueSuppliers = useMemo(() => Array.from(new Set(goodsList.map((g) => g.supplierAsal))), [goodsList]);
@@ -468,12 +548,15 @@ function MasterGoodsContent() {
     sortDirection,
   ]);
 
-  const totalEntries = filteredAndSortedGoods.length;
+  const totalEntries = serverTotal !== null ? serverTotal : filteredAndSortedGoods.length;
   const totalPages = Math.ceil(totalEntries / pageSize) || 1;
   const paginatedGoods = useMemo(() => {
+    if (serverTotal !== null) {
+      return goodsList;
+    }
     const start = (currentPage - 1) * pageSize;
     return filteredAndSortedGoods.slice(start, start + pageSize);
-  }, [filteredAndSortedGoods, currentPage, pageSize]);
+  }, [serverTotal, goodsList, filteredAndSortedGoods, currentPage, pageSize]);
 
   const handleHeaderSortToggle = (colKey: string) => {
     if (sortColumn === colKey) {
@@ -711,7 +794,7 @@ function MasterGoodsContent() {
             toolbarProps={{
               searchQuery,
               onSearchChange: setSearchQuery,
-              searchPlaceholder: "Cari kode, nama barang, supplier, wujud...",
+              searchPlaceholder: "Cari kode atau nama barang...",
               filterColumns: [
                 {
                   key: "kategori",
@@ -719,18 +802,9 @@ function MasterGoodsContent() {
                   type: "select",
                   options: categoriesList.map((c) => c.kategori),
                 },
-                {
-                  key: "supplier",
-                  label: "Supplier Rekanan",
-                  type: "select",
-                  options: uniqueSuppliers,
-                },
               ],
-              selectedColumn: selectedFilterColumn,
-              onSelectColumn: (col) => {
-                setSelectedFilterColumn(col);
-                setFilterColumnValue("ALL");
-              },
+              selectedColumn: "kategori",
+              onSelectColumn: () => {},
               filterValue: filterColumnValue,
               onFilterValueChange: setFilterColumnValue,
               actionButton: {
@@ -749,22 +823,13 @@ function MasterGoodsContent() {
             <table className="w-full text-left border-collapse text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  {/* Select All Checkbox */}
-                  <th className="p-3.5 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={paginatedGoods.length > 0 && selectedRowIds.length === paginatedGoods.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                  <th className="p-3.5 w-10 text-slate-400">#</th>
+                  <th className="p-3.5 w-12 text-slate-400">#</th>
                   <th
                     className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
                     onClick={() => handleHeaderSortToggle("kode")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>KODE BARANG</span>
+                      <span>KODE</span>
                       {sortColumn === "kode" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
@@ -773,11 +838,11 @@ function MasterGoodsContent() {
                     </div>
                   </th>
                   <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[200px]"
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[260px]"
                     onClick={() => handleHeaderSortToggle("nama")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>NAMA BARANG</span>
+                      <span>BARANG</span>
                       {sortColumn === "nama" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
@@ -786,34 +851,7 @@ function MasterGoodsContent() {
                     </div>
                   </th>
                   <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
-                    onClick={() => handleHeaderSortToggle("supplierAsal")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>SUPPLIER ASAL</span>
-                      {sortColumn === "supplierAsal" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 min-w-[140px]">WUJUD FISIK</th>
-                  <th
-                    className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap"
-                    onClick={() => handleHeaderSortToggle("realStok")}
-                  >
-                    <div className="flex items-center justify-end gap-1">
-                      <span>REAL STOK</span>
-                      {sortColumn === "realStok" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap min-w-[120px]"
+                    className="p-3.5 text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap min-w-[130px]"
                     onClick={() => handleHeaderSortToggle("hargaBeli")}
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -826,7 +864,7 @@ function MasterGoodsContent() {
                     </div>
                   </th>
                   <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
                     onClick={() => handleHeaderSortToggle("kategori")}
                   >
                     <div className="flex items-center justify-between gap-1">
@@ -838,51 +876,25 @@ function MasterGoodsContent() {
                       )}
                     </div>
                   </th>
-                  <th className="p-3.5 min-w-[110px]">SUB KATEGORI</th>
-                  <th className="p-3.5 text-center min-w-[70px]">SATUAN</th>
-                  <th
-                    className="p-3.5 text-center cursor-pointer hover:bg-slate-100/60 min-w-[100px]"
-                    onClick={() => handleHeaderSortToggle("agingHari")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>AGING GUDANG</span>
-                      {sortColumn === "agingHari" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 text-center font-bold w-20 whitespace-nowrap">AKSI</th>
+                  <th className="p-3.5 min-w-[120px]">SUB KATEGORI</th>
+                  <th className="p-3.5 text-center min-w-[80px]">SATUAN</th>
+                  <th className="p-3.5 text-center font-bold w-24 whitespace-nowrap">#</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedGoods.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="p-10 text-center text-slate-400">
+                    <td colSpan={8} className="p-10 text-center text-slate-400">
                       Tidak ada barang yang sesuai dengan kriteria filter saat ini.
                     </td>
                   </tr>
                 ) : (
                   paginatedGoods.map((item, index) => {
-                    const isSelected = selectedRowIds.includes(item.id);
-                    const isCritical = item.realStok <= item.stokMin;
                     return (
                       <tr
                         key={item.id}
-                        className={cn(
-                          "hover:bg-slate-50/80 transition-colors group",
-                          isSelected && "bg-blue-50/30"
-                        )}
+                        className="hover:bg-slate-50/80 transition-colors group"
                       >
-                        <td className="p-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(item.id)}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          />
-                        </td>
                         <td className="p-3.5 text-slate-400 tabular-nums">
                           {(currentPage - 1) * pageSize + index + 1}
                         </td>
@@ -896,57 +908,35 @@ function MasterGoodsContent() {
                           />
                         </td>
                         <td className="p-3.5">
-                          <DnaCell.Text
-                            primary={item.nama}
-                            secondary={item.akunPersediaan}
-                          />
-                        </td>
-                        <td className="p-3.5">
-                          <DnaCell.Text primary={item.supplierAsal} />
-                        </td>
-                        <td className="p-3.5 whitespace-nowrap">
-                          <span className="text-slate-600 text-[11px] bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
-                            {item.wujudFisik}
-                          </span>
-                        </td>
-                        <td className="p-3.5 text-right">
-                          <div className="flex flex-col items-end">
-                            <span
-                              className={cn(
-                                "font-medium tabular-nums text-xs",
-                                isCritical ? "text-rose-600 font-bold" : "text-slate-800"
-                              )}
-                            >
-                              {item.realStok.toLocaleString("id-ID")} {item.satuan}
-                            </span>
-                            {isCritical && (
-                              <span className="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 mt-0.5">
-                                ROP Min: {item.stokMin.toLocaleString("id-ID")}
-                              </span>
+                          <div className="flex items-center gap-3">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.nama}
+                                className="w-7 h-7 rounded object-cover border border-slate-200 bg-slate-50 flex-shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
+                                <Package className="w-3.5 h-3.5" />
+                              </div>
                             )}
+                            <span className="font-medium text-slate-900 line-clamp-1">{item.nama}</span>
                           </div>
                         </td>
-                        <td className="p-3.5 text-right">
+                        <td className="p-3.5 text-right font-medium text-slate-900 tabular-nums whitespace-nowrap">
                           <DnaCell.Currency value={item.hargaBeli} />
                         </td>
                         <td className="p-3.5 whitespace-nowrap">
                           <DnaCell.Badge status={item.kategori} />
                         </td>
-                        <td className="p-3.5 text-slate-500 text-[11.5px] whitespace-nowrap">
-                          {item.subKategori}
+                        <td className="p-3.5 text-slate-600 text-[12px] whitespace-nowrap">
+                          {item.subKategori || "-"}
                         </td>
-                        <td className="p-3.5 text-center text-slate-500 font-mono text-[11px]">
+                        <td className="p-3.5 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">
                           {item.satuan}
-                        </td>
-                        <td className="p-3.5 text-center whitespace-nowrap">
-                          <span
-                            className={cn(
-                              "text-[11px] font-medium",
-                              item.agingHari > 45 ? "text-amber-600 font-bold" : "text-slate-500"
-                            )}
-                          >
-                            {item.agingHari} Hari
-                          </span>
                         </td>
                         <td className="p-3.5 text-center whitespace-nowrap">
                           <DnaCell.Actions
@@ -987,32 +977,25 @@ function MasterGoodsContent() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
                   <th className="p-3.5 w-12 text-slate-400">#</th>
-                  <th className="p-3.5 min-w-[120px]">KODE PREFIX</th>
-                  <th className="p-3.5 min-w-[180px]">NAMA KATEGORI</th>
-                  <th className="p-3.5 min-w-[260px]">DESKRIPSI / RUANG LINGKUP</th>
-                  <th className="p-3.5 text-center min-w-[120px]">TOTAL SKU</th>
-                  <th className="p-3.5 min-w-[200px]">AKUN PERSEDIAAN (NERACA)</th>
-                  <th className="p-3.5 min-w-[200px]">AKUN COGS / BIAYA</th>
-                  <th className="p-3.5 text-center w-24">AKSI</th>
+                  <th className="p-3.5 min-w-[120px]">KODE</th>
+                  <th className="p-3.5 min-w-[200px]">KATEGORI</th>
+                  <th className="p-3.5 min-w-[300px]">DESKRIPSI</th>
+                  <th className="p-3.5 text-center w-24">#</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {categoriesList.map((cat, idx) => (
                   <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
-                    <td className="p-3.5">
+                    <td className="p-3.5 whitespace-nowrap">
                       <DnaCell.Code value={cat.kode} />
                     </td>
                     <td className="p-3.5 font-bold text-slate-900 uppercase">{cat.kategori}</td>
-                    <td className="p-3.5 text-slate-600 max-w-xs">{cat.deskripsi}</td>
-                    <td className="p-3.5 text-center">
-                      <DnaCell.Badge label={`${cat.totalSku} SKU`} status="info" />
-                    </td>
-                    <td className="p-3.5 text-slate-600 font-mono text-[11px]">{cat.akunPersediaan}</td>
-                    <td className="p-3.5 text-slate-600 font-mono text-[11px]">{cat.akunCogs}</td>
-                    <td className="p-3.5 text-center">
+                    <td className="p-3.5 text-slate-600">{cat.deskripsi}</td>
+                    <td className="p-3.5 text-center whitespace-nowrap">
                       <DnaCell.Actions
                         onEdit={() => handleOpenEditCategory(cat)}
+                        editTitle="Sunting Kategori"
                       />
                     </td>
                   </tr>

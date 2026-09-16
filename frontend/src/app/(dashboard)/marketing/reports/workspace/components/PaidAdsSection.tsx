@@ -50,171 +50,34 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
     }).format(val);
   };
 
-  // Default Meta Ads Data
+  // Default Meta Ads Data (Zero default, API-driven)
   const metaData: MetaAdsReportData = metaAds || propMetaData || {
-    spend: 10750000,
-    impressions: 384000,
-    clicks: 14200,
-    cpc: 757,
-    ctr: 3.7,
-    leadsContributed: 312,
-    cpl: 34455,
-    sampleRequests: 68,
-    roas: 4.8,
-    creatives: [
-      {
-        id: 'c-1',
-        creativeName: 'Video Hook: 3 Biang Kerok Formula Serum Rusak & Pisah',
-        hook: 'Kenapa serum buatan kamu sering pecah atau oksidasi setelah sebulan?',
-        format: 'Video / Reel',
-        visualAngle: 'Lab R&D Testing Demo & Ahli Formulasi',
-        spend: 3850000,
-        impressions: 142000,
-        clicks: 5840,
-        ctr: 4.11,
-        hookRate: 42.8,
-        leadsContributed: 134,
-        cpl: 28731,
-        sampleRequests: 32,
-        status: 'Top Performer',
-        actionRecommendation: 'Winner Creative! Tingkatkan budget harian +35% dan perluas lookalike audience.'
-      },
-      {
-        id: 'c-2',
-        creativeName: 'Carousel: Panduan Step-by-Step Maklon Skincare BPOM',
-        hook: 'Mau punya brand skincare sendiri? Ini alur lengkap dari formulasi sampai izin edar BPOM keluar.',
-        format: 'Carousel',
-        visualAngle: 'Infografis Roadmap B2B Beautypreneur',
-        spend: 2950000,
-        impressions: 98000,
-        clicks: 3450,
-        ctr: 3.52,
-        hookRate: 31.4,
-        leadsContributed: 86,
-        cpl: 34302,
-        sampleRequests: 19,
-        status: 'Active',
-        actionRecommendation: 'CPL stabil, pertahankan pacing budget dan refresh slide penutup dengan penawaran sample kit.'
-      },
-      {
-        id: 'c-3',
-        creativeName: 'UGC Video: Unboxing Sample Kit Maklon & First Impression Tekstur',
-        hook: 'Paket sample formula serum dari Dreamlab akhirnya sampai! Yuk kita tes bareng di kulit...',
-        format: 'Video / Reel',
-        visualAngle: 'Authentic Creator Review & Texture Shot',
-        spend: 2450000,
-        impressions: 89000,
-        clicks: 3100,
-        ctr: 3.48,
-        hookRate: 38.6,
-        leadsContributed: 68,
-        cpl: 36029,
-        sampleRequests: 17,
-        status: 'Active',
-        actionRecommendation: 'Engagement tinggi di kolom komentar; optimasi fast response DM untuk meningkatkan closing.'
-      },
-      {
-        id: 'c-4',
-        creativeName: 'Single Image: Mockup Desain Botol Serum & Logo Brand Kamu',
-        hook: 'Bikin brand skincare dengan nama dan formula eksklusif milikmu sendiri.',
-        format: 'Single Image',
-        visualAngle: 'Estetik Visual Produk 3D & Brand Identity',
-        spend: 1500000,
-        impressions: 55000,
-        clicks: 1810,
-        ctr: 3.29,
-        hookRate: 24.5,
-        leadsContributed: 24,
-        cpl: 62500,
-        sampleRequests: 0,
-        status: 'Fatigue',
-        actionRecommendation: 'CPL membengkak karena ad fatigue; ganti visual gambar dan perbarui angle teks penawaran.'
-      }
-    ]
+    spend: 0,
+    impressions: 0,
+    clicks: 0,
+    cpc: 0,
+    ctr: 0,
+    leadsContributed: 0,
+    cpl: 0,
+    sampleRequests: 0,
+    roas: 0,
+    creatives: []
   };
 
-  // Default Google Ads Data
+  // Default Google Ads Data (Zero default, API-driven)
   const googleData: GoogleAdsReportData = googleAds || propGoogleData || {
-    spend: 9320000,
-    impressions: 89400,
-    clicks: 7850,
-    avgCpc: 1187,
-    ctr: 8.78,
-    leadsContributed: 194,
-    costPerLead: 48041,
-    conversionRate: 2.47,
-    campaigns: [
-      {
-        name: 'GS - Maklon Skincare BPOM High Intent (Exact & Phrase)',
-        type: 'Search',
-        spend: 5200000,
-        impressions: 48500,
-        clicks: 4450,
-        leads: 122,
-        cpl: 42622
-      },
-      {
-        name: 'PMax - Omni Channel B2B Beautypreneurs Lead Gen',
-        type: 'Performance Max',
-        spend: 2620000,
-        impressions: 28400,
-        clicks: 2280,
-        leads: 52,
-        cpl: 50384
-      },
-      {
-        name: 'GDN & YT - Retargeting Website Visitors & Sample Viewers',
-        type: 'Display / Retargeting',
-        spend: 1500000,
-        impressions: 12500,
-        clicks: 1120,
-        leads: 20,
-        cpl: 75000
-      }
-    ],
-    topQueries: [
-      {
-        keyword: 'jasa maklon kosmetik bpom terpercaya',
-        matchType: 'Exact',
-        impressions: 18400,
-        clicks: 2150,
-        cpc: 1240,
-        leadsContributed: 64,
-        conversionRate: 2.98,
-        cpl: 41656
-      },
-      {
-        keyword: 'biaya maklon skincare murah jogja',
-        matchType: 'Phrase',
-        impressions: 14200,
-        clicks: 1480,
-        cpc: 1120,
-        leadsContributed: 42,
-        conversionRate: 2.84,
-        cpl: 39466
-      },
-      {
-        keyword: 'pabrik maklon serum dan moisturizer r&d',
-        matchType: 'Phrase',
-        impressions: 11200,
-        clicks: 1040,
-        cpc: 1350,
-        leadsContributed: 35,
-        conversionRate: 3.36,
-        cpl: 40114
-      },
-      {
-        keyword: 'sample formula maklon kosmetik gratis',
-        matchType: 'Phrase',
-        impressions: 9800,
-        clicks: 1120,
-        cpc: 980,
-        leadsContributed: 38,
-        conversionRate: 3.39,
-        cpl: 28884
-      }
-    ]
+    spend: 0,
+    impressions: 0,
+    clicks: 0,
+    avgCpc: 0,
+    ctr: 0,
+    leadsContributed: 0,
+    costPerLead: 0,
+    conversionRate: 0,
+    campaigns: [],
+    topQueries: []
   };
+
 
   const filteredCreatives = creativeStatusFilter === 'All'
     ? metaData.creatives
@@ -226,54 +89,44 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* HEADER BANNER */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-40 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-400/30">
-              <Zap className="w-3.5 h-3.5" />
-              <span>Paid Acquisition & Ads Hub</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>{currentBrandName}</span>
-              <span className="text-indigo-400">Meta Ads & Google Ads Performance</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-              Overview menyeluruh performa iklan berbayar, analisis mendalam <strong className="text-white">Creative Ads Performance</strong> (Meta), dan konversi kata kunci Google Search.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 self-start lg:self-auto">
-            <button
-              onClick={() => setActiveTab('meta')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
-                activeTab === 'meta'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              <span>Meta Ads Overview</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-700/80 text-white">
-                {metaData.creatives.length} Creatives
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('google')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
-                activeTab === 'google'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              <span>Google Ads Overview</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-700/80 text-white">
-                {googleData.campaigns.length} Kampanye
-              </span>
-            </button>
-          </div>
+      {/* PAID ADS SUB-BAR */}
+      <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+        <div className="text-xs font-bold text-slate-700">
+          Paid Acquisition
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab('meta')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'meta'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <span>Meta Ads</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
+              activeTab === 'meta' ? 'bg-indigo-700/80 text-white' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {metaData.creatives.length} Creatives
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('google')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'google'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <span>Google Ads</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
+              activeTab === 'google' ? 'bg-amber-700/80 text-white' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {googleData.campaigns.length} Kampanye
+            </span>
+          </button>
         </div>
       </div>
 
@@ -344,16 +197,9 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-700 uppercase tracking-wider mb-1">
-                  <Sparkles className="w-3 h-3" />
-                  <span>Overview Creative Ads Performance</span>
-                </div>
                 <h3 className="font-extrabold text-slate-900 text-base">
-                  Breakdown Kinerja Materi Iklan (Creative Hook, Visual Angle & CPL)
+                  Breakdown Kinerja Materi Iklan
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Evaluasi efektivitas hook 3-detik video, visual angle audiens, kuantitas leads yang dihasilkan, dan rekomendasi scaling.
-                </p>
               </div>
 
               <div className="flex items-center gap-2">

@@ -60,18 +60,13 @@ import { YouTubeSection } from './YouTubeSection';
 import { WebsiteSection } from './WebsiteSection';
 import { PaidAdsSection } from './PaidAdsSection';
 import { 
-  DREAMLAB_LEAD_FUNNELS, 
-  DREAMLAB_TIKTOK_REPORT, 
-  DREAMLAB_YOUTUBE_REPORT, 
-  DREAMLAB_WEBSITE_REPORT, 
-  DREAMLAB_META_ADS_REPORT, 
-  DREAMLAB_GOOGLE_ADS_REPORT,
-  TORIBIO_LEAD_FUNNELS,
-  TORIBIO_TIKTOK_REPORT,
-  TORIBIO_YOUTUBE_REPORT,
-  TORIBIO_WEBSITE_REPORT,
-  TORIBIO_META_ADS_REPORT,
-  TORIBIO_GOOGLE_ADS_REPORT
+  createEmptyBrandReport,
+  EMPTY_LEAD_FUNNELS, 
+  EMPTY_TIKTOK_REPORT, 
+  EMPTY_YOUTUBE_REPORT, 
+  EMPTY_WEBSITE_REPORT, 
+  EMPTY_META_ADS_REPORT, 
+  EMPTY_GOOGLE_ADS_REPORT
 } from '../data/channelReportsData';
 
 export type ReportTab = 'all' | 'funnel' | 'weekly' | 'tiktok' | 'youtube' | 'website' | 'ads' | 'monthly';
@@ -175,135 +170,46 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
   }, [posts, brand.name]);
 
   // If report not found or missing fields, create a robust default
+  // Active Report calculation: zero-based default, pure database/API-driven
   const activeReport: BrandReport = useMemo(() => {
-    const isDreamlab = brand.name.toLowerCase().includes('dreamlab');
-    const defaultFunnels = isDreamlab ? DREAMLAB_LEAD_FUNNELS : TORIBIO_LEAD_FUNNELS;
-    const defaultTikTok = isDreamlab ? DREAMLAB_TIKTOK_REPORT : TORIBIO_TIKTOK_REPORT;
-    const defaultYouTube = isDreamlab ? DREAMLAB_YOUTUBE_REPORT : TORIBIO_YOUTUBE_REPORT;
-    const defaultWebsite = isDreamlab ? DREAMLAB_WEBSITE_REPORT : TORIBIO_WEBSITE_REPORT;
-    const defaultMeta = isDreamlab ? DREAMLAB_META_ADS_REPORT : TORIBIO_META_ADS_REPORT;
-    const defaultGoogle = isDreamlab ? DREAMLAB_GOOGLE_ADS_REPORT : TORIBIO_GOOGLE_ADS_REPORT;
+    const emptyRep = createEmptyBrandReport(brand.name, selectedPeriod);
 
-    const defaultRep: BrandReport = {
-      id: `rep-${brand.name.toLowerCase()}-${selectedPeriod.replace(/\s+/g, '-').toLowerCase()}`,
-      brandId: brand.name,
-      monthYear: selectedPeriod,
-      leadFunnels: defaultFunnels,
-      tiktokReport: defaultTikTok,
-      youtubeReport: defaultYouTube,
-      websiteReport: defaultWebsite,
-      metaAdsReport: defaultMeta,
-      googleAdsReport: defaultGoogle,
-      totalFollowers: isDreamlab ? 28450 : 64800,
-      followersGained: isDreamlab ? 2180 : 5240,
-      followersUnfollowed: isDreamlab ? 530 : 1120,
-      followersNetGrowth: isDreamlab ? 1650 : 4120,
-      followersGrowthPercent: isDreamlab ? 6.1 : 6.8,
+    if (!report) return emptyRep;
 
-      totalViews: isDreamlab ? 284000 : 620000,
-      averageViewsPerPost: isDreamlab ? 35500 : 68800,
-      totalReach: isDreamlab ? 184200 : 342000,
-      reachGrowthPercent: isDreamlab ? 22.4 : 31.2,
-      totalImpressions: isDreamlab ? 492000 : 885000,
-      impressionsGrowthPercent: isDreamlab ? 19.5 : 28.0,
-
-      totalLikes: isDreamlab ? 4320 : 14500,
-      totalComments: isDreamlab ? 380 : 1680,
-      totalShares: isDreamlab ? 1220 : 3420,
-      totalSaves: isDreamlab ? 2430 : 5100,
-      totalEngagements: isDreamlab ? 8350 : 24700,
-      engagementRate: isDreamlab ? 5.2 : 6.8,
-      engagementRateChange: isDreamlab ? 0.8 : 1.2,
-
-      totalPostsPublished: isDreamlab ? 8 : 9,
-      platformBreakdown: [
-        { platform: 'Instagram', followers: isDreamlab ? 18900 : 41200, followersGrowth: isDreamlab ? 1100 : 2350, reach: isDreamlab ? 114200 : 188000, views: isDreamlab ? 186000 : 340000, engagementRate: isDreamlab ? 5.4 : 6.5, postsCount: 9 },
-        { platform: isDreamlab ? 'LinkedIn' : 'TikTok', followers: isDreamlab ? 6350 : 21800, followersGrowth: isDreamlab ? 420 : 1680, reach: isDreamlab ? 48000 : 142000, views: isDreamlab ? 65000 : 260000, engagementRate: isDreamlab ? 6.8 : 7.4, postsCount: 4 },
-        { platform: isDreamlab ? 'TikTok' : 'YouTube', followers: isDreamlab ? 3200 : 1800, followersGrowth: isDreamlab ? 130 : 90, reach: isDreamlab ? 22000 : 12000, views: isDreamlab ? 33000 : 20000, engagementRate: isDreamlab ? 3.2 : 4.8, postsCount: 1 }
-      ],
-      weeklyTrends: [
-        { week: 'Minggu 1', reach: isDreamlab ? 38500 : 76000, views: isDreamlab ? 62000 : 145000, engagement: 2100, impressions: 98000, followersGained: 520, followersUnfollowed: 110 },
-        { week: 'Minggu 2', reach: isDreamlab ? 52400 : 98500, views: isDreamlab ? 88000 : 198000, engagement: 2950, impressions: 138000, followersGained: 680, followersUnfollowed: 150 },
-        { week: 'Minggu 3', reach: isDreamlab ? 47200 : 84200, views: isDreamlab ? 71000 : 142000, engagement: 2540, impressions: 126000, followersGained: 490, followersUnfollowed: 130 },
-        { week: 'Minggu 4', reach: isDreamlab ? 46100 : 83300, views: isDreamlab ? 63000 : 135000, engagement: 2430, impressions: 130000, followersGained: 490, followersUnfollowed: 140 }
-      ],
-      formatPerformance: [
-        { format: 'Carousel', postsCount: 6, avgEngagementRate: 6.4, avgReach: 24500, avgViews: 38000 },
-        { format: 'Reels', postsCount: 5, avgEngagementRate: 4.8, avgReach: 39800, avgViews: 64000 },
-        { format: 'Single Image', postsCount: 3, avgEngagementRate: 3.6, avgReach: 14600, avgViews: 22000 }
-      ],
-      storiesRecap: {
-        totalStoriesCreated: isDreamlab ? 20 : 32,
-        totalStoryViews: isDreamlab ? 48100 : 105000,
-        avgViewsPerStory: isDreamlab ? 2405 : 3281,
-        avgStoriesPerDay: isDreamlab ? 2.2 : 3.5,
-        completionRate: isDreamlab ? 78 : 84,
-        dailyStories: isDreamlab ? [
-          { id: 'ds-dl-1', date: '2026-09-01', dayNumber: 1, dayName: 'Selasa', storiesCount: 2, totalViews: 4200, avgViewsPerStory: 2100, replies: 14, linkClicks: 22, topicOrTheme: 'Lab Update: Clinical Trial Batch 4' },
-          { id: 'ds-dl-2', date: '2026-09-02', dayNumber: 2, dayName: 'Rabu', storiesCount: 1, totalViews: 2800, avgViewsPerStory: 2800, replies: 8, linkClicks: 15, topicOrTheme: 'Tim R&D Meeting Insight & Formula' },
-          { id: 'ds-dl-3', date: '2026-09-03', dayNumber: 3, dayName: 'Kamis', storiesCount: 3, totalViews: 6500, avgViewsPerStory: 2167, replies: 24, linkClicks: 38, topicOrTheme: 'B2B OEM Client Consultation' },
-          { id: 'ds-dl-4', date: '2026-09-04', dayNumber: 4, dayName: 'Jumat', storiesCount: 2, totalViews: 5100, avgViewsPerStory: 2550, replies: 16, linkClicks: 29, topicOrTheme: 'Sterilisasi Alat Cleanroom ISO-9001' },
-          { id: 'ds-dl-5', date: '2026-09-05', dayNumber: 5, dayName: 'Sabtu', storiesCount: 3, totalViews: 7400, avgViewsPerStory: 2467, replies: 32, linkClicks: 45, topicOrTheme: 'Sertifikasi BPOM & CPKB Checklist' },
-          { id: 'ds-dl-6', date: '2026-09-06', dayNumber: 6, dayName: 'Minggu', storiesCount: 1, totalViews: 3200, avgViewsPerStory: 3200, replies: 10, linkClicks: 18, topicOrTheme: 'Weekend Lab Maintenance Routine' },
-          { id: 'ds-dl-7', date: '2026-09-07', dayNumber: 7, dayName: 'Senin', storiesCount: 2, totalViews: 4900, avgViewsPerStory: 2450, replies: 18, linkClicks: 26, topicOrTheme: 'Formulasi Serum Vitamin C Terstabil' },
-          { id: 'ds-dl-8', date: '2026-09-08', dayNumber: 8, dayName: 'Selasa', storiesCount: 3, totalViews: 6800, avgViewsPerStory: 2267, replies: 27, linkClicks: 40, topicOrTheme: 'Workshop Formulator Muda Batch 2' },
-          { id: 'ds-dl-9', date: '2026-09-09', dayNumber: 9, dayName: 'Rabu', storiesCount: 3, totalViews: 7200, avgViewsPerStory: 2400, replies: 35, linkClicks: 52, topicOrTheme: 'Kunjungan Partner Industri Skincare' }
-        ] : [
-          { id: 'ds-tb-1', date: '2026-09-01', dayNumber: 1, dayName: 'Selasa', storiesCount: 3, totalViews: 8900, avgViewsPerStory: 2966, replies: 32, linkClicks: 54, topicOrTheme: 'Behind The Scenes Formulasi Barrier Cream' },
-          { id: 'ds-tb-2', date: '2026-09-02', dayNumber: 2, dayName: 'Rabu', storiesCount: 2, totalViews: 6400, avgViewsPerStory: 3200, replies: 18, linkClicks: 42, topicOrTheme: 'Morning Skincare Routine Steps' },
-          { id: 'ds-tb-3', date: '2026-09-03', dayNumber: 3, dayName: 'Kamis', storiesCount: 4, totalViews: 11800, avgViewsPerStory: 2950, replies: 65, linkClicks: 88, topicOrTheme: 'Q&A: Cara Mengatasi Kulit Kering & Sensitif' },
-          { id: 'ds-tb-4', date: '2026-09-04', dayNumber: 4, dayName: 'Jumat', storiesCount: 3, totalViews: 9200, avgViewsPerStory: 3067, replies: 41, linkClicks: 65, topicOrTheme: 'Packaging Unboxing & Detail Botol Kaca' },
-          { id: 'ds-tb-5', date: '2026-09-05', dayNumber: 5, dayName: 'Sabtu', storiesCount: 5, totalViews: 16500, avgViewsPerStory: 3300, replies: 112, linkClicks: 185, topicOrTheme: 'Teaser Flash Sale 9.9 & Quiz Voucher' },
-          { id: 'ds-tb-6', date: '2026-09-06', dayNumber: 6, dayName: 'Minggu', storiesCount: 2, totalViews: 7100, avgViewsPerStory: 3550, replies: 28, linkClicks: 46, topicOrTheme: 'Customer Testimonial Repost & Real Results' },
-          { id: 'ds-tb-7', date: '2026-09-07', dayNumber: 7, dayName: 'Senin', storiesCount: 3, totalViews: 10400, avgViewsPerStory: 3467, replies: 53, linkClicks: 78, topicOrTheme: 'Ceramide vs Niacinamide Skin Barrier Guide' },
-          { id: 'ds-tb-8', date: '2026-09-08', dayNumber: 8, dayName: 'Selasa', storiesCount: 4, totalViews: 13200, avgViewsPerStory: 3300, replies: 88, linkClicks: 140, topicOrTheme: 'Countdown H-1 Menuju 9.9 Mega Sale' },
-          { id: 'ds-tb-9', date: '2026-09-09', dayNumber: 9, dayName: 'Rabu', storiesCount: 6, totalViews: 21500, avgViewsPerStory: 3583, replies: 195, linkClicks: 320, topicOrTheme: 'D-Day Flash Sale 9.9 & Live Order Packing' }
-        ]
-      },
-      executiveSummary: `Laporan analitik media sosial untuk brand ${brand.name} pada periode ${selectedPeriod}. Performa menunjukkan lonjakan positif pada total kuantitas view dan retensi follower.`,
-      strategicRecommendations: [
-        'Pertahankan jadwal publikasi konsisten pada hari aktif engagement.',
-        'Optimalkan format Carousel dan Reels edukasi.',
-        'Monitor retensi follower agar rasio unfollow tetap terkendali.'
-      ]
-    };
-
-    if (!report) return defaultRep;
-
-    const gained = report.followersGained ?? defaultRep.followersGained;
-    const unfollowed = report.followersUnfollowed ?? defaultRep.followersUnfollowed;
+    const gained = report.followersGained ?? 0;
+    const unfollowed = report.followersUnfollowed ?? 0;
     const net = report.followersNetGrowth ?? (Number(gained) - Number(unfollowed));
 
     return {
-      ...defaultRep,
+      ...emptyRep,
       ...report,
       monthYear: selectedPeriod,
-      totalFollowers: report.totalFollowers ?? defaultRep.totalFollowers,
+      totalFollowers: report.totalFollowers ?? 0,
       followersGained: gained,
       followersUnfollowed: unfollowed,
       followersNetGrowth: net,
-      followersGrowthPercent: report.followersGrowthPercent ?? defaultRep.followersGrowthPercent,
-      totalViews: report.totalViews ?? defaultRep.totalViews,
-      averageViewsPerPost: report.averageViewsPerPost ?? defaultRep.averageViewsPerPost,
-      totalReach: report.totalReach ?? defaultRep.totalReach,
-      reachGrowthPercent: report.reachGrowthPercent ?? defaultRep.reachGrowthPercent,
-      totalImpressions: report.totalImpressions ?? defaultRep.totalImpressions,
-      impressionsGrowthPercent: report.impressionsGrowthPercent ?? defaultRep.impressionsGrowthPercent,
-      totalLikes: report.totalLikes ?? defaultRep.totalLikes,
-      totalComments: report.totalComments ?? defaultRep.totalComments,
-      totalShares: report.totalShares ?? defaultRep.totalShares,
-      totalSaves: report.totalSaves ?? defaultRep.totalSaves,
-      totalEngagements: report.totalEngagements ?? defaultRep.totalEngagements,
-      engagementRate: report.engagementRate ?? defaultRep.engagementRate,
-      engagementRateChange: report.engagementRateChange ?? defaultRep.engagementRateChange,
-      storiesRecap: report.storiesRecap || defaultRep.storiesRecap,
-      weeklyReports: report.weeklyReports || defaultRep.weeklyReports,
-      leadFunnels: report.leadFunnels || defaultRep.leadFunnels,
-      tiktokReport: report.tiktokReport || defaultRep.tiktokReport,
-      youtubeReport: report.youtubeReport || defaultRep.youtubeReport,
-      websiteReport: report.websiteReport || defaultRep.websiteReport,
-      metaAdsReport: report.metaAdsReport || defaultRep.metaAdsReport,
-      googleAdsReport: report.googleAdsReport || defaultRep.googleAdsReport
+      followersGrowthPercent: report.followersGrowthPercent ?? 0,
+      totalViews: report.totalViews ?? 0,
+      averageViewsPerPost: report.averageViewsPerPost ?? 0,
+      totalReach: report.totalReach ?? 0,
+      reachGrowthPercent: report.reachGrowthPercent ?? 0,
+      totalImpressions: report.totalImpressions ?? 0,
+      impressionsGrowthPercent: report.impressionsGrowthPercent ?? 0,
+      totalLikes: report.totalLikes ?? 0,
+      totalComments: report.totalComments ?? 0,
+      totalShares: report.totalShares ?? 0,
+      totalSaves: report.totalSaves ?? 0,
+      totalEngagements: report.totalEngagements ?? 0,
+      engagementRate: report.engagementRate ?? 0,
+      engagementRateChange: report.engagementRateChange ?? 0,
+      storiesRecap: report.storiesRecap || emptyRep.storiesRecap,
+      weeklyReports: report.weeklyReports || emptyRep.weeklyReports,
+      leadFunnels: report.leadFunnels || emptyRep.leadFunnels,
+      tiktokReport: report.tiktokReport || emptyRep.tiktokReport,
+      youtubeReport: report.youtubeReport || emptyRep.youtubeReport,
+      websiteReport: report.websiteReport || emptyRep.websiteReport,
+      metaAdsReport: report.metaAdsReport || emptyRep.metaAdsReport,
+      googleAdsReport: report.googleAdsReport || emptyRep.googleAdsReport
     };
   }, [report, brand.name, selectedPeriod]);
 

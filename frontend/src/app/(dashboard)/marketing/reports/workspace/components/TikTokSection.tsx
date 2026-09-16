@@ -58,107 +58,56 @@ export const TikTokSection: React.FC<TikTokSectionProps> = ({
     ? tiktokPosts 
     : tiktokPosts.filter(p => p.targetAngle?.toLowerCase().includes(formatFilter.toLowerCase()) || p.format === formatFilter);
 
-  // Fallback data if report isn't populated
+  // Fallback data if report isn't populated (Zero default, API-driven)
   const activeReportData = report || data;
   const tiktokData: TikTokReportData = activeReportData || {
-    followers: 12400,
-    followersGained: 1850,
-    totalViews: 94000,
-    avgWatchRetention: 64.2,
-    totalLikes: 6820,
-    totalComments: 412,
-    totalShares: 1380,
-    totalSaves: 2490,
-    profileVisits: 8450,
-    bioLinkClicks: 1120,
-    leadsContributed: 148,
-    sampleRequests: 38,
-    topVideos: [
-      {
-        id: 'tt-1',
-        title: 'Bongkar Bahan Aktif Skincare Mahal vs Murah',
-        hook: 'Kenapa serum seharga 500rb dan 50rb bisa punya formula yang hampir mirip?',
-        views: 48500,
-        likes: 3100,
-        shares: 720,
-        saves: 1450,
-        retentionRate: 71.4,
-        leadsContributed: 64,
-        sampleRequests: 19
-      },
-      {
-        id: 'tt-2',
-        title: 'Proses Maklon Serum Niacinamide 10% di Laboratorium',
-        hook: 'Ini alasan kenapa skincare lokal sekarang kualitasnya bisa kalahkan brand luar!',
-        views: 28400,
-        likes: 1980,
-        shares: 410,
-        saves: 680,
-        retentionRate: 63.8,
-        leadsContributed: 52,
-        sampleRequests: 14
-      },
-      {
-        id: 'tt-3',
-        title: 'POV: Pertama kali coba bikin brand skincare sendiri',
-        hook: 'Ternyata modal maklon skincare ga perlu milyaran, ini breakdown biayanya...',
-        views: 17100,
-        likes: 1740,
-        shares: 250,
-        saves: 360,
-        retentionRate: 58.2,
-        leadsContributed: 32,
-        sampleRequests: 5
-      }
-    ]
+    followers: 0,
+    followersGained: 0,
+    totalViews: 0,
+    avgWatchRetention: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    totalShares: 0,
+    totalSaves: 0,
+    profileVisits: 0,
+    bioLinkClicks: 0,
+    leadsContributed: 0,
+    sampleRequests: 0,
+    topVideos: []
   };
 
   return (
     <div className="space-y-6">
-      {/* TIKTOK HEADER STATS */}
-      <div className="bg-slate-950 text-white rounded-2xl p-6 shadow-md border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-32 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-cyan-300 text-xs font-semibold border border-cyan-500/20">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span>TikTok Hub & Content Engine</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>{currentBrandName}</span>
-              <span className="text-pink-400">TikTok Analytics & Planner</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-              Platform pertumbuhan viral, edukasi visual format pendek, dan konversi audiens ke leads WhatsApp & sample request form.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveSubTab('analytics')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                activeSubTab === 'analytics'
-                  ? 'bg-cyan-500 text-slate-950 shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>TikTok Report</span>
-            </button>
-            <button
-              onClick={() => setActiveSubTab('planner')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                activeSubTab === 'planner'
-                  ? 'bg-pink-500 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>TikTok Content Planner</span>
-            </button>
-          </div>
+      {/* TIKTOK SUB-BAR */}
+      <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+        <div className="text-xs font-bold text-slate-700">
+          TikTok Hub
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('analytics')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'analytics'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Top Videos &amp; Metrics</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('planner')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'planner'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Play className="w-3.5 h-3.5" />
+            <span>Daftar Video ({filteredPosts.length})</span>
+          </button>
         </div>
       </div>
 

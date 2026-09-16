@@ -4,7 +4,8 @@ import {
   YouTubeReportData, 
   WebsiteReportData, 
   MetaAdsReportData, 
-  GoogleAdsReportData 
+  GoogleAdsReportData,
+  BrandReport
 } from '../types';
 
 // ==========================================
@@ -737,3 +738,137 @@ export const TORIBIO_GOOGLE_ADS_REPORT: GoogleAdsReportData = {
     }
   ]
 };
+
+// ==========================================
+// ZERO / DATABASE-FIRST EMPTY REPORT MODELS
+// ==========================================
+
+export const EMPTY_LEAD_FUNNELS: ChannelLeadFunnel[] = [
+  { channel: 'Instagram', traffic: 0, prospects: 0, nurturingSamples: 0, goals: 0, conversionRate: 0, dealValue: 0, notes: 'Belum ada inquiry' },
+  { channel: 'TikTok', traffic: 0, prospects: 0, nurturingSamples: 0, goals: 0, conversionRate: 0, dealValue: 0, notes: 'Belum ada inquiry' },
+  { channel: 'YouTube', traffic: 0, prospects: 0, nurturingSamples: 0, goals: 0, conversionRate: 0, dealValue: 0, notes: 'Belum ada inquiry' },
+  { channel: 'Website', traffic: 0, prospects: 0, nurturingSamples: 0, goals: 0, conversionRate: 0, dealValue: 0, notes: 'Belum ada inquiry' },
+  { channel: 'Meta Ads', traffic: 0, prospects: 0, nurturingSamples: 0, goals: 0, conversionRate: 0, dealValue: 0, notes: 'Belum ada inquiry' },
+  { channel: 'Google Ads', traffic: 0, prospects: 0, nurturingSamples: 0, goals: 0, conversionRate: 0, dealValue: 0, notes: 'Belum ada inquiry' },
+];
+
+export const EMPTY_TIKTOK_REPORT: TikTokReportData = {
+  followers: 0,
+  followersGained: 0,
+  totalViews: 0,
+  avgWatchRetention: 0,
+  totalLikes: 0,
+  totalComments: 0,
+  totalShares: 0,
+  totalSaves: 0,
+  profileVisits: 0,
+  bioLinkClicks: 0,
+  leadsContributed: 0,
+  sampleRequests: 0,
+  topVideos: []
+};
+
+export const EMPTY_YOUTUBE_REPORT: YouTubeReportData = {
+  subscribers: 0,
+  subsGained: 0,
+  totalViews: 0,
+  watchTimeHours: 0,
+  avgViewDuration: '0:00',
+  impressions: 0,
+  ctr: 0,
+  leadsContributed: 0,
+  sampleRequests: 0,
+  trafficSources: [],
+  topVideos: []
+};
+
+export const EMPTY_WEBSITE_REPORT: WebsiteReportData = {
+  totalSessions: 0,
+  totalUsers: 0,
+  organicImpressions: 0,
+  organicClicks: 0,
+  avgCtr: 0,
+  avgPosition: 0,
+  leadsTraffic: 0,
+  sampleRequests: 0,
+  conversionRate: 0,
+  queries: [],
+  tasks: []
+};
+
+export const EMPTY_META_ADS_REPORT: MetaAdsReportData = {
+  spend: 0,
+  impressions: 0,
+  clicks: 0,
+  cpc: 0,
+  ctr: 0,
+  leadsContributed: 0,
+  cpl: 0,
+  sampleRequests: 0,
+  roas: 0,
+  creatives: []
+};
+
+export const EMPTY_GOOGLE_ADS_REPORT: GoogleAdsReportData = {
+  spend: 0,
+  impressions: 0,
+  clicks: 0,
+  avgCpc: 0,
+  ctr: 0,
+  leadsContributed: 0,
+  costPerLead: 0,
+  conversionRate: 0,
+  campaigns: [],
+  topQueries: []
+};
+
+export const createEmptyBrandReport = (brandName: string, period: string): BrandReport => ({
+  id: `rep-${brandName.toLowerCase()}-${period.replace(/\s+/g, '-').toLowerCase()}`,
+  brandId: brandName,
+  monthYear: period,
+  totalFollowers: 0,
+  followersGained: 0,
+  followersUnfollowed: 0,
+  followersNetGrowth: 0,
+  followersGrowthPercent: 0,
+  totalViews: 0,
+  averageViewsPerPost: 0,
+  totalReach: 0,
+  reachGrowthPercent: 0,
+  totalImpressions: 0,
+  impressionsGrowthPercent: 0,
+  totalLikes: 0,
+  totalComments: 0,
+  totalShares: 0,
+  totalSaves: 0,
+  totalEngagements: 0,
+  engagementRate: 0,
+  engagementRateChange: 0,
+  storiesRecap: {
+    totalStoriesCreated: 0,
+    totalStoryViews: 0,
+    avgViewsPerStory: 0,
+    avgStoriesPerDay: 0,
+    completionRate: 0,
+    dailyStories: []
+  },
+  weeklyReports: [],
+  leadFunnels: EMPTY_LEAD_FUNNELS,
+  tiktokReport: EMPTY_TIKTOK_REPORT,
+  youtubeReport: EMPTY_YOUTUBE_REPORT,
+  websiteReport: EMPTY_WEBSITE_REPORT,
+  metaAdsReport: EMPTY_META_ADS_REPORT,
+  googleAdsReport: EMPTY_GOOGLE_ADS_REPORT,
+  totalPostsPublished: 0,
+  platformBreakdown: [
+    { platform: 'Instagram', followers: 0, followersGrowth: 0, reach: 0, views: 0, engagementRate: 0, postsCount: 0 },
+    { platform: 'TikTok', followers: 0, followersGrowth: 0, reach: 0, views: 0, engagementRate: 0, postsCount: 0 },
+    { platform: 'YouTube', followers: 0, followersGrowth: 0, reach: 0, views: 0, engagementRate: 0, postsCount: 0 },
+    { platform: 'Website', followers: 0, followersGrowth: 0, reach: 0, views: 0, engagementRate: 0, postsCount: 0 }
+  ],
+  weeklyTrends: [],
+  formatPerformance: [],
+  executiveSummary: `Belum ada data laporan untuk brand ${brandName} pada periode ${period}. Semua metrik tersinkronisasi langsung dari database.`,
+  strategicRecommendations: []
+});
+

@@ -27,6 +27,8 @@ import {
   UpdateMarketingMemberDto,
   UpdateTaskStatusDto,
   UpsertChannelMetricDto,
+  UpsertStoryMetricDto,
+  UpsertWeeklyReportDto,
 } from './canonical-marketing.dto';
 import {
   assertTaskTransition,
@@ -183,47 +185,65 @@ export class CanonicalMarketingService {
       dto,
       async (db) => {
         this.assertDateOrder(dto.startDate, dto.dueDate);
-        if (dto.type === 'PROJECT' && !dto.projectId) {
-          throw new BadRequestException({
-            code: 'TASK_PROJECT_REQUIRED',
-            message: 'projectId wajib untuk task PROJECT.',
-            fieldErrors: { projectId: 'required' },
-          });
-        }
-        if (!isMarketingManager(viewer) && dto.assigneeId !== viewer.id) {
+        const assigneeUser = await this.ensureActiveUser(db, dto.assigneeId, 'assigneeId');
+        if (!isMarketingManager(viewer) && assigneeUser.id !== viewer.id) {
           throw new ForbiddenException({
             code: 'TASK_ASSIGN_FORBIDDEN',
             message: 'Member hanya dapat membuat task untuk dirinya sendiri.',
           });
         }
-        await this.ensureActiveUser(db, dto.assigneeId, 'assigneeId');
+        let reviewerUser: { id: string } | null = null;
         if (dto.reviewerId)
-          await this.ensureActiveUser(db, dto.reviewerId, 'reviewerId');
-        if (dto.projectId) await this.ensureProject(db, dto.projectId);
+          reviewerUser = await this.ensureActiveUser(db, dto.reviewerId, 'reviewerId');
         const brand = dto.brandId
           ? await this.ensureActiveBrand(db, dto.brandId)
           : null;
+
+        let effectiveProjectId = dto.projectId ?? null;
+        if (effectiveProjectId) {
+          await this.ensureProject(db, effectiveProjectId);
+        } else if (dto.type === 'PROJECT') {
+          const defaultProjectCode = `PRJ-${brand?.name ? brand.name.toUpperCase().slice(0, 4) : 'MKT'}-GENERAL`;
+          const existingPrj = await db.marketingProject.findFirst({
+            where: { projectCode: defaultProjectCode },
+          });
+          if (existingPrj) {
+            effectiveProjectId = existingPrj.id;
+          } else {
+            const createdPrj = await db.marketingProject.create({
+              data: {
+                projectCode: defaultProjectCode,
+                name: `General Operations & Campaigns (${brand?.name ?? 'Marketing'})`,
+                channel: dto.channel?.trim() || 'General',
+                category: dto.category?.trim() || 'project_campaign',
+                ownerId: viewer.id,
+                brandId: brand?.id ?? null,
+              },
+            });
+            effectiveProjectId = createdPrj.id;
+          }
+        }
         const task = await db.marketingTask.create({
           data: {
             taskCode: this.code('MKT'),
             ownerId: viewer.id,
-            assigneeId: dto.assigneeId,
-            picId: dto.assigneeId,
-            reviewerId: dto.reviewerId ?? null,
+            assigneeId: assigneeUser.id,
+            picId: assigneeUser.id,
+            reviewerId: reviewerUser ? reviewerUser.id : null,
             assignedById: viewer.id,
             title: dto.title.trim(),
             description: dto.brief?.trim() || null,
             status: 'OPEN',
             canonicalStatus: 'NOT_STARTED',
-            taskType: dto.type,
+            taskType: dto.type.toUpperCase() === 'PROJECT' ? 'PROJECT' : 'DAILY',
             priority: dto.priority,
             startDate: new Date(dto.startDate),
             dueDate: new Date(dto.dueDate),
             channel: dto.channel.trim(),
             category: dto.category.trim(),
             brand: brand?.name ?? 'Dreamlab',
-            brandId: dto.brandId ?? null,
-            projectId: dto.projectId ?? null,
+            brandId: brand?.id ?? null,
+            projectId: effectiveProjectId,
             brief: dto.brief?.trim() || null,
             outputUrl: dto.outputUrl ?? null,
             referenceUrl: dto.referenceUrl ?? null,
@@ -271,13 +291,22 @@ export class CanonicalMarketingService {
         dto.dueDate ?? current.dueDate?.toISOString(),
       );
     }
-    if (dto.assigneeId)
-      await this.ensureActiveUser(this.prisma, dto.assigneeId, 'assigneeId');
-    if (dto.reviewerId)
-      await this.ensureActiveUser(this.prisma, dto.reviewerId, 'reviewerId');
-    if (dto.projectId) await this.ensureProject(this.prisma, dto.projectId);
-    if (dto.brandId) await this.ensureActiveBrand(this.prisma, dto.brandId);
     const data: any = { version: { increment: 1 } };
+    if (dto.assigneeId) {
+      const user = await this.ensureActiveUser(this.prisma, dto.assigneeId, 'assigneeId');
+      data.assigneeId = user.id;
+      data.picId = user.id;
+    }
+    if (dto.reviewerId) {
+      const user = await this.ensureActiveUser(this.prisma, dto.reviewerId, 'reviewerId');
+      data.reviewerId = user.id;
+    }
+    if (dto.projectId) await this.ensureProject(this.prisma, dto.projectId);
+    if (dto.brandId) {
+      const brand = await this.ensureActiveBrand(this.prisma, dto.brandId);
+      data.brandId = brand.id;
+      data.brand = brand.name;
+    }
     for (const field of [
       'title',
       'channel',
@@ -291,12 +320,8 @@ export class CanonicalMarketingService {
         data[field] =
           typeof dto[field] === 'string' ? dto[field].trim() : dto[field];
     }
-    for (const field of ['projectId', 'brandId', 'reviewerId'] as const)
+    for (const field of ['projectId', 'reviewerId'] as const)
       if (dto[field] !== undefined) data[field] = dto[field];
-    if (dto.assigneeId !== undefined) {
-      data.assigneeId = dto.assigneeId;
-      data.picId = dto.assigneeId;
-    }
     if (dto.startDate !== undefined) data.startDate = new Date(dto.startDate);
     if (dto.dueDate !== undefined) data.dueDate = new Date(dto.dueDate);
     if (dto.estimatedMinutes !== undefined) {
@@ -338,7 +363,7 @@ export class CanonicalMarketingService {
       reason: dto.reason,
     });
     await this.prisma.$transaction(async (db) => {
-      await this.optimisticUpdate(db.marketingTask, id, dto.version, {
+      await this.optimisticUpdate(db.marketingTask, id, dto.version ?? current.version, {
         canonicalStatus: dto.status,
         status: this.legacyTaskStatus(dto.status),
         completedAt:
@@ -830,7 +855,20 @@ export class CanonicalMarketingService {
     const page = query.page ?? 1,
       limit = query.limit ?? 50;
     const where: any = {};
-    if (query.brandId) where.brandId = query.brandId;
+    if (query.brandId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(query.brandId);
+      const brand = await this.prisma.marketingBrand.findFirst({
+        where: {
+          OR: [
+            ...(isUuid ? [{ id: query.brandId }] : []),
+            { name: { equals: query.brandId, mode: 'insensitive' } },
+            { code: { equals: query.brandId, mode: 'insensitive' } },
+          ],
+        },
+        select: { id: true },
+      });
+      where.brandId = brand ? brand.id : (isUuid ? query.brandId : '00000000-0000-0000-0000-000000000000');
+    }
     if (query.periodStart || query.periodEnd)
       where.AND = [
         query.periodStart
@@ -850,6 +888,7 @@ export class CanonicalMarketingService {
             orderBy: { channel: 'asc' },
           },
           weeklyReports: { orderBy: { weekNumber: 'asc' } },
+          storyMetrics: { orderBy: { date: 'asc' } },
           funnels: { where: query.channel ? { channel: query.channel } : {} },
         },
         orderBy: { periodEnd: 'desc' },
@@ -879,17 +918,18 @@ export class CanonicalMarketingService {
       viewer,
       dto,
       async (db) => {
-        await this.ensureActiveBrand(db, dto.brandId);
+        const brand = await this.ensureActiveBrand(db, dto.brandId);
+        const resolvedBrandId = brand.id;
         const period = await db.marketingReportingPeriod.upsert({
           where: {
             brandId_periodStart_periodEnd: {
-              brandId: dto.brandId,
+              brandId: resolvedBrandId,
               periodStart: new Date(dto.periodStart),
               periodEnd: new Date(dto.periodEnd),
             },
           },
           create: {
-            brandId: dto.brandId,
+            brandId: resolvedBrandId,
             periodStart: new Date(dto.periodStart),
             periodEnd: new Date(dto.periodEnd),
             createdById: viewer.id,
@@ -932,6 +972,149 @@ export class CanonicalMarketingService {
           update: { ...metricData, verifiedById: null, verifiedAt: null },
         });
         return this.jsonSafe(metric);
+      },
+    );
+  }
+
+  async upsertWeeklyReport(
+    viewer: MarketingViewer,
+    dto: UpsertWeeklyReportDto,
+    key?: string,
+  ) {
+    this.ensureSocialWriter(viewer);
+    this.assertDateOrder(dto.periodStart, dto.periodEnd);
+    this.assertDateOrder(dto.weekStart, dto.weekEnd);
+    return this.runIdempotent(
+      'POST:/marketing/social/reports/weekly',
+      key,
+      viewer,
+      dto,
+      async (db) => {
+        const brand = await this.ensureActiveBrand(db, dto.brandId);
+        const resolvedBrandId = brand.id;
+        const period = await db.marketingReportingPeriod.upsert({
+          where: {
+            brandId_periodStart_periodEnd: {
+              brandId: resolvedBrandId,
+              periodStart: new Date(dto.periodStart),
+              periodEnd: new Date(dto.periodEnd),
+            },
+          },
+          create: {
+            brandId: resolvedBrandId,
+            periodStart: new Date(dto.periodStart),
+            periodEnd: new Date(dto.periodEnd),
+            createdById: viewer.id,
+          },
+          update: {},
+        });
+        const gained =
+          dto.followersGained ??
+          Math.max(0, dto.followersEnd - dto.followersStart);
+        const lost =
+          dto.followersLost ??
+          Math.max(0, dto.followersStart - dto.followersEnd);
+        const weeklyData = {
+          weekStart: new Date(dto.weekStart),
+          weekEnd: new Date(dto.weekEnd),
+          followersStart: dto.followersStart,
+          followersEnd: dto.followersEnd,
+          followersGained: gained,
+          followersLost: lost,
+          reach: dto.reach,
+          views: dto.views,
+          impressions: dto.impressions,
+          totalEngagement: dto.totalEngagement,
+          storiesCount: dto.storiesCount,
+          storyViews: dto.storyViews,
+          highlights: dto.highlights?.trim() || null,
+          notes: dto.notes?.trim() || null,
+          enteredById: viewer.id,
+        };
+        const report = await db.weeklySocialReport.upsert({
+          where: {
+            periodId_weekNumber: {
+              periodId: period.id,
+              weekNumber: dto.weekNumber,
+            },
+          },
+          create: {
+            ...weeklyData,
+            periodId: period.id,
+            weekNumber: dto.weekNumber,
+          },
+          update: { ...weeklyData, verifiedById: null, verifiedAt: null },
+        });
+        return this.jsonSafe(report);
+      },
+    );
+  }
+
+  async upsertStoryMetric(
+    viewer: MarketingViewer,
+    dto: UpsertStoryMetricDto,
+    key?: string,
+  ) {
+    this.ensureSocialWriter(viewer);
+    this.assertDateOrder(dto.periodStart, dto.periodEnd);
+    return this.runIdempotent(
+      'POST:/marketing/social/reports/stories',
+      key,
+      viewer,
+      dto,
+      async (db) => {
+        const brand = await this.ensureActiveBrand(db, dto.brandId);
+        const resolvedBrandId = brand.id;
+        const period = await db.marketingReportingPeriod.upsert({
+          where: {
+            brandId_periodStart_periodEnd: {
+              brandId: resolvedBrandId,
+              periodStart: new Date(dto.periodStart),
+              periodEnd: new Date(dto.periodEnd),
+            },
+          },
+          create: {
+            brandId: resolvedBrandId,
+            periodStart: new Date(dto.periodStart),
+            periodEnd: new Date(dto.periodEnd),
+            createdById: viewer.id,
+          },
+          update: {},
+        });
+        const storyDate = new Date(dto.date);
+        const storyData = {
+          storiesCount: dto.storiesCount,
+          views: dto.views,
+          replies: dto.replies,
+          linkClicks: dto.linkClicks,
+          shares: dto.shares,
+          completionPct:
+            dto.completionPct !== undefined ? dto.completionPct : null,
+          topic: dto.topic?.trim() || null,
+          notes: dto.notes?.trim() || null,
+          enteredById: viewer.id,
+        };
+        const story = await db.storyDailyMetric.upsert({
+          where: {
+            brandId_date: {
+              brandId: resolvedBrandId,
+              date: storyDate,
+            },
+          },
+          create: {
+            ...storyData,
+            brandId: resolvedBrandId,
+            periodId: period.id,
+            date: storyDate,
+          },
+          update: {
+            ...storyData,
+            periodId: period.id,
+            verifiedById: null,
+            verifiedAt: null,
+          },
+        });
+        return this.jsonSafe(story);
       },
     );
   }
@@ -1174,16 +1357,44 @@ export class CanonicalMarketingService {
   }
 
   private async ensureActiveUser(db: DbClient, id: string, field: string) {
-    const found = await db.user.findFirst({
-      where: { id, status: 'ACTIVE', deletedAt: null },
-      select: { id: true },
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let found = await db.user.findFirst({
+      where: {
+        OR: [
+          ...(isUuid ? [{ id }] : []),
+          { fullName: { equals: id, mode: 'insensitive' } },
+          { email: { equals: id, mode: 'insensitive' } },
+        ],
+        status: 'ACTIVE',
+        deletedAt: null,
+      },
+      select: { id: true, fullName: true },
     });
+    if (!found) {
+      const member = await db.marketingTeamMember.findFirst({
+        where: {
+          OR: [
+            ...(isUuid ? [{ id }] : []),
+            { name: { equals: id, mode: 'insensitive' } },
+          ],
+          isActive: true,
+        },
+        select: { userId: true },
+      });
+      if (member?.userId) {
+        found = await db.user.findFirst({
+          where: { id: member.userId, status: 'ACTIVE', deletedAt: null },
+          select: { id: true, fullName: true },
+        });
+      }
+    }
     if (!found)
       throw new BadRequestException({
         code: 'USER_INVALID',
         message: `${field} tidak merujuk user aktif.`,
         fieldErrors: { [field]: 'invalid' },
       });
+    return found;
   }
 
   private async ensureProject(db: DbClient, id: string) {
@@ -1201,8 +1412,16 @@ export class CanonicalMarketingService {
   }
 
   private async ensureActiveBrand(db: DbClient, id: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     const brand = await db.marketingBrand.findFirst({
-      where: { id, isActive: true },
+      where: {
+        OR: [
+          ...(isUuid ? [{ id }] : []),
+          { name: { equals: id, mode: 'insensitive' } },
+          { code: { equals: id, mode: 'insensitive' } },
+        ],
+        isActive: true,
+      },
       select: { id: true, name: true },
     });
     if (!brand)

@@ -9,16 +9,31 @@ import {
   SocialPost, 
   BrandReport, 
   PostStatus,
-  WeeklyReportData
+  PostFormat,
+  PostPlatform,
+  WeeklyReportData,
+  DailyStoryRecap
 } from './types';
+import { INITIAL_BRANDS, INITIAL_MEMBERS } from './data/initialData';
 import { 
-  INITIAL_POSTS, 
-  INITIAL_REPORTS 
-} from './data/initialData';
-import { useMarketingBrands, useMarketingMembers } from '@/hooks/useCanonicalMarketing';
+  createEmptyBrandReport,
+  EMPTY_LEAD_FUNNELS, 
+  EMPTY_TIKTOK_REPORT, 
+  EMPTY_YOUTUBE_REPORT, 
+  EMPTY_WEBSITE_REPORT, 
+  EMPTY_META_ADS_REPORT, 
+  EMPTY_GOOGLE_ADS_REPORT
+} from './data/channelReportsData';
 
 import { ContentPlannerView } from './components/ContentPlannerView';
 import { BrandReportingView, ReportTab } from './components/BrandReportingView';
+import { TikTokSection } from './components/TikTokSection';
+import { YouTubeSection } from './components/YouTubeSection';
+import { WebsiteSection } from './components/WebsiteSection';
+import { PaidAdsSection } from './components/PaidAdsSection';
+import { NurturingFunnelSection } from './components/NurturingFunnelSection';
+import { StoriesRecapSection } from './components/StoriesRecapSection';
+import { WeeklyReportingSection } from './components/WeeklyReportingSection';
 
 import { 
   PostModal, 
@@ -32,31 +47,114 @@ import { WeeklyMetricModal } from './components/WeeklyMetricModal';
 
 import { 
   BarChart3, 
-  Video, 
-  Globe, 
-  Megaphone, 
   Calendar as CalendarIcon,
   ArrowLeft,
   CalendarDays,
-  LineChart,
   Layers,
   ChevronLeft,
   ChevronRight,
   Plus,
-  Printer
+  Printer,
+  Sparkles,
+  LayoutDashboard,
+  Share2,
+  FileSpreadsheet,
+  Globe,
+  Video,
+  Megaphone,
+  Target,
+  BookOpen
 } from 'lucide-react';
 import { Instagram, Youtube } from './utils/socialIcons';
+import { getPreviousMonth, parsePeriodDates, getWeekDates } from './utils/helpers';
+import { useDnaToast } from '@/components/dna/DnaToast';
+import { api } from '@/lib/api';
 
-export type MainTab = 'executive' | 'instagram' | 'tiktok' | 'youtube' | 'website' | 'ads';
-export type ChannelMode = 'planner' | 'report';
+export type BrandWorkspaceTab = 
+  | 'overview' 
+  | 'instagram' 
+  | 'tiktok' 
+  | 'youtube' 
+  | 'website' 
+  | 'ads' 
+  | 'funnel' 
+  | 'stories';
 
-const TABS: Array<{ id: MainTab; label: string; icon: React.FC<{ className?: string }>; colorClass?: string }> = [
-  { id: 'executive', label: 'Executive Summary', icon: BarChart3 },
-  { id: 'instagram', label: 'Instagram', icon: Instagram, colorClass: 'text-pink-600' },
-  { id: 'tiktok', label: 'TikTok', icon: Video, colorClass: 'text-cyan-500' },
-  { id: 'youtube', label: 'YouTube', icon: Youtube, colorClass: 'text-red-600' },
-  { id: 'website', label: 'Website & SEO', icon: Globe, colorClass: 'text-emerald-600' },
-  { id: 'ads', label: 'Paid Ads', icon: Megaphone, colorClass: 'text-amber-600' },
+export type ChannelViewMode = 'report' | 'planner';
+
+export const BRAND_NAV_CHANNELS = [
+  {
+    id: 'overview' as BrandWorkspaceTab,
+    label: 'Overview',
+    icon: LayoutDashboard,
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    desc: 'Executive Summary & Ringkasan Metrik Agregat',
+    plannerChannel: 'All',
+  },
+  {
+    id: 'instagram' as BrandWorkspaceTab,
+    label: 'Instagram',
+    icon: Instagram,
+    color: 'text-pink-600',
+    bg: 'bg-pink-50',
+    desc: 'Feed, Reels & Stories Performance & Konten',
+    plannerChannel: 'Instagram',
+  },
+  {
+    id: 'tiktok' as BrandWorkspaceTab,
+    label: 'TikTok',
+    icon: Video,
+    color: 'text-cyan-500',
+    bg: 'bg-slate-900 text-white',
+    desc: 'Hooks, Sounds & Video Performance & Kalender Konten',
+    plannerChannel: 'TikTok',
+  },
+  {
+    id: 'youtube' as BrandWorkspaceTab,
+    label: 'YouTube',
+    icon: Youtube,
+    color: 'text-red-600',
+    bg: 'bg-red-50',
+    desc: 'Shorts & Masterclass Analytics & Jadwal Video',
+    plannerChannel: 'YouTube',
+  },
+  {
+    id: 'website' as BrandWorkspaceTab,
+    label: 'Website & SEO',
+    icon: Globe,
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    desc: 'Organic Traffic, Queries, SERP & Tasks',
+    plannerChannel: 'Website',
+  },
+  {
+    id: 'ads' as BrandWorkspaceTab,
+    label: 'Paid Ads',
+    icon: Megaphone,
+    color: 'text-amber-600',
+    bg: 'bg-amber-50',
+    desc: 'Meta Ads & Google Ads Performance & Campaign Planning',
+    plannerChannel: 'Paid Ads',
+  },
+  {
+    id: 'funnel' as BrandWorkspaceTab,
+    label: 'Lead Funnel',
+    icon: Target,
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-50',
+    desc: 'Leads Acquisition & Conversion Funnel Goals',
+    plannerChannel: 'Instagram',
+  },
+  {
+    id: 'stories' as BrandWorkspaceTab,
+    label: 'Stories Recap',
+    icon: BookOpen,
+    color: 'text-violet-600',
+    bg: 'bg-violet-50',
+    desc: 'Daily & Monthly Stories Recap Archive',
+    plannerChannel: 'Instagram',
+  },
 ];
 
 const AVAILABLE_MONTHS = [
@@ -75,16 +173,17 @@ interface BrandWorkspaceProps {
   initialBrandSlug?: string;
   initialTab?: string;
   initialChannel?: string;
-  initialMode?: 'planner' | 'report';
+  initialMode?: string;
 }
 
 export default function BrandWorkspace({
   initialBrandSlug = 'dreamlab',
-  initialTab = 'all',
+  initialTab = 'overview',
   initialChannel,
-  initialMode = 'planner'
+  initialMode
 }: BrandWorkspaceProps) {
   const router = useRouter();
+  const toast = useDnaToast();
 
   // Active brand resolution: "dreamlab" or "toribio"
   const isToribio = initialBrandSlug.toLowerCase().includes('toribio');
@@ -92,22 +191,37 @@ export default function BrandWorkspace({
     isToribio ? 'Toribio' : 'Dreamlab'
   );
 
-  // Active navigation tab
-  const [activeTab, setActiveTab] = useState<MainTab>(() => {
-    if (initialTab === 'all' || initialTab === 'funnel' || initialTab === 'executive') return 'executive';
+  // Sync activeBrandName if initialBrandSlug changes
+  useEffect(() => {
+    setActiveBrandName(initialBrandSlug.toLowerCase().includes('toribio') ? 'Toribio' : 'Dreamlab');
+  }, [initialBrandSlug]);
+
+  // Main Navbar Tab State: Overview, Instagram, TikTok, YouTube, Website & SEO, Paid Ads, Lead Funnel, Stories Recap
+  const [activeTab, setActiveTab] = useState<BrandWorkspaceTab>(() => {
     if (initialChannel) {
       const ch = initialChannel.toLowerCase();
-      if (ch.includes('instagram')) return 'instagram';
       if (ch.includes('tiktok')) return 'tiktok';
       if (ch.includes('youtube')) return 'youtube';
-      if (ch.includes('website')) return 'website';
-      if (ch.includes('ads')) return 'ads';
+      if (ch.includes('web')) return 'website';
+      if (ch.includes('ad')) return 'ads';
+      if (ch.includes('funnel')) return 'funnel';
+      if (ch.includes('stor')) return 'stories';
+      if (ch.includes('insta')) return 'instagram';
     }
-    return 'executive';
+    if (initialTab) {
+      const t = initialTab.toLowerCase();
+      if (t === 'instagram' || t === 'tiktok' || t === 'youtube' || t === 'website' || t === 'ads' || t === 'funnel' || t === 'stories') {
+        return t as BrandWorkspaceTab;
+      }
+    }
+    return 'overview';
   });
 
-  // Channel mode: 'planner' vs 'report' (default planner for channels)
-  const [channelMode, setChannelMode] = useState<ChannelMode>(initialMode);
+  // Per-channel view mode: 'report' or 'planner'
+  const [channelViewMode, setChannelViewMode] = useState<ChannelViewMode>(() => {
+    if (initialMode === 'planner' || initialTab === 'planner') return 'planner';
+    return 'report';
+  });
 
   // Month Period Selection
   const [selectedPeriod, setSelectedPeriod] = useState('September 2026');
@@ -125,592 +239,945 @@ export default function BrandWorkspace({
     }
   };
 
-  // Persistent Data States with localStorage
-  // Wire members to canonical API (no local mutation — server-owned)
-  // ponytail: hook returns canonical MarketingMember shape ({name, role, avatarBg, initial, department}); pass-through.
-  const { data: membersData } = useMarketingMembers();
-  const members: Member[] = useMemo(() => (membersData ?? []).map((m) => ({
-    id: m.id,
-    name: m.name ?? '',
-    role: m.role || (m.roles?.[0] ?? 'MEMBER'),
-    email: m.email ?? '',
-    phone: m.phone ?? '',
-    avatarBg: m.avatarBg ?? '#e8eef6',
-    initial: (m.initial ?? m.name ?? '?').charAt(0).toUpperCase(),
-    department: m.department ?? '',
-  })), [membersData]);
-
-  // Wire brands to canonical API (local mutation no-op until useCreateBrand hook lands)
-  // ponytail: hook returns lean MarketingBrand shape ({code, accentToken}); richer fields stay empty.
-  const { data: brandsData } = useMarketingBrands();
-  const brands: Brand[] = useMemo(() => (brandsData ?? []).map((b) => ({
-    id: b.id,
-    name: b.name,
-    handle: b.handle ?? '',
-    initial: b.code,
-    color: b.accentToken ?? '#1264d3',
-    primaryPlatform: b.primaryPlatform ?? '',
-    pic: '',
-    note: '',
-  })), [brandsData]);
-  // Stub setter — brand create UI disabled until backend mutation wired
-  const setBrands = (_updater: Brand[] | ((prev: Brand[]) => Brand[])) => {
-    // ponytail: brand mutation intentionally no-op pending useCreateBrand hook
-  };
-
-  const [posts, setPosts] = useState<SocialPost[]>(() => {
-    if (typeof window === 'undefined') return INITIAL_POSTS;
-    try {
-      const saved = localStorage.getItem('dl_posts');
-      return saved ? JSON.parse(saved) : INITIAL_POSTS;
-    } catch {
-      return INITIAL_POSTS;
-    }
-  });
-
-  const [reports, setReports] = useState<Record<string, BrandReport>>(() => {
-    if (typeof window === 'undefined') return INITIAL_REPORTS;
-    try {
-      const saved = localStorage.getItem('dl_reports');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const merged: Record<string, BrandReport> = { ...INITIAL_REPORTS };
-        Object.keys(parsed).forEach(k => {
-          merged[k] = {
-            ...(INITIAL_REPORTS[k] || {}),
-            ...parsed[k],
-            leadFunnels: parsed[k]?.leadFunnels || INITIAL_REPORTS[k]?.leadFunnels,
-            tiktokReport: parsed[k]?.tiktokReport || INITIAL_REPORTS[k]?.tiktokReport,
-            youtubeReport: parsed[k]?.youtubeReport || INITIAL_REPORTS[k]?.youtubeReport,
-            websiteReport: parsed[k]?.websiteReport || INITIAL_REPORTS[k]?.websiteReport,
-            metaAdsReport: parsed[k]?.metaAdsReport || INITIAL_REPORTS[k]?.metaAdsReport,
-            googleAdsReport: parsed[k]?.googleAdsReport || INITIAL_REPORTS[k]?.googleAdsReport,
-            storiesRecap: parsed[k]?.storiesRecap || INITIAL_REPORTS[k]?.storiesRecap
-          };
-        });
-        return merged;
-      }
-    } catch (e) {
-      console.warn('Failed to parse saved reports:', e);
-    }
-    return INITIAL_REPORTS;
-  });
-
-  // Save posts + reports to localStorage (brands now server-owned)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dl_posts', JSON.stringify(posts));
-    }
-  }, [posts]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dl_reports', JSON.stringify(reports));
-    }
-  }, [reports]);
-
-  // Modals state
-  const [postModalOpen, setPostModalOpen] = useState(false);
-  const [postModalInitialDate, setPostModalInitialDate] = useState<string | undefined>(undefined);
-  const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
-  const [postMetricsModalOpen, setPostMetricsModalOpen] = useState(false);
-  const [postForMetrics, setPostForMetrics] = useState<SocialPost | null>(null);
-  const [reportMetricModalOpen, setReportMetricModalOpen] = useState(false);
-  const [reportMetricBrand, setReportMetricBrand] = useState<string>('Dreamlab');
-  const [brandModalOpen, setBrandModalOpen] = useState(false);
-  const [monthlyStoriesModalOpen, setMonthlyStoriesModalOpen] = useState(false);
-  const [weeklyMetricModalOpen, setWeeklyMetricModalOpen] = useState(false);
-  const [editingWeeklyData, setEditingWeeklyData] = useState<WeeklyReportData | null>(null);
-
-  const currentBrand = useMemo(() => {
-    const target = (activeBrandName ?? '').toLowerCase();
+  // Brands data
+  const brands = INITIAL_BRANDS;
+  const currentBrand: Brand = useMemo(() => {
     return (
-      brands.find(b => (b.name ?? '').toLowerCase() === target) ||
-      brands[0] || {
-        id: 'b1',
+      brands.find(b => b.name.toLowerCase() === activeBrandName.toLowerCase()) || {
+        id: activeBrandName === 'Dreamlab' ? 'b1' : 'b2',
         name: activeBrandName,
-        handle: activeBrandName === 'Toribio' ? '@toribio.skincare' : '@dreamlab.workspace',
-        initial: (activeBrandName ?? '?').charAt(0),
-        color: activeBrandName === 'Toribio' ? '#ec4899' : '#1264d3',
-        primaryPlatform: 'Instagram & TikTok',
-        pic: 'Revita',
-        note: 'Brand workspace.'
+        handle: activeBrandName === 'Dreamlab' ? '@dreamlab.workspace' : '@toribio.skincare',
+        initial: activeBrandName.charAt(0),
+        color: activeBrandName === 'Dreamlab' ? '#1264d3' : '#ec4899',
+        primaryPlatform: activeBrandName === 'Dreamlab' ? 'Instagram & LinkedIn' : 'Instagram & TikTok',
+        pic: activeBrandName === 'Dreamlab' ? 'Revita' : 'Gusti',
+        note: activeBrandName === 'Dreamlab' 
+          ? 'B2B Cosmetic R&D & Maklon formulation laboratory.'
+          : 'B2C Skincare & Beauty brand focusing on skin barrier.',
       }
     );
   }, [brands, activeBrandName]);
 
-  const currentReportKey = `${(currentBrand.name ?? '').toLowerCase()}-${selectedPeriod.replace(/\s+/g, '-').toLowerCase()}`;
-  const currentReport = reports[currentReportKey] || reports[(currentBrand.name ?? '').toLowerCase()];
-  const previousReportKey = `${(currentBrand.name ?? '').toLowerCase()}-agustus-2026`;
-  const previousReport = reports[previousReportKey];
+  const currentChannelConfig = useMemo(() => {
+    return BRAND_NAV_CHANNELS.find(c => c.id === activeTab) || BRAND_NAV_CHANNELS[0];
+  }, [activeTab]);
 
-  // Post handlers
-  const handleSavePost = (postData: Omit<SocialPost, 'id'>) => {
-    const newPost: SocialPost = {
-      ...postData,
-      id: `post-${Date.now()}`
+  // Posts State loaded directly from database
+  const [posts, setPosts] = useState<SocialPost[]>([]);
+
+  // Reports State loaded directly from database
+  const [reports, setReports] = useState<Record<string, BrandReport>>({});
+
+  // Helper to map backend post to frontend SocialPost
+  const mapApiSocialPost = (p: any): SocialPost => {
+    const rawFormat = String(p.contentType || 'single_post').toLowerCase();
+    const format: PostFormat =
+      rawFormat === 'reel' ? 'Reels' :
+      rawFormat === 'carousel' ? 'Carousel' :
+      rawFormat === 'story' ? 'Story' :
+      rawFormat === 'video' ? 'Video' : 'Single';
+
+    const rawStatus = String(p.status || 'draft').toLowerCase();
+    const status: PostStatus =
+      rawStatus === 'published' ? 'Published' :
+      rawStatus === 'review' || rawStatus === 'in_review' ? 'Review' :
+      rawStatus === 'scripting' || rawStatus === 'production' ? 'Production' :
+      rawStatus === 'draft' ? 'Draft' : 'Planning';
+
+    const rawPlatform = String(p.platform || 'instagram').toLowerCase();
+    const platform: PostPlatform =
+      rawPlatform === 'tiktok' ? 'TikTok' :
+      rawPlatform === 'youtube' ? 'YouTube' :
+      rawPlatform === 'website' ? 'Website' :
+      rawPlatform === 'linkedin' ? 'LinkedIn' :
+      rawPlatform === 'ads' || rawPlatform === 'paid ads' || rawPlatform === 'facebook' ? 'Paid Ads' : 'Instagram';
+
+    return {
+      id: p.id,
+      brandId: p.brand?.name || p.brandId || activeBrandName,
+      platform,
+      title: p.title || 'Untitled Post',
+      date: p.scheduledDate ? p.scheduledDate.split('T')[0] : p.publishedDate ? p.publishedDate.split('T')[0] : new Date().toISOString().split('T')[0],
+      format,
+      status,
+      pic: p.author?.name || p.assignee?.fullName || p.authorName || 'Gusti',
+      progress: status === 'Published' ? 100 : (p.progress ?? 50),
+      imageUrl: p.coverImage || p.mediaUrls?.[0] || undefined,
+      hook: p.hooks?.[0] || undefined,
+      caption: p.caption || undefined,
+      brief: p.brief || p.notes || undefined,
+      checklist: Array.isArray(p.checklist) ? p.checklist.map((c: any) => ({ id: c.id, text: c.text, done: Boolean(c.done) })) : [],
+      metrics: p.performance ? {
+        reach: Number(p.performance.reach || 0),
+        views: Number(p.performance.videoViews || p.performance.impressions || 0),
+        likes: Number(p.performance.likes || 0),
+        comments: Number(p.performance.comments || 0),
+        shares: Number(p.performance.shares || 0),
+        saves: Number(p.performance.saves || 0),
+        engagementRate: Number(p.performance.engagementRate || 0),
+      } : undefined,
     };
-    setPosts(prev => [newPost, ...prev]);
-    setPostModalOpen(false);
   };
 
-  const handleDeletePost = (postId: string) => {
+  // Load posts and reports from backend database on brand or period change
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBrandData() {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dl_posts');
+          localStorage.removeItem('dl_reports');
+        }
+
+        const [postsRes, reportsRes] = await Promise.allSettled([
+          api.get(`/marketing/social/posts?brand=${encodeURIComponent(activeBrandName)}&limit=200`),
+          api.get(`/marketing/social/reports?brandId=${encodeURIComponent(activeBrandName)}`),
+        ]);
+
+        if (isMounted && postsRes.status === 'fulfilled') {
+          const list = postsRes.value?.data?.data || postsRes.value?.data;
+          if (Array.isArray(list)) {
+            setPosts(list.map(mapApiSocialPost));
+          }
+        }
+
+        if (isMounted && reportsRes.status === 'fulfilled') {
+          const repList = reportsRes.value?.data?.data || reportsRes.value?.data;
+          if (Array.isArray(repList) && repList.length > 0) {
+            setReports(prev => {
+              const updated = { ...prev };
+              repList.forEach((rep: any) => {
+                const periodLabel = rep.monthYear || selectedPeriod;
+                const key = `${activeBrandName}__${periodLabel}`;
+                const existing = updated[key] || createEmptyBrandReport(activeBrandName, periodLabel);
+                const cm = Array.isArray(rep.channelMetrics) ? rep.channelMetrics : [];
+                const totFollowers = cm.reduce((acc: number, c: any) => acc + Number(c.followersEnd || 0), 0);
+                const totViews = cm.reduce((acc: number, c: any) => acc + Number(c.views || 0), 0);
+                const totReach = cm.reduce((acc: number, c: any) => acc + Number(c.reach || 0), 0);
+                const totImpressions = cm.reduce((acc: number, c: any) => acc + Number(c.impressions || 0), 0);
+                const totLikes = cm.reduce((acc: number, c: any) => acc + Number(c.likes || 0), 0);
+                const totComments = cm.reduce((acc: number, c: any) => acc + Number(c.comments || 0), 0);
+                const totShares = cm.reduce((acc: number, c: any) => acc + Number(c.shares || 0), 0);
+                const totSaves = cm.reduce((acc: number, c: any) => acc + Number(c.saves || 0), 0);
+                const totGained = cm.reduce((acc: number, c: any) => acc + Math.max(0, Number(c.followersEnd || 0) - Number(c.followersStart || 0)), 0);
+                const totUnfollowed = cm.reduce((acc: number, c: any) => acc + Math.max(0, Number(c.followersStart || 0) - Number(c.followersEnd || 0)), 0);
+                const netGrowth = totGained - totUnfollowed;
+                const totEngagements = totLikes + totComments + totShares + totSaves;
+                const er = totReach > 0 ? Number(((totEngagements / totReach) * 100).toFixed(2)) : 0;
+
+                const mappedWeekly = (existing.weeklyReports || []).map(w => {
+                  const found = rep.weeklyReports?.find((rw: any) => rw.weekNumber === w.weekNumber);
+                  if (!found) return w;
+                  return {
+                    ...w,
+                    id: found.id,
+                    startingFollowers: Number(found.followersStart || 0),
+                    endingFollowers: Number(found.followersEnd || 0),
+                    followersGained: Number(found.followersGained || 0),
+                    followersUnfollowed: Number(found.followersLost || 0),
+                    netGrowth: Number(found.followersGained || 0) - Number(found.followersLost || 0),
+                    reach: Number(found.reach || 0),
+                    views: Number(found.views || 0),
+                    impressions: Number(found.impressions || 0),
+                    totalEngagement: Number(found.totalEngagement || 0),
+                    engagementRate: Number(found.reach) > 0 ? Number(((Number(found.totalEngagement) / Number(found.reach)) * 100).toFixed(2)) : 0,
+                    storiesCount: Number(found.storiesCount || 0),
+                    totalStoryViews: Number(found.storyViews || 0),
+                    avgViewsPerStory: Number(found.storiesCount) > 0 ? Math.round(Number(found.storyViews) / Number(found.storiesCount)) : 0,
+                    highlights: found.highlights || w.highlights,
+                    notes: found.notes || w.notes,
+                  };
+                });
+
+                const storyList = Array.isArray(rep.storyMetrics) ? rep.storyMetrics : [];
+                const totStories = storyList.reduce((acc: number, s: any) => acc + Number(s.storiesCount || 0), 0);
+                const totStoryViews = storyList.reduce((acc: number, s: any) => acc + Number(s.views || 0), 0);
+                const avgStoryViews = totStories > 0 ? Math.round(totStoryViews / totStories) : 0;
+                const storiesRecap = (totStories > 0 || totStoryViews > 0) ? {
+                  ...(existing.storiesRecap || { completionRate: 80 }),
+                  totalStoriesCreated: totStories,
+                  totalStoryViews: totStoryViews,
+                  avgViewsPerStory: avgStoryViews,
+                } : existing.storiesRecap;
+
+                const finalReport: BrandReport = {
+                  ...existing,
+                  totalFollowers: totFollowers,
+                  followersGained: totGained,
+                  followersUnfollowed: totUnfollowed,
+                  followersNetGrowth: netGrowth,
+                  totalViews: totViews,
+                  totalReach: totReach,
+                  totalImpressions: totImpressions,
+                  totalLikes: totLikes,
+                  totalComments: totComments,
+                  totalShares: totShares,
+                  totalSaves: totSaves,
+                  totalEngagements: totEngagements,
+                  engagementRate: er,
+                  weeklyReports: mappedWeekly,
+                  storiesRecap,
+                  leadFunnels: Array.isArray(rep.funnels) && rep.funnels.length > 0 ? rep.funnels : existing.leadFunnels,
+                };
+
+                updated[key] = finalReport;
+                if (periodLabel === selectedPeriod) {
+                  updated[activeBrandName] = finalReport;
+                }
+              });
+              return updated;
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load brand data from backend:', err);
+      }
+    }
+
+    loadBrandData();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeBrandName, selectedPeriod]);
+
+  // Active Report calculation
+  const getReportForBrandAndPeriod = (brandName: string, period: string): BrandReport => {
+    const key = `${brandName}__${period}`;
+    if (reports[key]) return reports[key];
+    if (reports[brandName]) return reports[brandName];
+
+    // Clean zero-based report (all 0s initially until updated or recorded in DB)
+    const base = createEmptyBrandReport(brandName, period);
+
+    // Calculate metrics dynamically from real loaded posts if available
+    const brandPosts = posts.filter(p => p.brandId.toLowerCase() === brandName.toLowerCase());
+    const publishedPosts = brandPosts.filter(p => p.status === 'Published');
+    const postsLikes = publishedPosts.reduce((acc, p) => acc + (p.metrics?.likes || 0), 0);
+    const postsComments = publishedPosts.reduce((acc, p) => acc + (p.metrics?.comments || 0), 0);
+    const postsShares = publishedPosts.reduce((acc, p) => acc + (p.metrics?.shares || 0), 0);
+    const postsSaves = publishedPosts.reduce((acc, p) => acc + (p.metrics?.saves || 0), 0);
+    const postsViews = publishedPosts.reduce((acc, p) => acc + (p.metrics?.views || 0), 0);
+    const postsReach = publishedPosts.reduce((acc, p) => acc + (p.metrics?.reach || 0), 0);
+    const postsEngagements = postsLikes + postsComments + postsShares + postsSaves;
+    const postsEr = postsReach > 0 ? Number(((postsEngagements / postsReach) * 100).toFixed(2)) : 0;
+
+    return {
+      ...base,
+      totalPostsPublished: publishedPosts.length,
+      totalLikes: postsLikes,
+      totalComments: postsComments,
+      totalShares: postsShares,
+      totalSaves: postsSaves,
+      totalViews: postsViews,
+      totalReach: postsReach,
+      totalEngagements: postsEngagements,
+      engagementRate: postsEr,
+    };
+  };
+
+  const currentReport = useMemo(() => {
+    return getReportForBrandAndPeriod(currentBrand.name, selectedPeriod);
+  }, [currentBrand.name, selectedPeriod, reports]);
+
+  const previousReport = useMemo(() => {
+    return getReportForBrandAndPeriod(currentBrand.name, getPreviousMonth(selectedPeriod));
+  }, [currentBrand.name, selectedPeriod, reports]);
+
+  // Modal States
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [postModalInitialDate, setPostModalInitialDate] = useState<string | undefined>(undefined);
+  const [detailPost, setDetailPost] = useState<SocialPost | null>(null);
+  const [editingPostMetrics, setEditingPostMetrics] = useState<SocialPost | null>(null);
+  const [isReportMetricModalOpen, setIsReportMetricModalOpen] = useState(false);
+  const [reportBrandTarget, setReportBrandTarget] = useState<string>(currentBrand.name);
+  const [editingMonthlyStories, setEditingMonthlyStories] = useState<{
+    brandName: string;
+    monthYear: string;
+  } | null>(null);
+  const [editingWeeklyData, setEditingWeeklyData] = useState<{
+    brandName: string;
+    monthYear: string;
+    weekData: WeeklyReportData;
+  } | null>(null);
+
+  // Post Actions
+  const handleSavePost = async (postData: Omit<SocialPost, 'id'>) => {
+    const rawPlatform = (postData.platform || 'Instagram').toLowerCase();
+    const backendPlatform =
+      rawPlatform === 'paid ads' || rawPlatform === 'ads' ? 'facebook' : rawPlatform;
+
+    const payload = {
+      title: postData.title,
+      brandId: activeBrandName,
+      platform: backendPlatform,
+      contentType:
+        postData.format === 'Reels'
+          ? 'reel'
+          : postData.format === 'Carousel'
+          ? 'carousel'
+          : postData.format === 'Story'
+          ? 'story'
+          : postData.format === 'Video'
+          ? 'video'
+          : 'single_post',
+      status: postData.status === 'Published' ? 'published' : postData.status === 'Draft' ? 'draft' : 'scheduled',
+      scheduledDate: postData.date ? new Date(postData.date).toISOString() : new Date().toISOString(),
+      caption: postData.caption || undefined,
+      coverImage: postData.imageUrl || undefined,
+      hooks: postData.hook ? [postData.hook] : undefined,
+      notes: postData.brief || undefined,
+    };
+
+    try {
+      const res = await api.post('/marketing/social/posts', payload);
+      const created = res.data?.post || res.data?.data || res.data;
+      if (created?.id) {
+        setPosts(prev => [mapApiSocialPost(created), ...prev]);
+        toast.success('Postingan berhasil disimpan.');
+      } else {
+        toast.error('Gagal menyimpan postingan: respons server tidak valid.');
+      }
+    } catch (e: any) {
+      console.error('Failed to save post to backend:', e);
+      toast.error('Gagal menyimpan postingan: ' + (e.response?.data?.message || e.message || 'Terjadi kesalahan'));
+    }
+  };
+
+  const handleUpdatePostStatus = async (postId: string, newStatus: PostStatus) => {
+    setPosts(prev =>
+      prev.map(p => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            status: newStatus,
+            progress: newStatus === 'Published' ? 100 : p.progress,
+          };
+        }
+        return p;
+      })
+    );
+    if (detailPost && detailPost.id === postId) {
+      setDetailPost(prev => (prev ? { ...prev, status: newStatus } : null));
+    }
+
+    try {
+      await api.patch(`/marketing/social/posts/${postId}`, {
+        status: newStatus === 'Published' ? 'published' : newStatus === 'Draft' ? 'draft' : 'scheduled',
+      });
+    } catch (e) {
+      console.warn('Failed to update post status in backend:', e);
+    }
+  };
+
+  const handleUpdatePostProgress = async (postId: string, progress: number) => {
+    setPosts(prev => prev.map(p => (p.id === postId ? { ...p, progress } : p)));
+    try {
+      await api.patch(`/marketing/social/posts/${postId}`, {
+        notes: `Progress: ${progress}%`,
+      });
+    } catch (e) {
+      console.warn('Failed to update post progress in backend:', e);
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
     setPosts(prev => prev.filter(p => p.id !== postId));
-    setSelectedPost(null);
+    if (detailPost && detailPost.id === postId) {
+      setDetailPost(null);
+    }
+
+    try {
+      await api.delete(`/marketing/social/posts/${postId}`);
+      toast.success('Postingan berhasil dihapus.');
+    } catch (e) {
+      console.warn('Failed to delete post from backend:', e);
+      toast.error('Gagal menghapus postingan.');
+    }
   };
 
-  const handleUpdatePostStatus = (postId: string, status: PostStatus) => {
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, status } : p));
+  const handleSavePostMetrics = async (
+    postId: string,
+    metrics: NonNullable<SocialPost['metrics']>,
+    imageUrl?: string
+  ) => {
+    setPosts(prev =>
+      prev.map(p =>
+        p.id === postId ? { ...p, metrics, ...(imageUrl !== undefined ? { imageUrl } : {}) } : p
+      )
+    );
+
+    try {
+      await api.patch(`/marketing/social/posts/${postId}`, {
+        performance: {
+          reach: metrics.reach,
+          videoViews: metrics.views,
+          likes: metrics.likes,
+          comments: metrics.comments,
+          shares: metrics.shares,
+          saves: metrics.saves,
+          engagementRate: metrics.engagementRate,
+        },
+        ...(imageUrl ? { coverImage: imageUrl } : {}),
+      });
+      toast.success('Metrik postingan berhasil disimpan.');
+    } catch (e) {
+      console.warn('Failed to update post metrics in backend:', e);
+      toast.error('Gagal memperbarui metrik postingan.');
+    }
   };
 
-  const handleUpdatePostProgress = (postId: string, progress: number) => {
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, progress } : p));
+  const handleUpdatePostMedia = async (postId: string, imageUrl: string) => {
+    setPosts(prev => prev.map(p => (p.id === postId ? { ...p, imageUrl } : p)));
+    try {
+      await api.patch(`/marketing/social/posts/${postId}`, {
+        coverImage: imageUrl,
+      });
+    } catch (e) {
+      console.warn('Failed to update post media in backend:', e);
+    }
   };
 
-  // Metric update handler
-  const handleSaveReportMetrics = (updatedReport: BrandReport) => {
-    const brandKey = (updatedReport.brandId ?? '').toLowerCase();
-    const key = `${brandKey}-${(updatedReport.monthYear || selectedPeriod).replace(/\s+/g, '-').toLowerCase()}`;
+  // Report Metric Actions
+  const handleSaveReportMetrics = async (updatedReport: BrandReport) => {
+    const reportKey = `${updatedReport.brandId}__${updatedReport.monthYear}`;
     setReports(prev => ({
       ...prev,
-      [key]: updatedReport,
-      [brandKey]: updatedReport
+      [updatedReport.brandId]: updatedReport,
+      [reportKey]: updatedReport,
     }));
-    setReportMetricModalOpen(false);
-  };
 
-  // Weekly update handler
-  const handleSaveWeeklyMetric = (updatedWeekly: WeeklyReportData) => {
-    if (!currentReport) return;
-    const currentList = currentReport.weeklyReports || [];
-    const index = currentList.findIndex(w => w.weekNumber === updatedWeekly.weekNumber);
-    let newList: WeeklyReportData[];
-    if (index !== -1) {
-      newList = [...currentList];
-      newList[index] = updatedWeekly;
-    } else {
-      newList = [...currentList, updatedWeekly];
+    try {
+      const { periodStart, periodEnd } = parsePeriodDates(updatedReport.monthYear || selectedPeriod);
+      const targetChannel =
+        currentChannelConfig.plannerChannel && currentChannelConfig.plannerChannel !== 'All'
+          ? currentChannelConfig.plannerChannel
+          : 'Instagram';
+
+      await api.post('/marketing/social/reports/channel-metrics', {
+        brandId: activeBrandName,
+        periodStart,
+        periodEnd,
+        channel: targetChannel,
+        reach: updatedReport.totalReach || 0,
+        views: updatedReport.totalViews || 0,
+        impressions: updatedReport.totalImpressions || 0,
+        likes: updatedReport.totalLikes || 0,
+        comments: updatedReport.totalComments || 0,
+        shares: updatedReport.totalShares || 0,
+        saves: updatedReport.totalSaves || 0,
+        followersEnd: updatedReport.totalFollowers || 0,
+      });
+      toast.success('Metrik channel berhasil disimpan.');
+    } catch (e: any) {
+      console.warn('Failed to persist channel metric to backend:', e);
+      toast.error('Gagal menyimpan metrik channel: ' + (e.response?.data?.message || e.message || 'Terjadi kesalahan'));
     }
-    const updated: BrandReport = {
-      ...currentReport,
-      weeklyReports: newList
-    };
-    handleSaveReportMetrics(updated);
-    setWeeklyMetricModalOpen(false);
-    setEditingWeeklyData(null);
   };
 
-  // Print handler
+  const handleSaveMonthlyStories = async (
+    brandName: string,
+    monthYear: string,
+    totalStoriesCreated: number,
+    totalStoryViews: number
+  ) => {
+    const reportKey = `${brandName}__${monthYear}`;
+    const base = getReportForBrandAndPeriod(brandName, monthYear);
+    const avgViewsPerStory = totalStoriesCreated > 0 ? Math.round(totalStoryViews / totalStoriesCreated) : 0;
+
+    const updated: BrandReport = {
+      ...base,
+      storiesRecap: {
+        ...(base.storiesRecap || { completionRate: 80 }),
+        totalStoriesCreated,
+        totalStoryViews,
+        avgViewsPerStory,
+      },
+    };
+
+    setReports(prev => ({
+      ...prev,
+      [reportKey]: updated,
+      [brandName]: updated,
+    }));
+
+    try {
+      const { periodStart, periodEnd } = parsePeriodDates(monthYear || selectedPeriod);
+      await api.post('/marketing/social/reports/stories', {
+        brandId: brandName,
+        periodStart,
+        periodEnd,
+        date: periodStart,
+        storiesCount: totalStoriesCreated,
+        views: totalStoryViews,
+        replies: 0,
+        linkClicks: 0,
+        shares: 0,
+        completionPct: updated.storiesRecap?.completionRate ?? 80,
+        notes: `Monthly Stories Recap: ${totalStoriesCreated} stories, ${totalStoryViews} views`,
+      });
+      toast.success('Data story bulanan berhasil disimpan.');
+    } catch (e: any) {
+      console.warn('Failed to persist story metric to backend:', e);
+      toast.error('Gagal menyimpan recap story: ' + (e.response?.data?.message || e.message || 'Terjadi kesalahan'));
+    }
+  };
+
+  const handleSaveWeeklyData = async (
+    brandName: string,
+    monthYear: string,
+    updatedWeek: WeeklyReportData
+  ) => {
+    const reportKey = `${brandName}__${monthYear}`;
+    const base = getReportForBrandAndPeriod(brandName, monthYear);
+    const existing = base.weeklyReports || [];
+    const newWeekly = existing.map(w => (w.weekNumber === updatedWeek.weekNumber ? updatedWeek : w));
+
+    const updated: BrandReport = {
+      ...base,
+      weeklyReports: newWeekly,
+    };
+
+    setReports(prev => ({
+      ...prev,
+      [reportKey]: updated,
+      [brandName]: updated,
+    }));
+
+    try {
+      const { periodStart, periodEnd } = parsePeriodDates(monthYear || selectedPeriod);
+      const { weekStart, weekEnd } = getWeekDates(monthYear || selectedPeriod, updatedWeek.weekNumber);
+      const starting = updatedWeek.startingFollowers ?? 
+        Math.max(0, updatedWeek.endingFollowers - (updatedWeek.followersGained - updatedWeek.followersUnfollowed));
+
+      await api.post('/marketing/social/reports/weekly', {
+        brandId: brandName,
+        periodStart,
+        periodEnd,
+        weekNumber: updatedWeek.weekNumber,
+        weekStart,
+        weekEnd,
+        followersStart: starting,
+        followersEnd: updatedWeek.endingFollowers,
+        followersGained: updatedWeek.followersGained,
+        followersLost: updatedWeek.followersUnfollowed,
+        reach: updatedWeek.reach,
+        views: updatedWeek.views,
+        impressions: updatedWeek.impressions ?? 0,
+        totalEngagement: updatedWeek.totalEngagement,
+        storiesCount: updatedWeek.storiesCount,
+        storyViews: updatedWeek.totalStoryViews,
+        highlights: updatedWeek.highlights,
+        notes: updatedWeek.notes,
+      });
+      toast.success(`Laporan Minggu ${updatedWeek.weekNumber} berhasil disimpan.`);
+    } catch (e: any) {
+      console.warn('Failed to persist weekly report to backend:', e);
+      toast.error('Gagal menyimpan laporan mingguan: ' + (e.response?.data?.message || e.message || 'Terjadi kesalahan'));
+    }
+  };
+
   const handlePrint = () => {
     if (typeof window !== 'undefined') window.print();
   };
 
-  // Channel mapping helpers
-  const channelPlannerMap: Record<MainTab, string> = {
-    executive: 'Instagram',
-    instagram: 'Instagram',
-    tiktok: 'TikTok',
-    youtube: 'YouTube',
-    website: 'Website',
-    ads: 'Paid Ads'
-  };
-
-  const channelReportTabMap: Record<MainTab, ReportTab> = {
-    executive: 'all',
-    instagram: 'weekly',
-    tiktok: 'tiktok',
-    youtube: 'youtube',
-    website: 'website',
-    ads: 'ads'
+  // Switch Brand helper
+  const handleSwitchBrand = (brandName: 'Dreamlab' | 'Toribio') => {
+    setActiveBrandName(brandName);
+    const targetSlug = brandName.toLowerCase();
+    router.push(`/marketing/${targetSlug}`);
   };
 
   return (
-    <div className="w-full space-y-5">
-      {/* 🏛️ LAYER 01: Ultra-Clean Un-boxed Header (Visual DNA Standard) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <Link
-            href="/marketing/management-task/overview"
-            className="text-[12px] font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1.5 text-decoration-none mb-1 w-fit transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Management Task
-          </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-[28px] md:text-[32px] leading-[40px] font-bold text-slate-900 tracking-tight uppercase">
-              {activeBrandName} — SOCIAL MEDIA &amp; PIPELINE
-            </h1>
-            {/* Quick Brand Switcher */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveBrandName('Dreamlab');
-                  router.push('/marketing/reports/dreamlab');
-                }}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-md transition ${
-                  activeBrandName === 'Dreamlab'
-                    ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+    <div className="w-full min-h-screen bg-slate-50/50 space-y-6">
+      {/* 🏛️ HEADER: Modern Un-boxed Visual DNA */}
+      <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-5 shadow-2xs">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Link
+                href="/marketing/management-task"
+                className="text-xs font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1 transition"
               >
-                Dreamlab
+                <ArrowLeft className="w-3.5 h-3.5" /> Management Task
+              </Link>
+              <span className="text-slate-300">/</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Social Media Brands
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-base text-white shadow-xs"
+                style={{ backgroundColor: currentBrand.color }}
+              >
+                {currentBrand.initial}
+              </div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight uppercase">
+                {currentBrand.name} Workspace
+              </h1>
+
+              {/* Brand Switcher Toggle */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 ml-2">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchBrand('Dreamlab')}
+                  className={`text-xs font-bold px-3 py-1 rounded-lg transition ${
+                    activeBrandName === 'Dreamlab'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Dreamlab
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchBrand('Toribio')}
+                  className={`text-xs font-bold px-3 py-1 rounded-lg transition ${
+                    activeBrandName === 'Toribio'
+                      ? 'bg-pink-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Toribio
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-1.5">
+              <span className="font-semibold text-slate-700">{currentBrand.handle}</span> · PIC: {currentBrand.pic} · {currentBrand.note}
+            </p>
+          </div>
+
+          {/* Quick Action Toolbar */}
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            {/* Period Selector */}
+            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-0.5 shadow-2xs h-9">
+              <button
+                onClick={handlePrevMonth}
+                disabled={periodIndex >= AVAILABLE_MONTHS.length - 1}
+                className="p-1.5 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 rounded-lg transition"
+                title="Bulan Sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveBrandName('Toribio');
-                  router.push('/marketing/reports/toribio');
-                }}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-md transition ${
-                  activeBrandName === 'Toribio'
-                    ? 'bg-pink-600 text-white shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="text-xs font-bold bg-transparent px-2 text-slate-800 focus:outline-none cursor-pointer"
               >
-                Toribio
+                {AVAILABLE_MONTHS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleNextMonth}
+                disabled={periodIndex <= 0}
+                className="p-1.5 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 rounded-lg transition"
+                title="Bulan Berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
+
+            <button
+              onClick={() => {
+                setReportBrandTarget(currentBrand.name);
+                setIsReportMetricModalOpen(true);
+              }}
+              className="h-9 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5 text-blue-600" />
+              <span>Update Metrik</span>
+            </button>
+
+            <button
+              onClick={handlePrint}
+              className="h-9 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
+              title="Cetak Laporan"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Print</span>
+            </button>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {currentBrand.handle} · Arsitektur pelacakan konversi berjenjang, perencanaan konten, dan analitik multi-kanal.
-          </p>
         </div>
 
-        {/* Global Toolbar: Month Nav, Update Metrik Bulanan, Print */}
-        <div className="flex flex-wrap items-center gap-2.5 print:hidden">
-          {/* Month Selector */}
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-2xs h-9">
-            <button
-              onClick={handlePrevMonth}
-              disabled={periodIndex >= AVAILABLE_MONTHS.length - 1}
-              className="p-1.5 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 rounded-lg transition"
-              title="Bulan Sebelumnya"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="text-xs font-semibold bg-transparent px-2 text-slate-800 focus:outline-none cursor-pointer"
-            >
-              {AVAILABLE_MONTHS.map((m) => (
-                <option key={m} value={m}>
-                  {m} {m === 'September 2026' ? '· (Aktif)' : ''}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleNextMonth}
-              disabled={periodIndex <= 0}
-              className="p-1.5 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 rounded-lg transition"
-              title="Bulan Berikutnya"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+        {/* 🌟 UNIFIED CHANNEL TOP NAVBAR: Overview, Instagram, TikTok, YouTube, Website & SEO, Paid Ads, Lead Funnel, Stories Recap */}
+        <div className="max-w-7xl mx-auto mt-5 pt-3 border-t border-slate-100 flex items-center justify-between overflow-x-auto">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 shrink-0">
+            {BRAND_NAV_CHANNELS.map((ch) => {
+              const Icon = ch.icon;
+              const isActive = activeTab === ch.id;
+              return (
+                <button
+                  key={ch.id}
+                  type="button"
+                  id={`brand-nav-${ch.id}`}
+                  onClick={() => {
+                    setActiveTab(ch.id);
+                  }}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+                    isActive
+                      ? 'bg-white text-blue-600 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-blue-600' : ch.color}`} />
+                  <span>{ch.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <button
-            onClick={() => {
-              setReportMetricBrand(currentBrand.name);
-              setReportMetricModalOpen(true);
-            }}
-            className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5 text-blue-600" />
-            <span>Update Metrik Bulanan</span>
-          </button>
-
-          <button
-            onClick={handlePrint}
-            className="h-9 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
-            title="Cetak Ringkasan Laporan"
-          >
-            <Printer className="w-3.5 h-3.5 text-slate-500" />
-            <span>Print / PDF</span>
-          </button>
+          <div className="text-xs font-semibold text-slate-400 hidden lg:flex items-center gap-2">
+            <span>Periode Aktif:</span>
+            <span className="text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md">{selectedPeriod}</span>
+          </div>
         </div>
       </div>
 
-      {/* 🏛️ LAYER 03: Bordered Tab Nav Container (Visual DNA Standard) */}
-      <div className="bg-white border border-slate-200 rounded-xl p-1 shadow-2xs h-[46px] flex items-center gap-1 overflow-x-auto">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`h-[38px] px-4 rounded-lg text-[12px] transition-all shrink-0 cursor-pointer border-none flex items-center gap-2 ${
-                isActive
-                  ? 'bg-blue-600 text-white font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : tab.colorClass || 'text-slate-500'}`} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 🏛️ SUB-NAV MODE PILL (Shown for social media channels: Planner vs Report) */}
-      {activeTab !== 'executive' && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Mode Switcher Pill */}
-          <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => setChannelMode('planner')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold transition ${
-                channelMode === 'planner'
-                  ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Content Planner ({TABS.find(t => t.id === activeTab)?.label})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setChannelMode('report')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold transition ${
-                channelMode === 'report'
-                  ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <LineChart className="w-3.5 h-3.5" />
-              <span>Performance Report ({TABS.find(t => t.id === activeTab)?.label})</span>
-            </button>
+      {/* 🚀 MAIN CONTENT BODY */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+        {/* ========================================================= */}
+        {/* TAB 1: OVERVIEW (All-In-One Executive Summary & Brand KPIs) */}
+        {/* ========================================================= */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <BrandReportingView
+              brand={currentBrand}
+              report={currentReport}
+              previousReport={previousReport}
+              posts={posts}
+              initialTab="all"
+              currentPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
+              onOpenReportMetricModal={(b) => {
+                setReportBrandTarget(b);
+                setIsReportMetricModalOpen(true);
+              }}
+              onOpenPostMetricsModal={(p) => setEditingPostMetrics(p)}
+              onOpenStoriesModal={(b, m) => setEditingMonthlyStories({ brandName: b, monthYear: m })}
+              onOpenDailyStoryModal={(b, m, s) => setEditingMonthlyStories({ brandName: b, monthYear: m })}
+              onSaveReportMetrics={handleSaveReportMetrics}
+              onUpdatePostMedia={handleUpdatePostMedia}
+              onNavigateToPlanner={(channel) => {
+                if (channel) {
+                  const chLower = channel.toLowerCase();
+                  if (chLower.includes('tiktok')) setActiveTab('tiktok');
+                  else if (chLower.includes('youtube')) setActiveTab('youtube');
+                  else if (chLower.includes('web')) setActiveTab('website');
+                  else if (chLower.includes('ad')) setActiveTab('ads');
+                  else setActiveTab('instagram');
+                } else {
+                  setActiveTab('instagram');
+                }
+                setChannelViewMode('planner');
+              }}
+            />
           </div>
+        )}
 
-          {/* Quick Context Action */}
-          <div className="flex items-center gap-2">
-            {channelMode === 'planner' ? (
-              <button
-                onClick={() => {
-                  setPostModalInitialDate(new Date().toISOString().split('T')[0]);
-                  setPostModalOpen(true);
-                }}
-                className="h-8 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah Konten {TABS.find(t => t.id === activeTab)?.label}</span>
-              </button>
+        {/* ========================================================= */}
+        {/* TAB 2..8: SPECIFIC SOCIAL CHANNEL (Report & Planner Modes) */}
+        {/* ========================================================= */}
+        {activeTab !== 'overview' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* 📍 Channel Sub-Header Bar: Channel Identity & Report/Planner Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${currentChannelConfig.bg}`}>
+                  <currentChannelConfig.icon className={`w-4 h-4 ${currentChannelConfig.color}`} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-extrabold text-slate-900 leading-tight">
+                      {currentBrand.name} · {currentChannelConfig.label}
+                    </h2>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 uppercase">
+                      {channelViewMode === 'report' ? 'Report Mode' : 'Planner Mode'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                    {currentChannelConfig.desc}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sub-Navbar Toggle: Report & Planner */}
+              <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 shrink-0">
+                <button
+                  type="button"
+                  id={`channel-btn-report`}
+                  onClick={() => setChannelViewMode('report')}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    channelViewMode === 'report'
+                      ? 'bg-white text-blue-600 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  <span>Report</span>
+                </button>
+
+                <button
+                  type="button"
+                  id={`channel-btn-planner`}
+                  onClick={() => setChannelViewMode('planner')}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    channelViewMode === 'planner'
+                      ? 'bg-white text-blue-600 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  <span>Planner</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Content: Either Channel Report or Channel Content Planner */}
+            {channelViewMode === 'report' ? (
+              <div>
+                {activeTab === 'instagram' && (
+                  <WeeklyReportingSection
+                    brand={currentBrand}
+                    report={currentReport}
+                    currentPeriod={selectedPeriod}
+                    onUpdateWeeklyReports={(updatedReports) => {
+                      const updated: BrandReport = { ...currentReport, weeklyReports: updatedReports };
+                      handleSaveReportMetrics(updated);
+                    }}
+                  />
+                )}
+                {activeTab === 'tiktok' && (
+                  <TikTokSection data={currentReport.tiktokReport || EMPTY_TIKTOK_REPORT} />
+                )}
+                {activeTab === 'youtube' && (
+                  <YouTubeSection data={currentReport.youtubeReport || EMPTY_YOUTUBE_REPORT} />
+                )}
+                {activeTab === 'website' && (
+                  <WebsiteSection data={currentReport.websiteReport || EMPTY_WEBSITE_REPORT} />
+                )}
+                {activeTab === 'ads' && (
+                  <PaidAdsSection
+                    brand={currentBrand}
+                    metaAds={currentReport.metaAdsReport || EMPTY_META_ADS_REPORT}
+                    googleAds={currentReport.googleAdsReport || EMPTY_GOOGLE_ADS_REPORT}
+                    period={selectedPeriod}
+                  />
+                )}
+                {activeTab === 'funnel' && (
+                  <NurturingFunnelSection
+                    brandName={currentBrand.name}
+                    funnels={currentReport.leadFunnels || EMPTY_LEAD_FUNNELS}
+                  />
+                )}
+                {activeTab === 'stories' && (
+                  <StoriesRecapSection
+                    brandName={currentBrand.name}
+                    monthYear={selectedPeriod}
+                    storiesRecap={currentReport.storiesRecap}
+                    previousReport={previousReport}
+                    onOpenStoriesModal={(b: string, m: string) => setEditingMonthlyStories({ brandName: b, monthYear: m })}
+                  />
+                )}
+              </div>
             ) : (
-              <span className="text-[11px] text-slate-500 font-medium">
-                Periode: <strong className="text-slate-800">{selectedPeriod}</strong>
-              </span>
+              <ContentPlannerView
+                brand={currentBrand}
+                posts={posts}
+                initialChannel={currentChannelConfig.plannerChannel}
+                onOpenAddPostModal={(date) => {
+                  setPostModalInitialDate(date);
+                  setIsPostModalOpen(true);
+                }}
+                onViewPostDetail={(p) => setDetailPost(p)}
+                onUpdatePostStatus={handleUpdatePostStatus}
+                onUpdatePostProgress={handleUpdatePostProgress}
+                onNavigateToReporting={() => setChannelViewMode('report')}
+              />
             )}
           </div>
-        </div>
-      )}
-
-      {/* 🏛️ MAIN CONTENT CONTAINER */}
-      <div className="w-full">
-        {/* 1. EXECUTIVE SUMMARY TAB (Gambar 1: Omni-Channel Funnel & All Overview) */}
-        {activeTab === 'executive' && (
-          <BrandReportingView
-            brand={currentBrand}
-            report={currentReport}
-            previousReport={previousReport}
-            posts={posts}
-            currentPeriod={selectedPeriod}
-            initialTab="all"
-            hideHeader={true}
-            onPeriodChange={setSelectedPeriod}
-            onOpenReportMetricModal={(bName) => {
-              setReportMetricBrand(bName);
-              setReportMetricModalOpen(true);
-            }}
-            onOpenPostMetricsModal={(post) => {
-              setPostForMetrics(post);
-              setPostMetricsModalOpen(true);
-            }}
-            onOpenStoriesModal={() => setMonthlyStoriesModalOpen(true)}
-            onSaveReportMetrics={handleSaveReportMetrics}
-            onNavigateToPlanner={(ch) => {
-              if (ch) {
-                const lower = ch.toLowerCase();
-                if (lower.includes('instagram')) setActiveTab('instagram');
-                else if (lower.includes('tiktok')) setActiveTab('tiktok');
-                else if (lower.includes('youtube')) setActiveTab('youtube');
-                else if (lower.includes('website')) setActiveTab('website');
-                else if (lower.includes('ads')) setActiveTab('ads');
-              } else {
-                setActiveTab('instagram');
-              }
-              setChannelMode('planner');
-            }}
-          />
-        )}
-
-        {/* 2. CHANNELS: PLANNER MODE (Gambar 3: Calendar & Database View, Status chips) */}
-        {activeTab !== 'executive' && channelMode === 'planner' && (
-          <ContentPlannerView
-            brand={currentBrand}
-            posts={posts}
-            initialChannel={channelPlannerMap[activeTab]}
-            onOpenAddPostModal={(initDate) => {
-              setPostModalInitialDate(initDate);
-              setPostModalOpen(true);
-            }}
-            onViewPostDetail={(post) => {
-              setSelectedPost(post);
-            }}
-            onUpdatePostStatus={handleUpdatePostStatus}
-            onUpdatePostProgress={handleUpdatePostProgress}
-            onNavigateToReporting={() => {
-              setChannelMode('report');
-            }}
-          />
-        )}
-
-        {/* 3. CHANNELS: REPORT MODE (Gambar 5: Weekly Report & Channel Analytics) */}
-        {activeTab !== 'executive' && channelMode === 'report' && (
-          <BrandReportingView
-            brand={currentBrand}
-            report={currentReport}
-            previousReport={previousReport}
-            posts={posts}
-            currentPeriod={selectedPeriod}
-            initialTab={channelReportTabMap[activeTab]}
-            hideHeader={true}
-            onPeriodChange={setSelectedPeriod}
-            onOpenReportMetricModal={(bName) => {
-              setReportMetricBrand(bName);
-              setReportMetricModalOpen(true);
-            }}
-            onOpenPostMetricsModal={(post) => {
-              setPostForMetrics(post);
-              setPostMetricsModalOpen(true);
-            }}
-            onOpenStoriesModal={() => setMonthlyStoriesModalOpen(true)}
-            onSaveReportMetrics={handleSaveReportMetrics}
-            onNavigateToPlanner={() => {
-              setChannelMode('planner');
-            }}
-          />
         )}
       </div>
 
-      {/* 🏛️ MODALS (Matching Gambar 1, 2, 4) */}
-      {/* 1. Tambah Konten & Creative Brief (Gambar 4) */}
+      {/* ========================================================= */}
+      {/* MODALS CONTAINER                                          */}
+      {/* ========================================================= */}
+      {/* 1. Add Post Modal */}
       <PostModal
-        isOpen={postModalOpen}
-        onClose={() => setPostModalOpen(false)}
+        isOpen={isPostModalOpen}
+        onClose={() => {
+          setIsPostModalOpen(false);
+          setPostModalInitialDate(undefined);
+        }}
         onSave={handleSavePost}
         brands={brands}
-        members={members}
+        members={INITIAL_MEMBERS}
         initialBrand={currentBrand.name}
         initialDate={postModalInitialDate}
       />
 
-      {/* 2. Detail Konten */}
-      {selectedPost && (
-        <PostDetailModal
-          post={selectedPost}
-          onClose={() => setSelectedPost(null)}
-          onDelete={handleDeletePost}
-          onUpdateStatus={(id, status) => {
-            handleUpdatePostStatus(id, status);
-            setSelectedPost(prev => prev && prev.id === id ? { ...prev, status } : prev);
-          }}
-        />
-      )}
+      {/* 2. Detail Post Modal */}
+      <PostDetailModal
+        post={detailPost}
+        onClose={() => setDetailPost(null)}
+        onDelete={handleDeletePost}
+        onUpdateStatus={handleUpdatePostStatus}
+      />
 
-      {/* 3. Update Metrik Bulanan (Gambar 2) */}
+      {/* 3. Post Metrics Modal */}
+      <PostMetricsModal
+        post={editingPostMetrics}
+        isOpen={Boolean(editingPostMetrics)}
+        onClose={() => setEditingPostMetrics(null)}
+        onSave={handleSavePostMetrics}
+      />
+
+      {/* 4. Report Metric Modal */}
       <ReportMetricModal
-        isOpen={reportMetricModalOpen}
-        onClose={() => setReportMetricModalOpen(false)}
-        brandName={reportMetricBrand}
-        currentReport={currentReport}
-        previousReport={previousReport}
-        currentPeriod={selectedPeriod}
+        isOpen={isReportMetricModalOpen}
+        onClose={() => setIsReportMetricModalOpen(false)}
+        brandName={reportBrandTarget}
+        currentReport={getReportForBrandAndPeriod(reportBrandTarget, selectedPeriod)}
         onSave={handleSaveReportMetrics}
       />
 
-      {/* 4. Edit Metrik Mingguan (Gambar 1 User Upload) */}
-      {editingWeeklyData && (
-        <WeeklyMetricModal
-          isOpen={weeklyMetricModalOpen}
-          onClose={() => {
-            setWeeklyMetricModalOpen(false);
-            setEditingWeeklyData(null);
-          }}
-          weekData={editingWeeklyData}
-          brandName={currentBrand.name}
-          currentPeriod={selectedPeriod}
-          onSave={handleSaveWeeklyMetric}
-        />
-      )}
-
       {/* 5. Monthly Stories Modal */}
-      {monthlyStoriesModalOpen && (
-        <MonthlyStoriesModal
-          isOpen={monthlyStoriesModalOpen}
-          onClose={() => setMonthlyStoriesModalOpen(false)}
-          brandName={currentBrand.name}
-          monthYear={selectedPeriod}
-          currentReport={currentReport}
-          previousReport={previousReport}
-          onSave={(totalStories, totalViews) => {
-            if (!currentReport) return;
-            const updated: BrandReport = {
-              ...currentReport,
-              storiesRecap: {
-                ...(currentReport.storiesRecap || {
-                  avgStoriesPerDay: 2,
-                  completionRate: 80,
-                  dailyStories: []
-                }),
-                totalStoriesCreated: totalStories,
-                totalStoryViews: totalViews,
-                avgViewsPerStory: totalStories > 0 ? Math.round(totalViews / totalStories) : 0
-              }
-            };
-            handleSaveReportMetrics(updated);
-            setMonthlyStoriesModalOpen(false);
-          }}
-        />
-      )}
-
-      {/* 6. Post Metrics Modal */}
-      {postForMetrics && (
-        <PostMetricsModal
-          isOpen={postMetricsModalOpen}
-          post={postForMetrics}
-          onClose={() => {
-            setPostMetricsModalOpen(false);
-            setPostForMetrics(null);
-          }}
-          onSave={(postId, metrics, imgUrl) => {
-            setPosts(prev => prev.map(p => {
-              if (p.id === postId) {
-                return {
-                  ...p,
-                  metrics,
-                  ...(imgUrl ? { imageUrl: imgUrl } : {})
-                };
-              }
-              return p;
-            }));
-            setPostMetricsModalOpen(false);
-            setPostForMetrics(null);
-          }}
-        />
-      )}
-
-      {/* 7. Brand Modal — disabled pending useCreateBrand hook */}
-      <BrandModal
-        isOpen={brandModalOpen}
-        onClose={() => setBrandModalOpen(false)}
-        members={members}
-        onSave={() => {
-          // ponytail: brand mutation hook not yet exposed; UI save is no-op
-          setBrandModalOpen(false);
+      <MonthlyStoriesModal
+        isOpen={Boolean(editingMonthlyStories)}
+        onClose={() => setEditingMonthlyStories(null)}
+        brandName={editingMonthlyStories?.brandName || currentBrand.name}
+        monthYear={editingMonthlyStories?.monthYear || selectedPeriod}
+        currentReport={currentReport}
+        previousReport={previousReport}
+        onSave={(totalStoriesCreated: number, totalStoryViews: number) => {
+          handleSaveMonthlyStories(
+            editingMonthlyStories?.brandName || currentBrand.name,
+            editingMonthlyStories?.monthYear || selectedPeriod,
+            totalStoriesCreated,
+            totalStoryViews
+          );
         }}
       />
+
+      {/* 6. Weekly Metric Modal */}
+      {editingWeeklyData && (
+        <WeeklyMetricModal
+          isOpen={Boolean(editingWeeklyData)}
+          onClose={() => setEditingWeeklyData(null)}
+          weekData={editingWeeklyData.weekData}
+          brandName={editingWeeklyData.brandName}
+          currentPeriod={editingWeeklyData.monthYear}
+          onSave={(updatedWeek: WeeklyReportData) => {
+            handleSaveWeeklyData(editingWeeklyData.brandName, editingWeeklyData.monthYear, updatedWeek);
+            setEditingWeeklyData(null);
+          }}
+        />
+      )}
     </div>
   );
 }

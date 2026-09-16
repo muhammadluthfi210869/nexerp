@@ -1,0 +1,17 @@
+# Page Audit — ORPHAN
+
+- **Path**: `C:\GAWE\Web Dev\Porto Aureon\ERP FROM ZERO\frontend\src\app\(dashboard)\pembelian\request-list\page.tsx`
+- **Route**: `/pembelian/request-list`
+- **Spec**: ❌ ORPHAN — no SCR mapping (orphan)
+- **Match Method**: orphan
+- **Total Lines**: 123
+- **DNA Components**: 3
+- **Raw UI Barrel Imports**: 1 (target: 0)
+- **Mock Arrays**: 0 
+- **React Query Hooks**: 6
+- **Hardcoded `Rp`**: 0
+- **Hardcoded `toLocaleString`**: 0
+
+## Orphan Page — No Spec Mapping
+
+This page does not map to any SCR in `NEX_ERP_SCREEN_AND_API_CATALOG.json`. Mark as **non-spec page** or backfill mapping.

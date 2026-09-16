@@ -50,113 +50,17 @@ export const WebsiteSection: React.FC<WebsiteSectionProps> = ({
   const [newTaskImpact, setNewTaskImpact] = useState('+400 Impressions / +5 Leads');
 
   const defaultData: WebsiteReportData = {
-    totalSessions: 38400,
-    totalUsers: 27900,
-    organicImpressions: 148500,
-    organicClicks: 12400,
-    avgCtr: 8.35,
-    avgPosition: 3.8,
-    leadsTraffic: 186,
-    sampleRequests: 62,
-    conversionRate: 1.5,
-    queries: [
-      {
-        id: 'wq-1',
-        queryName: 'jasa maklon skincare bpom resmi',
-        impressions: 42500,
-        clicks: 4120,
-        ctr: 9.69,
-        avgPosition: 1.8,
-        leadsTraffic: 68,
-        sampleRequests: 24,
-        landingPage: '/maklon-skincare-bpom'
-      },
-      {
-        id: 'wq-2',
-        queryName: 'pabrik kosmetik r&d formulasi maklon',
-        impressions: 28400,
-        clicks: 2650,
-        ctr: 9.33,
-        avgPosition: 2.2,
-        leadsTraffic: 42,
-        sampleRequests: 16,
-        landingPage: '/formulasi-lab'
-      },
-      {
-        id: 'wq-3',
-        queryName: 'sample maklon kosmetik gratis trial formula',
-        impressions: 21900,
-        clicks: 2480,
-        ctr: 11.32,
-        avgPosition: 1.4,
-        leadsTraffic: 45,
-        sampleRequests: 18,
-        landingPage: '/request-sample-kit'
-      },
-      {
-        id: 'wq-4',
-        queryName: 'biaya maklon serum barrier repair jogja',
-        impressions: 18200,
-        clicks: 1420,
-        ctr: 7.8,
-        avgPosition: 3.1,
-        leadsTraffic: 21,
-        sampleRequests: 4,
-        landingPage: '/biaya-maklon-kalkulator'
-      },
-      {
-        id: 'wq-5',
-        queryName: 'cara buat brand skincare sendiri tanpa pabrik',
-        impressions: 37500,
-        clicks: 1730,
-        ctr: 4.61,
-        avgPosition: 4.5,
-        leadsTraffic: 10,
-        sampleRequests: 0,
-        landingPage: '/blog/panduan-brand-skincare-pemula'
-      }
-    ],
-    tasks: [
-      {
-        id: 'wt-1',
-        title: 'Optimasi Landing Page Form Request Sample Maklon (CRO & Speed)',
-        category: 'CRO & Sample Form',
-        assignee: 'Gusti',
-        targetQuery: 'sample maklon kosmetik gratis trial formula',
-        dueDate: '2026-09-12',
-        status: 'In Progress',
-        impact: '+25% Form Submission Rate'
-      },
-      {
-        id: 'wt-2',
-        title: 'Publikasi Artikel Pilar: Panduan Formulasi Ceramide & Niacinamide',
-        category: 'Blog Article',
-        assignee: 'Rahmat',
-        targetQuery: 'formulasi ceramide cream stabil',
-        dueDate: '2026-09-15',
-        status: 'Completed',
-        impact: '+520 Organic Impressions'
-      },
-      {
-        id: 'wt-3',
-        title: 'Technical SEO: Fix Core Web Vitals LCP < 1.8s di Mobile',
-        category: 'Technical & Speed',
-        assignee: 'Zarkasi',
-        dueDate: '2026-09-18',
-        status: 'Completed',
-        impact: 'Passing 100% Google PageSpeed'
-      },
-      {
-        id: 'wt-4',
-        title: 'A/B Testing Hero WhatsApp CTA vs Direct Form di Homepage',
-        category: 'Landing Page',
-        assignee: 'Revita',
-        targetQuery: 'jasa maklon skincare bpom resmi',
-        dueDate: '2026-09-22',
-        status: 'Pending',
-        impact: 'Target +15 Leads Mingguan'
-      }
-    ]
+    totalSessions: 0,
+    totalUsers: 0,
+    organicImpressions: 0,
+    organicClicks: 0,
+    avgCtr: 0,
+    avgPosition: 0,
+    leadsTraffic: 0,
+    sampleRequests: 0,
+    conversionRate: 0,
+    queries: [],
+    tasks: []
   };
 
   const data = report || propData || defaultData;
@@ -211,49 +115,36 @@ export const WebsiteSection: React.FC<WebsiteSectionProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* WEBSITE HEADER BANNER */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
-              <Globe className="w-3.5 h-3.5" />
-              <span>Website & SEO Performance Center</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>{currentBrandName}</span>
-              <span className="text-blue-400">Website Traffic & Lead Inquiries</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-              Pengelolaan tugas website SEO & landing page, metrik Google Search Console (Impressions & Query Name), serta pelacakan konversi leads & permintaan sample.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('queries')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'queries'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span>Query Name & Traffic</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('tasks')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'tasks'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>Task Website ({data.tasks.length})</span>
-            </button>
-          </div>
+      {/* WEBSITE SUB-BAR */}
+      <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+        <div className="text-xs font-bold text-slate-700">
+          Website &amp; SEO Center
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab('queries')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'queries'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Query Name &amp; Traffic</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('tasks')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'tasks'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span>Task Website ({data.tasks.length})</span>
+          </button>
         </div>
       </div>
 

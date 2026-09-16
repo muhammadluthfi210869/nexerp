@@ -1,13 +1,16 @@
 # ═══════════════════════════════════════════════════════════════
-#  CI — Build, Test & Push (satu-satunya pipeline, branch main)
+#  CI — Build, Test & Push (Pipeline Teroptimasi, Branch main)
 # ═══════════════════════════════════════════════════════════════
-#  Alur sejak konsolidasi 2026-09 (production-light DIARSIPKAN):
-#
-#    PR → build-and-test gate → merge ke main → push-images ke GHCR
-#    → di VPS: bash scripts/deploy.sh <sha>  (pull, TANPA build)
-#
-#  VPS (4GB) tidak pernah build; CI yang build dengan layer cache GHA.
-#  Rollback: bash scripts/rollback.sh <sha-lama> (image per-SHA abadi).
+#  Optimasi 2026-09-16 (§11 & §12 PANDUAN-TESTING-DAN-DEPLOY-LENGKAP):
+#    - PR: Fast regression & contracts check (~30 detik, tanpa Docker build)
+#    - Push to main: Single-pass pipeline (~8-10 menit):
+#        1. Build backend image & tag (1x build)
+#        2. Boot backend dengan Postgres test service
+#        3. Run test-deploy.sh (smoke 6/6)
+#        4. Run pre-flight E2E smoke (auth revita, members count, dual-write)
+#        5. Push backend image ke GHCR
+#        6. Build & push frontend image ke GHCR (1x build, production args)
+#    - VPS (4GB) hanya pull image per-SHA, tanpa build
 # ═══════════════════════════════════════════════════════════════
 
 name: 🔨 CI — Build, Test & Push
@@ -17,6 +20,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,8 +31,23 @@ env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 jobs:
-  build-and-test:
-    name: 🔨 Build & Integration Test
+  # ── FAST GATE UNTUK PULL REQUEST (~30 detik) ────────────────
+  fast-gate:
+    name: ⚡ Fast Contract & Regression Gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🧪 Run All Regression & Contract Tests
+        run: |
+          chmod +x scripts/__tests__/*.sh
+          bash scripts/__tests__/run-all.sh
+
+  # ── MAIN PIPELINE: TEST, PRE-FLIGHT SMOKE & PUSH KE GHCR ───
+  push-images:
+    name: 🚀 Test, Smoke & Push Images ke GHCR
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -44,30 +63,34 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: 🔑 Login ke GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🧪 Run Regression & Contract Tests
+        run: |
+          chmod +x scripts/__tests__/*.sh
+          bash scripts/__tests__/run-all.sh
+
       - name: 🏗️ Build Backend Image
         uses: docker/build-push-action@v6
         with:
           context: ./backend
           load: true
-          tags: nexerp-backend:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: 🏗️ Build Frontend Image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          load: true
-          tags: nexerp-frontend:test
-          build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost:3001/v1
-            JWT_SECRET=test-secret-do-not-use-in-production
+          tags: |
+            nexerp-backend:test
+            ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -98,54 +121,53 @@ jobs:
             fi
           done
 
-      - name: 🩺 Integration Tests
+      - name: 🩺 Standard Integration Tests (6/6)
         run: |
           chmod +x scripts/test-deploy.sh
           bash scripts/test-deploy.sh http://localhost:3001/v1
 
-      - name: 🧪 Consolidation Regression Tests
+      - name: 🔍 Pre-Flight E2E Smoke Tests
         run: |
-          chmod +x scripts/__tests__/consolidation.test.sh
-          bash scripts/__tests__/consolidation.test.sh
+          set -e
+          BASE="http://localhost:3001/v1"
+          echo "=== 1. Login Check (DIGIMAR User) ==="
+          LOGIN_RES=$(curl -sf -X POST "$BASE/auth/login" \
+            -H "Content-Type: application/json" \
+            -d '{"email":"revita@nexerp.id","password":"password123"}' || echo "")
+          TOKEN=$(echo "$LOGIN_RES" | jq -r '.accessToken // empty')
+          [ -n "$TOKEN" ] || { echo "❌ Pre-flight: Login gagal untuk revita@nexerp.id"; exit 1; }
+          echo "✅ Login berhasil, accessToken diperoleh"
 
-      - name: 📝 Logs (jika gagal)
-        if: failure()
-        run: docker logs nexerp-backend-test --tail 100
+          echo "=== 2. Marketing Members Check (Dept Whitelist & Seed Shape) ==="
+          MEMBERS_RES=$(curl -sf -X GET "$BASE/marketing/members" \
+            -H "Authorization: Bearer $TOKEN" || echo "[]")
+          COUNT=$(echo "$MEMBERS_RES" | jq 'length')
+          [ "$COUNT" -gt 0 ] || { echo "❌ Pre-flight: /marketing/members kosong (0 anggota)"; exit 1; }
+          echo "✅ /marketing/members mengembalikan $COUNT anggota"
 
-      - name: 🧹 Bersihkan container
-        if: always()
-        run: docker rm -f nexerp-backend-test 2>/dev/null || true
+          echo "=== 3. Dual-Write Task Creation Check ==="
+          ASSIGNEE_ID=$(echo "$MEMBERS_RES" | jq -r '.[0].userId // empty')
+          [ -n "$ASSIGNEE_ID" ] || ASSIGNEE_ID=$(echo "$LOGIN_RES" | jq -r '.user.id // empty')
+          CREATE_RES=$(curl -sf -X POST "$BASE/marketing/tasks" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"title\":\"CI Pre-flight Task\",\"assigneeId\":\"$ASSIGNEE_ID\",\"type\":\"DAILY\",\"priority\":\"LOW\",\"channel\":\"web\",\"category\":\"smoke\",\"startDate\":\"2026-09-15\",\"dueDate\":\"2026-09-16\"}" || echo "")
+          echo "$CREATE_RES" | jq -e '.id // .taskCode // .status' >/dev/null \
+            || { echo "❌ Pre-flight: createTask dual-write gagal"; echo "$CREATE_RES"; exit 1; }
+          echo "✅ Dual-write createTask terverifikasi"
 
-  push-images:
-    name: 📦 Push Images ke GHCR
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+          echo "=== 4. Prototype Route Disabled Check ==="
+          PROTO_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" "$BASE/marketing/prototype/bundle")
+          [ "$PROTO_CODE" = "404" ] || { echo "❌ Pre-flight: prototype endpoint masih aktif (HTTP $PROTO_CODE)"; exit 1; }
+          echo "✅ Prototype endpoint non-aktif (HTTP 404)"
 
-      - name: 🐳 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: 📦 Push Backend Image ke GHCR
+        run: |
+          docker push "${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}"
+          docker push "${{ env.IMAGE_PREFIX }}/backend:latest"
 
-      - name: 🔑 Login ke GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 📦 Build & Push Backend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: 📦 Build & Push Frontend
+      - name: 📦 Build & Push Frontend Image ke GHCR
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
@@ -156,18 +178,25 @@ jobs:
           build-args: |
             # ponytail: nginx rewrite ^/api/(.*) /v1/$1 (nginx.conf:80).
             # Browser hits /api/<path>; nginx adds /v1/ → backend /v1/<path>.
-            # Setting base to /api (NOT /api/v1) avoids the double-prefix 404
-            # bug (login returns /v1/v1/auth/login instead of /v1/auth/login).
+            # Setting base to /api (NOT /api/v1) avoids double-prefix 404.
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api' }}
             NEXT_PUBLIC_WA_PHONE=${{ vars.NEXT_PUBLIC_WA_PHONE || '6287793032556' }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: ✅ Ringkasan
+      - name: 📝 Logs (jika gagal)
+        if: failure()
+        run: docker logs nexerp-backend-test --tail 100
+
+      - name: 🧹 Bersihkan container
+        if: always()
+        run: docker rm -f nexerp-backend-test 2>/dev/null || true
+
+      - name: ✅ Ringkasan Rilis
         run: |
-          echo "### Image ter-push" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 🚀 Build & Test Berhasil — Image Ter-push ke GHCR" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Deploy: \`ssh dreamlab@103.93.134.215\` → \`cd /home/dreamlab/nexerp && bash scripts/deploy.sh ${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy ke VPS: \`ssh dreamlab@103.93.134.215\` → \`cd /home/dreamlab/nexerp && bash scripts/deploy.sh ${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"

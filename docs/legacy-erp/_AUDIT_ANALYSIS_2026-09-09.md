@@ -489,3 +489,15 @@ Dokumen legacy ERP (`docs/legacy-erp/`) merupakan **blueprint substansial** untu
 **Status agents background:** 3 agents masih berjalan untuk mengisi gap (78 REQUIREMENT penuh, KPI detail, database schema, finance spec detail). Output mereka akan menjadi suplemen terhadap dokumen ini — khususnya untuk Bagian 5 (archive conflicts) yang belum sepenuhnya ditelusuri.
 
 **Next step**: Bila user konfirmasi, lanjut ke Step 1 rekomendasi di Bagian 6.2.
+
+---
+
+## 10. ADDENDUM AUDIT LIVE ERP (2026-09-15) — RESOLUSI GAP 176 VS 144 LAYAR
+Per 15 September 2026, telah dilakukan live crawling & inspection terhadap sistem produksi `https://kil.gserp.id` (menggunakan akun `zaki@dreamlab.id` dari `.env`).
+
+**Hasil Temuan Kunci & Rekonsiliasi**:
+1. **144 Layar Aktif (HTTP 200)** terverifikasi hidup di `kil.gserp.id`. Ini cocok **98.63%** dengan file `_archive/kil_erp_full_inventory.csv` (146 baris baseline murni).
+2. **Selisih 31 Layar 404** pada `NEX_ERP_SCREEN_AND_API_CATALOG.json` (176 layar) terkonfirmasi sebagai **REQUIREMENT TAMBAHAN / ADVANCEMENT** yang berasal dari `_archive/kil_erp_full_inventory_v2.csv` (meliputi modul Aset Tetap, Escrow Ledger, Rekonsiliasi Bank, Tax Setup, Budgeting, Fund Request, dan Laporan Aging). Layar-layar ini belum pernah dibuat di server lama.
+3. **1 Layar Defect HTTP 500**: `/dashboard-human-resources` mengalami internal error pada backend legacy.
+4. **Dokumen Patokan Resmi**: Telah diterbitkan dokumen panduan definitif [NEX_ERP_LIVE_AUDIT_AND_PARITY_REFERENCE.md](file:///c:/GAWE/Web%20Dev/Porto%20Aureon/ERP%20FROM%20ZERO/docs/legacy-erp/NEX_ERP_LIVE_AUDIT_AND_PARITY_REFERENCE.md) dan update metadata `liveStatus` pada [NEX_ERP_SCREEN_AND_API_CATALOG.json](file:///c:/GAWE/Web%20Dev/Porto%20Aureon/ERP%20FROM%20ZERO/docs/legacy-erp/NEX_ERP_SCREEN_AND_API_CATALOG.json) (v2.1.0).
+

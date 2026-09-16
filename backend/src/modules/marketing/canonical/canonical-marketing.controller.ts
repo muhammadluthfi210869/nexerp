@@ -38,6 +38,8 @@ import {
   UpdateMarketingMemberDto,
   UpdateTaskStatusDto,
   UpsertChannelMetricDto,
+  UpsertStoryMetricDto,
+  UpsertWeeklyReportDto,
 } from './canonical-marketing.dto';
 import { CanonicalMarketingService } from './canonical-marketing.service';
 
@@ -314,6 +316,26 @@ export class CanonicalMarketingController {
     @Headers('idempotency-key') key?: string,
   ): Promise<unknown> {
     return this.service.upsertChannelMetric(req.user, dto, key);
+  }
+
+  @Post('social/reports/weekly')
+  @Roles(...SOCIAL_WRITE_ROLES)
+  upsertWeeklyReport(
+    @Req() req: any,
+    @Body() dto: UpsertWeeklyReportDto,
+    @Headers('idempotency-key') key?: string,
+  ): Promise<unknown> {
+    return this.service.upsertWeeklyReport(req.user, dto, key);
+  }
+
+  @Post('social/reports/stories')
+  @Roles(...SOCIAL_WRITE_ROLES)
+  upsertStoryMetric(
+    @Req() req: any,
+    @Body() dto: UpsertStoryMetricDto,
+    @Headers('idempotency-key') key?: string,
+  ): Promise<unknown> {
+    return this.service.upsertStoryMetric(req.user, dto, key);
   }
 
   @Get('social/integrations')

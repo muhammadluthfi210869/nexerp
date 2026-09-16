@@ -104,30 +104,33 @@ const DIGIMAR_SECTIONS: NavSection[] = [
     items: []
   },
   {
-    id: "dm-omnicrm",
-    title: "OmniCRM",
-    groupLabel: "MARKETING & CRM",
-    icon: Users,
-    isDirect: true,
-    href: "/samples/omni-crm",
-    items: []
-  },
-  {
-    id: "dm-social",
-    title: "Social Media",
-    groupLabel: "KONTEN & MEDIA",
-    icon: Sparkles,
-    isDirect: true,
-    href: "/marketing/social-tracker",
-    items: []
-  },
-  {
     id: "dm-tasks",
     title: "Management Task",
     groupLabel: "TASK MANAGEMENT",
     icon: ClipboardList,
     isDirect: true,
     href: "/marketing/management-task/overview",
+    items: []
+  },
+  {
+    id: "dm-social-brands",
+    title: "Social Media Brands",
+    groupLabel: "KONTEN & MEDIA",
+    icon: Sparkles,
+    badge: "2 BRANDS",
+    badgeVariant: "info",
+    items: [
+      { name: "Dreamlab", href: "/marketing/dreamlab", icon: Sparkles, badge: "B2B", badgeVariant: "default" },
+      { name: "Toribio", href: "/marketing/toribio", icon: Sparkles, badge: "B2C", badgeVariant: "purple" },
+    ]
+  },
+  {
+    id: "dm-omnicrm",
+    title: "OmniCRM",
+    groupLabel: "MARKETING & CRM",
+    icon: Users,
+    isDirect: true,
+    href: "/samples/omni-crm",
     items: []
   }
 ];
@@ -548,6 +551,22 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
     ]
   },
 
+  // ── 5.1 DIGITAL MARKETING & BRANDS ──
+  {
+    id: "sa-marketing",
+    title: "Digital Marketing & Brands",
+    groupLabel: "5.1 MARKETING & BRANDS",
+    icon: Sparkles,
+    badge: "2 BRANDS",
+    badgeVariant: "info",
+    items: [
+      { name: "Management Task", href: "/marketing/management-task/overview", icon: ClipboardList, badge: "TIM", badgeVariant: "warning" },
+      { name: "Brand Dreamlab", href: "/marketing/dreamlab", icon: Sparkles, badge: "B2B", badgeVariant: "default" },
+      { name: "Brand Toribio", href: "/marketing/toribio", icon: Sparkles, badge: "B2C", badgeVariant: "purple" },
+      { name: "Dashboard Digimar", href: "/marketing/dashboard", icon: LayoutDashboard },
+    ]
+  },
+
   // ── 6. PEMBELIAN & PENGADAAN (SCM) ──
   {
     id: "sa-purchasing",
@@ -726,6 +745,8 @@ export function Sidebar() {
   const isNavActive = (href: string) => {
     const [targetPath, targetQuery] = href.split("?");
     if (targetPath.startsWith("/marketing/management-task") && pathname.startsWith("/marketing/management-task")) return true;
+    if (targetPath.startsWith("/marketing/dreamlab") && pathname.startsWith("/marketing/dreamlab")) return true;
+    if (targetPath.startsWith("/marketing/toribio") && pathname.startsWith("/marketing/toribio")) return true;
     if (targetPath !== pathname) return false;
     if (!targetQuery) return !searchParams.toString();
     return new URLSearchParams(targetQuery).toString() === searchParams.toString();

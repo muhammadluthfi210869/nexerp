@@ -8,6 +8,8 @@ export interface Task {
   type: TaskType;
   project?: string;
   assignee: string; // Member name
+  assigneeId?: string; // Member user / team id
+  brand?: string;
   startDate: string; // YYYY-MM-DD
   dueDate: string; // YYYY-MM-DD
   priority: TaskPriority;
@@ -22,6 +24,7 @@ export interface Task {
 
 export interface Member {
   id: string;
+  userId?: string;
   name: string;
   role: string;
   email: string;

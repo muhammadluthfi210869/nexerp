@@ -28,6 +28,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [type, setType] = useState<TaskType>('Daily');
   const [project, setProject] = useState('');
   const [assignee, setAssignee] = useState(members[0]?.name || 'Gusti');
+  const [brand, setBrand] = useState(initialTask?.brand || 'Dreamlab');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [priority, setPriority] = useState<TaskPriority>('Medium');
@@ -42,6 +43,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setType(initialTask.type);
       setProject(initialTask.project || '');
       setAssignee(initialTask.assignee);
+      setBrand(initialTask.brand || 'Dreamlab');
       setStartDate(initialTask.startDate);
       setDueDate(initialTask.dueDate);
       setPriority(initialTask.priority);
@@ -54,6 +56,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setType('Daily');
       setProject('');
       setAssignee(members[0]?.name || 'Gusti');
+      setBrand('Dreamlab');
       const today = new Date().toISOString().split('T')[0];
       setStartDate(today);
       setDueDate(today);
@@ -78,6 +81,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       type,
       project: type === 'Project' ? (project || 'Project General') : undefined,
       assignee,
+      brand,
       startDate,
       dueDate,
       priority,
@@ -118,7 +122,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block font-bold text-slate-700 mb-1">Tipe Task</label>
               <select
@@ -141,6 +145,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 {members.map(m => (
                   <option key={m.id} value={m.name}>{m.name} ({m.role})</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Brand</label>
+              <select
+                value={brand}
+                onChange={e => setBrand(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none"
+              >
+                <option value="Dreamlab">Dreamlab (B2B)</option>
+                <option value="Toribio">Toribio (B2C)</option>
               </select>
             </div>
           </div>

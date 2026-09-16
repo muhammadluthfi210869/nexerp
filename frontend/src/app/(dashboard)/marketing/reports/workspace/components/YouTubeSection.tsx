@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Youtube } from '../utils/socialIcons';
 import { 
   Play, 
   Clock, 
@@ -47,53 +46,17 @@ export const YouTubeSection: React.FC<YouTubeSectionProps> = ({
 
   const activeReportData = report || data;
   const youtubeData: YouTubeReportData = activeReportData || {
-    subscribers: 8450,
-    subsGained: 680,
-    totalViews: 28400,
-    watchTimeHours: 1420,
-    avgViewDuration: '4:35',
-    impressions: 215000,
-    ctr: 7.8,
-    leadsContributed: 64,
-    sampleRequests: 21,
-    trafficSources: [
-      { source: 'YouTube Search (SEO Kata Kunci)', percentage: 46 },
-      { source: 'Suggested Videos (Rekomendasi Algoritma)', percentage: 32 },
-      { source: 'External / Website & WhatsApp', percentage: 14 },
-      { source: 'Channel Pages & Others', percentage: 8 }
-    ],
-    topVideos: [
-      {
-        id: 'yt-1',
-        title: 'Panduan Lengkap Maklon Skincare BPOM: Modal, Syarat & Tahapan Formulasi',
-        format: 'Video',
-        views: 14200,
-        watchTimeHours: 890,
-        ctr: 9.2,
-        leadsContributed: 38,
-        sampleRequests: 14
-      },
-      {
-        id: 'yt-2',
-        title: 'Bedah Formula Skincare Viral: Kenapa Kulit Malah Rusak & Iritasi?',
-        format: 'Video',
-        views: 8900,
-        watchTimeHours: 410,
-        ctr: 7.4,
-        leadsContributed: 18,
-        sampleRequests: 5
-      },
-      {
-        id: 'yt-3',
-        title: 'Cara Bedain Niacinamide Murni vs Campuran di Lab #Shorts',
-        format: 'Shorts',
-        views: 5300,
-        watchTimeHours: 120,
-        ctr: 6.8,
-        leadsContributed: 8,
-        sampleRequests: 2
-      }
-    ]
+    subscribers: 0,
+    subsGained: 0,
+    totalViews: 0,
+    watchTimeHours: 0,
+    avgViewDuration: '0:00',
+    impressions: 0,
+    ctr: 0,
+    leadsContributed: 0,
+    sampleRequests: 0,
+    trafficSources: [],
+    topVideos: []
   };
 
   const youtubePosts = (posts || []).filter(p => 
@@ -103,49 +66,36 @@ export const YouTubeSection: React.FC<YouTubeSectionProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* YOUTUBE HEADER */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/80 text-red-400 text-xs font-semibold border border-red-500/20">
-              <Youtube className="w-3.5 h-3.5 text-red-500" />
-              <span>YouTube Long-Form & Shorts Hub</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>{currentBrandName}</span>
-              <span className="text-red-400">YouTube Channel & Video Leads</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-              Pilar konten otoritas mendalam (deep educational content) untuk B2B Maklon kosmetik dan review formula dengan intent konversi tinggi.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'overview'
-                  ? 'bg-red-600 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>YouTube Analytics</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'videos'
-                  ? 'bg-red-600 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Video Planner & Pipeline</span>
-            </button>
-          </div>
+      {/* YOUTUBE SUB-BAR */}
+      <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+        <div className="text-xs font-bold text-slate-700">
+          YouTube Hub
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab('overview')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'overview'
+                ? 'bg-red-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>YouTube Analytics</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('videos')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'videos'
+                ? 'bg-red-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Play className="w-3.5 h-3.5" />
+            <span>Video Pipeline ({youtubePosts.length})</span>
+          </button>
         </div>
       </div>
 

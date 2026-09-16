@@ -18,6 +18,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Warehouse,
   ShieldCheck,
@@ -46,6 +47,8 @@ import {
   DnaCell,
   useDnaToast,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
 export interface MasterWarehouseItem {
@@ -345,6 +348,41 @@ function MasterWarehousesContent() {
   // ── States ──
   const [warehousesList, setWarehousesList] = useState<MasterWarehouseItem[]>(INITIAL_WAREHOUSES);
   const [accessList, setAccessList] = useState<WarehouseAccessItem[]>(INITIAL_WAREHOUSE_ACCESS);
+
+  // ── Backend API Query ──
+  const { data: apiWarehouses, refetch: refetchWarehouses } = useQuery({
+    queryKey: ["master-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/warehouses");
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : null;
+      } catch (e) {
+        console.warn("Using fallback warehouses:", e);
+        return null;
+      }
+    },
+    staleTime: 30000,
+  });
+
+  useEffect(() => {
+    if (apiWarehouses && Array.isArray(apiWarehouses) && apiWarehouses.length > 0) {
+      const mapped: MasterWarehouseItem[] = apiWarehouses.map((w: any) => ({
+        id: w.id,
+        kodeGudang: w.code || `GDG-${w.id.substring(0, 4)}`,
+        namaGudang: w.name,
+        lokasi: w.location || "Sidoarjo",
+        provinsi: "Jawa Timur",
+        telepon: w.phone || "-",
+        picName: w.picName || "Ghufron Dreamlab",
+        tipePenyimpanan: "Suhu Ruang (Ambient)",
+        totalBinLocations: 24,
+        status: w.status || "ACTIVE",
+        alamatLengkap: w.location || "-",
+      }));
+      setWarehousesList(mapped);
+    }
+  }, [apiWarehouses]);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -692,35 +730,13 @@ function MasterWarehousesContent() {
             <table className="w-full text-left border-collapse text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  {/* Select All Checkbox */}
-                  <th className="p-3.5 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={paginatedWarehouses.length > 0 && selectedRowIds.length === paginatedWarehouses.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                  <th className="p-3.5 w-10 text-slate-400">#</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[110px]"
-                    onClick={() => handleHeaderSortToggle("kodeGudang")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>KODE</span>
-                      {sortColumn === "kodeGudang" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
+                  <th className="p-3.5 w-12 text-slate-400">#</th>
                   <th
                     className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[220px]"
                     onClick={() => handleHeaderSortToggle("namaGudang")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>NAMA GUDANG</span>
+                      <span>GUDANG</span>
                       {sortColumn === "namaGudang" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
@@ -728,12 +744,13 @@ function MasterWarehousesContent() {
                       )}
                     </div>
                   </th>
+                  <th className="p-3.5 min-w-[140px]">TELEPON</th>
                   <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
+                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[140px]"
                     onClick={() => handleHeaderSortToggle("lokasi")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>WILAYAH LOKASI</span>
+                      <span>LOKASI</span>
                       {sortColumn === "lokasi" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
@@ -741,104 +758,36 @@ function MasterWarehousesContent() {
                       )}
                     </div>
                   </th>
-                  <th className="p-3.5 min-w-[120px]">NOMOR TELEPON</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[160px]"
-                    onClick={() => handleHeaderSortToggle("picName")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>PIC PENANGGUNG JAWAB</span>
-                      {sortColumn === "picName" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 min-w-[180px]">TIPE SUHU / PENYIMPANAN</th>
-                  <th
-                    className="p-3.5 text-center cursor-pointer hover:bg-slate-100/60 min-w-[100px]"
-                    onClick={() => handleHeaderSortToggle("totalBinLocations")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>BIN SLOT</span>
-                      {sortColumn === "totalBinLocations" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 text-center min-w-[90px]">STATUS</th>
-                  <th className="p-3.5 text-center w-24">AKSI</th>
+                  <th className="p-3.5 text-center font-bold w-24 whitespace-nowrap">#</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedWarehouses.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-slate-400">
+                    <td colSpan={5} className="p-8 text-center text-slate-400">
                       Tidak ada data gudang yang sesuai filter.
                     </td>
                   </tr>
                 ) : (
                   paginatedWarehouses.map((w, idx) => {
-                    const isSelected = selectedRowIds.includes(w.id);
                     return (
                       <tr
                         key={w.id}
-                        className={`hover:bg-slate-50/80 transition-colors cursor-default ${
-                          isSelected ? "bg-blue-50/30" : ""
-                        }`}
+                        className="hover:bg-slate-50/80 transition-colors cursor-default"
                       >
-                        <td className="p-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(w.id)}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          />
-                        </td>
                         <td className="p-3.5 text-slate-400 tabular-nums">
                           {(currentPage - 1) * pageSize + idx + 1}
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Code value={w.kodeGudang} />
+                        <td className="p-3.5 font-bold text-slate-900 whitespace-nowrap">
+                          {w.namaGudang}
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Text
-                            primary={w.namaGudang}
-                            secondary={w.alamatLengkap}
-                            maxWidth="max-w-[240px]"
-                          />
-                        </td>
-                        <td className="p-3.5 text-slate-600 font-medium">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{w.lokasi}</span>
-                          </div>
-                        </td>
-                        <td className="p-3.5 font-mono text-[11px] text-slate-600">
+                        <td className="p-3.5 font-mono text-[11px] text-slate-600 whitespace-nowrap">
                           {w.telepon || "-"}
                         </td>
-                        <td className="p-3.5 font-medium text-slate-800">
-                          {w.picName}
+                        <td className="p-3.5 text-slate-600 font-medium whitespace-nowrap">
+                          {w.lokasi}
                         </td>
-                        <td className="p-3.5">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                            <Thermometer className="w-3 h-3 text-blue-500" />
-                            {w.tipePenyimpanan}
-                          </span>
-                        </td>
-                        <td className="p-3.5 text-center">
-                          <DnaCell.Number value={w.totalBinLocations} />
-                        </td>
-                        <td className="p-3.5 text-center">
-                          <DnaCell.Badge
-                            label={w.status}
-                            status={w.status === "ACTIVE" ? "success" : "default"}
-                          />
-                        </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <DnaCell.Actions
                             onEdit={() => handleOpenEditWarehouse(w)}
                             onDelete={() => setWarehouseToDelete(w)}

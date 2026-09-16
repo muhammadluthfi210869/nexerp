@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SuppliersService } from '../services/suppliers.service';
@@ -17,8 +18,8 @@ export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
 
   @Get()
-  findAll() {
-    return this.suppliersService.findAll();
+  findAll(@Query() query?: any) {
+    return this.suppliersService.findAll(query);
   }
 
   @Get(':id')

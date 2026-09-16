@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().min(2, "Corporate email or username is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -39,7 +39,11 @@ export default function LoginPage() {
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      const response = await api.post("/auth/login", data);
+      const identifier = data.email.trim();
+      const response = await api.post("/auth/login", {
+        email: identifier,
+        password: data.password,
+      });
       const { access_token, user } = response.data;
 
       // Store token securely for client-side usage
@@ -56,8 +60,20 @@ export default function LoginPage() {
 
       toast.success(`Welcome back, ${user.fullName || user.email}!`);
 
-      // Unified redirect — all users go to executive dashboard
-      window.location.href = "/executive/dashboard";
+      // Smart redirect:
+      // 1. If redirected from a specific page (?redirect=...)
+      // 2. If user is DIGIMAR role, go to Digital Marketing Management Task Overview
+      // 3. Otherwise executive dashboard
+      const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const redirectTarget = params?.get("redirect");
+
+      if (redirectTarget && redirectTarget.startsWith("/")) {
+        window.location.href = redirectTarget;
+      } else if (user.roles?.includes("DIGIMAR") && !user.roles?.includes("SUPER_ADMIN")) {
+        window.location.href = "/marketing/management-task/overview";
+      } else {
+        window.location.href = "/executive/dashboard";
+      }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || "Login failed. Check your credentials.");
@@ -95,11 +111,13 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent className="space-y-6 pt-4 px-10">
               <div className="space-y-2.5">
-                <Label htmlFor="email" className="text-slate-500 font-bold text-[10px] uppercase tracking-wider ml-1">Corporate Email</Label>
+                <Label htmlFor="email" className="text-slate-500 font-bold text-[10px] uppercase tracking-wider ml-1">Corporate Email / Username</Label>
                 <Input
                   id="email"
-                  type="email"
-                  placeholder="name@Nex.com"
+                  type="text"
+                  placeholder="revita@nexerp.id or revita"
+                  autoCapitalize="none"
+                  autoCorrect="off"
                   className="border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-300 focus:ring-primary/20 focus:border-primary/50 rounded-2xl h-14 font-medium transition-all"
                   {...register("email")}
                 />

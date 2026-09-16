@@ -65,7 +65,12 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
   // Member stats calculations
   const memberStats = useMemo(() => {
     return members.map(m => {
-      const mTasks = tasks.filter(t => t.assignee === m.name);
+      const mTasks = tasks.filter(t => {
+        if (t.assigneeId && (t.assigneeId === m.id || t.assigneeId === m.userId)) return true;
+        const tAss = (t.assignee || '').toLowerCase();
+        const mName = (m.name || '').toLowerCase();
+        return tAss === mName || tAss.includes(mName) || mName.includes(tAss);
+      });
       const mDaily = mTasks.filter(t => t.type === 'Daily');
       const mDailyDone = mDaily.filter(t => t.status === 'Completed').length;
       const mProject = mTasks.filter(t => t.type === 'Project');

@@ -26,11 +26,11 @@ export const WeeklyReportingSection: React.FC<WeeklyReportingSectionProps> = ({
     ? report.weeklyReports
     : (report.weeklyTrends && report.weeklyTrends.length > 0)
       ? report.weeklyTrends.map((wt, idx) => {
-          const gained = wt.followersGained || Math.round(report.followersGained / 4);
-          const unfoll = wt.followersUnfollowed || Math.round(report.followersUnfollowed / 4);
+          const gained = wt.followersGained || Math.round((report.followersGained || 0) / 4);
+          const unfoll = wt.followersUnfollowed || Math.round((report.followersUnfollowed || 0) / 4);
           const net = gained - unfoll;
-          const storiesCt = Math.max(1, Math.round((report.storiesRecap?.totalStoriesCreated || 20) / 4));
-          const storyVw = Math.round((report.storiesRecap?.totalStoryViews || 48000) / 4);
+          const storiesCt = Math.max(0, Math.round((report.storiesRecap?.totalStoriesCreated || 0) / 4));
+          const storyVw = Math.round((report.storiesRecap?.totalStoryViews || 0) / 4);
           return {
             id: `wr-gen-${idx + 1}`,
             weekNumber: idx + 1,
@@ -39,20 +39,20 @@ export const WeeklyReportingSection: React.FC<WeeklyReportingSectionProps> = ({
             followersGained: gained,
             followersUnfollowed: unfoll,
             netGrowth: net,
-            endingFollowers: (report.totalFollowers || 28000) - (3 - idx) * 350,
-            views: wt.views || Math.round(report.totalViews / 4),
-            reach: wt.reach || Math.round(report.totalReach / 4),
-            totalEngagement: wt.engagement || Math.round(report.totalEngagements / 4),
-            engagementRate: Number(report.engagementRate || 5.0),
-            likes: Math.round((report.totalLikes || 4000) / 4),
-            comments: Math.round((report.totalComments || 350) / 4),
-            shares: Math.round((report.totalShares || 1200) / 4),
-            saves: Math.round((report.totalSaves || 2400) / 4),
+            endingFollowers: report.totalFollowers || 0,
+            views: wt.views || Math.round((report.totalViews || 0) / 4),
+            reach: wt.reach || Math.round((report.totalReach || 0) / 4),
+            totalEngagement: wt.engagement || Math.round((report.totalEngagements || 0) / 4),
+            engagementRate: Number(report.engagementRate || 0),
+            likes: Math.round((report.totalLikes || 0) / 4),
+            comments: Math.round((report.totalComments || 0) / 4),
+            shares: Math.round((report.totalShares || 0) / 4),
+            saves: Math.round((report.totalSaves || 0) / 4),
             storiesCount: storiesCt,
             totalStoryViews: storyVw,
             avgViewsPerStory: storiesCt > 0 ? Math.round(storyVw / storiesCt) : 0,
             storyReplies: Math.round((storyVw * 0.003)),
-            storyCompletionRate: report.storiesRecap?.completionRate || 78
+            storyCompletionRate: report.storiesRecap?.completionRate || 0
           };
         })
       : [];

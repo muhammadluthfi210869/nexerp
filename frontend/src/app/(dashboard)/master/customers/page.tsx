@@ -18,6 +18,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
   UserCheck,
@@ -46,6 +47,8 @@ import {
   DnaCell,
   useDnaToast,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
 export interface MasterCustomerItem {
@@ -287,6 +290,55 @@ function MasterCustomersContent() {
   const [selectedKpiFilter, setSelectedKpiFilter] = useState<string>("ALL");
   const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>("kategori");
   const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
+
+  // ── Backend API Query ──
+  const { data: apiCustomers, refetch: refetchCustomers } = useQuery({
+    queryKey: ["master-customers", searchQuery],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/master/customers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
+        const body = unwrapResponse(res);
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : null;
+      } catch (e) {
+        console.warn("Using fallback customers:", e);
+        return null;
+      }
+    },
+    staleTime: 30000,
+  });
+
+  useEffect(() => {
+    if (apiCustomers && Array.isArray(apiCustomers) && apiCustomers.length > 0) {
+      const mapped: MasterCustomerItem[] = apiCustomers.map((c: any) => ({
+        id: c.id,
+        customerCode: c.code || `CUST-${c.id.substring(0, 4)}`,
+        nama: c.name,
+        brandName: c.name,
+        pic: c.name,
+        phone: c.phone || "-",
+        email: c.email || undefined,
+        kategori: (c.notes?.match(/Kategori:\s*([^|]+)/)?.[1]?.trim() as any) || "Calon Pelanggan",
+        penginput: c.notes?.match(/Penginput:\s*([^|]+)/)?.[1]?.trim() || "Admin",
+        kota: c.address || "-",
+        provinsi: "",
+        alamatLengkap: c.address || "-",
+        contractType: "Jasa Maklon",
+        nominalSoProduk: 0,
+        soSampleCount: 0,
+        soProdukCount: 0,
+        status: c.isActive ? "ACTIVE" : "INACTIVE",
+        sampleFeeTotal: 0,
+        sampleStatus: "-",
+        produksiBatchTotal: 0,
+        produksiStatus: "-",
+        legalitasBpom: "Belum Diajukan",
+        legalitasHalal: "Belum",
+        legalitasHki: "Belum",
+        escrowDeposit: 0,
+      }));
+      setCustomersList(mapped);
+    }
+  }, [apiCustomers]);
 
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -714,56 +766,34 @@ function MasterCustomersContent() {
             <table className="w-full text-left border-collapse text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  {/* Checkbox Select All */}
-                  <th className="p-3.5 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={paginatedCustomers.length > 0 && selectedRowIds.length === paginatedCustomers.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                  <th className="p-3.5 w-10 text-slate-400">#</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
-                    onClick={() => handleHeaderSortToggle("customerCode")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>CUSTOMER CODE</span>
-                      {sortColumn === "customerCode" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
+                  <th className="p-3.5 w-12 text-slate-400">#</th>
                   <th
                     className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[200px]"
-                    onClick={() => handleHeaderSortToggle("brandName")}
+                    onClick={() => handleHeaderSortToggle("nama")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>PELANGGAN & BRAND</span>
-                      {sortColumn === "brandName" ? (
+                      <span>NAMA</span>
+                      {sortColumn === "nama" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
                         <ArrowUpDown className="w-3 h-3 text-slate-400" />
                       )}
                     </div>
                   </th>
-                  <th className="p-3.5 min-w-[130px]">TELEPON / WA</th>
+                  <th className="p-3.5 min-w-[130px]">TELEPON</th>
                   <th className="p-3.5 min-w-[130px]">KATEGORI</th>
                   <th
                     className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[150px]"
                     onClick={() => handleHeaderSortToggle("penginput")}
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span>SALES PIC</span>
+                      <span>PENGINPUT</span>
                       {sortColumn === "penginput" ? (
                         sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
                       ) : (
                         <ArrowUpDown className="w-3 h-3 text-slate-400" />
                       )}
-                    </div>
+                      </div>
                   </th>
                   <th
                     className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[120px]"
@@ -793,56 +823,38 @@ function MasterCustomersContent() {
                   </th>
                   <th className="p-3.5 text-center min-w-[90px]">SO SAMPLE</th>
                   <th className="p-3.5 text-center min-w-[90px]">SO PRODUK</th>
-                  <th className="p-3.5 min-w-[110px]">TIPE KONTRAK</th>
-                  <th className="p-3.5 text-center w-28">AKSI</th>
+                  <th className="p-3.5 text-center font-bold w-24 whitespace-nowrap">#</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="p-8 text-center text-slate-400">
+                    <td colSpan={10} className="p-8 text-center text-slate-400">
                       Tidak ada data pelanggan yang sesuai filter.
                     </td>
                   </tr>
                 ) : (
                   paginatedCustomers.map((cust, idx) => {
-                    const isSelected = selectedRowIds.includes(cust.id);
                     return (
                       <tr
                         key={cust.id}
-                        className={`hover:bg-slate-50/80 transition-colors cursor-default ${
-                          isSelected ? "bg-blue-50/30" : ""
-                        }`}
+                        className="hover:bg-slate-50/80 transition-colors cursor-default"
                       >
-                        {/* Checkbox */}
-                        <td className="p-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(cust.id)}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          />
-                        </td>
                         <td className="p-3.5 text-slate-400 tabular-nums">
                           {(currentPage - 1) * pageSize + idx + 1}
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Code
-                            value={cust.customerCode}
+                        <td className="p-3.5 font-bold text-slate-900 whitespace-nowrap">
+                          <button
                             onClick={() => {
                               setSelectedCustomer(cust);
                               setIsDetailModalOpen(true);
                             }}
-                          />
+                            className="hover:text-blue-600 hover:underline text-left font-semibold text-slate-900"
+                          >
+                            {cust.nama}
+                          </button>
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Text
-                            primary={cust.brandName}
-                            secondary={`a/n ${cust.nama}`}
-                            maxWidth="max-w-[220px]"
-                          />
-                        </td>
-                        <td className="p-3.5">
+                        <td className="p-3.5 whitespace-nowrap">
                           <a
                             href={`https://wa.me/${cust.phone.replace(/^0/, "62")}`}
                             target="_blank"
@@ -853,7 +865,7 @@ function MasterCustomersContent() {
                             {cust.phone}
                           </a>
                         </td>
-                        <td className="p-3.5">
+                        <td className="p-3.5 whitespace-nowrap">
                           <DnaCell.Badge
                             label={cust.kategori}
                             status={
@@ -867,34 +879,26 @@ function MasterCustomersContent() {
                             }
                           />
                         </td>
-                        <td className="p-3.5">
-                          <DnaCell.Avatar
-                            name={cust.penginput}
-                            subtext="Sales Representative"
-                          />
+                        <td className="p-3.5 text-slate-700 font-medium text-[12px] whitespace-nowrap">
+                          {cust.penginput}
                         </td>
-                        <td className="p-3.5 text-slate-600 font-medium">
+                        <td className="p-3.5 text-slate-600 font-medium whitespace-nowrap">
                           {cust.kota}
                         </td>
-                        <td className="p-3.5 text-right">
+                        <td className="p-3.5 text-right whitespace-nowrap">
                           <DnaCell.Currency value={cust.nominalSoProduk} />
                         </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <span className="font-mono font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
                             {cust.soSampleCount}
                           </span>
                         </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <span className="font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                             {cust.soProdukCount}
                           </span>
                         </td>
-                        <td className="p-3.5">
-                          <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                            {cust.contractType}
-                          </span>
-                        </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <DnaCell.Actions
                             onView={() => {
                               setSelectedCustomer(cust);

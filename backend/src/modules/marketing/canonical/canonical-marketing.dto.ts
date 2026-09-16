@@ -40,14 +40,15 @@ export class CreateChecklistItemDto {
 }
 
 export class CreateCanonicalTaskDto {
-  @IsIn(['DAILY', 'PROJECT']) type!: 'DAILY' | 'PROJECT';
+  @IsIn(['DAILY', 'PROJECT', 'Daily', 'Project', 'daily', 'project'])
+  type!: string;
   @IsString() @MinLength(1) @MaxLength(255) title!: string;
-  @IsOptional() @IsUUID() projectId?: string;
-  @IsOptional() @IsUUID() brandId?: string;
+  @IsOptional() @IsString() projectId?: string;
+  @IsOptional() @IsString() brandId?: string;
   @IsString() @MinLength(1) @MaxLength(100) channel!: string;
   @IsString() @MinLength(1) @MaxLength(100) category!: string;
-  @IsUUID() assigneeId!: string;
-  @IsOptional() @IsUUID() reviewerId?: string;
+  @IsString() assigneeId!: string;
+  @IsOptional() @IsString() reviewerId?: string;
   @IsIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']) priority!: string;
   @IsDateString() startDate!: string;
   @IsDateString() dueDate!: string;
@@ -91,7 +92,7 @@ export class UpdateCanonicalTaskDto {
 
 export class UpdateTaskStatusDto {
   @IsIn(TASK_STATUSES) status!: (typeof TASK_STATUSES)[number];
-  @IsInt() @Min(1) version!: number;
+  @IsOptional() @IsInt() @Min(1) version?: number;
   @IsOptional() @IsString() @MaxLength(1_000) reason?: string;
 }
 
@@ -162,14 +163,14 @@ export class UpdateBrandDto {
 }
 
 export class ReportingQueryDto extends PaginationQueryDto {
-  @IsOptional() @IsUUID() brandId?: string;
+  @IsOptional() @IsString() brandId?: string;
   @IsOptional() @IsString() @MaxLength(50) channel?: string;
   @IsOptional() @IsDateString() periodStart?: string;
   @IsOptional() @IsDateString() periodEnd?: string;
 }
 
 export class UpsertChannelMetricDto {
-  @IsUUID() brandId!: string;
+  @IsString() brandId!: string;
   @IsDateString() periodStart!: string;
   @IsDateString() periodEnd!: string;
   @IsString() @MaxLength(50) channel!: string;
@@ -215,4 +216,41 @@ export class UpdateMarketingMemberDto {
   @IsOptional() @IsString() @MaxLength(100) department?: string;
 }
 
+export class UpsertWeeklyReportDto {
+  @IsString() @MinLength(1) brandId!: string;
+  @IsDateString() periodStart!: string;
+  @IsDateString() periodEnd!: string;
+  @IsInt() @Min(1) @Max(5) weekNumber!: number;
+  @IsDateString() weekStart!: string;
+  @IsDateString() weekEnd!: string;
+  @IsOptional() @IsInt() @Min(0) followersStart = 0;
+  @IsOptional() @IsInt() @Min(0) followersEnd = 0;
+  @IsOptional() @IsInt() @Min(0) followersGained = 0;
+  @IsOptional() @IsInt() @Min(0) followersLost = 0;
+  @IsOptional() @IsInt() @Min(0) reach = 0;
+  @IsOptional() @IsInt() @Min(0) views = 0;
+  @IsOptional() @IsInt() @Min(0) impressions = 0;
+  @IsOptional() @IsInt() @Min(0) totalEngagement = 0;
+  @IsOptional() @IsInt() @Min(0) storiesCount = 0;
+  @IsOptional() @IsInt() @Min(0) storyViews = 0;
+  @IsOptional() @IsString() @MaxLength(5000) highlights?: string;
+  @IsOptional() @IsString() @MaxLength(5000) notes?: string;
+}
+
+export class UpsertStoryMetricDto {
+  @IsString() @MinLength(1) brandId!: string;
+  @IsDateString() periodStart!: string;
+  @IsDateString() periodEnd!: string;
+  @IsDateString() date!: string;
+  @IsOptional() @IsInt() @Min(0) storiesCount = 0;
+  @IsOptional() @IsInt() @Min(0) views = 0;
+  @IsOptional() @IsInt() @Min(0) replies = 0;
+  @IsOptional() @IsInt() @Min(0) linkClicks = 0;
+  @IsOptional() @IsInt() @Min(0) shares = 0;
+  @IsOptional() @Type(() => Number) @Min(0) @Max(100) completionPct?: number;
+  @IsOptional() @IsString() @MaxLength(255) topic?: string;
+  @IsOptional() @IsString() @MaxLength(5000) notes?: string;
+}
+
 export { SOCIAL_STATUSES };
+

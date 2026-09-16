@@ -131,3 +131,80 @@ export function calcComparison(current: number | undefined | null, previous: num
     formattedDiff
   };
 }
+
+const INDO_MONTHS: Record<string, number> = {
+  januari: 0,
+  februari: 1,
+  maret: 2,
+  april: 3,
+  mei: 4,
+  juni: 5,
+  juli: 6,
+  agustus: 7,
+  september: 8,
+  oktober: 9,
+  november: 10,
+  desember: 11,
+};
+
+export function parsePeriodDates(monthYear: string): { periodStart: string; periodEnd: string } {
+  if (!monthYear) {
+    const now = new Date();
+    const start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
+    return { periodStart: start.toISOString(), periodEnd: end.toISOString() };
+  }
+  const parts = monthYear.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    const monthName = parts[0].toLowerCase();
+    const year = parseInt(parts[1], 10) || new Date().getFullYear();
+    const monthIndex = INDO_MONTHS[monthName] ?? new Date().getMonth();
+    const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0, 23, 59, 59, 999));
+    return {
+      periodStart: start.toISOString(),
+      periodEnd: end.toISOString(),
+    };
+  }
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
+  return { periodStart: start.toISOString(), periodEnd: end.toISOString() };
+}
+
+export function getWeekDates(
+  monthYear: string,
+  weekNumber: number
+): { weekStart: string; weekEnd: string } {
+  const parts = (monthYear || '').trim().split(/\s+/);
+  const now = new Date();
+  const year = parts.length >= 2 ? parseInt(parts[1], 10) || now.getFullYear() : now.getFullYear();
+  const monthName = parts.length >= 1 ? parts[0].toLowerCase() : '';
+  const monthIndex = INDO_MONTHS[monthName] ?? now.getMonth();
+
+  const lastDayOfMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getDate();
+
+  let startDay = 1;
+  let endDay = 7;
+  if (weekNumber === 2) {
+    startDay = 8;
+    endDay = 14;
+  } else if (weekNumber === 3) {
+    startDay = 15;
+    endDay = 21;
+  } else if (weekNumber === 4) {
+    startDay = 22;
+    endDay = 28;
+  } else if (weekNumber >= 5) {
+    startDay = 29;
+    endDay = lastDayOfMonth;
+  }
+
+  const start = new Date(Date.UTC(year, monthIndex, Math.min(startDay, lastDayOfMonth), 0, 0, 0, 0));
+  const end = new Date(Date.UTC(year, monthIndex, Math.min(endDay, lastDayOfMonth), 23, 59, 59, 999));
+
+  return {
+    weekStart: start.toISOString(),
+    weekEnd: end.toISOString(),
+  };
+}

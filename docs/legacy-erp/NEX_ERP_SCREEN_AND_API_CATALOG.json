@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "generatedAt": "2026-09-09T11:51:01.670Z",
   "description": "Machine-readable screen, form inputs, table columns, cards, and API catalog for NEX ERP",
   "totalScreens": 176,
@@ -42,7 +42,29 @@
         "Pending",
         "Lihat Detail"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 8 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-guest-book/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /dashboard-guest-book/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal & Waktu",
+          "Nama Klien",
+          "Meeting & PIC",
+          "Kontak",
+          "Kota",
+          "Produk Diminati",
+          "MOQ",
+          "Target Market",
+          "Kategori",
+          "Status",
+          "Aksi"
+        ]
+      }
     },
     {
       "screenId": "SCR-002",
@@ -87,7 +109,27 @@
       "actions": [
         "PERLU OPTIMASI"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 17 & 76: Widget AR Aging terintegrasi di BusDev. Data history / card tetap muncul meskipun user berpindah filter bulan"
+      "specialRequirementsNotes": "\"\" | Poin 17 & 76: Widget AR Aging terintegrasi di BusDev. Data history / card tetap muncul meskipun user berpindah filter bulan",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 10 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-business-development/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "BD NAME",
+          "LEADS",
+          "FOLLOW UP",
+          "CR SAMPLE",
+          "CR DEAL",
+          "CLS SAMPLE",
+          "CLS NEW CLIENT",
+          "CLS RO",
+          "ACTUAL REVENUE",
+          "STATUS"
+        ]
+      }
     },
     {
       "screenId": "SCR-003",
@@ -145,7 +187,44 @@
         "Lihat",
         "Lihat Timeline"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 28 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-client-production/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /dashboard-client-production/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Brand/Produk",
+          "Sales Order",
+          "BusDev",
+          "Mulai",
+          "Berakhir",
+          "Deadline",
+          "Progress",
+          "Status Projek",
+          "Desain Logo Semua Pending Process Done",
+          "HKI Semua Pending Process Done",
+          "BPOM Merk Semua Pending Process Done",
+          "BPOM NA Semua Pending Process Done",
+          "MOU Semua Pending Process Done",
+          "Desain Kemasan Semua Pending Process Done",
+          "Approval Desain Semua Pending Process Done",
+          "Bahan Baku Semua Pending Process Done",
+          "Pelunasan Semua Pending Process Done",
+          "Mixing Semua Pending Process Done",
+          "Bahan Kemas Semua Pending Process Done",
+          "Filling Semua Pending Process Done",
+          "Label Semua Pending Process Done",
+          "Box Semua Pending Process Done",
+          "Packing Semua Pending Process Done",
+          "Delivery Semua Pending Process Done",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-004",
@@ -202,7 +281,44 @@
         "Lihat",
         "Lihat Timeline"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 21 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-client-repeat-order/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /dashboard-client-repeat-order/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Brand/Produk",
+          "Sales Order",
+          "BusDev",
+          "Mulai",
+          "Berakhir",
+          "Deadline",
+          "Progress",
+          "Status Projek",
+          "Desain Logo Semua Pending Process Done",
+          "HKI Semua Pending Process Done",
+          "BPOM Merk Semua Pending Process Done",
+          "BPOM NA Semua Pending Process Done",
+          "MOU Semua Pending Process Done",
+          "Desain Kemasan Semua Pending Process Done",
+          "Approval Desain Semua Pending Process Done",
+          "Bahan Baku Semua Pending Process Done",
+          "Pelunasan Semua Pending Process Done",
+          "Mixing Semua Pending Process Done",
+          "Bahan Kemas Semua Pending Process Done",
+          "Filling Semua Pending Process Done",
+          "Label Semua Pending Process Done",
+          "Box Semua Pending Process Done",
+          "Packing Semua Pending Process Done",
+          "Delivery Semua Pending Process Done",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-005",
@@ -254,7 +370,49 @@
         "NOT STARTED",
         "APPROVED"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 13 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-client-sample/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "No",
+          "Nama Client",
+          "Nama Brand / Merek",
+          "Domisili",
+          "No Telp",
+          "Prio/Standar",
+          "Sample Product",
+          "Rencana MOQ",
+          "Budget Closing (Rp)",
+          "Sample 1",
+          "Revisi 1",
+          "Revisi 2",
+          "Status Progress",
+          "Terakhir FU",
+          "Next FU",
+          "Fix Formula",
+          "HKI",
+          "Kemasan Primer",
+          "Kemasan Sekunder",
+          "Tgl Permintaan HPP",
+          "Tgl Dikasih HPP",
+          "Tgl Target DP",
+          "Status Akhir",
+          "Lost Reason",
+          "Source",
+          "Arahan Head BD",
+          "NPF",
+          "Delivery",
+          "NPF",
+          "Delivery",
+          "NPF",
+          "Delivery"
+        ]
+      }
     },
     {
       "screenId": "SCR-006",
@@ -283,7 +441,21 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-digital-marketing/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Campaign",
+          "Platform",
+          "Leads",
+          "Spend"
+        ]
+      }
     },
     {
       "screenId": "SCR-007",
@@ -309,7 +481,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-executive/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-008",
@@ -342,7 +523,21 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 1 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-warehouse/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Kode",
+          "Nama Barang",
+          "Stok Saat Ini",
+          "Min Stok"
+        ]
+      }
     },
     {
       "screenId": "SCR-009",
@@ -359,7 +554,10 @@
       "formInputs": [],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "DEFECT_500",
+      "origin": "LEGACY_DEFECT",
+      "liveAuditNotes": "HTTP 500 (Internal Server Error) pada live server kil.gserp.id. Controller crash di legacy PHP. Harus dibangun clean-slate di NEX ERP."
     },
     {
       "screenId": "SCR-010",
@@ -438,7 +636,16 @@
         "28",
         "29"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-production-schedule/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /dashboard-production-schedule/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-011",
@@ -467,7 +674,23 @@
         "Refresh Data",
         "Export Snapshot PDF"
       ],
-      "specialRequirementsNotes": "Read-only agregasi dari seluruh subledger; tanpa input manual"
+      "specialRequirementsNotes": "Read-only agregasi dari seluruh subledger; tanpa input manual",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-finance/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Tanggal",
+          "No Jurnal",
+          "Tipe Jurnal",
+          "Debit (Rp)",
+          "Kredit (Rp)",
+          "Keterangan"
+        ]
+      }
     },
     {
       "screenId": "SCR-012",
@@ -497,7 +720,22 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 1 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-legality/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Nomor Dokumen",
+          "Nama Dokumen",
+          "Kategori",
+          "Tanggal Berlaku",
+          "Status"
+        ]
+      }
     },
     {
       "screenId": "SCR-013",
@@ -538,7 +776,25 @@
         "Canceled",
         "NOT STARTED"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-client-lost/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "NO",
+          "BRAND & PRODUK",
+          "PELANGGAN",
+          "PIC BD",
+          "EST. VALUE DEAL",
+          "TGL SAMPLE",
+          "STATUS SAMPLE",
+          "STATUS LOST"
+        ]
+      }
     },
     {
       "screenId": "SCR-014",
@@ -562,7 +818,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-notification/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-015",
@@ -609,7 +874,21 @@
       "actions": [
         "Lihat Semua 50 Data"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-customer/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Jumlah Sales",
+          "Total Revenue"
+        ]
+      }
     },
     {
       "screenId": "SCR-016",
@@ -645,7 +924,21 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-sales-product/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Jumlah",
+          "Total Nilai"
+        ]
+      }
     },
     {
       "screenId": "SCR-017",
@@ -681,7 +974,21 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-sales-sample/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Jumlah",
+          "Total Nilai"
+        ]
+      }
     },
     {
       "screenId": "SCR-018",
@@ -710,7 +1017,21 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 1 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-production/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Tanggal",
+          "No Realisasi",
+          "Kode Jadwal",
+          "Status"
+        ]
+      }
     },
     {
       "screenId": "SCR-019",
@@ -742,7 +1063,20 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-purchasing/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Supplier",
+          "Jml PO",
+          "Total Nilai (Rp)"
+        ]
+      }
     },
     {
       "screenId": "SCR-020",
@@ -820,7 +1154,16 @@
         "28",
         "29"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-production-realization/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /dashboard-production-realization/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-021",
@@ -851,7 +1194,20 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "/dashboard-rnd/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Nama Formulator",
+          "Sampel Masuk",
+          "Disetujui"
+        ]
+      }
     },
     {
       "screenId": "SCR-022",
@@ -868,7 +1224,15 @@
       "formInputs": [],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/rnd/dashboard-sample",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-023",
@@ -903,7 +1267,15 @@
         "Run Allocation Test",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Dikonfigurasi oleh Finance Controller untuk pembebanan overhead pabrik ke Job Order Costing"
+      "specialRequirementsNotes": "Dikonfigurasi oleh Finance Controller untuk pembebanan overhead pabrik ke Job Order Costing",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/cost-allocation-setup",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-024",
@@ -944,7 +1316,15 @@
         "Transfer Lokasi",
         "Dispose Aset"
       ],
-      "specialRequirementsNotes": "Sub-tab Purchase History mencatat penambahan nilai/kapitalisasi komponen besar, berbeda dari tabel penyusutan rutin | Poin 28-30: Riwayat pembelian pada tiap aset. Kode aset otomatis Universal (DL-FIN-AST-... urut global tanpa reset). Masa manfaat: Inventaris 4th, Motor 4th, Mobil 8th, Bangunan 20th"
+      "specialRequirementsNotes": "Sub-tab Purchase History mencatat penambahan nilai/kapitalisasi komponen besar, berbeda dari tabel penyusutan rutin | Poin 28-30: Riwayat pembelian pada tiap aset. Kode aset otomatis Universal (DL-FIN-AST-... urut global tanpa reset). Masa manfaat: Inventaris 4th, Motor 4th, Mobil 8th, Bangunan 20th",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/asset-register",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-025",
@@ -976,7 +1356,15 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Default useful life auto-fill: Inventaris (4 thn), Motor (4 thn), Mobil (8 thn), Bangunan Permanen (20 thn) | Poin 29-30: Format kode universal global berlanjut. Masa manfaat default terstandarisasi"
+      "specialRequirementsNotes": "Default useful life auto-fill: Inventaris (4 thn), Motor (4 thn), Mobil (8 thn), Bangunan Permanen (20 thn) | Poin 29-30: Format kode universal global berlanjut. Masa manfaat default terstandarisasi",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/asset-register/create",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-026",
@@ -1013,7 +1401,15 @@
         "Run Amortization",
         "Perbarui Sertifikasi"
       ],
-      "specialRequirementsNotes": "Sistem otomatis mengirimkan notifikasi reminder H-90, H-60, dan H-30 sebelum sertifikat kadaluarsa"
+      "specialRequirementsNotes": "Sistem otomatis mengirimkan notifikasi reminder H-90, H-60, dan H-30 sebelum sertifikat kadaluarsa",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/compliance-asset",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-027",
@@ -1044,7 +1440,22 @@
         "Sunting",
         "Hapus"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/goods-category-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-category-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-028",
@@ -1076,7 +1487,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 11 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-category-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-029",
@@ -1129,7 +1549,25 @@
         "Modal Akun Barang Belum Faktur",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 48-52: Kolom kondisi bagus & cacat dihapus, diganti Real Stok. Menampilkan supplier asal barang, wujud fisik & kondisi bahan, serta lama barang ada di gudang (aging barang)"
+      "specialRequirementsNotes": "\"\" | Poin 48-52: Kolom kondisi bagus & cacat dihapus, diganti Real Stok. Menampilkan supplier asal barang, wujud fisik & kondisi bahan, serta lama barang ada di gudang (aging barang)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/goods-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Barang",
+          "Harga Beli",
+          "Kategori",
+          "Sub Kategori",
+          "Satuan",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-030",
@@ -1168,7 +1606,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "\"\" | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)"
+      "specialRequirementsNotes": "\"\" | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 17 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-031",
@@ -1210,7 +1657,16 @@
         "Edit Rule",
         "Toggle Active"
       ],
-      "specialRequirementsNotes": "Otak posting otomatis (0.5). Minimal 1 rule aktif per Document Type sebelum transaksi live. Restriksi hak akses hanya Finance Admin/Controller"
+      "specialRequirementsNotes": "Otak posting otomatis (0.5). Minimal 1 rule aktif per Document Type sebelum transaksi live. Restriksi hak akses hanya Finance Admin/Controller",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/coa-auto-manage/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-032",
@@ -1246,7 +1702,22 @@
         "Edit",
         "Hapus / Deactivate"
       ],
-      "specialRequirementsNotes": "Delete hanya jika belum ada transaksi (referential integrity); jika ada -> deactivate. Auto numbering by type (1xxx Asset, 2xxx Liability, dst)"
+      "specialRequirementsNotes": "Delete hanya jika belum ada transaksi (referential integrity); jika ada -> deactivate. Auto numbering by type (1xxx Asset, 2xxx Liability, dst)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 19 aksi.",
+      "livePatterns": {
+        "editRoute": "/coa-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /coa-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Nama",
+          "Tipe",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-033",
@@ -1273,7 +1744,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Allow Manual Journal = false mencegah transaksi manual sembarangan di Jurnal Umum (khusus akun AP Control, AR Control, WIP)"
+      "specialRequirementsNotes": "Allow Manual Journal = false mencegah transaksi manual sembarangan di Jurnal Umum (khusus akun AP Control, AR Control, WIP)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /coa-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-034",
@@ -1305,7 +1785,24 @@
         "Akses Gudang",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/warehouse-access-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /warehouse-access-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Nama",
+          "Email",
+          "Nomor Telepon",
+          "Hak Akses",
+          "Gudang",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-035",
@@ -1335,7 +1832,22 @@
         "Sunting",
         "Hapus"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/warehouse-manage/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Gudang",
+          "Lokasi",
+          "Telepon",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-036",
@@ -1361,7 +1873,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-037",
@@ -1396,7 +1917,15 @@
         "Edit",
         "Deactivate"
       ],
-      "specialRequirementsNotes": "Saldo real-time di sini menjadi sumber data navbar AP Aging dan Cash Position dashboard"
+      "specialRequirementsNotes": "Saldo real-time di sini menjadi sumber data navbar AP Aging dan Cash Position dashboard",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/bank-account-manage",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-038",
@@ -1422,7 +1951,15 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Nomor akun otomatis dan mapping ke akun neraca kas/bank"
+      "specialRequirementsNotes": "Nomor akun otomatis dan mapping ke akun neraca kas/bank",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/bank-account-manage/create",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-039",
@@ -1452,7 +1989,15 @@
         "Edit",
         "Toggle Active"
       ],
-      "specialRequirementsNotes": "Setup oleh Finance Admin. Ruang lingkup: PPN, PPh 23, rekap PPh 21 (tanpa e-Faktur/e-Bupot DJP langsung) | Poin 35: Modul Pajak dan e-Faktur TIDAK PERLU DIKERJAKAN (di-skip dari scope pengerjaan sesuai arahan final)"
+      "specialRequirementsNotes": "Setup oleh Finance Admin. Ruang lingkup: PPN, PPh 23, rekap PPh 21 (tanpa e-Faktur/e-Bupot DJP langsung) | Poin 35: Modul Pajak dan e-Faktur TIDAK PERLU DIKERJAKAN (di-skip dari scope pengerjaan sesuai arahan final)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/tax-setup",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-040",
@@ -1481,7 +2026,21 @@
         "Sunting",
         "Hapus"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/customer-category-manage/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-041",
@@ -1504,7 +2063,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-042",
@@ -1547,7 +2115,27 @@
         "Modal Pelanggan Sample",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": "Contract Type menentukan perlakuan pajak dan akun revenue pada Faktur Penjualan | Poin 2: Ditambahkan field & card khusus untuk Sample, Produksi, dan Legalitas pada master customer"
+      "specialRequirementsNotes": "Contract Type menentukan perlakuan pajak dan akun revenue pada Faktur Penjualan | Poin 2: Ditambahkan field & card khusus untuk Sample, Produksi, dan Legalitas pada master customer",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/customer-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /customer-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Nama",
+          "Telepon",
+          "Kategori",
+          "Kota",
+          "Penginput",
+          "SO Sample",
+          "SO Produk",
+          "Nominal SO Produk",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-043",
@@ -1576,7 +2164,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 2: Field klasifikasi Sample, Produksi, Legalitas"
+      "specialRequirementsNotes": "\"\" | Poin 2: Field klasifikasi Sample, Produksi, Legalitas",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 10 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /customer-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-044",
@@ -1606,7 +2203,24 @@
       "actions": [
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/customer-my-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /customer-my-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Nama",
+          "Telepon",
+          "Kategori",
+          "Kota",
+          "Penginput",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-045",
@@ -1636,7 +2250,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 9 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /customer-my-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-046",
@@ -1665,7 +2288,20 @@
         "Sunting",
         "Hapus"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/role-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /role-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Hak Akses",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-047",
@@ -1687,7 +2323,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /role-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-048",
@@ -1721,7 +2366,24 @@
         "Sunting",
         "Nonaktifkan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/user-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /user-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode/NIP",
+          "Nama",
+          "Email",
+          "Nomor Telepon",
+          "Hak Akses",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-049",
@@ -1751,7 +2413,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 8 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /user-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-050",
@@ -1784,7 +2455,21 @@
         "Modal Produk Baru",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-category/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-category/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-051",
@@ -1807,7 +2492,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-category/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-052",
@@ -1837,7 +2531,24 @@
       "actions": [
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-target/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-target/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Marketing",
+          "Periode",
+          "Target",
+          "Achievement",
+          "% Capaian",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-053",
@@ -1862,7 +2573,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 4 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-target/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-054",
@@ -1891,7 +2611,21 @@
         "Sunting",
         "Hapus"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/supplier-category-manage/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-055",
@@ -1914,7 +2648,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-056",
@@ -1954,7 +2697,25 @@
         "Edit",
         "Deactivate"
       ],
-      "specialRequirementsNotes": "Kategori Riil (Raw Material/Packaging/Jasa/Lainnya) dipisah dari Kategori COA (Akun GL default per vendor) | Poin 1 & 47: Fitur Import Excel vendor. Filter supplier berdasarkan jenis bahan (bahan baku, primer, sekunder, pembantu). Kategorisasi pengadaan murni berbasis COA"
+      "specialRequirementsNotes": "Kategori Riil (Raw Material/Packaging/Jasa/Lainnya) dipisah dari Kategori COA (Akun GL default per vendor) | Poin 1 & 47: Fitur Import Excel vendor. Filter supplier berdasarkan jenis bahan (bahan baku, primer, sekunder, pembantu). Kategorisasi pengadaan murni berbasis COA",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/supplier-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /supplier-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Supplier",
+          "PIC",
+          "Telepon",
+          "Kategori",
+          "Kota",
+          "Pajak (%)",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-057",
@@ -1986,7 +2747,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "PKP Status menentukan perhitungan otomatis PPN Masukan pada Faktur Pembelian | Poin 3: Kategorisasi pengadaan dilakukan berdasarkan COA saja"
+      "specialRequirementsNotes": "PKP Status menentukan perhitungan otomatis PPN Masukan pada Faktur Pembelian | Poin 3: Kategorisasi pengadaan dilakukan berdasarkan COA saja",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 9 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /supplier-manage/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-058",
@@ -2022,7 +2792,26 @@
         "Modal Tolak (Input Catatan Tolak)",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Supplier",
+          "Gudang",
+          "Pembuat",
+          "Nominal",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-059",
@@ -2059,7 +2848,27 @@
         "Modal Tolak",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pelanggan",
+          "Kategori",
+          "Merek",
+          "Pembuat",
+          "Total",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-060",
@@ -2096,7 +2905,27 @@
         "Modal Tolak",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-sample-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-sample-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pelanggan",
+          "Nama Produk",
+          "Rev",
+          "Pembuat",
+          "Total",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-061",
@@ -2133,7 +2962,26 @@
         "Modal Tolak",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 10 aksi.",
+      "livePatterns": {
+        "editRoute": "/goods-request-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-request-approval/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/goods-request-approval/263/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Peminta",
+          "Penyedia",
+          "Pembuat",
+          "Catatan",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-062",
@@ -2170,7 +3018,27 @@
         "Modal Tolak",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/request-cogs-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /request-cogs-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pelanggan",
+          "Sales Sample",
+          "Produk",
+          "Pembuat",
+          "Catatan",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-063",
@@ -2205,7 +3073,25 @@
         "Modal Tolak",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-request-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-request-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pemohon",
+          "Total Item",
+          "Catatan",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-064",
@@ -2241,7 +3127,26 @@
         "Modal Tolak (Input Alasan Penolakan)",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-return-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-return-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal",
+          "Kode Retur",
+          "Pembelian Masuk",
+          "Supplier",
+          "Total",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-065",
@@ -2277,7 +3182,26 @@
         "Modal Tolak",
         "Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-return-approval/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-return-approval/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal",
+          "Kode Retur",
+          "No. Faktur",
+          "Pelanggan",
+          "Total",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-066",
@@ -2311,7 +3235,26 @@
         "Buat",
         "Tracking"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/checklist/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /checklist/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "No. Sales",
+          "Customer",
+          "Produk",
+          "Tanggal Mulai",
+          "Tanggal Selesai",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-067",
@@ -2357,7 +3300,16 @@
         "Batal",
         "Simpan Checklist"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 23 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /checklist/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-068",
@@ -2396,7 +3348,26 @@
         "Update Milestone",
         "Kirim Notifikasi Pending"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 36, 54, 55, 57, 58, 64-67, 71: 1 SO hanya punya 1 checklist utama (bukan per baris kategori). Versi Keseluruhan vs Khusus PIC. Notifikasi item pending. Navbar dibedakan Input Design (PIC Mas Edi) dan Main. Dokumen BPOM ditampilkan per SO. Status done bisa dikembalikan jika terkendala"
+      "specialRequirementsNotes": "\"\" | Poin 36, 54, 55, 57, 58, 64-67, 71: 1 SO hanya punya 1 checklist utama (bukan per baris kategori). Versi Keseluruhan vs Khusus PIC. Notifikasi item pending. Navbar dibedakan Input Design (PIC Mas Edi) dan Main. Dokumen BPOM ditampilkan per SO. Status done bisa dikembalikan jika terkendala",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/checklist-progress/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /checklist-progress/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "No. Sales",
+          "Brand/Produk",
+          "Customer",
+          "Kategori",
+          "Tanggal Mulai",
+          "Tanggal Selesai",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-069",
@@ -2457,7 +3428,44 @@
         "Riwayat Status",
         "Upload Foto Kemasan"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 38, 39, 56, 59, 62, 63, 67, 74: Deadline terpisah per PIC & estimasi deadline. Kategori baru dianggap selesai setelah SEMUA kategori dalam SO selesai. Urutan kronologis. Validasi status berurutan (mencegah manipulasi KPI). Menampilkan foto kemasan. Nomor BPOM & history progress"
+      "specialRequirementsNotes": "\"\" | Poin 38, 39, 56, 59, 62, 63, 67, 74: Deadline terpisah per PIC & estimasi deadline. Kategori baru dianggap selesai setelah SEMUA kategori dalam SO selesai. Urutan kronologis. Validasi status berurutan (mencegah manipulasi KPI). Menampilkan foto kemasan. Nomor BPOM & history progress",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 31 aksi.",
+      "livePatterns": {
+        "editRoute": "/checklist-tracking/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /checklist-tracking/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Brand/Produk",
+          "Sales Order",
+          "BusDev",
+          "Mulai",
+          "Berakhir",
+          "Deadline",
+          "Progress",
+          "Status Projek",
+          "Desain Logo Semua Pending Process Done Semua Reset",
+          "HKI Semua Pending Process Done Semua Reset",
+          "BPOM Merk Semua Pending Process Done Semua Reset",
+          "BPOM NA Semua Pending Process Done Semua Reset",
+          "MOU Semua Pending Process Done Semua Reset",
+          "Desain Kemasan Semua Pending Process Done Semua Reset",
+          "Approval Desain Semua Pending Process Done Semua Reset",
+          "Bahan Baku Semua Pending Process Done Semua Reset",
+          "Pelunasan Semua Pending Process Done Semua Reset",
+          "Mixing Semua Pending Process Done Semua Reset",
+          "Bahan Kemas Semua Pending Process Done Semua Reset",
+          "Filling Semua Pending Process Done Semua Reset",
+          "Label Semua Pending Process Done Semua Reset",
+          "Box Semua Pending Process Done Semua Reset",
+          "Packing Semua Pending Process Done Semua Reset",
+          "Delivery Semua Pending Process Done Semua Reset",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-070",
@@ -2493,7 +3501,15 @@
         "Upload Bukti",
         "Tombol \"Lock Period [Bulan]\" (Hard Lock / Soft Lock)"
       ],
-      "specialRequirementsNotes": "Fitur Period Lock: Soft Lock memberikan peringatan saat transaksi; Hard Lock mengunci total seluruh transaksi di periode tersebut (read-only). Transaksi susulan wajib lewat Adjustment Journal"
+      "specialRequirementsNotes": "Fitur Period Lock: Soft Lock memberikan peringatan saat transaksi; Hard Lock mengunci total seluruh transaksi di periode tersebut (read-only). Transaksi susulan wajib lewat Adjustment Journal",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/closing-checklist",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-071",
@@ -2524,7 +3540,23 @@
         "Sunting",
         "Hapus"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/checklist-category/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Nama Kategori",
+          "Urutan",
+          "Lama Hari per Kategori Penjualan",
+          "Setelah Kategori",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-072",
@@ -2553,7 +3585,19 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Kategori Penjualan",
+          "Lama Hari"
+        ]
+      }
     },
     {
       "screenId": "SCR-073",
@@ -2592,7 +3636,27 @@
         "Batalkan",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/checklist-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /checklist-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "No. Sales",
+          "Customer",
+          "Brand",
+          "Produk",
+          "Tanggal Mulai",
+          "Tanggal Selesai",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-074",
@@ -2631,7 +3695,15 @@
         "Modal Tolak",
         "Posting ke GL"
       ],
-      "specialRequirementsNotes": "Satu-satunya jalur sah untuk memasukkan transaksi ke periode yang sudah berstatus Hard Lock"
+      "specialRequirementsNotes": "Satu-satunya jalur sah untuk memasukkan transaksi ke periode yang sudah berstatus Hard Lock",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/adjustment-journal",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-075",
@@ -2667,7 +3739,15 @@
         "Lihat",
         "Cetak Berita Acara Pelepasan Aset"
       ],
-      "specialRequirementsNotes": "Memerlukan persetujuan Finance Manager sebelum menghapus aset dari neraca"
+      "specialRequirementsNotes": "Memerlukan persetujuan Finance Manager sebelum menghapus aset dari neraca",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/scm/asset-transfer-disposal",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-076",
@@ -2697,7 +3777,15 @@
         "Create Reconciliation Journal (selisih biaya bank)",
         "Finalize Reconcile"
       ],
-      "specialRequirementsNotes": "Selisih biaya administrasi/bunga bank langsung dibuatkan jurnal rekonsiliasi dari halaman ini: Dr Bank Charge, Cr Bank | Poin 20 & 21: Tambahkan filter tanggal kalender lengkap (rentang bebas) dan filter berdasarkan COA"
+      "specialRequirementsNotes": "Selisih biaya administrasi/bunga bank langsung dibuatkan jurnal rekonsiliasi dari halaman ini: Dr Bank Charge, Cr Bank | Poin 20 & 21: Tambahkan filter tanggal kalender lengkap (rentang bebas) dan filter berdasarkan COA",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/bank-reconciliation",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-077",
@@ -2734,7 +3822,15 @@
         "Cetak Rekonsiliasi Escrow Klien",
         "Refund Sisa Dana"
       ],
-      "specialRequirementsNotes": "Uang titipan BPOM/HKI/uji lab klien BUKAN REVENUE Dreamlab. Jika biaya aktual lebih besar, sistem memunculkan tagihan top-up ke klien"
+      "specialRequirementsNotes": "Uang titipan BPOM/HKI/uji lab klien BUKAN REVENUE Dreamlab. Jika biaya aktual lebih besar, sistem memunculkan tagihan top-up ke klien",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/client-escrow",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-078",
@@ -2769,7 +3865,15 @@
         "Cr Akumulasi Penyusutan)",
         "Export Excel"
       ],
-      "specialRequirementsNotes": "Default useful life auto-fill: Inventaris (4 thn), Motor (4 thn), Mobil (8 thn), Bangunan Permanen (20 thn)"
+      "specialRequirementsNotes": "Default useful life auto-fill: Inventaris (4 thn), Motor (4 thn), Mobil (8 thn), Bangunan Permanen (20 thn)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/depreciation-schedule",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-079",
@@ -2808,7 +3912,27 @@
         "Lihat",
         "Print"
       ],
-      "specialRequirementsNotes": "Tipe dan Referensi otomatis terisi dari subledger (AP/AR/Cash/Stock). Jurnal Manual hanya untuk adjustment, accrual, reclassification. Tidak boleh posting ke akun Allow Manual Journal = false atau periode Locked | Poin 25-27: Filter periode custom. Tampilan/format disamakan dengan sistem ERP lama (G-SERP). Input \"Dimensi Finansial\" dihapus total"
+      "specialRequirementsNotes": "Tipe dan Referensi otomatis terisi dari subledger (AP/AR/Cash/Stock). Jurnal Manual hanya untuk adjustment, accrual, reclassification. Tidak boleh posting ke akun Allow Manual Journal = false atau periode Locked | Poin 25-27: Filter periode custom. Tampilan/format disamakan dengan sistem ERP lama (G-SERP). Input \"Dimensi Finansial\" dihapus total",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": "/general-journal/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /general-journal/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/general-journal/1096/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Deksripsi",
+          "Debit",
+          "Kredit",
+          "Tipe",
+          "Referensi",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-080",
@@ -2844,7 +3968,16 @@
         "Simpan Draft",
         "Submit Approval"
       ],
-      "specialRequirementsNotes": "Balanced Check wajib: Total Debit harus sama dengan Total Credit sebelum bisa submit | Poin 27: Input Dimensi Finansial dihapus | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)"
+      "specialRequirementsNotes": "Balanced Check wajib: Total Debit harus sama dengan Total Credit sebelum bisa submit | Poin 27: Input Dimensi Finansial dihapus | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 6 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /general-journal/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-081",
@@ -2881,7 +4014,26 @@
         "Lihat",
         "Print Bukti Kas Masuk"
       ],
-      "specialRequirementsNotes": "Auto-generated entries dari Bayar Penjualan & DP Penjualan bersifat read-only. Form manual hanya untuk transaksi tanpa dokumen sumber (petty cash, bunga bank) | Poin 18: Card Kas Bank Masuk menampilkan HANYA total kas, dengan filter kalender lengkap (date range custom bebas)"
+      "specialRequirementsNotes": "Auto-generated entries dari Bayar Penjualan & DP Penjualan bersifat read-only. Form manual hanya untuk transaksi tanpa dokumen sumber (petty cash, bunga bank) | Poin 18: Card Kas Bank Masuk menampilkan HANYA total kas, dengan filter kalender lengkap (date range custom bebas)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/other-deposit/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /other-deposit/detail?id={id}",
+        "printRoute": "/other-deposit/{id}/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Deskripsi",
+          "Dari",
+          "Kas/Bank",
+          "Jumlah",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-082",
@@ -2910,7 +4062,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 7 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /other-deposit/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-083",
@@ -2948,7 +4109,27 @@
         "Lihat",
         "Print Bukti Kas Keluar"
       ],
-      "specialRequirementsNotes": "Auto-generated dari Bayar Pembelian, DP Pembelian, dan Pengajuan Dana (Disbursed). Manual entry hanya untuk biaya operasional tanpa faktur vendor | Poin 19: Card Kas Bank Keluar menampilkan HANYA total kas keluar, dengan filter kalender lengkap (date range custom bebas)"
+      "specialRequirementsNotes": "Auto-generated dari Bayar Pembelian, DP Pembelian, dan Pengajuan Dana (Disbursed). Manual entry hanya untuk biaya operasional tanpa faktur vendor | Poin 19: Card Kas Bank Keluar menampilkan HANYA total kas keluar, dengan filter kalender lengkap (date range custom bebas)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/other-payment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /other-payment/detail?id={id}",
+        "printRoute": "/other-payment/{id}/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Deskripsi",
+          "Kepada",
+          "No. Tagihan",
+          "Kas/Bank",
+          "Jumlah",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-084",
@@ -2978,7 +4159,16 @@
         "Kembali",
         "Simpan Kas Bank Keluar"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 8 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /other-payment/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-085",
@@ -3013,7 +4203,15 @@
         "Export Rekap Pajak (Excel)",
         "Update Status Reported/Paid"
       ],
-      "specialRequirementsNotes": "Baris otomatis muncul dari Faktur Pembelian dan Faktur Penjualan. PPh 21 direkap bulanan dari data payroll HR sebagai informasi laporan keuangan | Poin 35: Di-skip dari scope pengerjaan (tanpa integrasi e-Faktur/e-Bupot DJP)"
+      "specialRequirementsNotes": "Baris otomatis muncul dari Faktur Pembelian dan Faktur Penjualan. PPh 21 direkap bulanan dari data payroll HR sebagai informasi laporan keuangan | Poin 35: Di-skip dari scope pengerjaan (tanpa integrasi e-Faktur/e-Bupot DJP)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/tax-transactions",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-086",
@@ -3051,7 +4249,26 @@
         "Batalkan",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 3 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/delivery-out/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /delivery-out/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/delivery-out/8/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "No. Sales",
+          "Tanggal Sales",
+          "Customer",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-087",
@@ -3084,7 +4301,23 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /delivery-out/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Barang",
+          "Satuan",
+          "Qty Sales",
+          "Qty Tersedia",
+          "Qty Kirim"
+        ]
+      }
     },
     {
       "screenId": "SCR-088",
@@ -3119,7 +4352,25 @@
         "Batalkan",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": "/goods-transfer/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-transfer/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/goods-transfer/250/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Gudang Asal",
+          "Gudang Tujuan",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-089",
@@ -3149,7 +4400,16 @@
         "Kembali",
         "Simpan Transfer"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 7 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-transfer/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-090",
@@ -3180,7 +4440,25 @@
       "actions": [
         "Riwayat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-return-out/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-return-out/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode Retur",
+          "Tanggal Retur",
+          "Supplier",
+          "Gudang",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-091",
@@ -3220,7 +4498,25 @@
         "Print Warehouse",
         "Terima Barang"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 44, 50, 51, 53: Penerimaan barang wajib mencantumkan rincian jumlah free, jumlah cacat/reject, dan jumlah kondisi bagus. Pembayaran vendor HANYA untuk kondisi bagus. Input free dicatat di sini"
+      "specialRequirementsNotes": "\"\" | Poin 44, 50, 51, 53: Penerimaan barang wajib mencantumkan rincian jumlah free, jumlah cacat/reject, dan jumlah kondisi bagus. Pembayaran vendor HANYA untuk kondisi bagus. Input free dicatat di sini",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-in/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-in/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/purchase-in/542/print-warehouse",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Supplier",
+          "Gudang",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-092",
@@ -3250,7 +4546,24 @@
       "actions": [
         "Riwayat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-return-in/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-return-in/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode Retur",
+          "Tanggal Retur",
+          "Pelanggan",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-093",
@@ -3281,7 +4594,15 @@
         "Lock Version",
         "Export Excel"
       ],
-      "specialRequirementsNotes": "Revisi budget yang sudah approved dilakukan dengan membuat versi baru (V2, V3)"
+      "specialRequirementsNotes": "Revisi budget yang sudah approved dilakukan dengan membuat versi baru (V2, V3)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/budget-entry",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-094",
@@ -3322,7 +4643,28 @@
         "Riwayat",
         "Buat"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 77: Tambahkan filter bulan dan fitur search berdasarkan nama pada Buku Tamu"
+      "specialRequirementsNotes": "\"\" | Poin 77: Tambahkan filter bulan dan fitur search berdasarkan nama pada Buku Tamu",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/guest-book/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /guest-book/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal & Waktu",
+          "Nama Klien",
+          "Meeting & PIC",
+          "Kontak",
+          "Kota",
+          "Produk Diminati",
+          "MOQ",
+          "Target Market",
+          "Kategori",
+          "Aksi"
+        ]
+      }
     },
     {
       "screenId": "SCR-095",
@@ -3350,7 +4692,16 @@
         "Kembali",
         "Simpan Data"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 78: Tambahkan fitur auto-save saat user keluar dari form input"
+      "specialRequirementsNotes": "\"\" | Poin 78: Tambahkan fitur auto-save saat user keluar dari form input",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 11 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /guest-book/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-096",
@@ -3387,7 +4738,25 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "/client-lost/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "NO",
+          "BRAND & PRODUK",
+          "PELANGGAN",
+          "PIC BD",
+          "EST. VALUE DEAL",
+          "TGL SAMPLE",
+          "STATUS SAMPLE",
+          "STATUS LOST"
+        ]
+      }
     },
     {
       "screenId": "SCR-097",
@@ -3439,7 +4808,44 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/client-production/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /client-production/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Brand/Produk",
+          "Sales Order",
+          "BusDev",
+          "Mulai",
+          "Berakhir",
+          "Deadline",
+          "Progress",
+          "Status Projek",
+          "Desain Logo Semua Pending Process Done",
+          "HKI Semua Pending Process Done",
+          "BPOM Merk Semua Pending Process Done",
+          "BPOM NA Semua Pending Process Done",
+          "MOU Semua Pending Process Done",
+          "Desain Kemasan Semua Pending Process Done",
+          "Approval Desain Semua Pending Process Done",
+          "Bahan Baku Semua Pending Process Done",
+          "Pelunasan Semua Pending Process Done",
+          "Mixing Semua Pending Process Done",
+          "Bahan Kemas Semua Pending Process Done",
+          "Filling Semua Pending Process Done",
+          "Label Semua Pending Process Done",
+          "Box Semua Pending Process Done",
+          "Packing Semua Pending Process Done",
+          "Delivery Semua Pending Process Done",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-098",
@@ -3488,7 +4894,44 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/client-repeat-order/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /client-repeat-order/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Pelanggan",
+          "Brand/Produk",
+          "Sales Order",
+          "BusDev",
+          "Mulai",
+          "Berakhir",
+          "Deadline",
+          "Progress",
+          "Status Projek",
+          "Desain Logo Semua Pending Process Done",
+          "HKI Semua Pending Process Done",
+          "BPOM Merk Semua Pending Process Done",
+          "BPOM NA Semua Pending Process Done",
+          "MOU Semua Pending Process Done",
+          "Desain Kemasan Semua Pending Process Done",
+          "Approval Desain Semua Pending Process Done",
+          "Bahan Baku Semua Pending Process Done",
+          "Pelunasan Semua Pending Process Done",
+          "Mixing Semua Pending Process Done",
+          "Bahan Kemas Semua Pending Process Done",
+          "Filling Semua Pending Process Done",
+          "Label Semua Pending Process Done",
+          "Box Semua Pending Process Done",
+          "Packing Semua Pending Process Done",
+          "Delivery Semua Pending Process Done",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-099",
@@ -3548,7 +4991,50 @@
       "actions": [
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 29 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/client-sample/{id}/update",
+        "detailModal": "trackModal, modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "No",
+          "Nama Client",
+          "Nama Brand / Merek",
+          "Domisili",
+          "No Telp",
+          "Prio/Standar",
+          "Sample Product",
+          "Rencana MOQ",
+          "Budget Closing (Rp)",
+          "Sample 1",
+          "Revisi 1",
+          "Revisi 2",
+          "Status Progress",
+          "Terakhir FU",
+          "Next FU",
+          "Fix Formula",
+          "HKI",
+          "Kemasan Primer",
+          "Kemasan Sekunder",
+          "Tgl Permintaan HPP",
+          "Tgl Dikasih HPP",
+          "Tgl Target DP",
+          "Status Akhir",
+          "Lost Reason",
+          "Source",
+          "Arahan Head BD",
+          "Aksi",
+          "NPF",
+          "Delivery",
+          "NPF",
+          "Delivery",
+          "NPF",
+          "Delivery"
+        ]
+      }
     },
     {
       "screenId": "SCR-100",
@@ -5017,7 +6503,24 @@
         "Hide",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 11 aksi.",
+      "livePatterns": {
+        "editRoute": "/need-for-goods/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /need-for-goods/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Sales / Customer / Produk / Brand",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-101",
@@ -5056,7 +6559,22 @@
         "Batal",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 8 input dan 10 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /need-for-goods/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode Bahan",
+          "Nama Bahan",
+          "Konsentrasi (%)",
+          "Qty Dibutuhkan"
+        ]
+      }
     },
     {
       "screenId": "SCR-102",
@@ -5084,7 +6602,22 @@
       "actions": [
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/leads/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /leads/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal Leads",
+          "Catatan",
+          "Total Qty Leads",
+          "Aksi"
+        ]
+      }
     },
     {
       "screenId": "SCR-103",
@@ -5111,7 +6644,20 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /leads/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "Penerima Leads *",
+          "Qty Leads *",
+          "Aksi"
+        ]
+      }
     },
     {
       "screenId": "SCR-104",
@@ -5148,7 +6694,28 @@
         "Apply to Invoice",
         "Cancel (Draft)"
       ],
-      "specialRequirementsNotes": "Saat Faktur Pembelian dibuat untuk vendor dengan DP outstanding, sistem notifikasi untuk potong/apply DP ke invoice | Poin 9: Urutan card & tab selaras dengan Bayar Pembelian lalu DP Pembelian"
+      "specialRequirementsNotes": "Saat Faktur Pembelian dibuat untuk vendor dengan DP outstanding, sistem notifikasi untuk potong/apply DP ke invoice | Poin 9: Urutan card & tab selaras dengan Bayar Pembelian lalu DP Pembelian",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-down-payment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-down-payment/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode DP",
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Kas/Bank",
+          "Jumlah DP",
+          "Terpakai",
+          "Sisa",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-105",
@@ -5180,7 +6747,22 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Nomor DP otomatis DPB-YYMM-XXXX"
+      "specialRequirementsNotes": "Nomor DP otomatis DPB-YYMM-XXXX",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-down-payment/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Barang",
+          "Qty",
+          "Harga",
+          "Total"
+        ]
+      }
     },
     {
       "screenId": "SCR-106",
@@ -5222,7 +6804,26 @@
         "Modal Setuju",
         "Modal Tolak"
       ],
-      "specialRequirementsNotes": "Matching Engine 4-Leg: PO ↔ GRN ↔ QC Passed Qty ↔ Vendor Invoice. Toleransi otomatis. Reject QC auto generate Debit Note/Pending Retur AP. Persentase akurasi di-hide dari UI (hanya status Matched/Exception) | Poin 4-9: Tanggal invoice custom (tidak read-only). Import data faktur. Detail barang + diskon. Navbar Semua/Sudah/Belum Dibayar + Notes alasan belum dibayar. Hide akurasi matching. Pola card Bayar Pembelian lalu DP Pembelian. Label jatuh tempo -> Deadline. Fitur pencocokan selisih nominal dinonaktifkan"
+      "specialRequirementsNotes": "Matching Engine 4-Leg: PO ↔ GRN ↔ QC Passed Qty ↔ Vendor Invoice. Toleransi otomatis. Reject QC auto generate Debit Note/Pending Retur AP. Persentase akurasi di-hide dari UI (hanya status Matched/Exception) | Poin 4-9: Tanggal invoice custom (tidak read-only). Import data faktur. Detail barang + diskon. Navbar Semua/Sudah/Belum Dibayar + Notes alasan belum dibayar. Hide akurasi matching. Pola card Bayar Pembelian lalu DP Pembelian. Label jatuh tempo -> Deadline. Fitur pencocokan selisih nominal dinonaktifkan",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-invoice/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-invoice/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode GR",
+          "Tanggal",
+          "Supplier",
+          "Gudang",
+          "Total",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-107",
@@ -5257,7 +6858,28 @@
         "Eksekusi Bayar",
         "Print Bukti Kas Keluar"
       ],
-      "specialRequirementsNotes": "Konsistensi posisi card & navbar disamakan dengan DP Pembelian. Mendukung partial payment. Auto update status invoice jadi Paid/Partial | Poin 9: Pola card ringkasan di atas + navbar/tab filter di bawahnya dengan urutan selaras: Bayar Pembelian lalu DP Pembelian (referensi Work Orders)"
+      "specialRequirementsNotes": "Konsistensi posisi card & navbar disamakan dengan DP Pembelian. Mendukung partial payment. Auto update status invoice jadi Paid/Partial | Poin 9: Pola card ringkasan di atas + navbar/tab filter di bawahnya dengan urutan selaras: Bayar Pembelian lalu DP Pembelian (referensi Work Orders)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-payment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-payment/detail?id={id}",
+        "printRoute": "/purchase-payment/{id}/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode Faktur",
+          "Kode GR",
+          "Kode PO",
+          "Tanggal",
+          "Supplier",
+          "Grand Total",
+          "Dibayar",
+          "Sisa",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-108",
@@ -5290,7 +6912,25 @@
         "Buat",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 4 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-return/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-return/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal",
+          "Kode Retur",
+          "Pembelian Masuk",
+          "Supplier",
+          "Total",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-109",
@@ -5324,7 +6964,26 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 7 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-return/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Barang",
+          "Satuan",
+          "Qty GR",
+          "Sudah Diretur",
+          "Qty Tersedia",
+          "Qty Retur",
+          "Catatan",
+          "Total"
+        ]
+      }
     },
     {
       "screenId": "SCR-110",
@@ -5363,7 +7022,16 @@
         "Batal",
         "Simpan Pembelian"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 41, 45, 46, 60, 61: Input PO wajib menyertakan Diskon & Ongkir (Diskon dalam Rupiah, bukan persen, dikurangi dari ongkir). Selisih pembulatan packing dimasukkan ke diskon. Tanggal input read-only hari ini. Tanda tangan digital | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)"
+      "specialRequirementsNotes": "\"\" | Poin 41, 45, 46, 60, 61: Input PO wajib menyertakan Diskon & Ongkir (Diskon dalam Rupiah, bukan persen, dikurangi dari ongkir). Selisih pembulatan packing dimasukkan ke diskon. Tanggal input read-only hari ini. Tanda tangan digital | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 10 input dan 11 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-111",
@@ -5401,7 +7069,15 @@
         "Modal Tolak (Catatan)",
         "Cairkan Dana (Disburse)"
       ],
-      "specialRequirementsNotes": "Menggantikan Google Form. Pola UI disamakan dengan Persetujuan Pembelian. Saat Disbursed, otomatis generate Kas Bank Keluar (Dr Uang Muka Karyawan / Beban, Cr Bank) | Poin 22-24: Alur disesuaikan Google Form. Jenjang approval: Staff -> Head -> Accounting -> Direktur; jika diajukan Head -> langsung Accounting -> Direktur. Proses disamakan dengan persetujuan pembelian"
+      "specialRequirementsNotes": "Menggantikan Google Form. Pola UI disamakan dengan Persetujuan Pembelian. Saat Disbursed, otomatis generate Kas Bank Keluar (Dr Uang Muka Karyawan / Beban, Cr Bank) | Poin 22-24: Alur disesuaikan Google Form. Jenjang approval: Staff -> Head -> Accounting -> Direktur; jika diajukan Head -> langsung Accounting -> Direktur. Proses disamakan dengan persetujuan pembelian",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/fund-request",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-112",
@@ -5429,7 +7105,15 @@
         "Kembali",
         "Submit Pengajuan"
       ],
-      "specialRequirementsNotes": "Threshold amount menentukan apakah perlu Direktur atau cukup Accounting | Poin 23: Pilihan jenjang pengaju Staff vs Head menentukan rute approval otomatis"
+      "specialRequirementsNotes": "Threshold amount menentukan apakah perlu Direktur atau cukup Accounting | Poin 23: Pilihan jenjang pengaju Staff vs Head menentukan rute approval otomatis",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/fund-request/create",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-113",
@@ -5468,7 +7152,15 @@
         "Kirim Reminder",
         "Export Excel"
       ],
-      "specialRequirementsNotes": "Murni log pelacakan reminder, tidak menghasilkan jurnal GL"
+      "specialRequirementsNotes": "Murni log pelacakan reminder, tidak menghasilkan jurnal GL",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/collections",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-114",
@@ -5504,7 +7196,26 @@
         "Riwayat",
         "Buat"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 38 & 70: Ditambahkan deadline per PIC pada Sales Order. Format kode universal SO (DL-SAL-SO-... nomor urut global berlanjut tanpa reset)"
+      "specialRequirementsNotes": "\"\" | Poin 38 & 70: Ditambahkan deadline per PIC pada Sales Order. Format kode universal SO (DL-SAL-SO-... nomor urut global berlanjut tanpa reset)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pelanggan",
+          "Kategori",
+          "Merek",
+          "Total",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-115",
@@ -5542,7 +7253,28 @@
         "Apply to Invoice",
         "Cancel"
       ],
-      "specialRequirementsNotes": "Tab Legalitas terhubung ke logic Escrow 5.3. Tab Sample terhubung ke Sample Fee 3.7. Tab Produksi untuk Job Order | Poin 14: Navbar DP Penjualan dipisahkan menjadi tab Sample, Legalitas, dan Produksi"
+      "specialRequirementsNotes": "Tab Legalitas terhubung ke logic Escrow 5.3. Tab Sample terhubung ke Sample Fee 3.7. Tab Produksi untuk Job Order | Poin 14: Navbar DP Penjualan dipisahkan menjadi tab Sample, Legalitas, dan Produksi",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-down-payment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-down-payment/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode DP",
+          "Tanggal",
+          "No. Penjualan",
+          "Pelanggan",
+          "Kas/Bank",
+          "Jumlah DP",
+          "Terpakai",
+          "Sisa",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-116",
@@ -5577,7 +7309,24 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-down-payment/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tipe",
+          "Nama Item",
+          "Netto",
+          "Harga",
+          "Qty",
+          "Total"
+        ]
+      }
     },
     {
       "screenId": "SCR-117",
@@ -5619,7 +7368,26 @@
         "Release Delivery",
         "Print Invoice"
       ],
-      "specialRequirementsNotes": "AR Delivery Gatekeeper (FINANCIAL_DELIVERY_RELEASE): default HELD, Gudang dilarang cetak Surat Jalan sebelum Finance ubah jadi RELEASED (setelah DP/lunas terverifikasi). Bahan Consignment tidak menambah COGS | Poin 13: Menerapkan seluruh perubahan yang sama dengan Faktur Pembelian (custom date, import, detail barang + diskon, navbar Semua/Sudah/Belum Dibayar + notes alasan belum lunas, hide matching %)"
+      "specialRequirementsNotes": "AR Delivery Gatekeeper (FINANCIAL_DELIVERY_RELEASE): default HELD, Gudang dilarang cetak Surat Jalan sebelum Finance ubah jadi RELEASED (setelah DP/lunas terverifikasi). Bahan Consignment tidak menambah COGS | Poin 13: Menerapkan seluruh perubahan yang sama dengan Faktur Pembelian (custom date, import, detail barang + diskon, navbar Semua/Sudah/Belum Dibayar + notes alasan belum lunas, hide matching %)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-invoice/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-invoice/detail?id={id}",
+        "printRoute": "/sales-invoice/{id}/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode DO",
+          "Kode Sales",
+          "Tanggal",
+          "Pelanggan",
+          "Total",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-118",
@@ -5661,7 +7429,28 @@
         "Print Bukti Penerimaan",
         "Lihat Detail"
       ],
-      "specialRequirementsNotes": "Kelebihan bayar otomatis menjadi AR Advance. PPh 23 dipotong customer dicatat sebagai uang muka pajak tanpa menggantung outstanding invoice | Poin 15 & 16: Judul/headline sidebar diganti menjadi \"Report Penjualan\". Tetap menyediakan perhitungan/laporan PPh 21 dan PPh 23"
+      "specialRequirementsNotes": "Kelebihan bayar otomatis menjadi AR Advance. PPh 23 dipotong customer dicatat sebagai uang muka pajak tanpa menggantung outstanding invoice | Poin 15 & 16: Judul/headline sidebar diganti menjadi \"Report Penjualan\". Tetap menyediakan perhitungan/laporan PPh 21 dan PPh 23",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-payment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-payment/detail?id={id}",
+        "printRoute": "/sales-payment/{id}/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode Faktur",
+          "Kode DO",
+          "Kode SO",
+          "Tanggal",
+          "Pelanggan",
+          "Grand Total",
+          "Dibayar",
+          "Sisa",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-119",
@@ -5693,7 +7482,25 @@
         "Riwayat",
         "Buat Retur"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 4 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-return/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-return/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Tanggal",
+          "Kode Retur",
+          "No. Faktur",
+          "Pelanggan",
+          "Total",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-120",
@@ -5727,7 +7534,26 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 8 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-return/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Barang",
+          "Satuan",
+          "Qty Faktur",
+          "Sudah Diretur",
+          "Qty Tersedia",
+          "Qty Retur",
+          "Catatan",
+          "Total"
+        ]
+      }
     },
     {
       "screenId": "SCR-121",
@@ -5767,7 +7593,28 @@
         "Riwayat",
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-sample/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-sample/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pelanggan",
+          "Nama Produk",
+          "Rev",
+          "Formulator",
+          "Catatan Formulasi",
+          "Total",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-122",
@@ -5807,7 +7654,28 @@
         "Offset ke DP Produksi",
         "Set Expired"
       ],
-      "specialRequirementsNotes": "Client bayar fee trial lab. Jika lanjut kontrak produksi massal, fee dikompensasikan sebagai pengurang DP Produksi (bukan revenue terpisah). Jika hangus/expired, baru diakui Revenue murni"
+      "specialRequirementsNotes": "Client bayar fee trial lab. Jika lanjut kontrak produksi massal, fee dikompensasikan sebagai pengurang DP Produksi (bukan revenue terpisah). Jika hangus/expired, baru diakui Revenue murni",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/sales-sample-payment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-sample-payment/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode Faktur",
+          "Kode Sample",
+          "Tanggal",
+          "Pelanggan",
+          "Nama Produk",
+          "Grand Total",
+          "Dibayar",
+          "Sisa",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-123",
@@ -5846,7 +7714,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 17 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales-sample/create/detail?id={id}",
+        "printRoute": "image/jpg,image/jpeg,image/gif,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-124",
@@ -5878,7 +7755,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 38: Input deadline per PIC | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)"
+      "specialRequirementsNotes": "\"\" | Poin 38: Input deadline per PIC | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 19 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /sales/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-125",
@@ -5907,7 +7793,24 @@
       "actions": [
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": "/stock-adjustment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /stock-adjustment/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Gudang",
+          "Pembuat",
+          "Catatan",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-126",
@@ -5937,7 +7840,16 @@
         "Kembali",
         "Simpan Penyesuaian Stok"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 7 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /stock-adjustment/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-127",
@@ -5974,7 +7886,26 @@
         "Print",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 11 aksi.",
+      "livePatterns": {
+        "editRoute": "/goods-request/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-request/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/goods-request/263/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Peminta",
+          "Penyedia",
+          "Pembuat",
+          "Catatan",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-128",
@@ -6011,7 +7942,21 @@
         "Kembali",
         "Simpan Permintaan"
       ],
-      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis"
+      "specialRequirementsNotes": "Memiliki sub-tabel keranjang/item dinamis",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 8 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /goods-request/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Nama Bahan",
+          "Kons. (%)",
+          "Qty Bth"
+        ]
+      }
     },
     {
       "screenId": "SCR-129",
@@ -6043,7 +7988,25 @@
         "Riwayat",
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase-request/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-request/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pemohon",
+          "Total Item",
+          "Catatan",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-130",
@@ -6071,7 +8034,16 @@
         "Kembali",
         "Simpan Permintaan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase-request/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-131",
@@ -6109,7 +8081,26 @@
         "Batalkan",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 8 aksi.",
+      "livePatterns": {
+        "editRoute": "/batch-record/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /batch-record/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/batch-record/87/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Sales",
+          "Pelanggan",
+          "Kategori",
+          "Produk",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-132",
@@ -6136,7 +8127,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": "\"\" | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)"
+      "specialRequirementsNotes": "\"\" | Format Kode Universal: Tersedia versi lengkap (DL-DIV-PRD-DDMMYYYY-0001) & versi ringkas (PRD-DDMMYYYY-0001). Nomor urut akhir bersifat global & berkelanjutan (tidak reset)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 5 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /batch-record/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-133",
@@ -6179,7 +8179,15 @@
         "Approval BusDev",
         "Approval Purchase"
       ],
-      "specialRequirementsNotes": "Poin 68-74: Modul Desain terhubung dengan QC, Purchase, dan BusDev. Mendukung fitur revisi, field batch, expired date, file lampiran, dan foto kemasan. Approval cukup oleh BusDev dan Purchase"
+      "specialRequirementsNotes": "Poin 68-74: Modul Desain terhubung dengan QC, Purchase, dan BusDev. Mendukung fitur revisi, field batch, expired date, file lampiran, dan foto kemasan. Approval cukup oleh BusDev dan Purchase",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/design-manage",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-134",
@@ -6211,7 +8219,15 @@
         "Simpan Draft",
         "Submit Approval ke BusDev & Purchase"
       ],
-      "specialRequirementsNotes": "Poin 71-74: Form input desain & revisi kemasan maklon kosmetik"
+      "specialRequirementsNotes": "Poin 71-74: Form input desain & revisi kemasan maklon kosmetik",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/design-manage/create",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-135",
@@ -6246,7 +8262,28 @@
         "Riwayat Sample",
         "Riwayat Formula"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 8 aksi.",
+      "livePatterns": {
+        "editRoute": "/formulation/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /formulation/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Nama Produk",
+          "Rev",
+          "Netto",
+          "Pelanggan",
+          "BusDev",
+          "Formulator",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-136",
@@ -6283,7 +8320,28 @@
         "Lihat",
         "Sesuaikan Formula"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 18 aksi.",
+      "livePatterns": {
+        "editRoute": "/formulation-adjustment/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /formulation-adjustment/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Nama Produk",
+          "Rev",
+          "Netto",
+          "Pelanggan",
+          "BusDev",
+          "Formulator",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-137",
@@ -6323,7 +8381,28 @@
         "Serahkan Formulator",
         "Buat Formulasi"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 17 aksi.",
+      "livePatterns": {
+        "editRoute": "/formulation-manage/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /formulation-manage/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Nama Produk",
+          "Rev",
+          "Netto",
+          "Pelanggan",
+          "BusDev",
+          "Formulator",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-138",
@@ -6356,7 +8435,26 @@
         "Riwayat",
         "Buat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/request-cogs/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /request-cogs/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Pelanggan",
+          "Produk",
+          "Formula",
+          "Jumlah MOQ",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-139",
@@ -6386,7 +8484,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 10 input dan 9 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /request-cogs/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-140",
@@ -6420,7 +8527,26 @@
         "Buat",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/schedule-filling/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /schedule-filling/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/schedule-filling/76/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Batch Record",
+          "Pelanggan",
+          "Produk",
+          "Target (PCS)",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-141",
@@ -6449,7 +8575,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 4 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /schedule-filling/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-142",
@@ -6488,7 +8623,27 @@
         "Batalkan",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/schedule-mixing/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /schedule-mixing/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/schedule-mixing/82/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Batch Record",
+          "Pelanggan",
+          "Produk",
+          "Target (PCS)",
+          "Hasil Upscale",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-143",
@@ -6516,7 +8671,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 5 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /schedule-mixing/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-144",
@@ -6554,7 +8718,26 @@
         "Batalkan",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/schedule-packaging/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /schedule-packaging/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/schedule-packaging/59/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Batch Record",
+          "Pelanggan",
+          "Produk",
+          "Target (PCS)",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-145",
@@ -6583,7 +8766,16 @@
         "Kembali",
         "Simpan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 4 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /schedule-packaging/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-146",
@@ -6624,7 +8816,15 @@
         "Close Job Order (Posting COGS)",
         "Export Excel"
       ],
-      "specialRequirementsNotes": "Sumber data integrasi dari Modul Produksi (SPK/Batch Record) dan Inventory (Mutasi Pemakaian Bahan)"
+      "specialRequirementsNotes": "Sumber data integrasi dari Modul Produksi (SPK/Batch Record) dan Inventory (Mutasi Pemakaian Bahan)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/job-order-costing",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-147",
@@ -6657,7 +8857,26 @@
         "Riwayat",
         "Modal Close"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 3 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/production-filling/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /production-filling/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Batch Record",
+          "Pelanggan",
+          "Produk",
+          "Target (PCS)",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-148",
@@ -6695,7 +8914,27 @@
         "Modal Canceled",
         "Modal Close"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 4 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/production-mixing/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /production-mixing/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode Jadwal",
+          "Tanggal",
+          "Batch Record",
+          "Pelanggan",
+          "Produk",
+          "Target (PCS)",
+          "Hasil Upscale",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-149",
@@ -6731,7 +8970,26 @@
         "Lihat Jadwal",
         "Modal Close"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 3 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/production-packaging/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /production-packaging/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Batch Record",
+          "Pelanggan",
+          "Produk",
+          "Target (PCS)",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-150",
@@ -6764,7 +9022,24 @@
         "Print",
         "Modal Tutup"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/stock-opname/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /stock-opname/detail?id={id}",
+        "printRoute": "https://kil.gserp.id/stock-opname/142/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Gudang",
+          "Pembuat",
+          "Catatan",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-151",
@@ -6793,7 +9068,16 @@
         "Kembali",
         "Simpan Stock Opname"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 6 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": null,
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /stock-opname/create/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-152",
@@ -8262,7 +10546,24 @@
         "Lihat",
         "Hide"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 10 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-need-for-goods/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /report-need-for-goods/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Sales / Customer / Produk / Brand",
+          "Pembuat",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-153",
@@ -8287,7 +10588,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-follow-up-customer/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-154",
@@ -8324,7 +10634,28 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 3 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-guest-book/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "No",
+          "Tanggal",
+          "Waktu",
+          "Nama",
+          "Telepon",
+          "Email",
+          "Alamat",
+          "Perusahaan",
+          "Tujuan",
+          "Bertemu",
+          "BusDev"
+        ]
+      }
     },
     {
       "screenId": "SCR-155",
@@ -8360,7 +10691,15 @@
         "Export Excel",
         "Drill Down Transaksi"
       ],
-      "specialRequirementsNotes": "Highlight otomatis jika pengeluaran melebihi batas anggaran yang ditetapkan"
+      "specialRequirementsNotes": "Highlight otomatis jika pengeluaran melebihi batas anggaran yang ditetapkan",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/budget-vs-actual",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-156",
@@ -8396,7 +10735,15 @@
         "Flag for Investigation",
         "Export Excel"
       ],
-      "specialRequirementsNotes": "Highlight otomatis baris dengan varians merah (>10%) untuk investigasi tim R&D/Produksi"
+      "specialRequirementsNotes": "Highlight otomatis baris dengan varians merah (>10%) untuk investigasi tim R&D/Produksi",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/cost-variance",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-157",
@@ -8431,7 +10778,15 @@
         "Export Excel",
         "Drill Down ke Kontrak SO"
       ],
-      "specialRequirementsNotes": "Menghitung margin riil kontrak maklon setelah memperhitungkan biaya bahan, upah pabrik, dan kemasan"
+      "specialRequirementsNotes": "Menghitung margin riil kontrak maklon setelah memperhitungkan biaya bahan, upah pabrik, dan kemasan",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/product-customer-profitability",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-158",
@@ -8468,7 +10823,15 @@
         "Export Excel",
         "Drill Down ke Faktur"
       ],
-      "specialRequirementsNotes": "Navbar menampilkan real-time Saldo Bank aktif saat ini agar user langsung bisa bandingkan kewajiban AP vs uang kas tersedia | Poin 10-12: Pewarnaan H-3 merah, H-7 kuning, overdue bold + bouncy/animasi. Card ringkasan H-3 dan H-7. Saldo bank real-time di navbar"
+      "specialRequirementsNotes": "Navbar menampilkan real-time Saldo Bank aktif saat ini agar user langsung bisa bandingkan kewajiban AP vs uang kas tersedia | Poin 10-12: Pewarnaan H-3 merah, H-7 kuning, overdue bold + bouncy/animasi. Card ringkasan H-3 dan H-7. Saldo bank real-time di navbar",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/scm/report-ap-aging",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-159",
@@ -8508,7 +10871,15 @@
         "Export Excel",
         "Drill Down"
       ],
-      "specialRequirementsNotes": "Cross-module visibility: Ringkasan AR Aging per client otomatis tampil di widget dashboard Laporan BusDev | Poin 17: AR Aging terintegrasi dan wajib muncul juga di modul BusDev (dashboard & laporan BusDev)"
+      "specialRequirementsNotes": "Cross-module visibility: Ringkasan AR Aging per client otomatis tampil di widget dashboard Laporan BusDev | Poin 17: AR Aging terintegrasi dan wajib muncul juga di modul BusDev (dashboard & laporan BusDev)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/scm/report-ar-aging",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-160",
@@ -8542,7 +10913,19 @@
         "Export Excel",
         "Print Neraca"
       ],
-      "specialRequirementsNotes": "Banner validasi keseimbangan neraca otomatis mendeteksi jika ada ketidakseimbangan (unbalanced)"
+      "specialRequirementsNotes": "Banner validasi keseimbangan neraca otomatis mendeteksi jika ada ketidakseimbangan (unbalanced)",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-balance-sheet/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /report-balance-sheet/detail?id={id}",
+        "printRoute": "/report-balance-sheet/{id}/print",
+        "tableColumnsLive": [
+          "Description",
+          "Balance"
+        ]
+      }
     },
     {
       "screenId": "SCR-161",
@@ -8572,7 +10955,15 @@
         "Export Excel",
         "Print Arus Kas"
       ],
-      "specialRequirementsNotes": "Menggunakan data riil Kas Bank Masuk / Keluar yang telah terekonsiliasi"
+      "specialRequirementsNotes": "Menggunakan data riil Kas Bank Masuk / Keluar yang telah terekonsiliasi",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/report-cash-flow",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-162",
@@ -8607,7 +10998,24 @@
         "Print",
         "Drill Down"
       ],
-      "specialRequirementsNotes": "Format hierarkis per grup akun mengikuti struktur parent-child COA di 1.1 | Poin 31: Ditambahkan filter periode custom date range"
+      "specialRequirementsNotes": "Format hierarkis per grup akun mengikuti struktur parent-child COA di 1.1 | Poin 31: Ditambahkan filter periode custom date range",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 8 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-general-ledger/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": "/report-general-ledger/{id}/print",
+        "tableColumnsLive": [
+          "Kode CoA",
+          "Nama CoA",
+          "Opening",
+          "Debet",
+          "Kredit",
+          "Perubahan",
+          "Saldo"
+        ]
+      }
     },
     {
       "screenId": "SCR-163",
@@ -8635,7 +11043,19 @@
         "Export Excel",
         "Print Laporan"
       ],
-      "specialRequirementsNotes": "Format hierarkis gaya ERP lama dipertahankan untuk ringkasan utama; breakdown per departemen menggunakan kolom terpisah | Poin 31-34: Filter periode custom. Tambahkan card total Laba Rugi. POSISI CARD DITUKAR: Total Beban HPP dan Laba Operasional Bersih. Format tabel gabungan seperti ERP lama (G-SERP) dengan kolom struktur ERP baru"
+      "specialRequirementsNotes": "Format hierarkis gaya ERP lama dipertahankan untuk ringkasan utama; breakdown per departemen menggunakan kolom terpisah | Poin 31-34: Filter periode custom. Tambahkan card total Laba Rugi. POSISI CARD DITUKAR: Total Beban HPP dan Laba Operasional Bersih. Format tabel gabungan seperti ERP lama (G-SERP) dengan kolom struktur ERP baru",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 1 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-profit-loss/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /report-profit-loss/detail?id={id}",
+        "printRoute": "/report-profit-loss/{id}/print",
+        "tableColumnsLive": [
+          "Description",
+          "Balance"
+        ]
+      }
     },
     {
       "screenId": "SCR-164",
@@ -8670,7 +11090,15 @@
         "Export Excel",
         "Print Rekap Penjualan"
       ],
-      "specialRequirementsNotes": "Halaman rekap terpisah dari transaksi Bayar Penjualan, memudahkan rekonsiliasi omzet dan piutang maklon"
+      "specialRequirementsNotes": "Halaman rekap terpisah dari transaksi Bayar Penjualan, memudahkan rekonsiliasi omzet dan piutang maklon",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/scm/report-sales-summary",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-165",
@@ -8701,7 +11129,28 @@
         "Export Excel",
         "Print"
       ],
-      "specialRequirementsNotes": "Mendeteksi selisih angka pembukuan sebelum tutup buku bulanan"
+      "specialRequirementsNotes": "Mendeteksi selisih angka pembukuan sebelum tutup buku bulanan",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-trial-balance/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /report-trial-balance/detail?id={id}",
+        "printRoute": "/report-trial-balance/{id}/print",
+        "tableColumnsLive": [
+          "Kode",
+          "Nama Akun",
+          "Saldo Awal",
+          "Perubahan",
+          "Saldo Akhir",
+          "Debit",
+          "Kredit",
+          "Debit",
+          "Kredit",
+          "Debit",
+          "Kredit"
+        ]
+      }
     },
     {
       "screenId": "SCR-166",
@@ -8743,7 +11192,15 @@
         "Export Excel",
         "Print Laporan Penerimaan Barang"
       ],
-      "specialRequirementsNotes": "Poin 64: Modul baru Report Penerimaan Barang dengan format mirip modul Pembelian ditambah kolom jumlah diterima, jumlah reject, jumlah bagus, dan jumlah gratis (free)"
+      "specialRequirementsNotes": "Poin 64: Modul baru Report Penerimaan Barang dengan format mirip modul Pembelian ditambah kolom jumlah diterima, jumlah reject, jumlah bagus, dan jumlah gratis (free)",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/scm/report-goods-receipt",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     },
     {
       "screenId": "SCR-167",
@@ -8764,7 +11221,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 3 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-mutation-goods/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-168",
@@ -8785,7 +11251,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-stock/{id}/update",
+        "detailModal": "modal-location, modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-169",
@@ -8806,7 +11281,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 2 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/report-stock-valuation/{id}/update",
+        "detailModal": "modal-location, modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-170",
@@ -8835,7 +11319,16 @@
         "Batal",
         "Simpan Perubahan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 7 input dan 6 aksi.",
+      "livePatterns": {
+        "editRoute": "/account/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-171",
@@ -8867,7 +11360,25 @@
       "actions": [
         "Lihat"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 3 input dan 8 aksi.",
+      "livePatterns": {
+        "editRoute": "/activity-log/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /activity-log/detail?id={id}",
+        "printRoute": null,
+        "tableColumnsLive": [
+          "#",
+          "Waktu",
+          "Pengguna",
+          "Modul",
+          "Aksi",
+          "Deskripsi",
+          "IP Address",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-172",
@@ -8941,7 +11452,16 @@
         "Batal",
         "Simpan Perubahan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 8 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/setting/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-173",
@@ -9015,7 +11535,16 @@
         "Batal",
         "Simpan Perubahan"
       ],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 6 input dan 4 aksi.",
+      "livePatterns": {
+        "editRoute": "/company/{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-174",
@@ -9124,7 +11653,16 @@
       ],
       "viewDetailModal": null,
       "actions": [],
-      "specialRequirementsNotes": null
+      "specialRequirementsNotes": null,
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 2 aksi.",
+      "livePatterns": {
+        "editRoute": "//{id}/update",
+        "detailModal": "modal-sm, modal-md, modal-lg, modal-xl",
+        "printRoute": null,
+        "tableColumnsLive": []
+      }
     },
     {
       "screenId": "SCR-175",
@@ -9165,7 +11703,28 @@
         "Tracking PO",
         "Print PO"
       ],
-      "specialRequirementsNotes": "\"\" | Poin 37, 41, 56, 57, 61: Label jatuh tempo diganti Deadline. Notifikasi mengarah ke item pending. History PO jelas menampilkan status bayar & terima. Penanggung jawab PO menggunakan Tanda Tangan Digital. Tanggal input PO read-only (hari ini)\"Operasional"
+      "specialRequirementsNotes": "\"\" | Poin 37, 41, 56, 57, 61: Label jatuh tempo diganti Deadline. Notifikasi mengarah ke item pending. History PO jelas menampilkan status bayar & terima. Penanggung jawab PO menggunakan Tanda Tangan Digital. Tanggal input PO read-only (hari ini)\"Operasional",
+      "liveStatus": "ACTIVE_200",
+      "origin": "LEGACY_LIVE",
+      "liveAuditNotes": "HTTP 200 OK di kil.gserp.id. Terverifikasi live dengan 0 input dan 7 aksi.",
+      "livePatterns": {
+        "editRoute": "/purchase/{id}/update",
+        "detailModal": "ajaxDetail(id, 'modal-xl') via GET /purchase/detail?id={id}",
+        "printRoute": "/purchase/{id}/print",
+        "tableColumnsLive": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Deadline PO",
+          "Supplier",
+          "Gudang",
+          "Pembuat",
+          "Catatan",
+          "Nominal",
+          "Status",
+          "#"
+        ]
+      }
     },
     {
       "screenId": "SCR-176",
@@ -9209,7 +11768,26 @@
         "Link Folder",
         "Export Excel"
       ],
-      "specialRequirementsNotes": "Referensi: docs/legacy-erp/Project_Monitoring_RND.csv (11 kolom). 1 project = 1 baris per NPF. Status otomatis terupdate dari Daily Tracking"
+      "specialRequirementsNotes": "Referensi: docs/legacy-erp/Project_Monitoring_RND.csv (11 kolom). 1 project = 1 baris per NPF. Status otomatis terupdate dari Daily Tracking",
+      "liveStatus": "REQUIREMENT_TAMBAHAN_404",
+      "origin": "REQUIREMENT_TAMBAHAN_V2",
+      "liveAuditNotes": "HTTP 404 (Not Found) di legacy live kil.gserp.id. Ini adalah REQUIREMENT TAMBAHAN dari kil_erp_full_inventory_v2.csv (spesifikasi baru untuk Finance/SCM/R&D/Aset Tetap). Bukan bug, melainkan fitur baru NEX ERP.",
+      "livePatterns": {
+        "targetNexErpRoute": "/master/rnd/project-monitoring",
+        "implementationTier": "TIER 2 (Expansion / New Feature)",
+        "databaseSource": "Clean-slate new Prisma schema (tidak ada di database legacy lama)"
+      }
     }
-  ]
+  ],
+  "lastAudited": "2026-09-15",
+  "auditSummary": {
+    "totalScreens": 176,
+    "liveActiveScreens": 144,
+    "additionalRequirementScreens": 31,
+    "defectLegacyScreens": 1,
+    "baselineMatchRate": "98.63% (against v0 pure legacy capture)",
+    "fullInventoryParityRate": "81.82% (144 live vs 176 total requirement v2)",
+    "gapPercentage": "18.18% (31 requirement tambahan + 1 defect live)",
+    "notes": "Dokumen ini telah disinkronkan dengan live audit kil.gserp.id per 2026-09-15. 31 layar berstatus REQUIREMENT_TAMBAHAN_404 adalah spesifikasi tambahan di Finance, SCM, Aset, dan R&D dari kil_erp_full_inventory_v2.csv yang belum pernah ada di server legacy lama."
+  }
 }
