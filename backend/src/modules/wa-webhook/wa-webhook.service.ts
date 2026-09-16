@@ -63,28 +63,51 @@ export class WaWebhookService {
           const trackingMatch = text.match(/\[Kode:\s*([A-Za-z0-9_-]+)\]/i);
           const trackingCode = trackingMatch ? trackingMatch[1] : null;
 
-          // Forward konfirmasi ke dreamlab.id lead monitor (non-blocking)
-          try {
-            fetch('https://dreamlab.id/api/lead-capture/confirm', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-forwarded-from': 'nexerp',
-              },
-              body: JSON.stringify({
-                trackingCode,
-                phone,
-                waName: profileName,
-                waMessage: text,
-                destinationPhone: value?.metadata?.display_phone_number || null,
-                phoneNumberId: value?.metadata?.phone_number_id || null,
-              }),
-            }).catch((err) => {
-              this.logger.error(`❌ Failed to forward lead to dreamlab.id: ${err?.message || err}`);
-            });
-          } catch (fwErr: any) {
-            this.logger.error(`❌ Forward lead error: ${fwErr?.message || fwErr}`);
-          }
+          // Forward konfirmasi ke dreamlab.id lead monitor (non-blocking, with
+          // visibility). Tiga peningkatan dari versi lama:
+          //  - AbortController 5s: jaga-jaga dreamlab.id hang agar tidak menggantung
+          //    request handler NestJS ini (lexrpc invoke).
+          //  - .then() periksa res.ok: fetch resolve normal pada 4xx/5xx, jadi cek
+          //    status aktif + log body supaya silent failure jadi visible.
+          //  - wamid = msgId: kirim id pesan Meta sehingga dreamlab.site bisa
+          //    dedup (tabel processed_webhook_messages) saat Meta retry.
+          const ac = new AbortController();
+          const timer = setTimeout(() => ac.abort(), 5000);
+          fetch('https://dreamlab.id/api/lead-capture/confirm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-forwarded-from': 'nexerp',
+            },
+            body: JSON.stringify({
+              trackingCode,
+              phone,
+              waName: profileName,
+              waMessage: text,
+              destinationPhone: value?.metadata?.display_phone_number || null,
+              phoneNumberId: value?.metadata?.phone_number_id || null,
+              wamid: msgId,
+            }),
+            signal: ac.signal,
+          })
+            .then(async (res) => {
+              if (!res.ok) {
+                const bodyText = await res.text().catch(() => '');
+                this.logger.warn(
+                  `⚠️ dreamlab.id returned ${res.status} ${res.statusText}: ${bodyText.slice(0, 200)}`,
+                );
+              } else if (this.logger.debug) {
+                this.logger.debug(
+                  `✅ Forwarded lead ${trackingCode || '(no-code)'} to dreamlab.id`,
+                );
+              }
+            })
+            .catch((err) => {
+              this.logger.error(
+                `❌ Failed to forward lead to dreamlab.id: ${err?.message || err}`,
+              );
+            })
+            .finally(() => clearTimeout(timer));
 
           if (trackingCode) {
             this.logger.log(`🔗 Tracking code found: ${trackingCode}`);
