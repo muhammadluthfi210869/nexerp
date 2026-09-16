@@ -35,6 +35,7 @@ import {
 import {
   DnaPageHeader,
   DnaKpiGrid,
+  DnaStatCard,
   DnaDataTableCard,
   DnaButton,
   DnaInput,
@@ -252,7 +253,7 @@ export default function PurchaseOrdersModernPage() {
               <DnaButton
                 variant="primary"
                 icon={<Plus className="w-4 h-4" />}
-                onClick={() => router.push("/scm/pembelian/create")}
+                onClick={() => router.push("/purchase/create")}
               >
                 + Buat Pembelian (PO)
               </DnaButton>
@@ -260,43 +261,37 @@ export default function PurchaseOrdersModernPage() {
           }
         />
 
-        {/* 4 KPI Grid */}
-        <DnaKpiGrid
-          items={[
-            {
-              label: "Total Nilai Pengadaan PO",
-              value: formatCurrency(totalPoValue),
-              subtitle: "Akumulasi komitmen belanja pabrik",
-              trend: `${poList.length} Purchase Orders`,
-              icon: DollarSign,
-              variant: "blue",
-            },
-            {
-              label: "Menunggu Inbound Gudang",
-              value: `${pendingInboundCount} PO In-Transit`,
-              subtitle: "Sedang dikirim supplier / otw",
-              trend: "Dalam Perjalanan",
-              icon: Truck,
-              variant: "amber",
-            },
-            {
-              label: "Penerimaan Selesai (GR)",
-              value: `${fullyReceivedCount} PO Tuntas`,
-              subtitle: "Fisik masuk real stok gudang",
-              trend: "100% Verified",
-              icon: CheckCircle2,
-              variant: "emerald",
-            },
-            {
-              label: "On-Time Delivery (OTD)",
-              value: "95.2%",
-              subtitle: "Kepatuhan deadline tiba supplier",
-              trend: "Target > 90%",
-              icon: Clock,
-              variant: "purple",
-            },
-          ]}
-        />
+        {/* Metric Cards */}
+        <DnaKpiGrid cols={4}>
+          <DnaStatCard
+            title="Total Nilai PO Aktif"
+            value={formatCurrency(totalPoValue)}
+            icon={DollarSign}
+            variant="default"
+            subtext="Akumulasi komitmen belanja"
+          />
+          <DnaStatCard
+            title="Total Order Pembelian"
+            value={poList.length}
+            icon={Package}
+            variant="default"
+            subtext="Dokumen PO terbit"
+          />
+          <DnaStatCard
+            title="Menunggu Inbound"
+            value={pendingInboundCount}
+            icon={Clock}
+            variant="warning"
+            subtext="Dalam perjalanan / antrean kirim"
+          />
+          <DnaStatCard
+            title="Selesai Penerimaan"
+            value={fullyReceivedCount}
+            icon={CheckCircle2}
+            variant="success"
+            subtext="100% lolos QC gudang"
+          />
+        </DnaKpiGrid>
 
         {/* Search & Toolbar */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
@@ -327,7 +322,8 @@ export default function PurchaseOrdersModernPage() {
                   <th className="py-3 px-3 w-8 text-center">#</th>
                   <th className="py-3 px-3">KODE PO</th>
                   <th className="py-3 px-3">TANGGAL PO</th>
-                  <th className="py-3 px-3">SUPPLIER & KATEGORI</th>
+                  <th className="py-3 px-3">SUPPLIER</th>
+                  <th className="py-3 px-3">KATEGORI BAHAN</th>
                   <th className="py-3 px-3">GUDANG TUJUAN</th>
                   <th className="py-3 px-3 text-center">DEADLINE TIBA</th>
                   <th className="py-3 px-3 text-right">TOTAL NILAI (RP)</th>
@@ -340,7 +336,7 @@ export default function PurchaseOrdersModernPage() {
               <tbody className="divide-y divide-slate-100">
                 {filteredPoList.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="text-center py-12 text-slate-400">
+                    <td colSpan={12} className="text-center py-12 text-slate-400">
                       Tidak ada data purchase order pada filter ini.
                     </td>
                   </tr>
@@ -358,9 +354,11 @@ export default function PurchaseOrdersModernPage() {
                       <td className="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap text-[10px]">
                         {po.date}
                       </td>
-                      <td className="py-2.5 px-3">
-                        <p className="font-bold text-slate-900">{po.supplierName}</p>
-                        <p className="text-[10px] text-slate-500 font-medium">{po.supplierCategory}</p>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800 whitespace-nowrap">
+                        {po.supplierName}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                        {po.supplierCategory}
                       </td>
                       <td className="py-2.5 px-3 text-slate-700 whitespace-nowrap">
                         {po.warehouseTarget}
@@ -370,11 +368,6 @@ export default function PurchaseOrdersModernPage() {
                       </td>
                       <td className="py-2.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
                         {formatCurrency(po.totalAmount)}
-                        {po.discountRp > 0 && (
-                          <span className="block text-[9px] text-emerald-600 font-normal">
-                            Disc: -{formatCurrency(po.discountRp)}
-                          </span>
-                        )}
                       </td>
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         <span

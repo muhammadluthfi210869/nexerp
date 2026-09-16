@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { 
   Truck, 
@@ -23,6 +24,16 @@ import { StatCard, DashboardCard, DnaButton, DnaInput } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function LogisticsOutboundPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Logistik Outbound...</div>}>
+      <LogisticsOutboundContent />
+    </Suspense>
+  );
+}
+
+function LogisticsOutboundContent() {
+  const searchParams = useSearchParams();
+  const isPurchaseReturn = searchParams.get("type") === "purchase-return";
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -85,9 +96,9 @@ export default function LogisticsOutboundPage() {
 
   return (
     <TableShell
-      title="OUTBOUND"
-      titleAccent="LOGISTICS HUB"
-      subtitle="FINAL FULFILLMENT & CARRIER INTEGRITY TERMINAL"
+      title={isPurchaseReturn ? "RETUR PEMBELIAN KELUAR" : "OUTBOUND"}
+      titleAccent={isPurchaseReturn ? "LOGISTIK SUPPLIER" : "LOGISTICS HUB"}
+      subtitle={isPurchaseReturn ? "PENGELUARAN FISIK BARANG RETUR KE SUPPLIER" : "FINAL FULFILLMENT & CARRIER INTEGRITY TERMINAL"}
       actions={
          <DnaButton variant="outline" size="lg" className="italic" icon={<History />}>
             LOGS

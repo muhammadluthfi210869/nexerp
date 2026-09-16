@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -166,6 +167,15 @@ const AVAILABLE_MATERIALS = [
 ];
 
 export default function MaterialRequisitionPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Permintaan Barang...</div>}>
+      <MaterialRequisitionContent />
+    </Suspense>
+  );
+}
+
+function MaterialRequisitionContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const queryClient = useQueryClient();
   const [dataList, setDataList] = useState<MaterialRequisition[]>(INITIAL_REQUISITIONS);
@@ -177,6 +187,15 @@ export default function MaterialRequisitionPage() {
   const [selectedReq, setSelectedReq] = useState<MaterialRequisition | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "create") {
+      setIsCreateOpen(true);
+    } else if (action === "approval") {
+      setActiveTab("PENDING");
+    }
+  }, [searchParams]);
 
   // Form State
   const [fromWarehouse, setFromWarehouse] = useState(MASTER_WAREHOUSES[0]);
@@ -460,7 +479,8 @@ export default function MaterialRequisitionPage() {
                 <th className="py-3 px-4">Tanggal</th>
                 <th className="py-3 px-4">Gudang Asal</th>
                 <th className="py-3 px-4">Tujuan / Divisi</th>
-                <th className="py-3 px-4">No. SPK / Keperluan</th>
+                <th className="py-3 px-4">No. SPK</th>
+                <th className="py-3 px-4">Keperluan</th>
                 <th className="py-3 px-4 text-center">Item</th>
                 <th className="py-3 px-4">Pemohon</th>
                 <th className="py-3 px-4">Status</th>
@@ -470,7 +490,7 @@ export default function MaterialRequisitionPage() {
             <tbody className="divide-y divide-slate-100 font-normal">
               {filteredList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
                     <Package className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada dokumen permintaan barang yang sesuai filter.
                   </td>
@@ -478,24 +498,23 @@ export default function MaterialRequisitionPage() {
               ) : (
                 filteredList.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs">
+                    <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs whitespace-nowrap">
                       {row.requisitionNumber}
                     </td>
                     <td className="py-3 px-4 text-xs whitespace-nowrap">
                       {row.requestDate}
                     </td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-800">
+                    <td className="py-3 px-4 text-xs font-medium text-slate-800 whitespace-nowrap">
                       {row.fromWarehouse}
                     </td>
-                    <td className="py-3 px-4 text-xs text-slate-700">
-                      <div className="font-semibold text-slate-900">{row.toDivision}</div>
-                      {row.batchNumber && (
-                        <div className="text-[11px] text-slate-500 font-mono">Lot: {row.batchNumber}</div>
-                      )}
+                    <td className="py-3 px-4 text-xs font-semibold text-slate-900 whitespace-nowrap">
+                      {row.toDivision}
                     </td>
-                    <td className="py-3 px-4 text-xs max-w-xs">
-                      <div className="font-mono font-medium text-slate-900">{row.spkNumber}</div>
-                      <div className="text-[11px] text-slate-500 truncate">{row.purpose}</div>
+                    <td className="py-3 px-4 text-xs font-mono font-medium text-slate-900 whitespace-nowrap">
+                      {row.spkNumber}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-slate-700 max-w-xs truncate">
+                      {row.purpose}
                     </td>
                     <td className="py-3 px-4 text-center text-xs font-semibold text-slate-800">
                       {row.totalItems} Material

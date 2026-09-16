@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -24,6 +25,15 @@ import { EmptyState } from "@/components/empty-state";
 // (current GRN list view; full 3-Pilar input is in the inbound form payload)
 
 export default function ReceivingPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Penerimaan Barang...</div>}>
+      <ReceivingContent />
+    </Suspense>
+  );
+}
+
+function ReceivingContent() {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState("");
@@ -31,6 +41,12 @@ export default function ReceivingPage() {
   const [invoiceNo, setInvoiceNo] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [taxTreatment, setTaxTreatment] = useState("PPN_11");
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
 
   const { data: purchaseOrders } = useQuery({
     queryKey: ["approved-po"],
@@ -131,20 +147,23 @@ export default function ReceivingPage() {
       >
         <table className="w-full text-left border-collapse text-[12px]">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider uppercase">
               <th className="p-3.5">ID GRN</th>
+              <th className="p-3.5">Tanggal</th>
               <th className="p-3.5">PO Asal</th>
               <th className="p-3.5">Pemasok</th>
-              <th className="p-3.5 text-center">3-Pilar Gudang<br/><span className="text-[9px] font-medium text-slate-400">(Bagus / Reject / Free)</span></th>
+              <th className="p-3.5 text-right">Bagus</th>
+              <th className="p-3.5 text-right">Reject</th>
+              <th className="p-3.5 text-right">Free</th>
               <th className="p-3.5 text-center">Status QC</th>
               <th className="p-3.5 text-center">Siklus</th>
-              <th className="p-3.5 text-right">Verifikasi</th>
+              <th className="p-3.5 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {!isLoading && (!receipts || receipts.length === 0) ? (
               <tr>
-                <td colSpan={7} className="p-6">
+                <td colSpan={10} className="p-6">
                   <EmptyState
                     icon={<PackageCheck className="h-8 w-8 text-slate-300" />}
                     title="Belum Ada Penerimaan"
@@ -159,37 +178,24 @@ export default function ReceivingPage() {
               </tr>
             ) : (receipts || []).map((receipt: any) => (
               <tr key={receipt.id} className="hover:bg-slate-50/80">
-                <td className="p-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
-                      <ClipboardCheck className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-900 uppercase italic">{receipt.id}</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">{receipt.date}</span>
-                    </div>
-                  </div>
+                <td className="p-3.5 font-bold text-slate-900 uppercase font-mono whitespace-nowrap">
+                  {receipt.id}
                 </td>
-                <td className="p-3.5"><DnaCell.Text primary={receipt.poId} /></td>
-                <td className="p-3.5"><DnaCell.Text primary={receipt.vendor} /></td>
-                <td className="p-3.5 text-center">
-                  {receipt.hasItems ? (
-                    <div className="flex items-center justify-center gap-2 text-[11px] font-bold">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        <ShieldCheck className="h-3 w-3" /> {receipt.qtyBagus}
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-100">
-                        <AlertTriangle className="h-3 w-3" /> {receipt.qtyReject}
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100">
-                        <FileSearch className="h-3 w-3" /> {receipt.qtyFree}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-slate-400">—</span>
-                  )}
+                <td className="p-3.5 text-slate-600 whitespace-nowrap">
+                  {receipt.date}
                 </td>
-                <td className="p-3.5 text-center">
+                <td className="p-3.5 font-mono whitespace-nowrap">{receipt.poId}</td>
+                <td className="p-3.5 font-medium text-slate-800 whitespace-nowrap">{receipt.vendor}</td>
+                <td className="p-3.5 text-right font-semibold text-emerald-700 whitespace-nowrap">
+                  {receipt.qtyBagus || 0}
+                </td>
+                <td className="p-3.5 text-right font-semibold text-rose-600 whitespace-nowrap">
+                  {receipt.qtyReject || 0}
+                </td>
+                <td className="p-3.5 text-right font-semibold text-amber-600 whitespace-nowrap">
+                  {receipt.qtyFree || 0}
+                </td>
+                <td className="p-3.5 text-center whitespace-nowrap">
                   <DnaBadge status={
                     receipt.qc === 'PASSED' ? 'success' :
                     receipt.qc === 'WAITING' ? 'warning' : 'critical'
@@ -197,17 +203,16 @@ export default function ReceivingPage() {
                     {receipt.qc}
                   </DnaBadge>
                 </td>
-                <td className="p-3.5 text-center">
+                <td className="p-3.5 text-center whitespace-nowrap">
                   <DnaBadge status={receipt.status === 'VERIFIED' ? 'info' : 'default'}>
                     {receipt.status}
                   </DnaBadge>
                 </td>
-                <td className="p-3.5 text-right">
+                <td className="p-3.5 text-right whitespace-nowrap">
                   <div className="flex justify-end gap-2">
                     <DnaButton variant="ghost" size="sm" icon={<FileSearch className="h-3 w-3" />}>
                       Inspeksi
                     </DnaButton>
-                    <DnaButton variant="ghost" size="icon" icon={<MoreVertical className="h-4 w-4" />} />
                   </div>
                 </td>
               </tr>

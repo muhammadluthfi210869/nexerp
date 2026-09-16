@@ -32,6 +32,27 @@ export class UsersService {
       });
     }
 
+    // 3. Fallback: alias common superadmin handles to super admin user
+    if (!user) {
+      const isSuperAdminAlias =
+        normalized === 'superadmin' ||
+        normalized === 'superadmin@nexerp.id' ||
+        normalized === 'admin@nexerp.id' ||
+        normalized === 'admin' ||
+        normalized === 'superadmin@dreamlab.com';
+
+      if (isSuperAdminAlias) {
+        user = await this.prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: 'admin@dreamlab.com' },
+              { roles: { has: 'SUPER_ADMIN' as any } },
+            ],
+          },
+        });
+      }
+    }
+
     return user;
   }
 

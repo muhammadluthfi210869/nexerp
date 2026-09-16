@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -135,6 +136,15 @@ const CASH_BANK_ACCOUNTS = [
 ];
 
 export default function DpPembelianPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat DP Pembelian...</div>}>
+      <DpPembelianContent />
+    </Suspense>
+  );
+}
+
+function DpPembelianContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const queryClient = useQueryClient();
   const [dataList, setDataList] = useState<PurchaseDp[]>(INITIAL_DP_LIST);
@@ -145,6 +155,12 @@ export default function DpPembelianPage() {
   const [selectedDp, setSelectedDp] = useState<PurchaseDp | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   // Form State
   const [selectedPoNumber, setSelectedPoNumber] = useState("");
@@ -392,9 +408,8 @@ export default function DpPembelianPage() {
                     <td className="py-3 px-4 text-xs whitespace-nowrap">
                       {row.dpDate}
                     </td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-900">
-                      <div>{row.vendorName}</div>
-                      <div className="text-[11px] text-slate-400 font-mono">{row.vendorCode}</div>
+                    <td className="py-3 px-4 text-xs font-medium text-slate-900 whitespace-nowrap">
+                      {row.vendorName}
                     </td>
                     <td className="py-3 px-4 text-xs font-mono font-medium text-slate-900">
                       {row.poNumber}

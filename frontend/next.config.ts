@@ -153,6 +153,42 @@ const nextConfig: NextConfig = {
       // 5. Permintaan HPP (COGS Request)
       { source: "/request-cogs", destination: "/finance/cogs-request-rnd" },
       { source: "/request-cogs/create", destination: "/finance/cogs-request-rnd?action=create" },
+
+      // =========================================================================
+      // FASE 4: SCM, PERMINTAAN & PEMBELIAN PO (19/19 URLs — 0 404s)
+      // =========================================================================
+      // 1. Pemesanan Pembelian (PO)
+      { source: "/purchase", destination: "/pembelian/scm-pembelian" },
+      { source: "/purchase/create", destination: "/pembelian/scm-pembelian/create" },
+      { source: "/purchase-approval", destination: "/approvals/purchase-approval" },
+
+      // 2. Permintaan Barang (Internal Requisition)
+      { source: "/goods-request", destination: "/inventory/requisition" },
+      { source: "/goods-request/create", destination: "/inventory/requisition?action=create" },
+      { source: "/goods-request-approval", destination: "/inventory/requisition?action=approval" },
+
+      // 3. Permintaan Pembelian (Purchase Requisition)
+      { source: "/purchase-request", destination: "/pembelian/purchase-requests" },
+      { source: "/purchase-request/create", destination: "/pembelian/purchase-requests?action=create" },
+      { source: "/purchase-request-approval", destination: "/approvals/purchase-request" },
+
+      // 4. DP Pembelian
+      { source: "/purchase-down-payment", destination: "/pembelian/dp-pembelian" },
+      { source: "/purchase-down-payment/create", destination: "/pembelian/dp-pembelian?action=create" },
+
+      // 5. Faktur & Pembayaran Pembelian
+      { source: "/purchase-invoice", destination: "/pembelian/faktur-pembelian" },
+      { source: "/purchase-payment", destination: "/pembelian/bayar-pembelian" },
+
+      // 6. Retur Pembelian
+      { source: "/purchase-return", destination: "/pembelian/purchase-returns" },
+      { source: "/purchase-return/create", destination: "/pembelian/purchase-returns?action=create" },
+      { source: "/purchase-return-approval", destination: "/approvals/purchase-return" },
+      { source: "/purchase-return-out", destination: "/inventory/outbound?type=purchase-return" },
+
+      // 7. Penerimaan Barang 3-Pilar & Laporan
+      { source: "/purchase-in", destination: "/pembelian/receiving" },
+      { source: "/report-goods-receipt", destination: "/reports/goods-receipt" },
     ];
   },
 };

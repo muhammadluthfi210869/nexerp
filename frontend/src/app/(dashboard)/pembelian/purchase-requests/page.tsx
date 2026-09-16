@@ -12,7 +12,8 @@
  * - Format Kode Universal Global (DL-SCM-PR-DDMMYYYY-0001 / PR-DDMMYYYY-0001)
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FileText,
   Plus,
@@ -195,6 +196,15 @@ const INITIAL_PR_DATA: PurchaseRequestRecord[] = [
 ];
 
 export default function PurchaseRequestsModernPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Permintaan Pembelian...</div>}>
+      <PurchaseRequestsContent />
+    </Suspense>
+  );
+}
+
+function PurchaseRequestsContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const [prList, setPrList] = useState<PurchaseRequestRecord[]>(INITIAL_PR_DATA);
   const [activeTab, setActiveTab] = useState("all");
@@ -203,6 +213,12 @@ export default function PurchaseRequestsModernPage() {
 
   // Modal Create PR State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
   const [formDept, setFormDept] = useState("Produksi Pabrik");
   const [formRequester, setFormRequester] = useState("Staff Produksi");
   const [formRole, setFormRole] = useState<"STAFF" | "HEAD">("STAFF");
@@ -464,7 +480,8 @@ export default function PurchaseRequestsModernPage() {
                   <th className="py-3 px-3 w-8 text-center">#</th>
                   <th className="py-3 px-3">KODE PR</th>
                   <th className="py-3 px-3">TGL PENGAJUAN</th>
-                  <th className="py-3 px-3">DEPARTEMEN & PIC</th>
+                  <th className="py-3 px-3">DEPARTEMEN</th>
+                  <th className="py-3 px-3">PEMOHON</th>
                   <th className="py-3 px-3">KATEGORI COA</th>
                   <th className="py-3 px-3 text-center">PRIORITAS</th>
                   <th className="py-3 px-3 text-center">TOTAL ITEM</th>
@@ -476,7 +493,7 @@ export default function PurchaseRequestsModernPage() {
               <tbody className="divide-y divide-slate-100">
                 {filteredPrList.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-12 text-slate-400">
+                    <td colSpan={11} className="text-center py-12 text-slate-400">
                       Tidak ada permintaan pembelian pada filter ini.
                     </td>
                   </tr>
@@ -494,11 +511,11 @@ export default function PurchaseRequestsModernPage() {
                       <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap font-mono text-[10px]">
                         {pr.date}
                       </td>
-                      <td className="py-2.5 px-3">
-                        <p className="font-bold text-slate-900">{pr.department}</p>
-                        <p className="text-[10px] text-slate-500 font-medium">
-                          {pr.requesterName} ({pr.requesterRole})
-                        </p>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800 whitespace-nowrap">
+                        {pr.department}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap text-[11px]">
+                        {pr.requesterName}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">

@@ -498,6 +498,7 @@ export default function FakturPembelianPage() {
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">No. Faktur</th>
+                <th className="py-3 px-4">No. PO</th>
                 <th className="py-3 px-4">Tgl Invoice</th>
                 <th className="py-3 px-4">Jatuh Tempo</th>
                 <th className="py-3 px-4">Supplier / Vendor</th>
@@ -512,7 +513,7 @@ export default function FakturPembelianPage() {
             <tbody className="divide-y divide-slate-100 font-normal">
               {filteredList.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                  <td colSpan={11} className="py-12 text-center text-slate-400">
                     <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada faktur pembelian yang sesuai filter.
                   </td>
@@ -522,9 +523,11 @@ export default function FakturPembelianPage() {
                   const remaining = Math.max(0, row.grandTotal - row.paidAmount);
                   return (
                     <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs">
+                      <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs whitespace-nowrap">
                         {row.billNumber}
-                        <div className="text-[11px] text-slate-400 font-normal font-sans">{row.poNumber}</div>
+                      </td>
+                      <td className="py-3 px-4 font-mono text-slate-600 text-xs whitespace-nowrap">
+                        {row.poNumber}
                       </td>
                       <td className="py-3 px-4 text-xs whitespace-nowrap">
                         {row.invoiceDate}

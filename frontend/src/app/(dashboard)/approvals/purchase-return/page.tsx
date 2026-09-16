@@ -129,14 +129,19 @@ export default function PurchaseReturnApprovalPage() {
       render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
     },
     {
-      header: "Ref PO & Supplier",
+      header: "Supplier",
       accessor: "supplier",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.supplier}</p>
-          <p className="text-[11px] text-blue-600 font-mono font-medium">Ref: {item.refPo}</p>
-        </div>
+        <span className="font-semibold text-slate-800 whitespace-nowrap">{item.supplier}</span>
+      ),
+    },
+    {
+      header: "Ref. PO",
+      accessor: "refPo",
+      sortable: true,
+      render: (item) => (
+        <span className="text-blue-600 font-mono font-medium text-xs whitespace-nowrap">{item.refPo}</span>
       ),
     },
     {
@@ -147,13 +152,17 @@ export default function PurchaseReturnApprovalPage() {
       ),
     },
     {
-      header: "Pemohon & Lokasi",
+      header: "Pemohon",
       accessor: "requesterName",
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-700">{item.requesterName}</p>
-          <p className="text-[11px] text-slate-500">{item.warehouse}</p>
-        </div>
+        <span className="font-medium text-slate-700 whitespace-nowrap">{item.requesterName}</span>
+      ),
+    },
+    {
+      header: "Gudang",
+      accessor: "warehouse",
+      render: (item) => (
+        <span className="text-xs text-slate-600 whitespace-nowrap">{item.warehouse}</span>
       ),
     },
     {

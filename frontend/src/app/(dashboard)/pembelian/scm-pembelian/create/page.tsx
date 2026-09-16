@@ -154,7 +154,7 @@ export default function CreatePurchaseOrderPage() {
     }
 
     toast.success("PO Berhasil Dibuat", `Purchase Order ${poCode} diterbitkan dan siap diverifikasi Finance.`);
-    router.push("/scm/pembelian");
+    router.push("/purchase");
   };
 
   return (
@@ -164,7 +164,7 @@ export default function CreatePurchaseOrderPage() {
         <DnaPageHeader
           title="Buat Pembelian Baru (Purchase Order / PO)"
           description="Form Penerbitan Dokumen Resmi Pengadaan Bahan Baku & Kemasan Pabrik (Standar Universal Code & 3 Pilar Fisik)"
-          backLink={{ href: "/scm/pembelian", label: "Kembali ke Daftar PO" }}
+          backLink={{ href: "/purchase", label: "Kembali ke Daftar PO" }}
         />
 
         {/* Form Container */}
@@ -463,7 +463,7 @@ export default function CreatePurchaseOrderPage() {
               </div>
 
               <div className="pt-4 flex justify-end gap-2">
-                <DnaButton type="button" variant="secondary" onClick={() => router.push("/scm/pembelian")}>
+                <DnaButton type="button" variant="secondary" onClick={() => router.push("/purchase")}>
                   Batal
                 </DnaButton>
                 <DnaButton type="submit" variant="primary" icon={<Save className="w-4 h-4" />}>

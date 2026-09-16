@@ -172,14 +172,19 @@ export default function PurchaseRequestApprovalPage() {
       render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
     },
     {
-      header: "Departemen & Pemohon",
+      header: "Departemen",
       accessor: "department",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.department}</p>
-          <p className="text-[11px] text-slate-500">{item.requesterName} • {item.creatorRole}</p>
-        </div>
+        <span className="font-semibold text-slate-800 whitespace-nowrap">{item.department}</span>
+      ),
+    },
+    {
+      header: "Pemohon",
+      accessor: "requesterName",
+      sortable: true,
+      render: (item) => (
+        <span className="text-slate-600 whitespace-nowrap">{item.requesterName}</span>
       ),
     },
     {
