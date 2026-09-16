@@ -1932,6 +1932,19 @@ export class CanonicalMarketingService implements OnModuleInit {
               status: 'ACTIVE',
             },
           });
+        } else if (
+          !user.roles?.some((r: string) => ['MARKETING', 'DIGIMAR'].includes(r))
+        ) {
+          // ponytail: catch-up role grant for users created via personnel.seeder
+          // (which sets ['EMPLOYEE'] not ['MARKETING','DIGIMAR']). Idempotent.
+          user = await db.user.update({
+            where: { id: user.id },
+            data: {
+              roles: Array.from(
+                new Set([...(user.roles ?? []), 'MARKETING', 'DIGIMAR']),
+              ),
+            },
+          });
         }
 
         // Find existing marketing team member by userId, email, or name
@@ -2017,11 +2030,27 @@ export class CanonicalMarketingService implements OnModuleInit {
     }
     let defaultOwner = Object.values(userMap)[0];
     if (!defaultOwner) {
-      const anyUser = await db.user.findFirst({
-        where: { status: 'ACTIVE', deletedAt: null },
+      // ponytail: must be a marketing persona, not Super Admin — fixes
+      // RC2 prod blast radius where first ACTIVE user is global Admin.
+      const marketingUser = await db.user.findFirst({
+        where: {
+          status: 'ACTIVE',
+          deletedAt: null,
+          roles: { hasSome: ['MARKETING', 'DIGIMAR', 'HEAD_OPS'] },
+        },
+        orderBy: { createdAt: 'asc' },
         select: { id: true },
       });
-      if (anyUser) defaultOwner = anyUser.id;
+      if (marketingUser) {
+        defaultOwner = marketingUser.id;
+      } else {
+        // Last-resort fallback so dev/CI never blocks on missing seed.
+        const anyUser = await db.user.findFirst({
+          where: { status: 'ACTIVE', deletedAt: null },
+          select: { id: true },
+        });
+        if (anyUser) defaultOwner = anyUser.id;
+      }
     }
     if (!defaultOwner) return;
 
