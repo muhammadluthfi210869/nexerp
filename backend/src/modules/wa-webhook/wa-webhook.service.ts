@@ -59,9 +59,32 @@ export class WaWebhookService {
           this.logger.log(`📨 WA from ${phone}: "${text.slice(0, 50)}"`);
 
           // Extract tracking code dari isi pesan
-          // Format: [Kode: DLxxxx] atau [Kode: DLxxxxxx]
-          const trackingMatch = text.match(/\[Kode:\s*(DL\w+)\]/);
+          // Format: [Kode: DLxxxx] atau [Kode: DL-YYYYMMDD-XXXXXX]
+          const trackingMatch = text.match(/\[Kode:\s*([A-Za-z0-9_-]+)\]/i);
           const trackingCode = trackingMatch ? trackingMatch[1] : null;
+
+          // Forward konfirmasi ke dreamlab.id lead monitor (non-blocking)
+          try {
+            fetch('https://dreamlab.id/api/lead-capture/confirm', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-forwarded-from': 'nexerp',
+              },
+              body: JSON.stringify({
+                trackingCode,
+                phone,
+                waName: profileName,
+                waMessage: text,
+                destinationPhone: value?.metadata?.display_phone_number || null,
+                phoneNumberId: value?.metadata?.phone_number_id || null,
+              }),
+            }).catch((err) => {
+              this.logger.error(`❌ Failed to forward lead to dreamlab.id: ${err?.message || err}`);
+            });
+          } catch (fwErr: any) {
+            this.logger.error(`❌ Forward lead error: ${fwErr?.message || fwErr}`);
+          }
 
           if (trackingCode) {
             this.logger.log(`🔗 Tracking code found: ${trackingCode}`);
