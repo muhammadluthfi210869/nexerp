@@ -37,7 +37,11 @@ function resolveManagementTaskPath(user: any) {
     email.startsWith("nisa@") ||
     roles.some((role) => managerRoleSet.has(role));
 
-  return isManager ? "/marketing/management-task/revi" : "/marketing/management-task/aurel";
+  // ponytail: 'aurel' doesn't match any seeded roster member — fall back to
+  // overview which renders the management-task workspace for any marketing viewer.
+  return isManager
+    ? "/marketing/management-task/revi"
+    : "/marketing/management-task/overview";
 }
 
 export default function ManagementTaskRedirectPage() {
