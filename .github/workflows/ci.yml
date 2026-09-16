@@ -198,4 +198,18 @@ jobs:
           echo "- \`${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Deploy ke VPS: \`ssh dreamlab@103.93.134.215\` → \`cd /home/dreamlab/nexerp && bash scripts/deploy.sh ${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy ke VPS: \`cd /home/dreamlab/nexerp && bash scripts/deploy.sh ${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── AUTO-DEPLOY PADA SELF-HOSTED RUNNER VPS ─────────────────
+  auto-deploy:
+    name: 🌐 Auto-Deploy on VPS
+    needs: push-images
+    runs-on: self-hosted
+    steps:
+      - name: 🚀 Pull Latest & Deploy
+        run: |
+          set -euo pipefail
+          cd /home/dreamlab/nexerp
+          git fetch origin main
+          git reset --hard origin/main
+          bash scripts/deploy.sh ${{ github.sha }}
