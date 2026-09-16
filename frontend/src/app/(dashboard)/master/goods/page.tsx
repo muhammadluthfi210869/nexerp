@@ -462,6 +462,16 @@ function MasterGoodsContent() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<KategoriBarangItem | null>(null);
 
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      if (tabParam === "categories") {
+        setIsCategoryModalOpen(true);
+      } else {
+        setIsBarangModalOpen(true);
+      }
+    }
+  }, [searchParams, tabParam]);
+
   // Form State Barang
   const [barangForm, setBarangForm] = useState({
     kode: "",

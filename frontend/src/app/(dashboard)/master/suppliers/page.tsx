@@ -394,6 +394,16 @@ function MasterSuppliersContent() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<KategoriSupplierItem | null>(null);
 
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      if (tabParam === "categories") {
+        setIsCategoryModalOpen(true);
+      } else {
+        setIsSupplierModalOpen(true);
+      }
+    }
+  }, [searchParams, tabParam]);
+
   // Form Supplier
   const [supplierForm, setSupplierForm] = useState({
     vendorCode: "",

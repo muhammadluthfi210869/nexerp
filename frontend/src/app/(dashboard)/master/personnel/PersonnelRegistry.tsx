@@ -123,7 +123,10 @@ export function PersonnelRegistry() {
     if (tabParam === "roles" || tabParam === "users") {
       setActiveTab(tabParam);
     }
-  }, [tabParam]);
+    if (searchParams.get("action") === "create") {
+      handleOpenCreateUser();
+    }
+  }, [tabParam, searchParams]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);

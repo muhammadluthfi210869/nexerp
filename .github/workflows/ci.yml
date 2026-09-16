@@ -131,12 +131,12 @@ jobs:
           set -e
           BASE="http://localhost:3001/v1"
           echo "=== 1. Login Check (DIGIMAR User) ==="
-          LOGIN_RES=$(curl -sf -X POST "$BASE/auth/login" \
+          LOGIN_RES=$(curl -s -X POST "$BASE/auth/login" \
             -H "Content-Type: application/json" \
-            -d '{"email":"revita@nexerp.id","password":"password123"}' || echo "")
-          TOKEN=$(echo "$LOGIN_RES" | jq -r '.accessToken // empty')
-          [ -n "$TOKEN" ] || { echo "❌ Pre-flight: Login gagal untuk revita@nexerp.id"; exit 1; }
-          echo "✅ Login berhasil, accessToken diperoleh"
+            -d '{"email":"revita@nexerp.id","password":"password123"}')
+          TOKEN=$(echo "$LOGIN_RES" | jq -r '.access_token // .accessToken // empty')
+          [ -n "$TOKEN" ] || { echo "❌ Pre-flight: Login gagal untuk revita@nexerp.id:"; echo "$LOGIN_RES"; exit 1; }
+          echo "✅ Login berhasil, token diperoleh"
 
           echo "=== 2. Marketing Members Check (Dept Whitelist & Seed Shape) ==="
           MEMBERS_RES=$(curl -sf -X GET "$BASE/marketing/members" \
@@ -146,12 +146,11 @@ jobs:
           echo "✅ /marketing/members mengembalikan $COUNT anggota"
 
           echo "=== 3. Dual-Write Task Creation Check ==="
-          ASSIGNEE_ID=$(echo "$MEMBERS_RES" | jq -r '.[0].userId // empty')
-          [ -n "$ASSIGNEE_ID" ] || ASSIGNEE_ID=$(echo "$LOGIN_RES" | jq -r '.user.id // empty')
+          REVITA_ID=$(echo "$LOGIN_RES" | jq -r '.user.id // empty')
           CREATE_RES=$(curl -sf -X POST "$BASE/marketing/tasks" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"title\":\"CI Pre-flight Task\",\"assigneeId\":\"$ASSIGNEE_ID\",\"type\":\"DAILY\",\"priority\":\"LOW\",\"channel\":\"web\",\"category\":\"smoke\",\"startDate\":\"2026-09-15\",\"dueDate\":\"2026-09-16\"}" || echo "")
+            -d "{\"title\":\"CI Pre-flight Task\",\"assigneeId\":\"$REVITA_ID\",\"type\":\"DAILY\",\"priority\":\"LOW\",\"channel\":\"web\",\"category\":\"smoke\",\"startDate\":\"2026-09-15\",\"dueDate\":\"2026-09-16\"}" || echo "")
           echo "$CREATE_RES" | jq -e '.id // .taskCode // .status' >/dev/null \
             || { echo "❌ Pre-flight: createTask dual-write gagal"; echo "$CREATE_RES"; exit 1; }
           echo "✅ Dual-write createTask terverifikasi"

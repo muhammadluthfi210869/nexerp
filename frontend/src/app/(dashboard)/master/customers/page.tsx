@@ -365,6 +365,16 @@ function MasterCustomersContent() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CustomerCategoryItem | null>(null);
 
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      if (tabParam === "categories") {
+        setIsCategoryModalOpen(true);
+      } else {
+        setIsCustomerModalOpen(true);
+      }
+    }
+  }, [searchParams, tabParam]);
+
   // Form Pelanggan
   const [customerForm, setCustomerForm] = useState({
     customerCode: "",
