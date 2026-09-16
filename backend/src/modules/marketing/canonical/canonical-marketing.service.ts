@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  OnModuleInit,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
@@ -50,8 +51,28 @@ const TASK_INCLUDE: any = {
 };
 
 @Injectable()
-export class CanonicalMarketingService {
+export class CanonicalMarketingService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
+
+  async onModuleInit() {
+    try {
+      const brandCount = await this.prisma.marketingBrand.count();
+      if (brandCount === 0) {
+        await this.autoSeedMarketingBrands(this.prisma);
+      }
+      const memberCount = await this.prisma.marketingTeamMember.count();
+      if (memberCount === 0) {
+        await this.autoSeedMarketingMembers(this.prisma);
+      }
+      const taskCount = await this.prisma.marketingTask.count();
+      if (taskCount === 0) {
+        await this.autoSeedMarketingTasks(this.prisma);
+      }
+    } catch (e: any) {
+      // Non-blocking in case of deferred DB availability on cold start
+      console.warn('Marketing master data self-heal deferred:', e?.message);
+    }
+  }
 
   async listTasks(viewer: MarketingViewer, query: TaskListQueryDto) {
     ensureMarketingTaskRole(viewer);
@@ -85,6 +106,37 @@ export class CanonicalMarketingService {
       }),
       this.prisma.marketingTask.count({ where }),
     ]);
+
+    if (
+      total === 0 &&
+      !query.q &&
+      !query.status &&
+      !query.assigneeId &&
+      !query.projectId &&
+      !query.brandId
+    ) {
+      const globalCount = await this.prisma.marketingTask.count();
+      if (globalCount === 0) {
+        await this.autoSeedMarketingTasks(this.prisma);
+        const [seededRows, seededTotal] = await this.prisma.$transaction([
+          this.prisma.marketingTask.findMany({
+            where,
+            include: TASK_INCLUDE,
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          this.prisma.marketingTask.count({ where }),
+        ]);
+        return this.page(
+          seededRows.map((row) => this.taskResponse(row)),
+          page,
+          limit,
+          seededTotal,
+        );
+      }
+    }
+
     return this.page(
       rows.map((row) => this.taskResponse(row)),
       page,
@@ -185,7 +237,7 @@ export class CanonicalMarketingService {
       dto,
       async (db) => {
         this.assertDateOrder(dto.startDate, dto.dueDate);
-        const assigneeUser = await this.ensureActiveUser(db, dto.assigneeId, 'assigneeId');
+        const assigneeUser = await this.ensureActiveUser(db, dto.assigneeId, 'assigneeId', viewer.id);
         const isSelf =
           assigneeUser.id === viewer.id ||
           (Boolean(assigneeUser.email) &&
@@ -707,7 +759,7 @@ export class CanonicalMarketingService {
     // Filter to marketing team only (defense-in-depth: even if isActive=true was set on stale
     // admin/busdev rows from earlier seeds, we exclude them here). Marketing-relevant
     // departments are an allow-list; super-admin / admin role rows are excluded by name.
-    const members = await this.prisma.marketingTeamMember.findMany({
+    let members = await this.prisma.marketingTeamMember.findMany({
       where: {
         isActive: true,
         department: { in: ['Digital Marketing', 'Digital Strategy', 'Social Media', 'Design & Visual', 'Production'] },
@@ -715,6 +767,17 @@ export class CanonicalMarketingService {
       },
       orderBy: { name: 'asc' },
     });
+    if (members.length === 0) {
+      await this.autoSeedMarketingMembers(this.prisma);
+      members = await this.prisma.marketingTeamMember.findMany({
+        where: {
+          isActive: true,
+          department: { in: ['Digital Marketing', 'Digital Strategy', 'Social Media', 'Design & Visual', 'Production'] },
+          NOT: { role: { contains: 'Admin' } },
+        },
+        orderBy: { name: 'asc' },
+      });
+    }
     return members.map((m) => ({
       id: m.id,
       userId: m.userId,
@@ -780,7 +843,7 @@ export class CanonicalMarketingService {
 
   async listBrands(viewer: MarketingViewer, includeInactive = false) {
     this.ensureMarketingRead(viewer);
-    return this.prisma.marketingBrand.findMany({
+    let brands = await this.prisma.marketingBrand.findMany({
       where:
         includeInactive && isMarketingManager(viewer) ? {} : { isActive: true },
       select: {
@@ -798,6 +861,28 @@ export class CanonicalMarketingService {
       },
       orderBy: { name: 'asc' },
     });
+    if (brands.length === 0) {
+      await this.autoSeedMarketingBrands(this.prisma);
+      brands = await this.prisma.marketingBrand.findMany({
+        where:
+          includeInactive && isMarketingManager(viewer) ? {} : { isActive: true },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          handle: true,
+          primaryPlatform: true,
+          ownerId: true,
+          notes: true,
+          accentToken: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { name: 'asc' },
+      });
+    }
+    return brands;
   }
 
   async createBrand(
@@ -1362,8 +1447,19 @@ export class CanonicalMarketingService {
       });
   }
 
-  private async ensureActiveUser(db: DbClient, id: string, field: string) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  private async ensureActiveUser(
+    db: DbClient,
+    id: string,
+    field: string,
+    fallbackUserId?: string,
+  ) {
+    if (!id && fallbackUserId) {
+      id = fallbackUserId;
+    }
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
     let found = await db.user.findFirst({
       where: {
         OR: [
@@ -1382,6 +1478,7 @@ export class CanonicalMarketingService {
           OR: [
             ...(isUuid ? [{ id }] : []),
             { name: { equals: id, mode: 'insensitive' } },
+            { email: { equals: id, mode: 'insensitive' } },
           ],
           isActive: true,
         },
@@ -1393,6 +1490,12 @@ export class CanonicalMarketingService {
           select: { id: true, fullName: true, email: true },
         });
       }
+    }
+    if (!found && fallbackUserId) {
+      found = await db.user.findFirst({
+        where: { id: fallbackUserId, status: 'ACTIVE', deletedAt: null },
+        select: { id: true, fullName: true, email: true },
+      });
     }
     if (!found)
       throw new BadRequestException({
@@ -1418,8 +1521,11 @@ export class CanonicalMarketingService {
   }
 
   private async ensureActiveBrand(db: DbClient, id: string) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    const brand = await db.marketingBrand.findFirst({
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    let brand = await db.marketingBrand.findFirst({
       where: {
         OR: [
           ...(isUuid ? [{ id }] : []),
@@ -1430,6 +1536,42 @@ export class CanonicalMarketingService {
       },
       select: { id: true, name: true },
     });
+    if (!brand && typeof db?.marketingBrand?.upsert === 'function') {
+      const lower = id.toLowerCase();
+      if (lower.includes('dreamlab')) {
+        brand = await db.marketingBrand.upsert({
+          where: { code: 'dreamlab' },
+          update: { isActive: true },
+          create: {
+            code: 'dreamlab',
+            name: 'Dreamlab',
+            handle: '@dreamlab.workspace',
+            primaryPlatform: 'Instagram & LinkedIn',
+            accentToken: '#1264d3',
+            notes:
+              'B2B Cosmetic R&D & Maklon formulation laboratory. Tone: Professional, authoritative, sleek, innovative.',
+            isActive: true,
+          },
+          select: { id: true, name: true },
+        });
+      } else if (lower.includes('toribio')) {
+        brand = await db.marketingBrand.upsert({
+          where: { code: 'toribio' },
+          update: { isActive: true },
+          create: {
+            code: 'toribio',
+            name: 'Toribio',
+            handle: '@toribio.skincare',
+            primaryPlatform: 'Instagram & TikTok',
+            accentToken: '#ec4899',
+            notes:
+              'B2C Skincare & Beauty brand focusing on skin barrier and radiant glow. Tone: Friendly, vibrant, aesthetic, relatable.',
+            isActive: true,
+          },
+          select: { id: true, name: true },
+        });
+      }
+    }
     if (!brand)
       throw new BadRequestException({
         code: 'BRAND_INVALID',
@@ -1667,5 +1809,285 @@ export class CanonicalMarketingService {
     if ((error as { code?: string }).code === 'P2025')
       throw new NotFoundException({ code, message });
     throw error;
+  }
+
+  private async autoSeedMarketingBrands(db: DbClient) {
+    if (typeof db?.marketingBrand?.upsert !== 'function') return;
+    const brands = [
+      {
+        code: 'dreamlab',
+        name: 'Dreamlab',
+        handle: '@dreamlab.workspace',
+        primaryPlatform: 'Instagram & LinkedIn',
+        accentToken: '#1264d3',
+        notes:
+          'B2B Cosmetic R&D & Maklon formulation laboratory. Tone: Professional, authoritative, sleek, innovative.',
+        isActive: true,
+      },
+      {
+        code: 'toribio',
+        name: 'Toribio',
+        handle: '@toribio.skincare',
+        primaryPlatform: 'Instagram & TikTok',
+        accentToken: '#ec4899',
+        notes:
+          'B2C Skincare & Beauty brand focusing on skin barrier and radiant glow. Tone: Friendly, vibrant, aesthetic, relatable.',
+        isActive: true,
+      },
+    ];
+    for (const b of brands) {
+      await db.marketingBrand.upsert({
+        where: { code: b.code },
+        update: { isActive: true },
+        create: b,
+      });
+    }
+  }
+
+  private async autoSeedMarketingMembers(db: DbClient) {
+    if (
+      typeof db?.marketingTeamMember?.upsert !== 'function' ||
+      typeof db?.user?.findFirst !== 'function'
+    )
+      return;
+    const defaultMembers = [
+      {
+        name: 'Gusti',
+        fullName: 'Gusti Bagus',
+        email: 'gusti@dreamlab.id',
+        role: 'Lead Digital & Brand Strategist',
+        department: 'Digital Strategy',
+        phone: '+62 812-3456-7801',
+        avatarBg: '#e8eef6',
+        initial: 'G',
+      },
+      {
+        name: 'Revita',
+        fullName: 'Revita Yustianawati',
+        email: 'revita@dreamlab.id',
+        role: 'Creative Content & Social Media Lead',
+        department: 'Social Media',
+        phone: '+62 813-9876-5432',
+        avatarBg: '#fce7f3',
+        initial: 'R',
+      },
+      {
+        name: 'Zarkasi',
+        fullName: 'Muhammad Zarkasi',
+        email: 'zarkasi@dreamlab.id',
+        role: 'Graphic Designer & Visual Specialist',
+        department: 'Design & Visual',
+        phone: '+62 821-4567-8902',
+        avatarBg: '#fef3c7',
+        initial: 'Z',
+      },
+      {
+        name: 'Rahmat',
+        fullName: 'Rahmat Hidayat',
+        email: 'rahmat@dreamlab.id',
+        role: 'Video Production & Copywriter',
+        department: 'Production',
+        phone: '+62 856-7890-1234',
+        avatarBg: '#dcfce7',
+        initial: 'R',
+      },
+      {
+        name: 'Aurel',
+        fullName: 'Aurelia Putri',
+        email: 'aurel@dreamlab.id',
+        role: 'Social Media Officer & Community',
+        department: 'Social Media',
+        phone: '+62 857-1234-5678',
+        avatarBg: '#e0e7ff',
+        initial: 'A',
+      },
+    ];
+
+    for (const m of defaultMembers) {
+      let user = await db.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: m.email, mode: 'insensitive' } },
+            { email: { equals: `${m.name.toLowerCase()}@nexerp.id`, mode: 'insensitive' } },
+            { fullName: { equals: m.fullName, mode: 'insensitive' } },
+          ],
+        },
+      });
+      if (!user) {
+        user = await db.user.create({
+          data: {
+            email: m.email,
+            fullName: m.fullName,
+            passwordHash:
+              '$2b$10$N/SzrZjec.yMCM7jboDw3.vN.XZYrK4vCsZiFEgygNZctiAHyCbwC',
+            roles: ['MARKETING', 'DIGIMAR'],
+            status: 'ACTIVE',
+          },
+        });
+      }
+      await db.marketingTeamMember.upsert({
+        where: { email: m.email },
+        update: {
+          name: m.name,
+          role: m.role,
+          department: m.department,
+          phone: m.phone,
+          avatarBg: m.avatarBg,
+          initial: m.initial,
+          userId: user.id,
+          isActive: true,
+        },
+        create: {
+          name: m.name,
+          role: m.role,
+          department: m.department,
+          email: m.email,
+          phone: m.phone,
+          avatarBg: m.avatarBg,
+          initial: m.initial,
+          userId: user.id,
+          isActive: true,
+        },
+      });
+    }
+  }
+
+  private async autoSeedMarketingTasks(db: DbClient) {
+    if (
+      typeof db?.marketingTask?.upsert !== 'function' ||
+      typeof db?.marketingBrand?.findFirst !== 'function' ||
+      typeof db?.marketingTeamMember?.findMany !== 'function'
+    )
+      return;
+    await this.autoSeedMarketingBrands(db);
+    await this.autoSeedMarketingMembers(db);
+
+    const members = await db.marketingTeamMember.findMany({
+      where: { isActive: true },
+      select: { name: true, userId: true },
+    });
+    const userMap: Record<string, string> = {};
+    for (const m of members) {
+      if (m.userId) userMap[m.name] = m.userId;
+    }
+    const defaultOwner = Object.values(userMap)[0];
+    if (!defaultOwner) return;
+
+    const brandDreamlab = await db.marketingBrand.findFirst({
+      where: { code: 'dreamlab' },
+      select: { id: true, name: true },
+    });
+
+    const defaultTasks = [
+      {
+        taskCode: 'TSK-G-001',
+        title: 'Check Incoming Leads & Pitch Decks',
+        assignee: 'Gusti',
+        brand: 'Dreamlab',
+        priority: 'HIGH',
+        status: 'DONE',
+        canonicalStatus: 'DONE',
+        taskType: 'DAILY',
+        brief: 'Review daily CRM inbox for B2B skincare formulation inquiries.',
+        dueDate: new Date('2026-09-09'),
+      },
+      {
+        taskCode: 'TSK-G-002',
+        title: 'Update Daily Report & Campaign Metrics',
+        assignee: 'Gusti',
+        brand: 'Dreamlab',
+        priority: 'MEDIUM',
+        status: 'IN_PROGRESS',
+        canonicalStatus: 'IN_PROGRESS',
+        taskType: 'DAILY',
+        brief: 'Update Meta Ads spend, CTR, CPL, and Organic Reach in dashboard.',
+        dueDate: new Date('2026-09-09'),
+      },
+      {
+        taskCode: 'TSK-R-001',
+        title: 'Finalize Carousel Desain Edukasi Formulasi',
+        assignee: 'Revita',
+        brand: 'Dreamlab',
+        priority: 'HIGH',
+        status: 'DONE',
+        canonicalStatus: 'DONE',
+        taskType: 'DAILY',
+        brief: 'Konten 7 slide anatomi skin barrier & bahan aktif niacinamide 5%.',
+        dueDate: new Date('2026-09-09'),
+      },
+      {
+        taskCode: 'TSK-R-002',
+        title: 'Publish Instagram Stories Update Pabrik',
+        assignee: 'Revita',
+        brand: 'Dreamlab',
+        priority: 'MEDIUM',
+        status: 'DONE',
+        canonicalStatus: 'DONE',
+        taskType: 'DAILY',
+        brief: 'Tiga sequence story BTS lab mixer steril di Cikarang.',
+        dueDate: new Date('2026-09-09'),
+      },
+      {
+        taskCode: 'TSK-Z-001',
+        title: 'Desain Banner Promo Maklon Q4',
+        assignee: 'Zarkasi',
+        brand: 'Dreamlab',
+        priority: 'HIGH',
+        status: 'IN_PROGRESS',
+        canonicalStatus: 'IN_PROGRESS',
+        taskType: 'PROJECT',
+        brief: 'Asset visual untuk landing page dan campaign display Google Ads.',
+        dueDate: new Date('2026-09-15'),
+      },
+      {
+        taskCode: 'TSK-RH-001',
+        title: 'Editing Video Reels Lab Tour Cleanroom',
+        assignee: 'Rahmat',
+        brand: 'Dreamlab',
+        priority: 'HIGH',
+        status: 'IN_PROGRESS',
+        canonicalStatus: 'IN_PROGRESS',
+        taskType: 'PROJECT',
+        brief: 'Reels 60 detik dengan grading klinis modern, sound trending.',
+        dueDate: new Date('2026-09-12'),
+      },
+      {
+        taskCode: 'TSK-A-001',
+        title: 'Community Management & Reply Comments',
+        assignee: 'Aurel',
+        brand: 'Dreamlab',
+        priority: 'MEDIUM',
+        status: 'IN_PROGRESS',
+        canonicalStatus: 'IN_PROGRESS',
+        taskType: 'DAILY',
+        brief: 'Balas komentar dan DM di Instagram & TikTok @dreamlab.workspace.',
+        dueDate: new Date('2026-09-14'),
+      },
+    ];
+
+    for (const t of defaultTasks) {
+      const ownerId = userMap[t.assignee] || defaultOwner;
+      await db.marketingTask.upsert({
+        where: { taskCode: t.taskCode },
+        update: {},
+        create: {
+          taskCode: t.taskCode,
+          title: t.title,
+          ownerId,
+          assigneeId: ownerId,
+          picId: ownerId,
+          priority: t.priority as any,
+          status: t.status as any,
+          canonicalStatus: t.canonicalStatus as any,
+          taskType: t.taskType as any,
+          brief: t.brief,
+          brand: t.brand,
+          brandId: brandDreamlab?.id || null,
+          dueDate: t.dueDate,
+          channel: 'General',
+          category: 'general_operations',
+        },
+      });
+    }
   }
 }

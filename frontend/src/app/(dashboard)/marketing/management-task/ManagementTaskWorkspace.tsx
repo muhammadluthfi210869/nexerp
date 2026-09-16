@@ -175,7 +175,7 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
     };
 
     try {
-      const res = await api.post('/marketing/tasks', payload);
+      const res = await api.post('/marketing/tasks', payload, { timeout: 30000 });
       const createdTask = res.data?.data || res.data;
       if (createdTask?.id) {
         const mapped = mapApiTask(createdTask);
