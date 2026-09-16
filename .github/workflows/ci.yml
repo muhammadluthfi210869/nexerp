@@ -41,7 +41,7 @@ jobs:
 
       - name: 🧪 Run All Regression & Contract Tests
         run: |
-          chmod +x scripts/__tests__/*.sh
+          chmod +x scripts/*.sh scripts/__tests__/*.sh backend/init-db.sh
           bash scripts/__tests__/run-all.sh
 
   # ── MAIN PIPELINE: TEST, PRE-FLIGHT SMOKE & PUSH KE GHCR ───
@@ -79,7 +79,7 @@ jobs:
 
       - name: 🧪 Run Regression & Contract Tests
         run: |
-          chmod +x scripts/__tests__/*.sh
+          chmod +x scripts/*.sh scripts/__tests__/*.sh backend/init-db.sh
           bash scripts/__tests__/run-all.sh
 
       - name: 🏗️ Build Backend Image
@@ -187,7 +187,7 @@ jobs:
 
       - name: 📝 Logs (jika gagal)
         if: failure()
-        run: docker logs nexerp-backend-test --tail 100
+        run: docker logs nexerp-backend-test --tail 100 || true
 
       - name: 🧹 Bersihkan container
         if: always()
